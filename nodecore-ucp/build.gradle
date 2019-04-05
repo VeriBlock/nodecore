@@ -1,0 +1,55 @@
+plugins {
+    id "java"
+    id "idea"
+    id "java-library"
+    id "maven-publish"
+    id "com.jfrog.artifactory"
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.12'
+
+    compile project(':veriblock-core')
+    implementation 'org.slf4j:slf4j-api:1.7.15'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
+}
+
+jar {
+    manifest {
+        attributes 'Name': 'nodecore/api/ucp',
+                'Specification-Title': 'VeriBlock NodeCore Universal Client Protocol',
+                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Vendor': 'VeriBlock Foundation',
+                'Implementation-Title': 'nodecore.api.ucp',
+                'Implementation-Version': version,
+                'Implementation-Vendor': 'VeriBlock Foundation'
+    }
+}
+
+artifactory {
+    contextUrl = artifactory_url
+    publish {
+        repository {
+            repoKey = artifactory_repoKey // The Artifactory repository key to publish to
+            username = artifactory_user // The publisher user name
+            password = artifactory_password // The publisher password
+            maven = true
+        }
+
+        defaults {
+            publications('mavenJava')
+            publishArtifacts = true
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'veriblock'
+            artifactId 'nodecore-ucp'
+            version this.version
+            from components.java
+        }
+    }
+}

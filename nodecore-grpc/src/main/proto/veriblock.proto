@@ -1,0 +1,1414 @@
+// VeriBlock NodeCore
+// Copyright 2017-2018 VeriBlock, Inc.
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
+syntax = "proto3";
+
+package core;
+
+option java_package = "nodecore.api.grpc";
+option java_outer_classname = "VeriBlockMessages";
+
+message AddressBalance {
+    bytes address = 1;
+    int64 unlocked_amount = 2;
+    int64 locked_amount = 3;
+    int64 total_amount = 4;
+}
+
+message Output {
+    bytes address = 1;
+    int64 amount = 2;
+}
+
+message Paging {
+    int32 page_number = 1;
+    int32 results_per_page = 2;
+}
+
+message NumericFilter {
+    enum Operator {
+        EQUAL = 0;
+        LESS_THAN = 1;
+        LESS_THAN_OR_EQUAL = 2;
+        GREATER_THAN = 3;
+        GREATER_THAN_OR_EQUAL = 4;
+        BETWEEN = 5;
+    }
+    Operator operator = 1;
+    sint64 value = 2;
+    sint64 secondary_value = 3;
+}
+
+message Endpoint {
+    string address = 1;
+    int32 port = 2;
+}
+
+message MultisigSlot {
+    bool populated = 1;
+    bytes signature = 2;
+    bytes public_key = 3;
+    bytes owner_address = 4;
+}
+
+message MultisigBundle {
+    repeated MultisigSlot slots = 1;
+}
+
+message SignedTransaction {
+    bytes signature = 1;
+    bytes public_key = 2;
+    int64 signature_index = 3;
+    Transaction transaction = 4;
+}
+
+message SignedMultisigTransaction {
+    MultisigBundle signature_bundle = 1;
+    Transaction transaction = 2;
+    int64 signature_index = 3;
+}
+
+message CoinbaseTransaction {
+    int64 pow_coinbase_amount = 1;
+    int64 pop_coinbase_amount = 2;
+    int64 pow_fee_share = 3;
+    int64 pop_fee_share = 4;
+    repeated Output pow_outputs = 5;
+    repeated Output pop_outputs = 6;
+    int32 block_height = 7;
+    bytes tx_id = 8;
+}
+
+message BitcoinBlockHeader {
+    bytes header = 1;
+}
+
+message PoPEndorsementInfo {
+    bytes miner_address = 1;
+    bytes endorsed_veriblock_block_hash = 2;
+    bytes contained_in_veriblock_block_hash = 3;
+    bytes veriblock_tx_id = 4;
+    bytes bitcoin_transaction = 5;
+    bytes bitcoin_tx_id = 6;
+    bytes bitcoin_block_header = 7;
+    bytes bitcoin_block_header_hash = 8;
+    int64 reward = 9;
+    bool finalized = 10;
+    int32 endorsed_block_number = 11;
+}
+
+message StandardAddress {
+    bytes standard_address = 1;
+}
+
+message TroubleshootPoPTransactionsRequest {
+    bool only_failures = 1;
+    int32 search_length = 2;
+    oneof search_paramater {
+        AddressSet addresses = 3;
+        TransactionSet transactions = 4;
+    }
+}
+
+message AddressSet {
+    repeated bytes addresses = 1;
+}
+
+message TransactionSet {
+    repeated bytes txids = 1;
+}
+
+message TroubleshootPoPTransactionsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated PoPTransactionProblemReport popProblemReports = 3;
+}
+
+message PoPTransactionProblemReport {
+    bytes address = 1;
+    bytes txid = 2;
+    bytes endorsed_vbk_block_hash = 3;
+    int32 endorsed_vbk_block_index = 4;
+    bytes included_in_vbk_block_hash = 5;
+    int32 included_in_vbk_block_index = 6;
+    bytes pop_payout_vbk_block_hash = 7;
+    int32 pop_payout_vbk_block_index = 8;
+    bool paid_out_in_pop_payout_vbk_block = 9;
+    int64 pop_payout_vbk_amount = 10;
+    bytes bitcoin_txid = 11;
+    bytes included_in_btc_block_hash = 12;
+    int32 included_in_btc_block_index = 13;
+    bool endorsed_vbk_block_in_main_chain = 14;
+    bool included_in_vbk_block_in_main_chain = 15;
+    bool included_in_btc_block_in_main_chain = 16;
+    int32 first_btc_block_of_equivalent_pop_endorsements_index = 17;
+    int32 current_block_height = 18;
+}
+
+message GetPoPEndorsementsInfoRequest {
+    int32 search_length = 1;
+    repeated StandardAddress addresses = 2;
+}
+
+message GetPoPEndorsementsInfoReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated PoPEndorsementInfo pop_endorsements = 3;
+}
+
+message GetProtectedChildrenRequest {
+    int32 search_length = 1;
+    bytes veriblock_block_hash = 2;
+}
+
+message GetProtectedChildrenReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated PoPEndorsementInfo pop_endorsements = 3;
+}
+
+message GetProtectingParentsRequest {
+    int32 search_length = 1;
+    bytes veriblock_block_hash = 2;
+}
+
+message GetProtectingParentsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated PoPEndorsementInfo pop_endorsements = 3;
+}
+
+message Transaction {
+    enum Type {
+        ZERO_UNUSED = 0;
+        STANDARD = 1;
+        PROOF_OF_PROOF = 2;
+        MULTISIG = 3;
+    }
+
+    Type type = 1;
+    bytes source_address = 2;
+    int64 source_amount = 3;
+    repeated Output outputs = 4;
+    int64 transaction_fee = 5;
+    bytes data = 7;
+    bytes bitcoin_transaction = 10;
+    bytes endorsed_block_header = 11;
+    BitcoinBlockHeader bitcoin_block_header_of_proof = 12;
+    string merkle_path = 13;
+    repeated BitcoinBlockHeader context_bitcoin_block_headers = 14;
+    int32 timestamp = 15;
+    int32 size = 16;
+    bytes tx_id = 17;
+}
+
+message UnsignedMultisigTransactionWithIndex {
+    Transaction unsigned_multisig_tansaction = 1;
+    int64 signature_index = 2;
+}
+
+message TransactionUnion {
+    oneof transaction {
+        Transaction unsigned = 1;
+        SignedTransaction signed = 2;
+        SignedMultisigTransaction signed_multisig = 3;
+    }
+}
+
+message VBKTransactionWithContext {
+    VBKMerklePath merkle_path = 1;
+    oneof transaction {
+        SignedTransaction signed_transaction = 2;
+        SignedMultisigTransaction signed_multisig_transaction = 3;
+    }
+}
+
+message VBKMerklePath {
+    repeated bytes layers = 1;
+    bytes bottom_data = 2;
+    int32 bottom_data_index = 3;
+}
+
+message TransactionMeta {
+    enum Status {
+        UNKNOWN = 0;
+        PENDING = 1;
+        CONFIRMED = 2;
+        DEAD = 3;
+    }
+
+    bytes tx_id = 1;
+    bytes block_header = 2;
+    repeated bytes appears_in = 3;
+    int32 confirmations = 4;
+    Status status = 5;
+}
+
+message WalletTransaction {
+    enum Type {
+        NOT_SET = 0;
+        POW_COINBASE = 1;
+        POP_COINBASE = 2;
+        BOTH_COINBASE = 3;
+        SENT = 4;
+        RECEIVED = 5;
+        SENT_AND_RECEIVED = 6;
+        POP = 7;
+    }
+
+    bytes tx_id = 1;
+    bytes address = 2;
+    int32 timestamp = 3;
+    Type type = 4;
+    sint64 net_amount = 5;
+    Output input = 6;
+    repeated Output outputs = 7;
+    TransactionMeta meta = 8;
+}
+
+message PoPDatastore {
+    bytes datastore_hash = 1;
+    bytes endorsed_veriblock_headers_hash = 2;
+    bytes endorsed_altchain_headers_hash = 3;
+    repeated BitcoinHeaderVeriBlockEndorsementCountsPair veriblock_header_endorsements = 4;
+    repeated AltchainIdAltchainHeaderEndorsementCountsPair altchain_header_endorsements = 5;
+}
+
+message AltchainIdAltchainHeaderEndorsementCountsPair {
+    int64 altchain_identifier = 1;
+    repeated AltchainHeaderEndorsementCountPair altchain_header_endorsement_count_pairs = 2;
+}
+
+message BitcoinHeaderVeriBlockEndorsementCountsPair {
+    bytes bitcoin_header = 1;
+    repeated VeriBlockHeaderEndorsementCountPair veriblock_header_endorsement_count_pairs = 2;
+}
+
+message VeriBlockHeaderEndorsementCountPair {
+    bytes veriblock_header = 1;
+    int32 endorsement_count = 2;
+}
+
+message AltchainHeaderEndorsementCountPair {
+    bytes altchain_header = 1;
+    int32 endorsement_count = 2;
+}
+
+message BlockFeeTable {
+    int64 pop_fee_share = 1;
+}
+
+message BlockContentMetapackage {
+    CoinbaseTransaction coinbase_transaction = 1;
+    PoPDatastore pop_datastore = 2;
+    bytes miner_comment = 3;
+    bytes ledger_hash = 4;
+    sint64 extra_nonce = 5;
+    bytes hash = 6;
+    BlockFeeTable block_fee_table = 7;
+}
+
+message BlockSummary {
+    int32 number = 1;
+    int32 timestamp = 2;
+    bytes hash = 3;
+    bytes previous_hash = 4;
+    bytes second_previous_hash = 5;
+    bytes third_previous_hash = 6;
+    fixed64 decoded_difficulty = 7;
+    sint32 winning_nonce = 8;
+    int32 num_regular_transactions = 9;
+    int32 num_pop_transactions = 10;
+    int64 total_fees = 11;
+    int64 pow_coinbase_reward = 12;
+    int64 pop_coinbase_reward = 13;
+    int32 size = 14;
+    bytes ledger_hash = 15;
+    bytes miner_comment = 16;
+	int32 version = 17;
+	bytes merkle_root = 18;
+}
+
+message LightBlockSummary {
+    int32 number = 1;
+    int32 timestamp = 2;
+    bytes hash = 3;
+    bytes previous_hash = 4;
+    bytes second_previous_hash = 5;
+    bytes third_previous_hash = 6;
+    fixed64 decoded_difficulty = 7;
+    sint32 winning_nonce = 8;
+    int32 num_known_regular_transactions = 9;
+    int32 num_pop_transactions = 10;
+    int64 pow_coinbase_reward = 11;
+    int64 pop_coinbase_reward = 12;
+    bytes ledger_hash = 13;
+    bytes miner_comment = 14;
+    bytes normal_transaction_merkle_root = 15;
+	int32 version = 16;
+	bytes merkle_root = 17;
+}
+
+message Block {
+    int32 number = 1;
+    int32 timestamp = 2;
+    bytes hash = 3;
+    bytes previous_hash = 4;
+    bytes second_previous_hash = 5;
+    bytes third_previous_hash = 6;
+    int32 encoded_difficulty = 7;
+    sint32 winning_nonce = 8;
+    repeated TransactionUnion regular_transactions = 9;
+    repeated TransactionUnion pop_transactions = 10;
+    int64 total_fees = 11;
+    int64 pow_coinbase_reward = 12;
+    int64 pop_coinbase_reward = 13;
+    repeated bytes bitcoin_block_headers = 14;
+    BlockContentMetapackage block_content_metapackage = 15;
+    int32 size = 16;
+	int32 version = 17;
+	bytes merkle_root = 18;	
+}
+
+message BlockHeader {
+    bytes header = 1;
+    bytes hash = 2;
+}
+
+message FilteredBlock {
+    int32 number = 1;
+    int32 version = 2;
+    bytes previous_hash = 3;
+    bytes second_previous_hash = 4;
+    bytes third_previous_hash = 5;
+    bytes merkle_root = 6;
+    int32 timestamp = 7;
+    int32 difficulty = 8;
+    sint32 nonce = 9;
+    int32 total_regular_transactions = 10;
+    int32 total_pop_transactions = 11;
+    repeated bytes merkle_hashes = 12;
+    bytes merkle_flags = 13;
+}
+
+message LightVBKBlock {
+    int32 number = 1;
+    int32 timestamp = 2;
+    bytes hash = 3;
+    bytes previous_hash = 4;
+    bytes second_previous_hash = 5;
+    bytes third_previous_hash = 6;
+    int32 encoded_difficulty = 7;
+    sint32 winning_nonce = 8;
+    repeated VBKTransactionWithContext known_regular_transactions = 9;
+    repeated TransactionUnion pop_transactions = 10;
+    int64 pow_coinbase_reward = 11;
+    int64 pop_coinbase_reward = 12;
+    repeated bytes bitcoin_block_headers = 13;
+    BlockContentMetapackage block_content_metapackage = 14;
+    bytes normal_transaction_merkle_root = 15;
+	int32 version = 16;
+	bytes merkle_root = 17;
+}
+
+message BlockFilter {
+    oneof filters {
+        bytes hash = 1;
+        int32 index = 2;
+        int32 number = 3;
+    }
+}
+
+message GetBlocksRequest {
+    int32 search_length = 1;
+    repeated BlockFilter filters = 2;
+}
+
+message Result {
+    bool error = 1;
+    string code = 2;
+    string message = 3;
+    string details = 4;
+}
+
+message ProtocolReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+message GetBlocksReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated Block blocks = 3;
+}
+
+message BackupWalletRequest {
+    bytes target_location = 1;
+}
+
+message BackupWalletReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+message ImportWalletRequest {
+    bytes source_location = 1;
+    string passphrase = 2;
+}
+
+message ImportWalletReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+// --------------------------------------------------------------------
+
+message Announce {
+    bool reply = 1;
+    NodeInfo node_info = 2;
+}
+
+message NodeInfo {
+    string address = 1;
+    int32 port = 2;
+    string application = 3;
+    int32 protocol_version = 4;
+    string platform = 5;
+    int32 start_timestamp = 6;
+    string id = 7;
+    bool share = 8;
+    int64 capabilities = 9;
+}
+
+message AddBlocksRequest {
+    repeated Block blocks = 1;
+}
+
+message BlockInfo {
+    int32 number = 1;
+    bytes hash = 2;
+}
+
+message AddTransactionsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated bytes tx_ids = 3;
+}
+
+message Heartbeat {
+    BlockInfo block = 1;
+}
+
+message BlockQuery {
+    BlockInfo block = 1;
+    string id = 2;
+}
+
+message BlockQueryReply {
+    bool matched = 1;
+    BlockInfo block = 2;
+    string id = 3;
+}
+
+message SyncRequest {
+    int32 starting_block_height = 1;
+    bool sync_transactions = 2;
+}
+
+message NetworkInfoRequest {
+}
+
+message NetworkInfoReply {
+    repeated NodeInfo available_nodes = 1;
+}
+
+message Acknowledgement {
+    string message_id = 1;
+}
+
+message AdvertiseBlocks {
+    repeated BlockHeader headers = 1;
+}
+
+message TransactionAnnounce {
+    enum Type {
+        NORMAL = 0;
+        PROOF_OF_PROOF = 1;
+    }
+
+    Type type = 1;
+    bytes tx_id = 2;
+}
+
+message AdvertiseTransaction {
+    repeated TransactionAnnounce transactions = 1;
+}
+
+message BlockRequest {
+    repeated BlockHeader headers = 1;
+}
+
+message TransactionRequest {
+    repeated TransactionAnnounce transactions = 1;
+}
+
+message KeystoneQuery {
+    repeated BlockHeader headers = 1;
+}
+
+message NotFound {
+    enum Type {
+        BLOCK = 0;
+        TX = 1;
+    }
+    Type type = 1;
+    bytes id = 2;
+}
+
+message CreateFilter {
+    bytes filter = 1;
+    int32 hash_iterations = 2;
+    int32 tweak = 3;
+    int32 flags = 4;
+}
+
+message AddFilter {
+    bytes data = 1;
+}
+
+message ClearFilter {
+
+}
+
+message Event {
+    oneof results {
+        Block block = 1;
+        TransactionUnion transaction = 2;
+        Announce announce = 3;
+        Heartbeat heartbeat = 4;
+        BlockQuery block_query = 5;
+        BlockQueryReply block_query_reply = 6;
+        NetworkInfoRequest network_info_request = 8;
+        NetworkInfoReply network_info_reply = 9;
+        Acknowledgement acknowledgement = 10;
+        AdvertiseBlocks advertise_blocks = 13;
+        BlockRequest block_request = 14;
+        KeystoneQuery keystone_query = 15;
+        AdvertiseTransaction advertise_tx = 16;
+        TransactionRequest tx_request = 17;
+        NotFound not_found = 18;
+        CreateFilter create_filter = 19;
+        AddFilter add_filter = 20;
+        ClearFilter clear_filter = 21;
+        BlockRequest filtered_block_request = 22;
+        FilteredBlock filtered_block = 23;
+    }
+    string id = 11;
+    bool acknowledge = 12;
+}
+// --------------------------------------------------------------------
+
+message NodeRequest {
+    repeated Endpoint endpoint = 1;
+}
+
+message StartPoolRequest {
+    bytes type = 1;
+}
+
+message StartPoolReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+message StopPoolRequest {
+}
+
+message StopPoolReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+message RestartPoolWebServerRequest {
+}
+
+message RestartPoolWebServerReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+
+message GetPopRequest {
+    int32 block_num = 1;
+}
+
+message GetPopReply {
+    bool success = 1;
+    repeated Result results = 2;
+    int32 block_height = 3;
+    int32 version = 4;
+    bytes previous_block_hash = 5;
+    bytes second_previous_block_hash = 6;
+    bytes third_previous_block_hash = 7;
+    bytes merkle_root = 8;
+    int32 timestamp = 9;
+    int32 encoded_difficulty = 10;
+    sint32 nonce = 11;
+    bytes pop_miner_address = 12;
+    bytes full_pop = 13;
+    BitcoinBlockHeader last_known_block = 14;
+    repeated BitcoinBlockHeader last_known_block_context = 15;
+}
+
+message GetInfoRequest {
+}
+
+message GetDiagnosticInfoRequest {
+}
+
+message GetBalanceRequest {
+    repeated bytes addresses = 1;
+}
+
+message GetBalanceReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated AddressBalance confirmed = 3;
+    repeated Output unconfirmed = 4;
+}
+
+message SubmitPopRequest {
+    bytes endorsed_block_header = 1;
+    bytes bitcoin_transaction = 2;
+    bytes bitcoin_merkle_path_to_root = 3;
+    BitcoinBlockHeader bitcoin_block_header_of_proof = 4;
+    repeated BitcoinBlockHeader context_bitcoin_block_headers = 5;
+    bytes address = 6;
+}
+
+message PoPEndorsement {
+    bytes endorsed_block_header = 1;
+    bytes bitcoin_transaction = 2;
+    bytes bitcoin_merkle_path_to_root = 3;
+    BitcoinBlockHeader bitcoin_block_header_of_proof = 4;
+    bytes address = 5;
+}
+
+message GetEndorsementsOfBlockRequest {
+    BlockFilter filter = 1;
+}
+
+message GetEndorsementsOfBlockReply {
+    bool success = 1;
+    repeated PoPEndorsement endorsements = 2;
+}
+
+message SendCoinsRequest {
+    bytes source_address = 1;
+    repeated Output amounts = 2;
+}
+
+message SendCoinsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated bytes tx_ids = 3;
+}
+
+message SendAltChainEndorsementRequest {
+    bytes publication_data = 1;
+}
+
+message SendAltChainEndorsementReply {
+    bool success = 1;
+    repeated Result results = 2;
+    SignedTransaction transaction = 3;
+}
+
+message GetHistoryRequest {
+    repeated bytes addresses = 1;
+}
+
+message AddressHistory {
+    bytes address = 1;
+    int64 balance = 2;
+    int32 blocks_mined = 3;
+    repeated TransactionUnion confirmed_transactions = 4;
+    repeated TransactionUnion pending_transactions = 5;
+}
+
+message GetHistoryReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated AddressHistory addresses = 3;
+}
+
+message GetPeerInfoRequest {
+}
+
+message NodeHeight {
+    string peer = 1;
+    int32 height = 2;
+}
+
+message GetPeerInfoReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated Endpoint endpoints = 3;
+    repeated NodeInfo connected_nodes = 4;
+    repeated NodeInfo disconnected_nodes = 5;
+    repeated NodeInfo candidate_nodes = 6;
+    repeated NodeHeight node_heights = 7;
+}
+
+message GetBlockchainsRequest {
+}
+
+message GetBlockchainsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    int32 best_blockchain_length = 3;
+    int32 longest_blockchain_length = 4;
+}
+
+message SubmitBlocksRequest {
+    repeated Block blocks = 1;
+}
+
+message GetBlockTimesRequest {
+    int32 history_length = 1;
+}
+
+message GetBlockTimesReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated sint32 times = 3;
+}
+
+message StartSoloPoolRequest {
+	bytes address = 1;
+}
+
+message StartSoloPoolReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+message GetSignatureIndexRequest {
+    repeated bytes addresses = 1;
+}
+
+message SetDefaultAddressRequest {
+    bytes address = 1;
+}
+
+message AddressSignatureIndexes {
+    bytes address = 1;
+    int64 pool_index = 3;
+    int64 blockchain_index = 2;
+}
+
+message GetSignatureIndexReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated AddressSignatureIndexes indexes = 3;
+}
+
+message SetDefaultAddressReply {
+    bool success = 1;
+    repeated Result results = 2;
+}
+
+message GetTransactionsRequest {
+    int32 search_length = 1;
+    repeated bytes ids = 2;
+}
+
+message TransactionInfo {
+    int32 confirmations = 1;
+    Transaction transaction = 2;
+    int32 block_number = 3;
+    int32 timestamp = 4;
+    bytes endorsed_block_hash = 5;
+    bytes bitcoin_block_hash = 6;
+    bytes bitcoin_tx_id = 7;
+}
+
+message GetTransactionsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated TransactionInfo transactions = 3;
+}
+
+message SetTransactionFeeRequest {
+    int64 amount = 1;
+}
+
+message DumpPrivateKeyRequest {
+    bytes address = 1;
+}
+
+message DumpPrivateKeyReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes address = 3;
+    bytes private_key = 4;
+}
+
+message ImportPrivateKeyRequest {
+    bytes private_key = 1;
+}
+
+message ImportPrivateKeyReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes resultant_address = 3;
+}
+
+message GetLastBitcoinBlockRequest {
+}
+
+message GetLastBlockRequest {
+}
+
+message GetLastBitcoinBlockReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes header = 3;
+}
+
+message GetLastBlockReply {
+    bool success = 1;
+    repeated Result results = 2;
+    BlockHeader header = 3;
+}
+
+message ListBlocksSinceRequest {
+    bytes hash = 1;
+}
+
+message ListBlocksSinceReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated BlockHeader removed = 3;
+    repeated BlockHeader added = 4;
+}
+
+message SubmitTransactionsRequest {
+    repeated TransactionUnion transactions = 1;
+}
+
+message GetInfoReply {
+    bool success = 1;
+    repeated Result results = 2;
+    int32 number_of_blocks = 3;
+    BlockSummary last_block = 4;
+    AddressBalance default_address = 5;
+    int64 transaction_fee = 6;
+    int64 estimated_hashrate = 7;
+    fixed64 decoded_difficulty = 8;
+}
+
+message GetDiagnosticInfoReply {
+    bool success = 1;
+    repeated Result results = 2;
+
+    string user_language = 3;
+    string java_runtime_name = 4;
+    string sun_boot_library_path = 5;
+    string java_runtime_version = 6;
+    string java_specification_version = 7;
+    string os_name = 8;
+    string os_arch = 9;
+    string os_version = 10;
+    string memory_total_gb = 11;
+    string memory_max_gb = 12;
+    string processor_count = 13;
+    string processor_type = 14;
+    string working_directory = 15;
+    string datetime_now_utc = 16;
+
+    string nodecore_properties_source = 17;
+    repeated string nodecore_properties_values = 18;
+
+}
+
+message GetPendingTransactionsRequest {
+}
+
+message GetPendingTransactionsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated Transaction transactions = 3;
+}
+
+message GetNewAddressRequest {
+    int32 count = 1;
+}
+
+message GetNewAddressReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes address = 3;
+    repeated bytes additional_addresses = 4;
+}
+
+message ValidateAddressRequest {
+    bytes address = 1;
+}
+
+message ValidateAddressReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes address = 3;
+    bytes public_key = 4;
+    bool is_remote = 5;
+}
+
+message GenerateMultisigAddressRequest {
+    repeated bytes source_addresses = 1;
+    int32 signature_threshold_m = 2;
+}
+
+message GenerateMultisigAddressReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated bytes source_addresses = 3;
+    int32 signature_threshold_m = 4;
+    bytes multisig_address = 5;
+}
+
+message MakeUnsignedMultisigTxRequest {
+    bytes source_multisig_address = 1;
+    repeated Output amounts = 2;
+    int64 fee = 3;
+    bytes signature_index_string = 4;
+}
+
+message MakeUnsignedMultisigTxReply {
+    bool success = 1;
+    repeated Result results = 2;
+    int32 signature_threshold_m = 3;
+    int32 address_composition_count_n = 4;
+    UnsignedMultisigTransactionWithIndex unsigned_multisig_transaction_with_index = 5;
+    bytes txid = 6;
+    int64 signature_index = 7;
+}
+
+message SubmitMultisigTxRequest {
+    SignedMultisigTransaction multisig_transaction = 3;
+}
+
+message SubmitMultisigTxReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes txid = 3;
+    SignedMultisigTransaction signed_multisig_transaction = 4;
+}
+
+message SignMessageRequest {
+    bytes address = 1;
+    bytes message = 2;
+}
+
+message SignMessageReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes signed_message = 3;
+    bytes public_key = 4;
+}
+
+message GetBlockTemplateRequest {
+    string mode = 1;
+    repeated string capabilities = 2;
+}
+
+message CandidateTransaction {
+    int64 fee = 1;
+    int64 weight = 2;
+    bool required = 3;
+    bytes tx_id = 4;
+    repeated int32 depends = 5;
+    TransactionUnion transaction = 6;
+}
+
+message GetBlockTemplateReply {
+    bool success = 1;
+    repeated Result results = 2;
+    int64 target = 3;
+    int64 size_limit = 4;
+    int32 block_height = 5;
+    int64 coinbase_value = 6;
+    int32 minimum_timestamp = 7;
+    int32 current_timestamp = 8;
+    repeated string mutable = 9;
+    bytes previous_block_hash = 10;
+    bytes second_previous_block_hash = 11;
+    bytes third_previous_block_hash = 12;
+    bytes previous_ledger_hash = 13;
+    repeated CandidateTransaction transactions = 14;
+}
+
+message SetBanRequest {
+    enum Command {
+        ADD = 0;
+        REMOVE = 1;
+    }
+
+    Command command = 1;
+    string value = 2;
+    string reason = 3;
+    int32 expiry_timestamp = 4;
+}
+
+message SetAllowedRequest {
+    enum Command {
+        ADD = 0;
+        REMOVE = 1;
+    }
+
+    Command command = 1;
+    string value = 2;
+}
+
+message BlackListInfo {
+    enum Type {
+        ADDRESS = 0;
+        NETMASK = 1;
+        CIDR = 2;
+    }
+
+    int32 id = 1;
+    Type type = 2;
+    string value = 3;
+    string reason = 4;
+    int32 timestamp = 5;
+    int32 expiry_timestamp = 6;
+}
+
+message WhiteListInfo {
+    enum Type {
+        ADDRESS = 0;
+        NETMASK = 1;
+        CIDR = 2;
+    }
+
+    int32 id = 1;
+    Type type = 2;
+    string value = 3;
+    int32 timestamp = 4;
+}
+
+message ListBannedRequest {
+}
+
+message ListAllowedRequest {
+}
+
+message ListBannedReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated BlackListInfo entries = 3;
+}
+
+message ListAllowedReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated WhiteListInfo entries = 3;
+}
+
+message ListBannedMinersRequest {
+}
+
+message ListBannedMinersReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated string clients = 3;
+}
+
+message ClearBannedRequest {
+}
+
+message ClearBannedMinersRequest {
+}
+
+message ClearAllowedRequest {
+}
+
+message PingRequest{}
+
+message PingReply{}
+
+message GetBitcoinBlockIndexRequest {
+    bytes block_header = 1;
+    int32 search_length = 2;
+}
+
+message GetWalletTransactionsRequest {
+    enum Type {
+        LIST = 0;
+        QUERY = 1;
+    }
+    Type request_type = 1;
+    bytes address = 2;
+    WalletTransaction.Type transaction_type = 3;
+    TransactionMeta.Status status = 4;
+    NumericFilter amount_filter = 5;
+    NumericFilter timestamp_filter = 6;
+    Paging page = 7;
+}
+
+message GetWalletTransactionsReply {
+    enum CacheState {
+        UNKNOWN = 0;
+        BUILDING = 1;
+        CURRENT = 2;
+        ERRORED = 3;
+    }
+    Paging next = 1;
+    repeated WalletTransaction transactions = 2;
+    CacheState cache_state = 3;
+    string message = 4;
+    bool success = 5;
+    repeated Result results = 6;
+}
+
+message BlockchainStateInfo {
+    enum State {
+        LOADING = 0;
+        NORMAL = 1;
+        PAUSED = 3;
+        STALE = 4;
+        LOADED = 5;
+    }
+ State state = 1;
+}
+
+message OperatingStateInfo {
+    enum State {
+        STARTED = 0;
+        INITIALIZING = 1;
+        RUNNING = 2;
+        TERMINATING = 3;
+    }
+    State state = 1;
+}
+
+message NetworkStateInfo {
+    enum State {
+        DISCONNECTED = 0;
+        CONNECTED = 1;
+    }
+    State state = 1;
+}
+
+message GetStateInfoRequest {}
+
+message GetStateInfoReply {
+    enum WalletState {
+        DEFAULT = 0;
+        LOCKED = 1;
+        UNLOCKED = 2;
+    }
+    BlockchainStateInfo blockchain_state = 1;
+    OperatingStateInfo operating_state = 2;
+    NetworkStateInfo network_state = 3;
+    int32 connected_peer_count = 4;
+    string current_sync_peer = 5;
+    int32 network_height = 6;
+    int32 local_blockchain_height = 7;
+    bool success = 8;
+    repeated Result results = 9;
+    string network_version = 10;
+    string data_directory = 11;
+    string program_version = 12;
+    int64 nodecore_starttime = 13;
+    int32 wallet_cache_sync_height = 14;
+    WalletState wallet_state = 15;
+}
+
+message StopNodeCoreRequest {}
+
+message RefreshWalletCacheRequest {}
+
+message EncryptWalletRequest {
+    string passphrase = 1;
+}
+
+message DecryptWalletRequest {
+    string passphrase = 1;
+}
+
+message UnlockWalletRequest {
+    string passphrase = 1;
+}
+
+message LockWalletRequest {}
+
+message DrainAddressRequest {
+    bytes source_address = 1;
+    bytes destination_address = 2;
+}
+
+message DrainAddressReply {
+    bool success = 1;
+    repeated Result results = 2;
+    Transaction transaction = 3;
+}
+
+message BalanceUnlockEvent {
+    int32 block_height = 1;
+    int64 amount_unlocked = 2;
+    int64 locked_balance = 3;
+}
+
+message AddressBalanceSchedule {
+    bytes address = 1;
+    int64 unlock_balance = 2;
+    int64 locked_balance = 3;
+    int64 total_balance = 4;
+    repeated BalanceUnlockEvent schedule = 5;
+}
+
+message GetBalanceUnlockScheduleRequest {
+    repeated bytes addresses = 1;
+}
+
+message GetBalanceUnlockScheduleReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated AddressBalanceSchedule address_schedule = 3;
+}
+
+service Admin {
+    rpc GetPop(GetPopRequest) returns (GetPopReply) {}
+
+    rpc AddNode(NodeRequest) returns (ProtocolReply) {}
+
+    rpc SetBan(SetBanRequest) returns (ProtocolReply) {}
+
+    rpc GetInfo(GetInfoRequest) returns (GetInfoReply) {}
+
+    rpc GetDiagnosticInfo(GetDiagnosticInfoRequest) returns (GetDiagnosticInfoReply) {}
+
+    rpc RemoveNode(NodeRequest) returns (ProtocolReply) {}
+
+    rpc StopPool(StopPoolRequest) returns (StopPoolReply) {}
+
+    rpc SubmitPop(SubmitPopRequest) returns (ProtocolReply) {}
+
+    rpc SendCoins(SendCoinsRequest) returns (SendCoinsReply) {}
+
+    rpc SendAltChainEndorsement(SendAltChainEndorsementRequest) returns (SendAltChainEndorsementReply) {}
+
+    rpc GetBlocks(GetBlocksRequest) returns (GetBlocksReply) {}
+
+    rpc StartPool(StartPoolRequest) returns (StartPoolReply) {}
+
+    rpc RestartPoolWebServer(RestartPoolWebServerRequest) returns (RestartPoolWebServerReply) {}
+
+    rpc GetHistory(GetHistoryRequest) returns (GetHistoryReply) {}
+
+    rpc GetBalance(GetBalanceRequest) returns (GetBalanceReply) {}
+    
+    rpc SetAllowed(SetAllowedRequest) returns (ProtocolReply) {}
+
+    rpc ListBanned(ListBannedRequest) returns (ListBannedReply) {}
+
+    rpc ListBannedMiners(ListBannedMinersRequest) returns (ListBannedMinersReply) {}
+
+    rpc ClearBanned(ClearBannedRequest) returns (ProtocolReply) {}
+
+    rpc ClearBannedMiners(ClearBannedMinersRequest) returns (ProtocolReply) {}
+
+    rpc SubmitBlocks(SubmitBlocksRequest) returns (ProtocolReply) {}
+
+    rpc ClearAllowed(ClearAllowedRequest) returns (ProtocolReply) {}
+
+    rpc GetPeerInfo(GetPeerInfoRequest) returns (GetPeerInfoReply) {}
+
+    rpc SignMessage(SignMessageRequest) returns (SignMessageReply) {}
+
+    rpc ListAllowed(ListAllowedRequest) returns (ListAllowedReply) {}
+    
+    rpc BackupWallet(BackupWalletRequest) returns (BackupWalletReply) {}
+    
+    rpc ImportWallet(ImportWalletRequest) returns (ImportWalletReply) {}
+
+    rpc GetNewAddress(GetNewAddressRequest) returns (GetNewAddressReply) {}
+
+    rpc GetBlockTimes(GetBlockTimesRequest) returns (GetBlockTimesReply) {}
+	
+	rpc StartSoloPool(StartSoloPoolRequest) returns (StartSoloPoolReply) {}
+
+    rpc GetBlockchains(GetBlockchainsRequest) returns (GetBlockchainsReply) {}
+
+    rpc SetTransactionFee(SetTransactionFeeRequest) returns (ProtocolReply) {}
+	
+	rpc DumpPrivateKey(DumpPrivateKeyRequest) returns (DumpPrivateKeyReply) {}
+	
+	rpc ImportPrivateKey(ImportPrivateKeyRequest) returns (ImportPrivateKeyReply) {}
+
+    rpc SubmitTransactions(SubmitTransactionsRequest) returns (ProtocolReply) {}
+
+    rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsReply) {}
+
+    rpc ValidateAddress(ValidateAddressRequest) returns (ValidateAddressReply) {}
+
+    rpc GenerateMultisigAddress(GenerateMultisigAddressRequest) returns (GenerateMultisigAddressReply) {}
+
+    rpc MakeUnsignedMultisigTx(MakeUnsignedMultisigTxRequest) returns (MakeUnsignedMultisigTxReply) {}
+
+    rpc SubmitMultisigTx(SubmitMultisigTxRequest) returns (SubmitMultisigTxReply) {}
+    
+    rpc GetBitcoinBlockIndex(GetBitcoinBlockIndexRequest) returns (ProtocolReply){}
+
+    rpc GetBlockTemplate(GetBlockTemplateRequest) returns (GetBlockTemplateReply) {}
+
+    rpc GetSignatureIndex(GetSignatureIndexRequest) returns (GetSignatureIndexReply) {}
+	
+	rpc SetDefaultAddress(SetDefaultAddressRequest) returns (SetDefaultAddressReply) {}
+
+    rpc GetLastBitcoinBlock(GetLastBitcoinBlockRequest) returns (GetLastBitcoinBlockReply) {}
+    
+    rpc GetProtectedChildren(GetProtectedChildrenRequest) returns (GetProtectedChildrenReply) {}
+    
+    rpc GetProtectingParents(GetProtectingParentsRequest) returns (GetProtectingParentsReply) {}
+    
+    rpc GetWalletTransactions(GetWalletTransactionsRequest) returns (GetWalletTransactionsReply) {}
+    
+    rpc GetEndorsementsOfBlock(GetEndorsementsOfBlockRequest) returns (GetEndorsementsOfBlockReply) {}
+
+    rpc GetPendingTransactions(GetPendingTransactionsRequest) returns (GetPendingTransactionsReply) {}
+
+    rpc GetPoPEndorsementsInfo(GetPoPEndorsementsInfoRequest) returns (GetPoPEndorsementsInfoReply) {}
+
+    rpc Ping(PingRequest) returns (PingReply) {}
+
+    rpc GetStateInfo(GetStateInfoRequest) returns (GetStateInfoReply) {}
+
+    rpc GetLastBlock(GetLastBlockRequest) returns (GetLastBlockReply) {}
+
+    rpc ListBlocksSince(ListBlocksSinceRequest) returns (ListBlocksSinceReply) {}
+
+    rpc TroubleshootPoPTransactions(TroubleshootPoPTransactionsRequest) returns (TroubleshootPoPTransactionsReply) {}
+
+    rpc StopNodeCore(StopNodeCoreRequest) returns (ProtocolReply) {}
+
+    rpc RefreshWalletCache(RefreshWalletCacheRequest) returns (ProtocolReply) {}
+
+    rpc EncryptWallet(EncryptWalletRequest) returns (ProtocolReply) {}
+
+    rpc DecryptWallet(DecryptWalletRequest) returns (ProtocolReply) {}
+
+    rpc UnlockWallet(UnlockWalletRequest) returns (ProtocolReply) {}
+
+    rpc LockWallet(LockWalletRequest) returns (ProtocolReply) {}
+
+    rpc DrainAddress(DrainAddressRequest) returns (DrainAddressReply) {}
+    
+    rpc GetBalanceUnlockSchedule(GetBalanceUnlockScheduleRequest) returns (GetBalanceUnlockScheduleReply) {}
+}

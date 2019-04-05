@@ -1,0 +1,103 @@
+plugins {
+    id "java"
+    id "idea"
+    id "java-library"
+    id "maven-publish"
+    id "com.google.protobuf"
+    id "com.jfrog.artifactory"
+}
+
+dependencies {
+    compile project(':veriblock-core')
+    compile group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.19.0'
+    compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.19.0'
+    compile group: 'io.grpc', name: 'grpc-stub', version: '1.19.0'
+}
+
+protobuf {
+    generatedFilesBaseDir = "$projectDir/src/generated"
+
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.6.1"
+    }
+
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.19.0'
+        }
+    }
+
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                grpc {
+                    outputSubDir = 'java'
+                }
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        proto {}
+        java {
+            srcDir "$projectDir/src/main"
+            srcDir "$projectDir/src/generated/main"
+        }
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Name': 'nodecore/api/grpc',
+                'Specification-Title': 'VeriBlock NodeCore gRPC API',
+                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Vendor': 'VeriBlock Foundation',
+                'Implementation-Title': 'nodecore.api.grpc',
+                'Implementation-Version': version,
+                'Implementation-Vendor': 'VeriBlock Foundation'
+    }
+}
+
+artifactory {
+    contextUrl = artifactory_url
+    publish {
+        repository {
+            repoKey = artifactory_repoKey
+            username = artifactory_user
+            password = artifactory_password
+            maven = true
+        }
+
+        defaults {
+            publications('mavenJava')
+            publishArtifacts = true
+        }
+    }
+
+    resolve {
+        repoKey = 'jcenter'
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'veriblock'
+            artifactId 'nodecore-grpc'
+            version this.version
+            from components.java
+        }
+    }
+}
+
+clean {
+    delete 'src/generated'
+}
+
+publishToMavenLocal {
+    doFirst {
+        println "Publishing package to local maven repo..."
+    }
+}

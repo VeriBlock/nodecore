@@ -1,0 +1,100 @@
+# A general .gitignore for Gradle built Java projects that
+# may use IntelliJ or Eclipse as an IDE.
+
+# built application files for Android development
+*.apk
+*.ap_
+
+# Ignition Module files
+*.modl
+
+# files for the dex VM
+*.dex
+
+# Ignore Java class files
+*.class
+
+# Gradle generated files
+bin/
+gen/
+
+# Local configuration file used for proj. specific settings (sdk paths, etc)
+local.properties
+
+# Ignore Eclipse project files
+.classpath
+.project
+
+### JetBrains ###
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
+# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+
+# User-specific stuff:
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+
+# Sensitive or high-churn files:
+.idea/dataSources.ids
+.idea/dataSources.xml
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+.idea/preferred-vcs.xml
+
+# Gradle:
+.idea/gradle.xml
+.idea/libraries
+.idea/modules
+.idea/modules.xml
+
+# Mongo Explorer plugin:
+.idea/mongoSettings.xml
+
+## File-based project format:
+*.iws
+
+# Gradle related files and caches
+.gradletasknamecache
+.gradle/
+build/
+alpha/
+testnet/
+unit-tests/
+
+*.dat
+*.dat-journal
+*.dat-shm
+*.dat-wal
+*.bdt
+poolshares.txt
+poolshares-normal.txt
+poolshares-solo.txt
+*.wallet
+*.spvchain
+*.state
+
+\.vscode/
+
+*.orig
+*.log
+status_log.txt
+classes/
+out/
+generated/
+nodecore.properties
+ncpop.properties
+x.txt
+testledgerout.txt
+*.csh
+*.pem
+*.crt
+*.tmp
+
+.DS_Store
+scripts/certs/
+
+certs/

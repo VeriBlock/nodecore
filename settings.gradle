@@ -1,0 +1,5 @@
+include 'veriblock-core'
+include 'nodecore-grpc'
+include 'nodecore-ucp'
+
+rootProject.name = 'nodecore-all'
