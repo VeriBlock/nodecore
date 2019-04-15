@@ -7,6 +7,7 @@
 
 package org.veriblock.core.utilities;
 
+import org.veriblock.core.Context;
 import org.veriblock.core.SharedConstants;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.crypto.Crypto;
@@ -177,7 +178,7 @@ public final class BlockUtility {
             return false;
         }
 
-        return embeddedDifficulty.compareTo(SharedConstants.MINIMUM_POW_DIFFICULTY) >= 0;
+        return embeddedDifficulty.compareTo(Context.get().getNetworkParameters().getMinimumDifficulty()) >= 0;
     }
 
     /**

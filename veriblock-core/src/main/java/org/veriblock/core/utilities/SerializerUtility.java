@@ -40,7 +40,12 @@ public class SerializerUtility {
         stream.write(value);
     }
 
-    public static void serializeRegularTransactionToStream(OutputStream stream, byte transactionType, TransactionAddress sourceAddress, TransactionAmount sourceAmount, List<Output> outputs, long signatureIndex, byte[] data) throws IOException {
+    public static void serializeRegularTransactionToStream(OutputStream stream, Byte magicByte, byte transactionType, TransactionAddress sourceAddress, TransactionAmount sourceAmount, List<Output> outputs, long signatureIndex, byte[] data) throws IOException {
+        // Magic byte is used on non-mainnet networks as replay protection
+        if (magicByte != null) {
+            stream.write(magicByte);
+        }
+
         // Write type
         stream.write(transactionType);
 

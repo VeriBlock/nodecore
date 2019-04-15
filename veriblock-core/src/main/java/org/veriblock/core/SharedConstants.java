@@ -14,8 +14,6 @@ public final class SharedConstants {
             "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
             16);
 
-    public static final BigInteger MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900_000_000_000L);
-
     /* The starting character makes addresses easy for humans to recognize. 'V' for VeriBlock. */
     public static final char STARTING_CHAR = 'V';
 

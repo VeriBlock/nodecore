@@ -8,12 +8,20 @@
 package org.veriblock.core.utilities;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.veriblock.core.Context;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
+import org.veriblock.core.params.AlphaNetParameters;
 import org.veriblock.core.types.BitString;
 
 public class BitcoinUtilityTests {
+    @BeforeClass
+    public static void setupFixture() {
+        Context.create(new AlphaNetParameters());
+    }
+
     @Test
     public void embeddedDataUtilityDescriptorBeforeChunks() {
         String transactionBytes = "927A59"; // Magic bytes
@@ -86,7 +94,6 @@ public class BitcoinUtilityTests {
         embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
-
 
     @Test
     public void embeddedDataUtilityDescriptorBeforeChunksWithIgnoredMalformattedDescriptor() {

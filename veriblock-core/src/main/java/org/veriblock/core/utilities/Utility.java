@@ -16,6 +16,7 @@ import org.veriblock.core.SharedConstants;
 import java.io.File;
 import java.io.PrintWriter;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -991,5 +992,19 @@ public class Utility {
         }
 
         return Long.parseLong(toConvert);
+    }
+
+    public static byte[] stringToBytes(String input) {
+        return input.getBytes(StandardCharsets.UTF_8);
+    }
+
+    public static String bytesToString(byte[] input) {
+        return new String(input, StandardCharsets.UTF_8);
+    }
+
+    public static String bytesToString(byte[] input, String defaultValue) {
+        if (input == null || input.length == 0) return defaultValue;
+
+        return bytesToString(input);
     }
 }

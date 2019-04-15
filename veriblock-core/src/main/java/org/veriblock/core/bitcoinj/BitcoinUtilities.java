@@ -7,8 +7,10 @@
 
 package org.veriblock.core.bitcoinj;
 
+import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.TransactionEmbeddedDataUtility;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 
@@ -114,5 +116,36 @@ public class BitcoinUtilities {
         } catch (Exception e) {
             return null;
         }
+    }
+    /**
+     * <p>
+     * The pseudo-constructor which does the heavy-lifting behind constructing an SPV Bitcoin block.
+     *
+     * @param version              The version integer [4 bytes]
+     * @param previousBlockHashHex The hex representation of the previous Bitcoin block [32 bytes]
+     * @param merkleRootHashHex    The hex representation of this block's Merkle root [32 bytes]
+     * @param timestamp            The (UNIX-epoch-style) timestamp [4 bytes]
+     * @param bits                 The nBits representation of the target, similar to scientific notation ('inverse' of Bitcoin difficulty) [4 bytes]
+     * @param nonce                The winning nonce which, in the context of the rest of the header data (all above fields) creates a valid PoW solution [4 bytes]
+     */
+    public static byte[] constructBitcoinBlockHeader(
+            int version,
+            String previousBlockHashHex,
+            String merkleRootHashHex,
+            int timestamp,
+            int bits,
+            int nonce) {
+        /* Space for the 80-byte header */
+        byte[] header = new byte[4 + 32 + 32 + 4 + 4 + 4];
+
+        /* Copy the header data, in order, into the 80-byte header */
+        System.arraycopy(Utility.flip(Utility.intToByteArray(version)), 0, header, 0, 4);
+        System.arraycopy(Utility.flip(Utility.hexToBytes(previousBlockHashHex)), 0, header, 4, 32);
+        System.arraycopy(Utility.flip(Utility.hexToBytes(merkleRootHashHex)), 0, header, 36, 32);
+        System.arraycopy(Utility.flip(Utility.intToByteArray(timestamp)), 0, header, 68, 4);
+        System.arraycopy(Utility.flip(Utility.intToByteArray(bits)), 0, header, 72, 4);
+        System.arraycopy(Utility.flip(Utility.longToByteArray(nonce)), 0, header, 76, 4);
+
+        return header;
     }
 }

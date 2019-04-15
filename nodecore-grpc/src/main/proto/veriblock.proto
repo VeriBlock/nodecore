@@ -1283,6 +1283,33 @@ message GetBalanceUnlockScheduleReply {
     repeated AddressBalanceSchedule address_schedule = 3;
 }
 
+message PoolConfiguration {
+    bool solo = 1;
+    string type = 2;
+    string pool_target = 3;
+    string pool_address = 4;
+    string operator_address = 5;
+    double operator_fee = 6;
+    string coinbase_comment = 7;
+}
+
+message PoolStats {
+    int32 current_round = 1;
+    int32 mining_block_number = 2;
+    int32 last_block_number = 3;
+    string recent_hash_rate = 4;
+}
+
+message GetPoolStateRequest {}
+
+message GetPoolStateReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bool running = 3;
+    PoolConfiguration configuration = 4;
+    PoolStats stats = 5;
+}
+
 service Admin {
     rpc GetPop(GetPopRequest) returns (GetPopReply) {}
 
@@ -1411,4 +1438,6 @@ service Admin {
     rpc DrainAddress(DrainAddressRequest) returns (DrainAddressReply) {}
     
     rpc GetBalanceUnlockSchedule(GetBalanceUnlockScheduleRequest) returns (GetBalanceUnlockScheduleReply) {}
+
+    rpc GetPoolState(GetPoolStateRequest) returns (GetPoolStateReply) {}
 }
