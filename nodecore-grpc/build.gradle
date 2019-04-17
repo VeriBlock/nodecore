@@ -9,9 +9,9 @@ plugins {
 
 dependencies {
     compile project(':veriblock-core')
-    compile group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.19.0'
-    compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.19.0'
-    compile group: 'io.grpc', name: 'grpc-stub', version: '1.19.0'
+    compile group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.15.1'
+    compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.15.1'
+    compile group: 'io.grpc', name: 'grpc-stub', version: '1.15.1'
 }
 
 protobuf {
