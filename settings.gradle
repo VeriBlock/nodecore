@@ -1,5 +1,7 @@
 include 'veriblock-core'
 include 'nodecore-grpc'
 include 'nodecore-ucp'
+include 'nodecore-cli'
+include 'nodecore-miners-pow'
 
 rootProject.name = 'nodecore-all'
