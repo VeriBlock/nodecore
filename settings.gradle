@@ -3,5 +3,6 @@ include 'nodecore-grpc'
 include 'nodecore-ucp'
 include 'nodecore-cli'
 include 'nodecore-miners-pow'
+include 'nodecore-miners-pop'
 
 rootProject.name = 'nodecore-all'

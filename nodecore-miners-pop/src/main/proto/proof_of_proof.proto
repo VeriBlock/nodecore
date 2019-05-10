@@ -1,0 +1,35 @@
+// VeriBlock NodeCore
+// Copyright 2017-2018 VeriBlock, Inc.
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
+syntax = "proto3";
+
+option java_package = "nodecore.miners.pop.storage";
+
+message MiningInstruction {
+    bytes publication_data = 1;
+    bytes endorsed_block_header = 2;
+    bytes last_bitcoin_block = 3;
+    bytes miner_address = 4;
+    repeated bytes bitcoin_context_at_endorsed = 5;
+}
+
+message OperationState {
+    string id = 1;
+    string status = 2;
+    string action = 3;
+    int32 endorsed_block_number = 4;
+    MiningInstruction mining_instructions = 5;
+    bytes transaction = 6;
+    string bitcoin_tx_id = 7;
+    bytes block_of_proof = 8;
+    repeated bytes bitcoin_context = 9;
+    string merkle_path = 10;
+    repeated bytes alternate_blocks_of_proof = 11;
+    string pop_tx_id = 12;
+    string message = 13;
+    string transaction_status = 14;
+}
