@@ -54,7 +54,7 @@ public class MinerThread extends Thread {
 
         while (shouldContinue) {
             synchronized (lock) {
-                workingTimestamp = (int)Instant.now().getEpochSecond() + localTimeOffset;
+                workingTimestamp = (int)Instant.now().getEpochSecond();// + localTimeOffset;
 
                 if (nonce < 0 || nonce + NUM_HASHES_PER_CYCLE * incrementOffset < 0) {
                     nonce = threadNum;
