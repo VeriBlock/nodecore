@@ -278,10 +278,20 @@ public class AdminServiceClient implements AdminService {
     public VeriBlockMessages.GetWalletTransactionsReply getWalletTransactions(VeriBlockMessages.GetWalletTransactionsRequest request) {
         return blockingStub.getWalletTransactions(request);
     }
-	
+
     @Override
     public VeriBlockMessages.PingReply connect() {
         return blockingStub.ping(VeriBlockMessages.PingRequest.getDefaultInstance());
+    }
+
+    @Override
+    public VeriBlockMessages.ProtocolReply clearBanned(VeriBlockMessages.ClearBannedRequest request) {
+        return blockingStub.clearBanned(request);
+    }
+
+    @Override
+    public VeriBlockMessages.ListBannedReply listBanned(VeriBlockMessages.ListBannedRequest request) {
+        return blockingStub.listBanned(request);
     }
 
     @Override

@@ -106,6 +106,10 @@ public interface AdminService {
 
     VeriBlockMessages.TroubleshootPoPTransactionsReply troubleshootPoPTransactions(VeriBlockMessages.TroubleshootPoPTransactionsRequest request);
 
+    VeriBlockMessages.ProtocolReply clearBanned(VeriBlockMessages.ClearBannedRequest request);
+
+    VeriBlockMessages.ListBannedReply listBanned(VeriBlockMessages.ListBannedRequest request);
+
     VeriBlockMessages.ProtocolReply clearBannedMiners(VeriBlockMessages.ClearBannedMinersRequest request);
 
     VeriBlockMessages.ListBannedMinersReply listBannedMiners(VeriBlockMessages.ListBannedMinersRequest request);
