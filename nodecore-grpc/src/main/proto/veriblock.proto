@@ -20,6 +20,7 @@ extend google.protobuf.FieldOptions {
 
 option java_package = "nodecore.api.grpc";
 option java_outer_classname = "VeriBlockMessages";
+option java_multiple_files = true;
 
 message AddressBalance {
     bytes address = 1 [(address_encoded)=true];
