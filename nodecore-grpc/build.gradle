@@ -42,8 +42,8 @@ sourceSets {
     main {
         proto {}
         java {
-            srcDir "$projectDir/src/main"
-            srcDir "$projectDir/src/generated/main"
+            srcDir "$projectDir/src/main/java"
+            srcDir "$projectDir/src/generated/main/java"
         }
     }
 }
