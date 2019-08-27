@@ -7,14 +7,14 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Block;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BlocksPayload {
-    public BlocksPayload(final List<VeriBlockMessages.Block> list) {
-        for (final VeriBlockMessages.Block block : list)
+    public BlocksPayload(final List<Block> list) {
+        for (final Block block : list)
             blocks.add(new BlockInfo(block));
     }
 

@@ -8,10 +8,10 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetStateInfoReply;
 
 public class GetStateInfoPayload {
-    public GetStateInfoPayload(final VeriBlockMessages.GetStateInfoReply reply) {
+    public GetStateInfoPayload(final GetStateInfoReply reply) {
         blockchainState = reply.getBlockchainState().getState().name();
         operatingState = reply.getOperatingState().getState().name();
         networkState = reply.getNetworkState().getState().name();

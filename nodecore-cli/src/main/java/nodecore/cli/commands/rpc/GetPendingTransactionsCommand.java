@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPendingTransactionsReply;
+import nodecore.api.grpc.GetPendingTransactionsRequest;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.TransactionInfo;
@@ -41,9 +42,9 @@ public class GetPendingTransactionsCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.GetPendingTransactionsReply reply = context
+            GetPendingTransactionsReply reply = context
                     .adminService()
-                    .getPendingTransactions(VeriBlockMessages.GetPendingTransactionsRequest.newBuilder().build());
+                    .getPendingTransactions(GetPendingTransactionsRequest.newBuilder().build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -63,7 +64,7 @@ public class GetPendingTransactionsCommand implements Command {
                 ));
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

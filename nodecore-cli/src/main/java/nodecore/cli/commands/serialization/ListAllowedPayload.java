@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ListAllowedReply;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,7 +18,7 @@ public class ListAllowedPayload {
     @SerializedName("allowed")
     public List<WhitelistInfo> allowed;
 
-    public ListAllowedPayload(final VeriBlockMessages.ListAllowedReply reply) {
+    public ListAllowedPayload(final ListAllowedReply reply) {
         allowed = reply.getEntriesList().stream().map(info -> new WhitelistInfo(info)).collect(Collectors.toList());
     }
 }

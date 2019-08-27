@@ -9,7 +9,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Output;
+import nodecore.api.grpc.SendCoinsReply;
+import nodecore.api.grpc.SendCoinsRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -49,9 +51,9 @@ public class SendCommand implements Command {
         String sourceAddress = context.getParameter("sourceAddress");
 
         try {
-            VeriBlockMessages.SendCoinsRequest.Builder request = VeriBlockMessages.SendCoinsRequest.newBuilder();
+            SendCoinsRequest.Builder request = SendCoinsRequest.newBuilder();
             if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
-                request.addAmounts(VeriBlockMessages.Output.newBuilder()
+                request.addAmounts(Output.newBuilder()
                         .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
                         .setAmount(atomicAmount));
             } else {
@@ -64,7 +66,7 @@ public class SendCommand implements Command {
                 request.setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress));
             }
 
-            VeriBlockMessages.SendCoinsReply reply = context
+            SendCoinsReply reply = context
                     .adminService()
                     .sendCoins(request.build());
             if (!reply.getSuccess()) {
@@ -81,7 +83,7 @@ public class SendCommand implements Command {
                         GetBalanceCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

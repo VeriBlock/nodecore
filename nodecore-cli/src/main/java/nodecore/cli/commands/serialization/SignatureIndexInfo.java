@@ -8,11 +8,11 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressSignatureIndexes;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 
 public class SignatureIndexInfo {
-    public SignatureIndexInfo(final VeriBlockMessages.AddressSignatureIndexes indexes) {
+    public SignatureIndexInfo(final AddressSignatureIndexes indexes) {
         poolIndex = indexes.getPoolIndex();
         blockchainIndex = indexes.getBlockchainIndex();
         address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(indexes.getAddress());

@@ -7,14 +7,15 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressSignatureIndexes;
+import nodecore.api.grpc.GetSignatureIndexReply;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SignatureIndexPayload {
-    public SignatureIndexPayload(final VeriBlockMessages.GetSignatureIndexReply reply) {
-        for (final VeriBlockMessages.AddressSignatureIndexes indexes : reply.getIndexesList())
+    public SignatureIndexPayload(final GetSignatureIndexReply reply) {
+        for (final AddressSignatureIndexes indexes : reply.getIndexesList())
             addresses.add(new SignatureIndexInfo(indexes));
     }
 

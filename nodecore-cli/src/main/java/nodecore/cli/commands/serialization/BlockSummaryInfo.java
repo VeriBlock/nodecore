@@ -8,12 +8,12 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BlockSummary;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class BlockSummaryInfo {
-    public BlockSummaryInfo(final VeriBlockMessages.BlockSummary block) {
+    public BlockSummaryInfo(final BlockSummary block) {
         hash = ByteStringUtility.byteStringToHex(block.getHash());
         number = block.getNumber();
         version = (short)block.getVersion();

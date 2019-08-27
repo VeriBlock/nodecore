@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ProtocolReply;
+import nodecore.api.grpc.SetAllowedRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -42,10 +43,10 @@ public class RemoveAllowedCommand implements Command {
 
         String value = context.getParameter("address");
         try {
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
-                    .setAllowed(VeriBlockMessages.SetAllowedRequest.newBuilder()
-                            .setCommand(VeriBlockMessages.SetAllowedRequest.Command.REMOVE)
+                    .setAllowed(SetAllowedRequest.newBuilder()
+                            .setCommand(SetAllowedRequest.Command.REMOVE)
                             .setValue(value)
                             .build());
             if (!reply.getSuccess()) {
@@ -56,7 +57,7 @@ public class RemoveAllowedCommand implements Command {
                 temp.payload = new EmptyPayload();
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

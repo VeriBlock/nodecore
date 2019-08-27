@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.DumpPrivateKeyReply;
+import nodecore.api.grpc.DumpPrivateKeyRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -45,11 +46,11 @@ public class DumpPrivateKeyCommand implements Command {
 
         try {
             String address = context.getParameter("address");
-            VeriBlockMessages.DumpPrivateKeyReply reply;
+            DumpPrivateKeyReply reply;
 
             reply = context
                     .adminService()
-                    .dumpPrivateKey(VeriBlockMessages.DumpPrivateKeyRequest.newBuilder()
+                    .dumpPrivateKey(DumpPrivateKeyRequest.newBuilder()
                             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                             .build());
 
@@ -70,7 +71,7 @@ public class DumpPrivateKeyCommand implements Command {
                         ImportWalletCommand.class,
                         ImportPrivateKeyCommand.class));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

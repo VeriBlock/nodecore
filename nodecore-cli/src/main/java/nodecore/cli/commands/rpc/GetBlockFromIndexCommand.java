@@ -9,7 +9,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BlockFilter;
+import nodecore.api.grpc.GetBlocksReply;
+import nodecore.api.grpc.GetBlocksRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -43,9 +45,9 @@ public class GetBlockFromIndexCommand implements Command {
 
         int index = context.getParameter("blockIndex");
         try {
-            VeriBlockMessages.GetBlocksRequest.Builder requestBuilder = VeriBlockMessages.GetBlocksRequest.newBuilder();
-            requestBuilder.addFilters(VeriBlockMessages.BlockFilter.newBuilder().setIndex(index));
-            VeriBlockMessages.GetBlocksReply reply = context.adminService().getBlocks(requestBuilder.build());
+            GetBlocksRequest.Builder requestBuilder = GetBlocksRequest.newBuilder();
+            requestBuilder.addFilters(BlockFilter.newBuilder().setIndex(index));
+            GetBlocksReply reply = context.adminService().getBlocks(requestBuilder.build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -60,7 +62,7 @@ public class GetBlockFromIndexCommand implements Command {
                         GetTransactionCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

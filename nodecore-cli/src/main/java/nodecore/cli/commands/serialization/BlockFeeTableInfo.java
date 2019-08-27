@@ -8,14 +8,14 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BlockFeeTable;
 import org.veriblock.core.utilities.Utility;
 
 public class BlockFeeTableInfo {
     @SerializedName("pop_fee_share")
     public String popFeeShare;
 
-    public BlockFeeTableInfo(final VeriBlockMessages.BlockFeeTable message) {
+    public BlockFeeTableInfo(final BlockFeeTable message) {
         this.popFeeShare = Utility.formatAtomicLongWithDecimal(message.getPopFeeShare());
     }
 }

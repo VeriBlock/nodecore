@@ -11,16 +11,15 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import io.grpc.*;
-import nodecore.api.grpc.VeriBlockMessages;
+import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
+import nodecore.api.grpc.*;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.contracts.*;
 import nodecore.miners.pop.contracts.PoPEndorsementInfo;
 import nodecore.miners.pop.contracts.Result;
+import nodecore.miners.pop.contracts.*;
 import nodecore.miners.pop.events.*;
-import nodecore.api.grpc.AdminGrpc;
-import nodecore.api.grpc.VeriBlockMessages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +130,7 @@ public class DefaultNodeCoreService implements NodeCoreService {
             result.setSuccess(false);
 
             StringBuilder message = new StringBuilder();
-            for (VeriBlockMessages.Result r : reply.getResultsList()) {
+            for (nodecore.api.grpc.Result r : reply.getResultsList()) {
                 if (r.getMessage() != null) {
                     message.append(r.getMessage()).append("\n");
                 }
@@ -230,7 +229,7 @@ public class DefaultNodeCoreService implements NodeCoreService {
         if (!protocolReply.getSuccess()) {
             result.fail();
         }
-        for (VeriBlockMessages.Result r : protocolReply.getResultsList()) {
+        for (nodecore.api.grpc.Result r : protocolReply.getResultsList()) {
             result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         }
 
@@ -246,7 +245,7 @@ public class DefaultNodeCoreService implements NodeCoreService {
         if (!protocolReply.getSuccess()) {
             result.fail();
         }
-        for (VeriBlockMessages.Result r : protocolReply.getResultsList()) {
+        for (nodecore.api.grpc.Result r : protocolReply.getResultsList()) {
             result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         }
 

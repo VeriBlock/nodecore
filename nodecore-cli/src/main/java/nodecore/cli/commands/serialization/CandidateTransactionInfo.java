@@ -8,14 +8,14 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.CandidateTransaction;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CandidateTransactionInfo {
-    public CandidateTransactionInfo(final VeriBlockMessages.CandidateTransaction candidate) {
+    public CandidateTransactionInfo(final CandidateTransaction candidate) {
         fee = candidate.getFee();
         weight = candidate.getWeight();
         depends = candidate.getDependsList();

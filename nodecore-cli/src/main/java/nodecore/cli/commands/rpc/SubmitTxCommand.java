@@ -9,7 +9,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ProtocolReply;
+import nodecore.api.grpc.SubmitTransactionsRequest;
+import nodecore.api.grpc.TransactionUnion;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -42,11 +44,11 @@ public class SubmitTxCommand implements Command {
 
         String rawTransaction = context.getParameter("rawTransaction");
         try {
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
-                    .submitTransactions(VeriBlockMessages.SubmitTransactionsRequest
+                    .submitTransactions(SubmitTransactionsRequest
                             .newBuilder()
-                            .addTransactions(VeriBlockMessages.TransactionUnion.parseFrom(Utility.hexToBytes(rawTransaction)))
+                            .addTransactions(TransactionUnion.parseFrom(Utility.hexToBytes(rawTransaction)))
                             .build());
             if (!reply.getSuccess()) {
                 result.fail();
@@ -57,7 +59,7 @@ public class SubmitTxCommand implements Command {
 
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

@@ -10,7 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.StartPoolReply;
+import nodecore.api.grpc.StartPoolRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -44,7 +45,7 @@ public class StartPoolCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.StartPoolRequest.Builder builder = VeriBlockMessages.StartPoolRequest.newBuilder();
+            StartPoolRequest.Builder builder = StartPoolRequest.newBuilder();
             String type = context.getParameter("type");
 
             try {
@@ -54,7 +55,7 @@ public class StartPoolCommand implements Command {
             }
 
 
-            VeriBlockMessages.StartPoolReply reply = context
+            StartPoolReply reply = context
                     .adminService()
                     .startPool(builder.build());
             if (!reply.getSuccess()) {
@@ -82,7 +83,7 @@ public class StartPoolCommand implements Command {
                         GetBalanceCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

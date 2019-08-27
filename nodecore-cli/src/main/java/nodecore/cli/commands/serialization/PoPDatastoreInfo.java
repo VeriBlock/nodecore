@@ -7,10 +7,10 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.PoPDatastore;
 
 public class PoPDatastoreInfo {
-    public PoPDatastoreInfo(final VeriBlockMessages.PoPDatastore poPDatastore)
+    public PoPDatastoreInfo(final PoPDatastore poPDatastore)
     {
         //TODO: Implement
     }

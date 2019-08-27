@@ -10,7 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.MakeUnsignedMultisigTxReply;
+import nodecore.api.grpc.MakeUnsignedMultisigTxRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -52,11 +53,11 @@ public class MakeUnsignedMultisigTxCommand implements Command {
             String destinationAddress = context.getParameter("destinationAddress");
             String sourceAddress = context.getParameter("sourceAddress");
 
-            VeriBlockMessages.MakeUnsignedMultisigTxRequest.Builder requestBuilder = VeriBlockMessages.MakeUnsignedMultisigTxRequest.newBuilder();
+            MakeUnsignedMultisigTxRequest.Builder requestBuilder = MakeUnsignedMultisigTxRequest.newBuilder();
 
             requestBuilder.setSourceMultisigAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress));
 
-            requestBuilder.addAmounts(VeriBlockMessages.Output.newBuilder()
+            requestBuilder.addAmounts(nodecore.api.grpc.Output.newBuilder()
                     .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
                     .setAmount(atomicAmount));
 
@@ -70,7 +71,7 @@ public class MakeUnsignedMultisigTxCommand implements Command {
                 requestBuilder.setSignatureIndexString(ByteString.copyFrom(("" + signatureIndex).getBytes()));
             }
 
-            VeriBlockMessages.MakeUnsignedMultisigTxReply reply = context
+            MakeUnsignedMultisigTxReply reply = context
                     .adminService()
                     .makeUnsignedMultisigTx(requestBuilder.build());
 
@@ -90,7 +91,7 @@ public class MakeUnsignedMultisigTxCommand implements Command {
                         SubmitMultisigTxCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

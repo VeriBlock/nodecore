@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetNewAddressReply;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class NewAddressPayload {
     @SerializedName("additional_address")
     public List<String> additionalAddresses;
 
-    public NewAddressPayload(final VeriBlockMessages.GetNewAddressReply reply) {
+    public NewAddressPayload(final GetNewAddressReply reply) {
         address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getAddress());
         if (reply.getAdditionalAddressesCount() > 0) {
             additionalAddresses = new ArrayList<>(reply.getAdditionalAddressesCount());

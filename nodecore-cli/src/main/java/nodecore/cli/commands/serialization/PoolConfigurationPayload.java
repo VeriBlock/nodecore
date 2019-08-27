@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.PoolConfiguration;
 
 public class PoolConfigurationPayload {
     public boolean solo;
@@ -25,7 +25,7 @@ public class PoolConfigurationPayload {
     @SerializedName("coinbase_comment")
     public String coinbaseComment;
 
-    public PoolConfigurationPayload(VeriBlockMessages.PoolConfiguration message) {
+    public PoolConfigurationPayload(PoolConfiguration message) {
         this.solo = message.getSolo();
         this.type = message.getType();
         this.poolTarget = message.getPoolTarget();

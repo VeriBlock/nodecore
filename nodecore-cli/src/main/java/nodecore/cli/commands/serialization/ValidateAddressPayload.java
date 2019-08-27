@@ -8,12 +8,12 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ValidateAddressReply;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class ValidateAddressPayload {
-    public ValidateAddressPayload(final VeriBlockMessages.ValidateAddressReply reply) {
+    public ValidateAddressPayload(final ValidateAddressReply reply) {
         isRemote = reply.getIsRemote();
         address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getAddress());
         publicKey = ByteStringUtility.byteStringToHex(reply.getPublicKey());

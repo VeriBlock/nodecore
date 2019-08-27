@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.StopPoolReply;
+import nodecore.api.grpc.StopPoolRequest;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.EmptyPayload;
 import nodecore.cli.commands.serialization.FormattableObject;
@@ -37,9 +38,9 @@ public class StopPoolCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.StopPoolReply reply = context
+            StopPoolReply reply = context
                     .adminService()
-                    .stopPool(VeriBlockMessages.StopPoolRequest.newBuilder().build());
+                    .stopPool(StopPoolRequest.newBuilder().build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -49,7 +50,7 @@ public class StopPoolCommand implements Command {
 
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

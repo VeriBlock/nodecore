@@ -7,12 +7,12 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Output;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class OutputInfo {
-    public OutputInfo(final VeriBlockMessages.Output output) {
+    public OutputInfo(final Output output) {
         address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.getAddress());
         amount = Utility.formatAtomicLongWithDecimal(output.getAmount());
     }

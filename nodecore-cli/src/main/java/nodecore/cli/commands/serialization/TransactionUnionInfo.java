@@ -7,10 +7,10 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.TransactionUnion;
 
 public class TransactionUnionInfo {
-    public TransactionUnionInfo(final VeriBlockMessages.TransactionUnion union) {
+    public TransactionUnionInfo(final TransactionUnion union) {
         switch (union.getTransactionCase()) {
             case UNSIGNED:
                 type = "unsigned";

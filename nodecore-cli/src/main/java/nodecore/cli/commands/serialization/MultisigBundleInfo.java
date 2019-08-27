@@ -7,10 +7,10 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.MultisigBundle;
 
 public class MultisigBundleInfo {
-    public MultisigBundleInfo(VeriBlockMessages.MultisigBundle multisigBundle) {
+    public MultisigBundleInfo(MultisigBundle multisigBundle) {
         multisigSlots = new MultisigSlotInfo[multisigBundle.getSlotsCount()];
         for (int i = 0; i < multisigBundle.getSlotsCount(); i++) {
             multisigSlots[i] = new MultisigSlotInfo(multisigBundle.getSlots(i));

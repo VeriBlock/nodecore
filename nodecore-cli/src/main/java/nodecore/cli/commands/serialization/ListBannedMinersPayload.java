@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ListBannedMinersReply;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public class ListBannedMinersPayload {
     @SerializedName("banned_clients")
     public List<String> bannedClients;
 
-    public ListBannedMinersPayload(final VeriBlockMessages.ListBannedMinersReply reply) {
+    public ListBannedMinersPayload(final ListBannedMinersReply reply) {
         bannedClients = reply.getClientsList();
     }
 }

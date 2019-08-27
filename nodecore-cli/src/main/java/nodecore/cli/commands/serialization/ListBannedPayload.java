@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ListBannedReply;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,7 +18,7 @@ public class ListBannedPayload {
     @SerializedName("banned_peers")
     public List<BlacklistInfo> bannedPeers;
 
-    public ListBannedPayload(final VeriBlockMessages.ListBannedReply reply) {
+    public ListBannedPayload(final ListBannedReply reply) {
         bannedPeers = reply.getEntriesList().stream().map(BlacklistInfo::new).collect(Collectors.toList());
     }
 }

@@ -9,7 +9,8 @@ package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
 import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Block;
+import nodecore.api.grpc.TransactionUnion;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.Utility;
@@ -18,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BlockInfo {
-    public BlockInfo(final VeriBlockMessages.Block block) {
+    public BlockInfo(final Block block) {
         hash = ByteStringUtility.byteStringToHex(block.getHash());
         number = block.getNumber();
         version = (short)block.getVersion();
@@ -35,14 +36,14 @@ public class BlockInfo {
         encoded_difficulty = block.getEncodedDifficulty();
         winningNonce = block.getWinningNonce();
 
-        for (VeriBlockMessages.TransactionUnion union : block.getRegularTransactionsList())
-            if (union.getTransactionCase() == VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED) {
+        for (TransactionUnion union : block.getRegularTransactionsList())
+            if (union.getTransactionCase() == TransactionUnion.TransactionCase.SIGNED) {
                 regular_transactions.add(ByteStringUtility.byteStringToHex(union.getSigned().getTransaction().getTxId()));
             }
             else {
                 regular_transactions.add(ByteStringUtility.byteStringToHex(union.getSignedMultisig().getTransaction().getTxId()));
             }
-        for (VeriBlockMessages.TransactionUnion union : block.getPopTransactionsList())
+        for (TransactionUnion union : block.getPopTransactionsList())
             pop_transactions.add(ByteStringUtility.byteStringToHex(union.getSigned().getTransaction().getTxId()));
 
         totalFees = Utility.formatAtomicLongWithDecimal(block.getTotalFees());

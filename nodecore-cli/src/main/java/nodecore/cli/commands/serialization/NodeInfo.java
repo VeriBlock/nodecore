@@ -8,7 +8,6 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
 
 public class NodeInfo {
 
@@ -23,7 +22,7 @@ public class NodeInfo {
     @SerializedName("start_timestamp")
     public int startTimestamp;
 
-    public NodeInfo(VeriBlockMessages.NodeInfo info) {
+    public NodeInfo(nodecore.api.grpc.NodeInfo info) {
         address = info.getAddress();
         port = info.getPort();
         application = info.getApplication();

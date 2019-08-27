@@ -7,7 +7,7 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BlackListInfo;
 
 public class BlacklistInfo {
 
@@ -17,7 +17,7 @@ public class BlacklistInfo {
     public int timestamp;
     public int expiryTimestamp;
 
-    public BlacklistInfo(VeriBlockMessages.BlackListInfo info) {
+    public BlacklistInfo(BlackListInfo info) {
         type = info.getType().name();
         reason = info.getReason();
         value = info.getValue();

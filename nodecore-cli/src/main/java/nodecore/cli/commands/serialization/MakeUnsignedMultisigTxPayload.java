@@ -7,12 +7,12 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.MakeUnsignedMultisigTxReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class MakeUnsignedMultisigTxPayload {
-    public MakeUnsignedMultisigTxPayload(final VeriBlockMessages.MakeUnsignedMultisigTxReply reply) {
+    public MakeUnsignedMultisigTxPayload(final MakeUnsignedMultisigTxReply reply) {
         this.signatureThresholdM = reply.getSignatureThresholdM();
         this.addressCompositionCountN = reply.getAddressCompositionCountN();
         this.unsignedTransaction = new TransactionInfo(reply.getUnsignedMultisigTransactionWithIndex().getUnsignedMultisigTansaction());

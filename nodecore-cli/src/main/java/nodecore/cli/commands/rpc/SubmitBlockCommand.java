@@ -10,7 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ProtocolReply;
+import nodecore.api.grpc.SubmitBlocksRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -44,9 +45,9 @@ public class SubmitBlockCommand implements Command {
         try {
             String rawBlock = context.getParameter("rawBlock");
 
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
-                    .submitBlocks(VeriBlockMessages.SubmitBlocksRequest.parseFrom(Utility.base64ToBytes(rawBlock)));
+                    .submitBlocks(SubmitBlocksRequest.parseFrom(Utility.base64ToBytes(rawBlock)));
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -55,7 +56,7 @@ public class SubmitBlockCommand implements Command {
                 temp.payload = new EmptyPayload();
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

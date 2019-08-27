@@ -7,14 +7,14 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.WalletTransaction;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class WalletTransactionsPayload {
-    public WalletTransactionsPayload(final List<VeriBlockMessages.WalletTransaction> list) {
-        for (final VeriBlockMessages.WalletTransaction transaction : list)
+    public WalletTransactionsPayload(final List<WalletTransaction> list) {
+        for (final WalletTransaction transaction : list)
             transactions.add(new WalletTransactionInfo(transaction));
     }
 

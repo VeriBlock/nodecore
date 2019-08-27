@@ -7,7 +7,8 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressBalanceSchedule;
+import nodecore.api.grpc.BalanceUnlockEvent;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import org.veriblock.core.utilities.Utility;
 
@@ -26,7 +27,7 @@ public class AddressBalanceSchedulePayload {
 
     public List<BalanceScheduleItem> schedule;
 
-    public AddressBalanceSchedulePayload(final VeriBlockMessages.AddressBalanceSchedule message) {
+    public AddressBalanceSchedulePayload(final AddressBalanceSchedule message) {
         address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(message.getAddress());
         totalBalance = Utility.formatAtomicLongWithDecimal(message.getTotalBalance());
         unlockedBalance = Utility.formatAtomicLongWithDecimal(message.getUnlockBalance());
@@ -34,7 +35,7 @@ public class AddressBalanceSchedulePayload {
 
         schedule = new ArrayList<>();
         if (message.getScheduleCount() > 0) {
-            for (VeriBlockMessages.BalanceUnlockEvent event : message.getScheduleList()) {
+            for (BalanceUnlockEvent event : message.getScheduleList()) {
                 schedule.add(new BalanceScheduleItem(event));
             }
         }

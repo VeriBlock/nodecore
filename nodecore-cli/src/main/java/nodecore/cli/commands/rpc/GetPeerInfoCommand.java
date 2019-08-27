@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPeerInfoReply;
+import nodecore.api.grpc.GetPeerInfoRequest;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.PeerInfoPayload;
@@ -37,9 +38,9 @@ public class GetPeerInfoCommand implements Command {
     public Result execute(CommandContext context) {
         Result result = new DefaultResult();
         try {
-            VeriBlockMessages.GetPeerInfoReply reply = context
+            GetPeerInfoReply reply = context
                     .adminService()
-                    .getPeerInfo(VeriBlockMessages.GetPeerInfoRequest.newBuilder().build());
+                    .getPeerInfo(GetPeerInfoRequest.newBuilder().build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -55,7 +56,7 @@ public class GetPeerInfoCommand implements Command {
                 ));
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.PoolStats;
 
 public class PoolStatsPayload {
     @SerializedName("current_round")
@@ -20,7 +20,7 @@ public class PoolStatsPayload {
     @SerializedName("recent_hash_rate")
     public String recentHashRate;
 
-    public PoolStatsPayload(VeriBlockMessages.PoolStats message) {
+    public PoolStatsPayload(PoolStats message) {
         this.currentRound = message.getCurrentRound();
         this.miningBlockNumber = message.getMiningBlockNumber();
         this.lastBlockNumber = message.getLastBlockNumber();

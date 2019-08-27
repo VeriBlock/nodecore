@@ -7,20 +7,22 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPoolStateReply;
+import nodecore.api.grpc.PoolConfiguration;
+import nodecore.api.grpc.PoolStats;
 
 public class PoolStatePayload {
     public boolean running;
     public PoolConfigurationPayload configuration;
     public PoolStatsPayload stats;
 
-    public PoolStatePayload(final VeriBlockMessages.GetPoolStateReply message) {
+    public PoolStatePayload(final GetPoolStateReply message) {
         this.running = message.getRunning();
 
-        if (!VeriBlockMessages.PoolConfiguration.getDefaultInstance().equals(message.getConfiguration())) {
+        if (!PoolConfiguration.getDefaultInstance().equals(message.getConfiguration())) {
             this.configuration = new PoolConfigurationPayload(message.getConfiguration());
         }
-        if (!VeriBlockMessages.PoolStats.getDefaultInstance().equals(message.getStats())) {
+        if (!PoolStats.getDefaultInstance().equals(message.getStats())) {
             this.stats = new PoolStatsPayload(message.getStats());
         }
     }

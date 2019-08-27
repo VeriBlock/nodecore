@@ -10,7 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.SignMessageReply;
+import nodecore.api.grpc.SignMessageRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -42,7 +43,7 @@ public class SignHexMessageCommand implements Command {
     public Result execute(CommandContext context) {
         Result result = new DefaultResult();
         try {
-            VeriBlockMessages.SignMessageRequest.Builder requestBuilder = VeriBlockMessages.SignMessageRequest.newBuilder();
+            SignMessageRequest.Builder requestBuilder = SignMessageRequest.newBuilder();
 
             String address = context.getParameter("address");
             byte[] message = Utility.hexToBytes(context.getParameter("message"));
@@ -51,7 +52,7 @@ public class SignHexMessageCommand implements Command {
 
             requestBuilder.setMessage(ByteString.copyFrom(message));
 
-            VeriBlockMessages.SignMessageReply reply = context
+            SignMessageReply reply = context
                     .adminService()
                     .signMessage(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -62,7 +63,7 @@ public class SignHexMessageCommand implements Command {
                 temp.payload = new SignMessagePayload(address, reply);
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

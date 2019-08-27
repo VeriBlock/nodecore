@@ -9,9 +9,7 @@ package nodecore.cli.services;
 
 import io.grpc.Channel;
 import io.grpc.ManagedChannel;
-import nodecore.api.grpc.AdminGrpc;
-import nodecore.api.grpc.AdminRpcConfiguration;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.*;
 import nodecore.api.grpc.utilities.ChannelBuilder;
 import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.Configuration;
@@ -45,297 +43,297 @@ public class AdminServiceClient implements AdminService {
     }
 
     @Override
-    public VeriBlockMessages.GetPopReply getPop(VeriBlockMessages.GetPopRequest request) {
+    public GetPopReply getPop(GetPopRequest request) {
         return blockingStub.getPop(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply addNode(VeriBlockMessages.NodeRequest request) {
+    public ProtocolReply addNode(NodeRequest request) {
         return blockingStub.addNode(request);
     }
 
     @Override
-    public VeriBlockMessages.GetInfoReply getInfo(VeriBlockMessages.GetInfoRequest request) {
+    public GetInfoReply getInfo(GetInfoRequest request) {
         return blockingStub.getInfo(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply removeNode(VeriBlockMessages.NodeRequest request) {
+    public ProtocolReply removeNode(NodeRequest request) {
         return blockingStub.removeNode(request);
     }
 
     @Override
-    public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
+    public SendCoinsReply sendCoins(SendCoinsRequest request) {
         return blockingStub.sendCoins(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply submitPop(VeriBlockMessages.SubmitPopRequest request) {
+    public ProtocolReply submitPop(SubmitPopRequest request) {
         return blockingStub.submitPop(request);
     }
 
     @Override
-    public VeriBlockMessages.GetBlocksReply getBlocks(VeriBlockMessages.GetBlocksRequest request) {
+    public GetBlocksReply getBlocks(GetBlocksRequest request) {
         return blockingStub.getBlocks(request);
     }
 
     @Override
-    public VeriBlockMessages.GetPoPEndorsementsInfoReply getPoPEndorsementsInfo(VeriBlockMessages.GetPoPEndorsementsInfoRequest request) {
+    public GetPoPEndorsementsInfoReply getPoPEndorsementsInfo(GetPoPEndorsementsInfoRequest request) {
         return blockingStub.getPoPEndorsementsInfo(request);
     }
 
     @Override
-    public VeriBlockMessages.GetProtectedChildrenReply getProtectedChildren(VeriBlockMessages.GetProtectedChildrenRequest request) {
+    public GetProtectedChildrenReply getProtectedChildren(GetProtectedChildrenRequest request) {
         return blockingStub.getProtectedChildren(request);
     }
 
     @Override
-    public VeriBlockMessages.GetProtectingParentsReply getProtectingParents(VeriBlockMessages.GetProtectingParentsRequest request) {
+    public GetProtectingParentsReply getProtectingParents(GetProtectingParentsRequest request) {
         return blockingStub.getProtectingParents(request);
     }
 
     @Override
-    public VeriBlockMessages.StartPoolReply startPool(VeriBlockMessages.StartPoolRequest request) {
+    public StartPoolReply startPool(StartPoolRequest request) {
         return blockingStub.startPool(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply setAllowed(VeriBlockMessages.SetAllowedRequest request) {
+    public ProtocolReply setAllowed(SetAllowedRequest request) {
         return blockingStub.setAllowed(request);
     }
 
     @Override
-    public VeriBlockMessages.RestartPoolWebServerReply restartPoolWebServer(VeriBlockMessages.RestartPoolWebServerRequest request) {
+    public RestartPoolWebServerReply restartPoolWebServer(RestartPoolWebServerRequest request) {
         return blockingStub.restartPoolWebServer(request);
     }
 
     @Override
-    public VeriBlockMessages.StopPoolReply stopPool(VeriBlockMessages.StopPoolRequest request) {
+    public StopPoolReply stopPool(StopPoolRequest request) {
         return blockingStub.stopPool(request);
     }
 
     @Override
-    public VeriBlockMessages.GetHistoryReply getHistory(VeriBlockMessages.GetHistoryRequest request) {
+    public GetHistoryReply getHistory(GetHistoryRequest request) {
         return blockingStub.getHistory(request);
     }
 
     @Override
-    public VeriBlockMessages.GetBalanceReply getBalance(VeriBlockMessages.GetBalanceRequest request) {
+    public GetBalanceReply getBalance(GetBalanceRequest request) {
         return blockingStub.getBalance(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply submitBlocks(VeriBlockMessages.SubmitBlocksRequest request) {
+    public ProtocolReply submitBlocks(SubmitBlocksRequest request) {
         return blockingStub.submitBlocks(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply clearAllowed(VeriBlockMessages.ClearAllowedRequest request) {
+    public ProtocolReply clearAllowed(ClearAllowedRequest request) {
         return blockingStub.clearAllowed(request);
     }
 
     @Override
-    public VeriBlockMessages.ListAllowedReply listAllowed(VeriBlockMessages.ListAllowedRequest request) {
+    public ListAllowedReply listAllowed(ListAllowedRequest request) {
         return blockingStub.listAllowed(request);
     }
 
     @Override
-    public VeriBlockMessages.GetPeerInfoReply getPeerInfo(VeriBlockMessages.GetPeerInfoRequest request) {
+    public GetPeerInfoReply getPeerInfo(GetPeerInfoRequest request) {
         return blockingStub.getPeerInfo(request);
     }
 
     @Override
-    public VeriBlockMessages.SignMessageReply signMessage(VeriBlockMessages.SignMessageRequest request) {
+    public SignMessageReply signMessage(SignMessageRequest request) {
         return blockingStub.signMessage(request);
     }
 
     @Override
-    public VeriBlockMessages.BackupWalletReply backupWallet(VeriBlockMessages.BackupWalletRequest request) {
+    public BackupWalletReply backupWallet(BackupWalletRequest request) {
         return blockingStub.backupWallet(request);
     }
 
     @Override
-    public VeriBlockMessages.ImportWalletReply importWallet(VeriBlockMessages.ImportWalletRequest request) {
+    public ImportWalletReply importWallet(ImportWalletRequest request) {
         return blockingStub.importWallet(request);
     }
 
     @Override
-    public VeriBlockMessages.GetNewAddressReply getNewAddress(VeriBlockMessages.GetNewAddressRequest request) {
+    public GetNewAddressReply getNewAddress(GetNewAddressRequest request) {
         return blockingStub.getNewAddress(request);
     }
 
     @Override
-    public VeriBlockMessages.GetBlockTimesReply getBlockTimes(VeriBlockMessages.GetBlockTimesRequest request) {
+    public GetBlockTimesReply getBlockTimes(GetBlockTimesRequest request) {
         return blockingStub.getBlockTimes(request);
     }
 
     @Override
-    public VeriBlockMessages.StartSoloPoolReply startSoloPool(VeriBlockMessages.StartSoloPoolRequest request) {
+    public StartSoloPoolReply startSoloPool(StartSoloPoolRequest request) {
         return blockingStub.startSoloPool(request);
     }
 
     @Override
-    public VeriBlockMessages.GetBlockchainsReply getBlockchains(VeriBlockMessages.GetBlockchainsRequest request) {
+    public GetBlockchainsReply getBlockchains(GetBlockchainsRequest request) {
         return blockingStub.getBlockchains(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply setTransactionFee(VeriBlockMessages.SetTransactionFeeRequest request) {
+    public ProtocolReply setTransactionFee(SetTransactionFeeRequest request) {
         return blockingStub.setTransactionFee(request);
     }
 
     @Override
-    public VeriBlockMessages.DumpPrivateKeyReply dumpPrivateKey(VeriBlockMessages.DumpPrivateKeyRequest request) {
+    public DumpPrivateKeyReply dumpPrivateKey(DumpPrivateKeyRequest request) {
         return blockingStub.dumpPrivateKey(request);
     }
 
     @Override
-    public VeriBlockMessages.ImportPrivateKeyReply importPrivateKey(VeriBlockMessages.ImportPrivateKeyRequest request) {
+    public ImportPrivateKeyReply importPrivateKey(ImportPrivateKeyRequest request) {
         return blockingStub.importPrivateKey(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply submitTransactions(VeriBlockMessages.SubmitTransactionsRequest request) {
+    public ProtocolReply submitTransactions(SubmitTransactionsRequest request) {
         return blockingStub.submitTransactions(request);
     }
 
     @Override
-    public VeriBlockMessages.ValidateAddressReply validateAddress(VeriBlockMessages.ValidateAddressRequest request) {
+    public ValidateAddressReply validateAddress(ValidateAddressRequest request) {
         return blockingStub.validateAddress(request);
     }
 
     @Override
-    public VeriBlockMessages.GenerateMultisigAddressReply generateMultisigAddress(VeriBlockMessages.GenerateMultisigAddressRequest request) {
+    public GenerateMultisigAddressReply generateMultisigAddress(GenerateMultisigAddressRequest request) {
         return blockingStub.generateMultisigAddress(request);
     }
 
     @Override
-    public VeriBlockMessages.MakeUnsignedMultisigTxReply makeUnsignedMultisigTx(VeriBlockMessages.MakeUnsignedMultisigTxRequest request) {
+    public MakeUnsignedMultisigTxReply makeUnsignedMultisigTx(MakeUnsignedMultisigTxRequest request) {
         return blockingStub.makeUnsignedMultisigTx(request);
     }
 
     @Override
-    public VeriBlockMessages.SubmitMultisigTxReply submitMultisigTx(VeriBlockMessages.SubmitMultisigTxRequest request) {
+    public SubmitMultisigTxReply submitMultisigTx(SubmitMultisigTxRequest request) {
         return blockingStub.submitMultisigTx(request);
     }
 
     @Override
-    public VeriBlockMessages.GetTransactionsReply getTransactions(VeriBlockMessages.GetTransactionsRequest request) {
+    public GetTransactionsReply getTransactions(GetTransactionsRequest request) {
         return blockingStub.getTransactions(request);
     }
 
     @Override
-    public VeriBlockMessages.GetBlockTemplateReply getBlockTemplate(VeriBlockMessages.GetBlockTemplateRequest request) {
+    public GetBlockTemplateReply getBlockTemplate(GetBlockTemplateRequest request) {
         return blockingStub.getBlockTemplate(request);
     }
 
     @Override
-    public VeriBlockMessages.GetSignatureIndexReply getSignatureIndex(VeriBlockMessages.GetSignatureIndexRequest request) {
+    public GetSignatureIndexReply getSignatureIndex(GetSignatureIndexRequest request) {
         return blockingStub.getSignatureIndex(request);
     }
 
     @Override
-    public VeriBlockMessages.SetDefaultAddressReply setDefaultAddress(VeriBlockMessages.SetDefaultAddressRequest request) {
+    public SetDefaultAddressReply setDefaultAddress(SetDefaultAddressRequest request) {
         return blockingStub.setDefaultAddress(request);
     }
 
     @Override
-    public VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request) {
+    public GetLastBitcoinBlockReply getLastBitcoinBlock(GetLastBitcoinBlockRequest request) {
         return blockingStub.getLastBitcoinBlock(request);
     }
 
     @Override
-    public VeriBlockMessages.GetPendingTransactionsReply getPendingTransactions(VeriBlockMessages.GetPendingTransactionsRequest request) {
+    public GetPendingTransactionsReply getPendingTransactions(GetPendingTransactionsRequest request) {
         return blockingStub.getPendingTransactions(request);
     }
 
     @Override
-    public VeriBlockMessages.GetStateInfoReply getStateInfo(VeriBlockMessages.GetStateInfoRequest request) {
+    public GetStateInfoReply getStateInfo(GetStateInfoRequest request) {
         return blockingStub.getStateInfo(request);
     }
 
     @Override
-    public VeriBlockMessages.GetDiagnosticInfoReply getDiagnosticInfo(VeriBlockMessages.GetDiagnosticInfoRequest request) {
+    public GetDiagnosticInfoReply getDiagnosticInfo(GetDiagnosticInfoRequest request) {
         return blockingStub.getDiagnosticInfo(request);
     }
 
     @Override
-    public VeriBlockMessages.TroubleshootPoPTransactionsReply troubleshootPoPTransactions(VeriBlockMessages.TroubleshootPoPTransactionsRequest request) {
+    public TroubleshootPoPTransactionsReply troubleshootPoPTransactions(TroubleshootPoPTransactionsRequest request) {
         return blockingStub.troubleshootPoPTransactions(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply stopNodeCore(VeriBlockMessages.StopNodeCoreRequest request) {
+    public ProtocolReply stopNodeCore(StopNodeCoreRequest request) {
         return blockingStub.stopNodeCore(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply refreshWalletCache(VeriBlockMessages.RefreshWalletCacheRequest request) {
+    public ProtocolReply refreshWalletCache(RefreshWalletCacheRequest request) {
         return blockingStub.refreshWalletCache(request);
     }
 
     @Override
-    public VeriBlockMessages.GetWalletTransactionsReply getWalletTransactions(VeriBlockMessages.GetWalletTransactionsRequest request) {
+    public GetWalletTransactionsReply getWalletTransactions(GetWalletTransactionsRequest request) {
         return blockingStub.getWalletTransactions(request);
     }
 
     @Override
-    public VeriBlockMessages.PingReply connect() {
-        return blockingStub.ping(VeriBlockMessages.PingRequest.getDefaultInstance());
+    public PingReply connect() {
+        return blockingStub.ping(PingRequest.getDefaultInstance());
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply clearBanned(VeriBlockMessages.ClearBannedRequest request) {
+    public ProtocolReply clearBanned(ClearBannedRequest request) {
         return blockingStub.clearBanned(request);
     }
 
     @Override
-    public VeriBlockMessages.ListBannedReply listBanned(VeriBlockMessages.ListBannedRequest request) {
+    public ListBannedReply listBanned(ListBannedRequest request) {
         return blockingStub.listBanned(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply clearBannedMiners(VeriBlockMessages.ClearBannedMinersRequest request) {
+    public ProtocolReply clearBannedMiners(ClearBannedMinersRequest request) {
         return blockingStub.clearBannedMiners(request);
     }
 
     @Override
-    public VeriBlockMessages.ListBannedMinersReply listBannedMiners(VeriBlockMessages.ListBannedMinersRequest request) {
+    public ListBannedMinersReply listBannedMiners(ListBannedMinersRequest request) {
         return blockingStub.listBannedMiners(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply encryptWallet(VeriBlockMessages.EncryptWalletRequest request) {
+    public ProtocolReply encryptWallet(EncryptWalletRequest request) {
         return blockingStub.encryptWallet(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply decryptWallet(VeriBlockMessages.DecryptWalletRequest request) {
+    public ProtocolReply decryptWallet(DecryptWalletRequest request) {
         return blockingStub.decryptWallet(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply unlockWallet(VeriBlockMessages.UnlockWalletRequest request) {
+    public ProtocolReply unlockWallet(UnlockWalletRequest request) {
         return blockingStub.unlockWallet(request);
     }
 
     @Override
-    public VeriBlockMessages.ProtocolReply lockWallet(VeriBlockMessages.LockWalletRequest request) {
+    public ProtocolReply lockWallet(LockWalletRequest request) {
         return blockingStub.lockWallet(request);
     }
 
     @Override
-    public VeriBlockMessages.DrainAddressReply drainAddress(VeriBlockMessages.DrainAddressRequest request) {
+    public DrainAddressReply drainAddress(DrainAddressRequest request) {
         return blockingStub.drainAddress(request);
     }
 
     @Override
-    public VeriBlockMessages.GetBalanceUnlockScheduleReply getBalanceUnlockSchedule(VeriBlockMessages.GetBalanceUnlockScheduleRequest request) {
+    public GetBalanceUnlockScheduleReply getBalanceUnlockSchedule(GetBalanceUnlockScheduleRequest request) {
         return blockingStub.getBalanceUnlockSchedule(request);
     }
 
     @Override
-    public VeriBlockMessages.GetPoolStateReply getPoolState(VeriBlockMessages.GetPoolStateRequest request) {
+    public GetPoolStateReply getPoolState(GetPoolStateRequest request) {
         return blockingStub.getPoolState(request);
     }
 }

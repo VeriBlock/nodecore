@@ -7,11 +7,11 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPopReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class PopPayload {
-    public PopPayload(final VeriBlockMessages.GetPopReply reply) {
+    public PopPayload(final GetPopReply reply) {
         block_height = reply.getBlockHeight();
         version = reply.getVersion();
         previous_block_hash = ByteStringUtility.byteStringToHex(reply.getPreviousBlockHash());

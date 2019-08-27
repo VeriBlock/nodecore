@@ -9,7 +9,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressSet;
+import nodecore.api.grpc.TroubleshootPoPTransactionsReply;
+import nodecore.api.grpc.TroubleshootPoPTransactionsRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -43,11 +45,11 @@ public class TroubleshootPoPByAddress implements Command {
     public Result execute(CommandContext context) {
         Result result = new DefaultResult();
         try {
-            VeriBlockMessages.TroubleshootPoPTransactionsRequest.Builder requestBuilder = VeriBlockMessages.TroubleshootPoPTransactionsRequest.newBuilder();
+            TroubleshootPoPTransactionsRequest.Builder requestBuilder = TroubleshootPoPTransactionsRequest.newBuilder();
 
             String address = context.getParameter("address");
             if (address != null) {
-                requestBuilder.setAddresses(VeriBlockMessages.AddressSet.newBuilder()
+                requestBuilder.setAddresses(AddressSet.newBuilder()
                         .addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address)));
             }
 
@@ -61,7 +63,7 @@ public class TroubleshootPoPByAddress implements Command {
                 requestBuilder.setSearchLength(2000);
             }
 
-            VeriBlockMessages.TroubleshootPoPTransactionsReply reply = context
+            TroubleshootPoPTransactionsReply reply = context
                     .adminService()
                     .troubleshootPoPTransactions(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -77,7 +79,7 @@ public class TroubleshootPoPByAddress implements Command {
                         GetBalanceCommand.class,
                         GetHistoryCommand.class));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

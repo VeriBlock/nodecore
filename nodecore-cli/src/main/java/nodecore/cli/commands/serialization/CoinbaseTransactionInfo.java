@@ -8,7 +8,8 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.CoinbaseTransaction;
+import nodecore.api.grpc.Output;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.Utility;
 
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CoinbaseTransactionInfo {
-    public CoinbaseTransactionInfo(final VeriBlockMessages.CoinbaseTransaction coinbaseTransaction)
+    public CoinbaseTransactionInfo(final CoinbaseTransaction coinbaseTransaction)
     {
         coinbase_tx_hash = ByteStringUtility.byteStringToHex(coinbaseTransaction.getTxId());
         powCoinbaseAmount = Utility.formatAtomicLongWithDecimal(coinbaseTransaction.getPowCoinbaseAmount());
@@ -24,11 +25,11 @@ public class CoinbaseTransactionInfo {
         powFeeShare = Utility.formatAtomicLongWithDecimal(coinbaseTransaction.getPowFeeShare());
         popFeeShare = Utility.formatAtomicLongWithDecimal(coinbaseTransaction.getPopFeeShare());
 
-        for (VeriBlockMessages.Output powOutput : coinbaseTransaction.getPowOutputsList()) {
+        for (Output powOutput : coinbaseTransaction.getPowOutputsList()) {
             powOutputs.add(new OutputInfo(powOutput));
         }
 
-        for (VeriBlockMessages.Output popOutput : coinbaseTransaction.getPopOutputsList()) {
+        for (Output popOutput : coinbaseTransaction.getPopOutputsList()) {
             popOutputs.add(new OutputInfo(popOutput));
         }
     }

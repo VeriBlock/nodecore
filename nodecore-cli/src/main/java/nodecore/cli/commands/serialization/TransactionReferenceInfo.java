@@ -7,11 +7,10 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class TransactionReferenceInfo {
-    public TransactionReferenceInfo(final VeriBlockMessages.TransactionInfo transactionInfo) {
+    public TransactionReferenceInfo(final nodecore.api.grpc.TransactionInfo transactionInfo) {
         blockNum = transactionInfo.getBlockNumber();
         confirmations = transactionInfo.getConfirmations();
         transaction = new TransactionInfo(transactionInfo.getTransaction());

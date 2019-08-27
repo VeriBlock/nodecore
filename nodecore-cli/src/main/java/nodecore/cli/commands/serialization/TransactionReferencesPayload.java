@@ -7,14 +7,12 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionReferencesPayload {
-    public TransactionReferencesPayload(final List<VeriBlockMessages.TransactionInfo> list) {
-        for (final VeriBlockMessages.TransactionInfo transaction : list)
+    public TransactionReferencesPayload(final List<nodecore.api.grpc.TransactionInfo> list) {
+        for (final nodecore.api.grpc.TransactionInfo transaction : list)
             transactions.add(new TransactionReferenceInfo(transaction));
     }
 

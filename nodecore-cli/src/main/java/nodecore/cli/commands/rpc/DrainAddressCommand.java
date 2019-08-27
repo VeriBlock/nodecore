@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.DrainAddressReply;
+import nodecore.api.grpc.DrainAddressRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -45,7 +46,7 @@ public class DrainAddressCommand implements Command {
         String destinationAddress = context.getParameter("destinationAddress");
 
         try {
-            VeriBlockMessages.DrainAddressReply reply = context.adminService().drainAddress(VeriBlockMessages.DrainAddressRequest.newBuilder()
+            DrainAddressReply reply = context.adminService().drainAddress(DrainAddressRequest.newBuilder()
                     .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress))
                     .setDestinationAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
                     .build());
@@ -59,7 +60,7 @@ public class DrainAddressCommand implements Command {
                 context.outputObject(temp);
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, logger);

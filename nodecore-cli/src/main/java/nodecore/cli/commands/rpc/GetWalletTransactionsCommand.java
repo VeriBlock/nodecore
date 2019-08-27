@@ -9,7 +9,7 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.*;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -43,38 +43,38 @@ public class GetWalletTransactionsCommand implements Command {
     public GetWalletTransactionsCommand() {
     }
 
-    private VeriBlockMessages.WalletTransaction.Type getTxType(String type)
+    private WalletTransaction.Type getTxType(String type)
     {
-        VeriBlockMessages.WalletTransaction.Type transactionType;
+        WalletTransaction.Type transactionType;
 
         switch (type) {
 
             case "popcoinbase":
-                transactionType = VeriBlockMessages.WalletTransaction.Type.POP_COINBASE;
+                transactionType = WalletTransaction.Type.POP_COINBASE;
                 break;
 
             case "powcoinbase":
-                transactionType = VeriBlockMessages.WalletTransaction.Type.POW_COINBASE;
+                transactionType = WalletTransaction.Type.POW_COINBASE;
                 break;
 
             case "coinbase":
-                transactionType = VeriBlockMessages.WalletTransaction.Type.BOTH_COINBASE;
+                transactionType = WalletTransaction.Type.BOTH_COINBASE;
                 break;
 
             case "pop":
-                transactionType = VeriBlockMessages.WalletTransaction.Type.POP;
+                transactionType = WalletTransaction.Type.POP;
                 break;
 
             case "received":
-                transactionType = VeriBlockMessages.WalletTransaction.Type.RECEIVED;
+                transactionType = WalletTransaction.Type.RECEIVED;
                 break;
 
             case "sent":
-                transactionType = VeriBlockMessages.WalletTransaction.Type.SENT;
+                transactionType = WalletTransaction.Type.SENT;
                 break;
 
             default:
-                transactionType = VeriBlockMessages.WalletTransaction.Type.NOT_SET;
+                transactionType = WalletTransaction.Type.NOT_SET;
         }
         return transactionType;
     }
@@ -96,10 +96,10 @@ public class GetWalletTransactionsCommand implements Command {
             //Want to output this immediately so that user knows where the exact file is, and could monitor it
             context.outputStatus( String.format("Append to file: %1$s", outputFile) );
 
-            VeriBlockMessages.WalletTransaction.Type transactionType;
+            WalletTransaction.Type transactionType;
 
             if (type == null) {
-                transactionType = VeriBlockMessages.WalletTransaction.Type.NOT_SET;
+                transactionType = WalletTransaction.Type.NOT_SET;
             } else {
                 transactionType = getTxType(type);
             }
@@ -114,13 +114,13 @@ public class GetWalletTransactionsCommand implements Command {
             while (!done) {
 
                 //get the data
-                VeriBlockMessages.GetWalletTransactionsReply reply = getTransactions(context, address, pageNum, pageSize, transactionType);
+                GetWalletTransactionsReply reply = getTransactions(context, address, pageNum, pageSize, transactionType);
 
                 try {
                     if (reply == null) {
                         result.fail();
                         done = true;
-                    } else if (reply.getCacheState() != VeriBlockMessages.GetWalletTransactionsReply.CacheState.CURRENT) {
+                    } else if (reply.getCacheState() != GetWalletTransactionsReply.CacheState.CURRENT) {
                         //bad
                         result.fail();
                         result.addMessage("-2", "Address CacheState not CURRENT", reply.getMessage(), true);
@@ -131,7 +131,7 @@ public class GetWalletTransactionsCommand implements Command {
                         String outputStatus = String.format("Got page %1$s with %2$s rows, appended to file", pageNum, resultSize);
 
                         //got a chunk, append it to the file!
-                        List<VeriBlockMessages.WalletTransaction> transactions = reply.getTransactionsList();
+                        List<WalletTransaction> transactions = reply.getTransactionsList();
                         appendRows(outputFile, transactions);
 
                         context.outputStatus(outputStatus);
@@ -170,15 +170,15 @@ public class GetWalletTransactionsCommand implements Command {
         return result;
     }
 
-    private VeriBlockMessages.GetWalletTransactionsReply getTransactions(CommandContext context, String address, int page, int itemsPerPage, VeriBlockMessages.WalletTransaction.Type transactionType) {
+    private GetWalletTransactionsReply getTransactions(CommandContext context, String address, int page, int itemsPerPage, WalletTransaction.Type transactionType) {
 
-        VeriBlockMessages.GetWalletTransactionsRequest.Builder requestBuilder = VeriBlockMessages.GetWalletTransactionsRequest.newBuilder();
+        GetWalletTransactionsRequest.Builder requestBuilder = GetWalletTransactionsRequest.newBuilder();
 
         requestBuilder.setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address));
-        VeriBlockMessages.TransactionMeta.Status confirmed = VeriBlockMessages.TransactionMeta.Status.CONFIRMED;
-        requestBuilder.setRequestType(VeriBlockMessages.GetWalletTransactionsRequest.Type.QUERY);
+        TransactionMeta.Status confirmed = TransactionMeta.Status.CONFIRMED;
+        requestBuilder.setRequestType(GetWalletTransactionsRequest.Type.QUERY);
         requestBuilder.setStatus(confirmed);
-        requestBuilder.setPage(VeriBlockMessages.Paging.newBuilder()
+        requestBuilder.setPage(Paging.newBuilder()
                 .setPageNumber(page)
                 .setResultsPerPage(itemsPerPage).build());
         requestBuilder.setTransactionType(transactionType);
@@ -204,13 +204,13 @@ public class GetWalletTransactionsCommand implements Command {
         appendFile(filename, s);
     }
 
-    private void appendRows(String filename, List<VeriBlockMessages.WalletTransaction> transactions) {
+    private void appendRows(String filename, List<WalletTransaction> transactions) {
         if (transactions == null) {
             return;
         }
 
         StringBuilder sb = new StringBuilder();
-        for (VeriBlockMessages.WalletTransaction transaction : transactions) {
+        for (WalletTransaction transaction : transactions) {
             WalletTransactionInfo row = new WalletTransactionInfo(transaction);
             String s = String.format("%1$s,%2$s,%3$s,%4$s,%5$s,%6$s,%7$s,%8$s,%9$s,%10$s,%11$s",
                     row.getBlockHeight(), row.getConfirmations(), row.getStatus(),

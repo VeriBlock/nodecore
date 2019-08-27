@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GenerateMultisigAddressReply;
+import nodecore.api.grpc.GenerateMultisigAddressRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -42,7 +43,7 @@ public class GenerateMultisigAddressCommand implements Command {
     public Result execute(CommandContext context) {
         Result result = new DefaultResult();
         try {
-            VeriBlockMessages.GenerateMultisigAddressRequest.Builder requestBuilder = VeriBlockMessages.GenerateMultisigAddressRequest.newBuilder();
+            GenerateMultisigAddressRequest.Builder requestBuilder = GenerateMultisigAddressRequest.newBuilder();
 
             int signatureThreshold = context.getParameter("signatureThreshold");
             requestBuilder.setSignatureThresholdM(signatureThreshold);
@@ -52,7 +53,7 @@ public class GenerateMultisigAddressCommand implements Command {
                 requestBuilder.addSourceAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
             }
 
-            VeriBlockMessages.GenerateMultisigAddressReply reply = context
+            GenerateMultisigAddressReply reply = context
                     .adminService()
                     .generateMultisigAddress(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -71,7 +72,7 @@ public class GenerateMultisigAddressCommand implements Command {
                         SubmitMultisigTxCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

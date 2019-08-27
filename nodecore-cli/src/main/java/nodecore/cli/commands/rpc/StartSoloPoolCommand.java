@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.StartSoloPoolReply;
+import nodecore.api.grpc.StartSoloPoolRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -43,18 +44,18 @@ public class StartSoloPoolCommand implements Command {
         Result result = new DefaultResult();
         try {
             String address = context.getParameter("address");
-            VeriBlockMessages.StartSoloPoolReply reply;
+            StartSoloPoolReply reply;
 
             if (address != null) {
                 reply = context
                         .adminService()
-                        .startSoloPool(VeriBlockMessages.StartSoloPoolRequest.newBuilder()
+                        .startSoloPool(StartSoloPoolRequest.newBuilder()
                                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                                 .build());
             } else {
                 reply = context
                         .adminService()
-                        .startSoloPool(VeriBlockMessages.StartSoloPoolRequest.newBuilder().build());
+                        .startSoloPool(StartSoloPoolRequest.newBuilder().build());
             }
 
             if (!reply.getSuccess()) {
@@ -82,7 +83,7 @@ public class StartSoloPoolCommand implements Command {
                         SetDefaultAddressCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

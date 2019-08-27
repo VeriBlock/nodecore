@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.LockWalletRequest;
+import nodecore.api.grpc.ProtocolReply;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.EmptyPayload;
 import nodecore.cli.commands.serialization.FormattableObject;
@@ -39,11 +40,11 @@ public class LockWalletCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
-                    .lockWallet(VeriBlockMessages.LockWalletRequest.newBuilder().build());
+                    .lockWallet(LockWalletRequest.newBuilder().build());
 
-            for (VeriBlockMessages.Result r : reply.getResultsList()) {
+            for (nodecore.api.grpc.Result r : reply.getResultsList()) {
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
             }
 

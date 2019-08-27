@@ -8,11 +8,10 @@
 package nodecore.miners.pop.contracts;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.miners.pop.common.Utility;
 
 public class PoPEndorsementInfo {
-    public PoPEndorsementInfo(final VeriBlockMessages.PoPEndorsementInfo popEndorsementInfo) {
+    public PoPEndorsementInfo(final nodecore.api.grpc.PoPEndorsementInfo popEndorsementInfo) {
         minerAddress = Utility.bytesToBase58(popEndorsementInfo.getMinerAddress().toByteArray());
         endorsedVeriBlockBlockHash = Utility.bytesToHex(popEndorsementInfo.getEndorsedVeriblockBlockHash().toByteArray());
         containedInVeriBlockBlockHash = Utility.bytesToHex(popEndorsementInfo.getContainedInVeriblockBlockHash().toByteArray());

@@ -7,12 +7,12 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressBalance;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class AddressBalanceInfo {
-    public AddressBalanceInfo(final VeriBlockMessages.AddressBalance addressBalance) {
+    public AddressBalanceInfo(final AddressBalance addressBalance) {
         address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(addressBalance.getAddress());
         totalAmount = Utility.formatAtomicLongWithDecimal(addressBalance.getTotalAmount());
         unlockedAmount = Utility.formatAtomicLongWithDecimal(addressBalance.getUnlockedAmount());

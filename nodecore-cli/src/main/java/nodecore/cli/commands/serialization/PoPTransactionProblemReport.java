@@ -7,12 +7,11 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class PoPTransactionProblemReport {
-    PoPTransactionProblemReport(VeriBlockMessages.PoPTransactionProblemReport report) {
+    PoPTransactionProblemReport(nodecore.api.grpc.PoPTransactionProblemReport report) {
         if (report.getAddress() != null) {
             address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(report.getAddress());
         }

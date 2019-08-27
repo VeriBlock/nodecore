@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetSignatureIndexReply;
+import nodecore.api.grpc.GetSignatureIndexRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -44,11 +45,11 @@ public class SigIndexCommand implements Command {
 
         String address = context.getParameter("address");
         try {
-            VeriBlockMessages.GetSignatureIndexRequest.Builder requestBuilder = VeriBlockMessages.GetSignatureIndexRequest.newBuilder();
+            GetSignatureIndexRequest.Builder requestBuilder = GetSignatureIndexRequest.newBuilder();
             if (address != null) {
                 requestBuilder.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
             }
-            VeriBlockMessages.GetSignatureIndexReply reply = context
+            GetSignatureIndexReply reply = context
                     .adminService()
                     .getSignatureIndex(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -65,7 +66,7 @@ public class SigIndexCommand implements Command {
                         GetHistoryCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

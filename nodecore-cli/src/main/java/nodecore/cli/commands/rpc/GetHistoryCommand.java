@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetHistoryReply;
+import nodecore.api.grpc.GetHistoryRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -46,10 +47,10 @@ public class GetHistoryCommand implements Command {
 
         String address = context.getParameter("address");
         try {
-            VeriBlockMessages.GetHistoryRequest.Builder requestBuilder = VeriBlockMessages.GetHistoryRequest.newBuilder();
+            GetHistoryRequest.Builder requestBuilder = GetHistoryRequest.newBuilder();
             if (address != null)
                 requestBuilder.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
-            VeriBlockMessages.GetHistoryReply reply = context
+            GetHistoryReply reply = context
                     .adminService()
                     .getHistory(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -68,7 +69,7 @@ public class GetHistoryCommand implements Command {
                         GetTransactionCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

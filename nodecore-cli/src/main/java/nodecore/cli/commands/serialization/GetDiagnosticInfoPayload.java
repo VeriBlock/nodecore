@@ -8,10 +8,10 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetDiagnosticInfoReply;
 
 public class GetDiagnosticInfoPayload {
-    public GetDiagnosticInfoPayload(final VeriBlockMessages.GetDiagnosticInfoReply reply) {
+    public GetDiagnosticInfoPayload(final GetDiagnosticInfoReply reply) {
 
         //Diagnostics
         workingDirectory = reply.getWorkingDirectory();

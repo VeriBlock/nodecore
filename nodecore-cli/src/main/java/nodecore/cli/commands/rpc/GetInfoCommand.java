@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetInfoReply;
+import nodecore.api.grpc.GetInfoRequest;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.GetInfoPayload;
@@ -40,9 +41,9 @@ public class GetInfoCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.GetInfoReply reply = context
+            GetInfoReply reply = context
                     .adminService()
-                    .getInfo(VeriBlockMessages.GetInfoRequest.newBuilder().build());
+                    .getInfo(GetInfoRequest.newBuilder().build());
 
             if (!reply.getSuccess()) {
                 result.fail();
@@ -60,7 +61,7 @@ public class GetInfoCommand implements Command {
                         GetBlockFromHashCommand.class,
                         GetStateInfoCommand.class));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         }  catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

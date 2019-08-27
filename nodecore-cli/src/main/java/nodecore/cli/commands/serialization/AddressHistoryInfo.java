@@ -8,20 +8,21 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressHistory;
+import nodecore.api.grpc.TransactionUnion;
 import org.veriblock.core.utilities.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AddressHistoryInfo {
-    public AddressHistoryInfo(final VeriBlockMessages.AddressHistory history) {
+    public AddressHistoryInfo(final AddressHistory history) {
         balance = Utility.formatAtomicLongWithDecimal(history.getBalance());
         blocksMined = history.getBlocksMined();
-        for (final VeriBlockMessages.TransactionUnion union : history.getConfirmedTransactionsList()) {
+        for (final TransactionUnion union : history.getConfirmedTransactionsList()) {
             confirmedTransactions.add(new TransactionUnionInfo(union));
         }
-        for (final VeriBlockMessages.TransactionUnion union : history.getPendingTransactionsList()) {
+        for (final TransactionUnion union : history.getPendingTransactionsList()) {
             pendingTransactions.add(new TransactionUnionInfo(union));
         }
     }

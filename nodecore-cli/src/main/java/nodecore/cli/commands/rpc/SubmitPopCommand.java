@@ -10,7 +10,9 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BitcoinBlockHeader;
+import nodecore.api.grpc.ProtocolReply;
+import nodecore.api.grpc.SubmitPopRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -55,17 +57,17 @@ public class SubmitPopCommand implements Command {
         //TODO: Add context Bitcoin block header parameters
 
         try {
-            VeriBlockMessages.SubmitPopRequest.Builder requestBuilder = VeriBlockMessages.SubmitPopRequest.newBuilder();
+            SubmitPopRequest.Builder requestBuilder = SubmitPopRequest.newBuilder();
             requestBuilder.setEndorsedBlockHeader(ByteString.copyFrom(Utility.hexToBytes(endorsedBlockHeader)));
             requestBuilder.setBitcoinTransaction(ByteString.copyFrom(Utility.hexToBytes(bitcoinTransaction)));
             requestBuilder.setBitcoinMerklePathToRoot(ByteString.copyFrom(bitcoinMerklePathToRoot.getBytes()));
-            requestBuilder.setBitcoinBlockHeaderOfProof(VeriBlockMessages.BitcoinBlockHeader
+            requestBuilder.setBitcoinBlockHeaderOfProof(BitcoinBlockHeader
                     .newBuilder().setHeader(ByteString.copyFrom(Utility.hexToBytes(bitcoinBlockHeader)))
                     .build());
             if (address != null)
                 requestBuilder.setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address));
 
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
                     .submitPop(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -76,7 +78,7 @@ public class SubmitPopCommand implements Command {
                 temp.payload = new EmptyPayload();
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

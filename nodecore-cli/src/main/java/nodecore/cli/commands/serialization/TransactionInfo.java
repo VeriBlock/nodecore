@@ -8,7 +8,8 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Output;
+import nodecore.api.grpc.Transaction;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.Utility;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionInfo {
-    public TransactionInfo(final VeriBlockMessages.Transaction transaction) {
+    public TransactionInfo(final Transaction transaction) {
         switch (transaction.getType()) {
             case STANDARD:
                 type = "standard";
@@ -41,7 +42,7 @@ public class TransactionInfo {
         sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.getSourceAddress());
         data = ByteStringUtility.byteStringToHex(transaction.getData());
         fee = Utility.formatAtomicLongWithDecimal(transaction.getTransactionFee());
-        if (transaction.getType() == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
+        if (transaction.getType() == Transaction.Type.PROOF_OF_PROOF) {
             byte[] bitcoinBlockHeaderBytes = transaction.getBitcoinBlockHeaderOfProof() != null ?
                     transaction.getBitcoinBlockHeaderOfProof().toByteArray() :
                     new byte[]{};
@@ -64,7 +65,7 @@ public class TransactionInfo {
             contextBlockHeaders.add("N/A");
             // contextBitcoinBlockHeaders = contextBlockHeaders;
         }
-        for (final VeriBlockMessages.Output output : transaction.getOutputsList())
+        for (final Output output : transaction.getOutputsList())
             outputs.add(new OutputInfo(output));
     }
 

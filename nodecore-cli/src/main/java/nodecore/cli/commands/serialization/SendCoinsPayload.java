@@ -8,11 +8,11 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.SendCoinsReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class SendCoinsPayload {
-    public SendCoinsPayload(final VeriBlockMessages.SendCoinsReply reply) {
+    public SendCoinsPayload(final SendCoinsReply reply) {
         txids = new String[reply.getTxIdsCount()];
 
         for (int i = 0; i < reply.getTxIdsCount(); i++) {

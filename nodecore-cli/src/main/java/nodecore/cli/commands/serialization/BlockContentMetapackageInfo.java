@@ -8,11 +8,11 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BlockContentMetapackage;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class BlockContentMetapackageInfo {
-    public BlockContentMetapackageInfo(final VeriBlockMessages.BlockContentMetapackage metapackage) {
+    public BlockContentMetapackageInfo(final BlockContentMetapackage metapackage) {
         coinbaseTransaction = new CoinbaseTransactionInfo(metapackage.getCoinbaseTransaction());
         popDatastore = new PoPDatastoreInfo(metapackage.getPopDatastore());
         blockFeeTable = new BlockFeeTableInfo(metapackage.getBlockFeeTable());

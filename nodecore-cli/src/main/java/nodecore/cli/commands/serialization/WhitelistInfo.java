@@ -7,7 +7,7 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.WhiteListInfo;
 
 public class WhitelistInfo {
 
@@ -15,7 +15,7 @@ public class WhitelistInfo {
     public String value;
     public int timestamp;
 
-    public WhitelistInfo(VeriBlockMessages.WhiteListInfo info) {
+    public WhitelistInfo(WhiteListInfo info) {
         type = info.getType().name();
         value = info.getValue();
         timestamp = info.getTimestamp();

@@ -7,11 +7,11 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.SubmitMultisigTxReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class SubmitMultisigTxPayload {
-    public SubmitMultisigTxPayload(final VeriBlockMessages.SubmitMultisigTxReply reply) {
+    public SubmitMultisigTxPayload(final SubmitMultisigTxReply reply) {
         this.transaction = new TransactionInfo(reply.getSignedMultisigTransaction().getTransaction());
         this.multisigSlotBundle = new MultisigBundleInfo(reply.getSignedMultisigTransaction().getSignatureBundle());
         this.txid = ByteStringUtility.byteStringToHex(reply.getTxid());

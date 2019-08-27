@@ -8,11 +8,11 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.SignedTransaction;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class SignedTransactionInfo {
-    public SignedTransactionInfo(final VeriBlockMessages.SignedTransaction signed) {
+    public SignedTransactionInfo(final SignedTransaction signed) {
         signatureIndex = signed.getSignatureIndex();
         signature = ByteStringUtility.byteStringToHex(signed.getSignature());
         publicKey = ByteStringUtility.byteStringToHex(signed.getPublicKey());

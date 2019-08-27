@@ -7,14 +7,14 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.SignMessageReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class SignMessagePayload {
     public String address;
     public String signedMessage;
     public String publicKey;
-    public SignMessagePayload(String address, VeriBlockMessages.SignMessageReply message) {
+    public SignMessagePayload(String address, SignMessageReply message) {
         this.address = address;
         this.signedMessage = ByteStringUtility.byteStringToHex(message.getSignedMessage());
         this.publicKey = ByteStringUtility.byteStringToHex(message.getPublicKey());

@@ -9,7 +9,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressBalanceSchedule;
+import nodecore.api.grpc.GetBalanceUnlockScheduleReply;
+import nodecore.api.grpc.GetBalanceUnlockScheduleRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -45,12 +47,12 @@ public class GetBalanceUnlockScheduleCommand implements Command {
 
         String address = context.getParameter("address");
         try {
-            VeriBlockMessages.GetBalanceUnlockScheduleRequest.Builder requestBuilder = VeriBlockMessages.GetBalanceUnlockScheduleRequest.newBuilder();
+            GetBalanceUnlockScheduleRequest.Builder requestBuilder = GetBalanceUnlockScheduleRequest.newBuilder();
             if (address != null) {
                 requestBuilder.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
             }
 
-            VeriBlockMessages.GetBalanceUnlockScheduleReply reply = context
+            GetBalanceUnlockScheduleReply reply = context
                     .adminService()
                     .getBalanceUnlockSchedule(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -60,7 +62,7 @@ public class GetBalanceUnlockScheduleCommand implements Command {
                 temp.success = !result.didFail();
 
                 List<AddressBalanceSchedulePayload> payload = new ArrayList<>();
-                for (VeriBlockMessages.AddressBalanceSchedule sched : reply.getAddressScheduleList()) {
+                for (AddressBalanceSchedule sched : reply.getAddressScheduleList()) {
                     payload.add(new AddressBalanceSchedulePayload(sched));
                 }
                 temp.payload = payload;
@@ -70,7 +72,7 @@ public class GetBalanceUnlockScheduleCommand implements Command {
                 context.suggestCommands(Collections.singletonList(GetBalanceCommand.class));
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, logger);

@@ -8,14 +8,14 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Result;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FormattableObject<T> {
-    public FormattableObject(final List<VeriBlockMessages.Result> results) {
-        for (VeriBlockMessages.Result result : results)
+    public FormattableObject(final List<Result> results) {
+        for (Result result : results)
             messages.add(new MessageInfo(result.getCode(),
                     result.getMessage(),
                     result.getDetails(),

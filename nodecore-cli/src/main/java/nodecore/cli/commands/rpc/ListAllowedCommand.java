@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ListAllowedReply;
+import nodecore.api.grpc.ListAllowedRequest;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.ListAllowedPayload;
@@ -35,9 +36,9 @@ public class ListAllowedCommand implements Command {
     public Result execute(CommandContext context) {
         Result result = new DefaultResult();
         try {
-            VeriBlockMessages.ListAllowedReply reply = context
+            ListAllowedReply reply = context
                     .adminService()
-                    .listAllowed(VeriBlockMessages.ListAllowedRequest.newBuilder().build());
+                    .listAllowed(ListAllowedRequest.newBuilder().build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -47,7 +48,7 @@ public class ListAllowedCommand implements Command {
 
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

@@ -17,7 +17,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPoPEndorsementsInfoReply;
+import nodecore.api.grpc.GetPoPEndorsementsInfoRequest;
+import nodecore.api.grpc.StandardAddress;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -59,14 +61,14 @@ public class GetPoPEndorsementsInfoCommand implements Command {
         Integer searchLength = context.getParameter("searchLength");
 
         try {
-            VeriBlockMessages.GetPoPEndorsementsInfoRequest.Builder requestBuilder = VeriBlockMessages.GetPoPEndorsementsInfoRequest.newBuilder();
-            requestBuilder.addAddresses(VeriBlockMessages.StandardAddress.newBuilder()
+            GetPoPEndorsementsInfoRequest.Builder requestBuilder = GetPoPEndorsementsInfoRequest.newBuilder();
+            requestBuilder.addAddresses(StandardAddress.newBuilder()
                     .setStandardAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address)));
 
             if (searchLength != null)
                 requestBuilder.setSearchLength(searchLength);
 
-            VeriBlockMessages.GetPoPEndorsementsInfoReply reply = context
+            GetPoPEndorsementsInfoReply reply = context
                     .adminService()
                     .getPoPEndorsementsInfo(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -90,7 +92,7 @@ public class GetPoPEndorsementsInfoCommand implements Command {
                 ));
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

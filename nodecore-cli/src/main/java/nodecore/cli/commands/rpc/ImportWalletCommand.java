@@ -10,7 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ImportWalletReply;
+import nodecore.api.grpc.ImportWalletRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -45,13 +46,13 @@ public class ImportWalletCommand implements Command {
         try {
             String passphrase = context.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ");
 
-            VeriBlockMessages.ImportWalletRequest.Builder requestBuilder = VeriBlockMessages.ImportWalletRequest.newBuilder();
+            ImportWalletRequest.Builder requestBuilder = ImportWalletRequest.newBuilder();
             requestBuilder.setSourceLocation(ByteString.copyFrom(sourceLocation.getBytes()));
             if (passphrase != null && passphrase.length() > 0) {
                 requestBuilder.setPassphrase(passphrase);
             }
 
-            VeriBlockMessages.ImportWalletReply reply = context
+            ImportWalletReply reply = context
                     .adminService()
                     .importWallet(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -69,7 +70,7 @@ public class ImportWalletCommand implements Command {
                         BackupWalletCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

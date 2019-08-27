@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetTransactionsReply;
+import nodecore.api.grpc.GetTransactionsRequest;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -45,13 +46,13 @@ public class GetTransactionCommand implements Command {
         String transactionId = context.getParameter("txId");
         Integer searchLength = context.getParameter("searchLength");
         try {
-            VeriBlockMessages.GetTransactionsRequest.Builder requestBuilder = VeriBlockMessages.GetTransactionsRequest.newBuilder();
+            GetTransactionsRequest.Builder requestBuilder = GetTransactionsRequest.newBuilder();
             requestBuilder.addIds(ByteStringUtility.hexToByteString(transactionId));
 
             if (searchLength != null)
                 requestBuilder.setSearchLength(searchLength);
 
-            VeriBlockMessages.GetTransactionsReply reply = context.adminService().getTransactions(requestBuilder.build());
+            GetTransactionsReply reply = context.adminService().getTransactions(requestBuilder.build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -66,7 +67,7 @@ public class GetTransactionCommand implements Command {
                         GetHistoryCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

@@ -7,13 +7,13 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.MultisigSlot;
 import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class MultisigSlotInfo {
-    public MultisigSlotInfo(VeriBlockMessages.MultisigSlot slot) {
+    public MultisigSlotInfo(MultisigSlot slot) {
         populated = slot.getPopulated();
         if (slot.getPublicKey() != null) {
             publicKey = Utility.bytesToHex(slot.getPublicKey().toByteArray());

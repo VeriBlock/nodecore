@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ClearBannedMinersRequest;
+import nodecore.api.grpc.ProtocolReply;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.EmptyPayload;
 import nodecore.cli.commands.serialization.FormattableObject;
@@ -37,9 +38,9 @@ public class ClearBannedMinersCommand implements Command {
     public Result execute(CommandContext context) {
         Result result = new DefaultResult();
         try {
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
-                    .clearBannedMiners(VeriBlockMessages.ClearBannedMinersRequest.newBuilder().build());
+                    .clearBannedMiners(ClearBannedMinersRequest.newBuilder().build());
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
@@ -48,7 +49,7 @@ public class ClearBannedMinersCommand implements Command {
                 temp.payload = new EmptyPayload();
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

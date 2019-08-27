@@ -10,7 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BackupWalletReply;
+import nodecore.api.grpc.BackupWalletRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -44,9 +45,9 @@ public class BackupWalletCommand implements Command {
         String targetLocation = context.getParameter("targetLocation");
 
         try {
-            VeriBlockMessages.BackupWalletReply reply = context
+            BackupWalletReply reply = context
                     .adminService()
-                    .backupWallet(VeriBlockMessages.BackupWalletRequest
+                    .backupWallet(BackupWalletRequest
                             .newBuilder()
                             .setTargetLocation(ByteString.copyFrom(targetLocation.getBytes()))
                             .build());
@@ -67,7 +68,7 @@ public class BackupWalletCommand implements Command {
                         DumpPrivateKeyCommand.class,
                         ImportPrivateKeyCommand.class));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

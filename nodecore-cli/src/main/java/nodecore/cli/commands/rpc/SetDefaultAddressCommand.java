@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.SetDefaultAddressReply;
+import nodecore.api.grpc.SetDefaultAddressRequest;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -46,9 +47,9 @@ public class SetDefaultAddressCommand implements Command {
         try {
             String address = context.getParameter("address");
 
-            VeriBlockMessages.SetDefaultAddressReply reply = context
+            SetDefaultAddressReply reply = context
                     .adminService()
-                    .setDefaultAddress(VeriBlockMessages.SetDefaultAddressRequest.newBuilder()
+                    .setDefaultAddress(SetDefaultAddressRequest.newBuilder()
                             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                             .build());
             if (!reply.getSuccess()) {
@@ -66,7 +67,7 @@ public class SetDefaultAddressCommand implements Command {
                         SigIndexCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

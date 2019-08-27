@@ -7,124 +7,124 @@
 
 package nodecore.cli.contracts;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.*;
 
 public interface AdminService {
-    VeriBlockMessages.GetPopReply getPop(VeriBlockMessages.GetPopRequest request);
+    GetPopReply getPop(GetPopRequest request);
 
-    VeriBlockMessages.ProtocolReply addNode(VeriBlockMessages.NodeRequest request);
+    ProtocolReply addNode(NodeRequest request);
 
-    VeriBlockMessages.GetInfoReply getInfo(VeriBlockMessages.GetInfoRequest request);
+    GetInfoReply getInfo(GetInfoRequest request);
 
-    VeriBlockMessages.ProtocolReply removeNode(VeriBlockMessages.NodeRequest request);
+    ProtocolReply removeNode(NodeRequest request);
 
-    VeriBlockMessages.StopPoolReply stopPool(VeriBlockMessages.StopPoolRequest request);
+    StopPoolReply stopPool(StopPoolRequest request);
 
-    VeriBlockMessages.ProtocolReply submitPop(VeriBlockMessages.SubmitPopRequest request);
+    ProtocolReply submitPop(SubmitPopRequest request);
 
-    VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request);
+    SendCoinsReply sendCoins(SendCoinsRequest request);
 
-    VeriBlockMessages.GetBlocksReply getBlocks(VeriBlockMessages.GetBlocksRequest request);
+    GetBlocksReply getBlocks(GetBlocksRequest request);
 
-    VeriBlockMessages.StartPoolReply startPool(VeriBlockMessages.StartPoolRequest request);
+    StartPoolReply startPool(StartPoolRequest request);
 
-    VeriBlockMessages.ProtocolReply setAllowed(VeriBlockMessages.SetAllowedRequest request);
+    ProtocolReply setAllowed(SetAllowedRequest request);
 
-    VeriBlockMessages.GetHistoryReply getHistory(VeriBlockMessages.GetHistoryRequest request);
+    GetHistoryReply getHistory(GetHistoryRequest request);
 
-    VeriBlockMessages.GetBalanceReply getBalance(VeriBlockMessages.GetBalanceRequest request);
+    GetBalanceReply getBalance(GetBalanceRequest request);
 
-    VeriBlockMessages.ProtocolReply submitBlocks(VeriBlockMessages.SubmitBlocksRequest request);
+    ProtocolReply submitBlocks(SubmitBlocksRequest request);
 
-    VeriBlockMessages.ProtocolReply clearAllowed(VeriBlockMessages.ClearAllowedRequest request);
+    ProtocolReply clearAllowed(ClearAllowedRequest request);
 
-    VeriBlockMessages.ListAllowedReply listAllowed(VeriBlockMessages.ListAllowedRequest request);
+    ListAllowedReply listAllowed(ListAllowedRequest request);
 
-    VeriBlockMessages.GetPeerInfoReply getPeerInfo(VeriBlockMessages.GetPeerInfoRequest request);
+    GetPeerInfoReply getPeerInfo(GetPeerInfoRequest request);
 
-    VeriBlockMessages.SignMessageReply signMessage(VeriBlockMessages.SignMessageRequest request);
+    SignMessageReply signMessage(SignMessageRequest request);
 
-    VeriBlockMessages.BackupWalletReply backupWallet(VeriBlockMessages.BackupWalletRequest request);
+    BackupWalletReply backupWallet(BackupWalletRequest request);
 
-    VeriBlockMessages.ImportWalletReply importWallet(VeriBlockMessages.ImportWalletRequest request);
+    ImportWalletReply importWallet(ImportWalletRequest request);
 
-    VeriBlockMessages.GetNewAddressReply getNewAddress(VeriBlockMessages.GetNewAddressRequest request);
+    GetNewAddressReply getNewAddress(GetNewAddressRequest request);
 
-    VeriBlockMessages.GetBlockTimesReply getBlockTimes(VeriBlockMessages.GetBlockTimesRequest request);
+    GetBlockTimesReply getBlockTimes(GetBlockTimesRequest request);
 
-    VeriBlockMessages.StartSoloPoolReply startSoloPool(VeriBlockMessages.StartSoloPoolRequest request);
+    StartSoloPoolReply startSoloPool(StartSoloPoolRequest request);
 
-    VeriBlockMessages.GetBlockchainsReply getBlockchains(VeriBlockMessages.GetBlockchainsRequest request);
+    GetBlockchainsReply getBlockchains(GetBlockchainsRequest request);
 
-    VeriBlockMessages.ProtocolReply setTransactionFee(VeriBlockMessages.SetTransactionFeeRequest request);
+    ProtocolReply setTransactionFee(SetTransactionFeeRequest request);
 
-    VeriBlockMessages.DumpPrivateKeyReply dumpPrivateKey(VeriBlockMessages.DumpPrivateKeyRequest request);
+    DumpPrivateKeyReply dumpPrivateKey(DumpPrivateKeyRequest request);
 
-    VeriBlockMessages.ImportPrivateKeyReply importPrivateKey(VeriBlockMessages.ImportPrivateKeyRequest request);
+    ImportPrivateKeyReply importPrivateKey(ImportPrivateKeyRequest request);
 
-    VeriBlockMessages.ProtocolReply submitTransactions(VeriBlockMessages.SubmitTransactionsRequest request);
+    ProtocolReply submitTransactions(SubmitTransactionsRequest request);
 
-    VeriBlockMessages.ValidateAddressReply validateAddress(VeriBlockMessages.ValidateAddressRequest request);
+    ValidateAddressReply validateAddress(ValidateAddressRequest request);
 
-    VeriBlockMessages.GenerateMultisigAddressReply generateMultisigAddress(VeriBlockMessages.GenerateMultisigAddressRequest request);
+    GenerateMultisigAddressReply generateMultisigAddress(GenerateMultisigAddressRequest request);
 
-    VeriBlockMessages.MakeUnsignedMultisigTxReply makeUnsignedMultisigTx(VeriBlockMessages.MakeUnsignedMultisigTxRequest request);
+    MakeUnsignedMultisigTxReply makeUnsignedMultisigTx(MakeUnsignedMultisigTxRequest request);
 
-    VeriBlockMessages.SubmitMultisigTxReply submitMultisigTx(VeriBlockMessages.SubmitMultisigTxRequest request);
+    SubmitMultisigTxReply submitMultisigTx(SubmitMultisigTxRequest request);
 
-    VeriBlockMessages.GetTransactionsReply getTransactions(VeriBlockMessages.GetTransactionsRequest request);
+    GetTransactionsReply getTransactions(GetTransactionsRequest request);
 
-    VeriBlockMessages.GetBlockTemplateReply getBlockTemplate(VeriBlockMessages.GetBlockTemplateRequest request);
+    GetBlockTemplateReply getBlockTemplate(GetBlockTemplateRequest request);
 
-    VeriBlockMessages.GetSignatureIndexReply getSignatureIndex(VeriBlockMessages.GetSignatureIndexRequest request);
+    GetSignatureIndexReply getSignatureIndex(GetSignatureIndexRequest request);
 
-    VeriBlockMessages.SetDefaultAddressReply setDefaultAddress(VeriBlockMessages.SetDefaultAddressRequest request);
+    SetDefaultAddressReply setDefaultAddress(SetDefaultAddressRequest request);
 
-    VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request);
+    GetLastBitcoinBlockReply getLastBitcoinBlock(GetLastBitcoinBlockRequest request);
 
-    VeriBlockMessages.GetProtectedChildrenReply getProtectedChildren(VeriBlockMessages.GetProtectedChildrenRequest request);
+    GetProtectedChildrenReply getProtectedChildren(GetProtectedChildrenRequest request);
 
-    VeriBlockMessages.GetProtectingParentsReply getProtectingParents(VeriBlockMessages.GetProtectingParentsRequest request);
+    GetProtectingParentsReply getProtectingParents(GetProtectingParentsRequest request);
 
-    VeriBlockMessages.RestartPoolWebServerReply restartPoolWebServer(VeriBlockMessages.RestartPoolWebServerRequest request);
+    RestartPoolWebServerReply restartPoolWebServer(RestartPoolWebServerRequest request);
 
-    VeriBlockMessages.GetPoPEndorsementsInfoReply getPoPEndorsementsInfo(VeriBlockMessages.GetPoPEndorsementsInfoRequest request);
+    GetPoPEndorsementsInfoReply getPoPEndorsementsInfo(GetPoPEndorsementsInfoRequest request);
 
-    VeriBlockMessages.GetPendingTransactionsReply getPendingTransactions(VeriBlockMessages.GetPendingTransactionsRequest request);
+    GetPendingTransactionsReply getPendingTransactions(GetPendingTransactionsRequest request);
 
-    VeriBlockMessages.GetStateInfoReply getStateInfo(VeriBlockMessages.GetStateInfoRequest request);
+    GetStateInfoReply getStateInfo(GetStateInfoRequest request);
 
-    VeriBlockMessages.GetDiagnosticInfoReply getDiagnosticInfo(VeriBlockMessages.GetDiagnosticInfoRequest request);
+    GetDiagnosticInfoReply getDiagnosticInfo(GetDiagnosticInfoRequest request);
 
-    VeriBlockMessages.ProtocolReply stopNodeCore(VeriBlockMessages.StopNodeCoreRequest request);
+    ProtocolReply stopNodeCore(StopNodeCoreRequest request);
 
-    VeriBlockMessages.ProtocolReply refreshWalletCache(VeriBlockMessages.RefreshWalletCacheRequest request);
+    ProtocolReply refreshWalletCache(RefreshWalletCacheRequest request);
 
-    VeriBlockMessages.GetWalletTransactionsReply getWalletTransactions(VeriBlockMessages.GetWalletTransactionsRequest build);
+    GetWalletTransactionsReply getWalletTransactions(GetWalletTransactionsRequest build);
 
-    VeriBlockMessages.PingReply connect();
+    PingReply connect();
 
-    VeriBlockMessages.TroubleshootPoPTransactionsReply troubleshootPoPTransactions(VeriBlockMessages.TroubleshootPoPTransactionsRequest request);
+    TroubleshootPoPTransactionsReply troubleshootPoPTransactions(TroubleshootPoPTransactionsRequest request);
 
-    VeriBlockMessages.ProtocolReply clearBanned(VeriBlockMessages.ClearBannedRequest request);
+    ProtocolReply clearBanned(ClearBannedRequest request);
 
-    VeriBlockMessages.ListBannedReply listBanned(VeriBlockMessages.ListBannedRequest request);
+    ListBannedReply listBanned(ListBannedRequest request);
 
-    VeriBlockMessages.ProtocolReply clearBannedMiners(VeriBlockMessages.ClearBannedMinersRequest request);
+    ProtocolReply clearBannedMiners(ClearBannedMinersRequest request);
 
-    VeriBlockMessages.ListBannedMinersReply listBannedMiners(VeriBlockMessages.ListBannedMinersRequest request);
+    ListBannedMinersReply listBannedMiners(ListBannedMinersRequest request);
 
-    VeriBlockMessages.ProtocolReply encryptWallet(VeriBlockMessages.EncryptWalletRequest request);
+    ProtocolReply encryptWallet(EncryptWalletRequest request);
 
-    VeriBlockMessages.ProtocolReply decryptWallet(VeriBlockMessages.DecryptWalletRequest request);
+    ProtocolReply decryptWallet(DecryptWalletRequest request);
 
-    VeriBlockMessages.ProtocolReply unlockWallet(VeriBlockMessages.UnlockWalletRequest request);
+    ProtocolReply unlockWallet(UnlockWalletRequest request);
 
-    VeriBlockMessages.ProtocolReply lockWallet(VeriBlockMessages.LockWalletRequest request);
+    ProtocolReply lockWallet(LockWalletRequest request);
 
-    VeriBlockMessages.DrainAddressReply drainAddress(VeriBlockMessages.DrainAddressRequest request);
+    DrainAddressReply drainAddress(DrainAddressRequest request);
     
-    VeriBlockMessages.GetBalanceUnlockScheduleReply getBalanceUnlockSchedule(VeriBlockMessages.GetBalanceUnlockScheduleRequest request);
+    GetBalanceUnlockScheduleReply getBalanceUnlockSchedule(GetBalanceUnlockScheduleRequest request);
 
-    VeriBlockMessages.GetPoolStateReply getPoolState(VeriBlockMessages.GetPoolStateRequest request);
+    GetPoolStateReply getPoolState(GetPoolStateRequest request);
 }

@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPopReply;
+import nodecore.api.grpc.GetPopRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -45,11 +46,11 @@ public class GetPopCommand implements Command {
 
         Integer blockNum = context.getParameter("block");
         try {
-            VeriBlockMessages.GetPopRequest.Builder popRequest = VeriBlockMessages.GetPopRequest.newBuilder();
+            GetPopRequest.Builder popRequest = GetPopRequest.newBuilder();
             if (blockNum != null && blockNum >= 0) {
                 popRequest.setBlockNum(blockNum);
             }
-            VeriBlockMessages.GetPopReply reply = context
+            GetPopReply reply = context
                     .adminService()
                     .getPop(popRequest.build());
             if (!reply.getSuccess()) {
@@ -65,7 +66,7 @@ public class GetPopCommand implements Command {
                     context.suggestCommands(Collections.singletonList(StartPoPMinerCommand.class));
                 }
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

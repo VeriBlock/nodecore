@@ -8,11 +8,11 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ImportPrivateKeyReply;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 
 public class ImportPrivateKeyInfo {
-    public ImportPrivateKeyInfo(final VeriBlockMessages.ImportPrivateKeyReply reply) {
+    public ImportPrivateKeyInfo(final ImportPrivateKeyReply reply) {
         this.address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getResultantAddress());
     }
 

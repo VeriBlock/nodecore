@@ -9,7 +9,7 @@ package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
 import com.opencsv.bean.CsvBindByName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.WalletTransaction;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.BlockUtility;
@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter;
 
 public class WalletTransactionInfo {
 
-    public WalletTransactionInfo(VeriBlockMessages.WalletTransaction transaction) {
+    public WalletTransactionInfo(WalletTransaction transaction) {
         txId  = ByteStringUtility.byteStringToHex(transaction.getTxId());
         ZonedDateTime date = Instant.ofEpochSecond(transaction.getTimestamp()).atZone(ZoneId.systemDefault());
         timestamp = date.format(DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss z"));

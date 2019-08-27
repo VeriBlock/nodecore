@@ -9,12 +9,12 @@ package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
 import com.opencsv.bean.CsvBindByName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetInfoReply;
 import org.veriblock.core.utilities.Utility;
 
 public class GetInfoPayload {
 
-    public GetInfoPayload(final VeriBlockMessages.GetInfoReply reply) {
+    public GetInfoPayload(final GetInfoReply reply) {
         decoded_difficulty = reply.getDecodedDifficulty();
         numberOfBlocks = reply.getNumberOfBlocks();
         transactionFee = Utility.formatAtomicLongWithDecimal(reply.getTransactionFee());

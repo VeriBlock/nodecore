@@ -7,7 +7,7 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.BalanceUnlockEvent;
 import org.veriblock.core.utilities.Utility;
 
 public class BalanceScheduleItem {
@@ -18,7 +18,7 @@ public class BalanceScheduleItem {
 
     public String lockedBalance;
 
-    public BalanceScheduleItem(final VeriBlockMessages.BalanceUnlockEvent message) {
+    public BalanceScheduleItem(final BalanceUnlockEvent message) {
         blockHeight = message.getBlockHeight();
         amountUnlocked = Utility.formatAtomicLongWithDecimal(message.getAmountUnlocked());
         lockedBalance = Utility.formatAtomicLongWithDecimal(message.getLockedBalance());

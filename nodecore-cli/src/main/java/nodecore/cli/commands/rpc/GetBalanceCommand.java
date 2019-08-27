@@ -10,7 +10,10 @@ package nodecore.cli.commands.rpc;
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.AddressBalance;
+import nodecore.api.grpc.GetBalanceReply;
+import nodecore.api.grpc.GetBalanceRequest;
+import nodecore.api.grpc.Output;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -39,10 +42,10 @@ public class GetBalanceCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(GetBalanceCommand.class);
 
     private class BalancePayload {
-        BalancePayload(final VeriBlockMessages.GetBalanceReply reply) {
-            for (final VeriBlockMessages.AddressBalance balanceInfo : reply.getConfirmedList())
+        BalancePayload(final GetBalanceReply reply) {
+            for (final AddressBalance balanceInfo : reply.getConfirmedList())
                 confirmed.add(new AddressBalanceInfo(balanceInfo));
-            for (final VeriBlockMessages.Output output : reply.getUnconfirmedList())
+            for (final Output output : reply.getUnconfirmedList())
                 unconfirmed.add(new OutputInfo(output));
         }
         @SerializedName("confirmed")
@@ -61,11 +64,11 @@ public class GetBalanceCommand implements Command {
 
         String address = context.getParameter("address");
         try {
-            VeriBlockMessages.GetBalanceRequest.Builder requestBuilder = VeriBlockMessages.GetBalanceRequest.newBuilder();
+            GetBalanceRequest.Builder requestBuilder = GetBalanceRequest.newBuilder();
             if (address != null) {
                 requestBuilder.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
             }
-            VeriBlockMessages.GetBalanceReply reply = context
+            GetBalanceReply reply = context
                     .adminService()
                     .getBalance(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -82,7 +85,7 @@ public class GetBalanceCommand implements Command {
                         GetNewAddressCommand.class));
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

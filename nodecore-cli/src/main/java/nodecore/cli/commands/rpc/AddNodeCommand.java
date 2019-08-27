@@ -9,7 +9,9 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.Endpoint;
+import nodecore.api.grpc.NodeRequest;
+import nodecore.api.grpc.ProtocolReply;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -40,13 +42,13 @@ public class AddNodeCommand implements Command {
 
         PeerEndpoint peer = context.getParameter("peer");
         try {
-            VeriBlockMessages.Endpoint endpoint = VeriBlockMessages.Endpoint
+            Endpoint endpoint = Endpoint
                     .newBuilder()
                     .setAddress(peer.address())
                     .setPort(peer.port())
                     .build();
-            VeriBlockMessages.ProtocolReply reply = context.adminService()
-                    .addNode(VeriBlockMessages.NodeRequest
+            ProtocolReply reply = context.adminService()
+                    .addNode(NodeRequest
                                 .newBuilder()
                                 .addEndpoint(endpoint)
                                 .build());
@@ -61,7 +63,7 @@ public class AddNodeCommand implements Command {
 
                 context.suggestCommands(Collections.singletonList(RemoveNodeCommand.class));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

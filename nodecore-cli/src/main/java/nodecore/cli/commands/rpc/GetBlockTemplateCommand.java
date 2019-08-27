@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetBlockTemplateReply;
+import nodecore.api.grpc.GetBlockTemplateRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -42,7 +43,7 @@ public class GetBlockTemplateCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.GetBlockTemplateRequest.Builder requestBuilder = VeriBlockMessages.GetBlockTemplateRequest.newBuilder();
+            GetBlockTemplateRequest.Builder requestBuilder = GetBlockTemplateRequest.newBuilder();
             String mode = context.getParameter("mode");
             if (mode == null || mode.isEmpty())
                 mode = "template";
@@ -54,7 +55,7 @@ public class GetBlockTemplateCommand implements Command {
                 for (String flag : flags)
                     requestBuilder.addCapabilities(flag);
             }
-            VeriBlockMessages.GetBlockTemplateReply reply = context
+            GetBlockTemplateReply reply = context
                     .adminService()
                     .getBlockTemplate(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -66,7 +67,7 @@ public class GetBlockTemplateCommand implements Command {
 
                 context.outputObject(temp);
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

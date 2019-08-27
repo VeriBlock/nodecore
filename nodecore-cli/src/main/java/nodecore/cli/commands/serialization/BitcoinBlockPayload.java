@@ -8,12 +8,12 @@ package nodecore.cli.commands.serialization;
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetLastBitcoinBlockReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class BitcoinBlockPayload {
 
-    public BitcoinBlockPayload(final VeriBlockMessages.GetLastBitcoinBlockReply reply) {
+    public BitcoinBlockPayload(final GetLastBitcoinBlockReply reply) {
         header = ByteStringUtility.byteStringToHex(reply.getHeader());
         height = reply.getHeight();
         hash = ByteStringUtility.byteStringToHex(reply.getHash());

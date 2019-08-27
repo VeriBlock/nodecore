@@ -9,13 +9,14 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.*;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.SubmitMultisigTxPayload;
+import nodecore.cli.contracts.Result;
 import nodecore.cli.contracts.*;
 import nodecore.cli.utilities.CommandUtility;
 import org.slf4j.Logger;
@@ -56,27 +57,27 @@ public class SubmitMultisigTxCommand implements Command {
                 result.addMessage("-1", "Invalid public keys / addresses and signatures provided!", "There must be an equivalent number of provided public keys / addresses as there are signatures. Note that a blank multisig slot (no public key, no slot) ", true);
             }
 
-            VeriBlockMessages.UnsignedMultisigTransactionWithIndex unsignedTransaction = null;
+            UnsignedMultisigTransactionWithIndex unsignedTransaction = null;
             try {
-                unsignedTransaction = VeriBlockMessages.UnsignedMultisigTransactionWithIndex.parseFrom(unsignedTransactionBytes);
+                unsignedTransaction = UnsignedMultisigTransactionWithIndex.parseFrom(unsignedTransactionBytes);
             } catch (Exception e) {
                 result.addMessage("-1", "Unable to parse the provided raw multisig transaction!", e.getMessage(), true);
                 return result;
             }
 
-            if (unsignedTransaction.getUnsignedMultisigTansaction().getType() != VeriBlockMessages.Transaction.Type.MULTISIG) {
+            if (unsignedTransaction.getUnsignedMultisigTansaction().getType() != Transaction.Type.MULTISIG) {
                 result.addMessage("-1", "Invalid transaction provided!", "The provided transaction is not a multisig transaction!", true);
                 return result;
             }
 
-            VeriBlockMessages.SignedMultisigTransaction.Builder signedMultisigTxBuilder = VeriBlockMessages.SignedMultisigTransaction.newBuilder();
+            SignedMultisigTransaction.Builder signedMultisigTxBuilder = SignedMultisigTransaction.newBuilder();
             signedMultisigTxBuilder.setSignatureIndex(unsignedTransaction.getSignatureIndex());
             signedMultisigTxBuilder.setTransaction(unsignedTransaction.getUnsignedMultisigTansaction());
 
-            VeriBlockMessages.MultisigBundle.Builder multisigBundleBuilder = VeriBlockMessages.MultisigBundle.newBuilder();
+            MultisigBundle.Builder multisigBundleBuilder = MultisigBundle.newBuilder();
 
             for (int i = 0; i < publicKeysOrAddresses.length; i++) {
-                VeriBlockMessages.MultisigSlot.Builder multisigSlotBuilder = VeriBlockMessages.MultisigSlot.newBuilder();
+                MultisigSlot.Builder multisigSlotBuilder = MultisigSlot.newBuilder();
                 if (AddressUtility.isValidStandardAddress(publicKeysOrAddresses[i])) {
                     multisigSlotBuilder.setOwnerAddress(ByteStringUtility.base58ToByteString(publicKeysOrAddresses[i]));
                     multisigSlotBuilder.setPopulated(false);
@@ -95,11 +96,11 @@ public class SubmitMultisigTxCommand implements Command {
             }
             signedMultisigTxBuilder.setSignatureBundle(multisigBundleBuilder.build());
 
-            VeriBlockMessages.SubmitMultisigTxRequest.Builder request = VeriBlockMessages.SubmitMultisigTxRequest.newBuilder();
+            SubmitMultisigTxRequest.Builder request = SubmitMultisigTxRequest.newBuilder();
 
             request.setMultisigTransaction(signedMultisigTxBuilder.build());
 
-            VeriBlockMessages.SubmitMultisigTxReply reply = context
+            SubmitMultisigTxReply reply = context
                     .adminService()
                     .submitMultisigTx(request.build());
 
@@ -120,7 +121,7 @@ public class SubmitMultisigTxCommand implements Command {
                         MakeUnsignedMultisigTxCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

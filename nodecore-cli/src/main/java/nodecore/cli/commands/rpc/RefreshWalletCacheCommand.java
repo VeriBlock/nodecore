@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.ProtocolReply;
+import nodecore.api.grpc.RefreshWalletCacheRequest;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.EmptyPayload;
 import nodecore.cli.commands.serialization.FormattableObject;
@@ -37,9 +38,9 @@ public class RefreshWalletCacheCommand implements Command {
         Result result = new DefaultResult();
 
         try {
-            VeriBlockMessages.ProtocolReply reply = context
+            ProtocolReply reply = context
                     .adminService()
-                    .refreshWalletCache(VeriBlockMessages.RefreshWalletCacheRequest.newBuilder().build());
+                    .refreshWalletCache(RefreshWalletCacheRequest.newBuilder().build());
 
             if (!reply.getSuccess()) {
                 result.fail();
@@ -51,7 +52,7 @@ public class RefreshWalletCacheCommand implements Command {
                 context.outputObject(temp);
             }
 
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, logger);

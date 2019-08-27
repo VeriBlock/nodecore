@@ -7,11 +7,11 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GenerateMultisigAddressReply;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 
 public class GenerateMultisigAddressPayload {
-    public GenerateMultisigAddressPayload(final VeriBlockMessages.GenerateMultisigAddressReply reply) {
+    public GenerateMultisigAddressPayload(final GenerateMultisigAddressReply reply) {
         sourceAddresses = new String[reply.getSourceAddressesCount()];
         for (int i = 0; i < reply.getSourceAddressesCount(); i++) {
             sourceAddresses[i] = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getSourceAddresses(i));

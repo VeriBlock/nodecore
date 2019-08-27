@@ -7,10 +7,10 @@
 
 package nodecore.cli.commands.serialization;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.TroubleshootPoPTransactionsReply;
 
 public class TroubleshootPoPTransactionsPayload {
-    public TroubleshootPoPTransactionsPayload(final VeriBlockMessages.TroubleshootPoPTransactionsReply reply) {
+    public TroubleshootPoPTransactionsPayload(final TroubleshootPoPTransactionsReply reply) {
         PoPProblemReports = new PoPTransactionProblemReport[reply.getPopProblemReportsCount()];
         for (int i = 0; i < reply.getPopProblemReportsCount(); i++) {
             PoPProblemReports[i] = new PoPTransactionProblemReport(reply.getPopProblemReports(i));

@@ -8,12 +8,12 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.DumpPrivateKeyReply;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 
 public class PrivateKeyInfo {
-    public PrivateKeyInfo(final VeriBlockMessages.DumpPrivateKeyReply reply) {
+    public PrivateKeyInfo(final DumpPrivateKeyReply reply) {
         this.address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getAddress());
         this.privateKey = ByteStringUtility.byteStringToHex(reply.getPrivateKey());
     }

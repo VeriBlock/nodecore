@@ -8,7 +8,8 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.CandidateTransaction;
+import nodecore.api.grpc.GetBlockTemplateReply;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.Utility;
 
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GetBlockTemplatePayload {
-    public GetBlockTemplatePayload(final VeriBlockMessages.GetBlockTemplateReply reply) {
+    public GetBlockTemplatePayload(final GetBlockTemplateReply reply) {
         target = reply.getTarget();
         sizeLimit = reply.getSizeLimit();
         blockHeight = reply.getBlockHeight();
@@ -25,7 +26,7 @@ public class GetBlockTemplatePayload {
         minimumTimestamp = reply.getMinimumTimestamp();
         currentTimestamp = reply.getCurrentTimestamp();
         previousBlockHash = ByteStringUtility.byteStringToHex(reply.getPreviousBlockHash());
-        for (final VeriBlockMessages.CandidateTransaction transaction : reply.getTransactionsList())
+        for (final CandidateTransaction transaction : reply.getTransactionsList())
             transactions.add(new CandidateTransactionInfo(transaction));
     }
 

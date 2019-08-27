@@ -17,7 +17,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetProtectingParentsReply;
+import nodecore.api.grpc.GetProtectingParentsRequest;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
@@ -59,13 +60,13 @@ public class GetProtectingParentsCommand implements Command {
         Integer searchLength = context.getParameter("searchLength");
 
         try {
-            VeriBlockMessages.GetProtectingParentsRequest.Builder requestBuilder = VeriBlockMessages.GetProtectingParentsRequest.newBuilder();
+            GetProtectingParentsRequest.Builder requestBuilder = GetProtectingParentsRequest.newBuilder();
             requestBuilder.setVeriblockBlockHash(ByteStringUtility.hexToByteString(hash));
 
             if (searchLength != null)
                 requestBuilder.setSearchLength(searchLength);
 
-            VeriBlockMessages.GetProtectingParentsReply reply = context
+            GetProtectingParentsReply reply = context
                     .adminService()
                     .getProtectingParents(requestBuilder.build());
             if (!reply.getSuccess()) {
@@ -88,7 +89,7 @@ public class GetProtectingParentsCommand implements Command {
                         StartPoPMinerCommand.class
                 ));
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);

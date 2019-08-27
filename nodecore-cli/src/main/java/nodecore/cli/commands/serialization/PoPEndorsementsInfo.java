@@ -8,13 +8,13 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.PoPEndorsementInfo;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.utilities.Utility;
 
 public class PoPEndorsementsInfo {
-    public PoPEndorsementsInfo(final VeriBlockMessages.PoPEndorsementInfo popEndorsementInfo) {
+    public PoPEndorsementsInfo(final PoPEndorsementInfo popEndorsementInfo) {
         minerAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(popEndorsementInfo.getMinerAddress());
         endorsedVeriBlockBlockHash = ByteStringUtility.byteStringToHex(popEndorsementInfo.getEndorsedVeriblockBlockHash());
         containedInVeriBlockBlockHash = ByteStringUtility.byteStringToHex(popEndorsementInfo.getContainedInVeriblockBlockHash());

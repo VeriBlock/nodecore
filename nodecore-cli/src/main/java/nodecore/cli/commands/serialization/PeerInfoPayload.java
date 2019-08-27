@@ -8,7 +8,7 @@
 package nodecore.cli.commands.serialization;
 
 import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetPeerInfoReply;
 import nodecore.cli.contracts.PeerEndpoint;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public class PeerInfoPayload {
     @SerializedName("candidates")
     public List<NodeInfo> candidateNodes;
 
-    public PeerInfoPayload(final VeriBlockMessages.GetPeerInfoReply reply) {
+    public PeerInfoPayload(final GetPeerInfoReply reply) {
         peerEndpoints = reply.getEndpointsList()
                 .stream()
                 .map(x -> new PeerEndpoint(x.getAddress(), (short) x.getPort(), null))

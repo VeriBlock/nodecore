@@ -9,7 +9,8 @@ package nodecore.cli.commands.rpc;
 
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.GetNewAddressReply;
+import nodecore.api.grpc.GetNewAddressRequest;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
@@ -45,9 +46,9 @@ public class GetNewAddressCommand implements Command {
                 count = 1;
             }
 
-            VeriBlockMessages.GetNewAddressReply reply = context
+            GetNewAddressReply reply = context
                     .adminService()
-                    .getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
+                    .getNewAddress(GetNewAddressRequest.newBuilder()
                             .setCount(count)
                             .build());
             if (!reply.getSuccess()) {
@@ -67,7 +68,7 @@ public class GetNewAddressCommand implements Command {
                 ));
 
             }
-            for (VeriBlockMessages.Result r : reply.getResultsList())
+            for (nodecore.api.grpc.Result r : reply.getResultsList())
                 result.addMessage(r.getCode(), r.getMessage(), r.getDetails(), r.getError());
         } catch (StatusRuntimeException e) {
             CommandUtility.handleRuntimeException(result, e, _logger);
