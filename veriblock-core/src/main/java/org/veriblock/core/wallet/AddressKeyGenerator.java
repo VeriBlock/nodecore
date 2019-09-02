@@ -7,6 +7,7 @@
 
 package org.veriblock.core.wallet;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.SharedConstants;
@@ -45,6 +46,7 @@ public class AddressKeyGenerator {
              * more secure (~1%), the secp256k1 curve is more 'rigid', and the choosing of apparently 'random' parameters
              * for secp256r1 are suspicious--NIST claims that the 'random' parameters are more efficient, despite
              * evidence that other prime choices are more efficient. */
+            Security.addProvider(new BouncyCastleProvider());
             keyPairGenerator.initialize(new ECGenParameterSpec("secp256k1"), random);
         } catch (NoSuchAlgorithmException e) {
             /* ECDSA not available */
