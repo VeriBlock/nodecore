@@ -11,6 +11,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringUtility;
+import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.Utility;
 
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ import java.util.List;
 public class BlockInfo {
     public BlockInfo(final VeriBlockMessages.Block block) {
         hash = ByteStringUtility.byteStringToHex(block.getHash());
-        header = ByteStringUtility.byteStringToHex(block.getHeader());
         number = block.getNumber();
         version = (short)block.getVersion();
         previousHash = ByteStringUtility.byteStringToHex(block.getPreviousHash());
@@ -54,6 +54,28 @@ public class BlockInfo {
 
         blockContentMetapackage = new BlockContentMetapackageInfo(block.getBlockContentMetapackage());
         size = block.getSize();
+
+        if (number % 20 == 0) {
+            header = Utility.bytesToHex(BlockUtility.assembleBlockHeader(number,
+                    version,
+                    previousHash,
+                    previousKeystoneHash,
+                    secondPreviousKeystoneHash,
+                    merkleRoot,
+                    timestamp,
+                    encoded_difficulty,
+                    winningNonce));
+        } else {
+            header = Utility.bytesToHex(BlockUtility.assembleBlockHeader(number,
+                    version,
+                    previousHash,
+                    secondPreviousHash,
+                    thirdPreviousHash,
+                    merkleRoot,
+                    timestamp,
+                    encoded_difficulty,
+                    winningNonce));
+        }
     }
 
     @SerializedName("hash")
