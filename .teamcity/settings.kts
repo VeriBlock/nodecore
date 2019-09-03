@@ -44,25 +44,23 @@ project {
     }
 }
 
-const val artifactoryTasks = "veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish"
-
 object Snapshot : Build(
     name = "Snapshot",
-    gradleTasks = "devSnapshot build installDist $artifactoryTasks",
+    gradleTasks = "devSnapshot build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish",
     branchFilter = "+:refs/heads/master",
     artifactoryRepoKey = "libs-snapshot-local"
 )
 
 object ReleaseCandidate : Build(
     name = "Release Candidate",
-    gradleTasks = "candidate build installDist $artifactoryTasks",
-    branchFilter = """+:refs/heads/release/*""",
+    gradleTasks = "candidate build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish",
+    branchFilter = "+:refs/heads/release/*",
     artifactoryRepoKey = "libs-release-local"
 )
 
 object FinalRelease : Build(
     name = "Final Release",
-    gradleTasks = "final build installDist $artifactoryTasks",
+    gradleTasks = "final build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish",
     branchFilter = null,
     artifactoryRepoKey = "libs-release-local"
 )

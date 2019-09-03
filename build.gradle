@@ -31,6 +31,10 @@ nebulaRelease {
 }
 
 task printTCBuildNumber() {
+    String version = version.toString()
+    if (version.contains("+")) {
+        version = version.substring(0, version.indexOf("+"))
+    }
     println "##teamcity[buildNumber \'${version}\']"
 }
 

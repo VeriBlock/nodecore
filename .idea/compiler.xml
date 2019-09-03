@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel>
-      <module name="nodecore-cli_main" target="1.8" />
-      <module name="nodecore-cli_test" target="1.8" />
-      <module name="nodecore-grpc_main" target="1.8" />
-      <module name="nodecore-grpc_test" target="1.8" />
-      <module name="nodecore-miners-pow_main" target="1.8" />
-      <module name="nodecore-miners-pow_test" target="1.8" />
-      <module name="nodecore-ucp_main" target="1.8" />
-      <module name="nodecore-ucp_test" target="1.8" />
-      <module name="veriblock-core_main" target="1.8" />
-      <module name="veriblock-core_test" target="1.8" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="1.8" />
   </component>
 </project>
