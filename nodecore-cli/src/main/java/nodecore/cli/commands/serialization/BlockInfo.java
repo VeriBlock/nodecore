@@ -19,6 +19,7 @@ import java.util.List;
 public class BlockInfo {
     public BlockInfo(final VeriBlockMessages.Block block) {
         hash = ByteStringUtility.byteStringToHex(block.getHash());
+        header = ByteStringUtility.byteStringToHex(block.getHeader());
         number = block.getNumber();
         version = (short)block.getVersion();
         previousHash = ByteStringUtility.byteStringToHex(block.getPreviousHash());
@@ -57,6 +58,9 @@ public class BlockInfo {
 
     @SerializedName("hash")
     public String hash;
+
+    @SerializedName("header")
+    public String header;
 
     @SerializedName("number")
     public int number;

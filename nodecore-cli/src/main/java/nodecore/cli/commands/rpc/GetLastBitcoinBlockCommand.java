@@ -10,8 +10,8 @@ package nodecore.cli.commands.rpc;
 import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.utilities.ByteStringUtility;
 import nodecore.cli.annotations.CommandSpec;
+import nodecore.cli.commands.serialization.BitcoinBlockPayload;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.contracts.Command;
 import nodecore.cli.contracts.CommandContext;
@@ -43,9 +43,9 @@ public class GetLastBitcoinBlockCommand implements Command {
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
-                FormattableObject<String> temp = new FormattableObject<>(reply.getResultsList());
+                FormattableObject<BitcoinBlockPayload> temp = new FormattableObject<>(reply.getResultsList());
                 temp.success = !result.didFail();
-                temp.payload = ByteStringUtility.byteStringToHex(reply.getHeader());
+                temp.payload = new BitcoinBlockPayload(reply);
 
                 context.outputObject(temp);
             }

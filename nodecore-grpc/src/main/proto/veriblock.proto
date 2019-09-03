@@ -382,6 +382,7 @@ message Block {
     int32 size = 16;
 	int32 version = 17;
 	bytes merkle_root = 18 [(hex_encoded)=true];
+    bytes header = 19 [(hex_encoded)=true];
 }
 
 message BlockHeader {
@@ -888,6 +889,8 @@ message GetLastBitcoinBlockReply {
     bool success = 1;
     repeated Result results = 2;
     bytes header = 3 [(hex_encoded)=true];
+    int32 height = 4;
+    bytes hash = 5;
 }
 
 message GetLastBlockReply {
