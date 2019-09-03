@@ -382,7 +382,6 @@ message Block {
     int32 size = 16;
 	int32 version = 17;
 	bytes merkle_root = 18 [(hex_encoded)=true];
-    bytes header = 19 [(hex_encoded)=true];
 }
 
 message BlockHeader {
