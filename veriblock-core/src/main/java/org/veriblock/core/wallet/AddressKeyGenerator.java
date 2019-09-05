@@ -26,6 +26,12 @@ public class AddressKeyGenerator {
     private static KeyFactory keyFactory;
 
     static {
+        String EC_ERROR_MESSAGE = "In order to continue, please download Oracle Java!\n" +
+                        "For Ubuntu/Debian, follow an installation guide like: \n" +
+                        "\thttp://tipsonubuntu.com/2016/07/31/install-oracle-java-8-9-ubuntu-16-04-linux-mint-18/\n" +
+                        "On Windows, download a 64-bit installer such as: \n" +
+                        "\thttp://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html\n" +
+                        "Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations for more details.";
         try {
             keyPairGenerator = KeyPairGenerator.getInstance("EC");
             keyFactory = KeyFactory.getInstance("EC");
@@ -49,10 +55,12 @@ public class AddressKeyGenerator {
         } catch (NoSuchAlgorithmException e) {
             /* ECDSA not available */
             logger.error("VERIBLOCK CANNOT FUNCTION WITHOUT ELLIPTICAL CURVE CRYPTOGRAPHY! EXITING.", e);
+            logger.info(EC_ERROR_MESSAGE);
             System.exit(SharedConstants.Errors.ERROR_NO_ELLIPTICAL_CRYPTOGRAPHY);
         } catch (InvalidAlgorithmParameterException e) {
             /* The secp256k1 curve is not available */
             logger.error("VERIBLOCK CANNOT FUNCTION WITHOUT THE SECP256K1 ELLIPTICAL CURVE! EXITING.", e);
+            logger.info(EC_ERROR_MESSAGE);
             System.exit(SharedConstants.Errors.ERROR_NO_SECP_256_K_1_ELLIPTICAL_CRYPTOGRAPHY);
         }
     }
