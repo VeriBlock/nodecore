@@ -1334,6 +1334,7 @@ message VeriBlockPublication {
 message GetVeriBlockPublicationsRequest {
     bytes keystone_hash = 1 [(hex_encoded)=true];
     bytes context_hash = 2 [(hex_encoded)=true];
+    bytes btc_context_hash = 3 [(hex_encoded)=true];
 }
 
 message GetVeriBlockPublicationsReply {
