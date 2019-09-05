@@ -30,11 +30,9 @@ nebulaRelease {
     addReleaseBranchPattern(/(release(-|\/))?\d+(.\d+)?(.\d+)?/)
 }
 
-task printTCBuildNumber() {
-    String version = version.toString()
-    if (version.contains("+")) {
-        version = version.substring(0, version.indexOf("+"))
-    }
+postRelease.doLast {
+    version = version.toString().split("\\+")[0]
+    // Print version to configure TeamCity
     println "##teamcity[buildNumber \'${version}\']"
 }
 
