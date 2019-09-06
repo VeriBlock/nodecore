@@ -36,6 +36,7 @@ import org.bitcoinj.core.Context;
 import org.bitcoinj.core.FilteredBlock;
 import org.bitcoinj.core.PartialMerkleTree;
 import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
@@ -45,6 +46,7 @@ import org.bitcoinj.core.listeners.BlocksDownloadedEventListener;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.kits.WalletAppKit;
+import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptOpCodes;
@@ -58,6 +60,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -153,6 +156,8 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 wallet.setAcceptRiskyTransactions(true);
                 blockChain = this.chain();
                 peerGroup = this.peerGroup();
+
+                peerGroup.setUseLocalhostPeerWhenPossible(configuration.isBitcoinUseLocalhostPeer());
 
                 wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> InternalEventBus.getInstance()
                         .post(new CoinsReceivedEvent(tx, prevBalance, newBalance)));
