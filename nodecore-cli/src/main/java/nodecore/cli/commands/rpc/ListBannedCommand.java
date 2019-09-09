@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 @CommandSpec(
         name = "List banned peers",
-        form = "listbanned",
+        form = "listbannedpeers",
         description = "Returns a list of peers that are currently banned")
 public class ListBannedCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(ListAllowedCommand.class);

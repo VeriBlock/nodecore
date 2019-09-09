@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 @CommandSpec(
         name = "Clear banned peers",
-        form = "clearbanned",
+        form = "clearbannedpeers",
         description = "Clears the list of peer connections that have been banned")
 public class ClearBannedCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(ClearBannedCommand.class);
