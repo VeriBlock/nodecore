@@ -51,6 +51,9 @@ jar {
 applicationName = 'nodecore-pow'
 mainClassName = 'nodecore.miners.pow.MainClass'
 
+distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
+distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
+
 startScripts {
     windowsStartScriptGenerator.template = resources.text.fromFile("windowsStartScript.txt")
 }

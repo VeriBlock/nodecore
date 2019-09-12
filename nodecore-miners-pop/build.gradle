@@ -98,6 +98,9 @@ jar {
 applicationName = 'nodecore-pop'
 mainClassName = 'nodecore.miners.pop.Program'
 
+distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
+distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
+
 startScripts {
     dependsOn jar
 
