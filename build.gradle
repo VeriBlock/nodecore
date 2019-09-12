@@ -41,7 +41,7 @@ String prettyVersion() {
         if (version.contains("+develop")) {
             version = version.split("\\+")[0]
         } else {
-            version = version.substring(0, version.lastIndexOf(".") + 1).replace("+", "")
+            version = version.substring(0, version.lastIndexOf(".")).replace("+", ".")
         }
     }
     return version
