@@ -52,7 +52,7 @@ jar {
     manifest {
         attributes 'Name': 'nodecore/api/grpc',
                 'Specification-Title': 'VeriBlock NodeCore gRPC API',
-                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'nodecore.api.grpc',
                 'Implementation-Version': version,

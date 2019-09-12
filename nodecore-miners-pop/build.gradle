@@ -86,7 +86,7 @@ jar {
     manifest {
         attributes 'Name': 'nodecore/miners/pop',
                 'Specification-Title': 'VeriBlock Proof-of-Proof (PoP) Miner',
-                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'nodecore.miners.pop',
                 'Implementation-Version': version,

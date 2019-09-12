@@ -30,10 +30,21 @@ nebulaRelease {
     addReleaseBranchPattern(/(release(-|\/))?\d+(.\d+)?(.\d+)?/)
 }
 
-postRelease.doLast {
-    version = version.toString().split("\\+")[0]
+releaseCheck.doLast {
     // Print version to configure TeamCity
-    println "##teamcity[buildNumber \'${version}\']"
+    println "##teamcity[buildNumber \'${prettyVersion()}\']"
+}
+
+String prettyVersion() {
+    String version = rootProject.version.toString()
+    if (version.contains("+")) {
+        if (version.contains("+develop")) {
+            version = version.split("\\+")[0]
+        } else {
+            version = version.substring(0, version.lastIndexOf(".") + 1).replace("+", "")
+        }
+    }
+    return version
 }
 
 task wrapper(type: Wrapper) {

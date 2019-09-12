@@ -18,7 +18,7 @@ jar {
     manifest {
         attributes 'Name': 'nodecore/api/ucp',
                 'Specification-Title': 'VeriBlock NodeCore Universal Client Protocol',
-                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'nodecore.api.ucp',
                 'Implementation-Version': version,

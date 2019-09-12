@@ -18,7 +18,7 @@ jar {
     manifest {
         attributes 'Name': 'org/veriblock/core',
                 'Specification-Title': 'VeriBlock Core Library',
-                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'org.veriblock.core',
                 'Implementation-Version': version,

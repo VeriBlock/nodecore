@@ -58,7 +58,7 @@ jar {
     manifest {
         attributes 'Name': 'nodecore/cli',
                 'Specification-Title': 'NodeCore Command-Line Interface',
-                'Specification-Version': version.toString().split(/-/)[0],
+                'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'nodecore.cli',
                 'Implementation-Version': version,
