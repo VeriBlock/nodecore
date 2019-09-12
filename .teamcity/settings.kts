@@ -46,28 +46,32 @@ project {
 
 object Snapshot : Build(
     name = "Snapshot",
-    gradleTasks = "devSnapshot build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish",
-    branchFilter = "+:refs/heads/master",
+    gradleTask = "devSnapshot",
+    branchFilter = """
+        +:refs/heads/*
+        -:refs/heads/master
+        -:refs/heads/release/*
+    """.trimIndent(),
     artifactoryRepoKey = "libs-snapshot-local"
 )
 
 object ReleaseCandidate : Build(
     name = "Release Candidate",
-    gradleTasks = "candidate build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish",
+    gradleTask = "candidate",
     branchFilter = "+:refs/heads/release/*",
     artifactoryRepoKey = "libs-release-local"
 )
 
 object FinalRelease : Build(
     name = "Final Release",
-    gradleTasks = "final build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish",
-    branchFilter = null,
+    gradleTask = "final",
+    branchFilter = "+:refs/heads/master",
     artifactoryRepoKey = "libs-release-local"
 )
 
 abstract class Build(
     name: String,
-    gradleTasks: String,
+    gradleTask: String,
     branchFilter: String?,
     artifactoryRepoKey: String
 ) : BuildType({
@@ -89,7 +93,7 @@ abstract class Build(
 
     steps {
         gradle {
-            tasks = gradleTasks
+            tasks = "$gradleTask clean build installDist veriblock-core:artifactoryPublish nodecore-grpc:artifactoryPublish nodecore-ucp:artifactoryPublish"
             buildFile = "build.gradle"
             gradleParams = "%gradle.cli.params%"
         }
