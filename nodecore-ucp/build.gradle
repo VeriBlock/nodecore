@@ -15,6 +15,7 @@ dependencies {
 }
 
 jar {
+    archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
         attributes 'Name': 'nodecore/api/ucp',
                 'Specification-Title': 'VeriBlock NodeCore Universal Client Protocol',

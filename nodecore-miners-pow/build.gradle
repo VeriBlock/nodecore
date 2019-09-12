@@ -37,6 +37,7 @@ ext {
 }
 
 jar {
+    archiveName = "$applicationName-${prettyVersion()}.jar"
     manifest {
         attributes 'Name': 'nodecore/miners/pow',
                 'Specification-Title': 'NodeCore Reference Proof-of-Work Miner',

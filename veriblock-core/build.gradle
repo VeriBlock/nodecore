@@ -15,6 +15,7 @@ dependencies {
 }
 
 jar {
+    archiveName = "veriblock-core-${prettyVersion()}.jar"
     manifest {
         attributes 'Name': 'org/veriblock/core',
                 'Specification-Title': 'VeriBlock Core Library',

@@ -49,6 +49,7 @@ sourceSets {
 }
 
 jar {
+    archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
         attributes 'Name': 'nodecore/api/grpc',
                 'Specification-Title': 'VeriBlock NodeCore gRPC API',

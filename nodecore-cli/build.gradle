@@ -55,6 +55,7 @@ ext {
 }
 
 jar {
+    archiveName = "$applicationName-${prettyVersion()}.jar"
     manifest {
         attributes 'Name': 'nodecore/cli',
                 'Specification-Title': 'NodeCore Command-Line Interface',
