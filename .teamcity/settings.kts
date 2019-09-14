@@ -52,28 +52,32 @@ object Snapshot : Build(
         -:refs/heads/master
         -:refs/heads/release/*
     """.trimIndent(),
-    artifactoryRepoKey = "libs-snapshot-local"
+    artifactoryRepoKey = "libs-snapshot-local",
+    isFinal = false
 )
 
 object ReleaseCandidate : Build(
     name = "Release Candidate",
     gradleTask = "candidate",
     branchFilter = "+:refs/heads/release/*",
-    artifactoryRepoKey = "libs-release-local"
+    artifactoryRepoKey = "libs-release-local",
+    isFinal = false
 )
 
 object FinalRelease : Build(
     name = "Final Release",
     gradleTask = "final",
     branchFilter = "+:refs/heads/master",
-    artifactoryRepoKey = "libs-release-local"
+    artifactoryRepoKey = "libs-release-local",
+    isFinal = true
 )
 
 abstract class Build(
     name: String,
     gradleTask: String,
     branchFilter: String?,
-    artifactoryRepoKey: String
+    artifactoryRepoKey: String,
+    isFinal: Boolean
 ) : BuildType({
     this.name = name
 
@@ -97,6 +101,35 @@ abstract class Build(
             buildFile = "build.gradle"
             gradleParams = "%gradle.cli.params%"
         }
+        fun deployDocker(stepName: String, dockerfilePath: String, imageName: String) {
+            dockerCommand {
+                this.name = "Build $stepName Docker Image"
+                commandType = build {
+                    source = path {
+                        path = dockerfilePath
+                    }
+                    namesAndTags = """
+					    ${if (isFinal) imageName else ""}
+					    $imageName:%build.number%
+				    """.trimIndent()
+                    commandArgs = "--pull"
+                }
+            }
+            dockerCommand {
+                this.name = "Push $stepName Docker Image"
+                commandType = push {
+                    namesAndTags = """
+					    ${if (isFinal) imageName else ""}
+					    $imageName:%build.number%
+				    """.trimIndent()
+                    removeImageAfterPush = false
+                }
+                param("dockerfile.path", dockerfilePath)
+            }
+        }
+        deployDocker("Nodecore CLI","nodecore-cli/Dockerfile", "veriblock.azurecr.io/nodecore-cli")
+        deployDocker("Nodecore PoP Miner","nodecore-miners-pop/Dockerfile", "veriblock.azurecr.io/nodecore-pop-miner")
+        deployDocker("Nodecore PoW Miner","nodecore-miners-pow/Dockerfile", "veriblock.azurecr.io/nodecore-pow-miner")
     }
 
     if (branchFilter != null) {
