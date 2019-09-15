@@ -57,9 +57,9 @@ public class PoPMiningTransaction {
             return this;
         }
 
-        private Transaction bitcoinTransaction_;
-        public Transaction getBitcoinTransaction() { return bitcoinTransaction_; }
-        public Builder setBitcoinTransaction(Transaction value) {
+        private byte[] bitcoinTransaction_;
+        public byte[] getBitcoinTransaction() { return bitcoinTransaction_; }
+        public Builder setBitcoinTransaction(byte[] value) {
             bitcoinTransaction_ = value;
             return this;
         }
@@ -88,7 +88,7 @@ public class PoPMiningTransaction {
         public PoPMiningTransaction build() {
             PoPMiningTransaction transaction = new PoPMiningTransaction();
             transaction.setEndorsedBlockHeader(getPopMiningInstruction().endorsedBlockHeader);
-            transaction.setBitcoinTransaction(BitcoinTransactionUtility.parseTxIDRelevantBits(getBitcoinTransaction().bitcoinSerialize()));
+            transaction.setBitcoinTransaction(getBitcoinTransaction());
             transaction.setBitcoinMerklePathToRoot(getBitcoinMerklePathToRoot().getBytes());
             transaction.setBitcoinBlockHeaderOfProof(Utility.serializeBlock(getBitcoinBlockHeaderOfProof()));
 

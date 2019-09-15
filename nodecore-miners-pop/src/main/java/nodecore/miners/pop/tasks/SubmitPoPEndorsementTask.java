@@ -25,7 +25,7 @@ public class SubmitPoPEndorsementTask extends BaseTask {
         try {
             PoPMiningTransaction popMiningTransaction = PoPMiningTransaction.newBuilder()
                     .setPopMiningInstruction(state.getMiningInstruction())
-                    .setBitcoinTransaction(state.getTransaction())
+                    .setBitcoinTransaction(state.getTransactionBytes())
                     .setBitcoinMerklePathToRoot(state.getMerklePath())
                     .setBitcoinBlockHeaderOfProof(state.getBitcoinBlockHeaderOfProof())
                     .setBitcoinContextBlocks(state.getBitcoinContextBlocks())

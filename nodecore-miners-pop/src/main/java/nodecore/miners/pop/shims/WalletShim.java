@@ -245,6 +245,7 @@ public class WalletShim {
                 Script script = output.getScriptPubKey();
                 ECKey key = null;
                 Script redeemScript = null;
+
                 if (ScriptPattern.isPayToPubKeyHash(script)) {
                     key = wallet.findKeyFromPubHash(ScriptPattern.extractHashFromPayToPubKeyHash(script));
                     checkNotNull(key, "Coin selection includes unspendable outputs");
@@ -253,7 +254,7 @@ public class WalletShim {
                     checkNotNull(redeemScript, "Coin selection includes unspendable outputs");
                 }
                 size += script.getNumberOfBytesRequiredToSpend(key, redeemScript);
-            } catch (ScriptException e) {
+            } catch (Exception e) {
                 // If this happens it means an output script in a wallet tx could not be understood. That should never
                 // happen, if it does it means the wallet has got into an inconsistent state.
                 throw new IllegalStateException(e);
@@ -263,7 +264,7 @@ public class WalletShim {
     }
 
     private static boolean adjustOutputDownwardsForFee(Wallet wallet, Transaction tx, CoinSelection coinSelection, Coin feePerKb,
-                                                boolean ensureMinRequiredFee) {
+                                                       boolean ensureMinRequiredFee) {
         final int size = tx.unsafeBitcoinSerialize().length + estimateBytesForSigning(wallet, coinSelection);
         Coin fee = feePerKb.multiply(size).divide(1000);
         if (ensureMinRequiredFee && fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
