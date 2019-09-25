@@ -40,6 +40,8 @@ public interface Configuration {
     ConfigurationResult setNodeCorePort(String value);
 
     String getCronSchedule();
+    
+    String getCronRebootSchedule();
 
     int getActionTimeout();
 

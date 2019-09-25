@@ -296,6 +296,11 @@ public class DefaultConfiguration implements Configuration {
     public String getCronSchedule() {
         return getPropertyOverrideOrDefault(Keys.SCHEDULE);
     }
+    
+    @Override
+    public String getCronRebootSchedule() {
+        return getPropertyOverrideOrDefault(Keys.REBOOT_SCHEDULE);
+    }
 
     @Override
     public int getActionTimeout() {
@@ -414,6 +419,13 @@ public class DefaultConfiguration implements Configuration {
                 result.addMessage("V052",
                         "Runtime configuration not allowed",
                         String.format("Property '%s' cannot be changed at runtime. Edit properties file and restart.", Keys.SCHEDULE),
+                        false);
+                result.fail();
+                break;
+            case Keys.REBOOT_SCHEDULE:
+                result.addMessage("V052",
+                        "Runtime configuration not allowed",
+                        String.format("Property '%s' cannot be changed at runtime. Edit properties file and restart.", Keys.REBOOT_SCHEDULE),
                         false);
                 result.fail();
                 break;
@@ -576,6 +588,7 @@ public class DefaultConfiguration implements Configuration {
 
         private static final String SCHEDULE = "pop.cron.schedule";
         private static final String ACTION_TIMEOUT = "pop.action.timeout";
+        private static final String REBOOT_SCHEDULE = "pop.cron.schedule.reboot";
 
         private static List<String> getAll() {
             List<String> keys = new ArrayList<>();
@@ -596,6 +609,7 @@ public class DefaultConfiguration implements Configuration {
             keys.add(NODECORE_CERT_CHAIN_PATH_KEY);
             keys.add(SCHEDULE);
             keys.add(ACTION_TIMEOUT);
+            keys.add(REBOOT_SCHEDULE);
             return keys;
         }
     }

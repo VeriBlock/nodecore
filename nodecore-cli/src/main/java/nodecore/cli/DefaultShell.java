@@ -147,8 +147,6 @@ public class DefaultShell implements Shell {
 
     @Override
     public Result run() {
-
-
         Result result = new DefaultResult();
 
         startRunning();

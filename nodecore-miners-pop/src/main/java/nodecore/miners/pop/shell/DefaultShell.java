@@ -7,41 +7,98 @@
 
 package nodecore.miners.pop.shell;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.diogonunes.jcdp.color.ColoredPrinter;
 import com.diogonunes.jcdp.color.api.Ansi;
 import com.google.common.base.Strings;
 import com.google.common.eventbus.Subscribe;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+
 import nodecore.miners.pop.Constants;
 import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.CommandContext;
+import nodecore.miners.pop.contracts.CommandFactory;
+import nodecore.miners.pop.contracts.CommandFactoryResult;
+import nodecore.miners.pop.contracts.Configuration;
+import nodecore.miners.pop.contracts.MessageEvent;
+import nodecore.miners.pop.contracts.MessageService;
+import nodecore.miners.pop.contracts.PoPMiner;
+import nodecore.miners.pop.contracts.Result;
+import nodecore.miners.pop.contracts.ResultMessage;
 import nodecore.miners.pop.events.PoPMinerReadyEvent;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
 import nodecore.miners.pop.events.ShellCompletedEvent;
 import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class DefaultShell implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(DefaultShell.class);
+    
+    private final ExecutorService readShellExecutor;
+    private Future<String> readLineTask = null;
+    
+    public class ConsoleInputReadTask implements Callable<String> {
+    	public String call() throws IOException, InterruptedException {
+    		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+	    	return br.readLine();
+    	}
+    }
+    
+    public String readLineEx() throws InterruptedException {
+        String input = null;
+        try {
+	        while(true) {
+	        	if(!consoleRunning) return null;
+	        	
+	        	readLineTask = readShellExecutor.submit(new ConsoleInputReadTask());
+	        	input = readLineTask.get();
+	        	if(input == null) {
+	        		Thread.sleep(100);
+	        		continue;
+	        	}
+	        	
+	        	return input;
+	        }
+        } catch(ExecutionException e) {
+        	input = null;
+        } catch(CancellationException e) {
+        	input = null;
+        }
+        
+        return input;
+    }
 
     private final Configuration configuration;
     private final CommandFactory commandFactory;
     private final MessageService messageService;
     private final ColoredPrinter printer;
-    private final Scanner scanner;
     private final Object lock = new Object();
     private final SimpleDateFormat dateFormatter;
     private final PoPMiner popMiner;
 
     private CompletableFuture<Void> messageHandler;
     private boolean running = false;
+    private boolean consoleRunning = true;
     private boolean awaitingInput = false;
     private boolean mustAcceptWalletSeed = false;
 
@@ -54,13 +111,13 @@ public class DefaultShell implements Runnable {
         this.popMiner = poPMiner;
         this.commandFactory = commandFactory;
         this.messageService = messageService;
-        this.scanner = new Scanner(System.in);
         this.printer = new ColoredPrinter.Builder(1, false)
                 .foreground(Ansi.FColor.WHITE)
                 .background(Ansi.BColor.NONE)
                 .build();
 
         this.dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        this.readShellExecutor = Executors.newSingleThreadExecutor();
 
         InternalEventBus.getInstance().register(this);
     }
@@ -140,11 +197,11 @@ public class DefaultShell implements Runnable {
         printLines(formatted);
     }
 
-    private String readLine() {
+    private String readLine() throws InterruptedException {
         prompt();
 
         awaitingInput = true;
-        String input = scanner.nextLine();
+        String input = readLineEx();
         awaitingInput = false;
 
         return input;
@@ -168,13 +225,17 @@ public class DefaultShell implements Runnable {
                 .thenRun(this::watchMessages);
     }
 
-    private void runOnce() {
+    private void runOnce() throws InterruptedException {
         if (mustAcceptWalletSeed) {
             List<String> walletSeed = popMiner.getWalletSeed();
             if (walletSeed != null) {
                 print(Collections.singletonList("This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue..."));
                 int counter = 0;
-                while (!readLine().toUpperCase().equals("Y")) {
+                
+                while (true) {
+                	String line = readLine();
+                	if(line == null) return;
+                	if(line.toUpperCase().equals("Y")) break;
                     counter++;
                     if (counter >= 3) {
                         System.exit(1);
@@ -189,11 +250,16 @@ public class DefaultShell implements Runnable {
 
                 print(Collections.singletonList("\rThis information will not be displayed again. Please make sure you have recorded them securely. Press 'y' to continue..."));
                 counter = 0;
-                while (!readLine().toUpperCase().equals("Y")) {
+                
+                while (true) {
+                	String line = readLine();
+                	if(line == null) return;
+                	if(line.toUpperCase().equals("Y")) break;
                     counter++;
                     if (counter >= 3) {
                         System.exit(1);
                     }
+                    
                     print(Collections.singletonList("This information will not be displayed again. Please make sure you have recorded them securely. Press 'y' to continue..."));
                 }
             }
@@ -214,54 +280,68 @@ public class DefaultShell implements Runnable {
                         "Please deposit minimal amounts of BTC sufficient for mining.\n\n");
     }
 
-    private static final long MINING_DELAY_MS = 6000;
     public void run() {
-        runOnce();
-
-        startRunning();
-
-        while (running) {
-            String input = readLine();
-            if (input.isEmpty())
-                continue;
-
-            Boolean clear = null;
-            Result executeResult = null;
-            CommandFactoryResult factoryResult = commandFactory.getInstance(input);
-            if (!factoryResult.didFail()) {
-                try {
-                    CommandContext context = new DefaultCommandContext(this, factoryResult.getParameters());
-                    executeResult = factoryResult.getInstance().execute(context);
-
-                    if (!executeResult.didFail()) {
-                        Boolean quit = context.getData("quit");
-                        if (quit != null && quit)
-                            stopRunning();
-
-                        clear = context.getData("clear");
-                    }
-                } catch (Exception e) {
-                    factoryResult.addMessage(
-                            "V999",
-                            "Unhandled exception",
-                            e.toString(),
-                            true);
-
-                    logger.error("V999: Unhandled Exception", e);
-                }
-            }
-
-            formatResult(factoryResult);
-            if (executeResult != null)
-                formatResult(executeResult);
-
-
-            if (clear != null && clear) {
-                clear();
-            }
-        }
+    	try {
+    		consoleRunning = true;
+	        runOnce();
+	        startRunning();
+    	} catch(InterruptedException e) {
+    		logger.error("Shell interrupted externally", e);
+    	}
+	
+	    while (running) {
+	    	try {
+	            String input = readLine();
+	            if (input == null)
+	                continue;
+	            if (input.isEmpty())
+	                continue;
+	
+	            Boolean clear = null;
+	            Result executeResult = null;
+	            CommandFactoryResult factoryResult = commandFactory.getInstance(input);
+	            if (!factoryResult.didFail()) {
+	                try {
+	                    CommandContext context = new DefaultCommandContext(this, factoryResult.getParameters());
+	                    executeResult = factoryResult.getInstance().execute(context);
+	
+	                    if (!executeResult.didFail()) {
+	                        Boolean quit = context.getData("quit");
+	                        if (quit != null && quit)
+	                            stopRunning();
+	
+	                        clear = context.getData("clear");
+	                    }
+	                } catch (Exception e) {
+	                    factoryResult.addMessage(
+	                            "V999",
+	                            "Unhandled exception",
+	                            e.toString(),
+	                            true);
+	
+	                    logger.error("V999: Unhandled Exception", e);
+	                }
+	            }
+	
+	            formatResult(factoryResult);
+	            if (executeResult != null)
+	                formatResult(executeResult);
+	
+	            if (clear != null && clear) {
+	                clear();
+	            }
+	    	} catch(InterruptedException e) {
+	    		///HACK: ignore. This exception allows to exit the readLine loop and check other flags.
+	    	}
+	    }
 
         InternalEventBus.getInstance().post(new ShellCompletedEvent());
+    }
+    
+    public void quitExternally() {
+    	stopRunning();
+    	consoleRunning = false;
+    	if(readLineTask != null) readLineTask.cancel(true);
     }
 
     public void print(List<String> text) {
