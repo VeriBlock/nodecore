@@ -8,15 +8,12 @@
 package nodecore.miners.pop.contracts;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import nodecore.miners.pop.common.BitcoinMerkleTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
-import org.bitcoinj.wallet.Wallet;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public interface BitcoinService {
     void initialize();
@@ -34,6 +31,8 @@ public interface BitcoinService {
     ListenableFuture<Transaction> createPoPTransaction(Script opReturnScript) throws ApplicationExceptions.SendTransactionException;
 
     Block getBlock(Sha256Hash hash);
+
+    StoredBlock getLastBlock();
 
     Block getBestBlock(Collection<Sha256Hash> hashes);
 
