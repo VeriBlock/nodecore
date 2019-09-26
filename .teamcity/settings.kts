@@ -137,9 +137,9 @@ abstract class Build(
             vcs {
                 enabled = true
                 this.branchFilter = branchFilter
-                perCheckinTriggering = true
+                perCheckinTriggering = false
                 groupCheckinsByCommitter = true
-                enableQueueOptimization = false
+                enableQueueOptimization = true
             }
         }
     }
