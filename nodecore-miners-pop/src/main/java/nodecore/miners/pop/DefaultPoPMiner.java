@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 import org.slf4j.Logger;
@@ -227,6 +228,11 @@ public class DefaultPoPMiner implements PoPMiner {
     @Override
     public Coin getBitcoinBalance() {
         return bitcoinService.getBalance();
+    }
+    
+    @Override
+    public StoredBlock getLastBitcoinBlock() {
+        return bitcoinService.getLastBlock();
     }
 
     @Override

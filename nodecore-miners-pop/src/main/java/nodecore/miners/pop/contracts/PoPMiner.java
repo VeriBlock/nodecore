@@ -9,6 +9,7 @@ package nodecore.miners.pop.contracts;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.StoredBlock;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,6 +30,8 @@ public interface PoPMiner extends Runnable {
     String getMinerAddress();
 
     Coin getBitcoinBalance();
+    
+    StoredBlock getLastBitcoinBlock();
 
     String getBitcoinReceiveAddress();
 

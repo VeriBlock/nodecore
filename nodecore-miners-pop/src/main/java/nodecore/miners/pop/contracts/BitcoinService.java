@@ -34,6 +34,8 @@ public interface BitcoinService {
     ListenableFuture<Transaction> createPoPTransaction(Script opReturnScript) throws ApplicationExceptions.SendTransactionException;
 
     Block getBlock(Sha256Hash hash);
+    
+    StoredBlock getLastBlock();
 
     Block getBestBlock(Collection<Sha256Hash> hashes);
 
