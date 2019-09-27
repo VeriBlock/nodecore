@@ -75,7 +75,6 @@ set CLASSPATH=$classpath
 :end
 @rem End local scope for the variables with windows NT shell
 if "%ERRORLEVEL%"=="0" goto mainEnd
-if "%ERRORLEVEL%"=="2" goto failRestart
 
 :fail
 rem Set variable ${exitEnvironmentVar} if you need the _script_ return code instead of
@@ -84,9 +83,6 @@ echo Application terminated unexpectedly, press any key to exit
 pause > nul
 if  not "" == "%${exitEnvironmentVar}%" exit 1
 exit /b 1
-
-:failRestart
-exit /b
 
 :mainEnd
 if "%OS%"=="Windows_NT" endlocal

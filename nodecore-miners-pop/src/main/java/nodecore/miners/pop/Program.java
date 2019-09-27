@@ -30,7 +30,7 @@ public class Program {
     private static final Logger logger = LoggerFactory.getLogger(Program.class);
     private final CountDownLatch shutdownSignal;
     private DefaultShell shell;
-    private static boolean shouldRestart = false;
+    private static boolean externalQuit = false;
 
     private Program() {
         this.shutdownSignal = new CountDownLatch(1);
@@ -40,7 +40,7 @@ public class Program {
 
     private int run(String[] args) {
         System.out.print(SharedConstants.LICENSE);
-        shouldRestart = false;
+        externalQuit = false;
 
         Runtime.getRuntime().addShutdownHook(new Thread(shutdownSignal::countDown));
 
@@ -73,7 +73,6 @@ public class Program {
 
         PoPMiner popMiner = startupInjector.getInstance(PoPMiner.class);
         PoPMiningScheduler scheduler = startupInjector.getInstance(PoPMiningScheduler.class);
-        RebootScheduler schedulerReboot = startupInjector.getInstance(RebootScheduler.class);
         PoPEventEngine eventEngine = startupInjector.getInstance(PoPEventEngine.class);
 
         ApiServer apiServer = startupInjector.getInstance(ApiServer.class);
@@ -85,7 +84,6 @@ public class Program {
         try {
             popMiner.run();
             scheduler.run();
-            schedulerReboot.run();
             eventEngine.run();
             apiServer.start();
             shell.run();
@@ -101,7 +99,6 @@ public class Program {
             apiServer.shutdown();
             eventEngine.shutdown();
             scheduler.shutdown();
-            schedulerReboot.shutdown();
             popMiner.shutdown();
             messageService.shutdown();
             configuration.save();
@@ -129,7 +126,7 @@ public class Program {
     @Subscribe public void onProgramQuit(ProgramQuitEvent event) {
     	///HACK: imitate an "exit" command in the console
     	if(event.reason == 1) {
-    		shouldRestart = true;
+    	    externalQuit = true;
     	}
     	shell.quitExternally();
     }
@@ -137,7 +134,7 @@ public class Program {
     public static void main(String[] args) {
     	Program main = new Program();
     	int programExitResult = main.run(args);
-    	if(shouldRestart) {
+    	if(externalQuit) {
     		System.exit(2);
     		return;
     	}

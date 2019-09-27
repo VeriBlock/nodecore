@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.api;
 
-import static nodecore.miners.pop.api.annotations.Route.Verb.POST;
+import static nodecore.miners.pop.api.annotations.Route.Verb.GET;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,16 +28,16 @@ import nodecore.miners.pop.contracts.PoPMiner;
 import spark.Request;
 import spark.Response;
 
-public class ShowLastBitcoinBlockController extends ApiController {
-    private static final Logger logger = LoggerFactory.getLogger(ShowLastBitcoinBlockController.class);
+public class LastBitcoinBlockController extends ApiController {
+    private static final Logger logger = LoggerFactory.getLogger(LastBitcoinBlockController.class);
     private final PoPMiner miner;
 
     @Inject
-    public ShowLastBitcoinBlockController(PoPMiner miner) {
+    public LastBitcoinBlockController(PoPMiner miner) {
         this.miner = miner;
     }
 
-    @Route(path = "/api/showlastbitcoinblock", verb = POST)
+    @Route(path = "/api/lastbitcoinblock", verb = GET)
     public String post(Request request, Response response) {
         try {            
             StoredBlock lastBlock = miner.getLastBitcoinBlock();
@@ -64,7 +64,7 @@ public class ShowLastBitcoinBlockController extends ApiController {
             response.status(400);
             return "";
         } catch (IOException e) {
-            logger.info("Cannot create the block header", e);
+            logger.info("Cannot parse the block header", e);
             response.status(500);
             return "";
         }

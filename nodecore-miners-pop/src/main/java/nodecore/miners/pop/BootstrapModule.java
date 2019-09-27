@@ -51,9 +51,5 @@ public class BootstrapModule extends AbstractModule {
         bind(PoPMiningScheduler.class)
                 .to(DefaultPoPMiningScheduler.class)
                 .in(Singleton.class);
-        
-        bind(RebootScheduler.class)
-        	.to(DefaultRebootScheduler.class)
-        	.in(Singleton.class);
     }
 }

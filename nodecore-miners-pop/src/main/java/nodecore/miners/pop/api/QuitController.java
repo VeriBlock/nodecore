@@ -33,7 +33,7 @@ public class QuitController extends ApiController {
     public class QuitTask implements Callable<Integer> {
         public Integer call() throws IOException, InterruptedException {
             Thread.sleep(1000);
-            ProgramQuitEvent event = new ProgramQuitEvent(0);
+            ProgramQuitEvent event = new ProgramQuitEvent(1);
             InternalEventBus.getInstance().post(event);
             return 0;
         }

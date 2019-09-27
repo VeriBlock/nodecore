@@ -17,7 +17,6 @@ public class WebApiModule extends AbstractModule {
         controllers.addBinding().to(MiningController.class);
         controllers.addBinding().to(ConfigurationController.class);
         controllers.addBinding().to(QuitController.class);
-        controllers.addBinding().to(RebootController.class);
-        controllers.addBinding().to(ShowLastBitcoinBlockController.class);
+        controllers.addBinding().to(LastBitcoinBlockController.class);
     }
 }
