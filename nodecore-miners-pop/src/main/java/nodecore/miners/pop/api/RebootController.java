@@ -28,31 +28,31 @@ import nodecore.miners.pop.events.ProgramQuitEvent;
 import spark.Request;
 import spark.Response;
 
-public class QuitController extends ApiController {
+public class RebootController extends ApiController {
     
     public class QuitTask implements Callable<Integer> {
         public Integer call() throws IOException, InterruptedException {
             Thread.sleep(1000);
-            ProgramQuitEvent event = new ProgramQuitEvent(0);
+            ProgramQuitEvent event = new ProgramQuitEvent(1);
             InternalEventBus.getInstance().post(event);
             return 0;
         }
     }
     
-    private static final Logger logger = LoggerFactory.getLogger(QuitController.class);
+    private static final Logger logger = LoggerFactory.getLogger(RebootController.class);
 
     @Inject
-    public QuitController() {
+    public RebootController() {
     }
 
-    @Route(path = "/api/quit", verb = POST)
+    @Route(path = "/api/reboot", verb = POST)
     public String post(Request request, Response response) {
         try {
             ResultResponse responseModel = new ResultResponse();
             responseModel.failed = false;
             responseModel.messages = new ArrayList<>();
             
-            logger.info("Terminating the miner now");
+            logger.info("Rebooting the miner now");
             ExecutorService quitExecutor = Executors.newSingleThreadExecutor();
             quitExecutor.submit(new QuitTask());
             
