@@ -19,14 +19,14 @@ public class TestNetParameters implements NetworkParameters {
 
     private static final int PROTOCOL_VERSION = 2;
 
-    private static final int INITIAL_BITCOIN_BLOCK_HEIGHT = 1489475;
+    private static final int INITIAL_BITCOIN_BLOCK_HEIGHT = 1580892;
     private static final int INITIAL_BITCOIN_BLOCK_VERSION = 536870912;
-    private static final String INITIAL_BITCOIN_BLOCK_PREVIOUS_HASH = "00000000000000b345b7bbf29bda1507a679b97967f99a10ab0088899529def7";
-    private static final String INITIAL_BITCOIN_BLOCK_MERKLE_ROOT = "5e16e6cef738a2eba1fe7409318e3f558bec325392427aa3d8eaf46b028654f8";
-    private static final int INITIAL_BITCOIN_BLOCK_TIMESTAMP = 1555501858;
-    private static final int INITIAL_BITCOIN_BLOCK_DIFFICULTY = Integer.parseUnsignedInt("436279940");
-    private static final int INITIAL_BITCOIN_BLOCK_WINNING_NONCE = Integer.parseUnsignedInt("2599551022");
-    private static final String INITIAL_VERIBLOCK_BLOCK_HASH = "00000025B4BF4948C520CD719B5D5A10E3E42DB430E7D88A";
+    private static final String INITIAL_BITCOIN_BLOCK_PREVIOUS_HASH = "00000000251E9261A15339B4BF0540A44328EC83F3797B9BAC67F47558D5F14E";
+    private static final String INITIAL_BITCOIN_BLOCK_MERKLE_ROOT = "CBF519E1DC00F8FFBDC31A6AC3A73109D95890EDD9283EA71AD9BE11639249E9";
+    private static final int INITIAL_BITCOIN_BLOCK_TIMESTAMP = 1570648139;
+    private static final int INITIAL_BITCOIN_BLOCK_DIFFICULTY = Integer.parseUnsignedInt("486604799");
+    private static final int INITIAL_BITCOIN_BLOCK_WINNING_NONCE = Integer.parseUnsignedInt("203968315");
+    private static final String INITIAL_VERIBLOCK_BLOCK_HASH = "00000017EB579EC7D0CDD63379A0615DC3D68032CE248823";
 
     private static final BigInteger MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L);
 
