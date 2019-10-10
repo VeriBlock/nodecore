@@ -23,6 +23,6 @@ public class TestNetParametersTests {
         byte[] result = crypto.SHA256D(header);
         String hash = Utility.bytesToHex(Utility.flip(result));
 
-        Assert.assertTrue(hash.equalsIgnoreCase("000000000000000246200f09b513e517a3bd8c591a3b692d9852ddf1ee0f8b3a"));
+        Assert.assertEquals("000000007843C8E24359279C64BD4E4EF1B62D2A8C0557807C03124739566DD8", hash);
     }
 }
