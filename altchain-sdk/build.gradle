@@ -1,0 +1,76 @@
+
+// VeriBlock Blockchain Project
+// Copyright 2017-2018 VeriBlock, Inc
+// Copyright 2018-2019 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
+plugins {
+    id "java"
+    id "idea"
+    id "java-library"
+    id 'org.jetbrains.kotlin.jvm'
+    id 'nebula.release'
+    id "com.jfrog.artifactory"
+    id "maven-publish"
+}
+
+dependencies {
+    compile files("lib/integrations-sdk-0.1.4.jar")
+
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+
+    // Configuration
+    implementation "io.github.config4k:config4k:0.4.0"
+
+    // Logging
+    implementation 'io.github.microutils:kotlin-logging:1.6.26'
+
+    testImplementation 'junit:junit:4.12'
+}
+
+jar {
+    archiveName = "${project.name}-${prettyVersion()}.jar"
+    manifest {
+        attributes 'Name': 'org/veriblock/alt/sdk',
+                'Specification-Title': 'VeriBlock Altchain SDK',
+                'Specification-Version': prettyVersion(),
+                'Specification-Vendor': 'Xenios SEZC',
+                'Implementation-Title': 'org.veriblock.alt.sdk',
+                'Implementation-Version': version,
+                'Implementation-Vendor': 'Xenios SEZC'
+    }
+}
+
+artifactory {
+    contextUrl = artifactory_url
+    publish {
+        repository {
+            repoKey = artifactory_repoKey
+            username = artifactory_user
+            password = artifactory_password
+            maven = true
+        }
+
+        defaults {
+            publications('mavenJava')
+            publishArtifacts = true
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'veriblock'
+            artifactId = 'altchain-sdk'
+            version = prettyVersion()
+
+            from components.java
+        }
+    }
+}

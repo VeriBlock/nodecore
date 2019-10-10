@@ -1,8 +1,19 @@
+
 include 'veriblock-core'
+include 'veriblock-shell'
+
 include 'nodecore-grpc'
 include 'nodecore-ucp'
 include 'nodecore-cli'
 include 'nodecore-miners-pow'
 include 'nodecore-miners-pop'
+
+include 'altchain-sdk'
+
+include 'altchain-pop-miner:core'
+include 'altchain-pop-miner:miner'
+
+include 'altchain-plugins'
+
 
 rootProject.name = 'nodecore-all'

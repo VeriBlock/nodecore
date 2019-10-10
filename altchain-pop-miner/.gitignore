@@ -1,0 +1,10 @@
+
+generated
+
+pop.dat
+*.spvchain
+*.spvwallet
+*.dat-shm
+*.dat-wal
+
+miner/application.conf

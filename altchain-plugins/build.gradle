@@ -1,0 +1,55 @@
+// VeriBlock Blockchain Project
+// Copyright 2017-2018 VeriBlock, Inc
+// Copyright 2018-2019 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
+plugins {
+    id "java"
+    id "idea"
+    id "java-library"
+    id 'org.jetbrains.kotlin.jvm'
+    id "com.github.johnrengelman.shadow" version "4.0.0"
+}
+
+configurations.all {
+    // check for updates every build for changing modules
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+dependencies {
+    implementation project(":veriblock-core")
+    implementation project(":altchain-sdk")
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+
+    implementation "com.google.code.gson:gson:2.8.5"
+    implementation "com.github.kittinunf.fuel:fuel:2.2.0"
+
+    // Logging
+    implementation 'io.github.microutils:kotlin-logging:1.6.26'
+
+    testImplementation 'junit:junit:4.12'
+}
+
+test {
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+jar {
+    archiveName = "${project.name}-${prettyVersion()}.jar"
+    manifest {
+        attributes 'Name': 'veriblock/examples',
+                'Specification-Title': 'VeriBlock Altchain Plugins',
+                'Specification-Version': prettyVersion(),
+                'Specification-Vendor': 'VeriBlock Foundation',
+                'Implementation-Title': 'veriblock.alt',
+                'Implementation-Version': version,
+                'Implementation-Vendor': 'VeriBlock Foundation'
+    }
+}

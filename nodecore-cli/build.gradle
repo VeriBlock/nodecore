@@ -10,26 +10,25 @@ configurations.all {
 }
 
 dependencies {
+    implementation project(':veriblock-core')
+    implementation project(':nodecore-grpc')
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.5'
+    implementation group: 'com.google.inject', name: 'guice', version: '4.1.0'
+    implementation group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.1.0'
+    implementation group: 'com.google.inject.extensions', name: 'guice-assistedinject', version: '4.1.0'
+    implementation group: 'joda-time', name: 'joda-time', version: '2.9.9'
+    implementation group: 'org.reflections', name: 'reflections', version: '0.9.11'
+    implementation group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
+    implementation group: 'org.jline', name: 'jline', version: '3.9.0'
+    implementation group: 'org.jline', name: 'jline-terminal', version: '3.9.0'
+    implementation group: 'org.jline', name: 'jline-terminal-jansi', version: '3.9.0'
+    implementation 'io.netty:netty-tcnative-boringssl-static:2.0.7.Final'
+    implementation group: 'com.opencsv', name: 'opencsv', version: '4.3.2'
+
     testImplementation 'junit:junit:4.12'
-
-    compile project(':veriblock-core')
-    compile project(':nodecore-grpc')
-    compile 'ch.qos.logback:logback-classic:1.2.3'
-    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
-    compile group: 'commons-io', name: 'commons-io', version: '2.5'
-    compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
-    compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.1.0'
-    compile group: 'com.google.inject.extensions', name: 'guice-assistedinject', version: '4.1.0'
-    compile group: 'joda-time', name: 'joda-time', version: '2.9.9'
-    compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
-    compile group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
-    compile group: 'org.jline', name: 'jline', version: '3.9.0'
-    compile group: 'org.jline', name: 'jline-terminal', version: '3.9.0'
-    compile group: 'org.jline', name: 'jline-terminal-jansi', version: '3.9.0'
-    compile 'io.netty:netty-tcnative-boringssl-static:2.0.7.Final'
-    compile group: 'com.opencsv', name: 'opencsv', version: '4.3.2'
-
 }
 
 test {
