@@ -43,56 +43,50 @@ class CommandFactory {
         val command = commands[form]
             ?: throw unknownCommandError(form)
 
-        var index = 1
-        val params = command.parameters
+        val parameters = extractParameters(command, parts)
 
-        if (parts.size - 1 > params.size) {
+        return CommandResult(command, parameters)
+    }
+
+    private fun extractParameters(command: Command, suppliedParams: Array<String>): Map<String, Any> {
+        if (suppliedParams.size - 1 > command.parameters.size) {
             throw syntaxError(command, "too many parameters provided")
         }
 
-        val parameters = HashMap<String, Any>()
-        for (param in params) {
-            if (param.required && parts.size < index + 1) {
+       return command.parameters.asSequence().mapIndexed { index, param ->
+            val suppliedParamIndex = index + 1
+            if (param.required && suppliedParamIndex >= suppliedParams.size) {
                 throw syntaxError(
                     command,
                     "parameter '${param.name}' is required"
                 )
             }
-
-            if (index < parts.size) {
-                val value = parts[index]
-                when (param.type) {
-                    CommandParameterType.STRING -> parameters[param.name] = value
-                    CommandParameterType.LONG -> if (!value.isPositiveLong()) {
-                        throw syntaxError(
-                            command,
-                            "parameter '${param.name}' must be a positive 64-bit integer"
-                        )
-                    } else {
-                        parameters[param.name] = value.toLong()
-                    }
-                    CommandParameterType.INTEGER -> if (!value.isPositiveInteger()) {
-                        throw syntaxError(
-                            command,
-                            "parameter '${param.name}' must be a positive 32-bit integer"
-                        )
-                    } else {
-                        parameters[param.name] = value.toInt()
-                    }
-                    CommandParameterType.AMOUNT -> try {
-                        val amount = BigDecimal(value)
-                        parameters.putIfAbsent(param.name, amount)
-                    } catch (e: NumberFormatException) {
-                        throw syntaxError(command, "parameter '${param.name}' must be an amount in BTC to send. e.g. 0.1")
-                    }
-
-                }
-            }
-
-            ++index
+            val suppliedParam = suppliedParams[suppliedParamIndex]
+            param.name to extractTypedParam(param, suppliedParam, command)
+        }.associate {
+            it
         }
+    }
 
-        return CommandResult(command, parameters)
+    private fun extractTypedParam(param: CommandParameter, suppliedParam: String, command: Command): Any {
+        return when (param.type) {
+            CommandParameterType.STRING -> suppliedParam
+            CommandParameterType.LONG -> suppliedParam.asPositiveLong()
+                ?: throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a positive 64-bit integer"
+                )
+            CommandParameterType.INTEGER -> suppliedParam.asPositiveInteger()
+                ?: throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a positive 32-bit integer"
+                )
+            CommandParameterType.AMOUNT -> try {
+                BigDecimal(suppliedParam)
+            } catch (e: NumberFormatException) {
+                throw syntaxError(command, "parameter '${param.name}' must be an amount in BTC to send. e.g. 0.1")
+            }
+        }
     }
 
     private fun malformedCommandError(): ShellException = ShellException(
@@ -133,5 +127,5 @@ class CommandFactory {
     }
 }
 
-fun String.isPositiveLong() = toLongOrNull()?.let { it >= 0L } ?: false
-fun String.isPositiveInteger() = toIntOrNull()?.let { it >= 0 } ?: false
+fun String.asPositiveLong() = toLongOrNull()?.let { if (it >= 0L) it else null }
+fun String.asPositiveInteger() = toIntOrNull()?.let { if (it >= 0) it else null }
