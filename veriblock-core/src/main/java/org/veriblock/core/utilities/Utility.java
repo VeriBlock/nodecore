@@ -859,11 +859,10 @@ public class Utility {
         }
 
         try {
-            if (!new File(fileName).exists())
-            {
-                PrintWriter out = new PrintWriter(new File(fileName));
-                out.println("");
-                out.close();
+            if (!new File(fileName).exists()) {
+                try (PrintWriter out = new PrintWriter(new File(fileName))) {
+                    out.println("");
+                }
             }
             Files.write(Paths.get(fileName), (message + "\n").getBytes(), StandardOpenOption.APPEND);
         } catch (Exception e) { return false; }

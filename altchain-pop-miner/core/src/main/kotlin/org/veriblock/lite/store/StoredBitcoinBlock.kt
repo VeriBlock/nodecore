@@ -11,24 +11,20 @@ import org.veriblock.sdk.BitcoinBlock
 import org.veriblock.sdk.Constants
 import org.veriblock.sdk.Sha256Hash
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Preconditions
 import org.veriblock.sdk.util.Utils
-
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
 class StoredBitcoinBlock(
     val block: BitcoinBlock,
-    val work: BigInteger,
+    private val work: BigInteger,
     val height: Int
 ) {
     val hash: Sha256Hash
 
     init {
-        Preconditions.notNull(block, "Block cannot be null!")
-        Preconditions.notNull(work, "Work cannot be null!")
-        Preconditions.argument<Any>(work.compareTo(BigInteger.ZERO) != -1, "Work must be positive!")
-        Preconditions.argument<Any>(height >= 0, "Block index must be positive!")
+        require(work > BigInteger.ZERO) { "Work must be positive!" }
+        require(height >= 0) { "Block index must be positive!" }
 
         this.hash = block.hash
     }
@@ -69,11 +65,11 @@ class StoredBitcoinBlock(
             return StoredBitcoinBlock(block, work, index)
         }
 
-        fun deserialize(bytes: ByteArray?): StoredBitcoinBlock {
-            Preconditions.argument<Any>(bytes != null && bytes.size >= SIZE, "Bytes must at least $SIZE bytes long!")
+        fun deserialize(bytes: ByteArray): StoredBitcoinBlock {
+            require(bytes.size >= SIZE) { "Bytes must at least $SIZE bytes long!" }
 
             val local = ByteBuffer.allocateDirect(SIZE)
-            local.put(bytes!!, bytes.size - SIZE, SIZE)
+            local.put(bytes, bytes.size - SIZE, SIZE)
 
             local.flip()
             local.position(Sha256Hash.BITCOIN_LENGTH)

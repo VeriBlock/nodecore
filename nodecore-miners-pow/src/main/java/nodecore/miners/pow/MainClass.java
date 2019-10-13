@@ -146,13 +146,12 @@ public class MainClass {
         boolean workedFirstTime = false;
 
         do {
-            try {
-                if (workedFirstTime) {
-                    System.out.println("Attempting to reconnect to " + hostName + ":" + remotePort);
-                } else {
-                    System.out.println("Attempting to connect to " + hostName + ":" + remotePort);
-                }
-                Socket remoteSocket = new Socket(hostName, remotePort);
+            if (workedFirstTime) {
+                System.out.println("Attempting to reconnect to " + hostName + ":" + remotePort);
+            } else {
+                System.out.println("Attempting to connect to " + hostName + ":" + remotePort);
+            }
+            try (Socket remoteSocket = new Socket(hostName, remotePort)) {
                 PrintWriter out = new PrintWriter(remoteSocket.getOutputStream(), true);
                 BufferedReader in = new BufferedReader(new InputStreamReader(remoteSocket.getInputStream()));
 

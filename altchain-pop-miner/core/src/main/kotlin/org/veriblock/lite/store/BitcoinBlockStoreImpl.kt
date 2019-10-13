@@ -10,6 +10,7 @@
 // which is licensed as follows:
 package org.veriblock.lite.store
 
+import org.veriblock.lite.util.invoke
 import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.Constants
 import org.veriblock.sdk.Sha256Hash
@@ -48,10 +49,9 @@ class BitcoinBlockStoreImpl(
 
     @Throws(BlockStoreException::class)
     override fun getChainHead(): StoredBitcoinBlock? {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
-        lock.lock()
-        try {
+        return lock {
             if (lastChainHead == null) {
                 val headHash = ByteArray(Sha256Hash.BITCOIN_LENGTH)
                 buffer.position(8)
@@ -60,9 +60,7 @@ class BitcoinBlockStoreImpl(
                 val block = get(hash) ?: throw BlockStoreException("Corrupted block store: could not find chain head: $hash")
                 lastChainHead = block
             }
-            return lastChainHead
-        } finally {
-            lock.unlock()
+            lastChainHead
         }
     }
 
@@ -71,17 +69,14 @@ class BitcoinBlockStoreImpl(
         val buffer = this.buffer
             ?: throw BlockStoreException("Store closed")
 
-        lock.lock()
-        try {
+        return lock {
             val previous = lastChainHead
             lastChainHead = chainHead
             val headHash = chainHead.block.hash.bytes
             buffer.position(8)
             buffer.put(headHash)
 
-            return previous
-        } finally {
-            lock.unlock()
+            previous
         }
     }
 
@@ -93,10 +88,9 @@ class BitcoinBlockStoreImpl(
      */
     @Throws(BlockStoreException::class)
     override fun put(storedBlock: StoredBitcoinBlock): StoredBitcoinBlock {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
-        lock.lock()
-        try {
+        return lock {
             var cursor = getRingCursor(buffer)
             if (cursor == getFileSize()) {
                 // Wrapped around.
@@ -112,18 +106,15 @@ class BitcoinBlockStoreImpl(
             storedBlock.serialize(buffer)
             setRingCursor(buffer, buffer.position())
 
-            return replaced
-        } finally {
-            lock.unlock()
+            replaced
         }
     }
 
     @Throws(BlockStoreException::class)
     override fun replace(hash: Sha256Hash, storedBlock: StoredBitcoinBlock): StoredBitcoinBlock? {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
-        lock.lock()
-        try {
+        return lock {
             var cursor = getRingCursor(buffer)
             val startingPoint = cursor
             val fileSize = getFileSize()
@@ -143,24 +134,21 @@ class BitcoinBlockStoreImpl(
                     val replaced = StoredBitcoinBlock.deserialize(buffer)
                     buffer.position(cursor)
                     storedBlock.serialize(buffer)
-                    return replaced
+                    return@lock replaced
                 }
             } while (cursor != startingPoint)
 
-            return null
-        } finally {
-            lock.unlock()
+            null
         }
     }
 
     @Throws(BlockStoreException::class)
     override fun get(hash: Sha256Hash): StoredBitcoinBlock? {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
-        lock.lock()
-        try {
+        return lock {
             if (notFoundCache[hash] != null) {
-                return null
+                return@lock null
             }
 
             // Starting from the current tip of the ring work backwards until we have either found the block or
@@ -181,28 +169,25 @@ class BitcoinBlockStoreImpl(
                 buffer.get(scratch)
                 if (Arrays.equals(scratch, targetHashBytes)) {
                     // Found the target.
-                    return StoredBitcoinBlock.deserialize(buffer)
+                    return@lock StoredBitcoinBlock.deserialize(buffer)
                 }
             } while (cursor != startingPoint)
 
             notFoundCache[hash] = NOT_FOUND_MARKER
-            return null
-        } finally {
-            lock.unlock()
+            null
         }
     }
 
     @Throws(BlockStoreException::class)
     override fun get(hash: Sha256Hash, count: Int): List<StoredBitcoinBlock> {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         val blocks = LinkedList<StoredBitcoinBlock>()
         if (count <= 0) return blocks
 
-        lock.lock()
-        try {
+        return lock {
             if (notFoundCache[hash] != null) {
-                return blocks
+                return@lock blocks
             }
 
             // Starting from the current tip of the ring work backwards until we have either found the block or
@@ -236,19 +221,16 @@ class BitcoinBlockStoreImpl(
                 }
             } while (cursor != startingPoint)
 
-            return blocks
-        } finally {
-            lock.unlock()
+            blocks
         }
     }
 
     override fun getFromChain(hash: Sha256Hash, blocksAgo: Int): StoredBitcoinBlock? {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
-        lock.lock()
-        try {
+        return lock {
             if (notFoundCache[hash] != null) {
-                return null
+                return@lock null
             }
 
             // Starting from the current tip of the ring work backwards until we have either found the block or
@@ -273,7 +255,7 @@ class BitcoinBlockStoreImpl(
                     counter++
 
                     if (counter == blocksAgo) {
-                        return StoredBitcoinBlock.deserialize(buffer)
+                        return@lock StoredBitcoinBlock.deserialize(buffer)
                     }
 
                     // Update the intermediate target with the previous block
@@ -284,17 +266,14 @@ class BitcoinBlockStoreImpl(
                 }
             } while (cursor != startingPoint)
 
-            return null
-        } finally {
-            lock.unlock()
+            null
         }
     }
 
     override fun scanBestChain(hash: Sha256Hash): StoredBitcoinBlock? {
-        val buffer = this.buffer ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
-        lock.lock()
-        try {
+        return lock {
             // Starting from the current tip of the ring work backwards until we have either found the block or
             // wrapped around.
             var cursor = getRingCursor(buffer)
@@ -316,7 +295,7 @@ class BitcoinBlockStoreImpl(
                 if (Arrays.equals(scratch, intermediateTarget)) {
                     if (Arrays.equals(intermediateTarget, targetHashBytes)) {
                         // Found the ACTUAL target.
-                        return StoredBitcoinBlock.deserialize(buffer)
+                        return@lock StoredBitcoinBlock.deserialize(buffer)
                     }
                     // Update the intermediate target with the previous block
                     buffer.position(cursor + 52)
@@ -326,9 +305,7 @@ class BitcoinBlockStoreImpl(
                 }
             } while (cursor != startingPoint)
 
-            return null
-        } finally {
-            lock.unlock()
+            null
         }
     }
 
@@ -341,6 +318,5 @@ class BitcoinBlockStoreImpl(
         } catch (e: IOException) {
             throw BlockStoreException(e)
         }
-
     }
 }

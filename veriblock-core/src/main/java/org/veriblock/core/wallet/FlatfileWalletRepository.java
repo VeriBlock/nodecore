@@ -57,16 +57,13 @@ public class FlatfileWalletRepository implements WalletRepository {
      */
     @Override
     public byte[] getWallet() {
-        try {
-            File walletFile = fileProvider.getDataFile(walletName);
-            if (!walletFile.exists()) {
-                return null;
-            }
-
-            FileInputStream walletIn = new FileInputStream(walletFile);
+        File walletFile = fileProvider.getDataFile(walletName);
+        if (!walletFile.exists()) {
+            return null;
+        }
+        try (FileInputStream walletIn = new FileInputStream(walletFile)) {
             byte[] wallet = new byte[(int)walletFile.length()];
             walletIn.read(wallet);
-            walletIn.close();
             return wallet;
         } catch (IOException e) {
             _logger.error(e.getMessage(), e);
@@ -85,20 +82,18 @@ public class FlatfileWalletRepository implements WalletRepository {
      */
     @Override
     public String getDefaultAddress() {
-        try {
-            File walletConfigFile = fileProvider.getDataFile(walletConfigName);
-            if (!walletConfigFile.exists()) {
-                return null;
-            }
+        File walletConfigFile = fileProvider.getDataFile(walletConfigName);
+        if (!walletConfigFile.exists()) {
+            return null;
+        }
 
-            Scanner scan = new Scanner(walletConfigFile);
+        try (Scanner scan = new Scanner(walletConfigFile)) {
             String line = scan.nextLine();
             while (!line.contains("default_address")) {
                 if (scan.hasNextLine()) {
                     line = scan.nextLine();
                 } else {
                     _logger.info("Note: there is no default_address configuration option in " + walletConfigFile.getAbsolutePath() + "!");
-                    scan.close();
                     return null;
                 }
             }
@@ -107,7 +102,6 @@ public class FlatfileWalletRepository implements WalletRepository {
             String[] parts = line.split(" ");
             if (parts.length < 2) {
                 _logger.error("The line \"" + line + "\" is not a valid format for default_address declaration!");
-                scan.close();
                 return null;
             }
 
@@ -115,7 +109,6 @@ public class FlatfileWalletRepository implements WalletRepository {
                 return parts[1];
             } else {
                 _logger.error("The specified default_address " + parts[1] + " is not a valid standard or multisig address!");
-                scan.close();
                 return null;
             }
         } catch (IOException e) {
@@ -145,10 +138,8 @@ public class FlatfileWalletRepository implements WalletRepository {
             return;
         }
 
-        try {
-            FileOutputStream walletOut = new FileOutputStream(walletFile);
+        try (FileOutputStream walletOut = new FileOutputStream(walletFile)) {
             walletOut.write(data);
-            walletOut.close();
         } catch (IOException e) {
             _logger.error("Unable to save the wallet file " + walletFile.getAbsolutePath() + "!", e);
             throw e;

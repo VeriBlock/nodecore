@@ -224,12 +224,8 @@ public class GetWalletTransactionsCommand implements Command {
 
     //NOTE - could optimize this by keeping the file open. But keep it simple for now
     private static void appendFile(String filename, String line) {
-        try {
-            FileWriter fw = new FileWriter(filename, true);
-
+        try (FileWriter fw = new FileWriter(filename, true)) {
             fw.write(line);
-
-            fw.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

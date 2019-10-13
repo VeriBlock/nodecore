@@ -70,15 +70,12 @@ public class FileOutputWriter implements OutputWriter {
     @SuppressWarnings("unchecked")
     private void saveToCSV(String filename, Object payload) {
 
-        try {
-            Writer writer  = new FileWriter(filename);
-
+        try (Writer writer  = new FileWriter(filename)) {
             StatefulBeanToCsv sbc = new StatefulBeanToCsvBuilder(writer)
                     .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
                     .build();
 
             sbc.write(payload);
-            writer.close();
         } catch (FileNotFoundException e) {
             _logger.error("Can't open output file %s", filename);
         } catch (IOException e) {

@@ -33,7 +33,7 @@ public class DefaultConfiguration implements Configuration {
     }
 
     @Inject
-    public DefaultConfiguration(ProgramOptions options) throws IOException {
+    public DefaultConfiguration(ProgramOptions options) {
         _options = options;
         loadDefaults();
         _properties = new Properties(_defaultProperties);

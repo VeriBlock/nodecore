@@ -11,7 +11,6 @@ package org.veriblock.lite.store
 import org.veriblock.lite.util.invoke
 import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.createLogger
-import org.veriblock.sdk.util.Preconditions
 import org.veriblock.sdk.util.Utils
 import java.io.*
 import java.nio.ByteBuffer
@@ -24,9 +23,9 @@ import java.util.concurrent.locks.ReentrantLock
 
 private val logger = createLogger {}
 
-abstract class FlatFileBlockStore<THash, TBlock> @Throws(BlockStoreException::class) constructor(
+abstract class FlatFileBlockStore<THash, TBlock>(
     // Used to stop other applications/processes from opening the store.
-    protected var workingStoreFile: File,
+    private var workingStoreFile: File,
     capacity: Int,
     private val header: String
 ) : BlockStore<THash, TBlock> {
@@ -45,25 +44,26 @@ abstract class FlatFileBlockStore<THash, TBlock> @Throws(BlockStoreException::cl
             return size > 100  // This was chosen arbitrarily.
         }
     }
-    protected var storeFileChannel: FileChannel
-    protected var fileLock: FileLock? = null
+    private var storeFileChannel: FileChannel
+    private var fileLock: FileLock? = null
     protected var randomAccessFile: RandomAccessFile? = null
     @Volatile
     protected var buffer: MappedByteBuffer? = null
 
+    protected val safeBuffer: MappedByteBuffer get() = buffer ?: throw BlockStoreException("Store closed")
+
     protected var lastChainHead: TBlock? = null
 
-    protected var fileSeriesNumber: Int? = null
+    private var fileSeriesNumber: Int? = null
 
-    var capacity: Int = 0
-        protected set
+    private var capacity: Int = 0
 
     protected abstract val recordSize: Int
 
     /** Returns the size in bytes of the file that is used to store the chain with the current parameters.  */
     fun getFileSize(): Int = FILE_PROLOGUE_BYTES + recordSize * capacity
 
-    protected fun getFileSeriesNumber(): Int {
+    private fun getFileSeriesNumber(): Int {
         val buffer = this.buffer
             ?: throw BlockStoreException("Store closed")
 
@@ -76,7 +76,7 @@ abstract class FlatFileBlockStore<THash, TBlock> @Throws(BlockStoreException::cl
         }
     }
 
-    protected fun setFileSeriesNumber(value: Int) {
+    private fun setFileSeriesNumber(value: Int) {
         val buffer = this.buffer
             ?: throw BlockStoreException("Store closed")
 
@@ -95,8 +95,7 @@ abstract class FlatFileBlockStore<THash, TBlock> @Throws(BlockStoreException::cl
      * will block on disk.
      */
     init {
-        Preconditions.notNull(workingStoreFile, "File cannot be null!")
-        Preconditions.argument<Any>(header.length == 4, "Header must be 4 characters long")
+        require(header.length == 4) { "Header must be 4 characters long" }
         try {
             this.capacity = capacity
             val exists = workingStoreFile.exists()
@@ -239,17 +238,17 @@ abstract class FlatFileBlockStore<THash, TBlock> @Throws(BlockStoreException::cl
     /** Returns the offset from the file start where the latest block should be written (end of prev block).  */
     protected fun getRingCursor(buffer: ByteBuffer): Int {
         val c = buffer.getInt(4)
-        Preconditions.state(c >= FILE_PROLOGUE_BYTES, "The ring cursor must be farther than $FILE_PROLOGUE_BYTES, but it is $c!")
+        check(c >= FILE_PROLOGUE_BYTES) { "The ring cursor must be farther than $FILE_PROLOGUE_BYTES, but it is $c!" }
         return c
     }
 
     protected fun setRingCursor(buffer: ByteBuffer, newCursor: Int) {
-        Preconditions.argument<Any>(newCursor >= 0, "The ring cursor must be positive!")
+        require(newCursor >= 0) { "The ring cursor must be positive!" }
         buffer.putInt(4, newCursor)
     }
 
     companion object {
-        val FILE_PROLOGUE_BYTES = 1024
+        const val FILE_PROLOGUE_BYTES = 1024
         val NOT_FOUND_MARKER = Any()
     }
 }

@@ -45,8 +45,7 @@ class VeriBlockBlockStoreImpl(
 
     @Throws(BlockStoreException::class)
     override fun getChainHead(): StoredVeriBlockBlock? {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             if (lastChainHead == null) {
@@ -68,8 +67,7 @@ class VeriBlockBlockStoreImpl(
 
     @Throws(BlockStoreException::class)
     override fun setChainHead(chainHead: StoredVeriBlockBlock): StoredVeriBlockBlock? {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             val previous = lastChainHead
@@ -90,8 +88,7 @@ class VeriBlockBlockStoreImpl(
      */
     @Throws(BlockStoreException::class)
     override fun put(storedBlock: StoredVeriBlockBlock): StoredVeriBlockBlock {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             var cursor = getRingCursor(buffer)
@@ -115,8 +112,7 @@ class VeriBlockBlockStoreImpl(
 
     @Throws(BlockStoreException::class)
     override fun replace(hash: VBlakeHash, storedBlock: StoredVeriBlockBlock): StoredVeriBlockBlock? {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             var cursor = getRingCursor(buffer)
@@ -148,8 +144,7 @@ class VeriBlockBlockStoreImpl(
 
     @Throws(BlockStoreException::class)
     override fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             if (notFoundCache[hash] != null) {
@@ -181,15 +176,14 @@ class VeriBlockBlockStoreImpl(
                 }
             } while (cursor != startingPoint)
 
-            notFoundCache[hash] = FlatFileBlockStore.Companion.NOT_FOUND_MARKER
+            notFoundCache[hash] = NOT_FOUND_MARKER
             return@lock null
         }
     }
 
     @Throws(BlockStoreException::class)
     override fun get(hash: VBlakeHash, count: Int): List<StoredVeriBlockBlock> {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         if (count <= 0) {
             return emptyList()
@@ -245,8 +239,7 @@ class VeriBlockBlockStoreImpl(
     }
 
     override fun getFromChain(hash: VBlakeHash, blocksAgo: Int): StoredVeriBlockBlock? {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             if (notFoundCache[hash] != null) {
@@ -294,8 +287,7 @@ class VeriBlockBlockStoreImpl(
     }
 
     override fun scanBestChain(hash: VBlakeHash): StoredVeriBlockBlock? {
-        val buffer = this.buffer
-            ?: throw BlockStoreException("Store closed")
+        val buffer = safeBuffer
 
         return lock {
             // Starting from the current tip of the ring work backwards until we have either found the block or

@@ -60,6 +60,7 @@ sonarqube {
     properties {
         property "sonar.projectKey", "vbk:nodecore"
         property "sonar.projectName", "NodeCore Application Suite"
+        property "sonar.projectVersion", prettyVersion()
         property "sonar.host.url", "https://sonar.veriblock.org"
         property "sonar.java.binaries", "${project.projectDir}/build/classes"
         property "sonar.java.libraries", "${project.projectDir}/build/libs"
