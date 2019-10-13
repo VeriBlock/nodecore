@@ -86,11 +86,9 @@ public class FileOutputWriter implements OutputWriter {
     }
 
     private void saveToJson(String filename, Object payload) {
-        try {
-            PrintWriter out = new PrintWriter(filename);
+        try (PrintWriter out = new PrintWriter(filename)) {
             out.print(new GsonBuilder().setPrettyPrinting().create().toJson(payload));
             out.flush();
-            out.close();
         } catch (FileNotFoundException e) {
             _logger.error("Can't open output file %s", filename);
         }
