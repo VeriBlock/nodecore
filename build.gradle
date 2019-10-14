@@ -47,11 +47,7 @@ releaseCheck.doLast {
 String prettyVersion() {
     String version = rootProject.version.toString()
     if (version.contains("+")) {
-        if (version.contains("+develop")) {
-            version = version.split("\\+")[0]
-        } else {
-            version = version.substring(0, version.lastIndexOf(".")).replace("+", ".")
-        }
+        version = version.substring(0, version.length() - 8).replace("+", ".")
     }
     return version
 }
