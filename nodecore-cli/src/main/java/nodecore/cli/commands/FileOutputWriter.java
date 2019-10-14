@@ -77,11 +77,11 @@ public class FileOutputWriter implements OutputWriter {
 
             sbc.write(payload);
         } catch (FileNotFoundException e) {
-            _logger.error("Can't open output file %s", filename);
+            _logger.error("Can't open output file {}", filename);
         } catch (IOException e) {
-            _logger.error("IO Error writing into a file %s", filename);
+            _logger.error("IO Error writing into a file {}", filename);
         } catch (CsvRequiredFieldEmptyException  | CsvDataTypeMismatchException e) {
-            _logger.error("CSV format error for a file %s", filename);
+            _logger.error("CSV format error for a file {}", filename);
         }
     }
 
@@ -90,7 +90,7 @@ public class FileOutputWriter implements OutputWriter {
             out.print(new GsonBuilder().setPrettyPrinting().create().toJson(payload));
             out.flush();
         } catch (FileNotFoundException e) {
-            _logger.error("Can't open output file %s", filename);
+            _logger.error("Can't open output file {}", filename);
         }
     }
 }

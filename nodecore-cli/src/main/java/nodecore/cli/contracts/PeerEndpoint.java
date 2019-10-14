@@ -9,6 +9,8 @@ package nodecore.cli.contracts;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Objects;
+
 public class PeerEndpoint {
     @SerializedName("address")
     private String _address;
@@ -65,6 +67,11 @@ public class PeerEndpoint {
 
         PeerEndpoint other = (PeerEndpoint) object;
         return other._address.equals(_address) && other._port == _port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_address, _port);
     }
 
     @Override

@@ -74,4 +74,9 @@ public class VeriBlockHeader {
         VeriBlockHeader compare = (VeriBlockHeader)obj;
         return Arrays.equals(this.bytes, compare.bytes);
     }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(bytes);
+    }
 }

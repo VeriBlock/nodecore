@@ -158,4 +158,9 @@ public class TransactionDataList {
 
         return toTest.serialize().equals(serialize());
     }
+
+    @Override
+    public int hashCode() {
+        return serialize().hashCode();
+    }
 }
