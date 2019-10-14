@@ -68,4 +68,9 @@ public class Bitflag {
 
         return bitflag.equals(((Bitflag) o).bitflag);
     }
+
+    @Override
+    public int hashCode() {
+        return bitflag.hashCode();
+    }
 }

@@ -217,5 +217,10 @@ public abstract class UCPCommand {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return compileCommand().hashCode();
+    }
+
     public abstract String compileCommand();
 }

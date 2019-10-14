@@ -7,6 +7,8 @@
 
 package nodecore.cli.contracts;
 
+import java.util.Objects;
+
 public class ProtocolEndpoint {
     private String _password;
     private ProtocolEndpointType _type;
@@ -55,6 +57,11 @@ public class ProtocolEndpoint {
 
         ProtocolEndpoint other = (ProtocolEndpoint) object;
         return other._address.equals(_address) && other._port == _port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_address, _port);
     }
 
     @Override
