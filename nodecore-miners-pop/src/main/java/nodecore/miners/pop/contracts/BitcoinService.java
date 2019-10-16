@@ -41,6 +41,8 @@ public interface BitcoinService {
 
     PartialMerkleTree getPartialMerkleTree(Sha256Hash hash);
 
+    Block downloadBlock(Sha256Hash hash);
+
     Block makeBlock(byte[] raw);
 
     Collection<Block> makeBlocks(Collection<byte[]> raw);

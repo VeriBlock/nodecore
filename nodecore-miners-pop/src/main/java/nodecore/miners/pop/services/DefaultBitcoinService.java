@@ -329,7 +329,8 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return null;
     }
 
-    private Block downloadBlock(Sha256Hash hash) {
+    @Override
+    public Block downloadBlock(Sha256Hash hash) {
         logger.info("Attempting to download block with hash {}", hash.toString());
 
         ListenableFuture<Block> blockFuture;

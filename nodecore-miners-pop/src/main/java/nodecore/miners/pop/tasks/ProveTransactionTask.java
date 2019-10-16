@@ -16,6 +16,7 @@ import org.bitcoinj.core.PartialMerkleTree;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProveTransactionTask extends BaseTask {
@@ -34,34 +35,64 @@ public class ProveTransactionTask extends BaseTask {
             Block block = state.getBitcoinBlockHeaderOfProof();
             PartialMerkleTree partialMerkleTree = bitcoinService.getPartialMerkleTree(block.getHash());
 
-            if (partialMerkleTree == null) {
-                return failProcess(state, "Unable to retrieve the merkle tree from the block " + block.getHashAsString());
-            }
+            String failureReason = "";
 
-            MerkleProof proof = MerkleProof.parse(partialMerkleTree);
-            if (proof == null) {
-                return failProcess(state, "Unable to construct merkle proof for block " + block.getHashAsString());
-            }
+            if (partialMerkleTree != null) {
+                MerkleProof proof = MerkleProof.parse(partialMerkleTree);
+                if (proof != null) {
+                    String path = proof.getCompactPath(Sha256Hash.wrap(state.getSubmittedTransactionId()));
+                    logger.info("Merkle Proof Compact Path: {}", path);
+                    logger.info("Merkle Root: {}", block.getMerkleRoot().toString());
 
-            String path = proof.getCompactPath(Sha256Hash.wrap(state.getSubmittedTransactionId()));
-            logger.info("Merkle Proof Compact Path: {}", path);
-            logger.info("Merkle Root: {}", block.getMerkleRoot().toString());
-
-            try {
-                BitcoinMerklePath merklePath = new BitcoinMerklePath(path);
-                logger.info("Computed Merkle Root: {}", merklePath.getMerkleRoot());
-                if (!merklePath.getMerkleRoot().equalsIgnoreCase(block.getMerkleRoot().toString())) {
-                    logger.info("Block merkle root does not match computed merkle root");
-                    return failProcess(state, "Unable to prove transaction " + state.getSubmittedTransactionId() + " in block " + block.getHashAsString());
+                    try {
+                        BitcoinMerklePath merklePath = new BitcoinMerklePath(path);
+                        logger.info("Computed Merkle Root: {}", merklePath.getMerkleRoot());
+                        if (merklePath.getMerkleRoot().equalsIgnoreCase(block.getMerkleRoot().toString())) {
+                            failureReason = "Block Merkle root does not match computed Merkle root";
+                        } else {
+                            state.onTransactionProven(merklePath.getCompactFormat());
+                            return TaskResult.succeed(state, getNext());
+                        }
+                    } catch (Exception e) {
+                        logger.error("Unable to validate Merkle path for transaction", e);
+                        failureReason = "Unable to prove transaction " + state.getSubmittedTransactionId() + " in block " + block.getHashAsString();
+                    }
                 } else {
-                    state.onTransactionProven(merklePath.getCompactFormat());
-
-                    return TaskResult.succeed(state, getNext());
+                    failureReason = "Unable to construct Merkle proof for block " + block.getHashAsString();
                 }
-            } catch (Exception e) {
-                logger.error("Unable to validate merkle path for transaction", e);
-                return failProcess(state, "Unable to prove transaction " + state.getSubmittedTransactionId() + " in block " + block.getHashAsString());
+            } else {
+                failureReason = "Unable to retrieve the Merkle tree from the block " + block.getHashAsString();
             }
+
+            // Retrieving the Merkle path from the PartialMerkleTree failed, try creating manually from the whole block
+            logger.info("Unable to calculate the correct Merkle path for transaction " +
+                    state.getTransaction().getHashAsString() + " in block " +
+                    state.getBitcoinBlockHeaderOfProof().getHashAsString() +
+                    " from a FilteredBlock, trying a fully downloaded block!");
+
+            Block fullBlock = bitcoinService.downloadBlock(state.getBitcoinBlockHeaderOfProof().getHash());
+            List<Transaction> allTransactions = fullBlock.getTransactions();
+
+            List<String> txids = new ArrayList<>();
+            for (int i = 0; i < allTransactions.size(); i++) {
+                txids.add(allTransactions.get(i).getHashAsString());
+            }
+
+            BitcoinMerkleTree bmt = new BitcoinMerkleTree(true, txids);
+            BitcoinMerklePath merklePath = bmt.getPathFromTxID(state.getSubmittedTransactionId());
+
+            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBitcoinBlockHeaderOfProof().getMerkleRoot().toString())) {
+                state.onTransactionProven(merklePath.getCompactFormat());
+                return TaskResult.succeed(state, getNext());
+            } else {
+                logger.error("Unable to calculate the correct Merkle path for transaction " +
+                        state.getTransaction().getHashAsString() + " in block " +
+                        state.getBitcoinBlockHeaderOfProof().getHashAsString() +
+                        " from a FilteredBlock or a fully downloaded block!");
+                return failProcess(state, failureReason);
+            }
+
+
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return failProcess(state, "Error proving transaction, see log for more detail.");
