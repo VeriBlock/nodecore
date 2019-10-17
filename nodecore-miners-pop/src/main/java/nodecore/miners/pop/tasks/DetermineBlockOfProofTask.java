@@ -7,7 +7,9 @@
 
 package nodecore.miners.pop.tasks;
 
+import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.Sha256Hash;
 
@@ -37,6 +39,29 @@ public class DetermineBlockOfProofTask extends BaseTask {
                 return TaskResult.succeed(state, getNext());
             }
         }
+
+        /**
+         * This mechanism is a quick hack to bypass instances where the FilteredBlockAvailableEvent is never
+         * passed to the internal event bus, preventing the PoP transaction from progressing.
+         */
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Thread.sleep(30000L); // Delay 30 seconds
+                    PoPMiningOperationState.Action stateAction = state.getCurrentAction();
+                    if (stateAction == PoPMiningOperationState.Action.PROOF) {
+                        // State still hasn't progressed past the PROOF action, meaning a FilteredBlockAvailableEvent
+                        // Probably never occurred.
+                        logger.info("Forcibly posting false filtered block available event...");
+                        InternalEventBus.getInstance().post(new FilteredBlockAvailableEvent(state));
+                    } else {
+                        logger.info("Not forcibly posting filtered block available event; state action is not PROOF.");
+                    }
+                } catch (Exception e) {
+                    logger.info("Exception occurred in the backup timer for providing alternate proof!");
+                }
+            }
+        }).start();
 
         return TaskResult.fail(state);
     }

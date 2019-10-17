@@ -55,7 +55,8 @@ public class ProveTransactionTask extends BaseTask {
                         }
                     } catch (Exception e) {
                         logger.error("Unable to validate Merkle path for transaction", e);
-                        failureReason = "Unable to prove transaction " + state.getSubmittedTransactionId() + " in block " + block.getHashAsString();
+                        failureReason = "Unable to prove transaction " + state.getSubmittedTransactionId() +
+                                " in block " + block.getHashAsString();
                     }
                 } else {
                     failureReason = "Unable to construct Merkle proof for block " + block.getHashAsString();
@@ -81,7 +82,8 @@ public class ProveTransactionTask extends BaseTask {
             BitcoinMerkleTree bmt = new BitcoinMerkleTree(true, txids);
             BitcoinMerklePath merklePath = bmt.getPathFromTxID(state.getSubmittedTransactionId());
 
-            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBitcoinBlockHeaderOfProof().getMerkleRoot().toString())) {
+            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBitcoinBlockHeaderOfProof()
+                    .getMerkleRoot().toString())) {
                 state.onTransactionProven(merklePath.getCompactFormat());
                 return TaskResult.succeed(state, getNext());
             } else {
