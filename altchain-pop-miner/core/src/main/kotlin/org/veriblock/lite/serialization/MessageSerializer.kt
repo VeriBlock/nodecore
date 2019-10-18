@@ -80,7 +80,8 @@ fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(params: N
         txMessage.data.toByteArray(),
         signature.toByteArray(),
         publicKey.toByteArray(),
-        params.transactionPrefix)
+        params.transactionPrefix
+    )
 }
 
 fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(params: NetworkParameters): VeriBlockTransaction {
@@ -96,7 +97,8 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(p
         txMessage.data.toByteArray(),
         ByteArray(0),
         ByteArray(0),
-        params.transactionPrefix)
+        params.transactionPrefix
+    )
 }
 
 fun VeriBlockMessages.VeriBlockPublication.deserialize(params: NetworkParameters): VeriBlockPublication {
@@ -113,5 +115,6 @@ fun VeriBlockMessages.VeriBlockPublication.deserialize(params: NetworkParameters
         popTransaction.deserializePoPTransaction(params),
         VeriBlockMerklePath(compactMerklePath),
         SerializeDeserializeService.parseVeriBlockBlock(containingBlock.toByteArray()),
-        context)
+        context
+    )
 }

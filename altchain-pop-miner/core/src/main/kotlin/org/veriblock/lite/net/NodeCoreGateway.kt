@@ -171,10 +171,16 @@ class NodeCoreGateway(
     }
 
     fun submitEndorsementTransaction(publicationData: ByteArray, addressManager: AddressManager): VeriBlockTransaction {
-        logger.debug { "Submitting endorsement transaction..." }
+        logger.debug { "Creating endorsement transaction..." }
+        val sourceAddressByteString = ByteStringAddressUtility.createProperByteStringAutomatically(
+            addressManager.defaultAddress.hash
+        )
         val createRequest = VeriBlockMessages.CreateAltChainEndorsementRequest
             .newBuilder()
             .setPublicationData(ByteStringUtility.bytesToByteString(publicationData))
+            .setSourceAddress(sourceAddressByteString)
+            .setFeePerByte(1_000) // TODO config-driven
+            .setMaxFee(10_000_000) // TODO config-driven
             .build()
 
         val createReply = blockingStub
@@ -187,14 +193,13 @@ class NodeCoreGateway(
             error("Unable to create endorsement transaction (Publication Data: ${publicationData.toHex()})")
         }
 
-        val signedTransaction = VeriBlockMessages.SignedTransaction.newBuilder()
-            .setTransaction(createReply.transaction)
-            .build()
+        val signedTransaction = generateSignedRegularTransaction(addressManager, createReply.transaction, createReply.signatureIndex)
+        logger.debug { "Submitting endorsement transaction..." }
         val submitRequest = VeriBlockMessages.SubmitTransactionsRequest
             .newBuilder()
-            .addTransactions(VeriBlockMessages.TransactionUnion.newBuilder().setSigned(
-                    generateSignedRegularTransaction(addressManager, createReply.transaction, createReply.signatureIndex)
-            ))
+            .addTransactions(
+                VeriBlockMessages.TransactionUnion.newBuilder().setSigned(signedTransaction)
+            )
             .build()
 
         val submitReply = blockingStub
@@ -215,13 +220,13 @@ class NodeCoreGateway(
         addressManager: AddressManager,
         unsignedTransaction: VeriBlockMessages.Transaction,
         signatureIndex: Long
-    ): VeriBlockMessages.SignedTransaction? {
+    ): VeriBlockMessages.SignedTransaction {
         val sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(unsignedTransaction.sourceAddress)
         requireNotNull(addressManager.get(sourceAddress)) {
             "The address $sourceAddress is not contained in the specified wallet file!"
         }
 
-        val transactionId = unsignedTransaction.toByteArray()
+        val transactionId = unsignedTransaction.txId.toByteArray()
         val signature = addressManager.signMessage(transactionId, sourceAddress)
 
         return VeriBlockMessages.SignedTransaction.newBuilder()

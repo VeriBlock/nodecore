@@ -53,13 +53,13 @@ private fun getInfo(): VbkInfo = config.host.httpPost()
     .body(JsonRpcRequestBody("getinfo", Any()).toJson())
     .rpcResponse()
 
-private fun getLastBitcoinBlockHeader() = config.host.httpPost()
+private fun getLastBitcoinBlockHash() = config.host.httpPost()
     .body(JsonRpcRequestBody("getlastbitcoinblock", Any()).toJson())
-    .rpcResponse<BtcBlockData>().header
+    .rpcResponse<BtcBlockData>().hash
 
-private fun getLastBlockHeader() = config.host.httpPost()
+private fun getLastBlockHash() = config.host.httpPost()
     .body(JsonRpcRequestBody("getlastblock", Any()).toJson())
-    .rpcResponse<BlockHeaderContainer>().header.header
+    .rpcResponse<BlockHeaderContainer>().header.hash
 
 @PluginSpec(name = "Test", key = "test")
 class TestChain : SecurityInheritingChain {
@@ -84,8 +84,8 @@ class TestChain : SecurityInheritingChain {
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
         logger.info { "Retrieving last known blocks from NodeCore at ${config.host}..." }
-        val lastVbkHeader = getLastBlockHeader().asHex()
-        val lastBtcHeader = getLastBitcoinBlockHeader().asHex()
+        val lastVbkHash = getLastBlockHash().asHex()
+        val lastBtcHash = getLastBitcoinBlockHash().asHex()
 
         val header = Random.nextBytes(20)
         val context = Random.nextBytes(100)
@@ -96,7 +96,7 @@ class TestChain : SecurityInheritingChain {
             Base58.decode("VFMJSUgJCy9QRa1RjXNmJ5kLy5D35C"),
             context
         )
-        return PublicationDataWithContext(publicationData, listOf(lastVbkHeader), listOf(lastBtcHeader))
+        return PublicationDataWithContext(publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
