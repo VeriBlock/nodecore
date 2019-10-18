@@ -29,7 +29,7 @@ object NetworkParameters {
     val network: String
     val adminHost: String
     val adminPort: Int
-    val transactionPrefix: Byte
+    val transactionPrefix: Byte?
     val minimumDifficulty: BigInteger
 
     var certificateChainPath: String? = config.certificateChainPath
@@ -54,7 +54,7 @@ object NetworkParameters {
 sealed class NetworkParametersTemplate {
     abstract val network: String
     abstract val defaultAdminPort: Int
-    abstract val transactionPrefix: Byte
+    abstract val transactionPrefix: Byte?
     abstract val minimumDifficulty: BigInteger
 }
 
@@ -62,8 +62,8 @@ private object MainNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "MainNet"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
 
-    override val transactionPrefix: Byte
-        get() = 0xAA.toByte()
+    override val transactionPrefix: Byte?
+        get() = null
 
     override val network: String
         get() = NETWORK
@@ -79,7 +79,7 @@ private object TestNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "TestNet"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L)
 
-    override val transactionPrefix: Byte
+    override val transactionPrefix: Byte?
         get() = 0xAA.toByte()
 
     override val network: String
@@ -96,7 +96,7 @@ private object AlphaNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "Alpha"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(9_999_872L)
 
-    override val transactionPrefix: Byte
+    override val transactionPrefix: Byte?
         get() = 0xAA.toByte()
 
     override val network: String

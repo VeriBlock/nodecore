@@ -26,7 +26,7 @@ class WalletTransactionTest {
         val data = ByteArray(8)
         val signature = ByteArray(10)
         val publicKey = ByteArray(8)
-        val networkByte: Byte = Context.networkParameters.transactionPrefix
+        val networkByte: Byte? = Context.networkParameters.transactionPrefix
         val transactionMeta: TransactionMeta = randomTransactionMeta()
         val merklePath = randomVeriBlockMerklePath()
 
@@ -59,7 +59,7 @@ class WalletTransactionTest {
         val data = ByteArray(8)
         val signature = ByteArray(10)
         val publicKey = ByteArray(8)
-        val networkByte: Byte = Context.networkParameters.transactionPrefix
+        val networkByte: Byte? = Context.networkParameters.transactionPrefix
 
         // When
         val veriblockTransaction = VeriBlockTransaction(type, sourceAddress, sourceAmount, outputs,

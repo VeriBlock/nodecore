@@ -60,7 +60,7 @@ fun randomWalletTransaction(
     data: ByteArray = ByteArray(8),
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
-    networkByte: Byte = Context.networkParameters.transactionPrefix,
+    networkByte: Byte? = Context.networkParameters.transactionPrefix,
     transactionMeta: TransactionMeta = randomTransactionMeta(),
     merklePath: VeriBlockMerklePath = randomVeriBlockMerklePath()
 ): WalletTransaction {
@@ -144,7 +144,7 @@ fun randomVeriBlockTransaction(
     data: ByteArray = ByteArray(8),
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
-    networkByte: Byte = Context.networkParameters.transactionPrefix
+    networkByte: Byte? = Context.networkParameters.transactionPrefix
 ): VeriBlockTransaction {
     return VeriBlockTransaction(
         type,
@@ -204,7 +204,7 @@ fun randomVeriBlockPoPTransaction(
     blockOfProofContext: List<BitcoinBlock> = (1..10).map { randomBitcoinBlock() },
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
-    networkByte: Byte = Context.networkParameters.transactionPrefix
+    networkByte: Byte? = Context.networkParameters.transactionPrefix
 ): VeriBlockPoPTransaction {
     return VeriBlockPoPTransaction(
         address,
