@@ -124,15 +124,15 @@ class TransactionMonitorTest {
             randomFullBlock(normalTransactions = confirmedWithRightDepthTransactions)
         }
 
-        val transactionMonitor = randomTransactionMonitor(address = address, walletTransactions = listOf())
+        val transactionMonitor = randomTransactionMonitor(address = address, walletTransactions = allTransactions)
 
         // When
         transactionMonitor.onBlockChainReorganized(oldBlocks, newBlocks)
 
         // Then
-       confirmedWithWrongDepthTransactions.forEach {
-           it.transactionMeta.depth shouldBe 60
-       }
+        confirmedWithWrongDepthTransactions.forEach {
+            it.transactionMeta.depth shouldBe 60
+        }
         confirmedWithRightDepthTransactions.forEach {
             it.transactionMeta.state shouldBe TransactionMeta.MetaState.CONFIRMED
             it.merklePath shouldNotBe null
