@@ -9,14 +9,15 @@
 package org.veriblock.lite.params
 
 import org.veriblock.sdk.Configuration
-import org.veriblock.sdk.VeriBlockBlock
-
 import java.math.BigInteger
 
 class NetworkConfig(
-    val network: String = "alpha",
+    val network: String = "mainnet",
     val ip: String? = null,
-    val port: Int? = null
+    val port: Int? = null,
+    val certificateChainPath: String? = null,
+    val isSsl: Boolean = false,
+    val adminPassword: String? = null
 )
 
 private val config: NetworkConfig = Configuration.extract("nodecore")
@@ -31,15 +32,16 @@ object NetworkParameters {
     val transactionPrefix: Byte
     val minimumDifficulty: BigInteger
 
-    // TODO
-    var certificateChainPath: String? = null
-    var isSsl = false
-    var adminPassword: String? = null
+    var certificateChainPath: String? = config.certificateChainPath
+    var isSsl = config.isSsl
+    var adminPassword: String? = config.adminPassword
 
     init {
         val template = when (config.network) {
+            "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
-            else -> AlphaNetParameters
+            "alpha" -> AlphaNetParameters
+            else -> error("Invalid network")
         }
         network = template.network
         adminHost = config.ip ?: LOCALHOST
@@ -47,8 +49,6 @@ object NetworkParameters {
         transactionPrefix = template.transactionPrefix
         minimumDifficulty = template.minimumDifficulty
     }
-
-    fun getGenesisBlock(): VeriBlockBlock? = null
 }
 
 sealed class NetworkParametersTemplate {
@@ -56,6 +56,23 @@ sealed class NetworkParametersTemplate {
     abstract val defaultAdminPort: Int
     abstract val transactionPrefix: Byte
     abstract val minimumDifficulty: BigInteger
+}
+
+private object MainNetParameters : NetworkParametersTemplate() {
+    const val NETWORK = "MainNet"
+    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
+
+    override val transactionPrefix: Byte
+        get() = 0xAA.toByte()
+
+    override val network: String
+        get() = NETWORK
+
+    override val defaultAdminPort: Int
+        get() = 10500
+
+    override val minimumDifficulty: BigInteger
+        get() = MINIMUM_POW_DIFFICULTY
 }
 
 private object TestNetParameters : NetworkParametersTemplate() {

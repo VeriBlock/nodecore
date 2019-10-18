@@ -10,9 +10,13 @@ package org.veriblock.lite.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import org.veriblock.lite.core.*
+import org.veriblock.core.contracts.AddressManager
+import org.veriblock.lite.core.BlockChain
+import org.veriblock.lite.core.Context
+import org.veriblock.lite.core.FullBlock
+import org.veriblock.lite.core.PublicationSubscription
 import org.veriblock.lite.util.Threading
-import org.veriblock.lite.wallet.Wallet
+import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.sdk.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -25,7 +29,8 @@ class NodeCoreNetwork(
     private val context: Context,
     private val gateway: NodeCoreGateway,
     private val blockChain: BlockChain,
-    private val wallet: Wallet
+    private val transactionMonitor: TransactionMonitor,
+    private val addressManager: AddressManager
 ) {
     private val healthy = AtomicBoolean(false)
     private val publicationSubscriptions = ConcurrentHashMap<String, PublicationSubscription>()
@@ -42,9 +47,13 @@ class NodeCoreNetwork(
         return connected
     }
 
+    fun shutdown() {
+        gateway.shutdown()
+    }
+
     fun submitEndorsement(publicationData: ByteArray): VeriBlockTransaction {
-        val transaction = gateway.submitEndorsementTransaction(publicationData)
-        wallet.commitTransaction(transaction)
+        val transaction = gateway.submitEndorsementTransaction(publicationData, addressManager)
+        transactionMonitor.commitTransaction(transaction)
         return transaction
     }
 
@@ -85,10 +94,6 @@ class NodeCoreNetwork(
 
             } else {
                 if (gateway.ping()) {
-                    getAddressDefaults()
-
-                    logger.info("Connected to NodeCore")
-
                     healthy.set(true)
                     connected.set(true)
                 }
@@ -134,16 +139,6 @@ class NodeCoreNetwork(
             logger.error("NodeCore Error", e)
         }
     }
-
-    private fun getAddressDefaults() {
-        if (wallet.address == null) {
-            wallet.address = Address(gateway.getDefaultAddress())
-        }
-        wallet.balance = gateway.getBalance(wallet.address!!.toString())
-    }
-
-    fun getBalance(): Balance? =
-        gateway.getBalance(wallet.address!!.toString())
 }
 
 class BlockDownloadException(message: String) : Exception(message)

@@ -88,7 +88,9 @@ public class DefaultNodeCoreService implements NodeCoreService {
 
     @Override
     public boolean ping() {
-        if (_blockingStub == null) return false;
+        if (_blockingStub == null) {
+            return false;
+        }
 
         try {
             _blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).ping(PingRequest.newBuilder().build());

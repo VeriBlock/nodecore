@@ -8,14 +8,16 @@
 
 package org.veriblock.lite.net
 
+import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.AdminRpcConfiguration
 import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.ChannelBuilder
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.contracts.AddressManager
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
@@ -119,38 +121,6 @@ class NodeCoreGateway(
         return null
     }
 
-    fun getBalance(address: String): Balance {
-        logger.debug { "Requesting balance for address $address..." }
-        val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
-            .addAddresses(ByteStringUtility.base58ToByteString(address))
-            .build()
-
-        val reply = blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
-            .getBalance(request)
-        if (reply.success) {
-            return Balance(
-                Coin.valueOf(reply.getConfirmed(0).unlockedAmount),
-                Coin.valueOf(reply.getUnconfirmed(0).amount)
-            )
-        } else {
-            error("Unable to retrieve balance from address $address")
-        }
-    }
-
-    fun getDefaultAddress(): String {
-        logger.debug { "Requesting default address..." }
-        val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder().build()
-        val reply = blockingStub
-            .withDeadlineAfter(5, TimeUnit.SECONDS)
-            .getSignatureIndex(request)
-        return if (reply.success) {
-            ByteStringUtility.byteStringToBase58(reply.getIndexes(0).address)
-        } else {
-            error("Unable to get default address: ${reply.resultsList.joinToString { "${it.code}: ${it.message}" }}")
-        }
-    }
-
     fun getVeriBlockPublications(keystoneHash: String, contextHash: String, btcContextHash: String): List<VeriBlockPublication> {
         logger.debug { "Requesting veriblock publications for keystone $keystoneHash..." }
         val request = VeriBlockMessages.GetVeriBlockPublicationsRequest
@@ -181,7 +151,7 @@ class NodeCoreGateway(
                 .ping(VeriBlockMessages.PingRequest.newBuilder().build())
             true
         } catch (e: StatusRuntimeException) {
-            logger.warn("Unable to connect ping NodeCore at this time")
+            //logger.warn("Unable to connect ping NodeCore at this time")
             false
         }
     }
@@ -200,23 +170,65 @@ class NodeCoreGateway(
         return BlockChainDelta(removed, added)
     }
 
-    fun submitEndorsementTransaction(publicationData: ByteArray): VeriBlockTransaction {
+    fun submitEndorsementTransaction(publicationData: ByteArray, addressManager: AddressManager): VeriBlockTransaction {
         logger.debug { "Submitting endorsement transaction..." }
-        val request = VeriBlockMessages.SendAltChainEndorsementRequest
+        val createRequest = VeriBlockMessages.CreateAltChainEndorsementRequest
             .newBuilder()
             .setPublicationData(ByteStringUtility.bytesToByteString(publicationData))
             .build()
 
-        val reply = blockingStub
-            .withDeadlineAfter(5, TimeUnit.SECONDS)
-            .sendAltChainEndorsement(request)
-        if (!reply.success) {
-            for (error in reply.resultsList) {
+        val createReply = blockingStub
+            .withDeadlineAfter(2, TimeUnit.SECONDS)
+            .createAltChainEndorsement(createRequest)
+        if (!createReply.success) {
+            for (error in createReply.resultsList) {
+                logger.error { "${error.message} | ${error.details}" }
+            }
+            error("Unable to create endorsement transaction (Publication Data: ${publicationData.toHex()})")
+        }
+
+        val signedTransaction = VeriBlockMessages.SignedTransaction.newBuilder()
+            .setTransaction(createReply.transaction)
+            .build()
+        val submitRequest = VeriBlockMessages.SubmitTransactionsRequest
+            .newBuilder()
+            .addTransactions(VeriBlockMessages.TransactionUnion.newBuilder().setSigned(
+                    generateSignedRegularTransaction(addressManager, createReply.transaction, createReply.signatureIndex)
+            ))
+            .build()
+
+        val submitReply = blockingStub
+            .withDeadlineAfter(3, TimeUnit.SECONDS)
+            .submitTransactions(submitRequest)
+
+        if (!submitReply.success) {
+            for (error in submitReply.resultsList) {
                 logger.error { "${error.message} | ${error.details}" }
             }
             error("Unable to submit endorsement transaction (Publication Data: ${publicationData.toHex()})")
         }
 
-        return reply.transaction.deserializeStandardTransaction(params)
+        return signedTransaction.deserializeStandardTransaction(params)
+    }
+
+    private fun generateSignedRegularTransaction(
+        addressManager: AddressManager,
+        unsignedTransaction: VeriBlockMessages.Transaction,
+        signatureIndex: Long
+    ): VeriBlockMessages.SignedTransaction? {
+        val sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(unsignedTransaction.sourceAddress)
+        requireNotNull(addressManager.get(sourceAddress)) {
+            "The address $sourceAddress is not contained in the specified wallet file!"
+        }
+
+        val transactionId = unsignedTransaction.toByteArray()
+        val signature = addressManager.signMessage(transactionId, sourceAddress)
+
+        return VeriBlockMessages.SignedTransaction.newBuilder()
+            .setPublicKey(ByteString.copyFrom(addressManager.getPublicKeyForAddress(sourceAddress).encoded))
+            .setSignatureIndex(signatureIndex)
+            .setSignature(ByteString.copyFrom(signature))
+            .setTransaction(unsignedTransaction)
+            .build()
     }
 }

@@ -3,7 +3,8 @@ generated
 
 pop.dat
 *.spvchain
-*.spvwallet
+*.wallet
+*.txmon
 *.dat-shm
 *.dat-wal
 

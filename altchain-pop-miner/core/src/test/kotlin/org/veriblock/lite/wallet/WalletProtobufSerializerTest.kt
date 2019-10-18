@@ -21,7 +21,7 @@ class WalletProtobufSerializerTest {
     @Test
     fun roundTrip() = with(serializer) {
         // Given
-        val wallet = randomWallet()
+        val wallet = randomTransactionMonitor()
         val outputStream = ByteArrayOutputStream()
         outputStream.writeWallet(wallet)
         val inputStream = ByteArrayInputStream(outputStream.toByteArray())

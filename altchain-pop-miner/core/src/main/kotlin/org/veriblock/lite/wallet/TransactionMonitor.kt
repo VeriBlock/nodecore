@@ -8,7 +8,10 @@
 
 package org.veriblock.lite.wallet
 
-import org.veriblock.lite.core.*
+import org.veriblock.lite.core.Context
+import org.veriblock.lite.core.FullBlock
+import org.veriblock.lite.core.MerkleTree
+import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.util.invoke
 import org.veriblock.sdk.*
 import java.io.File
@@ -19,32 +22,34 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 
 private val logger = createLogger {}
-const val WALLET_FILE_EXTENSION = ".spvwallet"
+const val TM_FILE_EXTENSION = ".txmon"
+const val WALLET_FILE_EXTENSION = ".wallet"
 
-class Wallet {
-
+class TransactionMonitor(
+    val address: Address,
+    transactionsToLoad: List<WalletTransaction> = emptyList()
+) {
     private val serializer = WalletProtobufSerializer()
     private val lock = ReentrantLock(true)
     private val transactions: MutableMap<Sha256Hash, WalletTransaction> = HashMap()
 
-    var address: Address? = null
-    lateinit var balance: Balance
-
-    fun getTransactions(): Collection<WalletTransaction> =
-        Collections.unmodifiableCollection(transactions.values)
-
-    internal fun loadTransactions(toLoad: List<WalletTransaction>) {
-        for (tx in toLoad) {
+    init {
+        for (tx in transactionsToLoad) {
             transactions[tx.id] = tx
         }
     }
 
+    fun getTransactions(): Collection<WalletTransaction> =
+        Collections.unmodifiableCollection(transactions.values)
+
     private fun save(serializer: WalletProtobufSerializer) {
-        val diskWallet = File(Context.directory, Context.filePrefix + WALLET_FILE_EXTENSION)
+        val diskWallet = File(Context.directory, Context.filePrefix + TM_FILE_EXTENSION)
 
         lock {
             try {
-                FileOutputStream(diskWallet).use { stream -> with(serializer) { stream.writeWallet(this@Wallet) } }
+                FileOutputStream(diskWallet).use { stream ->
+                    with(serializer) { stream.writeWallet(this@TransactionMonitor) }
+                }
             } catch (e: IOException) {
                 logger.error("Unable to save wallet to disk", e)
             }
@@ -59,12 +64,11 @@ class Wallet {
         val walletTransaction = WalletTransaction.wrap(transaction)
         walletTransaction.transactionMeta.setState(TransactionMeta.MetaState.PENDING)
         transactions[transaction.id] = walletTransaction
-        balance.addPendingSpend(transaction.sourceAmount)
     }
 
-    fun getWalletTransaction(transactionId: Sha256Hash): WalletTransaction {
+    fun getTransaction(transactionId: Sha256Hash): WalletTransaction {
         return transactions[transactionId]
-            ?: error("Unable to find transaction $transactionId in the wallet")
+            ?: error("Unable to find transaction $transactionId in the monitored address")
     }
 
     private fun handleReorganizedBlocks(blocks: List<VeriBlockBlock>) = lock {
@@ -100,17 +104,9 @@ class Wallet {
                 } else {
                     meta.setState(TransactionMeta.MetaState.PENDING)
                     tx.merklePath = null
-                    onConfirmedTransactionReorganized(tx)
                 }
             }
         }
-    }
-
-    private fun onConfirmedTransactionReorganized(tx: VeriBlockTransaction) = lock {
-        if (tx.sourceAddress == address) {
-            balance.makeConfirmedSpendPending(tx.sourceAmount)
-        }
-        // TODO: Outputs
     }
 
     private fun filterTransactionsFrom(block: FullBlock): Map<Sha256Hash, WalletTransaction> {
@@ -129,19 +125,6 @@ class Wallet {
             }
         }
         return relevantTransactions
-    }
-
-    private fun VeriBlockTransaction.isRelevant(): Boolean {
-        if (transactions.containsKey(id)) {
-            return true
-        }
-        if (address == sourceAddress) {
-            return true
-        }
-        // TODO: Outputs
-        // TODO: Proof-of-Proof endorsing chain
-        // TODO: Alt-chain endorsement
-        return false
     }
 
     fun onBlockChainDownloaded(blocks: Map<VBlakeHash, FullBlock>) {
@@ -184,11 +167,10 @@ class Wallet {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Wallet
+        other as TransactionMonitor
 
         if (transactions != other.transactions) return false
         if (address != other.address) return false
-        if (balance != other.balance) return false
 
         return true
     }
@@ -196,16 +178,28 @@ class Wallet {
     override fun hashCode(): Int {
         var result = transactions.hashCode()
         result = 31 * result + address.hashCode()
-        result = 31 * result + balance.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "Wallet(address=$address, balance=$balance, transactions=$transactions)"
+        return "TransactionMonitor(address=$address, transactions=$transactions)"
+    }
+
+    private fun VeriBlockTransaction.isRelevant(): Boolean {
+        if (transactions.containsKey(id)) {
+            return true
+        }
+        if (address == sourceAddress) {
+            return true
+        }
+        // TODO: Outputs
+        // TODO: Proof-of-Proof endorsing chain
+        // TODO: Alt-chain endorsement
+        return false
     }
 }
 
-fun File.loadWallet(): Wallet = try {
+fun File.loadTransactionMonitor(): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
         with (WalletProtobufSerializer()) {
             stream.readWallet()

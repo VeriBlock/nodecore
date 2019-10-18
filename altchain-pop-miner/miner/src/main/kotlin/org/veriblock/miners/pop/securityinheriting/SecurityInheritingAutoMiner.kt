@@ -36,6 +36,11 @@ class SecurityInheritingAutoMiner(
         pollSchedule = Threading.SI_POLL_THREAD.scheduleWithFixedDelay({
             this.poll()
         }, 1L, 1L, TimeUnit.SECONDS)
+
+        logger.info("Connecting to SI Chain ($chainId)...")
+        connected.addListener(Runnable {
+            logger.info("Connected to SI Chain ($chainId)!")
+        }, Threading.SI_POLL_THREAD)
     }
 
     fun stop() {
@@ -64,7 +69,6 @@ class SecurityInheritingAutoMiner(
             } else {
                 val pinged = checkSuccess { chain.getBestBlockHeight() }
                 if (pinged) {
-                    logger.info("Connected to SI Chain ($chainId)")
                     healthy.set(true)
                     connected.set(true)
                 }
