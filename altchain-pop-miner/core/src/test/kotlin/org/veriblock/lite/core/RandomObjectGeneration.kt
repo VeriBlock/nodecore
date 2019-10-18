@@ -11,7 +11,7 @@ package org.veriblock.lite.core
 import org.apache.commons.lang3.RandomStringUtils
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.wallet.AddressKeyGenerator
-import org.veriblock.lite.wallet.Wallet
+import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.sdk.*
 import java.security.MessageDigest
@@ -116,15 +116,10 @@ fun randomSha256Hash(): Sha256Hash {
     return Sha256Hash.wrap(messageDigest.digest(randomBytes))
 }
 
-fun randomWallet(
+fun randomTransactionMonitor(
     address: Address = randomAddress(),
-    balance: Balance = randomBalance(),
     walletTransactions: List<WalletTransaction> = (0..randomInt(20)).map { randomWalletTransaction() }
-) = Wallet().apply {
-    this.address = address
-    this.balance = balance
-    this.loadTransactions(walletTransactions)
-}
+) = TransactionMonitor(address, walletTransactions)
 
 fun randomVeriBlockMerklePath(
     treeIndex: Int = randomInt(1, 65535),

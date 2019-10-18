@@ -15,34 +15,31 @@ import io.kotlintest.shouldNotBe
 import org.junit.Test
 import org.veriblock.lite.core.*
 
-class WalletTest {
+class TransactionMonitorTest {
 
     @Test
     fun loadTransactions() {
         // Given
-        val wallet = randomWallet(walletTransactions = listOf())
         val walletTransactions = (1..10).map { randomWalletTransaction() }
 
         // When
-        wallet.loadTransactions(walletTransactions)
+        val transactionMonitor = randomTransactionMonitor(walletTransactions = walletTransactions)
 
         // Then
-        wallet.getTransactions() shouldContainExactlyInAnyOrder walletTransactions
+        transactionMonitor.getTransactions() shouldContainExactlyInAnyOrder walletTransactions
     }
 
     @Test
     fun commitTransaction() {
         // Given
         val transaction = randomVeriBlockTransaction()
-        val wallet = randomWallet()
-
-        val previousPendingBalanceChannges = wallet.balance.pendingBalanceChanges
+        val transactionMonitor = randomTransactionMonitor()
 
         // When
-        wallet.commitTransaction(transaction)
+        transactionMonitor.commitTransaction(transaction)
 
         // Then
-        val walletTransaction = wallet.getWalletTransaction(transaction.id)
+        val walletTransaction = transactionMonitor.getTransaction(transaction.id)
         walletTransaction.type shouldBe transaction.type
         walletTransaction.sourceAddress shouldBe transaction.sourceAddress
         walletTransaction.sourceAmount shouldBe transaction.sourceAmount
@@ -53,14 +50,13 @@ class WalletTest {
         walletTransaction.publicKey shouldBe transaction.publicKey
         walletTransaction.networkByte shouldBe transaction.networkByte
         walletTransaction.transactionMeta.state shouldBe TransactionMeta.MetaState.PENDING
-        wallet.balance.pendingBalanceChanges shouldBe (previousPendingBalanceChannges.subtract(transaction.sourceAmount))
     }
 
 
     @Test
     fun onBlockChainDownloaded() {
         // Given
-        val wallet = randomWallet(walletTransactions = listOf())
+        val address = randomAddress()
         val confirmedTransactionsWithWrongBlocks = (1..10).map {
             randomWalletTransaction(transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
         }
@@ -68,7 +64,7 @@ class WalletTest {
             randomWalletTransaction(transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
         }
         val unknownTransactionsWithRightBlocks = (1..10).map {
-            randomWalletTransaction(sourceAddress = wallet.address!!, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.UNKNOWN))
+            randomWalletTransaction(sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.UNKNOWN))
         }
         val confirmedTransactionBlocks = (1..10).map {
             confirmedTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock()
@@ -80,10 +76,10 @@ class WalletTest {
 
         val allTransactions = confirmedTransactionsWithWrongBlocks + confirmedTransactionsWithRightBlocks + unknownTransactionsWithRightBlocks
         val allBlocks =  confirmedTransactionBlocks + unknownTransactionBlocks
-        wallet.loadTransactions(allTransactions)
+        val transactionMonitor = randomTransactionMonitor(address, allTransactions)
 
         // When
-        wallet.onBlockChainDownloaded(allBlocks)
+        transactionMonitor.onBlockChainDownloaded(allBlocks)
 
         // Then
         confirmedTransactionsWithWrongBlocks.forEach {
@@ -112,25 +108,26 @@ class WalletTest {
     @Test
     fun onBlockChainReorganized() {
         // Given
-        val wallet = randomWallet(balance = randomBalance(randomCoin(10), randomCoin(10)), walletTransactions = listOf())
+        val address = randomAddress()
         val oldBlocks = (1..10).map {
             randomVeriBlockBlock()
         }
         val confirmedWithWrongDepthTransactions = (1..5).map {
-            randomWalletTransaction(sourceAddress = wallet.address!!, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  50))
+            randomWalletTransaction(sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  50))
         }
         val confirmedWithRightDepthTransactions = (1..5).map {
-            randomWalletTransaction(sourceAddress = wallet.address!!, sourceAmount = randomCoin(5), transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  oldBlocks.size))
+            randomWalletTransaction(sourceAddress = address, sourceAmount = randomCoin(5), transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  oldBlocks.size))
         }
 
         val allTransactions = confirmedWithWrongDepthTransactions + confirmedWithRightDepthTransactions
         val newBlocks = (1..20).map {
             randomFullBlock(normalTransactions = confirmedWithRightDepthTransactions)
         }
-        wallet.loadTransactions(allTransactions)
+
+        val transactionMonitor = randomTransactionMonitor(address = address, walletTransactions = listOf())
 
         // When
-        wallet.onBlockChainReorganized(oldBlocks, newBlocks)
+        transactionMonitor.onBlockChainReorganized(oldBlocks, newBlocks)
 
         // Then
        confirmedWithWrongDepthTransactions.forEach {
@@ -140,7 +137,5 @@ class WalletTest {
             it.transactionMeta.state shouldBe TransactionMeta.MetaState.CONFIRMED
             it.merklePath shouldNotBe null
         }
-        wallet.balance.pendingBalanceChanges.atomicUnits shouldBe (10 - ((confirmedWithRightDepthTransactions.size * 5))).toLong()
-        wallet.balance.confirmedBalance.atomicUnits shouldBe (10 + ((confirmedWithRightDepthTransactions.size * 5))).toLong()
     }
 }

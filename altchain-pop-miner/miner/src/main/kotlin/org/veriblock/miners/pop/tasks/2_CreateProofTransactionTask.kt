@@ -46,7 +46,7 @@ class CreateProofTransactionTask(
             failOperation(operation, "Could not create endorsement transaction")
         }
 
-        val walletTransaction = nodeCoreLiteKit.wallet.getWalletTransaction(transaction.id)
+        val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)
         operation.setTransaction(walletTransaction)
         logger.info(operation) { "Successfully added the transaction: ${walletTransaction.id}!" }
         logger.info(operation) { "Waiting for the transaction to be included in VeriBlock block..." }

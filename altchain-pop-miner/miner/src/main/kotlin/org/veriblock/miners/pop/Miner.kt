@@ -9,7 +9,6 @@
 package org.veriblock.miners.pop
 
 import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.core.Balance
 import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
@@ -30,13 +29,10 @@ class Miner(
 ) {
     private val operations = ConcurrentHashMap<String, MiningOperation>()
 
-    val balance: Balance?
-        get() = nodeCoreLiteKit.network.getBalance()
-
     init {
         // Restore operations (including re-attach listeners) before the network starts
-        this.nodeCoreLiteKit.beforeNetworkStart = Runnable { this.loadSuspendedOperations() }
-        this.nodeCoreLiteKit.afterNetworkStart = Runnable { this.submitSuspendedOperations() }
+        this.nodeCoreLiteKit.beforeNetworkStart = { this.loadSuspendedOperations() }
+        this.nodeCoreLiteKit.afterNetworkStart = { this.submitSuspendedOperations() }
     }
 
     fun start() {
@@ -92,7 +88,7 @@ class Miner(
         try {
             val txFactory: (String) -> WalletTransaction = { txId ->
                 val hash = Sha256Hash.wrap(txId)
-                nodeCoreLiteKit.wallet.getWalletTransaction(hash)
+                nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
             }
 
             val activeOperations = operationService.getActiveOperations(txFactory)

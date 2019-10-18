@@ -728,14 +728,18 @@ message SendCoinsReply {
     repeated bytes tx_ids = 3 [(hex_encoded)=true];
 }
 
-message SendAltChainEndorsementRequest {
+message CreateAltChainEndorsementRequest {
     bytes publication_data = 1 [(hex_encoded)=true];
+    bytes source_address = 2 [(address_encoded)=true];
+    int64 fee_per_byte = 3;
+    int64 max_fee = 4;
 }
 
-message SendAltChainEndorsementReply {
+message CreateAltChainEndorsementReply {
     bool success = 1;
     repeated Result results = 2;
-    SignedTransaction transaction = 3;
+    Transaction transaction = 3;
+    int64 signature_index = 4;
 }
 
 message GetHistoryRequest {
@@ -1346,37 +1350,37 @@ message GetVeriBlockPublicationsReply {
 service Admin {
     rpc GetPop(GetPopRequest) returns (GetPopReply) {}
 
-    rpc AddNode(NodeRequest) returns (ProtocolReply) {}
+    rpc AddNode (NodeRequest) returns (ProtocolReply) {}
 
-    rpc SetBan(SetBanRequest) returns (ProtocolReply) {}
+    rpc SetBan (SetBanRequest) returns (ProtocolReply) {}
 
-    rpc GetInfo(GetInfoRequest) returns (GetInfoReply) {}
+    rpc GetInfo (GetInfoRequest) returns (GetInfoReply) {}
 
-    rpc GetDiagnosticInfo(GetDiagnosticInfoRequest) returns (GetDiagnosticInfoReply) {}
+    rpc GetDiagnosticInfo (GetDiagnosticInfoRequest) returns (GetDiagnosticInfoReply) {}
 
-    rpc RemoveNode(NodeRequest) returns (ProtocolReply) {}
+    rpc RemoveNode (NodeRequest) returns (ProtocolReply) {}
 
-    rpc StopPool(StopPoolRequest) returns (StopPoolReply) {}
+    rpc StopPool (StopPoolRequest) returns (StopPoolReply) {}
 
-    rpc SubmitPop(SubmitPopRequest) returns (ProtocolReply) {}
+    rpc SubmitPop (SubmitPopRequest) returns (ProtocolReply) {}
 
-    rpc SendCoins(SendCoinsRequest) returns (SendCoinsReply) {}
+    rpc SendCoins (SendCoinsRequest) returns (SendCoinsReply) {}
 
-    rpc SendAltChainEndorsement(SendAltChainEndorsementRequest) returns (SendAltChainEndorsementReply) {}
+    rpc CreateAltChainEndorsement (CreateAltChainEndorsementRequest) returns (CreateAltChainEndorsementReply) {}
 
-    rpc GetBlocks(GetBlocksRequest) returns (GetBlocksReply) {}
+    rpc GetBlocks (GetBlocksRequest) returns (GetBlocksReply) {}
 
-    rpc StartPool(StartPoolRequest) returns (StartPoolReply) {}
+    rpc StartPool (StartPoolRequest) returns (StartPoolReply) {}
 
-    rpc RestartPoolWebServer(RestartPoolWebServerRequest) returns (RestartPoolWebServerReply) {}
+    rpc RestartPoolWebServer (RestartPoolWebServerRequest) returns (RestartPoolWebServerReply) {}
 
-    rpc GetHistory(GetHistoryRequest) returns (GetHistoryReply) {}
+    rpc GetHistory (GetHistoryRequest) returns (GetHistoryReply) {}
 
-    rpc GetBalance(GetBalanceRequest) returns (GetBalanceReply) {}
-    
-    rpc SetAllowed(SetAllowedRequest) returns (ProtocolReply) {}
+    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {}
 
-    rpc ListBanned(ListBannedRequest) returns (ListBannedReply) {}
+    rpc SetAllowed (SetAllowedRequest) returns (ProtocolReply) {}
+
+    rpc ListBanned (ListBannedRequest) returns (ListBannedReply) {}
 
     rpc ListBannedMiners(ListBannedMinersRequest) returns (ListBannedMinersReply) {}
 
@@ -1393,24 +1397,24 @@ service Admin {
     rpc SignMessage(SignMessageRequest) returns (SignMessageReply) {}
 
     rpc ListAllowed(ListAllowedRequest) returns (ListAllowedReply) {}
-    
+
     rpc BackupWallet(BackupWalletRequest) returns (BackupWalletReply) {}
-    
+
     rpc ImportWallet(ImportWalletRequest) returns (ImportWalletReply) {}
 
     rpc GetNewAddress(GetNewAddressRequest) returns (GetNewAddressReply) {}
 
     rpc GetBlockTimes(GetBlockTimesRequest) returns (GetBlockTimesReply) {}
-	
-	rpc StartSoloPool(StartSoloPoolRequest) returns (StartSoloPoolReply) {}
+
+    rpc StartSoloPool(StartSoloPoolRequest) returns (StartSoloPoolReply) {}
 
     rpc GetBlockchains(GetBlockchainsRequest) returns (GetBlockchainsReply) {}
 
     rpc SetTransactionFee(SetTransactionFeeRequest) returns (ProtocolReply) {}
-	
-	rpc DumpPrivateKey(DumpPrivateKeyRequest) returns (DumpPrivateKeyReply) {}
-	
-	rpc ImportPrivateKey(ImportPrivateKeyRequest) returns (ImportPrivateKeyReply) {}
+
+    rpc DumpPrivateKey(DumpPrivateKeyRequest) returns (DumpPrivateKeyReply) {}
+
+    rpc ImportPrivateKey(ImportPrivateKeyRequest) returns (ImportPrivateKeyReply) {}
 
     rpc SubmitTransactions(SubmitTransactionsRequest) returns (ProtocolReply) {}
 
@@ -1423,23 +1427,23 @@ service Admin {
     rpc MakeUnsignedMultisigTx(MakeUnsignedMultisigTxRequest) returns (MakeUnsignedMultisigTxReply) {}
 
     rpc SubmitMultisigTx(SubmitMultisigTxRequest) returns (SubmitMultisigTxReply) {}
-    
+
     rpc GetBitcoinBlockIndex(GetBitcoinBlockIndexRequest) returns (ProtocolReply){}
 
     rpc GetBlockTemplate(GetBlockTemplateRequest) returns (GetBlockTemplateReply) {}
 
     rpc GetSignatureIndex(GetSignatureIndexRequest) returns (GetSignatureIndexReply) {}
-	
-	rpc SetDefaultAddress(SetDefaultAddressRequest) returns (SetDefaultAddressReply) {}
+
+    rpc SetDefaultAddress(SetDefaultAddressRequest) returns (SetDefaultAddressReply) {}
 
     rpc GetLastBitcoinBlock(GetLastBitcoinBlockRequest) returns (GetLastBitcoinBlockReply) {}
-    
+
     rpc GetProtectedChildren(GetProtectedChildrenRequest) returns (GetProtectedChildrenReply) {}
-    
+
     rpc GetProtectingParents(GetProtectingParentsRequest) returns (GetProtectingParentsReply) {}
-    
+
     rpc GetWalletTransactions(GetWalletTransactionsRequest) returns (GetWalletTransactionsReply) {}
-    
+
     rpc GetEndorsementsOfBlock(GetEndorsementsOfBlockRequest) returns (GetEndorsementsOfBlockReply) {}
 
     rpc GetPendingTransactions(GetPendingTransactionsRequest) returns (GetPendingTransactionsReply) {}
@@ -1469,7 +1473,7 @@ service Admin {
     rpc LockWallet(LockWalletRequest) returns (ProtocolReply) {}
 
     rpc DrainAddress(DrainAddressRequest) returns (DrainAddressReply) {}
-    
+
     rpc GetBalanceUnlockSchedule(GetBalanceUnlockScheduleRequest) returns (GetBalanceUnlockScheduleReply) {}
 
     rpc GetPoolState(GetPoolStateRequest) returns (GetPoolStateReply) {}

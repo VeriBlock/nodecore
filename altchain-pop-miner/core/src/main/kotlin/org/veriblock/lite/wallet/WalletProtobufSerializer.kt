@@ -22,16 +22,15 @@ import java.io.OutputStream
 class WalletProtobufSerializer {
 
     @Throws(IOException::class)
-    fun OutputStream.writeWallet(wallet: Wallet) {
+    fun OutputStream.writeWallet(wallet: TransactionMonitor) {
         val codedOutputStream = CodedOutputStream.newInstance(this)
         wallet.toProto().writeTo(codedOutputStream)
         codedOutputStream.flush()
     }
 
-    private fun Wallet.toProto(): Protos.Wallet = Protos.Wallet.newBuilder().also {
+    private fun TransactionMonitor.toProto(): Protos.Wallet = Protos.Wallet.newBuilder().also {
         it.network = Context.networkParameters.network
         it.address = address.toString()
-        it.balance = balance.toProto()
 
         for (transaction in getTransactions()) {
             it.addTransactions(transaction.toProto())
@@ -101,20 +100,19 @@ class WalletProtobufSerializer {
     }
 
     @Throws(IOException::class)
-    fun InputStream.readWallet(): Wallet {
+    fun InputStream.readWallet(): TransactionMonitor {
         val codedInput = CodedInputStream.newInstance(this)
         return Protos.Wallet.parseFrom(codedInput).toModel()
     }
 
-    private fun Protos.Wallet.toModel(): Wallet {
+    private fun Protos.Wallet.toModel(): TransactionMonitor {
         check(Context.networkParameters.network == network) {
             "Network ${Context.networkParameters.network} attempting to read wallet for $network"
         }
-        return Wallet().also {
-            it.address = Address(address)
-            it.balance = balance.toModel()
-            it.loadTransactions(transactionsList.toModel())
-        }
+        return TransactionMonitor(
+            Address(address),
+            transactionsList.toModel()
+        )
     }
 
     private fun Protos.Balance.toModel() = Balance(

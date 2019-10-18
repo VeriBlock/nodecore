@@ -8,42 +8,49 @@
 
 package org.veriblock.lite
 
+import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.wallet.DefaultAddressManager
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.store.BlockStore
 import org.veriblock.lite.store.StoredVeriBlockBlock
 import org.veriblock.lite.store.VeriBlockBlockStoreImpl
 import org.veriblock.lite.util.Threading
+import org.veriblock.lite.wallet.TM_FILE_EXTENSION
+import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.lite.wallet.WALLET_FILE_EXTENSION
-import org.veriblock.lite.wallet.Wallet
-import org.veriblock.lite.wallet.loadWallet
+import org.veriblock.lite.wallet.loadTransactionMonitor
+import org.veriblock.sdk.Address
 import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.createLogger
 import java.io.File
 import java.io.IOException
 
-class NodeCoreLiteKit(
-        private val context: Context
-) {
-    private val params: NetworkParameters = context.networkParameters
+val logger = createLogger {}
 
+class NodeCoreLiteKit(
+    private val context: Context
+) {
     lateinit var blockStore: BlockStore<VBlakeHash, StoredVeriBlockBlock>
         private set
 
     lateinit var blockChain: BlockChain
         private set
 
-    lateinit var wallet: Wallet
+    lateinit var addressManager: AddressManager
+        private set
+
+    lateinit var transactionMonitor: TransactionMonitor
         private set
 
     lateinit var network: NodeCoreNetwork
         private set
 
-    var beforeNetworkStart: Runnable? = null
-    var afterNetworkStart: Runnable? = null
+    var beforeNetworkStart: () -> Unit = {}
+    var afterNetworkStart: () -> Unit = {}
 
     @Throws(IOException::class)
     fun start() {
@@ -51,34 +58,46 @@ class NodeCoreLiteKit(
             throw IOException("Unable to create directory")
         }
 
+        logger.info { "Network: ${context.networkParameters.network}" }
+
         try {
             this.blockStore = createBlockStore()
         } catch (e: BlockStoreException) {
             throw IOException("Unable to initialize block store", e)
         }
 
-        wallet = createOrLoadWallet()
+        addressManager = loadAddressManager()
+        logger.info { "Send funds to ${addressManager.defaultAddress.hash}" }
+        transactionMonitor = createOrLoadTransactionMonitor()
         blockChain = BlockChain(context.networkParameters, blockStore).apply {
-            newBestBlockEvent.register(wallet) {
-                wallet.onNewBestBlock(it)
+            newBestBlockEvent.register(transactionMonitor) {
+                transactionMonitor.onNewBestBlock(it)
             }
-            blockChainReorganizedEvent.register(wallet) {
-                wallet.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
+            blockChainReorganizedEvent.register(transactionMonitor) {
+                transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
             }
         }
 
-        beforeNetworkStart?.run()
+        beforeNetworkStart()
 
-        network = NodeCoreNetwork(context, NodeCoreGateway(context.networkParameters), blockChain, wallet).apply {
+        logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
+        network = NodeCoreNetwork(
+            context,
+            NodeCoreGateway(context.networkParameters),
+            blockChain,
+            transactionMonitor,
+            addressManager
+        ).apply {
             val connected = startAsync()
-            connected.addListener(Runnable{
-                afterNetworkStart?.run()
+            connected.addListener(Runnable {
+                logger.info { "Connected to NodeCore!" }
+                afterNetworkStart()
             }, Threading.LISTENER_THREAD)
         }
     }
 
     fun shutdown() {
-
+        network.shutdown()
     }
 
     @Throws(BlockStoreException::class)
@@ -87,14 +106,23 @@ class NodeCoreLiteKit(
         return VeriBlockBlockStoreImpl(chainFile)
     }
 
-    private fun createOrLoadWallet(): Wallet {
-        val walletFile = File(context.directory, context.filePrefix + WALLET_FILE_EXTENSION)
-        return if (walletFile.exists()) {
-            loadWallet(walletFile)
+    private fun createOrLoadTransactionMonitor(): TransactionMonitor {
+        val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
+        return if (file.exists()) {
+            file.loadTransactionMonitor()
         } else {
-            Wallet()
+            val address = Address(addressManager.defaultAddress.hash)
+            TransactionMonitor(address)
         }
     }
 
-    private fun loadWallet(walletFile: File): Wallet = walletFile.loadWallet()
+    private fun loadAddressManager(): AddressManager {
+        val addressManager = DefaultAddressManager()
+        val file = File(context.directory, context.filePrefix + WALLET_FILE_EXTENSION)
+        addressManager.load(file)
+        if (!file.exists()) {
+            addressManager.save()
+        }
+        return addressManager
+    }
 }

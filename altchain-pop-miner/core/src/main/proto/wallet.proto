@@ -54,14 +54,8 @@ message WalletTransaction {
     bytes public_key = 9;
 }
 
-message Balance {
-    int64 confirmed_balance = 1;
-    int64 pending_balance_changes = 2;
-}
-
 message Wallet {
     string network = 1;
     string address = 2;
-    Balance balance = 3;
-    repeated WalletTransaction transactions = 4;
+    repeated WalletTransaction transactions = 3;
 }

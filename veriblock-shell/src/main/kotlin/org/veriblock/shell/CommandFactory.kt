@@ -53,16 +53,20 @@ class CommandFactory {
             throw syntaxError(command, "too many parameters provided")
         }
 
-       return command.parameters.asSequence().mapIndexed { index, param ->
+        return command.parameters.asSequence().mapIndexedNotNull { index, param ->
             val suppliedParamIndex = index + 1
-            if (param.required && suppliedParamIndex >= suppliedParams.size) {
-                throw syntaxError(
-                    command,
-                    "parameter '${param.name}' is required"
-                )
+            if (suppliedParamIndex < suppliedParams.size) {
+                val suppliedParam = suppliedParams[suppliedParamIndex]
+                param.name to extractTypedParam(param, suppliedParam, command)
+            } else {
+                if (param.required) {
+                    throw syntaxError(
+                        command,
+                        "parameter '${param.name}' is required"
+                    )
+                }
+                null
             }
-            val suppliedParam = suppliedParams[suppliedParamIndex]
-            param.name to extractTypedParam(param, suppliedParam, command)
         }.associate {
             it
         }
