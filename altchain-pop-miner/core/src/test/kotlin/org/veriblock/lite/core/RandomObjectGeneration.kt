@@ -45,13 +45,6 @@ fun randomCoin(
     return Coin.valueOf(amount)
 }
 
-fun randomBalance(
-    confirmedBalance: Coin = randomCoin(),
-    pendingBalanceChanges: Coin = randomCoin()
-): Balance {
-    return Balance(confirmedBalance, pendingBalanceChanges)
-}
-
 fun randomAddress(): Address {
     val pair = AddressKeyGenerator.generate()
     val address = AddressUtility.addressFromPublicKey(pair.public)

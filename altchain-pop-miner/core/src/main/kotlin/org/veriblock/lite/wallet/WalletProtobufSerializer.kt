@@ -11,7 +11,6 @@ package org.veriblock.lite.wallet
 import com.google.protobuf.CodedInputStream
 import com.google.protobuf.CodedOutputStream
 import nodecore.api.grpc.utilities.ByteStringUtility
-import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.sdk.*
@@ -35,11 +34,6 @@ class WalletProtobufSerializer {
         for (transaction in getTransactions()) {
             it.addTransactions(transaction.toProto())
         }
-    }.build()
-
-    private fun Balance.toProto(): Protos.Balance = Protos.Balance.newBuilder().also {
-        it.confirmedBalance = confirmedBalance.atomicUnits
-        it.pendingBalanceChanges = pendingBalanceChanges.atomicUnits
     }.build()
 
     private fun WalletTransaction.toProto(): Protos.WalletTransaction = Protos.WalletTransaction.newBuilder().also {
@@ -114,11 +108,6 @@ class WalletProtobufSerializer {
             transactionsList.toModel()
         )
     }
-
-    private fun Protos.Balance.toModel() = Balance(
-        Coin.valueOf(confirmedBalance),
-        Coin.valueOf(pendingBalanceChanges)
-    )
 
     private fun List<Protos.WalletTransaction>.toModel(): List<WalletTransaction> = map {
         it.toModel()
