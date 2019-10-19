@@ -11,10 +11,7 @@ package org.veriblock.lite.net
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import org.veriblock.core.contracts.AddressManager
-import org.veriblock.lite.core.BlockChain
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.FullBlock
-import org.veriblock.lite.core.PublicationSubscription
+import org.veriblock.lite.core.*
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.sdk.*
@@ -51,8 +48,10 @@ class NodeCoreNetwork(
         gateway.shutdown()
     }
 
-    fun submitEndorsement(publicationData: ByteArray): VeriBlockTransaction {
-        val transaction = gateway.submitEndorsementTransaction(publicationData, addressManager)
+    fun submitEndorsement(publicationData: ByteArray, feePerByte: Long, maxFee: Long): VeriBlockTransaction {
+        val transaction = gateway.submitEndorsementTransaction(
+            publicationData, addressManager, feePerByte, maxFee
+        )
         transactionMonitor.commitTransaction(transaction)
         return transaction
     }
@@ -139,6 +138,9 @@ class NodeCoreNetwork(
             logger.error("NodeCore Error", e)
         }
     }
+
+    fun getBalance(): Balance =
+        gateway.getBalance(addressManager.defaultAddress.hash)
 }
 
 class BlockDownloadException(message: String) : Exception(message)

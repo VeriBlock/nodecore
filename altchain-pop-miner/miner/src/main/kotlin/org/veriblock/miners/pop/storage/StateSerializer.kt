@@ -95,7 +95,11 @@ object StateSerializer {
             }
 
             if (serialized.txId != null && serialized.txId.isNotEmpty()) {
-                setTransaction(txFactory(serialized.txId))
+                try {
+                    setTransaction(txFactory(serialized.txId))
+                } catch (e: IllegalStateException) {
+                    fail(e.message ?: "Unable to load transaction ${serialized.txId}")
+                }
             }
 
             if (serialized.blockOfProof != null && serialized.blockOfProof.size() > 0) {
