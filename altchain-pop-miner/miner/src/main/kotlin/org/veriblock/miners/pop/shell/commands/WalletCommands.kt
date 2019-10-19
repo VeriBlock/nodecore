@@ -11,21 +11,19 @@ package org.veriblock.miners.pop.shell.commands
 import com.google.gson.Gson
 import org.veriblock.miners.pop.Miner
 import org.veriblock.shell.Shell
+import org.veriblock.shell.command
+import org.veriblock.shell.core.success
 
 fun Shell.walletCommands(miner: Miner, prettyPrintGson: Gson) {
 
-    //command(
-    //    name = "Get Balance",
-    //    form = "getbalance",
-    //    description = "Gets the coin balance for the VeriBlock address"
-    //) {
-    //    val balance = miner.balance
-    //    if (balance != null) {
-    //        printInfo(prettyPrintGson.toJson(balance))
-    //    } else {
-    //        printInfo("Could not get balance")
-    //    }
-    //
-    //    success()
-    //}
+    command(
+        name = "Get Balance",
+        form = "getbalance",
+        description = "Gets the coin balance for the VeriBlock address"
+    ) {
+        val balance = miner.getBalance()
+        printInfo(prettyPrintGson.toJson(balance))
+
+        success()
+    }
 }

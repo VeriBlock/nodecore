@@ -9,18 +9,27 @@
 package org.veriblock.miners.pop
 
 import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.storage.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
+import org.veriblock.sdk.Configuration
 import org.veriblock.sdk.Sha256Hash
 import org.veriblock.sdk.createLogger
 import org.veriblock.shell.core.Result
+import org.veriblock.shell.core.failure
+import org.veriblock.shell.core.success
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
+
+class MinerConfig(
+    val feePerByte: Long = 1_000,
+    val maxFee: Long = 10_000_000
+)
+
+val minerConfig = Configuration.extract("miner") ?: MinerConfig()
 
 class Miner(
     private val workflowAuthority: WorkflowAuthority,
@@ -55,8 +64,32 @@ class Miner(
         return operations[id]
     }
 
+    fun getBalance() = nodeCoreLiteKit.network.getBalance()
+
     fun mine(chain: String, block: Int?): Result {
-        // TODO: Check ready conditions
+        if (!nodeCoreLiteKit.network.isHealthy()) {
+            return failure {
+                addMessage("V010", "Unable to mine", "Cannot connect to NodeCore", true)
+            }
+        }
+
+        val currentBalance = getBalance().confirmedBalance.atomicUnits
+        if (currentBalance < minerConfig.maxFee) {
+            return failure {
+                addMessage(
+                    "V011",
+                    "Insufficient funds",
+                    "Current confirmed balance is $currentBalance while the configured maximum fee is ${minerConfig.maxFee}",
+                    true
+                )
+                addMessage(
+                    "V011",
+                    "Please send VBK coins to ${nodeCoreLiteKit.addressManager.defaultAddress}",
+                    "You should send at least ${minerConfig.maxFee - currentBalance} atomic units of VBK",
+                    false
+                )
+            }
+        }
 
         val state = MiningOperation(
             chainId = chain,
@@ -71,9 +104,9 @@ class Miner(
         if (state.status != OperationStatus.UNKNOWN) {
             logger.info { "Created operation [${state.id}] on chain ${state.chainId}" }
 
-            return Result(false)
+            return success()
         } else {
-            return Result(true)
+            return failure()
         }
     }
 
@@ -86,12 +119,11 @@ class Miner(
         logger.info("Loading suspended operations")
 
         try {
-            val txFactory: (String) -> WalletTransaction = { txId ->
+            val activeOperations = operationService.getActiveOperations { txId ->
                 val hash = Sha256Hash.wrap(txId)
                 nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
             }
 
-            val activeOperations = operationService.getActiveOperations(txFactory)
             for (state in activeOperations) {
                 registerToStateChangedEvent(state)
                 operations[state.id] = state

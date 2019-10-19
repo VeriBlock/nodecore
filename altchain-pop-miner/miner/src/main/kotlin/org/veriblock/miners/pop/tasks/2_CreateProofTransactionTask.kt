@@ -12,6 +12,7 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
+import org.veriblock.miners.pop.minerConfig
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -41,7 +42,11 @@ class CreateProofTransactionTask(
         // Something to fill in all the gaps
         logger.info(operation) { "Submitting endorsement transaction..." }
         val transaction = try {
-            nodeCoreLiteKit.network.submitEndorsement(SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData))
+            nodeCoreLiteKit.network.submitEndorsement(
+                SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData),
+                minerConfig.feePerByte,
+                minerConfig.maxFee
+            )
         } catch (e: Exception) {
             failOperation(operation, "Could not create endorsement transaction")
         }

@@ -18,6 +18,7 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.ChannelBuilder
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
@@ -121,6 +122,25 @@ class NodeCoreGateway(
         return null
     }
 
+    fun getBalance(address: String): Balance {
+        logger.debug { "Requesting balance for address $address..." }
+        val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
+            .addAddresses(ByteStringUtility.base58ToByteString(address))
+            .build()
+
+        val reply = blockingStub
+            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .getBalance(request)
+        if (reply.success) {
+            return Balance(
+                Coin.valueOf(reply.getConfirmed(0).unlockedAmount),
+                Coin.valueOf(reply.getUnconfirmed(0).amount)
+            )
+        } else {
+            error("Unable to retrieve balance from address $address")
+        }
+    }
+
     fun getVeriBlockPublications(keystoneHash: String, contextHash: String, btcContextHash: String): List<VeriBlockPublication> {
         logger.debug { "Requesting veriblock publications for keystone $keystoneHash..." }
         val request = VeriBlockMessages.GetVeriBlockPublicationsRequest
@@ -170,7 +190,9 @@ class NodeCoreGateway(
         return BlockChainDelta(removed, added)
     }
 
-    fun submitEndorsementTransaction(publicationData: ByteArray, addressManager: AddressManager): VeriBlockTransaction {
+    fun submitEndorsementTransaction(
+        publicationData: ByteArray, addressManager: AddressManager, feePerByte: Long, maxFee: Long
+    ): VeriBlockTransaction {
         logger.debug { "Creating endorsement transaction..." }
         val sourceAddressByteString = ByteStringAddressUtility.createProperByteStringAutomatically(
             addressManager.defaultAddress.hash
@@ -179,8 +201,8 @@ class NodeCoreGateway(
             .newBuilder()
             .setPublicationData(ByteStringUtility.bytesToByteString(publicationData))
             .setSourceAddress(sourceAddressByteString)
-            .setFeePerByte(1_000) // TODO config-driven
-            .setMaxFee(10_000_000) // TODO config-driven
+            .setFeePerByte(feePerByte)
+            .setMaxFee(maxFee)
             .build()
 
         val createReply = blockingStub
