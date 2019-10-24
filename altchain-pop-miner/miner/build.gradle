@@ -99,7 +99,7 @@ jar {
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'veriblock.miners.pop',
-                'Implementation-Version': version,
+                'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
 }

@@ -41,7 +41,7 @@ jar {
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'Xenios SEZC',
                 'Implementation-Title': 'org.veriblock.alt.sdk',
-                'Implementation-Version': version,
+                'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'Xenios SEZC'
     }
 }

@@ -22,7 +22,7 @@ jar {
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'org.veriblock.core',
-                'Implementation-Version': version,
+                'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
 }
@@ -50,7 +50,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId 'veriblock'
             artifactId 'veriblock-core'
-            version this.version
+            version prettyVersion()
             from components.java
         }
     }

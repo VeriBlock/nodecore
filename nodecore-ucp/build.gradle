@@ -22,7 +22,7 @@ jar {
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'nodecore.api.ucp',
-                'Implementation-Version': version,
+                'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
 }
@@ -49,7 +49,7 @@ publishing {
         mavenJava(MavenPublication) {
             groupId 'veriblock'
             artifactId 'nodecore-ucp'
-            version this.version
+            version prettyVersion()
             from components.java
         }
     }
