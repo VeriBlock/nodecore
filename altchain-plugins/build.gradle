@@ -49,7 +49,7 @@ jar {
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'veriblock.alt',
-                'Implementation-Version': version,
+                'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
 }

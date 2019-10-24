@@ -44,7 +44,7 @@ jar {
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'nodecore.miners.pow',
-                'Implementation-Version': version,
+                'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
 }

@@ -1,0 +1,71 @@
+plugins {
+    id "java"
+    id "idea"
+    id 'org.jetbrains.kotlin.jvm'
+    id "java-library"
+    id "maven-publish"
+    id "com.jfrog.artifactory"
+}
+
+dependencies {
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+
+    compile project(':veriblock-core')
+    compile project(':nodecore-grpc')
+
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
+    compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
+    compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
+    compile group: 'dnsjava', name: 'dnsjava', version: '2.1.8'
+
+    // Configuration
+    implementation "io.github.config4k:config4k:0.4.0"
+}
+
+jar {
+    archiveName = "${project.name}-${prettyVersion()}.jar"
+    manifest {
+        attributes 'Name': 'nodecore/p2p',
+                'Specification-Title': 'VeriBlock NodeCore P2P',
+                'Specification-Version': prettyVersion(),
+                'Specification-Vendor': 'VeriBlock Foundation',
+                'Implementation-Title': 'nodecore.p2p',
+                'Implementation-Version': prettyVersion(),
+                'Implementation-Vendor': 'VeriBlock Foundation'
+    }
+}
+
+artifactory {
+    contextUrl = artifactory_url
+    publish {
+        repository {
+            repoKey = artifactory_repoKey
+            username = artifactory_user
+            password = artifactory_password
+            maven = true
+        }
+
+        defaults {
+            publications('mavenJava')
+            publishArtifacts = true
+        }
+    }
+
+    resolve {
+        repoKey = 'jcenter'
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'veriblock'
+            artifactId 'nodecore-p2p'
+            version prettyVersion()
+            from components.java
+        }
+    }
+}

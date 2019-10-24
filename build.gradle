@@ -42,6 +42,9 @@ String prettyVersion() {
     String version = rootProject.version.toString()
     if (version.contains("+")) {
         version = version.substring(0, version.length() - 8).replace("+", ".")
+        if (version.endsWith("develop")) {
+            version = version.substring(0, version.length() - 8)
+        }
     }
     return version
 }
