@@ -8,6 +8,7 @@ include 'nodecore-p2p'
 include 'nodecore-cli'
 include 'nodecore-miners-pow'
 include 'nodecore-miners-pop'
+include 'veriblock-extensions'
 
 include 'altchain-sdk'
 
