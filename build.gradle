@@ -14,6 +14,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.41'
     id 'nebula.release' version '6.0.0'
     id 'com.jfrog.artifactory' version '4.7.3'
+    id 'jacoco'
     id "org.sonarqube" version "2.8"
 }
 
@@ -21,13 +22,6 @@ allprojects {
     repositories {
         mavenLocal()
         jcenter()
-    }
-
-    apply plugin: 'jacoco'
-
-    jacoco {
-        toolVersion = "0.8.4"
-        reportsDir = file("$buildDir/coverage")
     }
 }
 
@@ -50,6 +44,21 @@ String prettyVersion() {
         version = version.substring(0, version.length() - 8).replace("+", ".")
     }
     return version
+}
+
+task codeCoverageReport(type: JacocoReport) {
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
+    subprojects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled true
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
+        html.enabled false
+        csv.enabled false
+    }
 }
 
 sonarqube {
