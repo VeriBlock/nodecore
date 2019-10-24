@@ -70,6 +70,9 @@ jar {
     }
 }
 
+applicationName = 'VeriBlockExtensions'
+mainClassName = 'org.veriblock.extensions.ledger.LedgerProof'
+
 distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
 distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
 
@@ -77,5 +80,4 @@ startScripts {
     dependsOn jar
 
     classpath = files(jar.archivePath)
-    windowsStartScriptGenerator.template = resources.text.fromFile("windowsStartScript.txt")
 }
