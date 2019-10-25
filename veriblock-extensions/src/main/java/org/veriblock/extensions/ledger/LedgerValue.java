@@ -29,14 +29,14 @@ public class LedgerValue {
      * @param frozenAtomicUnits    The number of atomic VeriBlock coins frozen in contracts
      * @param signatureIndex       The signature index of the owning address
      */
-    LedgerValue(long availableAtomicUnits, long frozenAtomicUnits, long signatureIndex) {
+    public LedgerValue(long availableAtomicUnits, long frozenAtomicUnits, long signatureIndex) {
         _availableAtomicUnits = availableAtomicUnits;
         _frozenAtomicUnits = frozenAtomicUnits;
         _signatureIndex = signatureIndex;
     }
 
 
-    LedgerValue(VeriBlockMessages.LedgerValue message) {
+    public LedgerValue(VeriBlockMessages.LedgerValue message) {
         this(message.getAvailableAtomicUnits(), 0L, message.getSignatureIndex());
 
         if (_availableAtomicUnits < 0) {
