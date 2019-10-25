@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:8-jre-alpine
 
 # Prepare for datadir mounts
 ENV DATA_DIR /data
