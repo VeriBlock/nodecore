@@ -1,63 +1,21 @@
 plugins {
     id "java"
     id "idea"
-    id "application"
-}
-
-configurations.all {
-    // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    id "java-library"
+    id "maven-publish"
+    id "com.jfrog.artifactory"
 }
 
 dependencies {
-    // Using compile in all dependencies because of the jar's classpath reference
+    testImplementation 'junit:junit:4.12'
 
-    compile "org.codehaus.groovy:groovy:2.4.12"
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
 
-    compile project(':nodecore-ucp')
-    compile project(':nodecore-grpc')
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
-    compile group: 'com.google.protobuf', name: 'protobuf-gradle-plugin', version: '0.8.6'
-    compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
-    compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.1.0'
-    compile group: 'com.google.inject.extensions', name: 'guice-assistedinject', version: '4.1.0'
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
-    compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
-    compile group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'
-    compile group: 'org.quartz-scheduler', name: 'quartz', version: '2.2.1'
-    compile group: 'org.quartz-scheduler', name: 'quartz-jobs', version: '2.2.1'
-    compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '5.1'
-    compile group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '5.1'
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
-    compile group: 'org.bitcoinj', name: 'bitcoinj-core', version: '0.14.7'
-    compile group: 'com.sparkjava', name: 'spark-core', version: '2.7.2'
-
-    // Kotlin
-    testCompile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.50'
-    testCompile 'org.jetbrains.kotlin:kotlin-reflect:1.3.50'
-
-    testCompile 'junit:junit:4.12'
-    testCompile "org.mockito:mockito-core:2.+"
-    // Test assertions
-    testCompile 'io.kotlintest:kotlintest-assertions:3.4.1'
-}
-
-test {
-    testLogging {
-        exceptionFormat = 'full'
-    }
-}
-
-ext {
-    group = 'veriblock'
-    println "archiveBaseName: $archivesBaseName"
-    println "branch = ${release.grgit.branch.current.name}"
 }
 
 jar {
-    archiveName = "$applicationName-${prettyVersion()}.jar"
+    archiveName = "veriblock-extensions-${prettyVersion()}.jar"
     manifest {
         attributes 'Name': 'org/veriblock/extensions',
                 'Specification-Title': 'VeriBlock Extensions',
@@ -65,19 +23,35 @@ jar {
                 'Specification-Vendor': 'VeriBlock Foundation',
                 'Implementation-Title': 'org.veriblock.extensions',
                 'Implementation-Version': prettyVersion(),
-                'Implementation-Vendor': 'VeriBlock Foundation',
-                'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
+                'Implementation-Vendor': 'VeriBlock Foundation'
     }
 }
 
-applicationName = 'VeriBlockExtensions'
-mainClassName = 'org.veriblock.extensions.ledger.LedgerProof'
 
-distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
-distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
+artifactory {
+    contextUrl = artifactory_url
+    publish {
+        repository {
+            repoKey = artifactory_repoKey
+            username = artifactory_user
+            password = artifactory_password
+            maven = true
+        }
 
-startScripts {
-    dependsOn jar
+        defaults {
+            publications('mavenJava')
+            publishArtifacts = true
+        }
+    }
+}
 
-    classpath = files(jar.archivePath)
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'veriblock'
+            artifactId 'veriblock-extensions'
+            version prettyVersion()
+            from components.java
+        }
+    }
 }
