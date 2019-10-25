@@ -192,6 +192,42 @@ message GetProtectingParentsReply {
     repeated PoPEndorsementInfo pop_endorsements = 3;
 }
 
+message LedgerValue {
+    int64 available_atomic_units = 1;
+    int64 frozen_atomic_units = 2;
+    int64 signature_index = 3;
+}
+
+message LedgerProofNode {
+    bytes route = 1;
+    bytes left_contiguous_child_hashes = 2;
+    bytes right_contiguous_child_hashes = 3;
+    LedgerValue ledgerValue = 4;
+}
+
+message LedgerProofOfExistence {
+    repeated LedgerProofNode vertical_proof_layers = 1;
+}
+
+message LedgerProofOfNonexistence {
+    repeated LedgerProofNode vertical_proof_layers = 1;
+    repeated LedgerProofNode horizontal_proof_layers = 2;
+    bytes address = 3 [(address_encoded)=true];
+}
+
+message LedgerProof {
+    oneof proof {
+        LedgerProofOfExistence proof_of_existence = 1;
+        LedgerProofOfNonexistence proof_of_nonexistence = 2;
+    }
+}
+
+message LedgerProofWithContext {
+    LedgerProof ledger_proof = 1;
+    repeated bytes ledger_proof_context_layers = 2;
+    BlockHeader block_header = 3;
+}
+
 message Transaction {
     enum Type {
         ZERO_UNUSED = 0;
