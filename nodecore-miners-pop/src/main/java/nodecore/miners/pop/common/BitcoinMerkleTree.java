@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * The BitcoinMerkleTree class provides a variety of ways to interact with Bitcoin transaction merkle trees.
  * Bitcoin transaction merkle trees make proving a given transaction exists in a given block incredibly efficient, since
@@ -64,7 +62,7 @@ public class BitcoinMerkleTree
 		/* Convert all of the TxIDs to byte[]s, flip them for the correct endianness */
 		for (int i = 0; i < txIDs.size(); i++)
 		{
-			floorData[i] = Utility.flip(DatatypeConverter.parseHexBinary(txIDs.get(i)));
+			floorData[i] = Utility.flip(Utility.hexToBytes(txIDs.get(i)));
 		}
 		
 		/* Create, at a minimum, the bottom floor */
@@ -99,7 +97,7 @@ public class BitcoinMerkleTree
 		}
 		
 		/* Get the (only) element from the top layer, flip it, convert to hex */
-		return DatatypeConverter.printHexBinary(Utility.flip(layers.get(layers.size() - 1).getElement(0)));
+		return Utility.bytesToHex(Utility.flip(layers.get(layers.size() - 1).getElement(0)));
 	}
 	
 	/**
@@ -113,7 +111,7 @@ public class BitcoinMerkleTree
 		int foundIndex = 0;
 		
 		/* The stored TxID will be in reversed-byte-order from the network-byte-order used by Bitcoin-RPC */
-		byte[] txIDBytes = Utility.flip(DatatypeConverter.parseHexBinary(txID));
+		byte[] txIDBytes = Utility.flip(Utility.hexToBytes(txID));
 		
 		MerkleLayer bottomLayer = layers.get(0);
 		for (; foundIndex < bottomLayer.numElementsInLayer(); foundIndex++)

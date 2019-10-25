@@ -6,7 +6,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 package nodecore.miners.pop.common;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * A BitcoinMerklePath object represents the path, from a TxID to a Bitcoin merkle root.
@@ -49,34 +48,28 @@ public class BitcoinMerklePath
 	/**
 	 * Constructs a BitcoinMerklePath object with the provided compact String representation
 	 */
-	public BitcoinMerklePath(String compactFormat)
-	{
+	public BitcoinMerklePath(String compactFormat) {
 		String[] parts = compactFormat.split(":");
-		if (parts.length < 3)
-		{
+		if (parts.length < 3) {
 			throw new IllegalArgumentException("The compactFormat string must be in the format: \"bottomIndex:bottomData:layer0:...:layerN\"");
 		}
 		
-		if (!Utility.isPositiveInteger(parts[0]))
-		{
+		if (!Utility.isPositiveInteger(parts[0])) {
 			throw new IllegalArgumentException("The compactFormat string must be in the format: \"bottomIndex:bottomData:layer0:...:layerN\"");
 		}
 		
-		for (int i = 1; i < parts.length; i++)
-		{
-			if (parts[i].length() != 64 || !Utility.isHex(parts[i]))
-			{
+		for (int i = 1; i < parts.length; i++) {
+			if (parts[i].length() != 64 || !Utility.isHex(parts[i])) {
 				throw new IllegalArgumentException("The compactFormat string must be in the format: \"bottomIndex:bottomData:layer0:...:layerN\"");
 			}
 		}
 		
 		this.bottomDataIndex = Integer.parseInt(parts[0]);
-		this.bottomData = DatatypeConverter.parseHexBinary(parts[1]);
+		this.bottomData = Utility.hexToBytes(parts[1]);
 		this.layers = new byte[parts.length - 2][];
 		
-		for (int i = 2; i < parts.length; i++)
-		{
-			this.layers[i - 2] = DatatypeConverter.parseHexBinary(parts[i]);
+		for (int i = 2; i < parts.length; i++) {
+			this.layers[i - 2] = Utility.hexToBytes(parts[i]);
 		}
 	}
 	
@@ -104,7 +97,7 @@ public class BitcoinMerklePath
 			layerIndex /= 2;
 		}
 		
-		return DatatypeConverter.printHexBinary(Utility.flip(movingHash));
+		return Utility.bytesToHex(Utility.flip(movingHash));
 	}
 	
 	/**
@@ -114,11 +107,11 @@ public class BitcoinMerklePath
 	 */
 	public String getCompactFormat()
 	{
-		String path = this.bottomDataIndex + ":" + DatatypeConverter.printHexBinary(this.bottomData);
+		String path = this.bottomDataIndex + ":" + Utility.bytesToHex(this.bottomData);
 		
 		for (int i = 0; i < layers.length; i++)
 		{
-			path += ":" + DatatypeConverter.printHexBinary(layers[i]);
+			path += ":" + Utility.bytesToHex(layers[i]);
 		}
 		
 		return path;
