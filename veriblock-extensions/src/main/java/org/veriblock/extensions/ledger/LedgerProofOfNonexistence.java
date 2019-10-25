@@ -123,7 +123,7 @@ public class LedgerProofOfNonexistence {
     //  Type-2 proofs show a particular node in the route has no children which continue to route the address.
     private final NonexistenceProofType type;
 
-    enum NonexistenceProofType {
+    public enum NonexistenceProofType {
         TYPE_1,
         TYPE_2
     }
