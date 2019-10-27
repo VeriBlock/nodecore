@@ -276,6 +276,11 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
     }
 
     @Override
+    public StoredBlock getLastBlock() {
+        return blockChain.getChainHead();
+    }
+
+    @Override
     public Block getBestBlock(Collection<Sha256Hash> hashes) {
         HashMap<Sha256Hash, StoredBlock> storedBlocks = new HashMap<>();
         for (Sha256Hash hash : hashes) {

@@ -16,11 +16,7 @@ import nodecore.miners.pop.events.*;
 import nodecore.miners.pop.tasks.ProcessManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Context;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.BlockUtility;
@@ -227,6 +223,11 @@ public class DefaultPoPMiner implements PoPMiner {
     @Override
     public Coin getBitcoinBalance() {
         return bitcoinService.getBalance();
+    }
+
+    @Override
+    public StoredBlock getLastBitcoinBlock() {
+        return bitcoinService.getLastBlock();
     }
 
     @Override
