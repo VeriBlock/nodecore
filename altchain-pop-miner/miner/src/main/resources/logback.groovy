@@ -19,7 +19,7 @@ def logLevel = System.getProperty("logging.level", System.getenv('APM_LOG_LEVEL'
 
 appender("TERMINAL", LoggingLineAppender) {
     encoder(PatternLayoutEncoder) {
-        pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-20.-20logger{0}) - %msg%n"
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
     }
 }
 

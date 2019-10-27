@@ -104,6 +104,10 @@ jar {
     }
 }
 
+startScripts {
+    windowsStartScriptGenerator.template = resources.text.fromFile("windowsStartScript.txt")
+}
+
 applicationName = 'veriblock-alt-pop'
 mainClassName = 'org.veriblock.miners.pop.ProgramKt'
 
