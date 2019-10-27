@@ -576,7 +576,7 @@ message LedgerProofRequest {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message LedgerProofResponse {
+message LedgerProofReply {
     enum Status {
         ADDRESS_EXISTS = 0;
         ADDRESS_DOES_NOT_EXIST = 1;
@@ -675,6 +675,7 @@ message Event {
         BlockRequest filtered_block_request = 22;
         FilteredBlock filtered_block = 23;
         LedgerProofRequest ledger_proof_request = 24;
+        LedgerProofReply ledger_proof_reply = 25;
     }
     string id = 11;
     bool acknowledge = 12;
