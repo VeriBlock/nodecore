@@ -23,6 +23,7 @@ allprojects {
         mavenLocal()
         jcenter()
     }
+    apply plugin: 'jacoco'
 }
 
 subprojects {
