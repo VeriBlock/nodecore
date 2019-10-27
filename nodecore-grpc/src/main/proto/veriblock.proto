@@ -586,12 +586,10 @@ message LedgerProofReply {
     message LedgerProofResult {
         bytes address = 1 [(address_encoded)=true];
         Status result = 2;
-        LedgerValue ledger_value = 3;
-        LedgerProofWithContext ledger_proof_with_context = 4;
+        LedgerProofWithContext ledger_proof_with_context = 3;
     }
 
-    BlockHeader block_header = 1;
-    repeated LedgerProofResult proofs = 2;
+    repeated LedgerProofResult proofs = 1;
 }
 
 message Acknowledgement {
