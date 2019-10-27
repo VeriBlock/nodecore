@@ -90,6 +90,8 @@ public class EventRegistrar {
             case FILTERED_BLOCK_REQUEST:
                 InternalEventBus.getInstance().postAsync(new FilteredBlockRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getFilteredBlockRequest()));
                 break;
+            case LEDGER_PROOF_REQUEST:
+                InternalEventBus.getInstance().postAsync(new LedgerProofRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getLedgerProofRequest()));
         }
     }
 

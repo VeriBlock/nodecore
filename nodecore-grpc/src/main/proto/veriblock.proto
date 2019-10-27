@@ -572,6 +572,28 @@ message NetworkInfoReply {
     repeated NodeInfo available_nodes = 1;
 }
 
+message LedgerProofRequest {
+    repeated bytes addresses = 1 [(address_encoded)=true];
+}
+
+message LedgerProofResponse {
+    enum Status {
+        ADDRESS_EXISTS = 0;
+        ADDRESS_DOES_NOT_EXIST = 1;
+        ADDRESS_IS_INVALID = 2;
+    }
+
+    message LedgerProofResult {
+        bytes address = 1 [(address_encoded)=true];
+        Status result = 2;
+        LedgerValue ledger_value = 3;
+        LedgerProofWithContext ledger_proof_with_context = 4;
+    }
+
+    BlockHeader block_header = 1;
+    repeated LedgerProofResult proofs = 2;
+}
+
 message Acknowledgement {
     string message_id = 1;
 }
@@ -652,6 +674,7 @@ message Event {
         ClearFilter clear_filter = 21;
         BlockRequest filtered_block_request = 22;
         FilteredBlock filtered_block = 23;
+        LedgerProofRequest ledger_proof_request = 24;
     }
     string id = 11;
     bool acknowledge = 12;
