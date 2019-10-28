@@ -54,11 +54,24 @@ public class LedgerProofWithContext {
                     "array!");
         }
 
+        if (topPath[0].length != 32) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[0] byte" +
+                    " array containing a path which isn't a 32-byte hash!");
+        }
+        if (topPath[1].length != 32) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[1] byte" +
+                    " array containing a path which isn't a 32-byte hash!");
+        }
+        if (topPath[2].length != 8) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[2] byte" +
+                    " array containing a path which isn't an 8-byte long!");
+        }
+        if (topPath[3].length != 32) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[3] byte" +
+                    " array containing a path which isn't a 32-byte hash!");
+        }
+
         for (int i = 0; i < topPath.length; i++) {
-            if (topPath[i].length != 32) {
-                throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath byte" +
-                        " array containing a path which isn't a 32-byte hash!");
-            }
         }
 
         if (topPath.length != 4) {
@@ -114,8 +127,6 @@ public class LedgerProofWithContext {
 
         this.containingHeader = new byte[containingHeader.length];
         System.arraycopy(containingHeader, 0, this.containingHeader, 0, containingHeader.length);
-
-
     }
 
     public byte[] getLedgerHash() {
