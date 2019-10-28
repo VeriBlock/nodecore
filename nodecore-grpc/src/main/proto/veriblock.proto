@@ -592,6 +592,26 @@ message LedgerProofReply {
     repeated LedgerProofResult proofs = 1;
 }
 
+message BlockHeadersPaginatedRequest {
+    int32 offset = 1;
+    int32 size = 2;
+}
+
+message BlockHeadersByHashesRequest {
+    repeated BlockInfo blocks = 1;
+}
+
+message BlockHeadersRequest {
+    oneof request {
+        BlockHeadersPaginatedRequest paginated_request = 1;
+        BlockHeadersByHashesRequest hashes_request = 2;
+    }
+}
+
+message BlockHeadersReply {
+    repeated BlockHeader blockHeaders = 1;
+}
+
 message Acknowledgement {
     string message_id = 1;
 }
@@ -674,6 +694,8 @@ message Event {
         FilteredBlock filtered_block = 23;
         LedgerProofRequest ledger_proof_request = 24;
         LedgerProofReply ledger_proof_reply = 25;
+        BlockHeadersRequest block_headers_request = 26;
+        BlockHeadersReply block_headers_reply = 27;
     }
     string id = 11;
     bool acknowledge = 12;
