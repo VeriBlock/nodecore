@@ -83,7 +83,7 @@ class TestChain : SecurityInheritingChain {
     }
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
-        logger.info { "Retrieving last known blocks from NodeCore at ${config.host}..." }
+        logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
         val lastVbkHash = getLastBlockHash().asHex()
         val lastBtcHash = getLastBitcoinBlockHash().asHex()
 

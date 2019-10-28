@@ -58,7 +58,7 @@ class NodeCoreLiteKit(
             throw IOException("Unable to create directory")
         }
 
-        logger.info { "Network: ${context.networkParameters.network}" }
+        logger.info { "VeriBlock Network: ${context.networkParameters.network}" }
 
         try {
             this.blockStore = createBlockStore()
@@ -71,7 +71,10 @@ class NodeCoreLiteKit(
         transactionMonitor = createOrLoadTransactionMonitor()
         blockChain = BlockChain(context.networkParameters, blockStore).apply {
             newBestBlockEvent.register(transactionMonitor) {
-                transactionMonitor.onNewBestBlock(it)
+                val balanceChanged = transactionMonitor.onNewBestBlock(it)
+                if (balanceChanged) {
+                    logger.info { "New balance: ${network.getBalance().confirmedBalance} VBK Atomic Units" }
+                }
             }
             blockChainReorganizedEvent.register(transactionMonitor) {
                 transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
@@ -91,13 +94,16 @@ class NodeCoreLiteKit(
             val connected = startAsync()
             connected.addListener(Runnable {
                 logger.info { "Connected to NodeCore!" }
+                logger.info { "Current balance: ${network.getBalance().confirmedBalance} VBK Atomic Units" }
                 afterNetworkStart()
             }, Threading.LISTENER_THREAD)
         }
     }
 
     fun shutdown() {
-        network.shutdown()
+        if (::network.isInitialized) {
+            network.shutdown()
+        }
     }
 
     @Throws(BlockStoreException::class)

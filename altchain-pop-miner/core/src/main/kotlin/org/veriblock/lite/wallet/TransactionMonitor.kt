@@ -29,7 +29,7 @@ class TransactionMonitor(
     val address: Address,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
-    private val serializer = WalletProtobufSerializer()
+    private val serializer = TransactionMonitorProtobufSerializer()
     private val lock = ReentrantLock(true)
     private val transactions: MutableMap<Sha256Hash, WalletTransaction> = HashMap()
 
@@ -42,13 +42,13 @@ class TransactionMonitor(
     fun getTransactions(): Collection<WalletTransaction> =
         Collections.unmodifiableCollection(transactions.values)
 
-    private fun save(serializer: WalletProtobufSerializer) {
+    private fun save(serializer: TransactionMonitorProtobufSerializer) {
         val diskWallet = File(Context.directory, Context.filePrefix + TM_FILE_EXTENSION)
 
         lock {
             try {
                 FileOutputStream(diskWallet).use { stream ->
-                    with(serializer) { stream.writeWallet(this@TransactionMonitor) }
+                    with(serializer) { stream.writeTransactionMonitor(this@TransactionMonitor) }
                 }
             } catch (e: IOException) {
                 logger.error("Unable to save wallet to disk", e)
@@ -93,6 +93,19 @@ class TransactionMonitor(
                 tx.merklePath = blockTransactions.getValue(tx.id).merklePath
             }
         }
+
+        var balanceChanged = false
+        for (tx in blockTransactions.values) {
+            if (tx.sourceAddress == address) {
+                logger.info { "Detected outgoing transaction: ${tx.id}" }
+                balanceChanged = true
+            }
+            if (tx.outputs.any { it.address == address }) {
+                logger.info { "Detected incoming transaction: ${tx.id}" }
+                balanceChanged = true
+            }
+        }
+        balanceChanged
     }
 
     private fun removeConfirmations(amount: Int) = lock {
@@ -157,10 +170,12 @@ class TransactionMonitor(
         save(serializer)
     }
 
-    fun onNewBestBlock(newBlock: FullBlock) {
-        handleNewBlock(newBlock)
+    fun onNewBestBlock(newBlock: FullBlock): Boolean {
+        val balanceChanged = handleNewBlock(newBlock)
 
         save(serializer)
+
+        return balanceChanged
     }
 
     override fun equals(other: Any?): Boolean {
@@ -189,10 +204,12 @@ class TransactionMonitor(
         if (transactions.containsKey(id)) {
             return true
         }
-        if (address == sourceAddress) {
+        if (sourceAddress == address) {
             return true
         }
-        // TODO: Outputs
+        if (outputs.any { it.address == address }) {
+            return true
+        }
         // TODO: Proof-of-Proof endorsing chain
         // TODO: Alt-chain endorsement
         return false
@@ -201,8 +218,8 @@ class TransactionMonitor(
 
 fun File.loadTransactionMonitor(): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
-        with (WalletProtobufSerializer()) {
-            stream.readWallet()
+        with (TransactionMonitorProtobufSerializer()) {
+            stream.readTransactionMonitor()
         }
     }
 } catch (e: IOException) {

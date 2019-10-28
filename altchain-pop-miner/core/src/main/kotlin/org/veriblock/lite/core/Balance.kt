@@ -87,6 +87,8 @@ class Balance(
     }
 }
 
+fun Coin.formatted(): String = toString()
+
 private operator fun Coin.plus(other: Coin): Coin = add(other)
 private operator fun Coin.minus(other: Coin): Coin = subtract(other)
 

@@ -116,7 +116,7 @@ class CommandFactory {
             "V009",
             "Syntax error",
             "Usage: ${command.form}${command.parameters.joinToString("") {
-                if (it.required) " <$it>" else " [$it]"
+                if (it.required) " <${it.name}>" else " [${it.name}]"
             }} ERROR: $message",
             true)
     )

@@ -9,24 +9,8 @@
 package org.veriblock.lite.core
 
 import org.veriblock.sdk.VeriBlockBlock
-import java.util.*
 
 class BlockChainDelta(
-        private val removed: List<VeriBlockBlock>,
-        private val added: MutableList<VeriBlockBlock>
-) {
-    private var continuationHash: String? = null
-
-    fun getRemoved(): List<VeriBlockBlock> {
-        return Collections.unmodifiableList(removed)
-    }
-
-    fun getAdded(): List<VeriBlockBlock> {
-        return Collections.unmodifiableList(added)
-    }
-
-    fun concat(other: BlockChainDelta) {
-        this.added.addAll(other.added)
-        this.continuationHash = other.continuationHash
-    }
-}
+    val removed: List<VeriBlockBlock>,
+    val added: List<VeriBlockBlock>
+)

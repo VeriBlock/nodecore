@@ -125,15 +125,15 @@ class NodeCoreNetwork(
 
             val blockChainDelta = gateway.listChangesSince(previousHead.hash.toString())
 
-            val added = ArrayList<FullBlock>(blockChainDelta.getAdded().size)
-            for (block in blockChainDelta.getAdded()) {
+            val added = ArrayList<FullBlock>(blockChainDelta.added.size)
+            for (block in blockChainDelta.added) {
                 val downloaded = gateway.getBlock(block.hash.toString())
                     ?: throw BlockDownloadException("Unable to download block " + block.hash.toString())
 
                 added.add(downloaded)
             }
 
-            blockChain.handleNewBestChain(blockChainDelta.getRemoved(), added)
+            blockChain.handleNewBestChain(blockChainDelta.removed, added)
         } catch (e: Exception) {
             logger.error("NodeCore Error", e)
         }

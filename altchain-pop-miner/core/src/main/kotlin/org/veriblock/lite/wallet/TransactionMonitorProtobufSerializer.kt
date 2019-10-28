@@ -18,16 +18,16 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
-class WalletProtobufSerializer {
+class TransactionMonitorProtobufSerializer {
 
     @Throws(IOException::class)
-    fun OutputStream.writeWallet(wallet: TransactionMonitor) {
+    fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor) {
         val codedOutputStream = CodedOutputStream.newInstance(this)
-        wallet.toProto().writeTo(codedOutputStream)
+        transactionMonitor.toProto().writeTo(codedOutputStream)
         codedOutputStream.flush()
     }
 
-    private fun TransactionMonitor.toProto(): Protos.Wallet = Protos.Wallet.newBuilder().also {
+    private fun TransactionMonitor.toProto(): Protos.TransactionMonitor = Protos.TransactionMonitor.newBuilder().also {
         it.network = Context.networkParameters.network
         it.address = address.toString()
 
@@ -94,12 +94,12 @@ class WalletProtobufSerializer {
     }
 
     @Throws(IOException::class)
-    fun InputStream.readWallet(): TransactionMonitor {
+    fun InputStream.readTransactionMonitor(): TransactionMonitor {
         val codedInput = CodedInputStream.newInstance(this)
-        return Protos.Wallet.parseFrom(codedInput).toModel()
+        return Protos.TransactionMonitor.parseFrom(codedInput).toModel()
     }
 
-    private fun Protos.Wallet.toModel(): TransactionMonitor {
+    private fun Protos.TransactionMonitor.toModel(): TransactionMonitor {
         check(Context.networkParameters.network == network) {
             "Network ${Context.networkParameters.network} attempting to read wallet for $network"
         }

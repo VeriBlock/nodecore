@@ -185,8 +185,11 @@ class NodeCoreGateway(
         val reply = blockingStub
             .withDeadlineAfter(10, TimeUnit.SECONDS)
             .listBlocksSince(builder.build())
+        if (!reply.success) {
+            error("Unable to retrieve changes since block $hash")
+        }
         val removed = reply.removedList.map { msg -> msg.deserialize(params) }
-        val added = reply.addedList.map { msg -> msg.deserialize(params) }.toMutableList()
+        val added = reply.addedList.map { msg -> msg.deserialize(params) }
         return BlockChainDelta(removed, added)
     }
 
