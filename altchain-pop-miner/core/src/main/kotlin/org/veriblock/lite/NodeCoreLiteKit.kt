@@ -14,9 +14,7 @@ import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
-import org.veriblock.lite.store.BlockStore
-import org.veriblock.lite.store.StoredVeriBlockBlock
-import org.veriblock.lite.store.VeriBlockBlockStoreImpl
+import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TM_FILE_EXTENSION
 import org.veriblock.lite.wallet.TransactionMonitor
@@ -24,7 +22,6 @@ import org.veriblock.lite.wallet.WALLET_FILE_EXTENSION
 import org.veriblock.lite.wallet.loadTransactionMonitor
 import org.veriblock.sdk.Address
 import org.veriblock.sdk.BlockStoreException
-import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.createLogger
 import java.io.File
 import java.io.IOException
@@ -34,7 +31,7 @@ val logger = createLogger {}
 class NodeCoreLiteKit(
     private val context: Context
 ) {
-    lateinit var blockStore: BlockStore<VBlakeHash, StoredVeriBlockBlock>
+    lateinit var blockStore: VeriBlockBlockStore
         private set
 
     lateinit var blockChain: BlockChain
@@ -107,9 +104,9 @@ class NodeCoreLiteKit(
     }
 
     @Throws(BlockStoreException::class)
-    private fun createBlockStore(): BlockStore<VBlakeHash, StoredVeriBlockBlock> {
+    private fun createBlockStore(): VeriBlockBlockStore {
         val chainFile = File(context.directory, context.filePrefix + ".spvchain")
-        return VeriBlockBlockStoreImpl(chainFile)
+        return VeriBlockBlockStore(chainFile)
     }
 
     private fun createOrLoadTransactionMonitor(): TransactionMonitor {

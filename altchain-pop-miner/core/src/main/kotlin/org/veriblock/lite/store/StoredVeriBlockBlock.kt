@@ -80,17 +80,5 @@ class StoredVeriBlockBlock(
 
             return StoredVeriBlockBlock(block, work, blockOfProof)
         }
-
-        fun deserialize(bytes: ByteArray): StoredVeriBlockBlock {
-            require(bytes.size >= SIZE) { "Bytes must at least $SIZE bytes long!" }
-
-            val local = ByteBuffer.allocateDirect(SIZE)
-            local.put(bytes, bytes.size - SIZE, SIZE)
-
-            local.flip()
-            local.position(VBlakeHash.VERIBLOCK_LENGTH)
-
-            return deserialize(local)
-        }
     }
 }

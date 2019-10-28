@@ -9,8 +9,8 @@
 package org.veriblock.lite.core
 
 import org.veriblock.lite.params.NetworkParameters
-import org.veriblock.lite.store.BlockStore
 import org.veriblock.lite.store.StoredVeriBlockBlock
+import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.*
 import org.veriblock.sdk.services.ValidationService
@@ -24,7 +24,7 @@ private val logger = createLogger {}
 
 class BlockChain(
     private val params: NetworkParameters,
-    private val veriBlockStore: BlockStore<VBlakeHash, StoredVeriBlockBlock>
+    private val veriBlockStore: VeriBlockBlockStore
 ) {
     val newBestBlockEvent = AsyncEvent<FullBlock>(Threading.LISTENER_THREAD)
     val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>(Threading.LISTENER_THREAD)
