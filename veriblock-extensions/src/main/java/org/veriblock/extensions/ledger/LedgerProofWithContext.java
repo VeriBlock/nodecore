@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  * or of an address's lack of presence in a RHT uniquely identified by the RHT hash, and a LedgerProofWithContext
  * provides authentication of that RHT hash to the Merkle root stored in a VeriBlock block header.
  */
+
 public class LedgerProofWithContext {
     // The LedgerProof which contains either a LedgerProofOfExistance or LedgerProofOfNonexistance, depending on
     // whether the address was routed by the Ledger RHT at the time the proof was produced.
@@ -54,6 +55,11 @@ public class LedgerProofWithContext {
                     "array!");
         }
 
+        if (topPath.length != 5) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath with " +
+                    (topPath.length < 5 ? "less" : "more") + " than five layers (" + topPath.length + " provided).");
+        }
+
         if (topPath[0].length != 32) {
             throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[0] byte" +
                     " array containing a path which isn't a 32-byte hash!");
@@ -62,21 +68,17 @@ public class LedgerProofWithContext {
             throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[1] byte" +
                     " array containing a path which isn't a 32-byte hash!");
         }
-        if (topPath[2].length != 8) {
+        if (topPath[2].length != 32) {
             throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[2] byte" +
-                    " array containing a path which isn't an 8-byte long!");
-        }
-        if (topPath[3].length != 32) {
-            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[3] byte" +
                     " array containing a path which isn't a 32-byte hash!");
         }
-
-        for (int i = 0; i < topPath.length; i++) {
+        if (topPath[3].length != 8) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[3] byte" +
+                    " array containing a path which isn't an 8-byte long!");
         }
-
-        if (topPath.length != 4) {
-            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath with " +
-                    (topPath.length < 4 ? "less" : "more") + " than three layers (" + topPath.length + " provided).");
+        if (topPath[4].length != 32) {
+            throw new IllegalArgumentException("A LedgerProofWithContext cannot be constructed with a topPath[4] byte" +
+                    " array containing a path which isn't a 32-byte hash!");
         }
 
         if (containingHeader == null || containingHeader.length != 64) {
@@ -89,12 +91,12 @@ public class LedgerProofWithContext {
             System.arraycopy(topPath[i], 0, this.topPath[i], 0, topPath[i].length);
         }
 
-        byte[] ledgerHash = ledgerProof.getLedgerHash();
+        byte[] ledgerHash = new Crypto().SHA256ReturnBytes(ledgerProof.getLedgerHash());
         byte[] workingHash = new byte[ledgerHash.length];
         System.arraycopy(ledgerHash, 0, workingHash, 0, ledgerHash.length);
 
-        // Ledger hash is the 3rd entry in the block content metapackage hash structure
-        int workingIndex = 2;
+        // Ledger hash is the 4th entry in the block content metapackage hash structure
+        int workingIndex = 3;
 
         Crypto crypto = new Crypto();
 
@@ -113,9 +115,9 @@ public class LedgerProofWithContext {
         }
 
         // Finished calculating top-level root hash
-        this.topRoot = new byte[workingHash.length];
+        this.topRoot = new byte[16];
 
-        System.arraycopy(workingHash, 0, this.topRoot, 0, workingHash.length);
+        System.arraycopy(workingHash, 0, this.topRoot, 0, this.topRoot.length);
 
         byte[] topLevelExtractedRoot = BlockUtility.extractMerkleRootFromBlockHeader(containingHeader);
 
@@ -144,6 +146,12 @@ public class LedgerProofWithContext {
     public byte[] getTopRootHash() {
         byte[] copy = new byte[topRoot.length];
         System.arraycopy(topRoot, 0, copy, 0, topRoot.length);
+        return copy;
+    }
+
+    public byte[] getContainingHeader() {
+        byte[] copy = new byte[containingHeader.length];
+        System.arraycopy(containingHeader, 0, copy, 0, containingHeader.length);
         return copy;
     }
 
