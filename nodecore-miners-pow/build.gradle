@@ -30,10 +30,9 @@ run {
 ext {
     group = 'veriblock'
     println "archiveBaseName: $archivesBaseName"
-    dockerVersion = version.toString().split(/\+/)[0]
-    println "docker version = $dockerVersion"
+    //dockerVersion = version.toString().split(/\+/)[0]
+    //println "docker version = $dockerVersion"
     println "branch = ${release.grgit.branch.current.name}"
-
 }
 
 jar {
