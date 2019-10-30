@@ -5,13 +5,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.api.models;
+package nodecore.miners.pop.api.controller;
 
-import java.util.List;
+import io.ktor.routing.Route
 
-public class ResultMessageResponse {
-    public String code;
-    public String message;
-    public List<String> details;
-    public boolean error;
+interface ApiController {
+    fun Route.registerApi()
 }
