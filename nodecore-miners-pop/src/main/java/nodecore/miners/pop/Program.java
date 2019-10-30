@@ -10,10 +10,13 @@ package nodecore.miners.pop;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import nodecore.miners.pop.contracts.*;
-import nodecore.miners.pop.events.ShellCompletedEvent;
 import nodecore.miners.pop.api.ApiServer;
-import nodecore.miners.pop.api.WebApiModule;
+import nodecore.miners.pop.contracts.Configuration;
+import nodecore.miners.pop.contracts.MessageService;
+import nodecore.miners.pop.contracts.PoPMiner;
+import nodecore.miners.pop.contracts.PoPMiningScheduler;
+import nodecore.miners.pop.contracts.ProgramOptions;
+import nodecore.miners.pop.events.ShellCompletedEvent;
 import nodecore.miners.pop.rules.RulesModule;
 import nodecore.miners.pop.shell.CommandFactoryModule;
 import nodecore.miners.pop.shell.DefaultShell;
@@ -23,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.SharedConstants;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
 
 public class Program {
     private static final Logger logger = LoggerFactory.getLogger(Program.class);
@@ -44,8 +47,7 @@ public class Program {
                 new BootstrapModule(),
                 new CommandFactoryModule(),
                 new RepositoriesModule(),
-                new RulesModule(),
-                new WebApiModule());
+                new RulesModule());
 
         ProgramOptions options = startupInjector.getInstance(ProgramOptions.class);
         options.parse(args);
