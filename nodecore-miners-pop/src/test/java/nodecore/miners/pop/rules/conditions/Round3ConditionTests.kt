@@ -5,64 +5,62 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.rules.conditions;
+package nodecore.miners.pop.rules.conditions
 
-import nodecore.miners.pop.contracts.Configuration;
-import org.junit.Assert;
-import org.junit.Test;
+import io.kotlintest.shouldBe
+import io.mockk.every
+import io.mockk.mockk
+import nodecore.miners.pop.contracts.Configuration
+import org.junit.Test
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-public class Round3ConditionTests {
-
+class Round3ConditionTests {
     @Test
-    public void isActiveWhenConfigurationFalse() {
-        Configuration config = mock(Configuration.class);
-        when(config.getBoolean("auto.mine.round3")).thenReturn(false);
-
-        Round3Condition condition = new Round3Condition();
-        Assert.assertFalse(condition.isActive(config));
+    fun isActiveWhenConfigurationFalse() {
+        val config: Configuration = mockk {
+            every { getBoolean("auto.mine.round3") } returns false
+        }
+        val condition = Round3Condition()
+        condition.isActive(config) shouldBe false
     }
 
     @Test
-    public void isActiveWhenConfigurationTrue() {
-        Configuration config = mock(Configuration.class);
-        when(config.getBoolean("auto.mine.round3")).thenReturn(true);
-
-        Round3Condition condition = new Round3Condition();
-        Assert.assertTrue(condition.isActive(config));
+    fun getIsActiveWhenConfigurationTrue() {
+        val config: Configuration = mockk {
+            every { getBoolean("auto.mine.round3") } returns true
+        }
+        val condition = Round3Condition()
+        condition.isActive(config) shouldBe true
     }
 
     @Test
-    public void evaluateWhenHeightNull() {
-        Round3Condition condition = new Round3Condition();
-        Assert.assertFalse(condition.evaluate(null));
+    fun evaluateWhenHeightNull() {
+        val condition = Round3Condition()
+        condition.evaluate(null) shouldBe false
     }
 
     @Test
-    public void evaluateWhenHeightIsNotRound3() {
-        Round3Condition condition = new Round3Condition();
-        for (int i = 1; i <= 19; i++) {
+    fun evaluateWhenHeightIsNotRound3() {
+        val condition = Round3Condition()
+        for (i in 1..19) {
             if (i % 3 != 0) {
-                Assert.assertFalse(condition.evaluate(10000 + i));
+                condition.evaluate(10000 + i) shouldBe false
             }
         }
     }
 
     @Test
-    public void evaluateWhenHeightIsRound3() {
-        Round3Condition condition = new Round3Condition();
-        for (int i = 1; i <= 19; i++) {
+    fun evaluateWhenHeightIsRound3() {
+        val condition = Round3Condition()
+        for (i in 1..19) {
             if (i % 3 == 0) {
-                Assert.assertTrue(condition.evaluate(13240 + i));
+                condition.evaluate(13240 + i) shouldBe true
             }
         }
     }
 
     @Test
-    public void evaluateWhenHeightIsKeystone() {
-        Round3Condition condition = new Round3Condition();
-        Assert.assertFalse(condition.evaluate(13240));
+    fun evaluateWhenHeightIsKeystone() {
+        val condition = Round3Condition()
+        condition.evaluate(13240) shouldBe false
     }
 }
