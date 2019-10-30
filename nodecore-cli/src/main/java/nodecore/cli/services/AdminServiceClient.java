@@ -338,4 +338,9 @@ public class AdminServiceClient implements AdminService {
     public VeriBlockMessages.GetPoolStateReply getPoolState(VeriBlockMessages.GetPoolStateRequest request) {
         return blockingStub.getPoolState(request);
     }
+
+    @Override
+    public VeriBlockMessages.AbandonTransactionReply abandonTransactionRequest(VeriBlockMessages.AbandonTransactionRequest request) {
+        return blockingStub.abandonTransaction(request);
+    }
 }
