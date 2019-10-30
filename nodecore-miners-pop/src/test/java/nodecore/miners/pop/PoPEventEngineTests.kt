@@ -5,46 +5,43 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop;
+package nodecore.miners.pop
 
-import nodecore.miners.pop.contracts.NodeCoreService;
-import nodecore.miners.pop.contracts.VeriBlockHeader;
-import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
-import nodecore.miners.pop.rules.Rule;
-import nodecore.miners.pop.rules.RuleContext;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
+import io.kotlintest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import nodecore.miners.pop.contracts.VeriBlockHeader
+import nodecore.miners.pop.events.NewVeriBlockFoundEvent
+import nodecore.miners.pop.rules.Rule
+import nodecore.miners.pop.rules.RuleContext
+import org.junit.Test
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-public class PoPEventEngineTests {
+class PoPEventEngineTests {
     @Test
-    public void onNewVeriBlockFound() {
-        NewVeriBlockFoundEvent event = mock(NewVeriBlockFoundEvent.class);
-        VeriBlockHeader latest = mock(VeriBlockHeader.class);
-        VeriBlockHeader previous = mock(VeriBlockHeader.class);
+    fun onNewVeriBlockFound() {
+        // Given
+        val latest: VeriBlockHeader = mockk()
+        val previous: VeriBlockHeader = mockk()
+        val event: NewVeriBlockFoundEvent = mockk {
+            every { block } returns latest
+            every { previousHead } returns previous
+        }
+        val rule: Rule = mockk()
+        val rules: Set<Rule> = setOf(rule)
+        val ruleContextSlot = slot<RuleContext>()
+        val engine = PoPEventEngine(mockk(), rules)
 
-        when(event.getBlock()).thenReturn(latest);
-        when(event.getPreviousHead()).thenReturn(previous);
+        // When
+        engine.onNewVeriBlockFound(event)
 
-        Rule rule = mock(Rule.class);
-        Set<Rule> rules = new HashSet<>();
-        rules.add(rule);
-
-        ArgumentCaptor<RuleContext> argumentCaptor = ArgumentCaptor.forClass(RuleContext.class);
-
-        PoPEventEngine engine = new PoPEventEngine(mock(NodeCoreService.class), rules);
-        engine.onNewVeriBlockFound(event);
-
-        verify(rule).evaluate(argumentCaptor.capture());
-        RuleContext captured = argumentCaptor.getValue();
-        Assert.assertEquals(latest, captured.getLatestBlock());
-        Assert.assertEquals(previous, captured.getPreviousHead());
+        // Then
+        verify(exactly = 1) {
+            rule.evaluate(capture(ruleContextSlot))
+        }
+        val captured: RuleContext = ruleContextSlot.captured
+        captured.latestBlock shouldBeSameInstanceAs latest
+        captured.previousHead shouldBeSameInstanceAs previous
     }
 }
