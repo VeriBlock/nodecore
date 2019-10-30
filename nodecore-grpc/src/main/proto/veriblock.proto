@@ -1427,6 +1427,24 @@ message GetVeriBlockPublicationsReply {
     repeated VeriBlockPublication publications = 3;
 }
 
+message AbandonAddressTransactionsRequest {
+    bytes address = 1 [(address_encoded)=true];
+    int64 starting_signature_index = 2;
+}
+
+message AbandonTransactionRequest {
+    oneof transactions_to_abandon {
+        TransactionSet txids = 1;
+        AbandonAddressTransactionsRequest addresses = 2;
+    }
+}
+
+message AbandonTransactionReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated TransactionUnion abandoned_transactions = 3;
+}
+
 service Admin {
     rpc GetPop(GetPopRequest) returns (GetPopReply) {}
 
@@ -1559,4 +1577,6 @@ service Admin {
     rpc GetPoolState(GetPoolStateRequest) returns (GetPoolStateReply) {}
 
     rpc GetVeriBlockPublications(GetVeriBlockPublicationsRequest) returns (GetVeriBlockPublicationsReply) {}
+
+    rpc AbandonTransaction(AbandonTransactionRequest) returns (AbandonTransactionReply) {}
 }
