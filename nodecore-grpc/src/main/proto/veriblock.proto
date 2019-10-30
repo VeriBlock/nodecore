@@ -1427,9 +1427,13 @@ message GetVeriBlockPublicationsReply {
     repeated VeriBlockPublication publications = 3;
 }
 
-message AbandonAddressTransactionsRequest {
-    bytes address = 1 [(address_encoded)=true];
+message AddressIndexPair {
+    bytes address = 1 [(address_encoded) = true];
     int64 starting_signature_index = 2;
+}
+
+message AbandonAddressTransactionsRequest {
+    repeated AddressIndexPair addresses = 1;
 }
 
 message AbandonTransactionRequest {
