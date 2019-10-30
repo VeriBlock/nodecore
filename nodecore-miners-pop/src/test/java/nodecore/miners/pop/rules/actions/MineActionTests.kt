@@ -9,10 +9,10 @@ package nodecore.miners.pop.rules.actions
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import nodecore.miners.pop.contracts.MineResult
 import nodecore.miners.pop.contracts.PoPMiner
 import org.junit.Test
-import org.mockito.Mockito.verify
 
 class MineActionTests {
     @Test

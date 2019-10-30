@@ -5,13 +5,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.api.models;
+package nodecore.miners.pop.api.model
 
-import java.util.List;
+class MineRequestPayload {
+    var block: Int? = null
+}
 
-public class MinerInfoResponse {
-    public String minerAddress;
-    public String bitcoinAddress;
-    public long bitcoinBalance;
-    public List<String> walletSeed;
+class SetConfigRequestPayload {
+    var key: String? = null
+    var value: String? = null
 }
