@@ -9,7 +9,6 @@
 package org.veriblock.shell
 
 import io.kotlintest.matchers.string.shouldContain
-import org.junit.Ignore
 import org.junit.Test
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream
@@ -19,15 +18,19 @@ class ShellTest {
     private val outStream = ByteArrayOutputStream()
 
     @Test
-    @Ignore
     fun test() {
+        // Given a set of commands that will be run
         val input = """
 test
 greet
 greet World
         """.trimStart()
 
-        Shell(input.byteInputStream(), PrintStream(outStream)).apply {
+        // and a shell configured with the greet command
+        val shell = Shell(
+            inputStream = input.byteInputStream(),
+            outputStream =  PrintStream(outStream)
+        ).apply {
             command(
                 name = "Greet",
                 form = "greet",
@@ -40,8 +43,12 @@ greet World
                 printInfo("Hello $who!")
                 success()
             }
-        }.run()
+        }
 
+        // When
+        shell.run()
+
+        // Then
         val output = outStream.toString("UTF-8")
         output shouldContain "[V004] Unknown protocol command"
         output shouldContain "The command 'test' is not supported"

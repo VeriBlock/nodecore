@@ -30,17 +30,22 @@ import java.util.*
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 
-open class Shell(inputStream: InputStream = System.`in`, outputStream: OutputStream = System.out) {
-
+open class Shell internal constructor(
+    inputStream: InputStream? = null,
+    outputStream: OutputStream? = null
+) {
     private val commandFactory = CommandFactory()
     private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     private var running = false
 
-    private val terminal: Terminal = TerminalBuilder.builder()
-        .system(true)
-        .streams(inputStream, outputStream)
-        .build()
+    private val terminal: Terminal = TerminalBuilder.builder().apply {
+        if (inputStream != null && outputStream != null) {
+            streams(inputStream, outputStream)
+        } else {
+            system(true)
+        }
+    }.build()
     val reader: LineReader = LineReaderBuilder.builder()
         .terminal(terminal)
         .build()
