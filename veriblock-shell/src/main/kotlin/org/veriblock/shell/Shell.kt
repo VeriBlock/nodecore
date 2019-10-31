@@ -23,16 +23,13 @@ import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.core.ActivityLevel
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
-import java.io.InputStream
-import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 
 open class Shell internal constructor(
-    inputStream: InputStream? = null,
-    outputStream: OutputStream? = null
+    testData: ShellTestData? = null
 ) {
     private val commandFactory = CommandFactory()
     private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -40,8 +37,8 @@ open class Shell internal constructor(
     private var running = false
 
     private val terminal: Terminal = TerminalBuilder.builder().apply {
-        if (inputStream != null && outputStream != null) {
-            streams(inputStream, outputStream)
+        if (testData != null) {
+            streams(testData.inputStream, testData.outputStream)
         } else {
             system(true)
         }
@@ -50,7 +47,8 @@ open class Shell internal constructor(
         .terminal(terminal)
         .build()
 
-    private fun getPrompt() = " > "
+    private fun getPrompt()
+        = " > "
 
     private fun readLine(): String? = try {
         val read = reader.readLine(getPrompt())
@@ -122,7 +120,6 @@ open class Shell internal constructor(
 
             printResultWithFormat(executeResult)
 
-
             if (clear != null && clear) {
                 clear()
             }
@@ -144,20 +141,20 @@ open class Shell internal constructor(
                 AttributedStringBuilder()
                     .style(AttributedStyle.DEFAULT.foreground(msg.getColor() + 8)) // Add 8 for bold color
                     .append(msg.level.toString().padStart(7, ' '))
-                    .toAnsi()
+                    .toAnsi(terminal)
             )
             terminal.writer().println(
                 AttributedStringBuilder()
                     .style(AttributedStyle.DEFAULT.foreground(msg.getColor()))
                     .append(": (" + dateFormatter.format(Date()) + ") " + msg.message)
-                    .toAnsi()
+                    .toAnsi(terminal)
             )
             for (detail in msg.details) {
                 terminal.writer().println(
                     AttributedStringBuilder()
                         .style(AttributedStyle.DEFAULT.foreground(msg.getColor()))
                         .append("         $detail")
-                        .toAnsi()
+                        .toAnsi(terminal)
                 )
             }
         }
@@ -188,7 +185,7 @@ open class Shell internal constructor(
             AttributedStringBuilder()
                 .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
                 .append(message)
-                .toAnsi()
+                .toAnsi(terminal)
         )
     }
 
