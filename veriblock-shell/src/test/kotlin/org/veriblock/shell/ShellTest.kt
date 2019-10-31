@@ -12,23 +12,33 @@ import io.kotlintest.matchers.string.shouldContain
 import org.junit.Test
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 
 class ShellTest {
 
     @Test
     fun test() {
         // Given a set of commands that will be run
-        val input = """
-test
-greet
-greet World
-        """.trimStart()
+        val inputCommands = listOf(
+            "test",
+            "greet",
+            "greet World"
+        )
+
+        // A piped input stream with that input appended
+        val inputStream = PipedInputStream()
+        val inputOutputPipe = PipedOutputStream(inputStream)
+        for (inputCommand in inputCommands) {
+            inputOutputPipe.write("$inputCommand\r\n".toByteArray())
+        }
+        inputOutputPipe.close()
 
         // and a shell configured with the greet command
         val outStream = ByteArrayOutputStream()
         val shell = Shell(
             ShellTestData(
-                inputStream = input.byteInputStream(),
+                inputStream = inputStream,
                 outputStream =  outStream
             )
         ).apply {
