@@ -8,7 +8,6 @@
 package nodecore.miners.pop;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.contracts.*;
@@ -53,7 +52,6 @@ public class DefaultPoPMiner implements PoPMiner {
         return isReady();
     }
 
-    @Inject
     public DefaultPoPMiner(
             Configuration configuration,
             BitcoinService bitcoinService,

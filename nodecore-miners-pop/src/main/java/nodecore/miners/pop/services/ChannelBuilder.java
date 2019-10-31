@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.services;
 
-import com.google.inject.Inject;
 import io.grpc.*;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NegotiationType;
@@ -22,7 +21,6 @@ import java.io.File;
 public class ChannelBuilder {
     private final Configuration configuration;
 
-    @Inject
     public ChannelBuilder(Configuration configuration) {
         this.configuration = configuration;
     }

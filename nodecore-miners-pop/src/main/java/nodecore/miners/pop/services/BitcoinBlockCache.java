@@ -9,7 +9,6 @@ package nodecore.miners.pop.services;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.bitcoinj.core.FilteredBlock;
 import org.slf4j.Logger;
@@ -32,8 +31,8 @@ public class BitcoinBlockCache {
 
     private final ReentrantLock lock = new ReentrantLock(true);
 
-    @Inject
-    public BitcoinBlockCache() {}
+    public BitcoinBlockCache() {
+    }
 
     public void put(String key, FilteredBlock block) {
         SettableFuture<FilteredBlock> task;

@@ -8,7 +8,6 @@
 package nodecore.miners.pop;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import nodecore.miners.pop.contracts.NodeCoreService;
 import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
 import nodecore.miners.pop.rules.Rule;
@@ -27,7 +26,6 @@ public class PoPEventEngine {
     private final Set<Rule> rules;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    @Inject
     public PoPEventEngine(NodeCoreService nodeCoreService, Set<Rule> rules) {
         this.nodeCoreService = nodeCoreService;
         this.rules = rules;

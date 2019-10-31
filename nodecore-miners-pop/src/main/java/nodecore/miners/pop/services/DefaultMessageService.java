@@ -8,7 +8,6 @@
 package nodecore.miners.pop.services;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.contracts.MessageEvent;
 import nodecore.miners.pop.contracts.MessageService;
@@ -28,7 +27,6 @@ public class DefaultMessageService implements MessageService {
     private CountDownLatch messageGate;
     private boolean running;
 
-    @Inject
     public DefaultMessageService() {
         this.queue = new ConcurrentLinkedQueue<>();
         this.messageGate = new CountDownLatch(1);

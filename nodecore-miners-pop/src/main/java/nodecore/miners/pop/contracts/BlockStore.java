@@ -7,8 +7,6 @@
 
 package nodecore.miners.pop.contracts;
 
-import com.google.inject.Inject;
-
 import java.util.concurrent.atomic.AtomicReference;
 
 public class BlockStore {
@@ -20,7 +18,6 @@ public class BlockStore {
         chainHead.set(blockBlockHeader);
     }
 
-    @Inject
     public BlockStore() {
 
     }

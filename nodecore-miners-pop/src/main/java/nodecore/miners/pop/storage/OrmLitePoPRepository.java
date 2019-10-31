@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.storage;
 
-import com.google.inject.Inject;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
@@ -26,7 +25,6 @@ public class OrmLitePoPRepository implements PoPRepository {
     private ConnectionSource connectionSource;
     private Dao<OperationStateData, String> operationStateDataDao;
 
-    @Inject
     public OrmLitePoPRepository(ConnectionSource connectionSource) {
         try {
             this.connectionSource = connectionSource;

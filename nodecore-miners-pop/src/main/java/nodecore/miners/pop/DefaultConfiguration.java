@@ -10,7 +10,6 @@ package nodecore.miners.pop;
 import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import com.google.inject.Inject;
 import nodecore.miners.pop.common.BitcoinNetwork;
 import nodecore.miners.pop.contracts.*;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
@@ -33,7 +32,6 @@ public class DefaultConfiguration implements Configuration {
     private final Properties defaultProperties = new Properties();
     private final Properties properties;
 
-    @Inject
     public DefaultConfiguration(ProgramOptions options) {
         this.options = options;
         loadDefaults();

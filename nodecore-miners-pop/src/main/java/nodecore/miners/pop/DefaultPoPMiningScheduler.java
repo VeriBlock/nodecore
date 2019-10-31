@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop;
 
-import com.google.inject.Inject;
 import nodecore.miners.pop.contracts.Configuration;
 import nodecore.miners.pop.contracts.PoPMiner;
 import nodecore.miners.pop.contracts.PoPMiningScheduler;
@@ -20,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class DefaultPoPMiningScheduler implements PoPMiningScheduler {
     private static final Logger logger = LoggerFactory.getLogger(DefaultPoPMiningScheduler.class);
@@ -33,7 +31,6 @@ public class DefaultPoPMiningScheduler implements PoPMiningScheduler {
     private boolean runnable = true;
     private ScheduleBuilder<CronTrigger> scheduleBuilder;
 
-    @Inject
     public DefaultPoPMiningScheduler(Configuration configuration, PoPMiner popMiner, Context context) {
         this.configuration = configuration;
         this.popMiner = popMiner;

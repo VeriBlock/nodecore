@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.api.controller
 
-import com.google.inject.Inject
 import io.ktor.application.call
 import io.ktor.request.receive
 import io.ktor.response.respond
@@ -19,7 +18,7 @@ import nodecore.miners.pop.api.model.MinerInfoResponse
 import nodecore.miners.pop.api.model.toResponse
 import nodecore.miners.pop.contracts.PoPMiner
 
-class MiningController @Inject constructor(
+class MiningController(
     private val miner: PoPMiner
 ) : ApiController {
 

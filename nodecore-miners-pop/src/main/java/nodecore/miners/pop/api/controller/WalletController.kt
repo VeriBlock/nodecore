@@ -1,12 +1,11 @@
 package nodecore.miners.pop.api.controller
 
-import com.google.inject.Inject
 import io.ktor.application.call
 import io.ktor.routing.Route
 import io.ktor.routing.post
 import nodecore.miners.pop.contracts.PoPMiner
 
-class WalletController @Inject constructor(
+class WalletController(
     private val miner: PoPMiner
 ) : ApiController {
 

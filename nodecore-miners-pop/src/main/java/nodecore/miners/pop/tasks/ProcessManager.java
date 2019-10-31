@@ -8,7 +8,6 @@
 package nodecore.miners.pop.tasks;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.contracts.*;
@@ -20,7 +19,6 @@ public class ProcessManager {
     private final NodeCoreService nodeCoreService;
     private final BitcoinService bitcoinService;
 
-    @Inject
     public ProcessManager(NodeCoreService nodeCoreService, BitcoinService bitcoinService) {
         this.nodeCoreService = nodeCoreService;
         this.bitcoinService = bitcoinService;
