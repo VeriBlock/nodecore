@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.api
 
-import com.google.inject.Inject
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
@@ -19,16 +18,12 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import mu.KotlinLogging
-import nodecore.miners.pop.api.controller.ConfigurationController
-import nodecore.miners.pop.api.controller.MiningController
-import nodecore.miners.pop.api.controller.WalletController
+import nodecore.miners.pop.api.controller.ApiController
 import nodecore.miners.pop.api.controller.statusPages
 import java.util.concurrent.TimeUnit
 
-class ApiServer @Inject constructor(
-    private val configurationController: ConfigurationController,
-    private val miningController: MiningController,
-    private val walletController: WalletController
+class ApiServer(
+    private val controllers: List<ApiController>
 ) {
 
     private var running = false
@@ -72,14 +67,10 @@ class ApiServer @Inject constructor(
 
             install(Routing) {
                 route("/api") {
-                    with(configurationController) {
-                        registerApi()
-                    }
-                    with(miningController) {
-                        registerApi()
-                    }
-                    with(walletController) {
-                        registerApi()
+                    for (controller in controllers) {
+                        with (controller) {
+                            registerApi()
+                        }
                     }
                 }
             }

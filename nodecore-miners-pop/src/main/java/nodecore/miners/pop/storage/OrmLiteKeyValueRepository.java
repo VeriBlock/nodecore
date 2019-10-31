@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.storage;
 
-import com.google.inject.Inject;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.support.ConnectionSource;
@@ -24,7 +23,6 @@ public class OrmLiteKeyValueRepository implements KeyValueRepository {
 
     private Dao<KeyValueData, String> keyValueDataDao;
 
-    @Inject
     public OrmLiteKeyValueRepository(ConnectionSource connectionSource) {
         try {
             TableUtils.createTableIfNotExists(connectionSource, KeyValueData.class);

@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.api.controller
 
-import com.google.inject.Inject
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
@@ -18,7 +17,7 @@ import io.ktor.routing.put
 import nodecore.miners.pop.api.model.SetConfigRequestPayload
 import nodecore.miners.pop.contracts.Configuration
 
-class ConfigurationController @Inject constructor(
+class ConfigurationController(
     private val configuration: Configuration
 ) : ApiController {
 

@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop.rules.actions;
 
-import com.google.inject.Inject;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.contracts.MineResult;
 import nodecore.miners.pop.contracts.PoPMiner;
@@ -18,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 public class MineAction implements RuleAction<Integer> {
     private final PoPMiner miner;
 
-    @Inject
     public MineAction(PoPMiner miner) {
         this.miner = miner;
     }

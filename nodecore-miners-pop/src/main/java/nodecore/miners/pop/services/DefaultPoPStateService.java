@@ -8,21 +8,22 @@
 package nodecore.miners.pop.services;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.PoPMiningInstruction;
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.PoPRepository;
+import nodecore.miners.pop.contracts.PoPStateService;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
 import nodecore.miners.pop.storage.OperationStateData;
 import nodecore.miners.pop.storage.ProofOfProof;
-import org.bitcoinj.core.Block;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.Utility;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +33,6 @@ public class DefaultPoPStateService implements PoPStateService {
 
     private final PoPRepository repository;
 
-    @Inject
     public DefaultPoPStateService(PoPRepository repository) {
         this.repository = repository;
         InternalEventBus.getInstance().register(this);

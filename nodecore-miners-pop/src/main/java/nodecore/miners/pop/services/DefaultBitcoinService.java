@@ -10,16 +10,11 @@ package nodecore.miners.pop.services;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.Inject;
 import nodecore.miners.pop.Constants;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.common.BitcoinNetwork;
-import nodecore.miners.pop.contracts.ApplicationExceptions.DuplicateTransactionException;
-import nodecore.miners.pop.contracts.ApplicationExceptions.UnableToAcquireTransactionLock;
-import nodecore.miners.pop.contracts.ApplicationExceptions.CorruptSPVChain;
-import nodecore.miners.pop.contracts.ApplicationExceptions.ExceededMaxTransactionFee;
-import nodecore.miners.pop.contracts.ApplicationExceptions.SendTransactionException;
+import nodecore.miners.pop.contracts.ApplicationExceptions.*;
 import nodecore.miners.pop.contracts.BitcoinService;
 import nodecore.miners.pop.contracts.Configuration;
 import nodecore.miners.pop.events.*;
@@ -96,7 +91,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         }
     }
 
-    @Inject
     public DefaultBitcoinService(Configuration configuration, Context context, BitcoinBlockCache cache) {
         this.configuration = configuration;
         this.context = context;
