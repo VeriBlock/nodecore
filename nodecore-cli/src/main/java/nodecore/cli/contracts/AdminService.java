@@ -127,4 +127,6 @@ public interface AdminService {
     VeriBlockMessages.GetBalanceUnlockScheduleReply getBalanceUnlockSchedule(VeriBlockMessages.GetBalanceUnlockScheduleRequest request);
 
     VeriBlockMessages.GetPoolStateReply getPoolState(VeriBlockMessages.GetPoolStateRequest request);
+
+    VeriBlockMessages.AbandonTransactionReply abandonTransactionRequest(VeriBlockMessages.AbandonTransactionRequest request);
 }
