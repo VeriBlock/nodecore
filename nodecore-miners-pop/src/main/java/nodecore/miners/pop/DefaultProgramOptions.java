@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop;
 
-import com.google.inject.Inject;
 import nodecore.miners.pop.contracts.ProgramOptions;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +23,6 @@ public class DefaultProgramOptions implements ProgramOptions {
     private String dataDirectory;
     private Properties properties;
 
-    @Inject
     public DefaultProgramOptions() {
         configPath = "ncpop.properties";
     }

@@ -9,18 +9,18 @@ package nodecore.miners.pop.services;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import io.grpc.*;
+import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
+import nodecore.api.grpc.AdminGrpc;
 import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.VeriBlockMessages.*;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.contracts.*;
 import nodecore.miners.pop.contracts.PoPEndorsementInfo;
 import nodecore.miners.pop.contracts.Result;
+import nodecore.miners.pop.contracts.*;
 import nodecore.miners.pop.events.*;
-import nodecore.api.grpc.AdminGrpc;
-import nodecore.api.grpc.VeriBlockMessages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return healthy.get();
     }
 
-    @Inject
     public DefaultNodeCoreService(Configuration configuration, ChannelBuilder channelBuilder, BlockStore blockStore) {
         this.configuration = configuration;
         this.channelBuilder = channelBuilder;

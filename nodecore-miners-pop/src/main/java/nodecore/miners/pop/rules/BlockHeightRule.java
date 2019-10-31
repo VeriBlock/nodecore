@@ -7,12 +7,14 @@
 
 package nodecore.miners.pop.rules;
 
-import com.google.inject.Inject;
 import nodecore.miners.pop.contracts.Configuration;
 import nodecore.miners.pop.contracts.VeriBlockHeader;
-import nodecore.miners.pop.rules.actions.Mining;
 import nodecore.miners.pop.rules.actions.RuleAction;
-import nodecore.miners.pop.rules.conditions.*;
+import nodecore.miners.pop.rules.conditions.Condition;
+import nodecore.miners.pop.rules.conditions.KeystoneBlockCondition;
+import nodecore.miners.pop.rules.conditions.Round1Condition;
+import nodecore.miners.pop.rules.conditions.Round2Condition;
+import nodecore.miners.pop.rules.conditions.Round3Condition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +38,7 @@ public class BlockHeightRule implements Rule {
         this.action = action;
     }
 
-    @Inject
-    public BlockHeightRule(@Mining RuleAction<Integer> action, Configuration configuration) {
+    public BlockHeightRule(RuleAction<Integer> action, Configuration configuration) {
         this.action = action;
         this.configuration = configuration;
 
