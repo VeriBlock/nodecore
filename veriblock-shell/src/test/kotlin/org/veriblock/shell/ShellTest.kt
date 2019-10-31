@@ -12,10 +12,8 @@ import io.kotlintest.matchers.string.shouldContain
 import org.junit.Test
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 
 class ShellTest {
-    private val outStream = ByteArrayOutputStream()
 
     @Test
     fun test() {
@@ -27,9 +25,10 @@ greet World
         """.trimStart()
 
         // and a shell configured with the greet command
+        val outStream = ByteArrayOutputStream()
         val shell = Shell(
             inputStream = input.byteInputStream(),
-            outputStream =  PrintStream(outStream)
+            outputStream =  outStream
         ).apply {
             command(
                 name = "Greet",
