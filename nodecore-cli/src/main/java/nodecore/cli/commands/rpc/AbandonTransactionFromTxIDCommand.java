@@ -14,8 +14,8 @@ import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
+import nodecore.cli.commands.serialization.AbandonTransactionFromTxIDInfo;
 import nodecore.cli.commands.serialization.FormattableObject;
-import nodecore.cli.commands.serialization.TransactionInfo;
 import nodecore.cli.contracts.Command;
 import nodecore.cli.contracts.CommandContext;
 import nodecore.cli.contracts.DefaultResult;
@@ -25,9 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.Utility;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @CommandSpec(
         name = "Abandon Transaction From TxID",
@@ -61,23 +58,10 @@ public class AbandonTransactionFromTxIDCommand implements Command {
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
-                FormattableObject<List<TransactionInfo>> temp = new FormattableObject<>(reply.getResultsList());
-
-                List<VeriBlockMessages.TransactionUnion> abandonedTransactions = reply.getAbandonedTransactionsList();
-
-                List<VeriBlockMessages.Transaction> rawAbandonedTransactions = new ArrayList<>();
-                for (VeriBlockMessages.TransactionUnion abandonedTransaction : abandonedTransactions) {
-                    if (abandonedTransaction.hasSigned()) {
-                        rawAbandonedTransactions.add(abandonedTransaction.getSigned().getTransaction());
-                    } else {
-                        rawAbandonedTransactions.add(abandonedTransaction.getSignedMultisig().getTransaction());
-                    }
-                }
+                FormattableObject<AbandonTransactionFromTxIDInfo> temp = new FormattableObject<>(reply.getResultsList());
 
                 temp.success = !result.didFail();
-                temp.payload = rawAbandonedTransactions
-                        .stream()
-                        .map(TransactionInfo::new).collect(Collectors.toList());
+                temp.payload = new AbandonTransactionFromTxIDInfo(reply);
 
                 context.outputObject(temp);
             }

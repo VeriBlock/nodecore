@@ -14,8 +14,8 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
+import nodecore.cli.commands.serialization.AbandonTransactionsFromAddressInfo;
 import nodecore.cli.commands.serialization.FormattableObject;
-import nodecore.cli.commands.serialization.TransactionInfo;
 import nodecore.cli.contracts.Command;
 import nodecore.cli.contracts.CommandContext;
 import nodecore.cli.contracts.DefaultResult;
@@ -23,10 +23,6 @@ import nodecore.cli.contracts.Result;
 import nodecore.cli.utilities.CommandUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @CommandSpec(
         name = "Abandon Transactions From Address",
@@ -65,23 +61,10 @@ public class AbandonTransactionsFromAddressCommand implements Command {
             if (!reply.getSuccess()) {
                 result.fail();
             } else {
-                FormattableObject<List<TransactionInfo>> temp = new FormattableObject<>(reply.getResultsList());
-
-                List<VeriBlockMessages.TransactionUnion> abandonedTransactions = reply.getAbandonedTransactionsList();
-
-                List<VeriBlockMessages.Transaction> rawAbandonedTransactions = new ArrayList<>();
-                for (VeriBlockMessages.TransactionUnion abandonedTransaction : abandonedTransactions) {
-                    if (abandonedTransaction.hasSigned()) {
-                        rawAbandonedTransactions.add(abandonedTransaction.getSigned().getTransaction());
-                    } else {
-                        rawAbandonedTransactions.add(abandonedTransaction.getSignedMultisig().getTransaction());
-                    }
-                }
+                FormattableObject<AbandonTransactionsFromAddressInfo> temp = new FormattableObject<>(reply.getResultsList());
 
                 temp.success = !result.didFail();
-                temp.payload = rawAbandonedTransactions
-                        .stream()
-                        .map(TransactionInfo::new).collect(Collectors.toList());
+                temp.payload = new AbandonTransactionsFromAddressInfo(reply);
 
                 context.outputObject(temp);
             }
