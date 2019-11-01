@@ -1447,6 +1447,7 @@ message AbandonTransactionReply {
     bool success = 1;
     repeated Result results = 2;
     repeated TransactionUnion abandoned_transactions = 3;
+    repeated bytes txids_not_abandoned = 4;
 }
 
 service Admin {
