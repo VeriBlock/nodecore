@@ -10,9 +10,8 @@ package org.veriblock.miners.pop
 
 import org.koin.log.EmptyLogger
 import org.koin.standalone.StandAloneContext.startKoin
-import org.veriblock.miners.pop.plugins.pluguinModule
+import org.veriblock.miners.pop.plugins.pluginModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.miners.pop.shell.configure
 import org.veriblock.miners.pop.storage.repositoryModule
 import org.veriblock.miners.pop.storage.serviceModule
 import org.veriblock.miners.pop.tasks.taskModule
@@ -31,15 +30,16 @@ private fun run(): Int {
     })
 
     logger.info { "Starting dependency injection" }
-    val koinApplication = startKoin(listOf(serviceModule, taskModule, minerModule, repositoryModule, pluguinModule), logger = EmptyLogger())
+    val koinApplication = startKoin(listOf(serviceModule, taskModule, minerModule, repositoryModule, pluginModule), logger = EmptyLogger())
 
     val miner: Miner = koinApplication.koinContext.get()
     val securityInheritingService: SecurityInheritingService = koinApplication.koinContext.get()
-    Shell.configure(miner)
+    val shell: Shell = koinApplication.koinContext.get()
+    shell.initialize()
     try {
         miner.start()
         securityInheritingService.start()
-        Shell.run()
+        shell.run()
     } catch (e: Exception) {
         logger.warn(e) { "Error in shell: ${e.message}" }
     } finally {

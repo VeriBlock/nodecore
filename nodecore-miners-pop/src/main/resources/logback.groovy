@@ -1,12 +1,19 @@
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+import org.veriblock.shell.LoggingLineAppender
 
 import static ch.qos.logback.classic.Level.INFO
 
-def logRootPath = System.getenv('NODECORE_LOG_PATH') ?: ''
+def logRootPath = System.getenv('VPM_LOG_PATH') ?: 'logs/'
+def logLevel = System.getenv('VPM_LOG_LEVEL') ?: ''
 
-appender("STDOUT", ConsoleAppender) {
+//appender("STDOUT", ConsoleAppender) {
+//    encoder(PatternLayoutEncoder) {
+//        pattern = "%date{YYYY-MM-dd HH:mm:ss.SSSXX} [%thread] %-5level %logger{36} - %msg%n"
+//    }
+//}
+appender("TERMINAL", LoggingLineAppender) {
     encoder(PatternLayoutEncoder) {
-        pattern = "%date{YYYY-MM-dd HH:mm:ss.SSSXX} [%thread] %-5level %logger{36} - %msg%n"
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
     }
 }
 appender("FILE", RollingFileAppender) {
@@ -35,7 +42,9 @@ appender("BITCOINJ-FILE", RollingFileAppender) {
     }
 }
 
-logger("nodecore.miners.pop", INFO)
+def level = toLevel(logLevel, INFO)
+
+logger("nodecore.miners.pop", level, ["TERMINAL"], false)
 logger("org.bitcoinj", INFO, ["BITCOINJ-FILE"], false)
 
-root(INFO, ["FILE"])
+root(DEBUG, ["FILE"])

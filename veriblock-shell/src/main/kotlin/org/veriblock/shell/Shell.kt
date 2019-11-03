@@ -28,7 +28,7 @@ import java.util.*
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 
-open class Shell internal constructor(
+open class Shell(
     testData: ShellTestData? = null
 ) {
     private val commandFactory = CommandFactory()
@@ -47,8 +47,14 @@ open class Shell internal constructor(
         .terminal(terminal)
         .build()
 
-    private fun getPrompt()
-        = " > "
+    init {
+        currentShell = this
+    }
+
+    private fun getPrompt() = AttributedStringBuilder()
+        .style(AttributedStyle.BOLD.foreground(AttributedStyle.GREEN))
+        .append(" > ")
+        .toAnsi(terminal)
 
     private fun readLine(): String? = try {
         val read = reader.readLine(getPrompt())
@@ -62,20 +68,27 @@ open class Shell internal constructor(
 
     private fun startRunning() {
         running = true
+        onStart()
+    }
+
+    protected open fun onStart() {
     }
 
     private fun stopRunning() {
+        onStop()
         running = false
     }
 
-    private fun initialize() {
+    protected open fun onStop() {
+    }
+
+    open fun initialize() {
         val objDiagnostics = DiagnosticUtility.getDiagnosticInfo()
         val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
         logger.debug(strDiagnostics)
     }
 
     fun run() {
-        initialize()
         startRunning()
 
         while (running) {
@@ -139,7 +152,7 @@ open class Shell internal constructor(
         for (msg in messages) {
             terminal.writer().print(
                 AttributedStringBuilder()
-                    .style(AttributedStyle.DEFAULT.foreground(msg.getColor() + 8)) // Add 8 for bold color
+                    .style(AttributedStyle.BOLD.foreground(msg.getColor()))
                     .append(msg.level.toString().padStart(7, ' '))
                     .toAnsi(terminal)
             )
@@ -181,12 +194,25 @@ open class Shell internal constructor(
     }
 
     fun printInfo(message: String) {
+        printStyled(message, AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
+    }
+
+    fun printWarning(message: String) {
+        printStyled(message, AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW))
+    }
+
+    fun renderFromThrowable(t: Throwable) {
+        printWarning("${t.message}\n\n")
+    }
+
+    fun printStyled(message: String, style: AttributedStyle) {
         terminal.writer().println(
             AttributedStringBuilder()
-                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
+                .style(style)
                 .append(message)
                 .toAnsi(terminal)
         )
+        terminal.writer().flush()
     }
 
     fun getCommands() = commandFactory.getCommands()
@@ -194,6 +220,4 @@ open class Shell internal constructor(
     fun registerCommand(command: Command) {
         commandFactory.registerCommand(command)
     }
-
-    companion object : Shell()
 }

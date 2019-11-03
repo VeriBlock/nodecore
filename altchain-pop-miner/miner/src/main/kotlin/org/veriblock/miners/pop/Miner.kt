@@ -9,10 +9,12 @@
 package org.veriblock.miners.pop
 
 import org.veriblock.lite.NodeCoreLiteKit
+import org.veriblock.lite.core.Balance
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.storage.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
+import org.veriblock.sdk.Coin
 import org.veriblock.sdk.Configuration
 import org.veriblock.sdk.Sha256Hash
 import org.veriblock.sdk.createLogger
@@ -20,6 +22,7 @@ import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.IOException
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
@@ -38,10 +41,74 @@ class Miner(
 ) {
     private val operations = ConcurrentHashMap<String, MiningOperation>()
 
+    private enum class ReadyCondition {
+        SUFFICIENT_FUNDS,
+        NODECORE_CONNECTED
+    }
+    private val readyConditions: EnumSet<ReadyCondition> = EnumSet.noneOf(ReadyCondition::class.java)
+
+    private var operationsSubmitted = false
+
     init {
         // Restore operations (including re-attach listeners) before the network starts
-        this.nodeCoreLiteKit.beforeNetworkStart = { this.loadSuspendedOperations() }
-        this.nodeCoreLiteKit.afterNetworkStart = { this.submitSuspendedOperations() }
+        this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
+
+        nodeCoreLiteKit.network.healthyEvent.register(this) {
+            addReadyCondition(ReadyCondition.NODECORE_CONNECTED)
+        }
+        nodeCoreLiteKit.network.unhealthyEvent.register(this) {
+            logger.warn { "Unable to connect to NodeCore!" }
+            removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
+        }
+        nodeCoreLiteKit.balanceChangedEvent.register(this) {
+            logger.info { "Current balance: ${it.confirmedBalance} VBK Atomic Units" }
+            if (it.confirmedBalance.atomicUnits >= minerConfig.maxFee) {
+                addReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
+            } else {
+                removeReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
+            }
+        }
+    }
+
+    private fun isReady(): Boolean {
+        return readyConditions.size == ReadyCondition.values().size
+    }
+
+    private fun addReadyCondition(condition: ReadyCondition) {
+        val wasReady = isReady()
+        readyConditions.add(condition)
+        if (!wasReady && isReady()) {
+            logger.info { "Miner is ready!" }
+            if (!operationsSubmitted) {
+                submitSuspendedOperations()
+            }
+        }
+    }
+
+    private fun removeReadyCondition(condition: ReadyCondition) {
+        val wasReady = isReady()
+        readyConditions.remove(condition)
+        if (wasReady) {
+            logger.info { "Miner is no longer ready:" }
+            logger.info { condition.getNotReadyMessage() }
+        }
+    }
+
+    private fun ReadyCondition.getNotReadyMessage() = when (this) {
+        ReadyCondition.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
+        ReadyCondition.SUFFICIENT_FUNDS -> {
+            val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
+            """
+                PoP wallet does not contain sufficient funds
+                         Current balance: ${currentBalance.atomicUnits} VBK atomic units
+                         Minimum required: ${minerConfig.maxFee}, need ${minerConfig.maxFee - currentBalance.atomicUnits} more
+                         Send VBK coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
+            """.trimIndent()
+        }
+    }
+
+    private fun listNotReadyConditions() = EnumSet.complementOf(readyConditions).map {
+        it.getNotReadyMessage()
     }
 
     fun start() {
@@ -64,30 +131,26 @@ class Miner(
         return operations[id]
     }
 
-    fun getBalance() = nodeCoreLiteKit.network.getBalance()
+    fun getBalance(): Balance? = if (nodeCoreLiteKit.network.isHealthy()) {
+        nodeCoreLiteKit.network.getBalance()
+    } else {
+        null
+    }
 
     fun mine(chain: String, block: Int?): Result {
+        if (!isReady()) {
+            return failure {
+                addMessage(
+                    "V412",
+                    "Miner is not ready",
+                    listNotReadyConditions(),
+                    true
+                )
+            }
+        }
         if (!nodeCoreLiteKit.network.isHealthy()) {
             return failure {
                 addMessage("V010", "Unable to mine", "Cannot connect to NodeCore", true)
-            }
-        }
-
-        val currentBalance = getBalance().confirmedBalance.atomicUnits
-        if (currentBalance < minerConfig.maxFee) {
-            return failure {
-                addMessage(
-                    "V011",
-                    "Insufficient funds",
-                    "Current confirmed balance is $currentBalance while the configured maximum fee is ${minerConfig.maxFee}",
-                    true
-                )
-                addMessage(
-                    "V011",
-                    "Please send VBK coins to ${nodeCoreLiteKit.addressManager.defaultAddress}",
-                    "You should send at least ${minerConfig.maxFee - currentBalance} atomic units of VBK",
-                    false
-                )
             }
         }
 
@@ -131,7 +194,6 @@ class Miner(
         } catch (e: Exception) {
             logger.error("Unable to load suspended operations", e)
         }
-
     }
 
     private fun submitSuspendedOperations() {
@@ -148,6 +210,8 @@ class Miner(
         } catch (e: Exception) {
             logger.error("Unable to resume suspended operations", e)
         }
+
+        operationsSubmitted = true
     }
 
     private fun registerToStateChangedEvent(operation: MiningOperation) {

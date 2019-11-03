@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class NodeCoreNetwork(
-    private val context: Context,
     private val gateway: NodeCoreGateway,
     private val blockChain: BlockChain,
     private val transactionMonitor: TransactionMonitor,
@@ -32,6 +31,10 @@ class NodeCoreNetwork(
     private val healthy = AtomicBoolean(false)
     private val publicationSubscriptions = ConcurrentHashMap<String, PublicationSubscription>()
     private val connected = SettableFuture.create<Boolean>()
+    private var firstPollAttempt = true
+
+    val healthyEvent = EmptyEvent()
+    val unhealthyEvent = EmptyEvent()
 
     fun isHealthy(): Boolean =
         healthy.get()
@@ -75,6 +78,7 @@ class NodeCoreNetwork(
                     gateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.error("NodeCore Error", e)
+                    unhealthyEvent.trigger()
                     healthy.set(false)
                     return
                 }
@@ -90,13 +94,21 @@ class NodeCoreNetwork(
                 } catch (e: BlockStoreException) {
                     logger.error("VeriBlockBlock store exception", e)
                 }
-
             } else {
                 if (gateway.ping()) {
+                    if (!isHealthy()) {
+                        healthyEvent.trigger()
+                    }
                     healthy.set(true)
                     connected.set(true)
+                } else {
+                    if (isHealthy() || firstPollAttempt) {
+                        unhealthyEvent.trigger()
+                    }
+                    healthy.set(false)
                 }
             }
+            firstPollAttempt = false
         } catch (e: Exception) {
             logger.error(e) { "Error when polling NodeCore" }
         }

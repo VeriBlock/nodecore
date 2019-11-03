@@ -13,6 +13,30 @@ import kotlinx.coroutines.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executor
 
+typealias EmptyEventHandler = () -> Unit
+typealias EmptyEventListenerPair = Pair<Any, EmptyEventHandler>
+
+class EmptyEvent {
+
+    private val listeners = CopyOnWriteArrayList<EmptyEventListenerPair>()
+
+    fun register(listener: Any, handler: EmptyEventHandler) {
+        listeners += listener to handler
+    }
+
+    fun remove(listener: Any) {
+        listeners.removeIf { it.first == listener }
+    }
+
+    fun clear() = listeners.clear()
+
+    fun trigger() {
+        for (listener in listeners) {
+            listener.second()
+        }
+    }
+}
+
 typealias EventHandler<T> = (T) -> Unit
 typealias EventListenerPair<T> = Pair<Any, EventHandler<T>>
 

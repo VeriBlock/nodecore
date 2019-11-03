@@ -10,6 +10,6 @@ package org.veriblock.miners.pop.plugins
 
 import org.koin.dsl.module.module
 
-val pluguinModule = module {
+val pluginModule = module {
     single { PluginFactory() }
 }
