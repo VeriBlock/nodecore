@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Singleton
@@ -43,7 +41,7 @@ public class BitcoinBlockCache {
         try {
             lock.lock();
             task = cache.computeIfAbsent(key, k -> {
-                logger.info("Placing block {} in downloaded cache", block.getHash().toString());
+                logger.debug("Placing block {} in downloaded cache", block.getHash().toString());
                 final SettableFuture<FilteredBlock> future = SettableFuture.create();
                 future.set(block);
                 return future;
@@ -53,7 +51,7 @@ public class BitcoinBlockCache {
         }
 
         if (!task.isDone()) {
-            logger.info("Placing block {} in downloaded cache", block.getHash().toString());
+            logger.debug("Placing block {} in downloaded cache", block.getHash().toString());
             task.set(block);
         }
     }
@@ -63,7 +61,7 @@ public class BitcoinBlockCache {
 
         try {
             lock.lock();
-            logger.info("Requesting block {} from download cache", key);
+            logger.debug("Requesting block {} from download cache", key);
             task = cache.computeIfAbsent(key, k -> SettableFuture.create());
         } finally {
             lock.unlock();

@@ -10,8 +10,10 @@ package org.veriblock.lite
 
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.wallet.DefaultAddressManager
+import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
+import org.veriblock.lite.core.Event
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.store.VeriBlockBlockStore
@@ -31,31 +33,19 @@ val logger = createLogger {}
 class NodeCoreLiteKit(
     private val context: Context
 ) {
-    lateinit var blockStore: VeriBlockBlockStore
-        private set
-
-    lateinit var blockChain: BlockChain
-        private set
-
-    lateinit var addressManager: AddressManager
-        private set
-
-    lateinit var transactionMonitor: TransactionMonitor
-        private set
-
-    lateinit var network: NodeCoreNetwork
-        private set
+    val blockStore: VeriBlockBlockStore
+    val blockChain: BlockChain
+    val addressManager: AddressManager
+    val transactionMonitor: TransactionMonitor
+    val network: NodeCoreNetwork
 
     var beforeNetworkStart: () -> Unit = {}
-    var afterNetworkStart: () -> Unit = {}
+    val balanceChangedEvent = Event<Balance>()
 
-    @Throws(IOException::class)
-    fun start() {
+    init {
         if (!context.directory.exists() && !context.directory.mkdirs()) {
             throw IOException("Unable to create directory")
         }
-
-        logger.info { "VeriBlock Network: ${context.networkParameters.network}" }
 
         try {
             this.blockStore = createBlockStore()
@@ -64,43 +54,42 @@ class NodeCoreLiteKit(
         }
 
         addressManager = loadAddressManager()
-        logger.info { "Send funds to ${addressManager.defaultAddress.hash}" }
         transactionMonitor = createOrLoadTransactionMonitor()
-        blockChain = BlockChain(context.networkParameters, blockStore).apply {
-            newBestBlockEvent.register(transactionMonitor) {
-                val balanceChanged = transactionMonitor.onNewBestBlock(it)
-                if (balanceChanged) {
-                    logger.info { "New balance: ${network.getBalance().confirmedBalance} VBK Atomic Units" }
-                }
-            }
-            blockChainReorganizedEvent.register(transactionMonitor) {
-                transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
-            }
-        }
+        blockChain = BlockChain(context.networkParameters, blockStore)
 
-        beforeNetworkStart()
 
-        logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         network = NodeCoreNetwork(
-            context,
             NodeCoreGateway(context.networkParameters),
             blockChain,
             transactionMonitor,
             addressManager
-        ).apply {
-            val connected = startAsync()
-            connected.addListener(Runnable {
-                logger.info { "Connected to NodeCore!" }
-                logger.info { "Current balance: ${network.getBalance().confirmedBalance} VBK Atomic Units" }
-                afterNetworkStart()
-            }, Threading.LISTENER_THREAD)
+        )
+    }
+
+    fun start() {
+        logger.info { "VeriBlock Network: ${context.networkParameters.network}" }
+
+        blockChain.newBestBlockEvent.register(transactionMonitor) {
+            val balanceChanged = transactionMonitor.onNewBestBlock(it)
+            if (balanceChanged) {
+                balanceChangedEvent.trigger(network.getBalance())
+            }
         }
+        blockChain.blockChainReorganizedEvent.register(transactionMonitor) {
+            transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
+        }
+
+        logger.info { "Send funds to ${addressManager.defaultAddress.hash}" }
+        logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
+        beforeNetworkStart()
+        network.startAsync().addListener(Runnable {
+            logger.info { "Connected to NodeCore!" }
+            balanceChangedEvent.trigger(network.getBalance())
+        }, Threading.LISTENER_THREAD)
     }
 
     fun shutdown() {
-        if (::network.isInitialized) {
-            network.shutdown()
-        }
+        network.shutdown()
     }
 
     @Throws(BlockStoreException::class)

@@ -5,124 +5,110 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop;
+package nodecore.miners.pop
 
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import nodecore.miners.pop.api.ApiServer;
-import nodecore.miners.pop.contracts.Configuration;
-import nodecore.miners.pop.contracts.MessageService;
-import nodecore.miners.pop.contracts.PoPMiner;
-import nodecore.miners.pop.contracts.PoPMiningScheduler;
-import nodecore.miners.pop.contracts.ProgramOptions;
-import nodecore.miners.pop.events.ShellCompletedEvent;
-import nodecore.miners.pop.rules.RulesModule;
-import nodecore.miners.pop.shell.CommandFactoryModule;
-import nodecore.miners.pop.shell.DefaultShell;
-import nodecore.miners.pop.storage.RepositoriesModule;
-import org.bitcoinj.core.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.core.SharedConstants;
+import com.google.common.eventbus.Subscribe
+import com.google.inject.Guice
+import com.google.inject.Injector
+import nodecore.miners.pop.api.ApiServer
+import nodecore.miners.pop.contracts.*
+import nodecore.miners.pop.events.ShellCompletedEvent
+import nodecore.miners.pop.rules.RulesModule
+import nodecore.miners.pop.shell.PopShell
+import nodecore.miners.pop.storage.RepositoriesModule
+import org.bitcoinj.core.Context
+import org.bitcoinj.utils.Threading
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.veriblock.core.SharedConstants
+import org.veriblock.shell.Shell
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import kotlin.system.exitProcess
 
-import java.util.concurrent.CountDownLatch;
+class Program {
+    private val shutdownSignal: CountDownLatch = CountDownLatch(1)
 
-public class Program {
-    private static final Logger logger = LoggerFactory.getLogger(Program.class);
-    private final CountDownLatch shutdownSignal;
-
-    private Program() {
-        this.shutdownSignal = new CountDownLatch(1);
-
-        InternalEventBus.getInstance().register(this);
+    init {
+        InternalEventBus.getInstance().register(this)
     }
 
-    private int run(String[] args) {
-        System.out.print(SharedConstants.LICENSE);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(shutdownSignal::countDown));
-
-        Injector startupInjector = Guice.createInjector(
-                new BootstrapModule(),
-                new CommandFactoryModule(),
-                new RepositoriesModule(),
-                new RulesModule());
-
-        ProgramOptions options = startupInjector.getInstance(ProgramOptions.class);
-        options.parse(args);
-
-        Configuration configuration = startupInjector.getInstance(Configuration.class);
-        configuration.load();
-        configuration.save();
-
-        MessageService messageService = startupInjector.getInstance(MessageService.class);
-
-        Context context = startupInjector.getInstance(Context.class);
-        org.bitcoinj.utils.Threading.ignoreLockCycles();
-        org.bitcoinj.utils.Threading.USER_THREAD = command -> {
-            Context.propagate(context);
+    fun run(args: Array<String>): Int {
+        print(SharedConstants.LICENSE)
+        Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdownSignal.countDown() }))
+        val startupInjector: Injector = Guice.createInjector(
+            BootstrapModule(),
+            RepositoriesModule(),
+            RulesModule())
+        val options: ProgramOptions = startupInjector.getInstance(ProgramOptions::class.java)
+        options.parse(args)
+        val configuration: Configuration = startupInjector.getInstance(Configuration::class.java)
+        configuration.load()
+        configuration.save()
+        val messageService: MessageService = startupInjector.getInstance(MessageService::class.java)
+        val context: Context = startupInjector.getInstance(Context::class.java)
+        Threading.ignoreLockCycles()
+        Threading.USER_THREAD = Executor { command: Runnable ->
+            Context.propagate(context)
             try {
-                command.run();
-            } catch (Exception e) {
-                logger.error("Exception running listener", e);
+                command.run()
+            } catch (e: Exception) {
+                logger.error("Exception running listener", e)
             }
-        };
-
-        PoPMiner popMiner = startupInjector.getInstance(PoPMiner.class);
-        PoPMiningScheduler scheduler = startupInjector.getInstance(PoPMiningScheduler.class);
-        PoPEventEngine eventEngine = startupInjector.getInstance(PoPEventEngine.class);
-
-        ApiServer apiServer = startupInjector.getInstance(ApiServer.class);
-        apiServer.setAddress(configuration.getHttpApiAddress());
-        apiServer.setPort(configuration.getHttpApiPort());
-
-        DefaultShell shell = startupInjector.getInstance(DefaultShell.class);
-        shell.initialize();
-        try {
-            popMiner.run();
-            scheduler.run();
-            eventEngine.run();
-            apiServer.start();
-            shell.run();
-        } catch (Exception e) {
-            shell.renderFromThrowable(e);
-            shutdownSignal.countDown();
         }
-
+        val popMiner: PoPMiner = startupInjector.getInstance(PoPMiner::class.java)
+        val scheduler: PoPMiningScheduler = startupInjector.getInstance(PoPMiningScheduler::class.java)
+        val eventEngine: PoPEventEngine = startupInjector.getInstance(PoPEventEngine::class.java)
+        val apiServer: ApiServer = startupInjector.getInstance(ApiServer::class.java)
+        apiServer.address = configuration.httpApiAddress
+        apiServer.port = configuration.httpApiPort
+        val shell: PopShell = startupInjector.getInstance(PopShell::class.java)
+        shell.initialize()
         try {
-            shutdownSignal.await();
-
-            Threading.shutdown();
-            apiServer.shutdown();
-            eventEngine.shutdown();
-            scheduler.shutdown();
-            popMiner.shutdown();
-            messageService.shutdown();
-            configuration.save();
-
-            logger.info("Application exit");
-        } catch (InterruptedException e) {
-            logger.error("Shutdown signal was interrupted", e);
-            return 1;
-        } catch (Exception e) {
-            logger.error("Could not shut down services cleanly", e);
-            return 1;
+            popMiner.run()
+            scheduler.run()
+            eventEngine.run()
+            apiServer.start()
+            shell.run()
+        } catch (e: Exception) {
+            shell.renderFromThrowable(e)
+            shutdownSignal.countDown()
         }
-
-        return 0;
+        try {
+            shutdownSignal.await()
+            nodecore.miners.pop.Threading.shutdown()
+            apiServer.shutdown()
+            eventEngine.shutdown()
+            scheduler.shutdown()
+            popMiner.shutdown()
+            messageService.shutdown()
+            configuration.save()
+            logger.info("Application exit")
+        } catch (e: InterruptedException) {
+            logger.error("Shutdown signal was interrupted", e)
+            return 1
+        } catch (e: Exception) {
+            logger.error("Could not shut down services cleanly", e)
+            return 1
+        }
+        return 0
     }
 
-    @Subscribe public void onShellCompleted(ShellCompletedEvent event) {
+    @Subscribe
+    fun onShellCompleted(event: ShellCompletedEvent?) {
         try {
-            shutdownSignal.countDown();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            shutdownSignal.countDown()
+        } catch (e: Exception) {
+            logger.error(e.message, e)
         }
     }
 
-    public static void main(String[] args) {
-        Program main = new Program();
-        System.exit(main.run(args));
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(Program::class.java)
     }
+}
+
+fun main(args: Array<String>) {
+    val main = Program()
+    exitProcess(main.run(args))
 }

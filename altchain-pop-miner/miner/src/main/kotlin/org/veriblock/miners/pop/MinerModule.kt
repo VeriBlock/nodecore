@@ -12,9 +12,16 @@ import org.koin.dsl.module.module
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
+import org.veriblock.miners.pop.shell.configure
+import org.veriblock.shell.Shell
 
 val minerModule = module {
     single { NodeCoreLiteKit(Context) }
     single { Miner(get(), get(), get()) }
     single { SecurityInheritingService(get(), get()) }
+    single {
+        Shell().apply {
+            configure(get())
+        }
+    }
 }

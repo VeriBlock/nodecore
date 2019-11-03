@@ -171,7 +171,7 @@ class NodeCoreGateway(
                 .ping(VeriBlockMessages.PingRequest.newBuilder().build())
             true
         } catch (e: StatusRuntimeException) {
-            //logger.warn("Unable to connect ping NodeCore at this time")
+            logger.debug("Unable to connect ping NodeCore at this time")
             false
         }
     }
@@ -262,3 +262,8 @@ class NodeCoreGateway(
             .build()
     }
 }
+
+sealed class VeriBlockException(
+    val errorCode: Int,
+    override val message: String
+): RuntimeException()

@@ -22,6 +22,7 @@ dependencies {
 
     compile project(':nodecore-ucp')
     compile project(':nodecore-grpc')
+    compile project(':veriblock-shell')
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
     compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
@@ -78,7 +79,7 @@ test {
 run {
     standardInput = System.in
     standardOutput = System.out
-    
+
     //if (System.getProperty('DEBUG', 'false') == 'true') {
     //    jvmArgs '-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9009'
     //}
