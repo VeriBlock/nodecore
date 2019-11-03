@@ -506,7 +506,7 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
     @Override
     public void onBlocksDownloaded(Peer peer, Block block, @Nullable FilteredBlock filteredBlock, int blocksLeft) {
         if (filteredBlock != null) {
-            logger.info("FilteredBlock {} downloaded", block.getHashAsString());
+            logger.debug("FilteredBlock {} downloaded", block.getHashAsString());
             blockCache.put(block.getHashAsString(), filteredBlock);
         }
     }

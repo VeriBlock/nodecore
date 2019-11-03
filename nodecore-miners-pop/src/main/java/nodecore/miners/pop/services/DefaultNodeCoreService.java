@@ -96,7 +96,7 @@ public class DefaultNodeCoreService implements NodeCoreService {
             _blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).ping(PingRequest.newBuilder().build());
             return true;
         } catch (StatusRuntimeException e) {
-            _logger.warn("Unable to connect ping NodeCore at this time");
+            _logger.debug("Unable to connect ping NodeCore at this time");
             return false;
         }
     }

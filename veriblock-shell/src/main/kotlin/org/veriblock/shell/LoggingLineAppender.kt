@@ -14,6 +14,8 @@ import ch.qos.logback.core.AppenderBase
 import ch.qos.logback.core.encoder.Encoder
 import java.nio.charset.Charset
 
+var currentShell: Shell? = null
+
 class LoggingLineAppender : AppenderBase<ILoggingEvent>() {
 
     private val layout = TTLLLayout()
@@ -31,6 +33,6 @@ class LoggingLineAppender : AppenderBase<ILoggingEvent>() {
     lateinit var encoder: Encoder<ILoggingEvent> // Initialized by the logger config
 
     override fun append(event: ILoggingEvent) {
-        Shell.reader.printAbove(encoder.encode(event).toString(Charset.defaultCharset()))
+        currentShell?.reader?.printAbove(encoder.encode(event).toString(Charset.defaultCharset()))
     }
 }

@@ -19,7 +19,11 @@ class Result(
         return messages
     }
 
-    fun addMessage(code: String, message: String, details: String, error: Boolean) {
+    fun addMessage(code: String, message: String, details: String, error: Boolean = isFailed) {
+        messages.add(ResultMessage(code, message, details, error))
+    }
+
+    fun addMessage(code: String, message: String, details: List<String>, error: Boolean = isFailed) {
         messages.add(ResultMessage(code, message, details, error))
     }
 

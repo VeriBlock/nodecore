@@ -82,7 +82,6 @@ public class DefaultPoPMiner implements PoPMiner {
     public void run() {
         InternalEventBus.getInstance().register(this);
 
-
         bitcoinService.initialize();
         if (!configuration.getBoolean(Constants.BYPASS_ACKNOWLEDGEMENT_KEY)) {
             KeyValueData data = keyValueRepository.get(Constants.WALLET_SEED_VIEWED_KEY);
