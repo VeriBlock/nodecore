@@ -3,7 +3,7 @@ package nodecore.miners.pop.api.controller
 import io.ktor.application.call
 import io.ktor.routing.Route
 import io.ktor.routing.post
-import nodecore.miners.pop.contracts.PoPMiner
+import nodecore.miners.pop.PoPMiner
 
 class WalletController(
     private val miner: PoPMiner

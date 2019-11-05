@@ -9,6 +9,8 @@ package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
 import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.services.BitcoinService;
+import nodecore.miners.pop.services.NodeCoreService;
 
 public class GetPoPInstructionsTask extends BaseTask {
 

@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop;
 
-import nodecore.miners.pop.contracts.ProgramOptions;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,18 +15,17 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Properties;
 
-public class DefaultProgramOptions implements ProgramOptions {
-    private static Logger logger = LoggerFactory.getLogger(DefaultProgramOptions.class);
+public class ProgramOptions {
+    private static Logger logger = LoggerFactory.getLogger(ProgramOptions.class);
 
     private String configPath;
     private String dataDirectory;
     private Properties properties;
 
-    public DefaultProgramOptions() {
+    public ProgramOptions() {
         configPath = "ncpop.properties";
     }
 
-    @Override
     public boolean parse(String[] args) {
         Option configFileOption = Option.builder("c")
                 .argName("path")
@@ -87,24 +85,20 @@ public class DefaultProgramOptions implements ProgramOptions {
         }
     }
 
-    @Override
     public String getConfigPath() {
         return configPath;
     }
 
-    @Override
     public String getDataDirectory() {
         return dataDirectory;
     }
 
-    @Override
     public String getProperty(String key) {
         if (properties == null) return null;
 
         return properties.getProperty(key);
     }
 
-    @Override
     public void removeProperty(String key) {
         if (properties != null)
             properties.remove(key);

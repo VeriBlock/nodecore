@@ -11,7 +11,10 @@ import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import nodecore.miners.pop.common.BitcoinNetwork;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.ConfigurationResult;
+import nodecore.miners.pop.contracts.IllegalConfigurationValueResultMessage;
+import nodecore.miners.pop.contracts.MissingConfigurationValueResultMessage;
+import nodecore.miners.pop.contracts.SuccessResultMessage;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -24,21 +27,20 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 
-public class DefaultConfiguration implements Configuration {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultConfiguration.class);
+public class Configuration {
+    private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
     private static final String DEFAULT_PROPERTIES = "ncpop-default.properties";
 
     private final ProgramOptions options;
     private final Properties defaultProperties = new Properties();
     private final Properties properties;
 
-    public DefaultConfiguration(ProgramOptions options) {
+    public Configuration(ProgramOptions options) {
         this.options = options;
         loadDefaults();
         properties = new Properties(defaultProperties);
     }
 
-    @Override
     public void load() {
         try
         {
@@ -52,7 +54,6 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public void load(InputStream inputStream) {
         try {
             properties.load(inputStream);
@@ -72,7 +73,6 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public BitcoinNetwork getBitcoinNetwork() {
         String networkValue = getPropertyOverrideOrDefault(Keys.BITCOIN_NETWORK_KEY);
         switch (networkValue.toLowerCase()) {
@@ -91,13 +91,12 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public long getMaxTransactionFee() {
         String value = getPropertyOverrideOrDefault(Keys.BITCOIN_MAX_TRANSACTION_FEE_KEY);
         Long transactionFee = Longs.tryParse(value);
         return transactionFee != null ? transactionFee : 0L;
     }
-    @Override
+
     public ConfigurationResult setMaxTransactionFee(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -120,13 +119,13 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public long getTransactionFeePerKB() {
         String value = getPropertyOverrideOrDefault(Keys.BITCOIN_TRANSACTION_FEE_PER_KB_KEY);
         Long transactionFee = Longs.tryParse(value);
         return transactionFee != null ? transactionFee : 0L;
     }
-    @Override
+
+
     public ConfigurationResult setTransactionFeePerKB(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -149,18 +148,18 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public boolean isMinimumRelayFeeEnforced() {
         return getBoolean(Keys.BITCOIN_MINIMUM_RELAY_FEE_ENFORCED_KEY);
     }
-    @Override
+
     public ConfigurationResult setMinimumRelayFeeEnforced(String value) {
         return setBoolean(Keys.BITCOIN_MINIMUM_RELAY_FEE_ENFORCED_KEY, value);
     }
 
-    @Override
-    public String getNodeCoreHost() { return getPropertyOverrideOrDefault(Keys.NODECORE_HOST_KEY); }
-    @Override
+    public String getNodeCoreHost() {
+        return getPropertyOverrideOrDefault(Keys.NODECORE_HOST_KEY);
+    }
+
     public ConfigurationResult setNodeCoreHost(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -185,7 +184,6 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public int getNodeCorePort() {
         Integer port = Ints.tryParse(getPropertyOverrideOrDefault(Keys.NODECORE_PORT_KEY));
         if(port == null)
@@ -193,7 +191,6 @@ public class DefaultConfiguration implements Configuration {
         return port;
     }
 
-    @Override
     public ConfigurationResult setNodeCorePort(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -227,12 +224,10 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public boolean getNodeCoreUseSSL() {
         return Boolean.valueOf(getPropertyOverrideOrDefault(Keys.NODECORE_USE_SSL_KEY));
     }
 
-    @Override
     public ConfigurationResult setNodeCoreUseSSL(String value) {
         ConfigurationResult result = new ConfigurationResult();
 
@@ -246,12 +241,10 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public String getNodeCorePassword() {
         return getPropertyOverrideOrDefault(Keys.NODECORE_PASSWORD_KEY);
     }
 
-    @Override
     public ConfigurationResult setNodeCorePassword(String value) {
         ConfigurationResult result = new ConfigurationResult();
 
@@ -263,12 +256,10 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public String getCertificateChainPath() {
         return getPropertyOverrideOrDefault(Keys.NODECORE_CERT_CHAIN_PATH_KEY);
     }
 
-    @Override
     public ConfigurationResult setCertificateChainPath(String value) {
         ConfigurationResult result = new ConfigurationResult();
 
@@ -290,12 +281,10 @@ public class DefaultConfiguration implements Configuration {
 
     }
 
-    @Override
     public String getCronSchedule() {
         return getPropertyOverrideOrDefault(Keys.SCHEDULE);
     }
 
-    @Override
     public int getActionTimeout() {
         Integer timeout = Ints.tryParse(getPropertyOverrideOrDefault(Keys.ACTION_TIMEOUT));
         if(timeout == null)
@@ -303,7 +292,6 @@ public class DefaultConfiguration implements Configuration {
         return timeout;
     }
 
-    @Override
     public ConfigurationResult setActionTimeout(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -326,7 +314,6 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public String getHttpApiAddress() {
         String address = getPropertyOverrideOrDefault(Keys.HTTP_API_ADDRESS);
         if(address == null)
@@ -334,7 +321,6 @@ public class DefaultConfiguration implements Configuration {
         return address;
     }
 
-    @Override
     public int getHttpApiPort() {
         Integer port = Ints.tryParse(getPropertyOverrideOrDefault(Keys.HTTP_API_PORT));
         if(port == null)
@@ -342,7 +328,6 @@ public class DefaultConfiguration implements Configuration {
         return port;
     }
 
-    @Override
     public List<String> list() {
         List<String> result = new ArrayList<>();
 
@@ -353,7 +338,6 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public ConfigurationResult setProperty(String key, String value) {
         ConfigurationResult result = new ConfigurationResult();
         switch (key.toLowerCase()) {
@@ -434,12 +418,10 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public boolean getBoolean(String key) {
         return Boolean.parseBoolean(getPropertyOverrideOrDefault(key));
     }
 
-    @Override
     public ConfigurationResult setBoolean(String key, String value) {
         ConfigurationResult result = new ConfigurationResult();
 
@@ -452,7 +434,6 @@ public class DefaultConfiguration implements Configuration {
         return result;
     }
 
-    @Override
     public void save() {
         try {
             File configFile = new File(options.getConfigPath());
@@ -467,7 +448,6 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public boolean isValid() {
         return getMaxTransactionFee() > 0L &&
                 getTransactionFeePerKB() > 0L &&
@@ -475,12 +455,10 @@ public class DefaultConfiguration implements Configuration {
                 getNodeCorePort() > 0 && getNodeCorePort() <= 65535;
     }
 
-    @Override
     public String getDataDirectory() {
         return options.getDataDirectory();
     }
 
-    @Override
     public String getDatabasePath() {
         String dataDirectory = getDataDirectory();
         dataDirectory = (dataDirectory != null) ? dataDirectory : "";

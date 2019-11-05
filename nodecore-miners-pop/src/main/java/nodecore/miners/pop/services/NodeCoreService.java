@@ -15,6 +15,7 @@ import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.AdminGrpc;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.VeriBlockMessages.*;
+import nodecore.miners.pop.Configuration;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.contracts.PoPEndorsementInfo;
@@ -34,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class DefaultNodeCoreService implements NodeCoreService {
-    private static final Logger _logger = LoggerFactory.getLogger(DefaultNodeCoreService.class);
+public class NodeCoreService {
+    private static final Logger _logger = LoggerFactory.getLogger(NodeCoreService.class);
 
     private final Configuration configuration;
     private final ChannelBuilder channelBuilder;
@@ -50,7 +51,7 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return healthy.get();
     }
 
-    public DefaultNodeCoreService(Configuration configuration, ChannelBuilder channelBuilder, BlockStore blockStore) {
+    public NodeCoreService(Configuration configuration, ChannelBuilder channelBuilder, BlockStore blockStore) {
         this.configuration = configuration;
         this.channelBuilder = channelBuilder;
         this.blockStore = blockStore;
@@ -79,13 +80,11 @@ public class DefaultNodeCoreService implements NodeCoreService {
         }
     }
 
-    @Override
     public void shutdown() throws InterruptedException {
         scheduledExecutorService.shutdown();
         _channel.shutdown().awaitTermination(15, TimeUnit.SECONDS);
     }
 
-    @Override
     public boolean ping() {
         if (_blockingStub == null) {
             return false;
@@ -100,7 +99,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
         }
     }
 
-    @Override
     public NodeCoreReply<PoPMiningInstruction> getPop(Integer blockNumber) {
         GetPopRequest.Builder requestBuilder = GetPopRequest.newBuilder();
         if (blockNumber != null && blockNumber > 0) {
@@ -148,7 +146,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return result;
     }
 
-    @Override
     public String submitPop(PoPMiningTransaction popMiningTransaction) {
         BitcoinBlockHeader.Builder blockOfProofBuilder = BitcoinBlockHeader.newBuilder();
         blockOfProofBuilder.setHeader(ByteString.copyFrom(popMiningTransaction.getBitcoinBlockHeaderOfProof()));
@@ -176,7 +173,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
         throw new ApplicationExceptions.PoPSubmitRejected();
     }
 
-    @Override
     public List<PoPEndorsementInfo> getPoPEndorsementInfo() {
         GetPoPEndorsementsInfoRequest request = GetPoPEndorsementsInfoRequest.newBuilder()
                 .setSearchLength(750)
@@ -189,7 +185,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public Integer getBitcoinBlockIndex(byte[] blockHeader) {
         GetBitcoinBlockIndexRequest request = GetBitcoinBlockIndexRequest.newBuilder()
                 .setBlockHeader(ByteString.copyFrom(blockHeader))
@@ -204,7 +199,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return null;
     }
 
-    @Override
     public String getMinerAddress() {
         GetInfoRequest request = GetInfoRequest.newBuilder().build();
         GetInfoReply reply = _blockingStub.getInfo(request);
@@ -212,7 +206,6 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return Utility.bytesToBase58(reply.getDefaultAddress().getAddress().toByteArray());
     }
 
-    @Override
     public VeriBlockHeader getLastBlock() {
         GetLastBlockReply reply = _blockingStub.withDeadlineAfter(10, TimeUnit.SECONDS)
                 .getLastBlock(GetLastBlockRequest.newBuilder().build());
@@ -220,14 +213,13 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return new VeriBlockHeader(reply.getHeader().getHeader().toByteArray());
     }
 
-    @Override
     public Result unlockWallet(String passphrase) {
         UnlockWalletRequest request = UnlockWalletRequest.newBuilder()
                 .setPassphrase(passphrase)
                 .build();
 
         ProtocolReply protocolReply = _blockingStub.unlockWallet(request);
-        DefaultResult result = new DefaultResult();
+        Result result = new Result();
         if (!protocolReply.getSuccess()) {
             result.fail();
         }
@@ -238,12 +230,11 @@ public class DefaultNodeCoreService implements NodeCoreService {
         return result;
     }
 
-    @Override
     public Result lockWallet() {
         LockWalletRequest request = LockWalletRequest.newBuilder().build();
 
         ProtocolReply protocolReply = _blockingStub.lockWallet(request);
-        DefaultResult result = new DefaultResult();
+        Result result = new Result();
         if (!protocolReply.getSuccess()) {
             result.fail();
         }

@@ -10,13 +10,12 @@ package nodecore.miners.pop.services;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import nodecore.miners.pop.Configuration;
 import nodecore.miners.pop.Constants;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.common.BitcoinNetwork;
 import nodecore.miners.pop.contracts.ApplicationExceptions.*;
-import nodecore.miners.pop.contracts.BitcoinService;
-import nodecore.miners.pop.contracts.Configuration;
 import nodecore.miners.pop.events.*;
 import nodecore.miners.pop.shims.WalletShim;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,8 +42,8 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public final class DefaultBitcoinService implements BitcoinService, BlocksDownloadedEventListener {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultBitcoinService.class);
+public final class BitcoinService implements BlocksDownloadedEventListener {
+    private static final Logger logger = LoggerFactory.getLogger(BitcoinService.class);
 
     private final Configuration configuration;
     private final Context context;
@@ -91,7 +90,7 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         }
     }
 
-    public DefaultBitcoinService(Configuration configuration, Context context, BitcoinBlockCache cache) {
+    public BitcoinService(Configuration configuration, Context context, BitcoinBlockCache cache) {
         this.configuration = configuration;
         this.context = context;
         this.blockCache = cache;
@@ -103,13 +102,13 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         this.serializer = new BitcoinSerializer(context.getParams(), true);
         this.kit = createWalletAppKit(context, getFilePrefix(bitcoinNetwork), null);
 
-        logger.info("DefaultBitcoinService constructor finished");
+        logger.info("BitcoinService constructor finished");
     }
 
     private WalletAppKit createWalletAppKit(Context context, String filePrefix, DeterministicSeed seed) {
         isBlockchainDownloaded = false;
 
-        DefaultBitcoinService self = this;
+        BitcoinService self = this;
 
         WalletAppKit kit = new WalletAppKit(context, new File("."), filePrefix) {
             @Override
@@ -164,7 +163,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return kit;
     }
 
-    @Override
     public void initialize() throws CorruptSPVChain {
         if (bitcoinNetwork == BitcoinNetwork.RegTest)
             kit.connectToLocalHost();
@@ -187,12 +185,10 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         }
     }
 
-    @Override
     public boolean serviceReady() {
         return isBlockchainDownloaded && isServiceReady;
     }
 
-    @Override
     public String currentReceiveAddress() {
         if (receiveAddress == null) {
             receiveAddress = wallet.currentReceiveAddress().toString();
@@ -207,12 +203,10 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return changeAddress;
     }
 
-    @Override
     public Coin getBalance() {
         return wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE);
     }
 
-    @Override
     public void resetWallet() {
         receiveAddress = null;
         setServiceReady(false);
@@ -224,12 +218,10 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         initialize();
     }
 
-    @Override
     public boolean blockchainDownloaded() {
         return isBlockchainDownloaded;
     }
 
-    @Override
     public Script generatePoPScript(byte[] opReturnData) {
         return new ScriptBuilder()
                 .op(ScriptOpCodes.OP_RETURN)
@@ -237,7 +229,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
                 .build();
     }
 
-    @Override
     public ListenableFuture<Transaction> createPoPTransaction(Script opReturnScript) throws SendTransactionException {
         return sendTxRequest(() -> {
             Transaction tx = new Transaction(kit.params());
@@ -253,7 +244,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         });
     }
 
-    @Override
     public Block getBlock(Sha256Hash hash) {
         try {
             StoredBlock block = blockStore.get(hash);
@@ -269,12 +259,10 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         }
     }
 
-    @Override
     public StoredBlock getLastBlock() {
         return blockChain.getChainHead();
     }
 
-    @Override
     public Block getBestBlock(Collection<Sha256Hash> hashes) {
         HashMap<Sha256Hash, StoredBlock> storedBlocks = new HashMap<>();
         for (Sha256Hash hash : hashes) {
@@ -306,12 +294,10 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
     private final ConcurrentHashMap<String, ListenableFuture<Block>> blockDownloader = new ConcurrentHashMap<>();
 
 
-    @Override
     public ListenableFuture<FilteredBlock> getFilteredBlockFuture(Sha256Hash hash) {
         return blockCache.getAsync(hash.toString());
     }
 
-    @Override
     public PartialMerkleTree getPartialMerkleTree(Sha256Hash hash) {
         try {
             logger.info("Awaiting block {}...", hash.toString());
@@ -328,7 +314,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return null;
     }
 
-    @Override
     public Block downloadBlock(Sha256Hash hash) {
         logger.info("Attempting to download block with hash {}", hash.toString());
 
@@ -360,21 +345,18 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return block;
     }
 
-    @Override
     public Block makeBlock(byte[] raw) {
         if (raw == null) return null;
 
         return serializer.makeBlock(raw);
     }
 
-    @Override
     public Collection<Block> makeBlocks(Collection<byte[]> raw) {
         if (raw == null) return null;
 
         return raw.stream().map(serializer::makeBlock).collect(Collectors.toSet());
     }
 
-    @Override
     public Transaction makeTransaction(byte[] raw) {
         if (raw == null) return null;
 
@@ -394,7 +376,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return reconstitutedTx;
     }
 
-    @Override
     public Transaction sendCoins(String address, Coin amount) throws SendTransactionException {
         try {
             return sendTxRequest(() -> {
@@ -409,7 +390,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         }
     }
 
-    @Override
     public Pair<Integer, Long> calculateFeesFromLatestBlock() {
         try {
             StoredBlock chainHead = blockChain.getChainHead();
@@ -430,7 +410,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return null;
     }
 
-    @Override
     public List<String> getMnemonicSeed() {
         DeterministicSeed seed = wallet.getKeyChainSeed();
         if (seed != null) {
@@ -445,7 +424,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return Collections.emptyList();
     }
 
-    @Override
     public boolean importWallet(String seedWords, Long creationTime) {
         if (creationTime == null) {
             creationTime = Constants.DEFAULT_WALLET_CREATION_DATE;
@@ -464,7 +442,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         }
     }
 
-    @Override
     public List<String> exportPrivateKeys() {
         List<DeterministicKey> keys = wallet.getActiveKeyChain().getLeafKeys();
         List<String> wifKeys = keys.stream()
@@ -473,7 +450,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return wifKeys;
     }
 
-    @Override
     public void shutdown() {
         setServiceReady(false);
         receiveAddress = null;
@@ -497,7 +473,6 @@ public final class DefaultBitcoinService implements BitcoinService, BlocksDownlo
         return filePrefix;
     }
 
-    @Override
     public void onBlocksDownloaded(Peer peer, Block block, @Nullable FilteredBlock filteredBlock, int blocksLeft) {
         if (filteredBlock != null) {
             logger.debug("FilteredBlock {} downloaded", block.getHashAsString());

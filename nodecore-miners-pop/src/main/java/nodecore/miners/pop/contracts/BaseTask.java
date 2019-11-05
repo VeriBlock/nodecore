@@ -9,6 +9,8 @@ package nodecore.miners.pop.contracts;
 
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.events.ErrorMessageEvent;
+import nodecore.miners.pop.services.BitcoinService;
+import nodecore.miners.pop.services.NodeCoreService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

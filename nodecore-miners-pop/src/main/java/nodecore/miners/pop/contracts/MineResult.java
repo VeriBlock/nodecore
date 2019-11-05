@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.contracts;
 
-public class MineResult extends DefaultResult {
+public class MineResult extends Result {
     private String operationId;
     public String getOperationId() {
         return operationId;

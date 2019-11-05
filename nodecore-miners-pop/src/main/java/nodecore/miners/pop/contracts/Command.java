@@ -7,6 +7,8 @@
 
 package nodecore.miners.pop.contracts;
 
+import org.veriblock.shell.CommandContext;
+
 public interface Command {
     Result execute(CommandContext context) throws Exception;
 }

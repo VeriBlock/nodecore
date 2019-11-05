@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.contracts;
 
-public class ConfigurationResult extends DefaultResult {
+public class ConfigurationResult extends Result {
     public ConfigurationResult() {
         super();
     }

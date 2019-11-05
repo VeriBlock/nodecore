@@ -7,7 +7,8 @@
 
 package nodecore.miners.pop.rules.conditions;
 
-import nodecore.miners.pop.contracts.Configuration;
+
+import nodecore.miners.pop.Configuration;
 
 public class KeystoneBlockCondition implements Condition<Integer> {
     @Override

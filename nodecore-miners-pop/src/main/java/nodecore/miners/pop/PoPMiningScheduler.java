@@ -7,9 +7,6 @@
 
 package nodecore.miners.pop;
 
-import nodecore.miners.pop.contracts.Configuration;
-import nodecore.miners.pop.contracts.PoPMiner;
-import nodecore.miners.pop.contracts.PoPMiningScheduler;
 import nodecore.miners.pop.events.InfoMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Context;
@@ -20,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 
-public class DefaultPoPMiningScheduler implements PoPMiningScheduler {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultPoPMiningScheduler.class);
+public class PoPMiningScheduler {
+    private static final Logger logger = LoggerFactory.getLogger(PoPMiningScheduler.class);
 
     private final Configuration configuration;
     private final PoPMiner popMiner;
@@ -31,7 +28,7 @@ public class DefaultPoPMiningScheduler implements PoPMiningScheduler {
     private boolean runnable = true;
     private ScheduleBuilder<CronTrigger> scheduleBuilder;
 
-    public DefaultPoPMiningScheduler(Configuration configuration, PoPMiner popMiner, Context context) {
+    public PoPMiningScheduler(Configuration configuration, PoPMiner popMiner, Context context) {
         this.configuration = configuration;
         this.popMiner = popMiner;
         this.context = context;
@@ -63,7 +60,6 @@ public class DefaultPoPMiningScheduler implements PoPMiningScheduler {
         this.scheduler = scheduler;
     }
 
-    @Override
     public void shutdown() throws InterruptedException {
         try {
             if (scheduler != null && !scheduler.isShutdown()) {
@@ -74,7 +70,6 @@ public class DefaultPoPMiningScheduler implements PoPMiningScheduler {
         }
     }
 
-    @Override
     public void run() {
         if (runnable && scheduler != null) {
             try {

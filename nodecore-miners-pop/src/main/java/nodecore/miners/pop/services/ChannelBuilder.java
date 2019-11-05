@@ -12,8 +12,8 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NegotiationType;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.MetadataUtils;
+import nodecore.miners.pop.Configuration;
 import nodecore.miners.pop.Constants;
-import nodecore.miners.pop.contracts.Configuration;
 
 import javax.net.ssl.SSLException;
 import java.io.File;

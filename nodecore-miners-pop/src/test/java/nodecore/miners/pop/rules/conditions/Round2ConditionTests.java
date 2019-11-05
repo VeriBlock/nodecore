@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.rules.conditions;
 
-import nodecore.miners.pop.contracts.Configuration;
+import nodecore.miners.pop.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 

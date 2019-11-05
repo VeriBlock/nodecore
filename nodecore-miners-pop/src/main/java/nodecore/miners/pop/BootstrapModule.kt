@@ -1,7 +1,7 @@
 package nodecore.miners.pop
 
 import nodecore.miners.pop.common.BitcoinNetwork
-import nodecore.miners.pop.contracts.*
+import nodecore.miners.pop.contracts.BlockStore
 import nodecore.miners.pop.services.*
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.tasks.ProcessManager
@@ -14,8 +14,8 @@ import org.koin.dsl.module
 
 @JvmField
 val bootstrapModule = module {
-    single<ProgramOptions> { DefaultProgramOptions() }
-    single<Configuration> { DefaultConfiguration(get()) }
+    single { ProgramOptions() }
+    single { Configuration(get()) }
 
     single {
         val configuration: Configuration = get()
@@ -34,11 +34,11 @@ val bootstrapModule = module {
     single { ProcessManager(get(), get()) }
     single { BitcoinBlockCache() }
     single { ChannelBuilder(get()) }
-    single<MessageService> { DefaultMessageService() }
-    single<PoPMiner> { DefaultPoPMiner(get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PoPStateService> { DefaultPoPStateService(get()) }
-    single<NodeCoreService> { DefaultNodeCoreService(get(), get(), get()) }
-    single<BitcoinService> { DefaultBitcoinService(get(), get(), get()) }
-    single<PoPMiningScheduler> { DefaultPoPMiningScheduler(get(), get(), get()) }
+    single { MessageService() }
+    single { PoPMiner(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { PoPStateService(get()) }
+    single { NodeCoreService(get(), get(), get()) }
+    single { BitcoinService(get(), get(), get()) }
+    single { PoPMiningScheduler(get(), get(), get()) }
     single { PopShell(get(), get(), get(), get()) }
 }

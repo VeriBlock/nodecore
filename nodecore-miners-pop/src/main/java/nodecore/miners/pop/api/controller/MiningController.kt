@@ -16,7 +16,7 @@ import io.ktor.routing.post
 import nodecore.miners.pop.api.model.MineRequestPayload
 import nodecore.miners.pop.api.model.MinerInfoResponse
 import nodecore.miners.pop.api.model.toResponse
-import nodecore.miners.pop.contracts.PoPMiner
+import nodecore.miners.pop.PoPMiner
 
 class MiningController(
     private val miner: PoPMiner

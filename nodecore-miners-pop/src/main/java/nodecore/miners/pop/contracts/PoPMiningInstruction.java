@@ -7,10 +7,10 @@
 
 package nodecore.miners.pop.contracts;
 
-import org.veriblock.core.crypto.Crypto;
 import nodecore.miners.pop.common.Utility;
+import org.veriblock.core.crypto.Crypto;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.List;
 
 public class PoPMiningInstruction implements Serializable {

@@ -12,6 +12,9 @@ import io.grpc.StatusRuntimeException;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.contracts.*;
 import nodecore.miners.pop.events.*;
+import nodecore.miners.pop.services.BitcoinService;
+import nodecore.miners.pop.services.NodeCoreService;
+import nodecore.miners.pop.services.PoPStateService;
 import nodecore.miners.pop.tasks.ProcessManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,8 +32,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class DefaultPoPMiner implements PoPMiner {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultPoPMiner.class);
+public class PoPMiner implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(PoPMiner.class);
 
     private final Configuration configuration;
     private final BitcoinService bitcoinService;
@@ -52,7 +55,7 @@ public class DefaultPoPMiner implements PoPMiner {
         return isReady();
     }
 
-    public DefaultPoPMiner(
+    public PoPMiner(
             Configuration configuration,
             BitcoinService bitcoinService,
             NodeCoreService nodeCoreService,
@@ -89,7 +92,6 @@ public class DefaultPoPMiner implements PoPMiner {
         }
     }
 
-    @Override
     public void shutdown() throws InterruptedException {
         InternalEventBus.getInstance().unregister(this);
 
@@ -98,12 +100,10 @@ public class DefaultPoPMiner implements PoPMiner {
         nodeCoreService.shutdown();
     }
 
-    @Override
     public boolean isReady() {
         return PoPMinerDependencies.SATISFIED.equals(readyConditions);
     }
 
-    @Override
     public List<OperationSummary> listOperations() {
         return operations.values().stream()
                 .map(state -> {
@@ -123,7 +123,6 @@ public class DefaultPoPMiner implements PoPMiner {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public PreservedPoPMiningOperationState getOperationState(String id) {
         PoPMiningOperationState state = stateService.getOperation(id);
 
@@ -146,7 +145,6 @@ public class DefaultPoPMiner implements PoPMiner {
         return result;
     }
 
-    @Override
     public MineResult mine(Integer blockNumber) {
         MineResult result = new MineResult();
         if (!readyToMine()) {
@@ -182,9 +180,8 @@ public class DefaultPoPMiner implements PoPMiner {
         return result;
     }
 
-    @Override
     public Result resubmit(String id) {
-        DefaultResult result = new DefaultResult();
+        Result result = new Result();
         if (!readyToMine()) {
             result.fail();
             List<String> reasons = listPendingReadyConditions();
@@ -208,7 +205,6 @@ public class DefaultPoPMiner implements PoPMiner {
         return result;
     }
 
-    @Override
     public String getMinerAddress() throws StatusRuntimeException {
         if (readyConditions.contains(PoPMinerDependencies.NODECORE_CONNECTED)) {
             return nodeCoreService.getMinerAddress();
@@ -217,22 +213,18 @@ public class DefaultPoPMiner implements PoPMiner {
         return null;
     }
 
-    @Override
     public Coin getBitcoinBalance() {
         return bitcoinService.getBalance();
     }
 
-    @Override
     public StoredBlock getLastBitcoinBlock() {
         return bitcoinService.getLastBlock();
     }
 
-    @Override
     public String getBitcoinReceiveAddress() {
         return bitcoinService.currentReceiveAddress();
     }
 
-    @Override
     public List<String> getWalletSeed() {
         KeyValueData data = keyValueRepository.get(Constants.WALLET_SEED_VIEWED_KEY);
         if (data == null || !data.value.equals("1")) {
@@ -244,7 +236,6 @@ public class DefaultPoPMiner implements PoPMiner {
         return null;
     }
 
-    @Override
     public void agreeToWalletSeedRequirement() {
         KeyValueData data = new KeyValueData();
         data.key = Constants.WALLET_SEED_VIEWED_KEY;
@@ -253,14 +244,12 @@ public class DefaultPoPMiner implements PoPMiner {
         keyValueRepository.insert(data);
     }
 
-    @Override
     public boolean importWallet(List<String> seedWords, Long creationDate) {
         return bitcoinService.importWallet(StringUtils.join(seedWords, " "), creationDate);
     }
 
-    @Override
     public Result sendBitcoinToAddress(String address, BigDecimal amount) {
-        Result result = new DefaultResult();
+        Result result = new Result();
 
         Coin coinAmount = Utility.amountToCoin(amount);
 
@@ -287,14 +276,12 @@ public class DefaultPoPMiner implements PoPMiner {
         return result;
     }
 
-    @Override
     public Pair<Integer, Long> showRecentBitcoinFees() {
         return bitcoinService.calculateFeesFromLatestBlock();
     }
 
-    @Override
     public Result resetBitcoinWallet() {
-        Result result = new DefaultResult();
+        Result result = new Result();
 
         bitcoinService.resetWallet();
 
@@ -303,9 +290,8 @@ public class DefaultPoPMiner implements PoPMiner {
         return result;
     }
 
-    @Override
     public Result exportBitcoinPrivateKeys() {
-        Result result = new DefaultResult();
+        Result result = new Result();
 
         try {
             String destination = String.format("keys-%d.txt", Instant.now().getEpochSecond());

@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.rules.conditions;
 
-import nodecore.miners.pop.contracts.Configuration;
+import nodecore.miners.pop.Configuration;
 
 public interface Condition<T> {
     boolean isActive(Configuration configuration);

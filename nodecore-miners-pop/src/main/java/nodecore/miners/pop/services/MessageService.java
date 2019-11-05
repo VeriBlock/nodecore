@@ -10,7 +10,6 @@ package nodecore.miners.pop.services;
 import com.google.common.eventbus.Subscribe;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.contracts.MessageEvent;
-import nodecore.miners.pop.contracts.MessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +19,14 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
-public class DefaultMessageService implements MessageService {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultMessageService.class);
+public class MessageService {
+    private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
     private final ConcurrentLinkedQueue<MessageEvent> queue;
 
     private CountDownLatch messageGate;
     private boolean running;
 
-    public DefaultMessageService() {
+    public MessageService() {
         this.queue = new ConcurrentLinkedQueue<>();
         this.messageGate = new CountDownLatch(1);
         this.running = true;
@@ -35,7 +34,6 @@ public class DefaultMessageService implements MessageService {
         InternalEventBus.getInstance().register(this);
     }
 
-    @Override
     public List<MessageEvent> getMessages() {
         if (!running) return Collections.emptyList();
 
@@ -55,7 +53,6 @@ public class DefaultMessageService implements MessageService {
         return messages;
     }
 
-    @Override
     public void shutdown() {
         this.running = false;
         messageGate.countDown();

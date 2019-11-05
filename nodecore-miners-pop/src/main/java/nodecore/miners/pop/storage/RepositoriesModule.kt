@@ -2,7 +2,7 @@ package nodecore.miners.pop.storage
 
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource
 import com.j256.ormlite.support.ConnectionSource
-import nodecore.miners.pop.contracts.Configuration
+import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.contracts.KeyValueRepository
 import nodecore.miners.pop.contracts.PoPRepository
 import org.koin.dsl.module
