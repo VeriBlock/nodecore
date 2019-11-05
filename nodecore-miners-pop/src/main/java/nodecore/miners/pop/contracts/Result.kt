@@ -5,33 +5,27 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts;
+package nodecore.miners.pop.contracts
 
-import java.util.ArrayList;
+import java.util.*
 
-public class Result {
-    private boolean failed;
-    private ArrayList<ResultMessage> messages;
+open class Result {
+    private var failed = false
+    val messages: ArrayList<ResultMessage> = ArrayList()
 
-    public Result() {
-        messages = new ArrayList<>();
+    fun fail() {
+        failed = true
     }
 
-    public void fail() { failed = true; }
-
-    public boolean didFail() {
-        return failed;
+    fun didFail(): Boolean {
+        return failed
     }
 
-    public ArrayList<ResultMessage> getMessages() {
-        return messages;
+    fun addMessage(code: String?, message: String?, details: String?, error: Boolean) {
+        messages.add(DefaultResultMessage(code, message, details, error))
     }
 
-    public void addMessage(String code, String message, String details, boolean error) {
-        messages.add(new DefaultResultMessage(code, message, details, error));
-    }
-
-    public void addMessage(ResultMessage resultMessage) {
-        messages.add(resultMessage);
+    fun addMessage(resultMessage: ResultMessage) {
+        messages.add(resultMessage)
     }
 }
