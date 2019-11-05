@@ -10,7 +10,7 @@ package nodecore.miners.pop.rules.conditions
 import io.kotlintest.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import nodecore.miners.pop.contracts.Configuration
+import nodecore.miners.pop.Configuration
 import org.junit.Test
 
 class Round3ConditionTests {

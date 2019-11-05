@@ -13,7 +13,6 @@ import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
 import nodecore.miners.pop.contracts.PoPRepository;
-import nodecore.miners.pop.contracts.PoPStateService;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
 import nodecore.miners.pop.storage.OperationStateData;
 import nodecore.miners.pop.storage.ProofOfProof;
@@ -28,17 +27,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DefaultPoPStateService implements PoPStateService {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultPoPStateService.class);
+public class PoPStateService {
+    private static final Logger logger = LoggerFactory.getLogger(PoPStateService.class);
 
     private final PoPRepository repository;
 
-    public DefaultPoPStateService(PoPRepository repository) {
+    public PoPStateService(PoPRepository repository) {
         this.repository = repository;
         InternalEventBus.getInstance().register(this);
     }
 
-    @Override
     public List<PoPMiningOperationState> getActiveOperations() {
         List<PoPMiningOperationState> operations = new ArrayList<>();
 
@@ -60,7 +58,6 @@ public class DefaultPoPStateService implements PoPStateService {
         return operations;
     }
 
-    @Override
     public PoPMiningOperationState getOperation(String id) {
         OperationStateData stateData = repository.getOperation(id);
         try {

@@ -10,10 +10,14 @@ package nodecore.miners.pop.tasks;
 import com.google.common.eventbus.Subscribe;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.BaseTask;
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.TaskResult;
 import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
 import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
 import nodecore.miners.pop.events.TransactionConfirmedEvent;
+import nodecore.miners.pop.services.BitcoinService;
+import nodecore.miners.pop.services.NodeCoreService;
 
 public class ProcessManager {
     private final NodeCoreService nodeCoreService;

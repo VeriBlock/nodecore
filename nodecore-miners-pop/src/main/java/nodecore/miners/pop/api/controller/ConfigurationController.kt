@@ -14,8 +14,8 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.put
+import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.api.model.SetConfigRequestPayload
-import nodecore.miners.pop.contracts.Configuration
 
 class ConfigurationController(
     private val configuration: Configuration

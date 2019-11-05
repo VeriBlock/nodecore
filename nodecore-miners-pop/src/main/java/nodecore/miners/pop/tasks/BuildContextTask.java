@@ -8,7 +8,11 @@
 package nodecore.miners.pop.tasks;
 
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.BaseTask;
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.TaskResult;
+import nodecore.miners.pop.services.BitcoinService;
+import nodecore.miners.pop.services.NodeCoreService;
 import org.bitcoinj.core.Block;
 
 import java.util.ArrayList;

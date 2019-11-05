@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.rules;
 
-import nodecore.miners.pop.contracts.Configuration;
+import nodecore.miners.pop.Configuration;
 import nodecore.miners.pop.contracts.VeriBlockHeader;
 import nodecore.miners.pop.rules.actions.RuleAction;
 import nodecore.miners.pop.rules.conditions.Condition;

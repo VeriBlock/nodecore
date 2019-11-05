@@ -10,7 +10,7 @@ package nodecore.miners.pop.shell.commands
 
 import com.google.gson.Gson
 import io.grpc.StatusRuntimeException
-import nodecore.miners.pop.contracts.PoPMiner
+import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.contracts.PoPOperationInfo
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandParameter

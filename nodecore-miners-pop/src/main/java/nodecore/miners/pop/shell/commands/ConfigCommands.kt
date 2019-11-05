@@ -8,7 +8,7 @@
 
 package nodecore.miners.pop.shell.commands
 
-import nodecore.miners.pop.contracts.Configuration
+import nodecore.miners.pop.Configuration
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
 import org.veriblock.shell.Shell

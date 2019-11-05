@@ -10,7 +10,7 @@ package nodecore.miners.pop.contracts;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CommandFactoryResult extends DefaultResult {
+public class CommandFactoryResult extends Result {
     private Map<String, Object> _parameters;
     private Command _command;
 

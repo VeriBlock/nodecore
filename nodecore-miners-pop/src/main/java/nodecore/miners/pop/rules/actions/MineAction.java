@@ -8,8 +8,8 @@
 package nodecore.miners.pop.rules.actions;
 
 import nodecore.miners.pop.InternalEventBus;
+import nodecore.miners.pop.PoPMiner;
 import nodecore.miners.pop.contracts.MineResult;
-import nodecore.miners.pop.contracts.PoPMiner;
 import nodecore.miners.pop.contracts.ResultMessage;
 import nodecore.miners.pop.events.ErrorMessageEvent;
 import org.apache.commons.lang3.StringUtils;

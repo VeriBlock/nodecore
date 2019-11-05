@@ -7,16 +7,31 @@
 
 package nodecore.miners.pop.contracts;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public interface Result {
-    void fail();
+public class Result {
+    private boolean failed;
+    private ArrayList<ResultMessage> messages;
 
-    boolean didFail();
+    public Result() {
+        messages = new ArrayList<>();
+    }
 
-    List<ResultMessage> getMessages();
+    public void fail() { failed = true; }
 
-    void addMessage(String code, String message, String details, boolean error);
+    public boolean didFail() {
+        return failed;
+    }
 
-    void addMessage(ResultMessage resultMessage);
+    public ArrayList<ResultMessage> getMessages() {
+        return messages;
+    }
+
+    public void addMessage(String code, String message, String details, boolean error) {
+        messages.add(new DefaultResultMessage(code, message, details, error));
+    }
+
+    public void addMessage(ResultMessage resultMessage) {
+        messages.add(resultMessage);
+    }
 }

@@ -15,7 +15,6 @@ import org.junit.*;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 public class PreservedPoPMiningOperationStateTests {

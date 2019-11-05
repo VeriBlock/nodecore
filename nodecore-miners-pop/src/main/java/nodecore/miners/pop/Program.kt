@@ -10,9 +10,9 @@ package nodecore.miners.pop
 import com.google.common.eventbus.Subscribe
 import nodecore.miners.pop.api.ApiServer
 import nodecore.miners.pop.api.webApiModule
-import nodecore.miners.pop.contracts.*
 import nodecore.miners.pop.events.ShellCompletedEvent
 import nodecore.miners.pop.rules.rulesModule
+import nodecore.miners.pop.services.MessageService
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.storage.repositoryModule
 import org.bitcoinj.core.Context

@@ -8,9 +8,9 @@
 package nodecore.miners.pop.contracts;
 
 import com.google.gson.annotations.SerializedName;
-import org.veriblock.core.crypto.Crypto;
 import nodecore.miners.pop.common.Utility;
 import org.bitcoinj.core.Base58;
+import org.veriblock.core.crypto.Crypto;
 
 import java.util.List;
 import java.util.stream.Collectors;

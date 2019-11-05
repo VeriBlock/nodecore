@@ -26,7 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.BlockUtility;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class PoPMiningOperationState {
