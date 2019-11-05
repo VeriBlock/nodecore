@@ -163,6 +163,12 @@ public class LedgerProofWithContext {
             builder.addLedgerProofContextLayers(ByteString.copyFrom(topPath[i]));
         }
 
+        VeriBlockMessages.BlockHeader.Builder blockHeaderBuilder = VeriBlockMessages.BlockHeader.newBuilder();
+        blockHeaderBuilder.setHeader(ByteString.copyFrom(containingHeader));
+        blockHeaderBuilder.setHash(ByteString.copyFrom(Utility.hexToBytes(BlockUtility.hashBlock(containingHeader))));
+
+        builder.setBlockHeader(blockHeaderBuilder);
+
         return builder;
     }
 
