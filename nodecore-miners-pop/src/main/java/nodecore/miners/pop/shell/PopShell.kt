@@ -9,7 +9,6 @@ package nodecore.miners.pop.shell
 
 import com.google.common.eventbus.Subscribe
 import com.google.gson.GsonBuilder
-import com.google.inject.Inject
 import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.InternalEventBus
@@ -32,7 +31,7 @@ import org.veriblock.shell.Shell
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
 
-class PopShell @Inject constructor(
+class PopShell(
     private val miner: PoPMiner,
     private val messageService: MessageService,
     configuration: Configuration,
