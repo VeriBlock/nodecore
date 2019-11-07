@@ -19,10 +19,7 @@ public class Threading {
 
     static {
         TASK_POOL = Executors.newFixedThreadPool(50,
-                new ThreadFactoryBuilder()
-                        .setNameFormat("pop-tasks-%d")
-                        .setThreadFactory(new ContextPropagatingThreadFactory("pop-tasks"))
-                        .build());
+                new ThreadFactoryBuilder().setNameFormat("pop-tasks-%d").setThreadFactory(new ContextPropagatingThreadFactory("pop-tasks")).build());
     }
 
     public static void shutdown() {

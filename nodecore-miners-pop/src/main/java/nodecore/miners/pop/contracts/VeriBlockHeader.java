@@ -68,10 +68,14 @@ public class VeriBlockHeader {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (!(obj instanceof VeriBlockHeader)) return false;
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof VeriBlockHeader)) {
+            return false;
+        }
 
-        VeriBlockHeader compare = (VeriBlockHeader)obj;
+        VeriBlockHeader compare = (VeriBlockHeader) obj;
         return Arrays.equals(this.bytes, compare.bytes);
     }
 

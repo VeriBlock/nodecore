@@ -17,29 +17,64 @@ import java.util.stream.Collectors;
 
 public class PoPMiningTransaction {
     private byte[] endorsedBlockHeader_;
-    public byte[] getEndorsedBlockHeader() { return endorsedBlockHeader_; }
-    private void setEndorsedBlockHeader(byte[] value) { endorsedBlockHeader_ = value; }
+
+    public byte[] getEndorsedBlockHeader() {
+        return endorsedBlockHeader_;
+    }
+
+    private void setEndorsedBlockHeader(byte[] value) {
+        endorsedBlockHeader_ = value;
+    }
 
     private byte[] bitcoinTransaction_;
-    public byte[] getBitcoinTransaction() { return bitcoinTransaction_; }
-    private void setBitcoinTransaction(byte[] value) { bitcoinTransaction_ = value; }
+
+    public byte[] getBitcoinTransaction() {
+        return bitcoinTransaction_;
+    }
+
+    private void setBitcoinTransaction(byte[] value) {
+        bitcoinTransaction_ = value;
+    }
 
     private byte[] bitcoinMerklePathToRoot_;
-    public byte[] getBitcoinMerklePathToRoot() { return bitcoinMerklePathToRoot_; }
-    private void setBitcoinMerklePathToRoot(byte[] value) { bitcoinMerklePathToRoot_ = value; }
+
+    public byte[] getBitcoinMerklePathToRoot() {
+        return bitcoinMerklePathToRoot_;
+    }
+
+    private void setBitcoinMerklePathToRoot(byte[] value) {
+        bitcoinMerklePathToRoot_ = value;
+    }
 
     private byte[] bitcoinBlockHeaderOfProof_;
-    public byte[] getBitcoinBlockHeaderOfProof() { return bitcoinBlockHeaderOfProof_; }
-    private void setBitcoinBlockHeaderOfProof(byte[] value) { bitcoinBlockHeaderOfProof_ = value; }
+
+    public byte[] getBitcoinBlockHeaderOfProof() {
+        return bitcoinBlockHeaderOfProof_;
+    }
+
+    private void setBitcoinBlockHeaderOfProof(byte[] value) {
+        bitcoinBlockHeaderOfProof_ = value;
+    }
 
     private byte[][] bitcoinContextBlocks_;
-    public byte[][] getBitcoinContextBlocks() { return bitcoinContextBlocks_; }
-    private void setBitcoinContextBlocks(byte[][] value) { bitcoinContextBlocks_ = value; }
+
+    public byte[][] getBitcoinContextBlocks() {
+        return bitcoinContextBlocks_;
+    }
+
+    private void setBitcoinContextBlocks(byte[][] value) {
+        bitcoinContextBlocks_ = value;
+    }
 
     private byte[] popMinerAddress_;
-    public byte[] getPopMinerAddress() { return popMinerAddress_; }
-    private void setPopMinerAddress(byte[] value) { popMinerAddress_ = value; }
 
+    public byte[] getPopMinerAddress() {
+        return popMinerAddress_;
+    }
+
+    private void setPopMinerAddress(byte[] value) {
+        popMinerAddress_ = value;
+    }
 
     public static Builder newBuilder() {
         return new Builder();
@@ -51,35 +86,55 @@ public class PoPMiningTransaction {
         }
 
         private PoPMiningInstruction popMiningInstruction_;
-        public PoPMiningInstruction getPopMiningInstruction() {return popMiningInstruction_;}
+
+        public PoPMiningInstruction getPopMiningInstruction() {
+            return popMiningInstruction_;
+        }
+
         public Builder setPopMiningInstruction(PoPMiningInstruction value) {
             popMiningInstruction_ = value;
             return this;
         }
 
         private Transaction bitcoinTransaction_;
-        public Transaction getBitcoinTransaction() { return bitcoinTransaction_; }
+
+        public Transaction getBitcoinTransaction() {
+            return bitcoinTransaction_;
+        }
+
         public Builder setBitcoinTransaction(Transaction value) {
             bitcoinTransaction_ = value;
             return this;
         }
 
         private String bitcoinMerklePathToRoot_;
-        public String getBitcoinMerklePathToRoot() { return bitcoinMerklePathToRoot_; }
+
+        public String getBitcoinMerklePathToRoot() {
+            return bitcoinMerklePathToRoot_;
+        }
+
         public Builder setBitcoinMerklePathToRoot(String value) {
             bitcoinMerklePathToRoot_ = value;
             return this;
         }
 
         private Block bitcoinBlockHeaderOfProof_;
-        public Block getBitcoinBlockHeaderOfProof() { return bitcoinBlockHeaderOfProof_; }
+
+        public Block getBitcoinBlockHeaderOfProof() {
+            return bitcoinBlockHeaderOfProof_;
+        }
+
         public Builder setBitcoinBlockHeaderOfProof(Block value) {
             bitcoinBlockHeaderOfProof_ = value;
             return this;
         }
 
         private List<Block> bitcoinContextBlocks_;
-        public List<Block> getBitcoinContextBlocks() { return bitcoinContextBlocks_; }
+
+        public List<Block> getBitcoinContextBlocks() {
+            return bitcoinContextBlocks_;
+        }
+
         public Builder setBitcoinContextBlocks(List<Block> value) {
             bitcoinContextBlocks_ = value;
             return this;
@@ -92,9 +147,7 @@ public class PoPMiningTransaction {
             transaction.setBitcoinMerklePathToRoot(getBitcoinMerklePathToRoot().getBytes());
             transaction.setBitcoinBlockHeaderOfProof(Utility.serializeBlock(getBitcoinBlockHeaderOfProof()));
 
-            List<byte[]> blockHeaders = getBitcoinContextBlocks().stream()
-                    .map(Utility::serializeBlock)
-                    .collect(Collectors.toList());
+            List<byte[]> blockHeaders = getBitcoinContextBlocks().stream().map(Utility::serializeBlock).collect(Collectors.toList());
             byte[][] contextHeaders = new byte[blockHeaders.size()][];
 
             transaction.setBitcoinContextBlocks(blockHeaders.toArray(contextHeaders));

@@ -63,12 +63,14 @@ public class ProcessManager {
         }
     }
 
-    @Subscribe public void onTransactionConfirmed(TransactionConfirmedEvent event) {
+    @Subscribe
+    public void onTransactionConfirmed(TransactionConfirmedEvent event) {
         BaseTask task = new DetermineBlockOfProofTask(nodeCoreService, bitcoinService);
         Threading.TASK_POOL.submit(() -> executeTask(task, event.getState()));
     }
 
-    @Subscribe public void onFilteredBlockAvailable(FilteredBlockAvailableEvent event) {
+    @Subscribe
+    public void onFilteredBlockAvailable(FilteredBlockAvailableEvent event) {
         BaseTask task = new ProveTransactionTask(nodeCoreService, bitcoinService);
         Threading.TASK_POOL.submit(() -> executeTask(task, event.getState()));
     }

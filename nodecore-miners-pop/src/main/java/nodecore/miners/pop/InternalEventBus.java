@@ -15,11 +15,13 @@ public final class InternalEventBus {
     private static final Logger logger = LoggerFactory.getLogger(InternalEventBus.class);
 
     private static InternalEventBus ourInstance = new InternalEventBus();
+
     public static InternalEventBus getInstance() {
         return ourInstance;
     }
 
     private final EventBus eventBus;
+
     private InternalEventBus() {
         this.eventBus = new EventBus();
     }

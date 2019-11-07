@@ -25,9 +25,21 @@
 package nodecore.miners.pop.shims;
 
 import nodecore.miners.pop.common.Utility;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.ScriptException;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
-import org.bitcoinj.wallet.*;
+import org.bitcoinj.wallet.CoinSelection;
+import org.bitcoinj.wallet.CoinSelector;
+import org.bitcoinj.wallet.DefaultCoinSelector;
+import org.bitcoinj.wallet.SendRequest;
+import org.bitcoinj.wallet.Wallet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +56,9 @@ import static com.google.common.base.Preconditions.checkState;
  * inputs are pre-selected the transaction size is under-estimated by nearly 40%, resulting in a much lower transaction
  * fee than configured by the feePerKB setting. The methods contained in this WalletShim class have been extracted
  * from the bitcoinj Github repository as of 11/1/2018.
- *
+ * <p>
  * See https://github.com/bitcoinj/bitcoinj/tree/2992cc16ff2ccd0c42b68469e90d0cc38a1e54d9.
- *
+ * <p>
  * The hope is that the next release of the bitcoinj package contains these improvements and the shim can be removed.
  */
 public class WalletShim {
@@ -68,24 +80,30 @@ public class WalletShim {
 
         // If any inputs have already been added, we don't need to get their value from wallet
         Coin totalInput = Coin.ZERO;
-        for (TransactionInput input : req.tx.getInputs())
-            if (input.getConnectedOutput() != null)
+        for (TransactionInput input : req.tx.getInputs()) {
+            if (input.getConnectedOutput() != null) {
                 totalInput = totalInput.add(input.getConnectedOutput().getValue());
-            else
+            } else {
                 log.warn("SendRequest transaction already has inputs but we don't know how much they are worth - they will be added to fee.");
+            }
+        }
         value = value.subtract(totalInput);
 
         // Check for dusty sends and the OP_RETURN limit.
         if (req.ensureMinRequiredFee && !req.emptyWallet) { // Min fee checking is handled later for emptyWallet.
             int opReturnCount = 0;
             for (TransactionOutput output : req.tx.getOutputs()) {
-                if (output.isDust())
+                if (output.isDust()) {
                     throw new Wallet.DustySendRequested();
-                if (ScriptPattern.isOpReturn(output.getScriptPubKey()))
+                }
+                if (ScriptPattern.isOpReturn(output.getScriptPubKey())) {
                     ++opReturnCount;
+                }
             }
             if (opReturnCount > 1) // Only 1 OP_RETURN per transaction allowed.
+            {
                 throw new Wallet.MultipleOpReturnRequested();
+            }
         }
 
         // Calculate a list of ALL potential candidates for spending and then ask a coin selector to provide us
@@ -104,8 +122,9 @@ public class WalletShim {
         bestChangeOutput = feeCalculation.bestChangeOutput;
         updatedOutputValues = feeCalculation.updatedOutputValues;
 
-        for (TransactionOutput output : bestCoinSelection.gathered)
+        for (TransactionOutput output : bestCoinSelection.gathered) {
             req.tx.addInput(output);
+        }
 
         if (updatedOutputValues != null) {
             for (int i = 0; i < updatedOutputValues.size(); i++) {
@@ -119,17 +138,20 @@ public class WalletShim {
         }
 
         // Now shuffle the outputs to obfuscate which is the change.
-        if (req.shuffleOutputs)
+        if (req.shuffleOutputs) {
             req.tx.shuffleOutputs();
+        }
 
         // Now sign the inputs, thus proving that we are entitled to redeem the connected outputs.
-        if (req.signInputs)
+        if (req.signInputs) {
             wallet.signTransaction(req);
+        }
 
         // Check size.
         final int size = req.tx.unsafeBitcoinSerialize().length;
-        if (size > Transaction.MAX_STANDARD_TX_SIZE)
+        if (size > Transaction.MAX_STANDARD_TX_SIZE) {
             throw new Wallet.ExceededMaxTransactionSize();
+        }
 
         // Label the transaction as being self created. We can use this later to spend its change output even before
         // the transaction is confirmed. We deliberately won't bother notifying listeners here as there's not much
@@ -158,7 +180,11 @@ public class WalletShim {
 
     //region Fee calculation code
 
-    private static FeeCalculation calculateFee(Wallet wallet, SendRequest req, Coin value, boolean needAtLeastReferenceFee, List<TransactionOutput> candidates) throws InsufficientMoneyException {
+    private static FeeCalculation calculateFee(Wallet wallet,
+                                               SendRequest req,
+                                               Coin value,
+                                               boolean needAtLeastReferenceFee,
+                                               List<TransactionOutput> candidates) throws InsufficientMoneyException {
         FeeCalculation result;
         Coin fee = Coin.ZERO;
         while (true) {
@@ -170,8 +196,7 @@ public class WalletShim {
             valueNeeded = valueNeeded.add(fee);
 
             for (int i = 0; i < req.tx.getOutputs().size(); i++) {
-                TransactionOutput output = new TransactionOutput(wallet.getParams(), tx,
-                        req.tx.getOutputs().get(i).bitcoinSerialize(), 0);
+                TransactionOutput output = new TransactionOutput(wallet.getParams(), tx, req.tx.getOutputs().get(i).bitcoinSerialize(), 0);
                 tx.addOutput(output);
             }
             CoinSelector selector = req.coinSelector == null ? DEFAULT_SELECTOR : req.coinSelector;
@@ -189,8 +214,9 @@ public class WalletShim {
                 // we need to take back some coins ... this is called "change". Add another output that sends the change
                 // back to us. The address comes either from the request or currentChangeAddress() as a default.
                 Address changeAddress = req.changeAddress;
-                if (changeAddress == null)
+                if (changeAddress == null) {
                     changeAddress = wallet.currentChangeAddress();
+                }
                 TransactionOutput changeOutput = new TransactionOutput(wallet.getParams(), tx, change, changeAddress);
                 if (changeOutput.isDust()) {
                     // Never create dust outputs; if we would, just
@@ -230,12 +256,12 @@ public class WalletShim {
             fee = feeNeeded;
         }
         return result;
-
     }
 
     private static void addSuppliedInputs(Wallet wallet, Transaction tx, List<TransactionInput> originalInputs) {
-        for (TransactionInput input : originalInputs)
+        for (TransactionInput input : originalInputs) {
             tx.addInput(new TransactionInput(wallet.getParams(), tx, input.bitcoinSerialize()));
+        }
     }
 
     private static int estimateBytesForSigning(Wallet wallet, CoinSelection selection) {
@@ -262,12 +288,16 @@ public class WalletShim {
         return size;
     }
 
-    private static boolean adjustOutputDownwardsForFee(Wallet wallet, Transaction tx, CoinSelection coinSelection, Coin feePerKb,
-                                                boolean ensureMinRequiredFee) {
+    private static boolean adjustOutputDownwardsForFee(Wallet wallet,
+                                                       Transaction tx,
+                                                       CoinSelection coinSelection,
+                                                       Coin feePerKb,
+                                                       boolean ensureMinRequiredFee) {
         final int size = tx.unsafeBitcoinSerialize().length + estimateBytesForSigning(wallet, coinSelection);
         Coin fee = feePerKb.multiply(size).divide(1000);
-        if (ensureMinRequiredFee && fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
+        if (ensureMinRequiredFee && fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0) {
             fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+        }
         TransactionOutput output = tx.getOutput(0);
         output.setValue(output.getValue().subtract(fee));
         return !output.isDust();

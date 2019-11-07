@@ -8,10 +8,17 @@
 package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.ApplicationExceptions;
+import nodecore.miners.pop.contracts.BaseTask;
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.PoPMiningTransaction;
+import nodecore.miners.pop.contracts.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 
+/**
+ * Sixth and last task that will be executed in a mining operation
+ */
 public class SubmitPoPEndorsementTask extends BaseTask {
     @Override
     public BaseTask getNext() {
@@ -38,8 +45,7 @@ public class SubmitPoPEndorsementTask extends BaseTask {
         } catch (ApplicationExceptions.PoPSubmitRejected e) {
             logger.error("NodeCore rejected PoP submission");
             return failTask(state, "NodeCore rejected PoP submission. Check NodeCore logs for detail.");
-        }
-        catch (StatusRuntimeException e) {
+        } catch (StatusRuntimeException e) {
             logger.error("Failed to submit PoP transaction to NodeCore: {}", e.getStatus());
             return failTask(state, "Unable to submit PoP transaction to NodeCore. Check that NodeCore RPC is available and resubmit operation.");
         }

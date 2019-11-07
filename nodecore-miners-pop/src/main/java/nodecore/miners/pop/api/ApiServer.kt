@@ -68,7 +68,7 @@ class ApiServer(
             install(Routing) {
                 route("/api") {
                     for (controller in controllers) {
-                        with (controller) {
+                        with(controller) {
                             registerApi()
                         }
                     }

@@ -12,6 +12,7 @@ import nodecore.miners.pop.contracts.MessageEvent;
 public class SuccessMessageEvent implements MessageEvent {
 
     private final String message;
+
     @Override
     public String getMessage() {
         return message;

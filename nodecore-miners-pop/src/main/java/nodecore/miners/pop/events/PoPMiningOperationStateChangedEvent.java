@@ -13,12 +13,16 @@ import java.util.List;
 
 public class PoPMiningOperationStateChangedEvent {
     private PoPMiningOperationState state;
+
     public PoPMiningOperationState getState() {
         return state;
     }
 
     private List<String> messages;
-    public List<String> getMessages() { return messages; }
+
+    public List<String> getMessages() {
+        return messages;
+    }
 
     public PoPMiningOperationStateChangedEvent(PoPMiningOperationState state, List<String> messages) {
         this.state = state;

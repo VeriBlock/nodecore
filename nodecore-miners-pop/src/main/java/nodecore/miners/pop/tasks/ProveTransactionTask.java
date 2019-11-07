@@ -23,6 +23,9 @@ import org.bitcoinj.core.Transaction;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fourth task that will be executed in a mining operation
+ */
 public class ProveTransactionTask extends BaseTask {
     @Override
     public BaseTask getNext() {
@@ -59,8 +62,7 @@ public class ProveTransactionTask extends BaseTask {
                         }
                     } catch (Exception e) {
                         logger.error("Unable to validate Merkle path for transaction", e);
-                        failureReason = "Unable to prove transaction " + state.getSubmittedTransactionId() +
-                                " in block " + block.getHashAsString();
+                        failureReason = "Unable to prove transaction " + state.getSubmittedTransactionId() + " in block " + block.getHashAsString();
                     }
                 } else {
                     failureReason = "Unable to construct Merkle proof for block " + block.getHashAsString();
@@ -70,10 +72,8 @@ public class ProveTransactionTask extends BaseTask {
             }
 
             // Retrieving the Merkle path from the PartialMerkleTree failed, try creating manually from the whole block
-            logger.info("Unable to calculate the correct Merkle path for transaction " +
-                    state.getTransaction().getHashAsString() + " in block " +
-                    state.getBitcoinBlockHeaderOfProof().getHashAsString() +
-                    " from a FilteredBlock, trying a fully downloaded block!");
+            logger.info("Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getHashAsString() + " in block " +
+                    state.getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock, trying a fully downloaded block!");
 
             Block fullBlock = bitcoinService.downloadBlock(state.getBitcoinBlockHeaderOfProof().getHash());
             List<Transaction> allTransactions = fullBlock.getTransactions();
@@ -86,19 +86,15 @@ public class ProveTransactionTask extends BaseTask {
             BitcoinMerkleTree bmt = new BitcoinMerkleTree(true, txids);
             BitcoinMerklePath merklePath = bmt.getPathFromTxID(state.getSubmittedTransactionId());
 
-            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBitcoinBlockHeaderOfProof()
-                    .getMerkleRoot().toString())) {
+            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBitcoinBlockHeaderOfProof().getMerkleRoot().toString())) {
                 state.onTransactionProven(merklePath.getCompactFormat());
                 return TaskResult.succeed(state, getNext());
             } else {
-                logger.error("Unable to calculate the correct Merkle path for transaction " +
-                        state.getTransaction().getHashAsString() + " in block " +
-                        state.getBitcoinBlockHeaderOfProof().getHashAsString() +
-                        " from a FilteredBlock or a fully downloaded block!");
+                logger.error(
+                        "Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getHashAsString() + " in block " +
+                                state.getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock or a fully downloaded block!");
                 return failProcess(state, failureReason);
             }
-
-
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return failProcess(state, "Error proving transaction, see log for more detail.");

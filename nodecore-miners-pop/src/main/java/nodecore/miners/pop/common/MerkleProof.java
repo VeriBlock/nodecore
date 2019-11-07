@@ -14,7 +14,11 @@ import org.bitcoinj.core.VerificationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.bitcoinj.core.Utils.checkBitLE;
 import static org.bitcoinj.core.Utils.reverseBytes;
@@ -38,7 +42,9 @@ public class MerkleProof {
     }
 
     public String getCompactPath(Sha256Hash txId) {
-        if (positions == null || tree == null) throw new IllegalStateException("Tree has not been initialized");
+        if (positions == null || tree == null) {
+            throw new IllegalStateException("Tree has not been initialized");
+        }
 
         Integer txPosition = positions.get(txId);
         if (txPosition == null) {
@@ -49,8 +55,7 @@ public class MerkleProof {
 
         int pos = txPosition;
         /* Fill up the path with the corresponding nodes */
-        for (int i = 0; i < tree.length; i++)
-        {
+        for (int i = 0; i < tree.length; i++) {
             int elementIndex = (pos % 2 == 0) ? pos + 1 : pos - 1;
             if (elementIndex == tree[i].length) {
                 elementIndex = elementIndex - 1;
@@ -84,10 +89,11 @@ public class MerkleProof {
         ValuesUsed used = new ValuesUsed();
         recursiveExtractHashes(height, 0, used);
 
-        if ((used.bitsUsed+7)/8 != matchedChildBits.length ||
+        if ((used.bitsUsed + 7) / 8 != matchedChildBits.length ||
                 // verify that all hashes were consumed
-                used.hashesUsed != hashes.size())
+                used.hashesUsed != hashes.size()) {
             throw new VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided");
+        }
     }
 
     private Sha256Hash get(int height, int offset) {
@@ -96,10 +102,14 @@ public class MerkleProof {
         }
 
         Sha256Hash element = tree[height][offset];
-        if (element != null) return element;
+        if (element != null) {
+            return element;
+        }
 
         // Return a ZERO HASH because we can't descend any further
-        if (height == 0) return Sha256Hash.ZERO_HASH;
+        if (height == 0) {
+            return Sha256Hash.ZERO_HASH;
+        }
 
         return combineLeftRight(get(height - 1, offset * 2).getBytes(), get(height - 1, (offset * 2) + 1).getBytes());
     }
@@ -118,7 +128,7 @@ public class MerkleProof {
     // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
     // it returns the hash of the respective node.
     private Sha256Hash recursiveExtractHashes(int height, int pos, ValuesUsed used) throws VerificationException {
-        if (used.bitsUsed >= matchedChildBits.length*8) {
+        if (used.bitsUsed >= matchedChildBits.length * 8) {
             // overflowed the bits array - failure
             throw new VerificationException("PartialMerkleTree overflowed its bits array");
         }
@@ -138,10 +148,11 @@ public class MerkleProof {
         } else {
             // otherwise, descend into the subtrees to extract matched txids and hashes
             byte[] left = recursiveExtractHashes(height - 1, pos * 2, used).getBytes(), right;
-            if (pos * 2 + 1 < getTreeWidth(transactionCount, height-1)) {
+            if (pos * 2 + 1 < getTreeWidth(transactionCount, height - 1)) {
                 right = recursiveExtractHashes(height - 1, pos * 2 + 1, used).getBytes();
-                if (Arrays.equals(right, left))
+                if (Arrays.equals(right, left)) {
                     throw new VerificationException("Invalid merkle tree with duplicated left/right branches");
+                }
             } else {
                 right = left;
             }
@@ -151,16 +162,14 @@ public class MerkleProof {
     }
 
     private static Sha256Hash combineLeftRight(byte[] left, byte[] right) {
-        return Sha256Hash.wrapReversed(Sha256Hash.hashTwice(
-                reverseBytes(left), 0, 32,
-                reverseBytes(right), 0, 32));
+        return Sha256Hash.wrapReversed(Sha256Hash.hashTwice(reverseBytes(left), 0, 32, reverseBytes(right), 0, 32));
     }
 
     @SuppressWarnings("unchecked")
     public static MerkleProof parse(PartialMerkleTree partialMerkleTree) {
         try {
             List<Sha256Hash> hashes = (List<Sha256Hash>) FieldUtils.readField(partialMerkleTree, "hashes", true);
-            byte[] bits = (byte[])FieldUtils.readField(partialMerkleTree, "matchedChildBits", true);
+            byte[] bits = (byte[]) FieldUtils.readField(partialMerkleTree, "matchedChildBits", true);
 
             return new MerkleProof(hashes, bits, partialMerkleTree.getTransactionCount());
         } catch (IllegalAccessException e) {

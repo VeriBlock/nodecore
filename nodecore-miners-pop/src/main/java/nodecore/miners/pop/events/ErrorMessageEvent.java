@@ -16,6 +16,7 @@ public class ErrorMessageEvent implements MessageEvent {
     }
 
     private final String message;
+
     @Override
     public String getMessage() {
         return message;

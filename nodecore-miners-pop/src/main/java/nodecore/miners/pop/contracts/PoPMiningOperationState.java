@@ -236,7 +236,9 @@ public class PoPMiningOperationState {
     }
 
     private void unregisterListeners(Transaction transaction) {
-        if (transaction == null) return;
+        if (transaction == null) {
+            return;
+        }
 
         transaction.getConfidence().removeEventListener(txConfidenceListener);
 
@@ -249,8 +251,13 @@ public class PoPMiningOperationState {
 
     private PoPMiningOperationState _this = this;
     private TransactionConfidence.Listener txConfidenceListener = (confidence, reason) -> {
-        logger.info("[{}] TransactionConfidence listener called: {} - {}", _this.getOperationId(), reason.name(), confidence.getConfidenceType().name());
-        if (reason != TransactionConfidence.Listener.ChangeReason.TYPE) return;
+        logger.info("[{}] TransactionConfidence listener called: {} - {}",
+                _this.getOperationId(),
+                reason.name(),
+                confidence.getConfidenceType().name());
+        if (reason != TransactionConfidence.Listener.ChangeReason.TYPE) {
+            return;
+        }
 
         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
             onBitcoinReorganize();
@@ -261,18 +268,27 @@ public class PoPMiningOperationState {
     private ListenableFuture<TransactionConfidence> futureDepthListener;
 
     private String operationId;
-    public String getOperationId() { return operationId; }
+
+    public String getOperationId() {
+        return operationId;
+    }
 
     private Integer blockNumber;
+
     public Integer getBlockNumber() {
         return blockNumber;
     }
+
     private void setBlockNumber(Integer value) {
         blockNumber = value;
     }
 
     private PoPMiningOperationStatus status;
-    public PoPMiningOperationStatus getStatus() { return status; }
+
+    public PoPMiningOperationStatus getStatus() {
+        return status;
+    }
+
     private String setStatus(PoPMiningOperationStatus value) {
         if (value != null && !value.equals(status)) {
             status = value;
@@ -281,7 +297,11 @@ public class PoPMiningOperationState {
     }
 
     private PoPMiningOperationState.Action currentAction;
-    public Action getCurrentAction() { return currentAction; }
+
+    public Action getCurrentAction() {
+        return currentAction;
+    }
+
     public String getCurrentActionAsString() {
         switch (currentAction) {
             case READY:
@@ -306,6 +326,7 @@ public class PoPMiningOperationState {
 
         return "";
     }
+
     private String setCurrentAction(Action value) {
         if (currentAction == null || !currentAction.equals(value)) {
             currentAction = value;
@@ -314,85 +335,125 @@ public class PoPMiningOperationState {
     }
 
     private PoPMiningInstruction miningInstruction;
-    public PoPMiningInstruction getMiningInstruction() { return miningInstruction; }
+
+    public PoPMiningInstruction getMiningInstruction() {
+        return miningInstruction;
+    }
+
     private void setMiningInstruction(PoPMiningInstruction value) {
         miningInstruction = value;
     }
 
     private byte[] transactionBytes;
+
     public byte[] getTransactionBytes() {
         return transactionBytes;
     }
-    private void setTransactionBytes(byte[] value ) {
+
+    private void setTransactionBytes(byte[] value) {
         transactionBytes = value;
     }
 
     private Transaction transaction;
-    public Transaction getTransaction() { return transaction; }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
+
     public void setTransaction(Transaction value) {
         transaction = value;
     }
 
     private String submittedTransactionId;
-    public String getSubmittedTransactionId() { return submittedTransactionId; }
+
+    public String getSubmittedTransactionId() {
+        return submittedTransactionId;
+    }
+
     private void setSubmittedTransactionId(String value) {
         submittedTransactionId = value;
     }
 
     private TransactionStatus transactionStatus;
+
     public TransactionStatus getTransactionStatus() {
         return transactionStatus;
     }
+
     private void setTransactionStatus(TransactionStatus value) {
         transactionStatus = value;
     }
 
     private byte[] bitcoinBlockHeaderOfProofBytes;
-    public byte[] getBitcoinBlockHeaderOfProofBytes() { return bitcoinBlockHeaderOfProofBytes; }
+
+    public byte[] getBitcoinBlockHeaderOfProofBytes() {
+        return bitcoinBlockHeaderOfProofBytes;
+    }
+
     private void setBitcoinBlockHeaderOfProofBytes(byte[] value) {
         bitcoinBlockHeaderOfProofBytes = value;
     }
 
     private Block bitcoinBlockHeaderOfProof;
-    public Block getBitcoinBlockHeaderOfProof() { return bitcoinBlockHeaderOfProof; }
+
+    public Block getBitcoinBlockHeaderOfProof() {
+        return bitcoinBlockHeaderOfProof;
+    }
+
     public void setBitcoinBlockHeaderOfProof(Block value) {
         bitcoinBlockHeaderOfProof = value;
     }
 
     private List<byte[]> bitcoinContextBlocksBytes;
+
     public List<byte[]> getBitcoinContextBlocksBytes() {
         return bitcoinContextBlocksBytes;
     }
+
     private void setBitcoinContextBlocksBytes(List<byte[]> value) {
         this.bitcoinContextBlocksBytes = value;
     }
 
     private List<Block> bitcoinContextBlocks;
-    public List<Block> getBitcoinContextBlocks() { return bitcoinContextBlocks; }
+
+    public List<Block> getBitcoinContextBlocks() {
+        return bitcoinContextBlocks;
+    }
+
     public void setBitcoinContextBlocks(List<Block> value) {
         bitcoinContextBlocks = value;
     }
 
     private String merklePath;
-    public String getMerklePath() { return merklePath; }
+
+    public String getMerklePath() {
+        return merklePath;
+    }
+
     private void setMerklePath(String value) {
         merklePath = value;
     }
 
     private String popTransactionId;
+
     public String getPopTransactionId() {
         return popTransactionId;
     }
+
     private void setPopTransactionId(String value) {
         popTransactionId = value;
     }
 
     private String message;
+
     public String getMessage() {
-        if (message == null) return "";
+        if (message == null) {
+            return "";
+        }
 
         return message;
     }
+
     private void setMessage(String value) {
         message = value;
     }
@@ -411,7 +472,7 @@ public class PoPMiningOperationState {
         private String popTransactionId_;
         private String message_;
         private TransactionStatus transactionStatus_;
-        
+
         public PoPMiningOperationStateBuilder setOperationId(String value) {
             operationId_ = value;
             return this;
@@ -421,7 +482,7 @@ public class PoPMiningOperationState {
             status_ = value;
             return this;
         }
-        
+
         public PoPMiningOperationStateBuilder parseStatus(String value) {
             switch (value) {
                 case "RUNNING":
@@ -441,7 +502,7 @@ public class PoPMiningOperationState {
             currentAction_ = value;
             return this;
         }
-        
+
         public PoPMiningOperationStateBuilder parseCurrentAction(String value) {
             switch (value) {
                 case "READY":

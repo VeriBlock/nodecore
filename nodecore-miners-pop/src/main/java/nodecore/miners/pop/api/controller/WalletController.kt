@@ -20,9 +20,9 @@ class WalletController(
             val result = miner.sendBitcoinToAddress(address, amount)
             if (result.didFail()) {
                 throw CallFailureException(
-                    result.messages.firstOrNull()?.let {  rm ->
+                    result.messages.firstOrNull()?.let { rm ->
                         rm.message + (rm.details.firstOrNull()?.let { "; $it" } ?: "")
-                    } ?:"Failed to send $amount Bitcoins to $address"
+                    } ?: "Failed to send $amount Bitcoins to $address"
                 )
             }
         }

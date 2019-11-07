@@ -50,7 +50,8 @@ public class PoPEventEngine {
         }
     }
 
-    @Subscribe public void onNewVeriBlockFound(NewVeriBlockFoundEvent event) {
+    @Subscribe
+    public void onNewVeriBlockFound(NewVeriBlockFoundEvent event) {
         try {
             RuleContext context = new RuleContext();
             context.setPreviousHead(event.getPreviousHead());

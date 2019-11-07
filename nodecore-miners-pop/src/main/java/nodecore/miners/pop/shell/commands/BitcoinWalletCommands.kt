@@ -8,8 +8,8 @@
 
 package nodecore.miners.pop.shell.commands
 
-import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
@@ -78,10 +78,10 @@ fun Shell.bitcoinWalletCommands(
         name = "Withdraw Bitcoin to Address",
         form = "withdrawbitcointoaddress",
         description = "Sends a Bitcoin amount to a given address",
-            parameters = listOf(
+        parameters = listOf(
             CommandParameter("address", CommandParameterType.STRING, true),
-        CommandParameter("amount", CommandParameterType.AMOUNT, true)
-    )
+            CommandParameter("amount", CommandParameterType.AMOUNT, true)
+        )
     ) {
         val address: String = getParameter("address")
         val amount: BigDecimal = getParameter("amount")

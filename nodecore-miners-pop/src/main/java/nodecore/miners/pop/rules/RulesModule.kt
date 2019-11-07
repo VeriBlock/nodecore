@@ -9,7 +9,9 @@ import org.koin.dsl.module
 val rulesModule = module {
     single<RuleAction<Int?>>(named("mining")) { MineAction(get()) }
 
-    single<Set<Rule>>(override = true) { setOf(
-        BlockHeightRule(get(named("mining")), get())
-    )}
+    single<Set<Rule>>(override = true) {
+        setOf(
+            BlockHeightRule(get(named("mining")), get())
+        )
+    }
 }

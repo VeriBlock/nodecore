@@ -39,7 +39,7 @@ fun OperationSummary.toResponse() = OperationSummaryResponse(
     message = message
 )
 
-fun Result.toResponse()= ResultResponse(
+fun Result.toResponse() = ResultResponse(
     failed = didFail(),
     messages = messages.map { it.toResponse() }
 )

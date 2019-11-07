@@ -11,9 +11,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class BlockStore {
     private AtomicReference<VeriBlockHeader> chainHead = new AtomicReference<>();
+
     public VeriBlockHeader getChainHead() {
         return chainHead.get();
     }
+
     public void setChainHead(VeriBlockHeader blockBlockHeader) {
         chainHead.set(blockBlockHeader);
     }

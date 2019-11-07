@@ -7,7 +7,12 @@
 
 package nodecore.miners.pop;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +32,8 @@ public class ProgramOptions {
     }
 
     public boolean parse(String[] args) {
-        Option configFileOption = Option.builder("c")
-                .argName("path")
-                .hasArg()
-                .required(false)
-                .desc("The configuration file location")
-                .longOpt("config")
-                .build();
+        Option configFileOption =
+                Option.builder("c").argName("path").hasArg().required(false).desc("The configuration file location").longOpt("config").build();
 
         Option dataDirectoryOption = Option.builder("d")
                 .argName("path")
@@ -43,10 +43,7 @@ public class ProgramOptions {
                 .longOpt("dataDir")
                 .build();
 
-        Option bypassAcknowledgement = Option.builder("skipAck")
-                .required(false)
-                .desc("Bypasses acknowledgement of seed words on first run")
-                .build();
+        Option bypassAcknowledgement = Option.builder("skipAck").required(false).desc("Bypasses acknowledgement of seed words on first run").build();
 
         Option paramOption = Option.builder("D")
                 .required(false)
@@ -68,11 +65,13 @@ public class ProgramOptions {
 
             this.properties = commandLine.getOptionProperties("D");
 
-            if (commandLine.hasOption("d"))
+            if (commandLine.hasOption("d")) {
                 setDataDirectory(commandLine.getOptionValue('d'));
+            }
 
-            if (commandLine.hasOption("c"))
+            if (commandLine.hasOption("c")) {
                 configPath = commandLine.getOptionValue('c');
+            }
 
             if (commandLine.hasOption("skipAck")) {
                 this.properties.setProperty(Constants.BYPASS_ACKNOWLEDGEMENT_KEY, Boolean.toString(true));
@@ -94,14 +93,17 @@ public class ProgramOptions {
     }
 
     public String getProperty(String key) {
-        if (properties == null) return null;
+        if (properties == null) {
+            return null;
+        }
 
         return properties.getProperty(key);
     }
 
     public void removeProperty(String key) {
-        if (properties != null)
+        if (properties != null) {
             properties.remove(key);
+        }
     }
 
     private void setDataDirectory(String value) {

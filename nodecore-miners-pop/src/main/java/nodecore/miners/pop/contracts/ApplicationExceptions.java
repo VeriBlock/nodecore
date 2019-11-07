@@ -8,9 +8,11 @@
 package nodecore.miners.pop.contracts;
 
 public class ApplicationExceptions {
-    public static class ExceededMaxTransactionFee extends RuntimeException {}
+    public static class ExceededMaxTransactionFee extends RuntimeException {
+    }
 
-    public static class PoPSubmitRejected extends RuntimeException {}
+    public static class PoPSubmitRejected extends RuntimeException {
+    }
 
     public static class CorruptSPVChain extends RuntimeException {
         public CorruptSPVChain(String message) {
@@ -18,12 +20,14 @@ public class ApplicationExceptions {
         }
     }
 
-    public static class UnableToAcquireTransactionLock extends RuntimeException {}
+    public static class UnableToAcquireTransactionLock extends RuntimeException {
+    }
 
-    public static class DuplicateTransactionException extends RuntimeException {}
+    public static class DuplicateTransactionException extends RuntimeException {
+    }
 
     public static class SendTransactionException extends RuntimeException {
-        public SendTransactionException (Exception inner) {
+        public SendTransactionException(Exception inner) {
             this.addSuppressed(inner);
         }
     }

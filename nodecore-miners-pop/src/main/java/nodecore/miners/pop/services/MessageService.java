@@ -35,7 +35,9 @@ public class MessageService {
     }
 
     public List<MessageEvent> getMessages() {
-        if (!running) return Collections.emptyList();
+        if (!running) {
+            return Collections.emptyList();
+        }
 
         try {
             messageGate.await();
@@ -58,8 +60,8 @@ public class MessageService {
         messageGate.countDown();
     }
 
-
-    @Subscribe public void onMessage(MessageEvent event) {
+    @Subscribe
+    public void onMessage(MessageEvent event) {
         try {
             queue.add(event);
             messageGate.countDown();

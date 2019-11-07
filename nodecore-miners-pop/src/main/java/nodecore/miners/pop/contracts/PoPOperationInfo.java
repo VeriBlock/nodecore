@@ -74,13 +74,13 @@ public class PoPOperationInfo {
         }
         this.bitcoinTransaction = state.transaction != null ? Utility.bytesToHex(state.transaction) : null;
         this.bitcoinTransactionId = state.submittedTransactionId;
-        this.bitcoinBlockHeaderOfProof = state.bitcoinBlockHeaderOfProof != null ?
-                Utility.bytesToHex(state.bitcoinBlockHeaderOfProof) : null;
-        this.bitcoinContextBlocks = state.bitcoinContextBlocks != null ?
-                state.bitcoinContextBlocks.stream().map(Utility::bytesToHex).collect(Collectors.toList()) : null;
+        this.bitcoinBlockHeaderOfProof = state.bitcoinBlockHeaderOfProof != null ? Utility.bytesToHex(state.bitcoinBlockHeaderOfProof) : null;
+        this.bitcoinContextBlocks =
+                state.bitcoinContextBlocks != null ? state.bitcoinContextBlocks.stream().map(Utility::bytesToHex).collect(Collectors.toList()) : null;
         this.bitcoinMerklePath = state.merklePath;
-        this.alternateBlocksOfProof = state.alternateBlocksOfProof != null ?
-                state.alternateBlocksOfProof.stream().map(Utility::bytesToHex).collect(Collectors.toList()) : null;
+        this.alternateBlocksOfProof =
+                state.alternateBlocksOfProof != null ? state.alternateBlocksOfProof.stream().map(Utility::bytesToHex).collect(Collectors.toList()) :
+                        null;
         this.popTransactionId = state.popTransactionId;
     }
 }
