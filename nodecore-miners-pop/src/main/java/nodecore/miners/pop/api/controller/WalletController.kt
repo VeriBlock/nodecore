@@ -10,7 +10,7 @@ class WalletController(
 ) : ApiController {
 
     override fun Route.registerApi() {
-        post("/api/wallet/btc/withdraw") {
+        post("/wallet/btc/withdraw") {
             val address: String = call.parameters["address"]
                 ?: throw BadRequestException("Parameter 'address' was not supplied")
             val amountString: String = call.parameters["amount"]
