@@ -19,6 +19,9 @@ import org.bitcoinj.core.Sha256Hash;
 
 import java.util.Map;
 
+/**
+ * Third task that will be executed in a mining operation
+ */
 public class DetermineBlockOfProofTask extends BaseTask {
     @Override
     public BaseTask getNext() {

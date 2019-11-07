@@ -9,16 +9,19 @@ package nodecore.miners.pop.contracts;
 
 public class TaskResult {
     private final boolean success;
+
     public boolean isSuccess() {
         return success;
     }
 
     private final PoPMiningOperationState state;
+
     public PoPMiningOperationState getState() {
         return state;
     }
 
     private final BaseTask next;
+
     public BaseTask getNext() {
         return next;
     }

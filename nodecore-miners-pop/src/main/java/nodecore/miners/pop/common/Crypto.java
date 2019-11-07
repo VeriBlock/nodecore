@@ -14,29 +14,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Crypto {
-	private static final Logger logger = LoggerFactory.getLogger(Crypto.class);
-	private MessageDigest sha256;
-	
-	public Crypto()
-	{
-		try 
-		{
-			sha256 = MessageDigest.getInstance("SHA-256");
-		} catch (NoSuchAlgorithmException e)
-		{
-			logger.error(e.getMessage(), e);
-		}
-	}
-	
-	public byte[] SHA256D(byte[] input)
-	{
-		return SHA256ReturnBytes(SHA256ReturnBytes(input));
-	}
-	
-	public byte[] SHA256ReturnBytes(byte[] input)
-	{
-		return sha256.digest(input);
-	}
-	
+    private static final Logger logger = LoggerFactory.getLogger(Crypto.class);
+    private MessageDigest sha256;
 
+    public Crypto() {
+        try {
+            sha256 = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    public byte[] SHA256D(byte[] input) {
+        return SHA256ReturnBytes(SHA256ReturnBytes(input));
+    }
+
+    public byte[] SHA256ReturnBytes(byte[] input) {
+        return sha256.digest(input);
+    }
 }

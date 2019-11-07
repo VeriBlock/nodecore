@@ -10,15 +10,45 @@ package nodecore.miners.pop;
 import com.google.common.eventbus.Subscribe;
 import io.grpc.StatusRuntimeException;
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.contracts.*;
-import nodecore.miners.pop.events.*;
+import nodecore.miners.pop.contracts.ApplicationExceptions;
+import nodecore.miners.pop.contracts.DefaultResultMessage;
+import nodecore.miners.pop.contracts.KeyValueData;
+import nodecore.miners.pop.contracts.KeyValueRepository;
+import nodecore.miners.pop.contracts.MineResult;
+import nodecore.miners.pop.contracts.OperationSummary;
+import nodecore.miners.pop.contracts.PoPMinerDependencies;
+import nodecore.miners.pop.contracts.PoPMiningInstruction;
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.PoPRepository;
+import nodecore.miners.pop.contracts.PreservedPoPMiningOperationState;
+import nodecore.miners.pop.contracts.Result;
+import nodecore.miners.pop.contracts.TransactionStatus;
+import nodecore.miners.pop.events.BitcoinServiceNotReadyEvent;
+import nodecore.miners.pop.events.BitcoinServiceReadyEvent;
+import nodecore.miners.pop.events.BlockchainDownloadedEvent;
+import nodecore.miners.pop.events.CoinsReceivedEvent;
+import nodecore.miners.pop.events.ConfigurationChangedEvent;
+import nodecore.miners.pop.events.FundsAddedEvent;
+import nodecore.miners.pop.events.InfoMessageEvent;
+import nodecore.miners.pop.events.InsufficientFundsEvent;
+import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
+import nodecore.miners.pop.events.NodeCoreHealthyEvent;
+import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
+import nodecore.miners.pop.events.PoPMinerNotReadyEvent;
+import nodecore.miners.pop.events.PoPMinerReadyEvent;
+import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
+import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import nodecore.miners.pop.services.PoPStateService;
 import nodecore.miners.pop.tasks.ProcessManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Context;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.BlockUtility;
@@ -28,7 +58,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -47,6 +82,7 @@ public class PoPMiner implements Runnable {
 
     private boolean stateRestored;
     private EnumSet<PoPMinerDependencies> readyConditions;
+
     private boolean readyToMine() {
         ensureBitcoinServiceReady();
         ensureBlockchainDownloaded();
@@ -55,15 +91,14 @@ public class PoPMiner implements Runnable {
         return isReady();
     }
 
-    public PoPMiner(
-            Configuration configuration,
-            BitcoinService bitcoinService,
-            NodeCoreService nodeCoreService,
-            PoPStateService stateService,
-            PoPRepository repository,
-            KeyValueRepository keyValueRepository,
-            ProcessManager processManager,
-            Context context) {
+    public PoPMiner(Configuration configuration,
+                    BitcoinService bitcoinService,
+                    NodeCoreService nodeCoreService,
+                    PoPStateService stateService,
+                    PoPRepository repository,
+                    KeyValueRepository keyValueRepository,
+                    ProcessManager processManager,
+                    Context context) {
 
         this.configuration = configuration;
         this.bitcoinService = bitcoinService;
@@ -105,28 +140,28 @@ public class PoPMiner implements Runnable {
     }
 
     public List<OperationSummary> listOperations() {
-        return operations.values().stream()
-                .map(state -> {
-                    if (state == null) return null;
+        return operations.values().stream().map(state -> {
+            if (state == null) {
+                return null;
+            }
 
-                    PoPMiningInstruction miningInstruction = state.getMiningInstruction();
-                    int blockNumber = -1;
-                    if (miningInstruction != null) {
-                        blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader);
-                    }
-                    String status = state.getStatus() != null ? state.getStatus().toString() : "";
+            PoPMiningInstruction miningInstruction = state.getMiningInstruction();
+            int blockNumber = -1;
+            if (miningInstruction != null) {
+                blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader);
+            }
+            String status = state.getStatus() != null ? state.getStatus().toString() : "";
 
-                    return new OperationSummary(state.getOperationId(), blockNumber, status, state.getCurrentActionAsString(), state.getMessage());
-                })
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(OperationSummary::getEndorsedBlockNumber))
-                .collect(Collectors.toList());
+            return new OperationSummary(state.getOperationId(), blockNumber, status, state.getCurrentActionAsString(), state.getMessage());
+        }).filter(Objects::nonNull).sorted(Comparator.comparingInt(OperationSummary::getEndorsedBlockNumber)).collect(Collectors.toList());
     }
 
     public PreservedPoPMiningOperationState getOperationState(String id) {
         PoPMiningOperationState state = stateService.getOperation(id);
 
-        if (state == null) return null;
+        if (state == null) {
+            return null;
+        }
 
         // TODO: Implement
         PreservedPoPMiningOperationState result = new PreservedPoPMiningOperationState();
@@ -156,13 +191,14 @@ public class PoPMiner implements Runnable {
 
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
         // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be sufficient.
-        long count = operations.values().parallelStream()
-                .filter(state -> state.getCurrentAction() == PoPMiningOperationState.Action.WAIT)
-                .count();
+        long count = operations.values().parallelStream().filter(state -> state.getCurrentAction() == PoPMiningOperationState.Action.WAIT).count();
 
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
             result.fail();
-            result.addMessage(new DefaultResultMessage("V412", "Too Many Pending Transactions", "Creating additional transactions at this time would result in rejection on the Bitcoin network", true));
+            result.addMessage(new DefaultResultMessage("V412",
+                    "Too Many Pending Transactions",
+                    "Creating additional transactions at this time would result in rejection on the Bitcoin network",
+                    true));
             return result;
         }
 
@@ -173,9 +209,7 @@ public class PoPMiner implements Runnable {
         processManager.submit(state);
 
         result.setOperationId(operationId);
-        result.addMessage("V201", "Mining operation started",
-                String.format("To view details, run command: getoperation %s", operationId),
-                false);
+        result.addMessage("V201", "Mining operation started", String.format("To view details, run command: getoperation %s", operationId), false);
 
         return result;
     }
@@ -198,9 +232,7 @@ public class PoPMiner implements Runnable {
 
         processManager.submit(operation);
 
-        result.addMessage("V200", "Success",
-                String.format("To view details, run command: getoperation %s", operation.getOperationId()),
-                false);
+        result.addMessage("V200", "Success", String.format("To view details, run command: getoperation %s", operation.getOperationId()), false);
 
         return result;
     }
@@ -259,13 +291,22 @@ public class PoPMiner implements Runnable {
         } catch (ApplicationExceptions.SendTransactionException e) {
             for (Throwable t : e.getSuppressed()) {
                 if (t instanceof ApplicationExceptions.UnableToAcquireTransactionLock) {
-                    result.addMessage("V409", "Temporarily Unable to Create Tx", "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.", true);
+                    result.addMessage("V409",
+                            "Temporarily Unable to Create Tx",
+                            "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.",
+                            true);
                 } else if (t instanceof InsufficientMoneyException) {
                     result.addMessage("V400", "Insufficient Funds", "Wallet does not contain sufficient funds to create transaction", true);
                 } else if (t instanceof ApplicationExceptions.ExceededMaxTransactionFee) {
-                    result.addMessage("V400", "Exceeded Max Fee", "Transaction fee was calculated to be more than the configured maximum transaction fee", true);
+                    result.addMessage("V400",
+                            "Exceeded Max Fee",
+                            "Transaction fee was calculated to be more than the configured maximum transaction fee",
+                            true);
                 } else if (t instanceof ApplicationExceptions.DuplicateTransactionException) {
-                    result.addMessage("V409", "Duplicate Transaction", "Transaction created is a duplicate of a previously broadcast transaction", true);
+                    result.addMessage("V409",
+                            "Duplicate Transaction",
+                            "Transaction created is a duplicate of a previously broadcast transaction",
+                            true);
                 } else {
                     result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true);
                 }
@@ -311,7 +352,6 @@ public class PoPMiner implements Runnable {
                 result.fail();
                 result.addMessage("V409", "Export Failed", "The destination file already exists and could not be created", true);
             }
-
         } catch (IOException e) {
             logger.error("Unable to export private keys", e);
             result.fail();
@@ -340,8 +380,7 @@ public class PoPMiner implements Runnable {
                 InternalEventBus.getInstance().post(new FundsAddedEvent());
             }
             addReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS);
-        }
-        else {
+        } else {
             removeReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS);
         }
     }
@@ -381,15 +420,11 @@ public class PoPMiner implements Runnable {
             case SUFFICIENT_FUNDS:
                 Coin maximumTransactionFee = Coin.valueOf(configuration.getMaxTransactionFee());
                 Coin balance = bitcoinService.getBalance();
-                return "PoP wallet does not contain sufficient funds" +
-                        System.lineSeparator() +
-                        "  Current balance: " + Utility.formatBTCFriendlyString(balance) +
-                        System.lineSeparator() +
-                        String.format("  Minimum required: %1$s, need %2$s more",
-                                Utility.formatBTCFriendlyString(maximumTransactionFee),
-                                Utility.formatBTCFriendlyString(maximumTransactionFee.subtract(balance))) +
-                        System.lineSeparator() +
-                        "  Send Bitcoin to: " + bitcoinService.currentReceiveAddress();
+                return "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
+                        Utility.formatBTCFriendlyString(balance) + System.lineSeparator() + String.format("  Minimum required: %1$s, need %2$s more",
+                        Utility.formatBTCFriendlyString(maximumTransactionFee),
+                        Utility.formatBTCFriendlyString(maximumTransactionFee.subtract(balance))) + System.lineSeparator() + "  Send Bitcoin to: " +
+                        bitcoinService.currentReceiveAddress();
             case NODECORE_CONNECTED:
                 return "Waiting for connection to NodeCore";
             case BITCOIN_SERVICE_READY:
@@ -416,7 +451,8 @@ public class PoPMiner implements Runnable {
         stateRestored = true;
     }
 
-    @Subscribe public void onPoPMiningOperationCompleted(PoPMiningOperationCompletedEvent event) {
+    @Subscribe
+    public void onPoPMiningOperationCompleted(PoPMiningOperationCompletedEvent event) {
         try {
             operations.remove(event.getOperationId());
         } catch (Exception e) {
@@ -424,10 +460,11 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onCoinsReceived(CoinsReceivedEvent event) {
+    @Subscribe
+    public void onCoinsReceived(CoinsReceivedEvent event) {
         try {
-            InternalEventBus.getInstance().post(new InfoMessageEvent(
-                    String.format("Received pending tx '%s', pending balance: '%s'",
+            InternalEventBus.getInstance()
+                    .post(new InfoMessageEvent(String.format("Received pending tx '%s', pending balance: '%s'",
                             event.getTx().getHashAsString(),
                             Utility.formatBTCFriendlyString(event.getNewBalance()))));
         } catch (Exception e) {
@@ -435,7 +472,8 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onInsufficientFunds(InsufficientFundsEvent event) {
+    @Subscribe
+    public void onInsufficientFunds(InsufficientFundsEvent event) {
         try {
             removeReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS);
         } catch (Exception e) {
@@ -443,7 +481,8 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onBitcoinServiceReady(BitcoinServiceReadyEvent event) {
+    @Subscribe
+    public void onBitcoinServiceReady(BitcoinServiceReadyEvent event) {
         try {
 
             addReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY);
@@ -454,13 +493,13 @@ public class PoPMiner implements Runnable {
                     InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(getMessageForDependencyCondition(flag), flag));
                 }
             }
-
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-    @Subscribe public void onBitcoinServiceNotReady(BitcoinServiceNotReadyEvent event) {
+    @Subscribe
+    public void onBitcoinServiceNotReady(BitcoinServiceNotReadyEvent event) {
         try {
             removeReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY);
         } catch (Exception e) {
@@ -468,20 +507,23 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onBlockchainDownloaded(BlockchainDownloadedEvent event) {
+    @Subscribe
+    public void onBlockchainDownloaded(BlockchainDownloadedEvent event) {
         try {
             addReadyCondition(PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED);
 
             ensureSufficientFunds();
 
-            InternalEventBus.getInstance().post(new InfoMessageEvent("Available Bitcoin balance: " + Utility.formatBTCFriendlyString(bitcoinService.getBalance())));
+            InternalEventBus.getInstance()
+                    .post(new InfoMessageEvent("Available Bitcoin balance: " + Utility.formatBTCFriendlyString(bitcoinService.getBalance())));
             InternalEventBus.getInstance().post(new InfoMessageEvent("Send Bitcoin to: " + bitcoinService.currentReceiveAddress()));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-    @Subscribe public void onNodeCoreHealthy(NodeCoreHealthyEvent event) {
+    @Subscribe
+    public void onNodeCoreHealthy(NodeCoreHealthyEvent event) {
         try {
             addReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED);
         } catch (Exception e) {
@@ -489,7 +531,8 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onNodeCoreUnhealthy(NodeCoreUnhealthyEvent event) {
+    @Subscribe
+    public void onNodeCoreUnhealthy(NodeCoreUnhealthyEvent event) {
         try {
             removeReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED);
         } catch (Exception e) {
@@ -497,7 +540,8 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onConfigurationChanged(ConfigurationChangedEvent event) {
+    @Subscribe
+    public void onConfigurationChanged(ConfigurationChangedEvent event) {
         try {
             ensureSufficientFunds();
         } catch (Exception e) {
@@ -505,11 +549,11 @@ public class PoPMiner implements Runnable {
         }
     }
 
-    @Subscribe public void onNewVeriBlockFound(NewVeriBlockFoundEvent event) {
+    @Subscribe
+    public void onNewVeriBlockFound(NewVeriBlockFoundEvent event) {
         for (String key : new HashSet<>(operations.keySet())) {
             PoPMiningOperationState operationState = operations.get(key);
-            if (operationState != null &&
-                    operationState.getTransactionStatus() == TransactionStatus.UNCONFIRMED &&
+            if (operationState != null && operationState.getTransactionStatus() == TransactionStatus.UNCONFIRMED &&
                     operationState.getBlockNumber() < (event.getBlock().getHeight() - Constants.POP_SETTLEMENT_INTERVAL)) {
                 operationState.fail(String.format("Endorsement of block %d is no longer relevant", operationState.getBlockNumber()));
             }

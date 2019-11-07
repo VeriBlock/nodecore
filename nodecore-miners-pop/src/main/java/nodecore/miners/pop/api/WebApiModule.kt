@@ -12,9 +12,11 @@ val webApiModule = module {
     single(named("miningController")) { MiningController(get()) }
     single(named("walletController")) { WalletController(get()) }
 
-    single { ApiServer(listOf(
-        get(named("configController")),
-        get(named("miningController")),
-        get(named("walletController"))
-    )) }
+    single {
+        ApiServer(listOf(
+            get(named("configController")),
+            get(named("miningController")),
+            get(named("walletController"))
+        ))
+    }
 }

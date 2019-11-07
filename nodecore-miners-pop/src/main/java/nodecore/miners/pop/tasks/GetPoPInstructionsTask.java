@@ -8,10 +8,17 @@
 package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
-import nodecore.miners.pop.contracts.*;
+import nodecore.miners.pop.contracts.BaseTask;
+import nodecore.miners.pop.contracts.NodeCoreReply;
+import nodecore.miners.pop.contracts.PoPMiningInstruction;
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 
+/**
+ * First task that will be executed in a mining operation
+ */
 public class GetPoPInstructionsTask extends BaseTask {
 
     @Override
@@ -25,7 +32,9 @@ public class GetPoPInstructionsTask extends BaseTask {
 
     @Override
     protected TaskResult executeImpl(PoPMiningOperationState state) {
-        if (state.getMiningInstruction() != null) return TaskResult.succeed(state, getNext());
+        if (state.getMiningInstruction() != null) {
+            return TaskResult.succeed(state, getNext());
+        }
 
         state.begin();
 

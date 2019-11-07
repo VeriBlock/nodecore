@@ -10,7 +10,16 @@ package nodecore.miners.pop;
 import nodecore.miners.pop.events.InfoMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Context;
-import org.quartz.*;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.CronTrigger;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.ScheduleBuilder;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +60,6 @@ public class PoPMiningScheduler {
             scheduler = factory.getScheduler();
             Runnable executeSchedule = this::executeSchedule;
             scheduler.setJobFactory(((bundle, scheduler1) -> new ScheduledPoPJob(executeSchedule)));
-
         } catch (SchedulerException e) {
             logger.error(e.getMessage(), e);
             runnable = false;
@@ -75,19 +83,15 @@ public class PoPMiningScheduler {
             try {
                 scheduler.start();
 
-                JobDetail job = JobBuilder.newJob(ScheduledPoPJob.class)
-                        .withIdentity("scheduledPoP")
-                        .build();
+                JobDetail job = JobBuilder.newJob(ScheduledPoPJob.class).withIdentity("scheduledPoP").build();
 
-                Trigger trigger = TriggerBuilder.newTrigger()
-                        .withIdentity("propertiesSchedule")
-                        .withSchedule(scheduleBuilder)
-                        .build();
+                Trigger trigger = TriggerBuilder.newTrigger().withIdentity("propertiesSchedule").withSchedule(scheduleBuilder).build();
 
                 scheduler.scheduleJob(job, trigger);
 
                 SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String info = String.format("Found cron schedule '" + configuration.getCronSchedule() + "', first trigger at %s", dateFormatter.format(trigger.getNextFireTime()));
+                String info = String.format("Found cron schedule '" + configuration.getCronSchedule() + "', first trigger at %s",
+                        dateFormatter.format(trigger.getNextFireTime()));
                 InternalEventBus.getInstance().post(new InfoMessageEvent(info));
             } catch (SchedulerException e) {
                 logger.error(e.getMessage(), e);

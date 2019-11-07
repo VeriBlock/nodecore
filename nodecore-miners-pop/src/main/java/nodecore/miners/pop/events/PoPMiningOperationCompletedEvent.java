@@ -10,6 +10,7 @@ package nodecore.miners.pop.events;
 public class PoPMiningOperationCompletedEvent {
 
     private final String operationId;
+
     public String getOperationId() {
         return operationId;
     }

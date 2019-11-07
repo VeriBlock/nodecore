@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * Task that attempts to restore a mining operation that was left in progress
+ */
 public class RestoreTask extends BaseTask {
     private BaseTask next = null;
 

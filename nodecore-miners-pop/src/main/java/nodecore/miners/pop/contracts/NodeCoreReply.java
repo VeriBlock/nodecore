@@ -9,25 +9,31 @@ package nodecore.miners.pop.contracts;
 
 public class NodeCoreReply<T> {
     private boolean success;
+
     public boolean getSuccess() {
         return success;
     }
+
     public void setSuccess(boolean success) {
         this.success = success;
     }
 
     private String resultMessage;
+
     public String getResultMessage() {
         return resultMessage;
     }
+
     public void setResultMessage(String resultMessage) {
         this.resultMessage = resultMessage;
     }
 
     private T result;
+
     public T getResult() {
         return result;
     }
+
     public void setResult(T result) {
         this.result = result;
     }

@@ -7,7 +7,11 @@
 
 package nodecore.miners.pop.services;
 
-import io.grpc.*;
+import io.grpc.Channel;
+import io.grpc.ClientInterceptor;
+import io.grpc.ClientInterceptors;
+import io.grpc.ManagedChannel;
+import io.grpc.Metadata;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NegotiationType;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
@@ -36,7 +40,7 @@ public class ChannelBuilder {
     public Channel attachPasswordInterceptor(Channel inner) {
         String password = configuration.getNodeCorePassword();
         Metadata headers = new Metadata();
-        if(password != null) {
+        if (password != null) {
             headers.put(Constants.RPC_PASSWORD_HEADER_NAME, password);
         }
         ClientInterceptor clientInterceptor = MetadataUtils.newAttachHeadersInterceptor(headers);
@@ -52,8 +56,6 @@ public class ChannelBuilder {
     }
 
     private ManagedChannel buildPlainTextManagedChannel() {
-        return NettyChannelBuilder.forAddress(configuration.getNodeCoreHost(), configuration.getNodeCorePort())
-                .usePlaintext()
-                .build();
+        return NettyChannelBuilder.forAddress(configuration.getNodeCoreHost(), configuration.getNodeCorePort()).usePlaintext().build();
     }
 }

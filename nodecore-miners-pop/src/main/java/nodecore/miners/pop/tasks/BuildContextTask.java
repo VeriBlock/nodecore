@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Fifth task that will be executed in a mining operation
+ */
 public class BuildContextTask extends BaseTask {
 
     @Override

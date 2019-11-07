@@ -40,22 +40,21 @@ public class MerkleProofTests {
         tree.getTxnHashAndMerkleRoot(new LinkedList<>());
 
         MerkleProof proof = MerkleProof.parse(tree);
-        if (proof == null) Assert.fail();
+        if (proof == null) {
+            Assert.fail();
+        }
 
         String txProof = proof.getCompactPath(Sha256Hash.wrap("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4"));
         String[] parts = txProof.split(":");
 
-        String[] expected = new String[] {
-                "17",
-                "F464B1EF45CC5D29E8EB2860A10DE46EC13F62C5F8C87E463EA59B5EDCC4CA56",
+        String[] expected = new String[]{"17", "F464B1EF45CC5D29E8EB2860A10DE46EC13F62C5F8C87E463EA59B5EDCC4CA56",
                 "38E72F67B2866D4D926F8139247C29707C5A67B0378DC9AF28B5D9AE0A19EB13",
                 "C40E9E844481BB835892BDDCDE0402C2091746AAAE2BFBE7CF33EF4B959B91BE",
                 "E5F4312C8C5A6D1A5B4D4BB6E3BF9BBCB2C2C3481363B22C599D348E7932BDC0",
                 "820763E6742E86AF6466DEFEF56A438727EDE13709CB83762D653BDAF5DDA293",
                 "5A8B2452852AC460637AE2C9838BEE00E8F60D607656C6083AFF89E5F5841AEA",
                 "23FBD9A3E64926935B3CC9FFD2ACA449411E59C51D105B79AF9755CA63EA4BF9",
-                "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"
-        };
+                "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"};
 
         Assert.assertArrayEquals(expected, parts);
 
@@ -63,14 +62,13 @@ public class MerkleProofTests {
         String calculatedRoot = verification.getMerkleRoot();
 
         Assert.assertEquals("bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96", calculatedRoot.toLowerCase());
-        Assert.assertEquals("bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96", tree.getTxnHashAndMerkleRoot(new LinkedList<>()).toString());
-
+        Assert.assertEquals("bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96",
+                tree.getTxnHashAndMerkleRoot(new LinkedList<>()).toString());
     }
 
     @Test
     public void old() {
-        String[] txns = new String[] {
-                "df48199e864d5c38feb0482531d0f74530946df1d0a05d6be4f79be89c3bc125",
+        String[] txns = new String[]{"df48199e864d5c38feb0482531d0f74530946df1d0a05d6be4f79be89c3bc125",
                 "18565166b4d2d6923a3e7729383593080e4e6d41deb473fe45de8381dccc617c",
                 "c44d996f7f5b2f309bd527b581156389b2e2eb9237bf9eae35a6956e24c03ab0",
                 "994a25c7a2cb27450cfac3023cd5dba15b5d5b02655e76c1674d7af82588bec9",
@@ -137,24 +135,20 @@ public class MerkleProofTests {
                 "48e21a989d896529ee48e678f455dd77403636b16c0d1eadeef5b18bccdda117",
                 "6d3b73da45161098b2847fd09e64b84421d887536ff3592bf969b293a3348fe3",
                 "b751b89ab152492059e242a064c5dcf85d5c9412fe24d392f030c134dc1c1cdf",
-                "982c260e95b29fc8d11fda14421878069cea000ed317a552f13ae18e5596db42"
-        };
+                "982c260e95b29fc8d11fda14421878069cea000ed317a552f13ae18e5596db42"};
         BitcoinMerkleTree tree = new BitcoinMerkleTree(true, Arrays.asList(txns));
         BitcoinMerklePath path = tree.getPathFromTxID("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4");
 
         String[] parts = path.getCompactFormat().split(":");
 
-        String[] expected = new String[] {
-                "17",
-                "F464B1EF45CC5D29E8EB2860A10DE46EC13F62C5F8C87E463EA59B5EDCC4CA56",
+        String[] expected = new String[]{"17", "F464B1EF45CC5D29E8EB2860A10DE46EC13F62C5F8C87E463EA59B5EDCC4CA56",
                 "38E72F67B2866D4D926F8139247C29707C5A67B0378DC9AF28B5D9AE0A19EB13",
                 "C40E9E844481BB835892BDDCDE0402C2091746AAAE2BFBE7CF33EF4B959B91BE",
                 "E5F4312C8C5A6D1A5B4D4BB6E3BF9BBCB2C2C3481363B22C599D348E7932BDC0",
                 "820763E6742E86AF6466DEFEF56A438727EDE13709CB83762D653BDAF5DDA293",
                 "5A8B2452852AC460637AE2C9838BEE00E8F60D607656C6083AFF89E5F5841AEA",
                 "23FBD9A3E64926935B3CC9FFD2ACA449411E59C51D105B79AF9755CA63EA4BF9",
-                "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"
-        };
+                "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"};
 
         Assert.assertArrayEquals(expected, parts);
 

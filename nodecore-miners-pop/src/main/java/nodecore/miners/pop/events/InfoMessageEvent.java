@@ -12,6 +12,7 @@ import nodecore.miners.pop.contracts.MessageEvent;
 public class InfoMessageEvent implements MessageEvent {
 
     private final String message;
+
     @Override
     public String getMessage() {
         return message;
@@ -25,5 +26,4 @@ public class InfoMessageEvent implements MessageEvent {
     public InfoMessageEvent(String message) {
         this.message = message;
     }
-
 }

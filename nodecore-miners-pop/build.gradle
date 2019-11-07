@@ -46,11 +46,15 @@ dependencies {
     compile 'org.koin:koin-core:2.0.1'
     compile 'org.koin:koin-java:2.0.1'
 
+    // Test
     testCompile 'junit:junit:4.12'
     testCompile "org.mockito:mockito-core:2.+"
+    // Better mocks
     testImplementation "io.mockk:mockk:1.9.3"
-    // Test assertions
-    testCompile 'io.kotlintest:kotlintest-assertions:3.4.1'
+    // Better testing framework
+    testCompile 'io.kotlintest:kotlintest-runner-junit5:3.4.2'
+    // Better assertions
+    testCompile 'io.kotlintest:kotlintest-assertions:3.4.2'
 }
 
 protobuf {
@@ -72,6 +76,7 @@ sourceSets {
 }
 
 test {
+    useJUnitPlatform()
     testLogging {
         exceptionFormat = 'full'
     }

@@ -20,7 +20,9 @@ public class PoPMiningInstruction implements Serializable {
     public byte[] minerAddress;
     public List<byte[]> endorsedBlockContextHeaders;
 
-    public String getBlockHashAsString() {return new Crypto().vBlakeReturnHex(endorsedBlockHeader);}
+    public String getBlockHashAsString() {
+        return new Crypto().vBlakeReturnHex(endorsedBlockHeader);
+    }
 
     public String getMinerAddress() {
         return Utility.bytesToBase58(minerAddress);

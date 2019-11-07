@@ -21,7 +21,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.Utility;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -42,8 +48,7 @@ public class Configuration {
     }
 
     public void load() {
-        try
-        {
+        try {
             try (InputStream stream = new FileInputStream(options.getConfigPath())) {
                 load(stream);
             }
@@ -57,7 +62,7 @@ public class Configuration {
     public void load(InputStream inputStream) {
         try {
             properties.load(inputStream);
-            
+
             // Temporary
             String perByte = properties.getProperty("bitcoin.fee.perbyte");
             if (perByte != null) {
@@ -65,9 +70,9 @@ public class Configuration {
                     Integer perByteValue = Integer.parseInt(perByte);
                     setTransactionFeePerKB(Integer.toString(perByteValue * 1000));
                     properties.remove("bitcoin.fee.perbyte");
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
-            
         } catch (Exception e) {
             logger.error("Unhandled exception in DefaultConfiguration.load", e);
         }
@@ -125,7 +130,6 @@ public class Configuration {
         return transactionFee != null ? transactionFee : 0L;
     }
 
-
     public ConfigurationResult setTransactionFeePerKB(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -177,8 +181,7 @@ public class Configuration {
             return result;
         }
 
-        result.addMessage(new IllegalConfigurationValueResultMessage(String.format(
-                "Property '%s' requires a valid IP address",
+        result.addMessage(new IllegalConfigurationValueResultMessage(String.format("Property '%s' requires a valid IP address",
                 Keys.NODECORE_HOST_KEY)));
         result.fail();
         return result;
@@ -186,8 +189,9 @@ public class Configuration {
 
     public int getNodeCorePort() {
         Integer port = Ints.tryParse(getPropertyOverrideOrDefault(Keys.NODECORE_PORT_KEY));
-        if(port == null)
+        if (port == null) {
             throw new NumberFormatException("Unable to load '" + Keys.NODECORE_PORT_KEY + "'. Invalid port number specified");
+        }
         return port;
     }
 
@@ -273,12 +277,10 @@ public class Configuration {
             return result;
         }
 
-        result.addMessage(new IllegalConfigurationValueResultMessage(String.format(
-                "Value '%s' does not refer to a file that exists",
+        result.addMessage(new IllegalConfigurationValueResultMessage(String.format("Value '%s' does not refer to a file that exists",
                 Keys.NODECORE_CERT_CHAIN_PATH_KEY)));
         result.fail();
         return result;
-
     }
 
     public String getCronSchedule() {
@@ -287,8 +289,9 @@ public class Configuration {
 
     public int getActionTimeout() {
         Integer timeout = Ints.tryParse(getPropertyOverrideOrDefault(Keys.ACTION_TIMEOUT));
-        if(timeout == null)
+        if (timeout == null) {
             throw new NumberFormatException("Unable to load '" + Keys.ACTION_TIMEOUT + "'. Invalid timeout specified");
+        }
         return timeout;
     }
 
@@ -316,15 +319,17 @@ public class Configuration {
 
     public String getHttpApiAddress() {
         String address = getPropertyOverrideOrDefault(Keys.HTTP_API_ADDRESS);
-        if(address == null)
+        if (address == null) {
             return "127.0.0.1";
+        }
         return address;
     }
 
     public int getHttpApiPort() {
         Integer port = Ints.tryParse(getPropertyOverrideOrDefault(Keys.HTTP_API_PORT));
-        if(port == null)
+        if (port == null) {
             return 8600;
+        }
         return port;
     }
 
@@ -449,10 +454,8 @@ public class Configuration {
     }
 
     public boolean isValid() {
-        return getMaxTransactionFee() > 0L &&
-                getTransactionFeePerKB() > 0L &&
-                StringUtils.isNotBlank(getNodeCoreHost()) &&
-                getNodeCorePort() > 0 && getNodeCorePort() <= 65535;
+        return getMaxTransactionFee() > 0L && getTransactionFeePerKB() > 0L && StringUtils.isNotBlank(getNodeCoreHost()) && getNodeCorePort() > 0 &&
+                getNodeCorePort() <= 65535;
     }
 
     public String getDataDirectory() {
@@ -488,7 +491,7 @@ public class Configuration {
         TreeMap<String, String> sorted = new TreeMap<>();
         for (Object key : defaultProperties.keySet()) {
             if (key instanceof String) {
-                String keyString = (String)key;
+                String keyString = (String) key;
                 if (properties.getProperty(keyString).equals(defaultProperties.getProperty(keyString))) {
                     sorted.put(keyString, defaultProperties.getProperty(keyString));
                 }
@@ -507,11 +510,8 @@ public class Configuration {
     }
 
     private void loadDefaults() {
-        try
-        {
-            InputStream stream = Configuration.class
-                    .getClassLoader()
-                    .getResourceAsStream(DEFAULT_PROPERTIES);
+        try {
+            InputStream stream = Configuration.class.getClassLoader().getResourceAsStream(DEFAULT_PROPERTIES);
             try {
                 defaultProperties.load(stream);
             } finally {
@@ -524,11 +524,13 @@ public class Configuration {
 
     private String getPropertyOverrideOrDefault(final String name) {
         String value = options.getProperty(name);
-        if (value != null && value.length() > 0)
+        if (value != null && value.length() > 0) {
             return value;
+        }
         value = properties.getProperty(name);
-        if (value == null)
+        if (value == null) {
             return "";
+        }
         return value;
     }
 

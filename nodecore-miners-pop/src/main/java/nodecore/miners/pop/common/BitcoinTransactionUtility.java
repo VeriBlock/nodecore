@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 
 public class BitcoinTransactionUtility {
     private static final Logger _logger = LoggerFactory.getLogger(BitcoinTransactionUtility.class);
+
     /**
      * Returns a String representing the DefaultRpcAgent-order txid for the given hexadecimal bitcoin DefaultTransaction data
      *
@@ -26,8 +27,7 @@ public class BitcoinTransactionUtility {
         }
 
         Crypto c = new Crypto();
-        return Utility.bytesToHex(
-                Utility.flip(c.SHA256D(bitcoinTransactionDataForTxID)));
+        return Utility.bytesToHex(Utility.flip(c.SHA256D(bitcoinTransactionDataForTxID)));
     }
 
     public static byte[] parseTxIDRelevantBits(byte[] fullBitcoinTransaction) {
@@ -54,7 +54,8 @@ public class BitcoinTransactionUtility {
             long numInputs = parseVInt(numInputsVInt);
 
             if (numInputs <= 0 || numInputs > Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("This decoder does not support transactions with an input count outside of the range [1, Integer.MAX_VALUE]!");
+                throw new IllegalArgumentException(
+                        "This decoder does not support transactions with an input count outside of the range [1, Integer.MAX_VALUE]!");
             }
 
             byte[][] serializedInputs = new byte[(int) numInputs][];
@@ -77,7 +78,8 @@ public class BitcoinTransactionUtility {
                 long scriptLength = parseVInt(scriptLengthVInt);
 
                 if (scriptLength <= 0 || scriptLength > Integer.MAX_VALUE) {
-                    throw new IllegalArgumentException("This decoder does not support inputs with script lengths outside the range [1, Integer.MAX_VALUE]!");
+                    throw new IllegalArgumentException(
+                            "This decoder does not support inputs with script lengths outside the range [1, Integer.MAX_VALUE]!");
                 }
 
                 byte[] script = new byte[(int) scriptLength];
@@ -112,11 +114,12 @@ public class BitcoinTransactionUtility {
             long numOutputs = parseVInt(numOutputsVInt);
 
             if (numInputs <= 0 || numInputs > Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("This decoder does not support transactions with an output count outside of the range [1, Integer.MAX_VALUE]!");
+                throw new IllegalArgumentException(
+                        "This decoder does not support transactions with an output count outside of the range [1, Integer.MAX_VALUE]!");
             }
 
             // Read all the outputs
-            byte[][] serializedOutputs = new byte[(int)numOutputs][];
+            byte[][] serializedOutputs = new byte[(int) numOutputs][];
             for (int i = 0; i < numOutputs; i++) {
                 // Satoshis in output always encoded in 64-bit int
                 byte[] satoshisInOutput = new byte[8];
@@ -129,7 +132,8 @@ public class BitcoinTransactionUtility {
                 long scriptLength = parseVInt(scriptLengthVInt);
 
                 if (scriptLength <= 0 || scriptLength > Integer.MAX_VALUE) {
-                    throw new IllegalArgumentException("This decoder does not support outputs with script lengths outside the range [1, Integer.MAX_VALUE]!");
+                    throw new IllegalArgumentException(
+                            "This decoder does not support outputs with script lengths outside the range [1, Integer.MAX_VALUE]!");
                 }
 
                 byte[] script = new byte[(int) scriptLength];
@@ -178,7 +182,7 @@ public class BitcoinTransactionUtility {
             throw new IllegalArgumentException("parseVInt cannot be called with a vInt of length (in bytes) 1, 3, 5, or 9!");
         }
 
-        if (vInt[0] == (byte)0xFF) {
+        if (vInt[0] == (byte) 0xFF) {
             if (vInt.length != 9) {
                 throw new IllegalArgumentException("parseVInt cannot be called with a vInt with a starting byte 0xFF and a length that isn't 9!");
             }
@@ -187,17 +191,17 @@ public class BitcoinTransactionUtility {
             System.arraycopy(vInt, 1, numberPart, 0, numberPart.length);
 
             long result = 0L;
-            result += ((long)numberPart[0]);
-            result += ((long)numberPart[1] << 8);
-            result += ((long)numberPart[2] << 16);
-            result += ((long)numberPart[3] << 24);
-            result += ((long)numberPart[4] << 32);
-            result += ((long)numberPart[5] << 40);
-            result += ((long)numberPart[6] << 48);
-            result += ((long)numberPart[7] << 56);
+            result += ((long) numberPart[0]);
+            result += ((long) numberPart[1] << 8);
+            result += ((long) numberPart[2] << 16);
+            result += ((long) numberPart[3] << 24);
+            result += ((long) numberPart[4] << 32);
+            result += ((long) numberPart[5] << 40);
+            result += ((long) numberPart[6] << 48);
+            result += ((long) numberPart[7] << 56);
 
             return result;
-        } else if (vInt[0] == (byte)0xFE) {
+        } else if (vInt[0] == (byte) 0xFE) {
             if (vInt.length != 5) {
                 throw new IllegalArgumentException("parseVInt cannot be called with a vInt with a starting byte 0xFE and a length that isn't 5!");
             }
@@ -206,13 +210,13 @@ public class BitcoinTransactionUtility {
             System.arraycopy(vInt, 1, numberPart, 0, numberPart.length);
 
             long result = 0L;
-            result += ((long)numberPart[0]);
-            result += ((long)numberPart[1] << 8);
-            result += ((long)numberPart[2] << 16);
-            result += ((long)numberPart[3] << 24);
+            result += ((long) numberPart[0]);
+            result += ((long) numberPart[1] << 8);
+            result += ((long) numberPart[2] << 16);
+            result += ((long) numberPart[3] << 24);
 
             return result;
-        } else if (vInt[0] == (byte)0xFD) {
+        } else if (vInt[0] == (byte) 0xFD) {
             if (vInt.length != 3) {
                 throw new IllegalArgumentException("parseVInt cannot be called with a vInt with a starting byte 0xFE and a length that isn't 3!");
             }
@@ -221,12 +225,12 @@ public class BitcoinTransactionUtility {
             System.arraycopy(vInt, 1, numberPart, 0, numberPart.length);
 
             long result = 0L;
-            result += ((long)numberPart[0]);
-            result += ((long)numberPart[1] << 8);
+            result += ((long) numberPart[0]);
+            result += ((long) numberPart[1] << 8);
 
             return result;
         } else {
-            return (long)vInt[0];
+            return (long) vInt[0];
         }
     }
 
@@ -235,11 +239,11 @@ public class BitcoinTransactionUtility {
 
         int vIntLength;
 
-        if (start == (byte)0xFF) {
+        if (start == (byte) 0xFF) {
             vIntLength = 9;
-        } else if (start == (byte)0xFE) {
+        } else if (start == (byte) 0xFE) {
             vIntLength = 5;
-        } else if (start == (byte)0xFD) {
+        } else if (start == (byte) 0xFD) {
             vIntLength = 3;
         } else {
             vIntLength = 1;
@@ -270,12 +274,15 @@ public class BitcoinTransactionUtility {
 
         for (int i = 0; i < bitcoinTransaction.length - data.length; i++) {
             int j;
-            for (j = 0; j < data.length; j++)
-                if (bitcoinTransaction[i + j] != data[j])
+            for (j = 0; j < data.length; j++) {
+                if (bitcoinTransaction[i + j] != data[j]) {
                     break;
+                }
+            }
 
-            if (j == data.length)
+            if (j == data.length) {
                 return true;
+            }
         }
         return false;
     }

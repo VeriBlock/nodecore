@@ -11,11 +11,13 @@ import nodecore.miners.pop.contracts.VeriBlockHeader;
 
 public class NewVeriBlockFoundEvent {
     private final VeriBlockHeader block;
+
     public VeriBlockHeader getBlock() {
         return block;
     }
 
     private final VeriBlockHeader previousHead;
+
     public VeriBlockHeader getPreviousHead() {
         return previousHead;
     }

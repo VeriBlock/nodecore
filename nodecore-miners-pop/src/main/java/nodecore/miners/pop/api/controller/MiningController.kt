@@ -13,10 +13,10 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
+import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.api.model.MineRequestPayload
 import nodecore.miners.pop.api.model.MinerInfoResponse
 import nodecore.miners.pop.api.model.toResponse
-import nodecore.miners.pop.PoPMiner
 
 class MiningController(
     private val miner: PoPMiner

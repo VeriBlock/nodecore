@@ -9,5 +9,6 @@ package nodecore.miners.pop.contracts;
 
 public interface KeyValueRepository {
     void insert(KeyValueData data);
+
     KeyValueData get(String key);
 }

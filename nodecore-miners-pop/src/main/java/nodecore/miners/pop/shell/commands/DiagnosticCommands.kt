@@ -8,8 +8,8 @@
 
 package nodecore.miners.pop.shell.commands
 
-import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.common.Utility
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Utils
 import org.veriblock.shell.Shell

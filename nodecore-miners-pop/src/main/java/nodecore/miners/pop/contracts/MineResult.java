@@ -9,9 +9,11 @@ package nodecore.miners.pop.contracts;
 
 public class MineResult extends Result {
     private String operationId;
+
     public String getOperationId() {
         return operationId;
     }
+
     public void setOperationId(String operationId) {
         this.operationId = operationId;
     }

@@ -23,17 +23,21 @@ public class BlockHeightRule implements Rule {
     private final Configuration configuration;
 
     private List<Condition<Integer>> conditions = new ArrayList<>();
+
     public List<Condition<Integer>> getConditions() {
         return conditions;
     }
+
     public void setConditions(List<Condition<Integer>> conditions) {
         this.conditions = conditions;
     }
 
     private RuleAction<Integer> action;
+
     public RuleAction<Integer> getAction() {
         return action;
     }
+
     public void setAction(RuleAction<Integer> action) {
         this.action = action;
     }
@@ -66,6 +70,5 @@ public class BlockHeightRule implements Rule {
                 }
             }
         }
-
     }
 }

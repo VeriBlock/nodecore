@@ -26,6 +26,9 @@ import org.bitcoinj.wallet.Wallet;
 
 import javax.annotation.Nullable;
 
+/**
+ * Second task that will be executed in a mining operation
+ */
 public class CreateBitcoinTransactionTask extends BaseTask {
     @Override
     public BaseTask getNext() {
@@ -38,7 +41,9 @@ public class CreateBitcoinTransactionTask extends BaseTask {
 
     @Override
     protected TaskResult executeImpl(PoPMiningOperationState state) {
-        if (state.getTransaction() != null) return TaskResult.succeed(state, getNext());
+        if (state.getTransaction() != null) {
+            return TaskResult.succeed(state, getNext());
+        }
 
         Script opReturnScript = bitcoinService.generatePoPScript(state.getMiningInstruction().publicationData);
 
@@ -73,7 +78,8 @@ public class CreateBitcoinTransactionTask extends BaseTask {
         for (Throwable e : container.getSuppressed()) {
             if (e instanceof ApplicationExceptions.UnableToAcquireTransactionLock) {
                 logger.info("A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending");
-                failProcess(state, "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.");
+                failProcess(state,
+                        "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.");
             } else if (e instanceof InsufficientMoneyException) {
                 logger.info(e.getMessage());
                 failProcess(state, "PoP wallet does not contain sufficient funds to create PoP transaction");
@@ -81,7 +87,8 @@ public class CreateBitcoinTransactionTask extends BaseTask {
             } else if (e instanceof ApplicationExceptions.ExceededMaxTransactionFee) {
                 failProcess(state, "Calculated fee exceeded configured maximum transaction fee");
             } else if (e instanceof ApplicationExceptions.DuplicateTransactionException) {
-                failProcess(state, "Transaction appears identical to a previously broadcast transaction. Often this occurs when there is a 'too-long-mempool-chain'.");
+                failProcess(state,
+                        "Transaction appears identical to a previously broadcast transaction. Often this occurs when there is a 'too-long-mempool-chain'.");
             } else if (e instanceof Wallet.CompletionException) {
                 logger.error(e.getClass().getSimpleName(), e);
                 failProcess(state, "Unable to complete transaction: " + e.getClass().getSimpleName());

@@ -27,6 +27,7 @@ public class OperationSummary {
     }
 
     private final String action;
+
     public String getAction() {
         return action;
     }

@@ -81,9 +81,7 @@ public class PoPStateService {
             stateData.id = operationState.getOperationId();
             stateData.status = operationState.getStatus().name();
             stateData.action = operationState.getCurrentActionAsString();
-            stateData.transactionStatus = operationState.getTransactionStatus() != null ?
-                    operationState.getTransactionStatus().name() :
-                    "";
+            stateData.transactionStatus = operationState.getTransactionStatus() != null ? operationState.getTransactionStatus().name() : "";
             stateData.message = operationState.getMessage();
             stateData.state = serializedState;
             stateData.isDone = PoPMiningOperationState.Action.DONE.equals(operationState.getCurrentAction());
@@ -135,7 +133,8 @@ public class PoPStateService {
         }
 
         if (operationState.getBitcoinContextBlocksBytes() != null) {
-            builder.addAllBitcoinContext(operationState.getBitcoinContextBlocksBytes().stream()
+            builder.addAllBitcoinContext(operationState.getBitcoinContextBlocksBytes()
+                    .stream()
                     .map(ByteString::copyFrom)
                     .collect(Collectors.toList()));
         }
@@ -164,13 +163,16 @@ public class PoPStateService {
             state.writeTo(stream);
 
             return stream.toByteArray();
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
 
         return null;
     }
 
     private PoPMiningOperationState reconstitute(ProofOfProof.OperationState state) {
-        if (state == null) return null;
+        if (state == null) {
+            return null;
+        }
 
         logger.info("Reconstituting operation {}", state.getId());
 
@@ -189,7 +191,8 @@ public class PoPStateService {
             miningInstruction.endorsedBlockHeader = state.getMiningInstructions().getEndorsedBlockHeader().toByteArray();
             miningInstruction.lastBitcoinBlock = state.getMiningInstructions().getLastBitcoinBlock().toByteArray();
             miningInstruction.minerAddress = state.getMiningInstructions().getMinerAddress().toByteArray();
-            miningInstruction.endorsedBlockContextHeaders = state.getMiningInstructions().getBitcoinContextAtEndorsedList()
+            miningInstruction.endorsedBlockContextHeaders = state.getMiningInstructions()
+                    .getBitcoinContextAtEndorsedList()
                     .stream()
                     .map(ByteString::toByteArray)
                     .collect(Collectors.toList());
@@ -207,9 +210,7 @@ public class PoPStateService {
         }
 
         if (state.getBitcoinContextList() != null && state.getBitcoinContextCount() > 0) {
-            builder.setBitcoinContextBlocks(state.getBitcoinContextList().stream()
-                    .map(ByteString::toByteArray)
-                    .collect(Collectors.toList()));
+            builder.setBitcoinContextBlocks(state.getBitcoinContextList().stream().map(ByteString::toByteArray).collect(Collectors.toList()));
         }
 
         if (state.getMerklePath() != null) {

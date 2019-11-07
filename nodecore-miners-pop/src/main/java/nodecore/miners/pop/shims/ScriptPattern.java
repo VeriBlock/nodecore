@@ -30,14 +30,18 @@ import org.bitcoinj.script.ScriptOpCodes;
 
 import java.util.List;
 
-import static org.bitcoinj.script.ScriptOpCodes.*;
+import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSIG;
+import static org.bitcoinj.script.ScriptOpCodes.OP_DUP;
+import static org.bitcoinj.script.ScriptOpCodes.OP_EQUAL;
+import static org.bitcoinj.script.ScriptOpCodes.OP_EQUALVERIFY;
+import static org.bitcoinj.script.ScriptOpCodes.OP_HASH160;
 
 /**
  * This is a Script pattern matcher with some typical script patterns
  */
 public class ScriptPattern {
     public static final int LEGACY_ADDRESS_LENGTH = 20;
-    
+
     /**
      * Returns true if this script is of the form {@code DUP HASH160 <pubkey hash> EQUALVERIFY CHECKSIG}, ie, payment to an
      * address like {@code 1VayNert3x1KzbpzMGt2qdqrAThiRovi8}. This form was originally intended for the case where you wish
@@ -46,21 +50,28 @@ public class ScriptPattern {
      */
     public static boolean isPayToPubKeyHash(Script script) {
         List<ScriptChunk> chunks = script.getChunks();
-        if (chunks.size() != 5)
+        if (chunks.size() != 5) {
             return false;
-        if (!chunks.get(0).equalsOpCode(OP_DUP))
+        }
+        if (!chunks.get(0).equalsOpCode(OP_DUP)) {
             return false;
-        if (!chunks.get(1).equalsOpCode(OP_HASH160))
+        }
+        if (!chunks.get(1).equalsOpCode(OP_HASH160)) {
             return false;
+        }
         byte[] chunk2data = chunks.get(2).data;
-        if (chunk2data == null)
+        if (chunk2data == null) {
             return false;
-        if (chunk2data.length != LEGACY_ADDRESS_LENGTH)
+        }
+        if (chunk2data.length != LEGACY_ADDRESS_LENGTH) {
             return false;
-        if (!chunks.get(3).equalsOpCode(OP_EQUALVERIFY))
+        }
+        if (!chunks.get(3).equalsOpCode(OP_EQUALVERIFY)) {
             return false;
-        if (!chunks.get(4).equalsOpCode(OP_CHECKSIG))
+        }
+        if (!chunks.get(4).equalsOpCode(OP_CHECKSIG)) {
             return false;
+        }
         return true;
     }
 
@@ -89,20 +100,26 @@ public class ScriptPattern {
         // printed out but one is a P2SH script and the other isn't! :(
         // We explicitly test that the op code used to load the 20 bytes is 0x14 and not something logically
         // equivalent like {@code OP_HASH160 OP_PUSHDATA1 0x14 <20 bytes of script hash> OP_EQUAL}
-        if (chunks.size() != 3)
+        if (chunks.size() != 3) {
             return false;
-        if (!chunks.get(0).equalsOpCode(OP_HASH160))
+        }
+        if (!chunks.get(0).equalsOpCode(OP_HASH160)) {
             return false;
+        }
         ScriptChunk chunk1 = chunks.get(1);
-        if (chunk1.opcode != 0x14)
+        if (chunk1.opcode != 0x14) {
             return false;
+        }
         byte[] chunk1data = chunk1.data;
-        if (chunk1data == null)
+        if (chunk1data == null) {
             return false;
-        if (chunk1data.length != LEGACY_ADDRESS_LENGTH)
+        }
+        if (chunk1data.length != LEGACY_ADDRESS_LENGTH) {
             return false;
-        if (!chunks.get(2).equalsOpCode(OP_EQUAL))
+        }
+        if (!chunks.get(2).equalsOpCode(OP_EQUAL)) {
             return false;
+        }
         return true;
     }
 

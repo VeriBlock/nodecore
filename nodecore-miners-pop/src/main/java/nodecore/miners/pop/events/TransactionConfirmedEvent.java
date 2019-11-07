@@ -11,6 +11,7 @@ import nodecore.miners.pop.contracts.PoPMiningOperationState;
 
 public class TransactionConfirmedEvent {
     private final PoPMiningOperationState state;
+
     public PoPMiningOperationState getState() {
         return state;
     }

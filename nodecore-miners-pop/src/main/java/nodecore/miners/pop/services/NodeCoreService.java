@@ -14,14 +14,38 @@ import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.AdminGrpc;
 import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.VeriBlockMessages.*;
+import nodecore.api.grpc.VeriBlockMessages.BitcoinBlockHeader;
+import nodecore.api.grpc.VeriBlockMessages.GetBitcoinBlockIndexRequest;
+import nodecore.api.grpc.VeriBlockMessages.GetInfoReply;
+import nodecore.api.grpc.VeriBlockMessages.GetInfoRequest;
+import nodecore.api.grpc.VeriBlockMessages.GetLastBlockReply;
+import nodecore.api.grpc.VeriBlockMessages.GetLastBlockRequest;
+import nodecore.api.grpc.VeriBlockMessages.GetPoPEndorsementsInfoReply;
+import nodecore.api.grpc.VeriBlockMessages.GetPoPEndorsementsInfoRequest;
+import nodecore.api.grpc.VeriBlockMessages.GetPopReply;
+import nodecore.api.grpc.VeriBlockMessages.GetPopRequest;
+import nodecore.api.grpc.VeriBlockMessages.LockWalletRequest;
+import nodecore.api.grpc.VeriBlockMessages.PingRequest;
+import nodecore.api.grpc.VeriBlockMessages.ProtocolReply;
+import nodecore.api.grpc.VeriBlockMessages.SubmitPopRequest;
+import nodecore.api.grpc.VeriBlockMessages.UnlockWalletRequest;
 import nodecore.miners.pop.Configuration;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.common.Utility;
+import nodecore.miners.pop.contracts.ApplicationExceptions;
+import nodecore.miners.pop.contracts.BlockStore;
+import nodecore.miners.pop.contracts.NodeCoreReply;
 import nodecore.miners.pop.contracts.PoPEndorsementInfo;
+import nodecore.miners.pop.contracts.PoPMiningInstruction;
+import nodecore.miners.pop.contracts.PoPMiningTransaction;
 import nodecore.miners.pop.contracts.Result;
-import nodecore.miners.pop.contracts.*;
-import nodecore.miners.pop.events.*;
+import nodecore.miners.pop.contracts.VeriBlockHeader;
+import nodecore.miners.pop.events.ErrorMessageEvent;
+import nodecore.miners.pop.events.InfoMessageEvent;
+import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
+import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
+import nodecore.miners.pop.events.NodeCoreHealthyEvent;
+import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,16 +82,16 @@ public class NodeCoreService {
 
         initializeClient();
 
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat("nc-poll").build());
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("nc-poll").build());
         scheduledExecutorService.scheduleWithFixedDelay(this::poll, 5, 1, TimeUnit.SECONDS);
 
         InternalEventBus.getInstance().register(this);
     }
 
     private void initializeClient() {
-        InternalEventBus.getInstance().post(new InfoMessageEvent(
-                String.format("Connecting to NodeCore at %s:%d %s", configuration.getNodeCoreHost(),
+        InternalEventBus.getInstance()
+                .post(new InfoMessageEvent(String.format("Connecting to NodeCore at %s:%d %s",
+                        configuration.getNodeCoreHost(),
                         configuration.getNodeCorePort(),
                         configuration.getNodeCoreUseSSL() ? "over SSL" : "")));
 
@@ -118,9 +142,8 @@ public class NodeCoreService {
             instruction.endorsedBlockHeader = Arrays.copyOfRange(instruction.publicationData, 0, 64);
 
             if (reply.getLastKnownBlockContextCount() > 0) {
-                instruction.endorsedBlockContextHeaders = reply.getLastKnownBlockContextList().stream()
-                        .map(header -> header.getHeader().toByteArray())
-                        .collect(Collectors.toList());
+                instruction.endorsedBlockContextHeaders =
+                        reply.getLastKnownBlockContextList().stream().map(header -> header.getHeader().toByteArray()).collect(Collectors.toList());
             } else {
                 instruction.endorsedBlockContextHeaders = new ArrayList<>();
             }
@@ -141,7 +164,6 @@ public class NodeCoreService {
 
             result.setResultMessage(message.toString());
         }
-
 
         return result;
     }
@@ -174,22 +196,15 @@ public class NodeCoreService {
     }
 
     public List<PoPEndorsementInfo> getPoPEndorsementInfo() {
-        GetPoPEndorsementsInfoRequest request = GetPoPEndorsementsInfoRequest.newBuilder()
-                .setSearchLength(750)
-                .build();
+        GetPoPEndorsementsInfoRequest request = GetPoPEndorsementsInfoRequest.newBuilder().setSearchLength(750).build();
 
         GetPoPEndorsementsInfoReply reply = _blockingStub.getPoPEndorsementsInfo(request);
-        return reply.getPopEndorsementsList()
-                .stream()
-                .map(PoPEndorsementInfo::new)
-                .collect(Collectors.toList());
+        return reply.getPopEndorsementsList().stream().map(PoPEndorsementInfo::new).collect(Collectors.toList());
     }
 
     public Integer getBitcoinBlockIndex(byte[] blockHeader) {
-        GetBitcoinBlockIndexRequest request = GetBitcoinBlockIndexRequest.newBuilder()
-                .setBlockHeader(ByteString.copyFrom(blockHeader))
-                .setSearchLength(20)
-                .build();
+        GetBitcoinBlockIndexRequest request =
+                GetBitcoinBlockIndexRequest.newBuilder().setBlockHeader(ByteString.copyFrom(blockHeader)).setSearchLength(20).build();
 
         ProtocolReply reply = _blockingStub.getBitcoinBlockIndex(request);
         if (reply.getSuccess() && reply.getResultsCount() > 0) {
@@ -207,16 +222,13 @@ public class NodeCoreService {
     }
 
     public VeriBlockHeader getLastBlock() {
-        GetLastBlockReply reply = _blockingStub.withDeadlineAfter(10, TimeUnit.SECONDS)
-                .getLastBlock(GetLastBlockRequest.newBuilder().build());
+        GetLastBlockReply reply = _blockingStub.withDeadlineAfter(10, TimeUnit.SECONDS).getLastBlock(GetLastBlockRequest.newBuilder().build());
 
         return new VeriBlockHeader(reply.getHeader().getHeader().toByteArray());
     }
 
     public Result unlockWallet(String passphrase) {
-        UnlockWalletRequest request = UnlockWalletRequest.newBuilder()
-                .setPassphrase(passphrase)
-                .build();
+        UnlockWalletRequest request = UnlockWalletRequest.newBuilder().setPassphrase(passphrase).build();
 
         ProtocolReply protocolReply = _blockingStub.unlockWallet(request);
         Result result = new Result();
@@ -245,7 +257,8 @@ public class NodeCoreService {
         return result;
     }
 
-    @Subscribe public void onNodeCoreConfigurationChanged(NodeCoreConfigurationChangedEvent event) {
+    @Subscribe
+    public void onNodeCoreConfigurationChanged(NodeCoreConfigurationChangedEvent event) {
         try {
             initializeClient();
         } catch (Exception e) {

@@ -13,33 +13,41 @@ import java.util.List;
 
 public class RuleContext {
     private VeriBlockHeader previousHead;
+
     public VeriBlockHeader getPreviousHead() {
         return previousHead;
     }
+
     public void setPreviousHead(VeriBlockHeader previousHead) {
         this.previousHead = previousHead;
     }
 
     private VeriBlockHeader latestBlock;
+
     public VeriBlockHeader getLatestBlock() {
         return latestBlock;
     }
+
     public void setLatestBlock(VeriBlockHeader latestBlock) {
         this.latestBlock = latestBlock;
     }
 
     private List<VeriBlockHeader> blocksRemoved;
+
     public List<VeriBlockHeader> getBlocksRemoved() {
         return blocksRemoved;
     }
+
     public void setBlocksRemoved(List<VeriBlockHeader> blocksRemoved) {
         this.blocksRemoved = blocksRemoved;
     }
 
     private List<VeriBlockHeader> blocksAdded;
+
     public List<VeriBlockHeader> getBlocksAdded() {
         return blocksAdded;
     }
+
     public void setBlocksAdded(List<VeriBlockHeader> blocksAdded) {
         this.blocksAdded = blocksAdded;
     }

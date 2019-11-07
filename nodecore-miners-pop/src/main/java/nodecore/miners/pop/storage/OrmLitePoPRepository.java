@@ -40,10 +40,7 @@ public class OrmLitePoPRepository implements PoPRepository {
     @Override
     public Iterator<OperationStateData> getActiveOperations() {
         try {
-            return operationStateDataDao.queryBuilder()
-                    .where()
-                    .eq("is_done", false)
-                    .iterator();
+            return operationStateDataDao.queryBuilder().where().eq("is_done", false).iterator();
         } catch (SQLException e) {
             logger.error("SQL Error: {}", e.getSQLState(), e);
         }
@@ -65,10 +62,7 @@ public class OrmLitePoPRepository implements PoPRepository {
     @Override
     public long getUnconfirmedTransactionCount() {
         try {
-            return operationStateDataDao.queryBuilder()
-                    .where()
-                    .eq("transaction_status", TransactionStatus.UNCONFIRMED.name())
-                    .countOf();
+            return operationStateDataDao.queryBuilder().where().eq("transaction_status", TransactionStatus.UNCONFIRMED.name()).countOf();
         } catch (SQLException e) {
             logger.error("SQL Error: {}", e.getSQLState(), e);
         }

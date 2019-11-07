@@ -122,9 +122,9 @@ class PopShell(
     @Subscribe
     fun onPoPMinerReady(event: PoPMinerReadyEvent?) {
         try {
-           printInfo("**********************************************************************************************")
-           printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
-           printInfo("**********************************************************************************************")
+            printInfo("**********************************************************************************************")
+            printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
+            printInfo("**********************************************************************************************")
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

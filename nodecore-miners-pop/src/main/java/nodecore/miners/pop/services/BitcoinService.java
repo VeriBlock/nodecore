@@ -15,11 +15,32 @@ import nodecore.miners.pop.Constants;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.common.BitcoinNetwork;
-import nodecore.miners.pop.contracts.ApplicationExceptions.*;
-import nodecore.miners.pop.events.*;
+import nodecore.miners.pop.contracts.ApplicationExceptions.CorruptSPVChain;
+import nodecore.miners.pop.contracts.ApplicationExceptions.DuplicateTransactionException;
+import nodecore.miners.pop.contracts.ApplicationExceptions.ExceededMaxTransactionFee;
+import nodecore.miners.pop.contracts.ApplicationExceptions.SendTransactionException;
+import nodecore.miners.pop.contracts.ApplicationExceptions.UnableToAcquireTransactionLock;
+import nodecore.miners.pop.events.BitcoinServiceNotReadyEvent;
+import nodecore.miners.pop.events.BitcoinServiceReadyEvent;
+import nodecore.miners.pop.events.BlockchainDownloadedEvent;
+import nodecore.miners.pop.events.CoinsReceivedEvent;
+import nodecore.miners.pop.events.InfoMessageEvent;
 import nodecore.miners.pop.shims.WalletShim;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.BitcoinSerializer;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Context;
+import org.bitcoinj.core.FilteredBlock;
+import org.bitcoinj.core.PartialMerkleTree;
+import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionBroadcast;
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -37,8 +58,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -80,7 +112,9 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     }
 
     public void setServiceReady(boolean value) {
-        if (value == isServiceReady) return;
+        if (value == isServiceReady) {
+            return;
+        }
 
         this.isServiceReady = value;
         if (this.isServiceReady) {
@@ -96,8 +130,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
         this.blockCache = cache;
         this.bitcoinNetwork = configuration.getBitcoinNetwork();
 
-        InternalEventBus.getInstance().post(new InfoMessageEvent(
-                String.format("Using Bitcoin %s network", this.bitcoinNetwork.toString())));
+        InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Using Bitcoin %s network", this.bitcoinNetwork.toString())));
 
         this.serializer = new BitcoinSerializer(context.getParams(), true);
         this.kit = createWalletAppKit(context, getFilePrefix(bitcoinNetwork), null);
@@ -121,8 +154,8 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 blockChain = this.chain();
                 peerGroup = this.peerGroup();
 
-                wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) ->
-                        InternalEventBus.getInstance().post(new CoinsReceivedEvent(tx, prevBalance, newBalance)));
+                wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> InternalEventBus.getInstance()
+                        .post(new CoinsReceivedEvent(tx, prevBalance, newBalance)));
 
                 peerGroup.addBlocksDownloadedEventListener(self);
 
@@ -145,10 +178,12 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 super.progress(pct, blocksSoFar, date);
 
                 // Don't report progress at the end, doneDownload() will handle that
-                if (blocksSoFar < 10) return;
+                if (blocksSoFar < 10) {
+                    return;
+                }
 
                 if ((int) pct % 5 == 0) {
-                    InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Blockchain downloading: %d%%", (int)pct)));
+                    InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Blockchain downloading: %d%%", (int) pct)));
                 }
                 if (pct > 95.0 && blocksSoFar % 10 == 0) {
                     InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Blockchain downloading: %d blocks to go", blocksSoFar)));
@@ -164,9 +199,11 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     }
 
     public void initialize() throws CorruptSPVChain {
-        if (bitcoinNetwork == BitcoinNetwork.RegTest)
+        if (bitcoinNetwork == BitcoinNetwork.RegTest) {
             kit.connectToLocalHost();
-            kit.startAsync();
+        }
+
+        kit.startAsync();
 
         try {
             kit.awaitRunning();
@@ -179,8 +216,9 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 throw new CorruptSPVChain("A corrupt SPV chain has been detected and deleted. Please restart the PoP miner, and run 'resetwallet'!");
             } else {
                 logger.info("Unable to delete corrupt SPV chain, please delete " + spvchain.getAbsolutePath() + "!");
-                throw new CorruptSPVChain("A corrupt SPV chain has been detected but could not be " +
-                        "deleted. Please delete " + spvchain.getAbsolutePath() + ", restart the PoP miner, and run 'resetwallet'!");
+                throw new CorruptSPVChain(
+                        "A corrupt SPV chain has been detected but could not be " + "deleted. Please delete " + spvchain.getAbsolutePath() +
+                                ", restart the PoP miner, and run 'resetwallet'!");
             }
         }
     }
@@ -223,10 +261,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     }
 
     public Script generatePoPScript(byte[] opReturnData) {
-        return new ScriptBuilder()
-                .op(ScriptOpCodes.OP_RETURN)
-                .data(opReturnData)
-                .build();
+        return new ScriptBuilder().op(ScriptOpCodes.OP_RETURN).data(opReturnData).build();
     }
 
     public ListenableFuture<Transaction> createPoPTransaction(Script opReturnScript) throws SendTransactionException {
@@ -293,7 +328,6 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     private final Object downloadLock = new Object();
     private final ConcurrentHashMap<String, ListenableFuture<Block>> blockDownloader = new ConcurrentHashMap<>();
 
-
     public ListenableFuture<FilteredBlock> getFilteredBlockFuture(Sha256Hash hash) {
         return blockCache.getAsync(hash.toString());
     }
@@ -301,8 +335,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     public PartialMerkleTree getPartialMerkleTree(Sha256Hash hash) {
         try {
             logger.info("Awaiting block {}...", hash.toString());
-            FilteredBlock block = blockCache.getAsync(hash.toString())
-                    .get(configuration.getActionTimeout(), TimeUnit.SECONDS);
+            FilteredBlock block = blockCache.getAsync(hash.toString()).get(configuration.getActionTimeout(), TimeUnit.SECONDS);
 
             if (block != null) {
                 return block.getPartialMerkleTree();
@@ -346,19 +379,25 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     }
 
     public Block makeBlock(byte[] raw) {
-        if (raw == null) return null;
+        if (raw == null) {
+            return null;
+        }
 
         return serializer.makeBlock(raw);
     }
 
     public Collection<Block> makeBlocks(Collection<byte[]> raw) {
-        if (raw == null) return null;
+        if (raw == null) {
+            return null;
+        }
 
         return raw.stream().map(serializer::makeBlock).collect(Collectors.toSet());
     }
 
     public Transaction makeTransaction(byte[] raw) {
-        if (raw == null) return null;
+        if (raw == null) {
+            return null;
+        }
 
         Transaction rawTx = serializer.makeTransaction(raw);
 
@@ -394,7 +433,6 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
         try {
             StoredBlock chainHead = blockChain.getChainHead();
             Block block = downloadBlock(chainHead.getHeader().getHash());
-
 
             if (block != null && block.getTransactions() != null && block.getTransactions().size() > 0) {
                 Coin fees = block.getTransactions().get(0).getOutputSum().minus(block.getBlockInflation(chainHead.getHeight()));
@@ -444,9 +482,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
 
     public List<String> exportPrivateKeys() {
         List<DeterministicKey> keys = wallet.getActiveKeyChain().getLeafKeys();
-        List<String> wifKeys = keys.stream()
-                .map(key -> key.getPrivateKeyAsWiF(wallet.getNetworkParameters()))
-                .collect(Collectors.toList());
+        List<String> wifKeys = keys.stream().map(key -> key.getPrivateKeyAsWiF(wallet.getNetworkParameters())).collect(Collectors.toList());
         return wifKeys;
     }
 
@@ -502,7 +538,8 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
 
             logger.info("Created transaction spending " + request.tx.getInputs().size() + " inputs:");
             for (int i = 0; i < request.tx.getInputs().size(); i++) {
-                logger.info("\t" + request.tx.getInputs().get(i).getOutpoint().getHash().toString() + ":" + request.tx.getInputs().get(i).getOutpoint().getIndex());
+                logger.info("\t" + request.tx.getInputs().get(i).getOutpoint().getHash().toString() + ":" +
+                        request.tx.getInputs().get(i).getOutpoint().getIndex());
             }
         } catch (Exception e) {
             releaseTxLock();

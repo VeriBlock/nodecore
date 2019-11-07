@@ -15,6 +15,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @BindingAnnotation
-@Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Mining {}
+public @interface Mining {
+}
