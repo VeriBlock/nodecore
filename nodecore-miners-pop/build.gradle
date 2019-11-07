@@ -117,7 +117,7 @@ jar {
 }
 
 applicationName = 'nodecore-pop'
-mainClassName = 'nodecore.miners.pop.Program'
+mainClassName = 'nodecore.miners.pop.ProgramKt'
 
 distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
 distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
