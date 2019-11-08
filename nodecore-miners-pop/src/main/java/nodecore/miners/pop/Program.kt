@@ -75,6 +75,7 @@ class Program {
             shell.run()
         } catch (e: Exception) {
             shell.renderFromThrowable(e)
+        } finally {
             shutdownSignal.countDown()
         }
         try {
