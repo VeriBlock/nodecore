@@ -29,6 +29,7 @@ import org.veriblock.shell.Shell
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
 
+
 class PopShell(
     private val miner: PoPMiner,
     private val messageService: MessageService,

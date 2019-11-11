@@ -8,8 +8,10 @@
 package nodecore.miners.pop
 
 import com.google.common.eventbus.Subscribe
+import mu.KotlinLogging
 import nodecore.miners.pop.api.ApiServer
 import nodecore.miners.pop.api.webApiModule
+import nodecore.miners.pop.events.ProgramQuitEvent
 import nodecore.miners.pop.events.ShellCompletedEvent
 import nodecore.miners.pop.rules.rulesModule
 import nodecore.miners.pop.services.MessageService
@@ -18,15 +20,17 @@ import nodecore.miners.pop.storage.repositoryModule
 import org.bitcoinj.core.Context
 import org.bitcoinj.utils.Threading
 import org.koin.core.context.startKoin
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.veriblock.core.SharedConstants
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import kotlin.system.exitProcess
 
+private val logger = KotlinLogging.logger {}
+
 class Program {
     private val shutdownSignal: CountDownLatch = CountDownLatch(1)
+    private lateinit var shell: PopShell
+    var externalQuit = false
 
     init {
         InternalEventBus.getInstance().register(this)
@@ -65,7 +69,7 @@ class Program {
         val apiServer: ApiServer = startupInjector.get()
         apiServer.address = configuration.httpApiAddress
         apiServer.port = configuration.httpApiPort
-        val shell: PopShell = startupInjector.get()
+        shell = startupInjector.get()
         shell.initialize()
         try {
             popMiner.run()
@@ -107,12 +111,22 @@ class Program {
         }
     }
 
-    companion object {
-        private val logger: Logger = LoggerFactory.getLogger(Program::class.java)
+    @Subscribe
+    fun onProgramQuit(event: ProgramQuitEvent) {
+        ///HACK: imitate an "exit" command in the console
+        if (event.reason == 1) {
+            externalQuit = true
+        }
+        shell.interrupt()
     }
 }
 
 fun main(args: Array<String>) {
     val main = Program()
-    exitProcess(main.run(args))
+    val programExitResult = main.run(args)
+    if (main.externalQuit) {
+        exitProcess(2)
+    } else {
+        exitProcess(programExitResult)
+    }
 }

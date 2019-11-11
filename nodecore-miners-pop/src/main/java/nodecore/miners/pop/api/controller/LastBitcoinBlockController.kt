@@ -5,68 +5,41 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.api;
+package nodecore.miners.pop.api.controller
 
-import static nodecore.miners.pop.api.annotations.Route.Verb.GET;
+import io.ktor.application.call
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.api.models.ShowLastBitcoinBlockResponse
+import nodecore.miners.pop.common.Utility
+import org.bitcoinj.core.Utils
+import java.io.ByteArrayOutputStream
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+class LastBitcoinBlockController(
+    private val miner: PoPMiner
+) : ApiController {
 
-import org.bitcoinj.core.Block;
-import org.bitcoinj.core.StoredBlock;
-import org.bitcoinj.core.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+    override fun Route.registerApi() {
+        get("/lastbitcoinblock") {
+            val lastBlock = miner.lastBitcoinBlock
+            val lastBlockHeader = lastBlock.header
 
-import com.google.gson.JsonSyntaxException;
-import com.google.inject.Inject;
+            val headerOutputSteram = ByteArrayOutputStream()
+            Utils.uint32ToByteStreamLE(lastBlockHeader.version, headerOutputSteram)
+            headerOutputSteram.write(lastBlockHeader.prevBlockHash.reversedBytes)
+            headerOutputSteram.write(lastBlockHeader.merkleRoot.reversedBytes)
+            Utils.uint32ToByteStreamLE(lastBlockHeader.timeSeconds, headerOutputSteram)
+            Utils.uint32ToByteStreamLE(lastBlockHeader.difficultyTarget, headerOutputSteram)
+            Utils.uint32ToByteStreamLE(lastBlockHeader.nonce, headerOutputSteram)
 
-import nodecore.miners.pop.api.annotations.Route;
-import nodecore.miners.pop.api.models.ShowLastBitcoinBlockResponse;
-import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.contracts.PoPMiner;
-import spark.Request;
-import spark.Response;
+            val responseModel = ShowLastBitcoinBlockResponse()
+            responseModel.header = Utility.bytesToHex(headerOutputSteram.toByteArray())
+            responseModel.hash = Utility.bytesToHex(lastBlockHeader.hash.bytes)
+            responseModel.height = lastBlock.height
 
-public class LastBitcoinBlockController extends ApiController {
-    private static final Logger logger = LoggerFactory.getLogger(LastBitcoinBlockController.class);
-    private final PoPMiner miner;
-
-    @Inject
-    public LastBitcoinBlockController(PoPMiner miner) {
-        this.miner = miner;
-    }
-
-    @Route(path = "/api/lastbitcoinblock", verb = GET)
-    public String post(Request request, Response response) {
-        try {            
-            StoredBlock lastBlock = miner.getLastBitcoinBlock();
-            Block lastBlockHeader = lastBlock.getHeader();
-
-            ByteArrayOutputStream headerOutputSteram = new ByteArrayOutputStream();
-            Utils.uint32ToByteStreamLE(lastBlockHeader.getVersion(), headerOutputSteram);
-            headerOutputSteram.write(lastBlockHeader.getPrevBlockHash().getReversedBytes());
-            headerOutputSteram.write(lastBlockHeader.getMerkleRoot().getReversedBytes());
-            Utils.uint32ToByteStreamLE(lastBlockHeader.getTimeSeconds(), headerOutputSteram);
-            Utils.uint32ToByteStreamLE(lastBlockHeader.getDifficultyTarget(), headerOutputSteram);
-            Utils.uint32ToByteStreamLE(lastBlockHeader.getNonce(), headerOutputSteram);
-
-            ShowLastBitcoinBlockResponse responseModel = new ShowLastBitcoinBlockResponse();
-            responseModel.header = Utility.bytesToHex(headerOutputSteram.toByteArray());
-            responseModel.hash = Utility.bytesToHex(lastBlockHeader.getHash().getBytes());
-            responseModel.height = lastBlock.getHeight();
-
-            response.status(200);
-            response.type(CONTENT_TYPE_JSON);
-
-            return toJson(responseModel);
-        } catch (JsonSyntaxException e) {
-            response.status(400);
-            return "";
-        } catch (IOException e) {
-            logger.info("Cannot parse the block header", e);
-            response.status(500);
-            return "";
+            call.respond(responseModel)
         }
     }
 }
