@@ -25,10 +25,12 @@ class QuitController : ApiController {
     override fun Route.registerApi() {
         post("/quit") {
             logger.info("Terminating the miner now")
+            val restart = call.parameters["restart"]?.toBoolean() ?: false
+            val quitReason = if (restart) 1 else 0
             val quitExecutor = Executors.newSingleThreadExecutor()
             quitExecutor.submit {
                 sleep(1000)
-                InternalEventBus.getInstance().post(ProgramQuitEvent(1))
+                InternalEventBus.getInstance().post(ProgramQuitEvent(quitReason))
             }
 
             call.respond(HttpStatusCode.OK)
