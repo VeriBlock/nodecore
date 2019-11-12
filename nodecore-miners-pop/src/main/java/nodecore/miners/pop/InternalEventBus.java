@@ -32,6 +32,7 @@ public final class InternalEventBus {
 
     public void post(Object event) {
         try {
+            logger.debug("Posted event: {}", event.toString());
             eventBus.post(event);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
