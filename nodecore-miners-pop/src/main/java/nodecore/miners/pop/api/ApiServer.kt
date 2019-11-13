@@ -55,26 +55,31 @@ class ApiServer(
 
         logger.info("Starting HTTP API on {}:{}", address, port)
 
-        server = embeddedServer(Netty, port = port, host = address) {
-            install(DefaultHeaders)
-            install(CallLogging)
+        server = try {
+            embeddedServer(Netty, port = port, host = address) {
+                install(DefaultHeaders)
+                install(CallLogging)
 
-            statusPages()
+                statusPages()
 
-            install(ContentNegotiation) {
-                gson()
-            }
+                install(ContentNegotiation) {
+                    gson()
+                }
 
-            install(Routing) {
-                route("/api") {
-                    for (controller in controllers) {
-                        with(controller) {
-                            registerApi()
+                install(Routing) {
+                    route("/api") {
+                        for (controller in controllers) {
+                            with(controller) {
+                                registerApi()
+                            }
                         }
                     }
                 }
-            }
-        }.start()
+            }.start()
+        } catch (e: Exception) {
+            logger.warn(e) { "Could not start the API" }
+            return
+        }
 
         running = true
     }
