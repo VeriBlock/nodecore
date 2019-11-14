@@ -144,8 +144,6 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     private WalletAppKit createWalletAppKit(Context context, String filePrefix, DeterministicSeed seed) {
         isBlockchainDownloaded = false;
 
-        BitcoinService self = this;
-
         WalletAppKit kit = new WalletAppKit(context.getParams(), Script.ScriptType.P2WPKH, null, new File("."), filePrefix) {
             @Override
             protected void onSetupCompleted() {
@@ -162,7 +160,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> InternalEventBus.getInstance()
                         .post(new CoinsReceivedEvent(tx, prevBalance, newBalance)));
 
-                peerGroup.addBlocksDownloadedEventListener(self);
+                peerGroup.addBlocksDownloadedEventListener(BitcoinService.this);
 
                 setServiceReady(true);
             }
@@ -353,31 +351,36 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     }
 
     public Block downloadBlock(Sha256Hash hash) {
-        logger.info("Attempting to download block with hash {}", hash.toString());
+        int attempts = 0;
+        Block block = null;
+        while (block == null && attempts < 5) {
+            logger.info("Attempting to download block with hash {}", hash.toString());
+            attempts++;
 
-        ListenableFuture<Block> blockFuture;
-        // Lock for read to see if we've got a download already started
-        synchronized (downloadLock) {
-            blockFuture = blockDownloader.get(hash.toString());
-            if (blockFuture == null) {
-                logger.info("Starting download of block {} from peer group", hash.toString());
-                blockFuture = peerGroup.getDownloadPeer().getBlock(hash);
-                blockDownloader.putIfAbsent(hash.toString(), blockFuture);
-            } else {
-                logger.info("Found existing download of block {}", hash.toString());
+            ListenableFuture<Block> blockFuture;
+            // Lock for read to see if we've got a download already started
+            synchronized (downloadLock) {
+                blockFuture = blockDownloader.get(hash.toString());
+                if (blockFuture == null) {
+                    logger.info("Starting download of block {} from peer group", hash.toString());
+                    blockFuture = peerGroup.getDownloadPeer().getBlock(hash);
+                    blockDownloader.putIfAbsent(hash.toString(), blockFuture);
+                } else {
+                    logger.info("Found existing download of block {}", hash.toString());
+                }
+            }
+
+            try {
+                logger.info("Waiting for block {} to finish downloading", hash.toString());
+                block = blockFuture.get(configuration.getActionTimeout(), TimeUnit.SECONDS);
+            } catch (TimeoutException | InterruptedException | ExecutionException e) {
+                logger.error("Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.getMessage());
+                blockDownloader.remove(hash.toString());
             }
         }
 
-        Block block = null;
-        try {
-            logger.info("Waiting for block {} to finish downloading", hash.toString());
-            block = blockFuture.get(configuration.getActionTimeout(), TimeUnit.SECONDS);
-        } catch (TimeoutException | InterruptedException | ExecutionException e) {
-            logger.error("Unable to download Bitcoin block", e);
-        }
-
         if (block != null) {
-            logger.info("Finished downloading block with hash {}", hash.toString());
+            logger.info("Finished downloading block with hash {} at the #{} attempt", hash.toString(), attempts);
         }
 
         return block;
@@ -514,6 +517,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
         return filePrefix;
     }
 
+    @Override
     public void onBlocksDownloaded(Peer peer, Block block, @Nullable FilteredBlock filteredBlock, int blocksLeft) {
         if (filteredBlock != null) {
             logger.debug("FilteredBlock {} downloaded", block.getHashAsString());
