@@ -84,12 +84,12 @@ class Program {
         }
         try {
             shutdownSignal.await()
-            nodecore.miners.pop.Threading.shutdown()
             apiServer.shutdown()
             eventEngine.shutdown()
             scheduler.shutdown()
             popMiner.shutdown()
             messageService.shutdown()
+            nodecore.miners.pop.Threading.shutdown()
             configuration.save()
             logger.info("Application exit")
         } catch (e: InterruptedException) {
