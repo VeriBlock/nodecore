@@ -30,12 +30,13 @@ class PluginConfigWithFamily(
 )
 
 class PluginFactory {
-    private val chainFamilies: Map<String, (Long, String, String) -> SecurityInheritingChain>
-    private val chains: Map<String, SecurityInheritingChain>
+    private lateinit var chainFamilies: Map<String, (Long, String, String) -> SecurityInheritingChain>
+    private lateinit var chains: Map<String, SecurityInheritingChain>
 
     private val configuredPluginFamilies: Map<String, PluginConfigWithFamily> = Configuration.extract("securityInheriting") ?: emptyMap()
 
-    init {
+    fun loadPlugins() {
+        logger.info { "Loading plugins..." }
         // Load plugin jars
         val urls: List<URL> = try {
             File("plugins/").walk().filter {
@@ -67,16 +68,17 @@ class PluginFactory {
         val siChainClasses = siClasses.filter {
             it.getAnnotation(PluginSpec::class.java) != null
         }
+        logger.info { "Found ${siChainFamilyClasses.size} family plugins and ${siChainClasses.size} standalone plugins" }
         chainFamilies = siChainFamilyClasses.associate {
             val annotation = it.getAnnotation(FamilyPluginSpec::class.java)
-            logger.info { "Loading plugin family ${annotation.key}" }
+            logger.info { "Loaded plugin family ${annotation.key}" }
             annotation.key to { id: Long, key: String, name: String ->
                 it.getDeclaredConstructor(Long::class.java, String::class.java, String::class.java).newInstance(id, key, name)
             }
         }
         chains = siChainClasses.asSequence().associate {
             val annotation = it.getAnnotation(PluginSpec::class.java)
-            logger.info { "Loading plugin ${annotation.key}" }
+            logger.info { "Loaded plugin ${annotation.key}" }
             // Create the map by name and class instance
             annotation.key to it.newInstance()
         } + configuredPluginFamilies.mapNotNull {
@@ -89,7 +91,7 @@ class PluginFactory {
             val chainSupplier = chainFamilies[family]
                 ?: return@mapNotNull null
 
-            logger.info { "Loading plugin ${it.key} ($family family) from config" }
+            logger.info { "Loaded plugin ${it.key} ($family family) from config" }
             it.key to chainSupplier(chainId, it.key, it.value.name ?: "")
         }.associate {
             it.first to it.second

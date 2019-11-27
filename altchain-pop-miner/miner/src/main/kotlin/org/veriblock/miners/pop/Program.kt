@@ -10,6 +10,7 @@ package org.veriblock.miners.pop
 
 import org.koin.log.EmptyLogger
 import org.koin.standalone.StandAloneContext.startKoin
+import org.veriblock.miners.pop.plugins.PluginFactory
 import org.veriblock.miners.pop.plugins.pluginModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.storage.repositoryModule
@@ -30,13 +31,20 @@ private fun run(): Int {
     })
 
     logger.info { "Starting dependency injection" }
-    val koinApplication = startKoin(listOf(serviceModule, taskModule, minerModule, repositoryModule, pluginModule), logger = EmptyLogger())
+    val koin = startKoin(
+        listOf(
+            serviceModule, taskModule, minerModule, repositoryModule, pluginModule
+        ),
+        logger = EmptyLogger()
+    ).koinContext
 
-    val miner: Miner = koinApplication.koinContext.get()
-    val securityInheritingService: SecurityInheritingService = koinApplication.koinContext.get()
-    val shell: Shell = koinApplication.koinContext.get()
+    val miner: Miner = koin.get()
+    val securityInheritingService: SecurityInheritingService = koin.get()
+    val shell: Shell = koin.get()
+    val pluginFactory: PluginFactory = koin.get()
     shell.initialize()
     try {
+        pluginFactory.loadPlugins()
         miner.start()
         securityInheritingService.start()
         shell.run()
