@@ -9,14 +9,14 @@
 package org.veriblock.miners.pop.securityinheriting
 
 import org.veriblock.miners.pop.Miner
-import org.veriblock.miners.pop.plugins.PluginFactory
+import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.createLogger
 
 private val logger = createLogger {}
 
 class SecurityInheritingService(
     private val miner: Miner,
-    private val pluginFactory: PluginFactory
+    private val pluginFactory: PluginService
 ) {
     private val autoMiners = HashMap<String, SecurityInheritingAutoMiner>()
 

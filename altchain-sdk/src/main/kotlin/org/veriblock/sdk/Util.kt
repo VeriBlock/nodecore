@@ -11,7 +11,7 @@ package org.veriblock.sdk
 import org.veriblock.sdk.util.Utils
 
 fun ByteArray.toHex(): String = Utils.encodeHex(this)
-fun String.asHex(): ByteArray = Utils.decodeHex(this)
+fun String.asHexBytes(): ByteArray = Utils.decodeHex(this)
 
 inline fun checkSuccess(block: () -> Any?): Boolean = try {
     block()

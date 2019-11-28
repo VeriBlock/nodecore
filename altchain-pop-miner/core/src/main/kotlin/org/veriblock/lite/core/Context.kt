@@ -18,6 +18,6 @@ object Context {
         ?: "./"
 
     val networkParameters = NetworkParameters
-    val directory: File = File(".")
-    val filePrefix: String = "${dataDir}vbk-${networkParameters.network}"
+    val directory: File = File(dataDir)
+    val filePrefix: String = "vbk-${networkParameters.network}"
 }
