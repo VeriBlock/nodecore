@@ -13,14 +13,14 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.error
-import org.veriblock.miners.pop.plugins.PluginFactory
+import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.createLogger
 
 private val logger = createLogger {}
 
 class WorkflowAuthority(
-    private val pluginFactory: PluginFactory,
+    private val pluginFactory: PluginService,
     private val nodeCoreLiteKit: NodeCoreLiteKit
 ) {
     fun submit(operation: MiningOperation) {

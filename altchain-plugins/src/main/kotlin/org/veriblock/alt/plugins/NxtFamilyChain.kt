@@ -10,7 +10,7 @@ package org.veriblock.alt.plugins
 
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.httpPost
+import com.github.kittinunf.fuel.httpGet
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.Configuration
 import org.veriblock.sdk.PublicationData
@@ -26,35 +26,39 @@ import org.veriblock.sdk.util.Base58
 
 private val logger = createLogger {}
 
-class BtcConfig(
+class NxtConfig(
     val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
-    val autoMine: BtcAutoMineConfig? = null
+    val autoMine: NxtAutoMineConfig? = null
 )
 
-class BtcAutoMineConfig(
+class NxtAutoMineConfig(
     val round1: Boolean = false,
     val round2: Boolean = false,
     val round3: Boolean = false,
     val round4: Boolean = false
 )
 
-private data class BtcPublicationData(
-    val block_header: String,
-    val raw_contextinfocontainer: String,
+private data class NxtBlockData(
+    val height: Int
+)
+
+private data class NxtPublicationData(
+    val blockHeader: String,
+    val contextInfoContainer: String,
     val last_known_veriblock_blocks: List<String>,
     val last_known_bitcoin_blocks: List<String>
 )
 
-@FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
-class BitcoinFamilyChain(
+@FamilyPluginSpec(name = "NxtFamily", key = "nxt")
+class NxtFamilyChain(
     val id: Long,
     val key: String,
     val name: String
 ) : SecurityInheritingChain {
 
-    private val config = Configuration.extract("securityInheriting.$key") ?: BtcConfig()
+    private val config = Configuration.extract("securityInheriting.$key") ?: NxtConfig()
 
     private fun Request.authenticate() = if (config.username != null && config.password != null) {
         authentication().basic(config.username, config.password)
@@ -83,11 +87,9 @@ class BitcoinFamilyChain(
 
     override fun getBestBlockHeight(): Int {
         logger.info { "Retrieving best block height..." }
-        val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
-        return config.host.httpPost()
-            .authenticate()
-            .body(jsonBody)
-            .rpcResponse()
+        return "${config.host}/nxt".httpGet(listOf(
+            "requestType" to "getBlock"
+        )).authenticate().httpResponse<NxtBlockData>().height
     }
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
@@ -96,34 +98,33 @@ class BitcoinFamilyChain(
             ?: getBestBlockHeight()
 
         logger.info { "Retrieving publication data at height $actualBlockHeight from $key daemon at ${config.host}..." }
-        val jsonBody = JsonRpcRequestBody("getpopdata", listOf(actualBlockHeight)).toJson()
-        val response: BtcPublicationData = config.host.httpPost()
-            .authenticate()
-            .body(jsonBody)
-            .rpcResponse()
+        val response: NxtPublicationData = "${config.host}/nxt".httpGet(listOf(
+            "requestType" to "getPopData",
+            "height" to actualBlockHeight
+        )).authenticate().httpResponse()
 
         val publicationData = PublicationData(
             getChainIdentifier(),
-            response.block_header.asHexBytes(),
+            response.blockHeader.asHexBytes(),
             Base58.decode("VFMJSUgJCy9QRa1RjXNmJ5kLy5D35C"), // TODO retrieve from response
-            response.raw_contextinfocontainer.asHexBytes()
+            response.contextInfoContainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {
             error("Publication data's context (last known VeriBlock blocks) must not be empty!")
         }
-        return PublicationDataWithContext(publicationData, response.last_known_veriblock_blocks.map { it.asHexBytes() }, response.last_known_bitcoin_blocks.map { it.asHexBytes() })
+        return PublicationDataWithContext(
+            publicationData,
+            response.last_known_veriblock_blocks.map { it.asHexBytes() },
+            response.last_known_bitcoin_blocks.map { it.asHexBytes() }
+        )
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
-        val jsonBody = JsonRpcRequestBody("submitpop", listOf(
-            SerializeDeserializeService.serialize(proofOfProof).toHex(),
-            veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
-        )).toJson()
-
-        return config.host.httpPost()
-                .authenticate()
-                .body(jsonBody)
-                .rpcResponse()
+        return "${config.host}/nxt".httpGet(listOf(
+            "requestType" to "submitPop",
+            "atv" to SerializeDeserializeService.serialize(proofOfProof).toHex(),
+            "vtb" to veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }.joinToString()
+        )).authenticate().httpResponse()
     }
 }

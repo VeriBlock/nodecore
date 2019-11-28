@@ -9,10 +9,16 @@
 package org.veriblock.alt.plugins
 
 import com.github.kittinunf.fuel.httpPost
-import org.veriblock.sdk.*
+import org.veriblock.sdk.AltPublication
+import org.veriblock.sdk.Configuration
+import org.veriblock.sdk.PublicationData
+import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.asHexBytes
+import org.veriblock.sdk.createLogger
+import org.veriblock.sdk.toHex
 import org.veriblock.sdk.util.Base58
 import kotlin.random.Random
 
@@ -84,8 +90,8 @@ class TestChain : SecurityInheritingChain {
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
         logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
-        val lastVbkHash = getLastBlockHash().asHex()
-        val lastBtcHash = getLastBitcoinBlockHash().asHex()
+        val lastVbkHash = getLastBlockHash().asHexBytes()
+        val lastBtcHash = getLastBitcoinBlockHash().asHexBytes()
 
         val header = Random.nextBytes(20)
         val context = Random.nextBytes(100)

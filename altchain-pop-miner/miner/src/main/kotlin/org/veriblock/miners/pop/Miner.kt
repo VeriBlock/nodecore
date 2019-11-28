@@ -12,7 +12,7 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
-import org.veriblock.miners.pop.storage.OperationService
+import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.sdk.Coin
 import org.veriblock.sdk.Configuration

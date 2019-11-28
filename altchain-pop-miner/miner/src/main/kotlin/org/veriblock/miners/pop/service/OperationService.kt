@@ -6,11 +6,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.miners.pop.storage
+package org.veriblock.miners.pop.service
 
 import com.google.protobuf.InvalidProtocolBufferException
 import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.storage.OperationRepository
+import org.veriblock.miners.pop.storage.OperationStateData
+import org.veriblock.miners.pop.storage.Pop
+import org.veriblock.miners.pop.storage.StateSerializer
 import org.veriblock.sdk.createLogger
 import java.util.*
 

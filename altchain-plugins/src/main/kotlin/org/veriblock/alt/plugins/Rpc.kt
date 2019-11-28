@@ -65,6 +65,3 @@ inline fun <reified T : Any> Request.rpcResponse(): T = try {
 }
 
 fun JsonRpcRequestBody.toJson(): String = gson.toJson(this)
-
-fun <T> String.fromJson(type: Type): T = gson.fromJson(this, type)
-fun <T> JsonElement.fromJson(type: Type): T = gson.fromJson(this, type)
