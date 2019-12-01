@@ -1427,6 +1427,17 @@ message GetVeriBlockPublicationsReply {
     repeated VeriBlockPublication publications = 3;
 }
 
+message GetDebugVTBsRequest {
+    bytes vbk_context_hash = 1 [(hex_encoded)=true];
+    bytes btc_context_hash = 2 [(hex_encoded)=true];
+}
+
+message GetDebugVTBsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated VeriBlockPublication publications = 3;
+}
+
 message AddressIndexPair {
     bytes address = 1 [(address_encoded) = true];
     int64 starting_signature_index = 2;
@@ -1582,6 +1593,8 @@ service Admin {
     rpc GetPoolState(GetPoolStateRequest) returns (GetPoolStateReply) {}
 
     rpc GetVeriBlockPublications(GetVeriBlockPublicationsRequest) returns (GetVeriBlockPublicationsReply) {}
+
+    rpc GetDebugVTBs(GetDebugVTBsRequest) returns (GetDebugVTBsReply) {}
 
     rpc AbandonTransaction(AbandonTransactionRequest) returns (AbandonTransactionReply) {}
 }
