@@ -11,10 +11,18 @@ package org.veriblock.lite.net
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import org.veriblock.core.contracts.AddressManager
-import org.veriblock.lite.core.*
+import org.veriblock.lite.core.Balance
+import org.veriblock.lite.core.BlockChain
+import org.veriblock.lite.core.EmptyEvent
+import org.veriblock.lite.core.FullBlock
+import org.veriblock.lite.core.PublicationSubscription
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TransactionMonitor
-import org.veriblock.sdk.*
+import org.veriblock.sdk.BlockStoreException
+import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.sdk.createLogger
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -153,6 +161,9 @@ class NodeCoreNetwork(
 
     fun getBalance(): Balance =
         gateway.getBalance(addressManager.defaultAddress.hash)
+
+    fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
+        gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
 }
 
 class BlockDownloadException(message: String) : Exception(message)

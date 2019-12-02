@@ -169,6 +169,28 @@ class NodeCoreGateway(
         return emptyList()
     }
 
+    fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String): List<VeriBlockPublication> {
+        logger.debug { "Requesting debug veriblock publications..." }
+        val request = VeriBlockMessages.GetDebugVTBsRequest
+            .newBuilder()
+            .setVbkContextHash(ByteStringUtility.hexToByteString(vbkContextHash))
+            .setBtcContextHash(ByteStringUtility.hexToByteString(btcContextHash))
+            .build()
+
+        val reply = blockingStub
+            .withDeadlineAfter(300, TimeUnit.SECONDS)
+            .getDebugVTBs(request)
+        if (reply.success) {
+            val publications = ArrayList<VeriBlockPublication>()
+            for (pubMsg in reply.publicationsList) {
+                publications.add(pubMsg.deserialize(params))
+            }
+            return publications
+        }
+
+        return emptyList()
+    }
+
     fun ping(): Boolean {
         return try {
             blockingStub

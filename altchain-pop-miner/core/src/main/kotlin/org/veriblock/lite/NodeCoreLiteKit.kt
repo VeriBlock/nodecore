@@ -92,6 +92,8 @@ class NodeCoreLiteKit(
         network.shutdown()
     }
 
+    fun getAddress(): String = addressManager.defaultAddress.hash
+
     @Throws(BlockStoreException::class)
     private fun createBlockStore(): VeriBlockBlockStore {
         val chainFile = File(context.directory, context.filePrefix + ".spvchain")
