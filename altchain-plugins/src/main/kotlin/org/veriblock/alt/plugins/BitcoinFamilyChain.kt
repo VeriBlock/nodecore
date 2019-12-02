@@ -22,7 +22,6 @@ import org.veriblock.sdk.asHexBytes
 import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.toHex
-import org.veriblock.sdk.util.Base58
 
 private val logger = createLogger {}
 
@@ -30,7 +29,8 @@ class BtcConfig(
     val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
-    val autoMine: BtcAutoMineConfig? = null
+    val autoMine: BtcAutoMineConfig? = null,
+    val rewardAddress: String? = null
 )
 
 class BtcAutoMineConfig(
@@ -43,6 +43,7 @@ class BtcAutoMineConfig(
 private data class BtcPublicationData(
     val block_header: String,
     val raw_contextinfocontainer: String,
+    val first_address: String,
     val last_known_veriblock_blocks: List<String>,
     val last_known_bitcoin_blocks: List<String>
 )
@@ -105,7 +106,7 @@ class BitcoinFamilyChain(
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.block_header.asHexBytes(),
-            Base58.decode("VFMJSUgJCy9QRa1RjXNmJ5kLy5D35C"), // TODO retrieve from response
+            (config.rewardAddress ?: response.first_address).toByteArray(Charsets.US_ASCII),
             response.raw_contextinfocontainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {
