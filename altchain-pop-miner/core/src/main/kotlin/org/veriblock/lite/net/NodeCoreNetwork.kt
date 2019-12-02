@@ -166,6 +166,9 @@ class NodeCoreNetwork(
 
     fun getBalance(): Balance =
         gateway.getBalance(addressManager.defaultAddress.hash)
+
+    fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
+        gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
 }
 
 class BlockDownloadException(message: String) : Exception(message)
