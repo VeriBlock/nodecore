@@ -13,6 +13,9 @@ package org.veriblock.miners.pop.service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.veriblock.core.CommunicationException
+import org.veriblock.core.MineException
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
@@ -158,41 +161,27 @@ class AltchainPopMinerService(
         null
     }
 
-    override fun mine(chainId: String, block: Int?): Result {
+    override fun mine(chainId: String, block: Int?): String {
         val chain = pluginService[chainId]
         if (chain == null) {
-            logger.warn { "Unable to load plugin $chainId" }
-            return failure()
+            error("Unable to load plugin $chainId")
         }
 
         if (!isReady()) {
-            return failure {
-                addMessage(
-                    "V412",
-                    "Miner is not ready",
-                    listNotReadyConditions(),
-                    true
-                )
-            }
+            throw MineException("Miner is not ready: ${listNotReadyConditions()}")
         }
         if (!nodeCoreLiteKit.network.isHealthy()) {
-            return failure {
-                addMessage("V010", "Unable to mine", "Cannot connect to NodeCore", true)
-            }
+            throw CommunicationException("Cannot connect to NodeCore")
         }
         if (isShuttingDown) {
-            return failure {
-                addMessage("V412", "Miner is not ready", "The miner is currently shutting down", true)
-            }
+            throw MineException("The miner is currently shutting down")
         }
-        if (!chain.isConnected()) {
-            return failure {
-                addMessage("V412", "Miner is not ready", "The miner is not connected to the ${chain.name} chain", true)
+        runBlocking {
+            if (!chain.isConnected()) {
+                throw MineException("The miner is not connected to the ${chain.name} chain")
             }
-        }
-        if (!chain.isSynchronized()) {
-            return failure {
-                addMessage("V412", "Miner is not ready", "The chain ${chain.name} is not synchronized", true)
+            if (!chain.isSynchronized()) {
+                throw MineException("The chain ${chain.name} is not synchronized")
             }
         }
 
@@ -212,9 +201,7 @@ class AltchainPopMinerService(
 
         logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name}" }
 
-        return success {
-            addMessage("v000", operation.id, "")
-        }
+        return operation.id
     }
 
     override fun resubmit(operation: ApmOperation) {

@@ -30,7 +30,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    implementation("com.github.kittinunf.fuel:fuel:2.2.0")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-gson:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth-jvm:$ktorVersion")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")

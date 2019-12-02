@@ -8,6 +8,7 @@
 
 package org.veriblock.alt.plugins.test
 
+import kotlinx.coroutines.runBlocking
 import org.junit.Ignore
 import org.junit.Test
 import org.veriblock.sdk.alt.plugin.PluginConfig
@@ -24,14 +25,14 @@ class TestChainTest {
 
     @Test
     @Ignore
-    fun getBestBlockHeight() {
+    fun getBestBlockHeight() = runBlocking {
         val data = chain.getBestBlockHeight()
         println(data)
     }
 
     @Test
     @Ignore
-    fun getPublicationData() {
+    fun getPublicationData() = runBlocking {
         val data = chain.getMiningInstruction(null)
         println(data)
     }

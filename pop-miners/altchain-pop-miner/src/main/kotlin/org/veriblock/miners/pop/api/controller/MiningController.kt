@@ -70,14 +70,10 @@ class MiningController(
         post<MineActionPath, OperationSummaryResponse, MineRequest>(
             info("Start mining operation")
         ) { _, mineRequest ->
-            val result = miner.mine(mineRequest.chainSymbol, mineRequest.height)
-            val firstMsg = result.getMessages().first()
-            if (result.isFailed) {
-                throw CallFailureException("${firstMsg.message} | ${firstMsg.details}")
-            }
+            val operationId = miner.mine(mineRequest.chainSymbol, mineRequest.height)
             respond(
                 OperationSummaryResponse(
-                    firstMsg.message,
+                    operationId,
                     mineRequest.chainSymbol,
                     mineRequest.height,
                     "Starting...",

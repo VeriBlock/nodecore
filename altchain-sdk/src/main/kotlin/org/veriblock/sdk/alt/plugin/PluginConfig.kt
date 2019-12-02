@@ -5,8 +5,7 @@ data class PluginConfig(
     val id: Long? = null,
     val name: String? = null,
     val host: String? = null,
-    val username: String? = null,
-    val password: String? = null,
+    val auth: HttpAuthConfig? = null,
     val payoutAddress: String? = null,
     val keystonePeriod: Int? = null,
     val neededConfirmations: Int? = null,
@@ -14,4 +13,9 @@ data class PluginConfig(
     val blockRoundIndices: IntArray? = null,
     val autoMineRounds: List<Int> = emptyList(),
     val extraConfig: Map<String, String> = emptyMap()
+)
+
+data class HttpAuthConfig(
+    val username: String,
+    val password: String
 )

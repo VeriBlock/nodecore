@@ -8,13 +8,12 @@
 
 package org.veriblock.alt.plugins.util
 
-import com.github.kittinunf.fuel.core.FuelError
-import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.result.Result
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import com.google.gson.reflect.TypeToken
+import org.veriblock.alt.plugins.HttpException
+import org.veriblock.alt.plugins.fromJson
 import org.veriblock.core.utilities.createLogger
 import java.lang.reflect.Type
 
@@ -35,38 +34,24 @@ data class RpcError(
 )
 
 class RpcException(
-    val responseStatusCode: Int,
     val errorCode: Int,
     override val message: String
 ) : RuntimeException()
 
 private val gson = Gson()
 
-val rpcLogger = createLogger {}
-
-inline fun <reified T : Any> Request.rpcResponse(): T = try {
-    val (_, response, result) = response()
-    val responseBody = response.body().asString("application/json")
-    rpcLogger.debug { "Request Body: ${this.body.asString("application/json")}" }
-    rpcLogger.debug { "Response Body: ${responseBody.trim()}" }
-    if (result is Result.Failure && response.statusCode != 500) {
-        if (response.statusCode == -1) {
-            throw HttpException(-1, "Unable to connect to RPC API: ${result.error.message}")
-        }
-        throw HttpException(response.statusCode, "Call to RPC API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
-    }
+inline fun <reified T : Any> RpcResponse.handle(): T = try {
     val type: Type = object : TypeToken<T>() {}.type
-    val rpcResponse: RpcResponse = responseBody.fromJson(object : TypeToken<RpcResponse>() {}.type)
     when {
-        rpcResponse.result !is JsonNull ->
-            rpcResponse.result.fromJson<T>(type)
-        rpcResponse.error != null ->
-            throw RpcException(response.statusCode, rpcResponse.error.code, rpcResponse.error.message)
+        result !is JsonNull ->
+            result.fromJson<T>(type)
+        error != null ->
+            throw RpcException(error.code, error.message)
         else ->
             throw IllegalStateException()
     }
-} catch (e: FuelError) {
-    throw HttpException(-1, "Failed to perform request to the API: ${e.message}", e)
+} catch (e: Exception) {
+    throw HttpException("Failed to perform request to the API: ${e.message}", e)
 }
 
 fun JsonRpcRequestBody.toJson(): String = gson.toJson(this)

@@ -31,7 +31,7 @@ interface MinerService {
 
     fun getBalance(): Balance?
 
-    fun mine(chainId: String, block: Int?): Result
+    fun mine(chainId: String, block: Int?): String
 
     fun resubmit(operation: ApmOperation)
 

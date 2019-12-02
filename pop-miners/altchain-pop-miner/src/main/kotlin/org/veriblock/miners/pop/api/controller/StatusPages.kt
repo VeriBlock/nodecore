@@ -10,12 +10,12 @@ import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import mu.KotlinLogging
+import org.veriblock.core.VeriBlockException
 
 private val logger = KotlinLogging.logger {}
 
 class BadRequestException(override val message: String) : Exception()
 class NotFoundException(override val message: String) : Exception()
-class CallFailureException(override val message: String) : Exception()
 
 data class ApiError(
     val message: String
@@ -38,8 +38,8 @@ fun Application.statusPages() {
         exception<NotFoundException> {
             call.respond(HttpStatusCode.NotFound, ApiError(it.message))
         }
-        exception<CallFailureException> {
-            call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
+        exception<VeriBlockException> {
+            call.respond(HttpStatusCode.InternalServerError, ApiError("${it.error.title}: ${it.message}"))
         }
         exception<Throwable> {
             logger.warn(it) { "Unhandled exception" }
