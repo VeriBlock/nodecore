@@ -24,7 +24,12 @@ import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
-import org.veriblock.sdk.*
+import org.veriblock.sdk.Coin
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.sdk.createLogger
+import org.veriblock.sdk.toHex
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
@@ -151,7 +156,7 @@ class NodeCoreGateway(
             .build()
 
         val reply = blockingStub
-            .withDeadlineAfter(30, TimeUnit.SECONDS)
+            .withDeadlineAfter(300, TimeUnit.SECONDS)
             .getVeriBlockPublications(request)
         if (reply.success) {
             val publications = ArrayList<VeriBlockPublication>()
