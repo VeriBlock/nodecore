@@ -42,7 +42,12 @@ class RegisterVeriBlockPublicationPollingTask(
         }
 
         nodeCoreLiteKit.network.addVeriBlockPublicationSubscription(operation.id, subscription)
-        logger.info(operation) { "Successfully added publication subscription! Keystone Hash: ${subscription.keystoneHash}, VBK Context Hash: ${subscription.contextHash}, BTC Context Hash: ${subscription.btcContextHash}" }
+        logger.info(operation) {
+            """Successfully added publication subscription!
+                |   - Keystone Hash: ${subscription.keystoneHash}
+                |   - VBK Context Hash: ${subscription.contextHash}
+                |   - BTC Context Hash: ${subscription.btcContextHash}""".trimMargin()
+        }
         logger.info(operation) { "Waiting for this operation's veriblock publication..." }
     }
 }
