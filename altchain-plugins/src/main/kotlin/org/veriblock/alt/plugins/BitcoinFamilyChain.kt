@@ -30,7 +30,7 @@ class BtcConfig(
     val username: String? = null,
     val password: String? = null,
     val autoMine: BtcAutoMineConfig? = null,
-    val rewardAddress: String? = null
+    val payoutAddress: String? = null
 )
 
 class BtcAutoMineConfig(
@@ -106,7 +106,7 @@ class BitcoinFamilyChain(
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.block_header.asHexBytes(),
-            (config.rewardAddress ?: response.first_address).toByteArray(Charsets.US_ASCII),
+            (config.payoutAddress ?: response.first_address).toByteArray(Charsets.US_ASCII),
             response.raw_contextinfocontainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {

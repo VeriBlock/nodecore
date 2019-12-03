@@ -22,7 +22,6 @@ import org.veriblock.sdk.asHexBytes
 import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.toHex
-import org.veriblock.sdk.util.Base58
 
 private val logger = createLogger {}
 
@@ -30,7 +29,8 @@ class NxtConfig(
     val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
-    val autoMine: NxtAutoMineConfig? = null
+    val autoMine: NxtAutoMineConfig? = null,
+    val payoutAddress: String? = null
 )
 
 class NxtAutoMineConfig(
@@ -106,7 +106,7 @@ class NxtFamilyChain(
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.blockHeader.asHexBytes(),
-            Base58.decode("VFMJSUgJCy9QRa1RjXNmJ5kLy5D35C"), // TODO retrieve from response
+            config.payoutAddress?.toByteArray(Charsets.US_ASCII) ?: ByteArray(0),
             response.contextInfoContainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {

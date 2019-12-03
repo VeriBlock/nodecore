@@ -19,7 +19,6 @@ import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.asHexBytes
 import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.toHex
-import org.veriblock.sdk.util.Base58
 import kotlin.random.Random
 
 private val logger = createLogger {}
@@ -99,7 +98,7 @@ class TestChain : SecurityInheritingChain {
         val publicationData = PublicationData(
             getChainIdentifier(),
             header,
-            Base58.decode("VFMJSUgJCy9QRa1RjXNmJ5kLy5D35C"),
+            ByteArray(0),
             context
         )
         return PublicationDataWithContext(publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
