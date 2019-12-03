@@ -13,7 +13,12 @@ import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.util.invoke
-import org.veriblock.sdk.*
+import org.veriblock.sdk.Address
+import org.veriblock.sdk.Sha256Hash
+import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.sdk.createLogger
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -51,7 +56,7 @@ class TransactionMonitor(
                     with(serializer) { stream.writeTransactionMonitor(this@TransactionMonitor) }
                 }
             } catch (e: IOException) {
-                logger.error("Unable to save wallet to disk", e)
+                logger.error("Unable to save VBK wallet to disk", e)
             }
         }
     }
@@ -76,10 +81,10 @@ class TransactionMonitor(
     }
 
     private fun handleNewBlock(block: FullBlock) = lock {
-        logger.debug { "New block received at height ${block.height}: ${block.hash}" }
+        logger.debug { "New VBK block received at height ${block.height}: ${block.hash}" }
         val blockTransactions = filterTransactionsFrom(block)
 
-        logger.debug { "Found ${blockTransactions.size} relevant transactions in the block" }
+        logger.debug { "Found ${blockTransactions.size} relevant transactions in the VBK block" }
         for (tx in transactions.values) {
             val meta = tx.transactionMeta
             if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
@@ -97,11 +102,11 @@ class TransactionMonitor(
         var balanceChanged = false
         for (tx in blockTransactions.values) {
             if (tx.sourceAddress == address) {
-                logger.info { "Detected outgoing transaction: ${tx.id}" }
+                logger.info { "Detected outgoing VBK transaction: ${tx.id}" }
                 balanceChanged = true
             }
             if (tx.outputs.any { it.address == address }) {
-                logger.info { "Detected incoming transaction: ${tx.id}" }
+                logger.info { "Detected incoming VBK transaction: ${tx.id}" }
                 balanceChanged = true
             }
         }
@@ -148,7 +153,7 @@ class TransactionMonitor(
                     tx.transactionMeta.state === TransactionMeta.MetaState.CONFIRMED &&
                     !blocks.containsKey(tx.transactionMeta.appearsInBestChainBlock)
                 ) {
-                    logger.warn { "The transaction ${tx.id} appears in a block that's not known: ${tx.transactionMeta.appearsInBestChainBlock}" }
+                    logger.warn { "The VBK transaction ${tx.id} appears in a block that's not known: ${tx.transactionMeta.appearsInBestChainBlock}" }
                     tx.transactionMeta.setState(TransactionMeta.MetaState.UNKNOWN)
                 }
             }
@@ -223,5 +228,5 @@ fun File.loadTransactionMonitor(): TransactionMonitor = try {
         }
     }
 } catch (e: IOException) {
-    throw IllegalStateException("Unable to read wallet from disk")
+    throw IllegalStateException("Unable to read VBK wallet from disk")
 }

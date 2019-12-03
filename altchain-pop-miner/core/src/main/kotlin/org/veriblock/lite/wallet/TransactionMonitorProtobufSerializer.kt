@@ -13,7 +13,12 @@ import com.google.protobuf.CodedOutputStream
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.sdk.*
+import org.veriblock.sdk.Address
+import org.veriblock.sdk.Coin
+import org.veriblock.sdk.Output
+import org.veriblock.sdk.Sha256Hash
+import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.VeriBlockMerklePath
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -101,7 +106,7 @@ class TransactionMonitorProtobufSerializer {
 
     private fun Protos.TransactionMonitor.toModel(): TransactionMonitor {
         check(Context.networkParameters.network == network) {
-            "Network ${Context.networkParameters.network} attempting to read wallet for $network"
+            "Network ${Context.networkParameters.network} attempting to read VBK wallet for $network"
         }
         return TransactionMonitor(
             Address(address),

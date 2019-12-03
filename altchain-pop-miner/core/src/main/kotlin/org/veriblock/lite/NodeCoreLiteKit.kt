@@ -50,7 +50,7 @@ class NodeCoreLiteKit(
         try {
             this.blockStore = createBlockStore()
         } catch (e: BlockStoreException) {
-            throw IOException("Unable to initialize block store", e)
+            throw IOException("Unable to initialize VBK block store", e)
         }
 
         addressManager = loadAddressManager()
@@ -91,6 +91,8 @@ class NodeCoreLiteKit(
     fun shutdown() {
         network.shutdown()
     }
+
+    fun getAddress(): String = addressManager.defaultAddress.hash
 
     @Throws(BlockStoreException::class)
     private fun createBlockStore(): VeriBlockBlockStore {

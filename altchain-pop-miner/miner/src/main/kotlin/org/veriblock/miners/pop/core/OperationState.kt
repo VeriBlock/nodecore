@@ -29,7 +29,7 @@ sealed class OperationState {
     open class PublicationData(
         val publicationDataWithContext: PublicationDataWithContext
     ) : OperationState() {
-        override fun toString() = "Publication Data retrieved, Endorsement Transaction to be submitted"
+        override fun toString() = "Publication Data retrieved, Endorsement VBK Transaction to be submitted"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             publicationDataWithContext.getDetailedInfo()
     }
@@ -38,7 +38,7 @@ sealed class OperationState {
         previous: PublicationData,
         override val transaction: WalletTransaction
     ) : PublicationData(previous.publicationDataWithContext) {
-        override fun toString() = "Endorsement Transaction submitted and to be confirmed"
+        override fun toString() = "Endorsement VBK Transaction submitted and to be confirmed"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Endorsement Transaction: ${transaction.id.bytes.toHex()}"
     }
@@ -46,14 +46,14 @@ sealed class OperationState {
     open class Confirmed(
         previous: EndorsementTransaction
     ) : EndorsementTransaction(previous, previous.transaction) {
-        override fun toString() = "Endorsement Transaction confirmed, waiting for Block of Proof"
+        override fun toString() = "Endorsement VBK Transaction confirmed, waiting for Block of Proof"
     }
 
     open class BlockOfProof(
         previous: Confirmed,
         val blockOfProof: VeriBlockBlock
     ) : Confirmed(previous) {
-        override fun toString() = "Block of Proof received, Endorsement Transaction to be proved"
+        override fun toString() = "Block of Proof received, Endorsement VBK Transaction to be proved"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Block of Proof: ${blockOfProof.hash.bytes.toHex()}"
     }
@@ -62,7 +62,7 @@ sealed class OperationState {
         previous: BlockOfProof,
         val merklePath: VeriBlockMerklePath
     ) : BlockOfProof(previous, previous.blockOfProof) {
-        override fun toString() = "Endorsement Transaction Proved, waiting for Keystone of Proof"
+        override fun toString() = "Endorsement VBK Transaction Proved, waiting for Keystone of Proof"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Endorsement Transaction Merkle Path: ${merklePath.toCompactString()}"
     }
@@ -71,7 +71,7 @@ sealed class OperationState {
         previous: TransactionProved,
         val keystoneOfProof: VeriBlockBlock
     ) : TransactionProved(previous, previous.merklePath) {
-        override fun toString() = "Keystone of Proof received, waiting for VeriBlock Publications"
+        override fun toString() = "VBK Keystone of Proof received, waiting for VBK Publications"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Keystone of Proof: ${keystoneOfProof.hash.bytes.toHex()}"
     }
@@ -80,7 +80,7 @@ sealed class OperationState {
         previous: KeystoneOfProof,
         val veriBlockPublications: List<VeriBlockPublication>
     ) : KeystoneOfProof(previous, previous.keystoneOfProof) {
-        override fun toString() = "VeriBlock Publications received, waiting for submission response"
+        override fun toString() = "VBK Publications received, waiting for submission response"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "VTB Transactions: ${veriBlockPublications.joinToString { it.transaction.id.bytes.toHex() }}"
     }
@@ -89,7 +89,7 @@ sealed class OperationState {
         previous: VeriBlockPublications,
         val proofOfProofId: String
     ) : VeriBlockPublications(previous, previous.veriBlockPublications) {
-        override fun toString() = "VTB submitted, waiting for depth completion"
+        override fun toString() = "Publications submitted, waiting for depth completion"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Proof of Proof Id: $proofOfProofId"
     }

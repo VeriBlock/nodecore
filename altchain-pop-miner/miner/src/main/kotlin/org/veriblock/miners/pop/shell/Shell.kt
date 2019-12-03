@@ -8,7 +8,6 @@
 
 package org.veriblock.miners.pop.shell
 
-import com.google.gson.GsonBuilder
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
@@ -19,9 +18,8 @@ import org.veriblock.shell.Shell
 fun Shell.configure(
     miner: Miner
 ) {
-    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
     standardCommands()
     configCommands()
-    miningCommands(miner, prettyPrintGson)
-    walletCommands(miner, prettyPrintGson)
+    miningCommands(miner)
+    walletCommands(miner)
 }

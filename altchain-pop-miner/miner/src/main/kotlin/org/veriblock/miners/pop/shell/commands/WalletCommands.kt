@@ -8,21 +8,38 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import com.google.gson.Gson
 import org.veriblock.miners.pop.Miner
+import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
+import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun Shell.walletCommands(miner: Miner, prettyPrintGson: Gson) {
+fun Shell.walletCommands(miner: Miner) {
+
+    command(
+        name = "Get Loaded Address",
+        form = "getaddress",
+        description = "Gets the currently loaded VeriBlock address"
+    ) {
+        val address = miner.getAddress()
+        printInfo(address)
+
+        success()
+    }
 
     command(
         name = "Get Balance",
         form = "getbalance",
-        description = "Gets the coin balance for the VeriBlock address"
+        description = "Gets the coin balance for the current VeriBlock address"
     ) {
-        val balance = miner.getBalance()
-        printInfo(prettyPrintGson.toJson(balance))
+        val balance = miner.getBalance() ?: run {
+            return@command failure {
+                addMessage("V010", "Unable to retrieve balance", "Connection to NodeCore is not healthy")
+            }
+        }
+        printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} tVBK")
+        printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} tVBK")
 
         success()
     }

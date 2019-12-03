@@ -51,7 +51,7 @@ class RegisterKeystoneListenersTask(
                 }
             }
         }
-        logger.info(operation) { "Successfully subscribed to the new best block and blockchain reorg events!" }
+        logger.info(operation) { "Successfully subscribed to VBK's new best block and blockchain reorg events!" }
         logger.info(operation) { "Waiting for the next Keystone..." }
     }
 

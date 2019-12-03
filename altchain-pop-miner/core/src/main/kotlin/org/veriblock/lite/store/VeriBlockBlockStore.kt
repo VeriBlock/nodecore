@@ -14,7 +14,11 @@ import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.util.ArrayUtils
 import org.veriblock.sdk.util.Utils
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
@@ -286,6 +290,10 @@ class VeriBlockBlockStore(
                 if (cursor < FILE_PROLOGUE_BYTES) {
                     // We hit the start, so wrap around.
                     cursor = fileSize - RECORD_SIZE
+                    // Break the loop if we had already started at the end
+                    if (startingPoint == fileSize) {
+                        break
+                    }
                 }
                 // Cursor is now at the start of the next record to check, so read the hash and compare it.
                 buffer.position(cursor + offset)
@@ -469,7 +477,7 @@ class VeriBlockBlockStore(
             try {
                 val created = archive.createNewFile()
                 if (created) {
-                    logger.info {"Created bitcoin block store archive file: ${archive.name}" }
+                    logger.info { "Created VBK block store archive file: ${archive.name}" }
                 }
             } catch (e: IOException) {
                 logger.error(e) { "Unable to create archive file: $archiveName" }
@@ -522,5 +530,19 @@ class VeriBlockBlockStore(
     protected fun setRingCursor(buffer: ByteBuffer, newCursor: Int) {
         require(newCursor >= 0) { "The ring cursor must be positive!" }
         buffer.putInt(4, newCursor)
+    }
+
+    fun reset() {
+        val headerBytes: ByteArray = header.toByteArray(StandardCharsets.US_ASCII)
+
+        lock {
+            buffer!!.position(0)
+            buffer!!.put(headerBytes)
+            setFileSeriesNumber(0)
+            setRingCursor(buffer!!, FILE_PROLOGUE_BYTES)
+            buffer!!.position(8)
+            buffer!!.put(VBlakeHash.EMPTY_HASH.bytes)
+            lastChainHead = null
+        }
     }
 }

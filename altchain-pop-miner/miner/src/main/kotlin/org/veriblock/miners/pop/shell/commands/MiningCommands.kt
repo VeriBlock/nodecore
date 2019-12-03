@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
@@ -18,7 +18,9 @@ import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
 
-fun Shell.miningCommands(miner: Miner, prettyPrintGson: Gson) {
+fun Shell.miningCommands(miner: Miner) {
+
+    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
 
     command(
         name = "Mine",

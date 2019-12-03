@@ -12,7 +12,11 @@ import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.store.StoredVeriBlockBlock
 import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.util.Threading
-import org.veriblock.sdk.*
+import org.veriblock.sdk.BlockStoreException
+import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VerificationException
+import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.sdk.util.BitcoinUtils
 import java.math.BigInteger
@@ -34,7 +38,6 @@ class BlockChain(
     fun get(hash: VBlakeHash): VeriBlockBlock?
         = veriBlockStore.get(hash)?.block
 
-    @Throws(BlockStoreException::class)
     fun add(block: VeriBlockBlock) {
         // Lightweight verification of the header
         ValidationService.verify(block)
@@ -60,11 +63,11 @@ class BlockChain(
         veriBlockStore.setChainHead(storedBlock)
     }
 
-    fun handleNewBestChain(oldBlocks: List<VeriBlockBlock>?, newBlocks: List<FullBlock>?) {
-        val reorganizing = !oldBlocks.isNullOrEmpty()
+    fun handleNewBestChain(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {
+        val reorganizing = oldBlocks.isNotEmpty()
 
         logger.debug { "Handling new best chain (${if (reorganizing) "reorg" else "no reorg"})..." }
-        if (!newBlocks.isNullOrEmpty()) {
+        if (newBlocks.isNotEmpty()) {
             logger.debug { "There are ${newBlocks.size} blocks to process" }
             for (block in newBlocks) {
                 try {
@@ -75,13 +78,13 @@ class BlockChain(
                 }
 
                 if (!reorganizing) {
-                    logger.debug { "Notifying event listeners about block ${block.hash}" }
+                    logger.debug { "Notifying event listeners about VBK block ${block.hash}" }
                     informListenersNewBestBlock(block)
                 }
             }
 
             if (reorganizing) {
-                blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks!!, newBlocks))
+                blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks, newBlocks))
             }
         }
     }
@@ -94,7 +97,6 @@ class BlockChain(
         blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks, newBlocks))
     }
 
-    @Throws(VerificationException::class)
     private fun verifyBlock(block: VeriBlockBlock, previous: StoredVeriBlockBlock): Boolean {
         if (!checkDuplicate(block)) {
             return false
@@ -121,7 +123,8 @@ class BlockChain(
 
     private fun checkConnectivity(block: VeriBlockBlock): StoredVeriBlockBlock {
         // Connects to a known "seen" block (except for origin block)
-        val previous = veriBlockStore.get(block.previousBlock) ?: throw VerificationException("Block does not fit")
+        val previous = veriBlockStore.get(block.previousBlock)
+            ?: throw VerificationException("Block does not fit")
 
         val keystone = veriBlockStore.get(block.previousKeystone)
         if (keystone == null) {
@@ -156,10 +159,9 @@ class BlockChain(
         return previous
     }
 
-    @Throws(VerificationException::class)
     private fun checkTimestamp(block: VeriBlockBlock, context: List<StoredVeriBlockBlock>) {
         if (context.size < MINIMUM_TIMESTAMP_BLOCK_COUNT) {
-            logger.debug("Not enough context blocks to check timestamp")
+            logger.debug("Not enough VBK context blocks to check timestamp")
             return
         }
 
@@ -176,10 +178,9 @@ class BlockChain(
         }
     }
 
-    @Throws(VerificationException::class)
     private fun checkDifficulty(block: VeriBlockBlock, previous: StoredVeriBlockBlock, context: List<StoredVeriBlockBlock>) {
         if (context.size < DIFFICULTY_ADJUST_BLOCK_COUNT) {
-            logger.debug("Not enough context blocks to check difficulty")
+            logger.debug("Not enough VBK context blocks to check difficulty")
             return
         }
 
@@ -189,5 +190,9 @@ class BlockChain(
         if (block.difficulty != BitcoinUtils.encodeCompactBits(calculated).toInt()) {
             throw VerificationException("Block does not conform to expected difficulty")
         }
+    }
+
+    fun reset() {
+        veriBlockStore.reset()
     }
 }

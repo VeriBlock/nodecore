@@ -14,7 +14,15 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.core.StateChangeEvent
-import org.veriblock.sdk.*
+import org.veriblock.sdk.Address
+import org.veriblock.sdk.BitcoinBlock
+import org.veriblock.sdk.BitcoinTransaction
+import org.veriblock.sdk.MerklePath
+import org.veriblock.sdk.PublicationData
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VeriBlockMerklePath
+import org.veriblock.sdk.VeriBlockPoPTransaction
+import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.*
@@ -98,7 +106,7 @@ object StateSerializer {
                 try {
                     setTransaction(txFactory(serialized.txId))
                 } catch (e: IllegalStateException) {
-                    fail(e.message ?: "Unable to load transaction ${serialized.txId}")
+                    fail(e.message ?: "Unable to load VBK transaction ${serialized.txId}")
                 }
             }
 

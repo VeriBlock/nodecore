@@ -31,7 +31,7 @@ class CreateProofTransactionTask(
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
         if (state is OperationState.EndorsementTransaction) {
-            logger.info(operation) { "Successfully retrieved the transaction: ${state.transaction.id}!" }
+            logger.info(operation) { "Successfully retrieved the VBK transaction: ${state.transaction.id}!" }
             return
         }
 
@@ -40,7 +40,7 @@ class CreateProofTransactionTask(
         }
 
         // Something to fill in all the gaps
-        logger.info(operation) { "Submitting endorsement transaction..." }
+        logger.info(operation) { "Submitting endorsement VBK transaction..." }
         val transaction = try {
             nodeCoreLiteKit.network.submitEndorsement(
                 SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData),
@@ -48,12 +48,12 @@ class CreateProofTransactionTask(
                 minerConfig.maxFee
             )
         } catch (e: Exception) {
-            failOperation(operation, "Could not create endorsement transaction")
+            failOperation(operation, "Could not create endorsement VBK transaction")
         }
 
         val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)
         operation.setTransaction(walletTransaction)
-        logger.info(operation) { "Successfully added the transaction: ${walletTransaction.id}!" }
+        logger.info(operation) { "Successfully added the VBK transaction: ${walletTransaction.id}!" }
         logger.info(operation) { "Waiting for the transaction to be included in VeriBlock block..." }
     }
 }

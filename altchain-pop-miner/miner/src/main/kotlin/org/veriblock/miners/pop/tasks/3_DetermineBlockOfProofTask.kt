@@ -37,11 +37,11 @@ class DetermineBlockOfProofTask(
 
         try {
             val block = nodeCoreLiteKit.blockChain.get(blockHash)
-                ?: failTask("Unable to retrieve block $blockHash")
+                ?: failTask("Unable to retrieve VBK block $blockHash")
             operation.setBlockOfProof(block)
-            logger.info(operation) { "Successfully added the block of proof!" }
+            logger.info(operation) { "Successfully added the VBK block of proof!" }
         } catch (e: BlockStoreException) {
-            failTask("Error when retrieving block $blockHash")
+            failTask("Error when retrieving VBK block $blockHash")
         }
     }
 }

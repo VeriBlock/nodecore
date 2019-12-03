@@ -11,10 +11,18 @@ package org.veriblock.lite.net
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import org.veriblock.core.contracts.AddressManager
-import org.veriblock.lite.core.*
+import org.veriblock.lite.core.Balance
+import org.veriblock.lite.core.BlockChain
+import org.veriblock.lite.core.EmptyEvent
+import org.veriblock.lite.core.FullBlock
+import org.veriblock.lite.core.PublicationSubscription
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TransactionMonitor
-import org.veriblock.sdk.*
+import org.veriblock.sdk.BlockStoreException
+import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.sdk.createLogger
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -125,9 +133,14 @@ class NodeCoreNetwork(
     }
 
     private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
-        logger.debug { "Reconciling blockchain..." }
+        logger.debug { "Reconciling VBK blockchain..." }
         try {
-            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize()) {
+            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 5
+            if (tooFarBehind) {
+                logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
+                blockChain.reset()
+            }
+            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
                 val downloaded = getBlock(latestBlock.hash)
                 if (downloaded != null) {
                     blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
@@ -140,7 +153,7 @@ class NodeCoreNetwork(
             val added = ArrayList<FullBlock>(blockChainDelta.added.size)
             for (block in blockChainDelta.added) {
                 val downloaded = gateway.getBlock(block.hash.toString())
-                    ?: throw BlockDownloadException("Unable to download block " + block.hash.toString())
+                    ?: throw BlockDownloadException("Unable to download VBK block " + block.hash.toString())
 
                 added.add(downloaded)
             }

@@ -39,7 +39,8 @@ class SubmitProofOfProofTask(
                 state.transaction,
                 state.merklePath,
                 state.blockOfProof,
-                emptyList())
+                emptyList()
+            )
 
             val veriBlockPublications = state.veriBlockPublications
 
@@ -102,7 +103,8 @@ class SubmitProofOfProofTask(
 
             val siTxId = securityInheritingChain.submit(proofOfProof, veriBlockPublications)
 
-            logger.info(operation) { "VTB submitted to ${operation.chainId}! SI PoP TxId: $siTxId. Waiting for VBK depth completion..." }
+            val chainSymbol = operation.chainId.toUpperCase()
+            logger.info(operation) { "VTB submitted to $chainSymbol! $chainSymbol PoP TxId: $siTxId. Waiting for VBK depth completion..." }
             operation.setProofOfProofId(siTxId)
         } catch (e: Exception) {
             logger.error("Error submitting proof of proof", e)

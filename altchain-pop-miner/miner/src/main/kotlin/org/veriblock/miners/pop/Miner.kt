@@ -14,6 +14,7 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
+import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.Coin
 import org.veriblock.sdk.Configuration
 import org.veriblock.sdk.Sha256Hash
@@ -61,7 +62,7 @@ class Miner(
             removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
         nodeCoreLiteKit.balanceChangedEvent.register(this) {
-            logger.info { "Current balance: ${it.confirmedBalance} VBK Atomic Units" }
+            logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} tVBK" }
             if (it.confirmedBalance.atomicUnits >= minerConfig.maxFee) {
                 addReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
             } else {
@@ -100,8 +101,8 @@ class Miner(
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
             """
                 PoP wallet does not contain sufficient funds
-                         Current balance: ${currentBalance.atomicUnits} VBK atomic units
-                         Minimum required: ${minerConfig.maxFee}, need ${minerConfig.maxFee - currentBalance.atomicUnits} more
+                         Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} tVBK
+                         Minimum required: ${minerConfig.maxFee.formatCoinAmount()}, need ${(minerConfig.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more
                          Send VBK coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
             """.trimIndent()
         }
@@ -130,6 +131,8 @@ class Miner(
     fun getOperation(id: String): MiningOperation? {
         return operations[id]
     }
+
+    fun getAddress(): String = nodeCoreLiteKit.getAddress()
 
     fun getBalance(): Balance? = if (nodeCoreLiteKit.network.isHealthy()) {
         nodeCoreLiteKit.network.getBalance()

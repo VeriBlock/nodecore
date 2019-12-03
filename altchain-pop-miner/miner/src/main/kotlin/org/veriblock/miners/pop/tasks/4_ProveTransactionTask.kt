@@ -30,7 +30,7 @@ class ProveTransactionTask(
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
         if (state !is OperationState.BlockOfProof) {
-            failTask("ProveTransactionTask called without block of proof!")
+            failTask("ProveTransactionTask called without VBK block of proof!")
         }
         val walletTransaction = state.transaction
 
@@ -42,7 +42,7 @@ class ProveTransactionTask(
         val vbkMerkleRoot = merklePath.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
         val verified = vbkMerkleRoot == state.blockOfProof.merkleRoot
         if (!verified) {
-            failOperation(operation, "Unable to verify merkle path! Transaction's merkle root: $vbkMerkleRoot; Block of proof's merkle root: ${state.blockOfProof.merkleRoot}")
+            failOperation(operation, "Unable to verify merkle path! VBK Transaction's merkle root: $vbkMerkleRoot; Block of proof's merkle root: ${state.blockOfProof.merkleRoot}")
         }
 
         operation.setMerklePath(merklePath)

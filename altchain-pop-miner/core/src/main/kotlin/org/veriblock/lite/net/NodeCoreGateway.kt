@@ -84,13 +84,13 @@ class NodeCoreGateway(
                 .getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
             lastBlock.header.deserialize(params)
         } catch (e: Exception) {
-            logger.error("Unable to get last block", e)
+            logger.error("Unable to get last VBK block", e)
             throw e
         }
     }
 
     fun getBlock(height: Int): FullBlock? {
-        logger.debug { "Requesting block at height $height..." }
+        logger.debug { "Requesting VBK block at height $height..." }
         val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
             .addFilters(VeriBlockMessages.BlockFilter.newBuilder()
                 .setIndex(height)
@@ -109,7 +109,7 @@ class NodeCoreGateway(
     }
 
     fun getBlock(hash: String): FullBlock? {
-        logger.debug { "Requesting block with hash $hash..." }
+        logger.debug { "Requesting VBK block with hash $hash..." }
         val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
             .addFilters(VeriBlockMessages.BlockFilter.newBuilder()
                 .setHash(ByteStringUtility.hexToByteString(hash))
@@ -191,7 +191,7 @@ class NodeCoreGateway(
             .withDeadlineAfter(10, TimeUnit.SECONDS)
             .listBlocksSince(builder.build())
         if (!reply.success) {
-            error("Unable to retrieve changes since block $hash")
+            error("Unable to retrieve changes since VBK block $hash")
         }
         val removed = reply.removedList.map { msg -> msg.deserialize(params) }
         val added = reply.addedList.map { msg -> msg.deserialize(params) }
