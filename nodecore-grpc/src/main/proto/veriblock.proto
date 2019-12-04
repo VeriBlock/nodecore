@@ -1029,7 +1029,7 @@ message GetDiagnosticInfoReply {
 
     string nodecore_properties_source = 17;
     repeated string nodecore_properties_values = 18;
-    repeated string nodecore_startup_options = 19;
+    string nodecore_start_commandline = 19;
     repeated string environment_variables = 20;
 }
 

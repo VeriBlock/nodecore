@@ -40,11 +40,7 @@ public class GetDiagnosticInfoPayload {
         }
 
         // Startup options
-        iCount = reply.getNodecoreStartupOptionsCount();
-        nodecoreStartupOptions = new String[iCount];
-        for (int i = 0; i < iCount; i++) {
-            nodecoreStartupOptions[i] = reply.getNodecoreStartupOptions(i);
-        }
+        nodecoreStartCommandline = reply.getNodecoreStartCommandline();
 
         // Environment Variables
         iCount = reply.getEnvironmentVariablesCount();
@@ -102,8 +98,8 @@ public class GetDiagnosticInfoPayload {
     @SerializedName("nodecore_properties_values")
     public String[] nodecorePropertiesValues;
 
-    @SerializedName("nodecore_startup_options")
-    public String[] nodecoreStartupOptions;
+    @SerializedName("nodecore_start_commandline")
+    public String nodecoreStartCommandline;
 
     @SerializedName("environment_variables")
     public String[] environmentVariables;
