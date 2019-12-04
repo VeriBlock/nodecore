@@ -4,35 +4,28 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.rules.actions
 
-package nodecore.miners.pop.rules.actions;
+import nodecore.miners.pop.InternalEventBus
+import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.events.ErrorMessageEvent
+import org.apache.commons.lang3.StringUtils
 
-import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.PoPMiner;
-import nodecore.miners.pop.contracts.MineResult;
-import nodecore.miners.pop.contracts.ResultMessage;
-import nodecore.miners.pop.events.ErrorMessageEvent;
-import org.apache.commons.lang3.StringUtils;
-
-public class MineAction implements RuleAction<Integer> {
-    private final PoPMiner miner;
-
-    public MineAction(PoPMiner miner) {
-        this.miner = miner;
-    }
-
-    @Override
-    public void execute(Integer blockHeight) {
-        MineResult result = miner.mine(blockHeight);
+class MineAction(
+    private val miner: PoPMiner
+) : RuleAction<Int> {
+    override fun execute(value: Int?) {
+        // The given value is the block index to mine (or null)
+        val result = miner.mine(value)
         if (result.didFail()) {
-            StringBuilder errorMessage = new StringBuilder();
-            for (ResultMessage message : result.getMessages()) {
+            val errorMessage = StringBuilder()
+            for (message in result.messages) {
                 errorMessage.append(System.lineSeparator())
-                        .append(message.getMessage())
-                        .append(": ")
-                        .append(StringUtils.join(message.getDetails(), "; "));
+                    .append(message.message)
+                    .append(": ")
+                    .append(StringUtils.join(message.details, "; "))
             }
-            InternalEventBus.getInstance().post(new ErrorMessageEvent(String.format("Mine Action Failed: %s", errorMessage.toString())));
+            InternalEventBus.getInstance().post(ErrorMessageEvent(String.format("Mine Action Failed: %s", errorMessage.toString())))
         }
     }
 }

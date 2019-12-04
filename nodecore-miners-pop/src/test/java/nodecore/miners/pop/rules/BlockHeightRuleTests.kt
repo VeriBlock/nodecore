@@ -19,15 +19,15 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenNoConditionsActive() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns false
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12343
+            every { getHeight() } returns 12343
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12339
+            every { getHeight() } returns 12339
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -47,16 +47,16 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenOnlyKeystoneConditionActive() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns false
             every { getBoolean("auto.mine.round4") } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12343
+            every { getHeight() } returns 12343
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12339
+            every { getHeight() } returns 12339
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -76,15 +76,15 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenAllConditionsActive() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12343
+            every { getHeight() } returns 12343
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12339
+            every { getHeight() } returns 12339
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -107,15 +107,15 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenSingleKeystone() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12340
+            every { getHeight() } returns 12340
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12339
+            every { getHeight() } returns 12339
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -135,15 +135,15 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenSingleRound1() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12341
+            every { getHeight() } returns 12341
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12340
+            every { getHeight() } returns 12340
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -163,15 +163,15 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenSingleRound2() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12342
+            every { getHeight() } returns 12342
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12341
+            every { getHeight() } returns 12341
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -191,15 +191,15 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenSingleRound3() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12343
+            every { getHeight() } returns 12343
         }
         val previous: VeriBlockHeader = mockk {
-            every { height } returns 12342
+            every { getHeight() } returns 12342
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest
@@ -219,12 +219,12 @@ class BlockHeightRuleTests {
     @Test
     fun evaluateWhenPreviousNotSet() {
         // Given
-        val action: RuleAction<Int?> = mockk(relaxed = true)
+        val action: RuleAction<Int> = mockk(relaxed = true)
         val config: Configuration = mockk {
             every { getBoolean(any()) } returns true
         }
         val latest: VeriBlockHeader = mockk {
-            every { height } returns 12343
+            every { getHeight() } returns 12343
         }
         val context: RuleContext = mockk {
             every { latestBlock } returns latest

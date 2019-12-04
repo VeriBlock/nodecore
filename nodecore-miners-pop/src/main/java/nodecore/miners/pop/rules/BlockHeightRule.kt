@@ -4,69 +4,41 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.rules
 
-package nodecore.miners.pop.rules;
+import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.rules.actions.RuleAction
+import nodecore.miners.pop.rules.conditions.KeystoneBlockCondition
+import nodecore.miners.pop.rules.conditions.Round1Condition
+import nodecore.miners.pop.rules.conditions.Round2Condition
+import nodecore.miners.pop.rules.conditions.Round3Condition
 
-import nodecore.miners.pop.Configuration;
-import nodecore.miners.pop.contracts.VeriBlockHeader;
-import nodecore.miners.pop.rules.actions.RuleAction;
-import nodecore.miners.pop.rules.conditions.Condition;
-import nodecore.miners.pop.rules.conditions.KeystoneBlockCondition;
-import nodecore.miners.pop.rules.conditions.Round1Condition;
-import nodecore.miners.pop.rules.conditions.Round2Condition;
-import nodecore.miners.pop.rules.conditions.Round3Condition;
+class BlockHeightRule(
+    var action: RuleAction<Int>,
+    private val configuration: Configuration
+) : Rule {
 
-import java.util.ArrayList;
-import java.util.List;
+    val conditions = listOf(
+        KeystoneBlockCondition(),
+        Round1Condition(),
+        Round2Condition(),
+        Round3Condition()
+    )
 
-public class BlockHeightRule implements Rule {
-    private final Configuration configuration;
-
-    private List<Condition<Integer>> conditions = new ArrayList<>();
-
-    public List<Condition<Integer>> getConditions() {
-        return conditions;
-    }
-
-    public void setConditions(List<Condition<Integer>> conditions) {
-        this.conditions = conditions;
-    }
-
-    private RuleAction<Integer> action;
-
-    public RuleAction<Integer> getAction() {
-        return action;
-    }
-
-    public void setAction(RuleAction<Integer> action) {
-        this.action = action;
-    }
-
-    public BlockHeightRule(RuleAction<Integer> action, Configuration configuration) {
-        this.action = action;
-        this.configuration = configuration;
-
-        this.conditions.add(new KeystoneBlockCondition());
-        this.conditions.add(new Round1Condition());
-        this.conditions.add(new Round2Condition());
-        this.conditions.add(new Round3Condition());
-    }
-
-    @Override
-    public void evaluate(RuleContext context) {
-        VeriBlockHeader previousHead = context.getPreviousHead();
-        VeriBlockHeader latestBlock = context.getLatestBlock();
-
-        int start, end;
-        start = end = latestBlock.getHeight();
+    override fun evaluate(context: RuleContext) {
+        val previousHead = context.previousHead
+        val latestBlock = context.latestBlock
+        var start: Int
+        val end: Int
+        end = latestBlock!!.getHeight()
+        start = end
         if (previousHead != null) {
-            start = previousHead.getHeight() + 1;
+            start = previousHead.getHeight() + 1
         }
-
-        for (int i = start; i <= end; i++) {
-            for (Condition<Integer> condition : conditions) {
+        for (i in start..end) {
+            for (condition in conditions) {
                 if (condition.isActive(configuration) && condition.evaluate(i)) {
-                    action.execute(i);
+                    action.execute(i)
                 }
             }
         }

@@ -4,19 +4,16 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.rules.conditions
 
-package nodecore.miners.pop.rules.conditions;
+import nodecore.miners.pop.Configuration
 
-import nodecore.miners.pop.Configuration;
-
-public class Round2Condition implements Condition<Integer> {
-    @Override
-    public boolean isActive(Configuration configuration) {
-        return configuration.getBoolean("auto.mine.round2");
+class Round2Condition : Condition<Int> {
+    override fun isActive(configuration: Configuration): Boolean {
+        return configuration.getBoolean("auto.mine.round2")
     }
 
-    @Override
-    public boolean evaluate(Integer subject) {
-        return subject != null && (subject % 20) != 0 && ((subject % 20) % 3) == 2;
+    override fun evaluate(subject: Int?): Boolean {
+        return subject != null && subject % 20 != 0 && subject % 20 % 3 == 2
     }
 }

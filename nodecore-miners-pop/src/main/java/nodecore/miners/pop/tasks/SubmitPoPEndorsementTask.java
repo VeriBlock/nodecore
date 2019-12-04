@@ -32,13 +32,13 @@ public class SubmitPoPEndorsementTask extends BaseTask {
     @Override
     protected TaskResult executeImpl(PoPMiningOperationState state) {
         try {
-            PoPMiningTransaction popMiningTransaction = PoPMiningTransaction.newBuilder()
-                    .setPopMiningInstruction(state.getMiningInstruction())
-                    .setBitcoinTransaction(state.getTransaction())
-                    .setBitcoinMerklePathToRoot(state.getMerklePath())
-                    .setBitcoinBlockHeaderOfProof(state.getBitcoinBlockHeaderOfProof())
-                    .setBitcoinContextBlocks(state.getBitcoinContextBlocks())
-                    .build();
+            PoPMiningTransaction popMiningTransaction = new PoPMiningTransaction(
+                state.getMiningInstruction(),
+                state.getTransaction(),
+                state.getMerklePath(),
+                state.getBitcoinBlockHeaderOfProof(),
+                state.getBitcoinContextBlocks()
+            );
 
             state.onPoPTransactionSubmitted(nodeCoreService.submitPop(popMiningTransaction));
             return TaskResult.succeed(state, getNext());

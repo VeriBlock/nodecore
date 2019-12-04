@@ -53,9 +53,10 @@ public class PoPEventEngine {
     @Subscribe
     public void onNewVeriBlockFound(NewVeriBlockFoundEvent event) {
         try {
-            RuleContext context = new RuleContext();
-            context.setPreviousHead(event.getPreviousHead());
-            context.setLatestBlock(event.getBlock());
+            RuleContext context = new RuleContext(
+                    event.getPreviousHead(),
+                    event.getBlock()
+            );
 
             evaluate(context);
         } catch (Exception e) {
