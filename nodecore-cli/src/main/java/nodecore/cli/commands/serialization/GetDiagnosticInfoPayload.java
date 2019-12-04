@@ -39,6 +39,19 @@ public class GetDiagnosticInfoPayload {
             nodecorePropertiesValues[i] = reply.getNodecorePropertiesValues(i);
         }
 
+        // Startup options
+        iCount = reply.getNodecoreStartupOptionsCount();
+        nodecoreStartupOptions = new String[iCount];
+        for (int i = 0; i < iCount; i++) {
+            nodecoreStartupOptions[i] = reply.getNodecoreStartupOptions(i);
+        }
+
+        // Environment Variables
+        iCount = reply.getEnvironmentVariablesCount();
+        environmentVariables = new String[iCount];
+        for (int i = 0; i < iCount; i++) {
+            environmentVariables[i] = reply.getEnvironmentVariables(i);
+        }
     }
 
     @SerializedName("nodecore_working_directory")
@@ -89,4 +102,9 @@ public class GetDiagnosticInfoPayload {
     @SerializedName("nodecore_properties_values")
     public String[] nodecorePropertiesValues;
 
+    @SerializedName("nodecore_startup_options")
+    public String[] nodecoreStartupOptions;
+
+    @SerializedName("environment_variables")
+    public String[] environmentVariables;
 }
