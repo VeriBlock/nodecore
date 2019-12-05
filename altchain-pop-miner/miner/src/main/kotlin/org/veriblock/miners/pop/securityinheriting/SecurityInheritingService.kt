@@ -23,9 +23,12 @@ class SecurityInheritingService(
     fun start() {
         for ((chainId, chain) in pluginFactory.getPlugins()) {
             if (chain.shouldAutoMine()) {
+                logger.debug { "Auto-mining on $chainId is enabled! Starting..." }
                 val autoMiner = SecurityInheritingAutoMiner(miner, chainId, chain)
                 autoMiner.start()
                 autoMiners[chainId] = autoMiner
+            } else {
+                logger.debug { "Auto-mining on $chainId is disabled" }
             }
         }
     }
