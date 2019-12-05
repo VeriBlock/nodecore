@@ -38,7 +38,7 @@ appender("FILE", RollingFileAppender) {
 
 def level = toLevel(logLevel, INFO)
 logger("org.veriblock", level)
-logger("org.veriblock.shell", ERROR)
+logger("shell-printing", INFO, ["FILE"], false)
 
 //root(ERROR, ["STDOUT"])
 root(ERROR, ["TERMINAL", "FILE"])

@@ -71,10 +71,16 @@ class Miner(
         }
     }
 
+    // FIXME: This is a hack to force-trigger balance retrieval in the ready check
+    private var currentBalance: Balance? = null
+
     private fun isReady(): Boolean {
         // FIXME: This is a hack to force-trigger balance retrieval in the ready check
         getBalance()?.let {
-            nodeCoreLiteKit.balanceChangedEvent.trigger(it)
+            if (it != currentBalance) {
+                nodeCoreLiteKit.balanceChangedEvent.trigger(it)
+                currentBalance = it
+            }
         }
         return readyConditions.size == ReadyCondition.values().size
     }

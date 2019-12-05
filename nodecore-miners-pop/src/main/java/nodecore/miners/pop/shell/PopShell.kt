@@ -22,7 +22,12 @@ import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent
 import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent
 import nodecore.miners.pop.services.MessageService
 import nodecore.miners.pop.services.NodeCoreService
-import nodecore.miners.pop.shell.commands.*
+import nodecore.miners.pop.shell.commands.bitcoinWalletCommands
+import nodecore.miners.pop.shell.commands.configCommands
+import nodecore.miners.pop.shell.commands.diagnosticCommands
+import nodecore.miners.pop.shell.commands.miningCommands
+import nodecore.miners.pop.shell.commands.standardCommands
+import nodecore.miners.pop.shell.commands.veriBlockWalletCommands
 import org.jline.utils.AttributedStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -98,7 +103,7 @@ class PopShell(
                     if (counter >= 3) {
                         System.exit(1)
                     }
-                    print(listOf<String?>("This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue..."))
+                    printInfo("This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue...")
                 }
                 printInfo("WALLET CREATION TIME:")
                 printInfo(String.format("\t%s", walletSeed[0]))

@@ -44,7 +44,8 @@ appender("BITCOINJ-FILE", RollingFileAppender) {
 
 def level = toLevel(logLevel, INFO)
 
-logger("nodecore.miners.pop", level, ["TERMINAL"], false)
+logger("nodecore.miners.pop", level)
 logger("org.bitcoinj", INFO, ["BITCOINJ-FILE"], false)
+logger("shell-printing", INFO, ["FILE"], false)
 
-root(DEBUG, ["FILE"])
+root(ERROR, ["TERMINAL", "FILE"])

@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
+private val printLogger = LoggerFactory.getLogger("shell-printing")
 
 open class Shell(
     testData: ShellTestData? = null
@@ -59,6 +60,7 @@ open class Shell(
     private fun readLine(): String? = try {
         val read = reader.readLine(getPrompt())
         println(read)
+        printLogger.info(read)
         read
     } catch (e: UserInterruptException) {
         null
@@ -170,17 +172,20 @@ open class Shell(
                         .toAnsi(terminal)
                 )
             }
+            terminal.writer().flush()
+
+            val printLogMsg = msg.message + msg.details.joinToString(prefix = "\n         ")
+            when (msg.level) {
+                ActivityLevel.ERROR -> printLogger.error(printLogMsg)
+                ActivityLevel.WARN -> printLogger.warn(printLogMsg)
+                else -> printLogger.info(printLogMsg)
+            }
         }
     }
 
     private fun printResultWithFormat(result: Result) {
         val formatted = ArrayList<ShellMessage>()
         for (msg in result.getMessages()) {
-            if (msg.isError) {
-                logger.warn("[${msg.code}] ${msg.message}")
-            } else {
-                logger.info("[${msg.code}] ${msg.message}")
-            }
             formatted.add(
                 ShellMessage(
                     if (msg.isError) ActivityLevel.ERROR else ActivityLevel.INFO,
@@ -195,10 +200,12 @@ open class Shell(
 
     fun printInfo(message: String) {
         printStyled(message, AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
+        printLogger.info(message)
     }
 
     fun printWarning(message: String) {
         printStyled(message, AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW))
+        printLogger.warn(message)
     }
 
     fun renderFromThrowable(t: Throwable) {
