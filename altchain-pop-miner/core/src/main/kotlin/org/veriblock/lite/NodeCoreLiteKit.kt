@@ -20,7 +20,6 @@ import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TM_FILE_EXTENSION
 import org.veriblock.lite.wallet.TransactionMonitor
-import org.veriblock.lite.wallet.WALLET_FILE_EXTENSION
 import org.veriblock.lite.wallet.loadTransactionMonitor
 import org.veriblock.sdk.Address
 import org.veriblock.sdk.BlockStoreException
@@ -29,6 +28,8 @@ import java.io.File
 import java.io.IOException
 
 val logger = createLogger {}
+
+private const val WALLET_FILE_EXTENSION = ".wallet"
 
 class NodeCoreLiteKit(
     private val context: Context

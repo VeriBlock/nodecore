@@ -28,7 +28,6 @@ import java.util.concurrent.locks.ReentrantLock
 
 private val logger = createLogger {}
 const val TM_FILE_EXTENSION = ".txmon"
-const val WALLET_FILE_EXTENSION = ".wallet"
 
 class TransactionMonitor(
     val address: Address,

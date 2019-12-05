@@ -110,12 +110,10 @@ class TransactionMonitorProtobufSerializer {
         }
         return TransactionMonitor(
             Address(address),
-            transactionsList.toModel()
+            transactionsList.map {
+                it.toModel()
+            }
         )
-    }
-
-    private fun List<Protos.WalletTransaction>.toModel(): List<WalletTransaction> = map {
-        it.toModel()
     }
 
     private fun Protos.WalletTransaction.toModel(): WalletTransaction = WalletTransaction(
