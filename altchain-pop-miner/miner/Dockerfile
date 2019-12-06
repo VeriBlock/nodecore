@@ -4,6 +4,7 @@ FROM openjdk:8-jre-alpine
 ENV DATA_DIR /data
 ENV CONFIG_FILE $DATA_DIR/application.conf
 ENV APM_LOG_PATH $DATA_DIR/logs
+ENV DOCKER true
 
 EXPOSE 4567
 

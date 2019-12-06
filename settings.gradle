@@ -17,4 +17,4 @@ include 'altchain-pop-miner:miner'
 
 include 'altchain-plugins'
 
-rootProject.name = 'nodecore-all'
+rootProject.name = 'nodecore-suite'
