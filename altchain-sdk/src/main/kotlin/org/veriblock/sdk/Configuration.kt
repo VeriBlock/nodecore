@@ -51,16 +51,19 @@ object Configuration {
 }
 
 private fun loadConfig(): Config {
+    val isDocker = System.getenv("DOCKER")?.toBoolean() ?: false
     // Attempt to load config file
     val configFile = Paths.get(System.getenv(CONFIG_FILE_ENV_VAR) ?: CONFIG_FILE).toFile()
     val appConfig = if (configFile.exists()) {
         // Parse it if it exists
         ConfigFactory.parseFile(configFile)
     } else {
-        // Otherwise, retrieve the default config resource file
-        getSystemResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE)?.let {
-            // Write its contents as the config file
-            configFile.writeBytes(it.readBytes())
+        // Otherwise, write the default config resource file (in non-docker envs)
+        if (!isDocker) {
+            getSystemResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE)?.let {
+                // Write its contents as the config file
+                configFile.writeBytes(it.readBytes())
+            }
         }
         // And return the default config
         ConfigFactory.load()
