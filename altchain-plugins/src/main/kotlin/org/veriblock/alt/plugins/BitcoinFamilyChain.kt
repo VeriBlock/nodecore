@@ -123,8 +123,21 @@ class BitcoinFamilyChain(
         )).toJson()
 
         return config.host.httpPost()
-                .authenticate()
-                .body(jsonBody)
-                .rpcResponse()
+            .authenticate()
+            .body(jsonBody)
+            .rpcResponse()
+    }
+
+    override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
+        logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
+        val jsonBody = JsonRpcRequestBody("updatecontext", listOf(
+            veriBlockPublications.map { it.transaction }.flatMap { it.blocks }.map { SerializeDeserializeService.serialize(it) },
+            veriBlockPublications.flatMap { it.blocks }.map { SerializeDeserializeService.serialize(it).toHex() }
+        )).toJson()
+
+        return config.host.httpPost()
+            .authenticate()
+            .body(jsonBody)
+            .rpcResponse()
     }
 }
