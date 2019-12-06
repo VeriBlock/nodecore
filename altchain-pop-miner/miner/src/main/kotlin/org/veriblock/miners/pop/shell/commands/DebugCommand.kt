@@ -10,8 +10,6 @@ package org.veriblock.miners.pop.shell.commands
 
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.service.PluginService
-import org.veriblock.miners.pop.tasks.logger
-import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.util.Utils
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
@@ -56,14 +54,7 @@ fun Shell.miningCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: Plugin
             Utils.encodeHex(publicationData.btcContext[0])
         )
 
-        val proofOfProof = AltPublication(
-            state.transaction,
-            state.merklePath,
-            state.blockOfProof,
-            emptyList()
-        )
-
-        val siTxId = securityInheritingChain.submit(proofOfProof, debugVeriBlockPublications)
+        val siTxId = securityInheritingChain.updateContext(debugVeriBlockPublications)
         printInfo(siTxId)
         success()
     }

@@ -27,4 +27,8 @@ interface SecurityInheritingChain {
     //fun submit(proofOfProof: AltPublication): SubmitResponse
 
     //fun inform(veriBlockProofOfProof: VeriBlockPublication): SubmitResponse
+
+    fun updateContext(debugVeriBlockPublications: List<VeriBlockPublication>): String {
+        TODO()
+    }
 }
