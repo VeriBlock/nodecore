@@ -83,7 +83,7 @@ class BitcoinFamilyChain(
     }
 
     override fun getBestBlockHeight(): Int {
-        logger.info { "Retrieving best block height..." }
+        logger.debug { "Retrieving best block height..." }
         val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
         return config.host.httpPost()
             .authenticate()
