@@ -86,7 +86,7 @@ class NxtFamilyChain(
     }
 
     override fun getBestBlockHeight(): Int {
-        logger.info { "Retrieving best block height..." }
+        logger.debug { "Retrieving best block height..." }
         return "${config.host}/nxt".httpGet(listOf(
             "requestType" to "getBlock"
         )).authenticate().httpResponse<NxtBlockData>().height
