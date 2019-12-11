@@ -79,8 +79,8 @@ class Miner(
         // FIXME: This is a hack to force-trigger balance retrieval in the ready check
         getBalance()?.let {
             if (it != currentBalance) {
-                nodeCoreLiteKit.balanceChangedEvent.trigger(it)
                 currentBalance = it
+                nodeCoreLiteKit.balanceChangedEvent.trigger(it)
             }
         }
         return readyConditions.size == ReadyCondition.values().size

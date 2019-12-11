@@ -139,4 +139,3 @@ class NxtFamilyChain(
 
     private fun Any.toJson() = Gson().toJson(this)
 }
-
