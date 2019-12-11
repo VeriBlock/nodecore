@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.shell.Shell
@@ -38,8 +39,8 @@ fun Shell.walletCommands(miner: Miner) {
                 addMessage("V010", "Unable to retrieve balance", "Connection to NodeCore is not healthy")
             }
         }
-        printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} tVBK")
-        printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} tVBK")
+        printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}")
+        printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} ${Context.vbkTokenName}")
 
         success()
     }

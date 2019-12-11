@@ -20,4 +20,7 @@ object Context {
     val networkParameters = NetworkParameters
     val directory: File = File(dataDir)
     val filePrefix: String = "vbk-${networkParameters.network}"
+
+    val vbkTokenName: String = if (networkParameters.network == "mainnet") "VBK" else "tVBK"
+    val btcTokenName: String = if (networkParameters.network == "mainnet") "BTC" else "tBTC"
 }

@@ -11,6 +11,8 @@ package org.veriblock.alt.plugins
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.fuel.httpPost
+import com.google.gson.Gson
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.Configuration
 import org.veriblock.sdk.PublicationData
@@ -49,6 +51,11 @@ private data class NxtPublicationData(
     val contextInfoContainer: String,
     val last_known_veriblock_blocks: List<String>,
     val last_known_bitcoin_blocks: List<String>
+)
+
+private data class NxtSubmitData(
+    val atv: String,
+    val vtb: List<String>
 )
 
 @FamilyPluginSpec(name = "NxtFamily", key = "nxt")
@@ -121,10 +128,15 @@ class NxtFamilyChain(
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
-        return "${config.host}/nxt".httpGet(listOf(
-            "requestType" to "submitPop",
-            "atv" to SerializeDeserializeService.serialize(proofOfProof).toHex(),
-            "vtb" to veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }.joinToString()
-        )).authenticate().httpResponse()
+        val jsonBody = NxtSubmitData(
+            atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
+            vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
+        ).toJson()
+        return "${config.host}/nxt".httpPost(listOf(
+            "requestType" to "submitPop"
+        )).authenticate().header("content-type", "application/json").body(jsonBody).httpResponse()
     }
+
+    private fun Any.toJson() = Gson().toJson(this)
 }
+

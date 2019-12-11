@@ -10,6 +10,7 @@ package org.veriblock.miners.pop
 
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
+import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.OperationService
@@ -62,7 +63,7 @@ class Miner(
             removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
         nodeCoreLiteKit.balanceChangedEvent.register(this) {
-            logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} tVBK" }
+            logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}" }
             if (it.confirmedBalance.atomicUnits >= minerConfig.maxFee) {
                 addReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
             } else {
@@ -111,7 +112,7 @@ class Miner(
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
             """
                 PoP wallet does not contain sufficient funds
-                         Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} tVBK
+                         Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${Context.vbkTokenName}
                          Minimum required: ${minerConfig.maxFee.formatCoinAmount()}, need ${(minerConfig.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more
                          Send VBK coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
             """.trimIndent()
