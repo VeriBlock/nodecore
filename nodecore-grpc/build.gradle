@@ -12,6 +12,7 @@ dependencies {
     compile group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.15.1'
     compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.15.1'
     compile group: 'io.grpc', name: 'grpc-stub', version: '1.15.1'
+    compileOnly 'javax.annotation:javax.annotation-api:1.2'
 }
 
 protobuf {
