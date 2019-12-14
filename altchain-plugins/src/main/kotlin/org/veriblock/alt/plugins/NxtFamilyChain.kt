@@ -58,6 +58,16 @@ private data class NxtSubmitData(
     val vtb: List<String>
 )
 
+private data class NxtSubmitResponse(
+    val requestProcessingTime: Int,
+    val transaction: NxtTransactionData
+)
+
+private data class NxtTransactionData(
+    val senderPublicKey: String,
+    val signature: String
+)
+
 @FamilyPluginSpec(name = "NxtFamily", key = "nxt")
 class NxtFamilyChain(
     val id: Long,
@@ -132,9 +142,10 @@ class NxtFamilyChain(
             atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
             vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ).toJson()
-        return "${config.host}/nxt".httpPost(listOf(
+        val submitResponse: NxtSubmitResponse = "${config.host}/nxt".httpPost(listOf(
             "requestType" to "submitPop"
         )).authenticate().header("content-type", "application/json").body(jsonBody).httpResponse()
+        return submitResponse.transaction.signature
     }
 
     private fun Any.toJson() = Gson().toJson(this)

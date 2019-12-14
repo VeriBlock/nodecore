@@ -52,7 +52,7 @@ class RegisterKeystoneListenersTask(
             }
         }
         logger.info(operation) { "Successfully subscribed to VBK's new best block and blockchain reorg events!" }
-        logger.info(operation) { "Waiting for the next Keystone..." }
+        logger.info(operation) { "Waiting for the next VBK Keystone..." }
     }
 
     private fun handleFoundKeystone(state: MiningOperation, newBlock: FullBlock) {

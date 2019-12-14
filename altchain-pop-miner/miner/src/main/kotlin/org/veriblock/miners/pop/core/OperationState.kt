@@ -81,8 +81,10 @@ sealed class OperationState {
         val veriBlockPublications: List<VeriBlockPublication>
     ) : KeystoneOfProof(previous, previous.keystoneOfProof) {
         override fun toString() = "VBK Publications received, waiting for submission response"
-        override fun getDetailedInfo() = super.getDetailedInfo() +
-            "VTB Transactions: ${veriBlockPublications.joinToString { it.transaction.id.bytes.toHex() }}"
+        override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
+            "VTB Transactions: ${veriBlockPublications.joinToString { it.transaction.id.bytes.toHex() }}",
+            "VTB BTC Blocks: ${veriBlockPublications.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }}"
+        )
     }
 
     open class SubmittedPopData(
