@@ -32,7 +32,9 @@ import nodecore.miners.pop.events.FundsAddedEvent;
 import nodecore.miners.pop.events.InfoMessageEvent;
 import nodecore.miners.pop.events.InsufficientFundsEvent;
 import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
+import nodecore.miners.pop.events.NodeCoreDesynchronizedEvent;
 import nodecore.miners.pop.events.NodeCoreHealthyEvent;
+import nodecore.miners.pop.events.NodeCoreSynchronizedEvent;
 import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
 import nodecore.miners.pop.events.PoPMinerNotReadyEvent;
 import nodecore.miners.pop.events.PoPMinerReadyEvent;
@@ -427,6 +429,8 @@ public class PoPMiner implements Runnable {
                         bitcoinService.currentReceiveAddress();
             case NODECORE_CONNECTED:
                 return "Waiting for connection to NodeCore";
+            case  SYNCHRONIZED_NODECORE:
+                return "Waiting for NodeCore to synchronize";
             case BITCOIN_SERVICE_READY:
                 return "Bitcoin service is not ready";
         }
@@ -535,6 +539,25 @@ public class PoPMiner implements Runnable {
     public void onNodeCoreUnhealthy(NodeCoreUnhealthyEvent event) {
         try {
             removeReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+
+    @Subscribe
+    public void onNodeCoreSynchronized(NodeCoreSynchronizedEvent event) {
+        try {
+            addReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    @Subscribe
+    public void onNodeCoreDesynchronized(NodeCoreDesynchronizedEvent event) {
+        try {
+            removeReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

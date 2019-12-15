@@ -12,6 +12,7 @@ import java.util.EnumSet;
 public enum PoPMinerDependencies {
     SUFFICIENT_FUNDS,
     NODECORE_CONNECTED,
+    SYNCHRONIZED_NODECORE,
     BLOCKCHAIN_DOWNLOADED,
     BITCOIN_SERVICE_READY;
 
