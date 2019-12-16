@@ -429,7 +429,7 @@ public class PoPMiner implements Runnable {
                         bitcoinService.currentReceiveAddress();
             case NODECORE_CONNECTED:
                 return "Waiting for connection to NodeCore";
-            case  SYNCHRONIZED_NODECORE:
+            case SYNCHRONIZED_NODECORE:
                 return "Waiting for NodeCore to synchronize";
             case BITCOIN_SERVICE_READY:
                 return "Bitcoin service is not ready";
