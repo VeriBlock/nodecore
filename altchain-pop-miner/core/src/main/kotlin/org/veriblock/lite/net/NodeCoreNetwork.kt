@@ -37,15 +37,21 @@ class NodeCoreNetwork(
     private val addressManager: AddressManager
 ) {
     private val healthy = AtomicBoolean(false)
+    private val synchronized = AtomicBoolean(false)
     private val publicationSubscriptions = ConcurrentHashMap<String, PublicationSubscription>()
     private val connected = SettableFuture.create<Boolean>()
     private var firstPollAttempt = true
 
     val healthyEvent = EmptyEvent()
     val unhealthyEvent = EmptyEvent()
+    val healthySyncEvent = EmptyEvent()
+    val unhealthySyncEvent = EmptyEvent()
 
     fun isHealthy(): Boolean =
         healthy.get()
+
+    private fun isSynchronized(): Boolean =
+        synchronized.get()
 
     fun startAsync(): ListenableFuture<Boolean> {
         Threading.NODECORE_POLL_THREAD.scheduleWithFixedDelay({
@@ -81,7 +87,13 @@ class NodeCoreNetwork(
 
     private fun poll() {
         try {
-            if (isHealthy()) {
+            if (isHealthy() && isSynchronized()) {
+                if (!gateway.isNodeCoreSynchronized()) {
+                    unhealthySyncEvent.trigger()
+                    synchronized.set(false)
+                    return
+                }
+
                 val lastBlock: VeriBlockBlock = try {
                     gateway.getLastBlock()
                 } catch (e: Exception) {
@@ -109,11 +121,27 @@ class NodeCoreNetwork(
                     }
                     healthy.set(true)
                     connected.set(true)
+
+                    if (gateway.isNodeCoreSynchronized()) {
+                        if (!isSynchronized()) {
+                            healthySyncEvent.trigger()
+                        }
+                        synchronized.set(true)
+                    } else {
+                        if (isSynchronized()) {
+                            unhealthySyncEvent.trigger()
+                        }
+                        synchronized.set(false)
+                    }
                 } else {
                     if (isHealthy() || firstPollAttempt) {
                         unhealthyEvent.trigger()
                     }
+                    if (isSynchronized()) {
+                        unhealthySyncEvent.trigger()
+                    }
                     healthy.set(false)
+                    synchronized.set(false)
                 }
             }
             firstPollAttempt = false
