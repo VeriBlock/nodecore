@@ -57,7 +57,7 @@ open class Shell(
         .append(" > ")
         .toAnsi(terminal)
 
-    private fun readLine(): String? = try {
+    fun readLine(): String? = try {
         val read = reader.readLine(getPrompt())
         println(read)
         printLogger.info(read)

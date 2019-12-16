@@ -44,7 +44,9 @@ import nodecore.miners.pop.events.ErrorMessageEvent;
 import nodecore.miners.pop.events.InfoMessageEvent;
 import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
+import nodecore.miners.pop.events.NodeCoreDesynchronizedEvent;
 import nodecore.miners.pop.events.NodeCoreHealthyEvent;
+import nodecore.miners.pop.events.NodeCoreSynchronizedEvent;
 import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,7 @@ public class NodeCoreService {
     private final ChannelBuilder channelBuilder;
     private final BlockStore blockStore;
     private final AtomicBoolean healthy = new AtomicBoolean(false);
+    private final AtomicBoolean _synchronized = new AtomicBoolean(false);
 
     private ManagedChannel _channel;
     private AdminGrpc.AdminBlockingStub _blockingStub;
@@ -73,6 +76,10 @@ public class NodeCoreService {
 
     public boolean isHealthy() {
         return healthy.get();
+    }
+
+    private boolean isSynchronized() {
+        return _synchronized.get();
     }
 
     public NodeCoreService(Configuration configuration, ChannelBuilder channelBuilder, BlockStore blockStore) {
@@ -119,6 +126,29 @@ public class NodeCoreService {
             return true;
         } catch (StatusRuntimeException e) {
             _logger.debug("Unable to connect ping NodeCore at this time");
+            return false;
+        }
+    }
+
+    /**
+     * Verify if the connected NodeCore is synchronized with the network (the block difference between the networkHeight and the localBlockchainHeight
+     * should be smaller than 4 blocks)
+     *
+     * This function might return false (StatusRuntimeException) if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
+     */
+    private boolean isNodeCoreSynchronized() {
+        if (_blockingStub == null) {
+            return false;
+        }
+
+        try {
+            final VeriBlockMessages.GetStateInfoReply request = _blockingStub
+                    .withDeadlineAfter(5L, TimeUnit.SECONDS)
+                    .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build());
+            final int blockDifference = Math.abs(request.getNetworkHeight() - request.getLocalBlockchainHeight());
+            return request.getNetworkHeight() > 0 && blockDifference < 4;
+        } catch (StatusRuntimeException e) {
+            _logger.warn("Unable to perform GetStateInfoRequest to NodeCore");
             return false;
         }
     }
@@ -267,7 +297,13 @@ public class NodeCoreService {
     }
 
     private void poll() {
-        if (isHealthy()) {
+        if (isHealthy() && isSynchronized()) {
+            if (!isNodeCoreSynchronized()) {
+                _synchronized.set(false);
+                InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                return;
+            }
+
             VeriBlockHeader latestBlock;
             try {
                 latestBlock = getLastBlock();
@@ -277,6 +313,7 @@ public class NodeCoreService {
                 InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
                 return;
             }
+
             VeriBlockHeader chainHead = blockStore.getChainHead();
             if (!latestBlock.equals(chainHead)) {
                 blockStore.setChainHead(latestBlock);
@@ -288,11 +325,27 @@ public class NodeCoreService {
                     InternalEventBus.getInstance().post(new NodeCoreHealthyEvent());
                 }
                 healthy.set(true);
+
+                if (isNodeCoreSynchronized()) {
+                    if (!isSynchronized()) {
+                        InternalEventBus.getInstance().post(new NodeCoreSynchronizedEvent());
+                    }
+                    _synchronized.set(true);
+                } else {
+                    if (isSynchronized()) {
+                        InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                    }
+                    _synchronized.set(false);
+                }
             } else {
                 if (isHealthy()) {
                     InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
                 }
+                if (isSynchronized()) {
+                    InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                }
                 healthy.set(false);
+                _synchronized.set(false);
             }
         }
     }

@@ -101,7 +101,7 @@ class PopShell(
                 while (readLine()!!.toUpperCase() != "Y") {
                     counter++
                     if (counter >= 3) {
-                        System.exit(1)
+                        exitProcess(1)
                     }
                     printInfo("This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue...")
                 }
