@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.securityinheriting
 
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.service.PluginService
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 

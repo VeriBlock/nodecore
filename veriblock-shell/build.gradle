@@ -24,6 +24,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlin:kotlin-reflect"
 
+    // Json serialization
+    implementation 'com.google.code.gson:gson:2.8.2'
+
     compile 'ch.qos.logback:logback-classic:1.2.3'
 
     compile group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'

@@ -17,9 +17,9 @@ import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.Coin
-import org.veriblock.sdk.Configuration
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.sdk.Sha256Hash
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success

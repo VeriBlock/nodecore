@@ -22,7 +22,7 @@ import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockTransaction
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit

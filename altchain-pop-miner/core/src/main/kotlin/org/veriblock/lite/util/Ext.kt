@@ -8,7 +8,7 @@
 
 package org.veriblock.lite.util
 
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.util.concurrent.locks.Lock
 
 private val logger = createLogger {}

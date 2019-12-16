@@ -15,7 +15,7 @@ import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.error
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 

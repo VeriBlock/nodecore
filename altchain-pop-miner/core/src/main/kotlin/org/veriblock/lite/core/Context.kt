@@ -9,7 +9,7 @@
 package org.veriblock.lite.core
 
 import org.veriblock.lite.params.NetworkParameters
-import org.veriblock.sdk.Configuration
+import org.veriblock.core.utilities.Configuration
 import java.io.File
 
 object Context {

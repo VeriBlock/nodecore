@@ -6,8 +6,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.sdk
+package org.veriblock.core.utilities.extensions
 
-import mu.KotlinLogging
+import java.util.concurrent.locks.Lock
 
-fun createLogger(context: () -> Unit) = KotlinLogging.logger(context)
+operator fun <T> Lock.invoke(block: () -> T): T {
+    lock()
+    try {
+        return block()
+    } finally {
+        unlock()
+    }
+}

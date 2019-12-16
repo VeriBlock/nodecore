@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 

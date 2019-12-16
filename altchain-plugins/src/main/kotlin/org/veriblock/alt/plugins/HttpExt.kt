@@ -15,7 +15,7 @@ import com.github.kittinunf.result.Result
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.lang.reflect.Type
 
 class HttpException(

@@ -12,9 +12,9 @@ import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import org.veriblock.alt.plugins.FamilyPluginsContainer
 import org.veriblock.alt.plugins.NormalPluginsContainer
-import org.veriblock.sdk.Configuration
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 

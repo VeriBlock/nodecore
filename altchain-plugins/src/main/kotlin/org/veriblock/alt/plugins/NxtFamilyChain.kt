@@ -13,15 +13,15 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
+import org.veriblock.core.utilities.Configuration
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.AltPublication
-import org.veriblock.sdk.Configuration
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.asHexBytes
-import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.toHex
 

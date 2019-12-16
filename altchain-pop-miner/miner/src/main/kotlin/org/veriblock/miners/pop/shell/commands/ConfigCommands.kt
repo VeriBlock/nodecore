@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import org.veriblock.sdk.Configuration
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
 import org.veriblock.shell.Shell

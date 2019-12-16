@@ -19,7 +19,7 @@ import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockMerklePath
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.PublicationDataWithContext
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.util.*
 
 private val logger = createLogger {}

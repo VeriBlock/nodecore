@@ -44,17 +44,6 @@ dependencies {
     testImplementation 'io.kotlintest:kotlintest-assertions:3.4.1'
 }
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"
 
