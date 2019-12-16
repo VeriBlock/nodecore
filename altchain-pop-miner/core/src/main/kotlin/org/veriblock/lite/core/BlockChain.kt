@@ -16,7 +16,7 @@ import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VerificationException
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.sdk.util.BitcoinUtils
 import java.math.BigInteger

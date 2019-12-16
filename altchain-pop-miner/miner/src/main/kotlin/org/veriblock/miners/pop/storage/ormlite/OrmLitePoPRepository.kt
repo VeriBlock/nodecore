@@ -14,7 +14,7 @@ import com.j256.ormlite.support.ConnectionSource
 import com.j256.ormlite.table.TableUtils
 import org.veriblock.miners.pop.storage.OperationStateData
 import org.veriblock.miners.pop.storage.OperationRepository
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.sql.SQLException
 
 private val logger = createLogger {}

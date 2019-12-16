@@ -13,7 +13,7 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.error
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 

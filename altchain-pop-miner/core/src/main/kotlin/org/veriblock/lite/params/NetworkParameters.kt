@@ -8,7 +8,7 @@
 
 package org.veriblock.lite.params
 
-import org.veriblock.sdk.Configuration
+import org.veriblock.core.utilities.Configuration
 import java.math.BigInteger
 
 class NetworkConfig(

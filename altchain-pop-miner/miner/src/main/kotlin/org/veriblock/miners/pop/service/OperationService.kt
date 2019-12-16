@@ -15,7 +15,7 @@ import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateData
 import org.veriblock.miners.pop.storage.Pop
 import org.veriblock.miners.pop.storage.StateSerializer
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.util.*
 
 private val logger = createLogger {}

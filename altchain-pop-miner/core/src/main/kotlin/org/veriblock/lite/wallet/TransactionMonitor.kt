@@ -18,7 +18,7 @@ import org.veriblock.sdk.Sha256Hash
 import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockTransaction
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

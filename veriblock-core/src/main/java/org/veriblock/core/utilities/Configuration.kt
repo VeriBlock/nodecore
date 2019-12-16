@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.sdk
+package org.veriblock.core.utilities
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -18,8 +18,6 @@ private const val CONFIG_FILE_ENV_VAR = "CONFIG_FILE"
 private const val CONFIG_FILE = "./application.conf"
 private const val CONFIG_RESOURCE_FILE = "application.conf"
 private const val DEFAULT_CONFIG_RESOURCE_FILE = "application-default.conf"
-
-private val logger = createLogger {}
 
 object Configuration {
     private var config: Config = loadConfig()
@@ -50,16 +48,21 @@ object Configuration {
     inline fun <reified T> extract(path: String) = getOrNull(path) { extract<T>(it) }
 }
 
+private val logger = createLogger {}
+
 private fun loadConfig(): Config {
     val isDocker = System.getenv("DOCKER")?.toBoolean() ?: false
     // Attempt to load config file
     val configFile = Paths.get(System.getenv(CONFIG_FILE_ENV_VAR) ?: CONFIG_FILE).toFile()
     val appConfig = if (configFile.exists()) {
         // Parse it if it exists
+        logger.debug { "Loading config file $configFile" }
         ConfigFactory.parseFile(configFile)
     } else {
-        // Otherwise, write the default config resource file (in non-docker envs)
+        logger.debug { "Config file $configFile does not exist! Loading defaults..." }
         if (!isDocker) {
+            logger.debug { "Writing to config file with default contents..." }
+            // Otherwise, write the default config resource file (in non-docker envs)
             getSystemResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE)?.let {
                 // Write its contents as the config file
                 configFile.writeBytes(it.readBytes())

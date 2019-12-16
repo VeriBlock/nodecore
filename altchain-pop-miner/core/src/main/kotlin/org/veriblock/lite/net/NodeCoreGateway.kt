@@ -18,6 +18,7 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.ChannelBuilder
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
@@ -28,7 +29,6 @@ import org.veriblock.sdk.Coin
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.VeriBlockTransaction
-import org.veriblock.sdk.createLogger
 import org.veriblock.sdk.toHex
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -164,6 +164,10 @@ class NodeCoreGateway(
                 publications.add(pubMsg.deserialize(params))
             }
             return publications
+        } else {
+            for (error in reply.resultsList) {
+                logger.debug { "${error.message} | ${error.details}" }
+            }
         }
 
         return emptyList()

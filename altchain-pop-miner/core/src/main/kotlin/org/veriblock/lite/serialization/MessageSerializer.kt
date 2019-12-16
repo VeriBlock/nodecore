@@ -11,10 +11,22 @@ package org.veriblock.lite.serialization
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.BlockMetaPackage
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
-import org.veriblock.sdk.*
+import org.veriblock.sdk.Address
+import org.veriblock.sdk.BitcoinTransaction
+import org.veriblock.sdk.Coin
+import org.veriblock.sdk.MerklePath
+import org.veriblock.sdk.Output
+import org.veriblock.sdk.Sha256Hash
+import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.VeriBlockMerklePath
+import org.veriblock.sdk.VeriBlockPoPTransaction
+import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}

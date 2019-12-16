@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.miners.pop.service.serviceModule
 import org.veriblock.miners.pop.storage.repositoryModule
 import org.veriblock.miners.pop.tasks.taskModule
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.Shell
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess

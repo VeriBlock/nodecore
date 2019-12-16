@@ -13,7 +13,7 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.Miner
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.checkSuccess
-import org.veriblock.sdk.createLogger
+import org.veriblock.core.utilities.createLogger
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
