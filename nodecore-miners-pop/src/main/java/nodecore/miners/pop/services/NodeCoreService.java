@@ -78,7 +78,7 @@ public class NodeCoreService {
         return healthy.get();
     }
 
-    public boolean isSynchronized() {
+    private boolean isSynchronized() {
         return _synchronized.get();
     }
 
@@ -310,9 +310,7 @@ public class NodeCoreService {
             } catch (Exception e) {
                 _logger.error("NodeCore Error", e);
                 healthy.set(false);
-                _synchronized.set(false);
                 InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
-                InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
                 return;
             }
 
