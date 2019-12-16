@@ -45,8 +45,10 @@ class Miner(
 
     private enum class ReadyCondition {
         SUFFICIENT_FUNDS,
-        NODECORE_CONNECTED
+        NODECORE_CONNECTED,
+        SYNCHRONIZED_NODECORE
     }
+
     private val readyConditions: EnumSet<ReadyCondition> = EnumSet.noneOf(ReadyCondition::class.java)
 
     private var operationsSubmitted = false
@@ -61,6 +63,14 @@ class Miner(
         nodeCoreLiteKit.network.unhealthyEvent.register(this) {
             logger.warn { "Unable to connect to NodeCore!" }
             removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
+        }
+        nodeCoreLiteKit.network.healthySyncEvent.register(this) {
+            logger.info { "The connected NodeCore is synchronized" }
+            addReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
+        }
+        nodeCoreLiteKit.network.unhealthySyncEvent.register(this) {
+            logger.warn { "The connected NodeCore is not synchronized" }
+            removeReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
         nodeCoreLiteKit.balanceChangedEvent.register(this) {
             logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}" }
@@ -108,6 +118,7 @@ class Miner(
 
     private fun ReadyCondition.getNotReadyMessage() = when (this) {
         ReadyCondition.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
+        ReadyCondition.SYNCHRONIZED_NODECORE -> "Waiting for NodeCore to synchronize"
         ReadyCondition.SUFFICIENT_FUNDS -> {
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
             """

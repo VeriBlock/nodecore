@@ -33,6 +33,8 @@ import org.veriblock.sdk.toHex
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
+import kotlin.math.abs
+
 
 private val logger = createLogger {}
 
@@ -199,6 +201,25 @@ class NodeCoreGateway(
             true
         } catch (e: StatusRuntimeException) {
             logger.debug("Unable to connect ping NodeCore at this time")
+            false
+        }
+    }
+
+    /**
+     * Verify if the connected NodeCore is synchronized with the network (the block difference between the networkHeight and the localBlockchainHeight
+     * should be smaller than 4 blocks)
+     *
+     * This function might return false (StatusRuntimeException) if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
+     */
+    fun isNodeCoreSynchronized(): Boolean {
+        return try {
+            val request = blockingStub
+                .withDeadlineAfter(5L, TimeUnit.SECONDS)
+                .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
+            val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
+            request.networkHeight > 0 && blockDifference < 4
+        } catch (e: StatusRuntimeException) {
+            logger.warn("Unable to perform GetStateInfoRequest to NodeCore")
             false
         }
     }
