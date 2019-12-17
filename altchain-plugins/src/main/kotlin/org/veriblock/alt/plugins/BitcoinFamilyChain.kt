@@ -43,9 +43,9 @@ class BtcAutoMineConfig(
 private data class BtcPublicationData(
     val block_header: String,
     val raw_contextinfocontainer: String,
-    val first_address: String,
     val last_known_veriblock_blocks: List<String>,
-    val last_known_bitcoin_blocks: List<String>
+    val last_known_bitcoin_blocks: List<String>,
+    val first_address: String? = null
 )
 
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
@@ -103,10 +103,14 @@ class BitcoinFamilyChain(
             .body(jsonBody)
             .rpcResponse()
 
+        val payoutAddress = config.payoutAddress
+            ?: response.first_address
+            ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
+
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.block_header.asHexBytes(),
-            (config.payoutAddress ?: response.first_address).toByteArray(Charsets.US_ASCII),
+            payoutAddress.toByteArray(Charsets.US_ASCII),
             response.raw_contextinfocontainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {
