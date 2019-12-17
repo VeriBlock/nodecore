@@ -13,15 +13,15 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpPost
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.asHexBytes
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.toHex
 
 private val logger = createLogger {}
 

@@ -15,15 +15,15 @@ import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.asHexBytes
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.toHex
 
 private val logger = createLogger {}
 
@@ -120,10 +120,13 @@ class NxtFamilyChain(
             "height" to actualBlockHeight
         )).authenticate().httpResponse()
 
+        val payoutAddress = config.payoutAddress
+            ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
+
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.blockHeader.asHexBytes(),
-            config.payoutAddress?.toByteArray(Charsets.US_ASCII) ?: ByteArray(0),
+            payoutAddress.toByteArray(Charsets.US_ASCII),
             response.contextInfoContainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {

@@ -19,6 +19,7 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.ChannelBuilder
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
@@ -29,7 +30,6 @@ import org.veriblock.sdk.Coin
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.VeriBlockTransaction
-import org.veriblock.sdk.toHex
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
@@ -313,8 +313,3 @@ class NodeCoreGateway(
             .build()
     }
 }
-
-sealed class VeriBlockException(
-    val errorCode: Int,
-    override val message: String
-): RuntimeException()

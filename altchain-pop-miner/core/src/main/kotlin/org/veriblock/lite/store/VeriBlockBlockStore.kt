@@ -7,11 +7,11 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.lite.store
 
-import org.veriblock.lite.util.invoke
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.invoke
 import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.Constants
 import org.veriblock.sdk.VBlakeHash
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.util.ArrayUtils
 import org.veriblock.sdk.util.Utils
 import java.io.File

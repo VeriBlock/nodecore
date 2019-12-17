@@ -8,12 +8,12 @@
 
 package org.veriblock.miners.pop.core
 
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockMerklePath
 import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.PublicationDataWithContext
-import org.veriblock.sdk.toHex
 
 
 sealed class OperationState {

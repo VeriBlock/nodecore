@@ -8,17 +8,17 @@
 
 package org.veriblock.lite.wallet
 
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.invoke
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.lite.util.invoke
 import org.veriblock.sdk.Address
 import org.veriblock.sdk.Sha256Hash
 import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockTransaction
-import org.veriblock.core.utilities.createLogger
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

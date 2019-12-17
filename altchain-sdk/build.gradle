@@ -17,7 +17,9 @@ plugins {
 }
 
 dependencies {
-    compile files("lib/integrations-sdk-0.1.4.jar")
+    api files("lib/integrations-sdk-0.1.4.jar")
+
+    implementation project(":veriblock-core")
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

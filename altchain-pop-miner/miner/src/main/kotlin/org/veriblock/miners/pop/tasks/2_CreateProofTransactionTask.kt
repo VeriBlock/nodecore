@@ -8,13 +8,15 @@
 
 package org.veriblock.miners.pop.tasks
 
+import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.minerConfig
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
@@ -42,8 +44,12 @@ class CreateProofTransactionTask(
         // Something to fill in all the gaps
         logger.info(operation) { "Submitting endorsement VBK transaction..." }
         val transaction = try {
+            val endorsementData = SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData)
+            if (!AltchainPoPEndorsement.isValidEndorsement(endorsementData)) {
+                failOperation(operation, "Invalid endorsement data: ${endorsementData.toHex()}")
+            }
             nodeCoreLiteKit.network.submitEndorsement(
-                SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData),
+                endorsementData,
                 minerConfig.feePerByte,
                 minerConfig.maxFee
             )
