@@ -43,6 +43,8 @@ object Configuration {
 
     fun getInt(path: String) = getOrNull(path) { getInt(it) }
 
+    fun getLong(path: String) = getOrNull(path) { getLong(it) }
+
     fun getString(path: String) = getOrNull(path) { getString(it) }
 
     inline fun <reified T> extract(path: String) = getOrNull(path) { extract<T>(it) }
