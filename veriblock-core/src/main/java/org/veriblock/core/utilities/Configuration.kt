@@ -41,6 +41,8 @@ object Configuration {
         config = ConfigFactory.parseMap(mapOf(key to value)).withFallback(config)
     }
 
+    fun getBoolean(path: String) = getOrNull(path) { getBoolean(it) }
+
     fun getInt(path: String) = getOrNull(path) { getInt(it) }
 
     fun getLong(path: String) = getOrNull(path) { getLong(it) }
