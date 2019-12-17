@@ -302,7 +302,6 @@ class NodeCoreGateway(
         requireNotNull(addressManager.get(sourceAddress)) {
             "The address $sourceAddress is not contained in the specified wallet file!"
         }
-
         val transactionId = unsignedTransaction.txId.toByteArray()
         val signature = addressManager.signMessage(transactionId, sourceAddress)
 
