@@ -8,12 +8,13 @@
 
 package org.veriblock.miners.pop.tasks
 
+import org.veriblock.alt.plugins.HttpException
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 
@@ -39,8 +40,10 @@ class GetPublicationDataTask(
             operation.setPublicationDataWithContext(publicationData)
             logger.info(operation) { "Successfully added the publication data!" }
             return
+        } catch (e: HttpException) {
+            failOperation(operation, "Http error (${e.responseStatusCode}) while trying to get PoP publication data from the ${operation.chainId} daemon: ${e.message}")
         } catch (e: Exception) {
-            failOperation(operation, "Failed to get PoP publication data from SI chain ${operation.chainId}: ${e.message}")
+            failOperation(operation, "Error while trying to get PoP publication data from the ${operation.chainId} daemon: ${e.message}")
         }
     }
 }

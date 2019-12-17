@@ -33,11 +33,6 @@ data class RpcError(
     val message: String
 )
 
-class RpcException(
-    message: String,
-    cause: Throwable? = null
-) : RuntimeException(message, cause)
-
 private val gson = Gson()
 
 val rpcLogger = createLogger {}
@@ -48,7 +43,7 @@ inline fun <reified T : Any> Request.rpcResponse(): T = try {
     rpcLogger.debug { "Request Body: ${this.body.asString("application/json")}" }
     rpcLogger.debug { "Response Body: ${responseBody.trim()}" }
     if (result is Result.Failure) {
-        throw RpcException("Call to RPC API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
+        throw HttpException(response.statusCode, "Call to RPC API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
     }
     val type: Type = object : TypeToken<T>() {}.type
     val rpcResponse: RpcResponse = responseBody.fromJson(object : TypeToken<RpcResponse>() {}.type)
@@ -56,12 +51,12 @@ inline fun <reified T : Any> Request.rpcResponse(): T = try {
         rpcResponse.result != null ->
             rpcResponse.result.fromJson<T>(type)
         rpcResponse.error != null ->
-            throw RpcException(rpcResponse.error.message)
+            throw HttpException(response.statusCode, rpcResponse.error.message)
         else ->
             throw IllegalStateException()
     }
 } catch (e: FuelError) {
-    throw RpcException("Failed to perform request to the API: ${e.message}", e)
+    throw HttpException(-1, "Failed to perform request to the API: ${e.message}", e)
 }
 
 fun JsonRpcRequestBody.toJson(): String = gson.toJson(this)

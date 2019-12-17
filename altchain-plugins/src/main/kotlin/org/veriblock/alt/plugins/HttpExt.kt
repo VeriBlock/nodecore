@@ -19,6 +19,7 @@ import org.veriblock.core.utilities.createLogger
 import java.lang.reflect.Type
 
 class HttpException(
+    val responseStatusCode: Int,
     message: String,
     cause: Throwable? = null
 ) : RuntimeException(message, cause)
@@ -33,11 +34,11 @@ inline fun <reified T : Any> Request.httpResponse(): T = try {
     httpLogger.debug { "Request call: ${cUrlString()}" }
     httpLogger.debug { "Response Body: ${responseBody.trim()}" }
     if (result is Result.Failure) {
-        throw RpcException("Call to API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
+        throw HttpException(response.statusCode, "Call to API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
     }
     responseBody.fromJson(object : TypeToken<T>() {}.type)
 } catch (e: FuelError) {
-    throw HttpException("Failed to perform request to the API: ${e.message}", e)
+    throw HttpException(-1, "Failed to perform request to the API: ${e.message}", e)
 }
 
 fun <T> String.fromJson(type: Type): T = gson.fromJson(this, type)
