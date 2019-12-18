@@ -98,7 +98,7 @@ class TestChain : SecurityInheritingChain {
         val publicationData = PublicationData(
             getChainIdentifier(),
             header,
-            ByteArray(0),
+            "give it to me".toByteArray(),
             context
         )
         return PublicationDataWithContext(publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
