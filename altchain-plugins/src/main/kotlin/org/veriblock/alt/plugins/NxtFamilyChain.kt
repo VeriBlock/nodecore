@@ -46,22 +46,34 @@ private data class NxtBlockData(
     val height: Int
 )
 
-private data class NxtPublicationData(
-    val blockHeader: String,
-    val contextInfoContainer: String,
-    val last_known_veriblock_blocks: List<String>,
-    val last_known_bitcoin_blocks: List<String>
+private abstract class NxtResponse(
+    val errorCode: Int? = null,
+    val error: String? = null,
+    val errorDescription: String? = null
 )
+
+private class NxtPublicationData(
+    val blockHeader: String? = null,
+    val contextInfoContainer: String? = null,
+    val last_known_veriblock_blocks: List<String>? = null,
+    val last_known_bitcoin_blocks: List<String>? = null,
+    errorCode: Int? = null,
+    error: String? = null,
+    errorDescription: String? = null
+) : NxtResponse(errorCode, error, errorDescription)
 
 private data class NxtSubmitData(
     val atv: String,
     val vtb: List<String>
 )
 
-private data class NxtSubmitResponse(
-    val requestProcessingTime: Int,
-    val transaction: NxtTransactionData
-)
+private class NxtSubmitResponse(
+    val requestProcessingTime: Int? = null,
+    val transaction: NxtTransactionData? = null,
+    errorCode: Int? = null,
+    error: String? = null,
+    errorDescription: String? = null
+) : NxtResponse(errorCode, error, errorDescription)
 
 private data class NxtTransactionData(
     val senderPublicKey: String,
@@ -110,6 +122,9 @@ class NxtFamilyChain(
     }
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
+        val payoutAddress = config.payoutAddress
+            ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
+
         val actualBlockHeight = blockHeight
             // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
@@ -120,8 +135,22 @@ class NxtFamilyChain(
             "height" to actualBlockHeight
         )).authenticate().httpResponse()
 
-        val payoutAddress = config.payoutAddress
-            ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
+        if (response.error != null) {
+            error("Error calling $key daemon's API: ${response.error} (${response.errorDescription})")
+        }
+
+        checkNotNull(response.blockHeader) {
+            "Null block header in NXT getPopData response"
+        }
+        checkNotNull(response.contextInfoContainer) {
+            "Null context info in NXT getPopData response"
+        }
+        check(!response.last_known_veriblock_blocks.isNullOrEmpty()) {
+            "Publication data's context (last known VeriBlock blocks) must not be empty!"
+        }
+        check(!response.last_known_bitcoin_blocks.isNullOrEmpty()) {
+            "Publication data's context (last known Bitcoin blocks) must not be empty!"
+        }
 
         val publicationData = PublicationData(
             getChainIdentifier(),
@@ -129,9 +158,6 @@ class NxtFamilyChain(
             payoutAddress.toByteArray(Charsets.US_ASCII),
             response.contextInfoContainer.asHexBytes()
         )
-        if (response.last_known_veriblock_blocks.isEmpty()) {
-            error("Publication data's context (last known VeriBlock blocks) must not be empty!")
-        }
         return PublicationDataWithContext(
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },
@@ -148,7 +174,13 @@ class NxtFamilyChain(
         val submitResponse: NxtSubmitResponse = "${config.host}/nxt".httpPost(listOf(
             "requestType" to "submitPop"
         )).authenticate().header("content-type", "application/json").body(jsonBody).httpResponse()
-        return submitResponse.transaction.signature
+
+        if (submitResponse.error != null) {
+            error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
+        }
+
+        return submitResponse.transaction?.signature
+            ?: error("Unable to retrieve $key's submission response data")
     }
 
     private fun Any.toJson() = Gson().toJson(this)
