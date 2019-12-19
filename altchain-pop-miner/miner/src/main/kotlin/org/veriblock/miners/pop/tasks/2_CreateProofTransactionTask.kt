@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.tasks
 
-import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
@@ -45,7 +45,8 @@ class CreateProofTransactionTask(
         logger.info(operation) { "Submitting endorsement VBK transaction..." }
         val transaction = try {
             val endorsementData = SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData)
-            if (!AltchainPoPEndorsement.isValidEndorsement(endorsementData)) {
+            endorsementData.checkForValidEndorsement {
+                logger.error(it) { "Invalid endorsement data" }
                 failOperation(operation, "Invalid endorsement data: ${endorsementData.toHex()}")
             }
             nodeCoreLiteKit.network.submitEndorsement(
