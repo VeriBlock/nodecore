@@ -52,6 +52,7 @@ class Miner(
     private val readyConditions: EnumSet<ReadyCondition> = EnumSet.noneOf(ReadyCondition::class.java)
 
     private var operationsSubmitted = false
+    private var lastConfirmedBalance = Coin.ZERO
 
     init {
         // Restore operations (including re-attach listeners) before the network starts
@@ -73,7 +74,10 @@ class Miner(
             removeReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
         nodeCoreLiteKit.balanceChangedEvent.register(this) {
-            logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}" }
+            if (lastConfirmedBalance != it.confirmedBalance) {
+                lastConfirmedBalance = it.confirmedBalance
+                logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}" }
+            }
             if (it.confirmedBalance.atomicUnits >= minerConfig.maxFee) {
                 addReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
             } else {
