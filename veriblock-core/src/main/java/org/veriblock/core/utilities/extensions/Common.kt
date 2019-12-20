@@ -1,12 +1,15 @@
 package org.veriblock.core.utilities.extensions
 
-import org.veriblock.core.utilities.createLogger
 import java.text.SimpleDateFormat
 import java.util.*
 
 fun Int.isValidPort(): Boolean {
     return this in 1..65535
 }
+
+fun String.isPositiveInteger(): Boolean = toIntOrNull()?.let {
+    it > 0
+} ?: false
 
 fun Char.isAlphabetic(): Boolean {
     return (this in 'a'..'z') or (this in 'A'..'Z')

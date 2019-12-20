@@ -4,58 +4,56 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.services
 
-package nodecore.miners.pop.services;
+import io.grpc.Channel
+import io.grpc.ClientInterceptors
+import io.grpc.ManagedChannel
+import io.grpc.Metadata
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
+import io.grpc.netty.shaded.io.grpc.netty.NegotiationType
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.grpc.stub.MetadataUtils
+import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.Constants
+import java.io.File
+import javax.net.ssl.SSLException
 
-import io.grpc.Channel;
-import io.grpc.ClientInterceptor;
-import io.grpc.ClientInterceptors;
-import io.grpc.ManagedChannel;
-import io.grpc.Metadata;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NegotiationType;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import io.grpc.stub.MetadataUtils;
-import nodecore.miners.pop.Configuration;
-import nodecore.miners.pop.Constants;
-
-import javax.net.ssl.SSLException;
-import java.io.File;
-
-public class ChannelBuilder {
-    private final Configuration configuration;
-
-    public ChannelBuilder(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    public ManagedChannel buildManagedChannel() throws SSLException {
-        if (configuration.getNodeCoreUseSSL()) {
-            return buildTlsManagedChannel();
+class ChannelBuilder(
+    private val configuration: Configuration
+) {
+    @Throws(SSLException::class)
+    fun buildManagedChannel(): ManagedChannel {
+        return if (configuration.nodeCoreUseSSL) {
+            buildTlsManagedChannel()
+        } else {
+            buildPlainTextManagedChannel()
         }
-
-        return buildPlainTextManagedChannel();
     }
 
-    public Channel attachPasswordInterceptor(Channel inner) {
-        String password = configuration.getNodeCorePassword();
-        Metadata headers = new Metadata();
+    fun attachPasswordInterceptor(inner: Channel?): Channel {
+        val headers = Metadata()
+        val password = configuration.nodeCorePassword
         if (password != null) {
-            headers.put(Constants.RPC_PASSWORD_HEADER_NAME, password);
+            headers.put(Constants.RPC_PASSWORD_HEADER_NAME, password)
         }
-        ClientInterceptor clientInterceptor = MetadataUtils.newAttachHeadersInterceptor(headers);
-        return ClientInterceptors.intercept(inner, clientInterceptor);
+        val clientInterceptor = MetadataUtils.newAttachHeadersInterceptor(headers)
+        return ClientInterceptors.intercept(inner, clientInterceptor)
     }
 
-    private ManagedChannel buildTlsManagedChannel() throws SSLException {
-        File certChainFile = new File(configuration.getCertificateChainPath());
-        return NettyChannelBuilder.forAddress(configuration.getNodeCoreHost(), configuration.getNodeCorePort())
-                .sslContext(GrpcSslContexts.forClient().trustManager(certChainFile).build())
-                .negotiationType(NegotiationType.TLS)
-                .build();
+    private fun buildTlsManagedChannel(): ManagedChannel {
+        val certChainFile = File(configuration.certificateChainPath)
+        return NettyChannelBuilder
+            .forAddress(configuration.nodeCoreHost, configuration.nodeCorePort)
+            .sslContext(GrpcSslContexts.forClient().trustManager(certChainFile).build())
+            .negotiationType(NegotiationType.TLS)
+            .build()
     }
 
-    private ManagedChannel buildPlainTextManagedChannel() {
-        return NettyChannelBuilder.forAddress(configuration.getNodeCoreHost(), configuration.getNodeCorePort()).usePlaintext().build();
+    private fun buildPlainTextManagedChannel(): ManagedChannel {
+        return NettyChannelBuilder
+            .forAddress(configuration.nodeCoreHost, configuration.nodeCorePort)
+            .usePlaintext()
+            .build()
     }
 }

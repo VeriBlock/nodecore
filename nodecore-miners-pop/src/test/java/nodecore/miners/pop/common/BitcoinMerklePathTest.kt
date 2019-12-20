@@ -35,7 +35,7 @@ class BitcoinMerklePathTest {
         val merklePath = BitcoinMerklePath(compactFormat)
 
         // Then
-        merklePath.merkleRoot shouldBe "1C57761E12EC0982653E47CA890804DD91FFD65100866692D1232B191A73EB16"
+        merklePath.getMerkleRoot() shouldBe "1C57761E12EC0982653E47CA890804DD91FFD65100866692D1232B191A73EB16"
     }
 
     @Test
@@ -47,7 +47,7 @@ class BitcoinMerklePathTest {
         val merklePath = BitcoinMerklePath(compactFormat)
 
         // Then
-        merklePath.compactFormat shouldBe compactFormat
+        merklePath.getCompactFormat() shouldBe compactFormat
     }
 
     @Test
@@ -94,7 +94,7 @@ class BitcoinMerklePathTest {
         merklePath.layers shouldBe layers
         merklePath.bottomData shouldBe bottomData
         merklePath.bottomDataIndex shouldBe bottomDataIndex
-        merklePath.compactFormat shouldBe compactFormat
+        merklePath.getCompactFormat() shouldBe compactFormat
     }
 
     @Test

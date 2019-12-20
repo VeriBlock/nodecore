@@ -4,69 +4,59 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.services
 
-package nodecore.miners.pop.services;
+import com.google.common.eventbus.Subscribe
+import nodecore.miners.pop.InternalEventBus
+import nodecore.miners.pop.contracts.MessageEvent
+import org.veriblock.core.utilities.createLogger
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
 
-import com.google.common.eventbus.Subscribe;
-import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.contracts.MessageEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+private val logger = createLogger {}
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
+class MessageService {
+    private val queue: ConcurrentLinkedQueue<MessageEvent> = ConcurrentLinkedQueue()
 
-public class MessageService {
-    private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
-    private final ConcurrentLinkedQueue<MessageEvent> queue;
+    private var messageGate: CountDownLatch = CountDownLatch(1)
+    private var running: Boolean = true
 
-    private CountDownLatch messageGate;
-    private boolean running;
-
-    public MessageService() {
-        this.queue = new ConcurrentLinkedQueue<>();
-        this.messageGate = new CountDownLatch(1);
-        this.running = true;
-
-        InternalEventBus.getInstance().register(this);
+    init {
+        InternalEventBus.getInstance().register(this)
     }
 
-    public List<MessageEvent> getMessages() {
+    fun getMessages(): List<MessageEvent> {
         if (!running) {
-            return Collections.emptyList();
+            return emptyList()
         }
-
         try {
-            messageGate.await();
-        } catch (InterruptedException e) {
-            logger.error(e.getMessage(), e);
+            messageGate.await()
+        } catch (e: InterruptedException) {
+            logger.error(e.message, e)
         }
-
-        List<MessageEvent> messages = new ArrayList<>();
-        MessageEvent message;
-        while ((message = queue.poll()) != null) {
-            messages.add(message);
+        val messages: MutableList<MessageEvent> = ArrayList()
+        var message: MessageEvent? = queue.poll()
+        while (message != null) {
+            messages.add(message)
+            message = queue.poll()
         }
-
-        messageGate = new CountDownLatch(1);
-        return messages;
+        messageGate = CountDownLatch(1)
+        return messages
     }
 
-    public void shutdown() {
-        this.running = false;
-        messageGate.countDown();
+    fun shutdown() {
+        running = false
+        messageGate.countDown()
     }
 
     @Subscribe
-    public void onMessage(MessageEvent event) {
+    fun onMessage(event: MessageEvent) {
         try {
-            queue.add(event);
-            messageGate.countDown();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            queue.add(event)
+            messageGate.countDown()
+        } catch (e: Exception) {
+            logger.error(e.message, e)
         }
     }
 }

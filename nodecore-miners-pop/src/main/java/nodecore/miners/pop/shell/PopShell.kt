@@ -77,16 +77,20 @@ class PopShell(
     }
 
     private fun watchMessages() {
-        messageHandler = CompletableFuture.supplyAsync { messageService.messages }
-            .thenAccept { messages: List<MessageEvent> -> formatMessages(messages) }
-            .thenRun { watchMessages() }
+        messageHandler = CompletableFuture.supplyAsync {
+            messageService.getMessages()
+        }.thenAccept { messages: List<MessageEvent> ->
+            formatMessages(messages)
+        }.thenRun {
+            watchMessages()
+        }
     }
 
     private fun formatMessages(messages: List<MessageEvent>) {
         for (msg in messages) {
-            when {
-                Level.ERROR == msg.level -> logger.error(msg.message)
-                Level.WARN == msg.level -> logger.warn(msg.message)
+            when (msg.level) {
+                Level.ERROR -> logger.error(msg.message)
+                Level.WARN -> logger.warn(msg.message)
                 else -> logger.info(msg.message)
             }
         }
