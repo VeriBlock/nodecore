@@ -344,6 +344,14 @@ message AltchainHeaderEndorsementCountPair {
     int32 endorsement_count = 2;
 }
 
+message AltchainPoPEndorsement {
+    int64 identifier = 1;
+    bytes header = 2;
+    bytes contextInfo = 3;
+    bytes payoutInfo = 4;
+    bytes rawData = 5;
+}
+
 message BlockFeeTable {
     int64 pop_fee_share = 1;
 }
@@ -820,6 +828,18 @@ message CreateAltChainEndorsementReply {
     repeated Result results = 2;
     Transaction transaction = 3;
     int64 signature_index = 4;
+}
+
+message GetAltChainPoPEndorsementsRequest {
+    bytes block_hash = 1 [(hex_encoded)=true];
+    int64 altchain_identifier = 2;
+}
+
+message GetAltChainPoPEndorsementsReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes block_hash = 3 [(hex_encoded)=true];
+    repeated AltchainPoPEndorsement altchain_pop_endorsements = 4;
 }
 
 message GetHistoryRequest {
@@ -1483,6 +1503,8 @@ service Admin {
     rpc SendCoins (SendCoinsRequest) returns (SendCoinsReply) {}
 
     rpc CreateAltChainEndorsement (CreateAltChainEndorsementRequest) returns (CreateAltChainEndorsementReply) {}
+
+    rpc GetAltChainPoPEndorsements (GetAltChainPoPEndorsementsRequest) returns (GetAltChainPoPEndorsementsReply) {}
 
     rpc GetBlocks (GetBlocksRequest) returns (GetBlocksReply) {}
 
