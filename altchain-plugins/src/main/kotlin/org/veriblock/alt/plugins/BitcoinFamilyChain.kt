@@ -110,7 +110,7 @@ class BitcoinFamilyChain(
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.block_header.asHexBytes(),
-            payoutAddress.toByteArray(Charsets.US_ASCII),
+            payoutAddress.asHexBytes(),//.toByteArray(Charsets.US_ASCII),
             response.raw_contextinfocontainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {
