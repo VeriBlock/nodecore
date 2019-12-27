@@ -11,6 +11,7 @@ package org.veriblock.lite.net
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.EmptyEvent
@@ -22,7 +23,6 @@ import org.veriblock.sdk.BlockStoreException
 import org.veriblock.sdk.VBlakeHash
 import org.veriblock.sdk.VeriBlockBlock
 import org.veriblock.sdk.VeriBlockTransaction
-import org.veriblock.core.utilities.createLogger
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -153,10 +153,14 @@ class NodeCoreNetwork(
     private fun pollForVeriBlockPublications() {
         logger.debug { "Polling for VeriBlock publications..." }
         for (subscription in publicationSubscriptions.values) {
-            val veriBlockPublications = gateway.getVeriBlockPublications(
-                subscription.keystoneHash, subscription.contextHash, subscription.btcContextHash
-            )
-            subscription.trySetResults(veriBlockPublications)
+            try {
+                val veriBlockPublications = gateway.getVeriBlockPublications(
+                    subscription.keystoneHash, subscription.contextHash, subscription.btcContextHash
+                )
+                subscription.trySetResults(veriBlockPublications)
+            } catch (e: Exception) {
+                subscription.onError(e)
+            }
         }
     }
 

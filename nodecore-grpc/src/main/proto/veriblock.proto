@@ -929,6 +929,7 @@ message TransactionInfo {
     bytes endorsed_block_hash = 5 [(hex_encoded)=true];
     bytes bitcoin_block_hash = 6 [(hex_encoded)=true];
     bytes bitcoin_tx_id = 7 [(hex_encoded)=true];
+    int32 bitcoin_confirmations = 8;
 }
 
 message GetTransactionsReply {

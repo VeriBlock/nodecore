@@ -124,7 +124,7 @@ class AltchainPoPEndorsement(rawData: ByteArray) {
         }
         var result = 0L
         for (i in bytes.indices) {
-            result = (result shl 8) or 0xFF and bytes[i].toLong()
+            result = (result shl 8) or (0xFFL and bytes[i].toLong())
         }
         return result
     }

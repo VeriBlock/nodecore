@@ -161,18 +161,15 @@ class NodeCoreGateway(
             .withDeadlineAfter(300, TimeUnit.SECONDS)
             .getVeriBlockPublications(request)
         if (reply.success) {
-            val publications = ArrayList<VeriBlockPublication>()
-            for (pubMsg in reply.publicationsList) {
-                publications.add(pubMsg.deserialize(params))
+            return reply.publicationsList.map {
+                it.deserialize(params)
             }
-            return publications
         } else {
             for (error in reply.resultsList) {
-                logger.debug { "${error.message} | ${error.details}" }
+                logger.warn { "${error.message} | ${error.details}" }
             }
+            error("Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash")
         }
-
-        return emptyList()
     }
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String): List<VeriBlockPublication> {

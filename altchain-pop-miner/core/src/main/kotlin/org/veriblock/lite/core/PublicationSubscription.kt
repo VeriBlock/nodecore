@@ -14,7 +14,8 @@ class PublicationSubscription(
     val keystoneHash: String,
     val contextHash: String,
     val btcContextHash: String,
-    private val listener: (List<VeriBlockPublication>) -> Unit
+    private val listener: (List<VeriBlockPublication>) -> Unit,
+    private val failureListener: (Exception) -> Unit
 ) {
     var results: List<VeriBlockPublication>? = null
         private set
@@ -43,5 +44,9 @@ class PublicationSubscription(
         }
 
         return false
+    }
+
+    fun onError(e: Exception) {
+        failureListener(e)
     }
 }
