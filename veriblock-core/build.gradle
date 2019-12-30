@@ -42,6 +42,10 @@ jar {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
 
 artifactory {
     contextUrl = artifactory_url
@@ -67,7 +71,7 @@ publishing {
             artifactId 'veriblock-core'
             version prettyVersion()
             from components.java
-            artifact (kotlinSourcesJar) {
+            artifact (sourcesJar) {
                 classifier = 'sources'
             }
         }
