@@ -40,8 +40,6 @@ jar {
                 'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
-    // Include source code
-    from sourceSets.main.allSource
 }
 
 
@@ -69,6 +67,9 @@ publishing {
             artifactId 'veriblock-core'
             version prettyVersion()
             from components.java
+            artifact (kotlinSourcesJar) {
+                classifier = 'sources'
+            }
         }
     }
 }
