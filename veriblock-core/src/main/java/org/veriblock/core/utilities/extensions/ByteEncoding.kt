@@ -2,7 +2,6 @@ package org.veriblock.core.utilities.extensions
 
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.bitcoinj.Base59
-import org.veriblock.core.utilities.createLogger
 import java.util.*
 
 /**
@@ -29,6 +28,9 @@ private val hexArray = hexAlphabet.toCharArray()
  * @return A byte array consisting of the bytes within the hexadecimal String
  */
 fun String.asHexBytes(): ByteArray {
+    require(isHex()) {
+        "non-hex String cannot be converted to hex (called with $this)!"
+    }
     val len = length
     val data = ByteArray(len / 2)
     var i = 0

@@ -14,6 +14,7 @@ import com.github.kittinunf.fuel.httpPost
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
@@ -55,7 +56,14 @@ class BitcoinFamilyChain(
     val name: String
 ) : SecurityInheritingChain {
 
-    private val config = Configuration.extract("securityInheriting.$key") ?: BtcConfig()
+    private val config: BtcConfig = Configuration.extract("securityInheriting.$key")
+        ?: error("Please configure the securityInheriting.$key section")
+
+    init {
+        if (config.payoutAddress == null || !config.payoutAddress.isHex()) {
+            error("$key's payoutAddress configuration must be a properly formed hex string")
+        }
+    }
 
     private fun Request.authenticate() = if (config.username != null && config.password != null) {
         authentication().basic(config.username, config.password)

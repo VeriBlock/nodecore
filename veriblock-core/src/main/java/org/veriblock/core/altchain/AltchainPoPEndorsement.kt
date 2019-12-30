@@ -26,12 +26,13 @@ import java.io.ByteArrayInputStream
  * information to perform preliminary validation (such as hashing the block header and seeing if it is the appropriate
  * difficulty).
  */
-class AltchainPoPEndorsement(rawData: ByteArray) {
+class AltchainPoPEndorsement(
+    private val rawData: ByteArray
+) {
     val identifier: Long
     private val header: ByteArray
     private val contextInfo: ByteArray
     private val payoutInfo: ByteArray
-    private val rawData: ByteArray
 
     fun getHeader() = header.clone()
 
@@ -48,7 +49,6 @@ class AltchainPoPEndorsement(rawData: ByteArray) {
         require(rawData.size <= TransactionConstants.MAX_TRANSACTION_DATA_SIZE_BYTES) {
             "An AltchainPoPEndorsement cannot be created with raw data that is longer than ${TransactionConstants.MAX_TRANSACTION_DATA_SIZE_BYTES}"
         }
-        this.rawData = rawData
         val endorsementDataStream = ByteArrayInputStream(rawData)
         val idSize = endorsementDataStream.read().toByte()
         require(idSize <= AltchainConstants.MAX_ALTCHAIN_IDENTIFIER_LENGTH) {
@@ -130,6 +130,7 @@ class AltchainPoPEndorsement(rawData: ByteArray) {
     }
 
     companion object {
+        @JvmStatic
         fun isValidEndorsement(rawData: ByteArray): Boolean {
             return try {
                 AltchainPoPEndorsement(rawData)
