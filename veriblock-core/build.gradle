@@ -40,6 +40,8 @@ jar {
                 'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
     }
+    // Include source code
+    from sourceSets.main.allSource
 }
 
 
