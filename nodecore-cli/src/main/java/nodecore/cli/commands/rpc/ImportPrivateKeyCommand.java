@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringUtility;
@@ -35,7 +34,6 @@ import java.util.Arrays;
 public class ImportPrivateKeyCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(ImportPrivateKeyCommand.class);
 
-    @Inject
     public ImportPrivateKeyCommand() {
     }
 

@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.cli.annotations.CommandSpec;
@@ -30,7 +29,6 @@ import java.util.Arrays;
 public class GetInfoCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(GetInfoCommand.class);
 
-    @Inject
     public GetInfoCommand() {
 
     }

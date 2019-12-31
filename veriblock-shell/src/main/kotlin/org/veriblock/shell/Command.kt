@@ -15,7 +15,9 @@ class Command(
     val form: String,
     val description: String,
     val parameters: List<CommandParameter>,
-    val execute: (CommandContext) -> Result
+    val suggestedCommands: List<String> = emptyList(),
+    val extraData: String? = null,
+    val action: (CommandContext) -> Result
 )
 
 class CommandParameter(
@@ -28,7 +30,12 @@ enum class CommandParameterType {
     STRING,
     INTEGER,
     LONG,
-    AMOUNT
+    AMOUNT,
+    PEER,
+    STANDARD_ADDRESS,
+    COMMA_SEPARATED_STANDARD_ADDRESSES,
+    STANDARD_OR_MULTISIG_ADDRESS,
+    HASH
 }
 
 fun Shell.command(
@@ -36,8 +43,9 @@ fun Shell.command(
     form: String,
     description: String,
     parameters: List<CommandParameter> = emptyList(),
+    suggestedCommands: List<String> = emptyList(),
     action: CommandContext.() -> Result
 ) {
-    val command = Command(name, form, description, parameters, action)
+    val command = Command(name, form, description, parameters, suggestedCommands, action)
     registerCommand(command)
 }

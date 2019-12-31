@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.cli.annotations.CommandSpec;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 public class StopNodeCoreCommand implements Command {
     private static final Logger logger = LoggerFactory.getLogger(StopNodeCoreCommand.class);
 
-    @Inject
     public StopNodeCoreCommand() {}
 
     @Override

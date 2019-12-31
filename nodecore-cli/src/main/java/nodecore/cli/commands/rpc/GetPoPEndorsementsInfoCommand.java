@@ -15,7 +15,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
@@ -47,7 +46,6 @@ import java.util.stream.Collectors;
 public class GetPoPEndorsementsInfoCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(GetPoPEndorsementsInfoCommand.class);
 
-    @Inject
     public GetPoPEndorsementsInfoCommand() {
     }
 

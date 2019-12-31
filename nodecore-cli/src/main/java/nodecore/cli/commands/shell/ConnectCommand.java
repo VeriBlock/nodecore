@@ -7,14 +7,19 @@
 
 package nodecore.cli.commands.shell;
 
-import com.google.inject.Inject;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandServiceType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.Command;
+import nodecore.cli.contracts.CommandContext;
+import nodecore.cli.contracts.PeerEndpoint;
+import nodecore.cli.contracts.ProtocolEndpoint;
+import nodecore.cli.contracts.ProtocolEndpointType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
 
 @CommandSpec(
         name = "Connect",
@@ -29,8 +34,17 @@ import org.slf4j.LoggerFactory;
 public class ConnectCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(ConnectCommand.class);
 
-    @Inject
     public ConnectCommand() {
+        // TODO: ADD THESE SUGGESTED COMMANDS WHEN REFACTORING:
+        List<Class<? extends Command>> suggestedCommands = new ArrayList<>(Arrays.asList(GetInfoCommand.class,
+            GetNewAddressCommand.class,
+            GetBalanceCommand.class,
+            StartSoloPoolCommand.class));
+
+        // TODO: GOOD LUCK IMPLEMENTING THIS
+        if (!GraphicsEnvironment.isHeadless()) {
+            suggestedCommands.add(StartPoPMinerCommand.class);
+        }
     }
 
     @Override

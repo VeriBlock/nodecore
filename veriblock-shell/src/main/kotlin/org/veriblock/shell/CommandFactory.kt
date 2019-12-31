@@ -15,6 +15,9 @@ import kotlin.collections.set
 
 private val logger = LoggerFactory.getLogger(CommandFactory::class.java)
 
+const val FILENAME_SELECTOR = "-o"
+const val FORMAT_SELECTOR = "-f"
+
 class CommandResult(
     val command: Command,
     val parameters: Map<String, Any>
@@ -90,6 +93,7 @@ class CommandFactory {
             } catch (e: NumberFormatException) {
                 throw syntaxError(command, "parameter '${param.name}' must be an amount in BTC to send. e.g. 0.1")
             }
+            else -> TODO("Command type ${param.type} is still to be implemented")
         }
     }
 

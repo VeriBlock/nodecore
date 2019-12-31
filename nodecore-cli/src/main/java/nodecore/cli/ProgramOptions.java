@@ -7,27 +7,28 @@
 
 package nodecore.cli;
 
-import com.google.inject.Inject;
-import nodecore.cli.contracts.ProgramOptions;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class DefaultProgramOptions implements ProgramOptions {
+public class ProgramOptions {
     private String _configPath;
     private List<String> _scripts = new ArrayList<>();
     private Properties _properties = new Properties();
 
     private String _connect;
 
-    @Inject
-    public DefaultProgramOptions() {
+    public ProgramOptions() {
         resetToDefaults();
     }
 
-    @Override
     public boolean parse(String[] args) {
         Option configFileOption = Option.builder("c")
                 .argName("path")
@@ -77,23 +78,19 @@ public class DefaultProgramOptions implements ProgramOptions {
         }
     }
 
-    @Override
     public String getConfigPath() {
         return _configPath;
     }
 
-    @Override
     public void resetToDefaults() {
         _properties.clear();
         _configPath = "nodecore-cli.properties";
     }
 
-    @Override
     public void removeProperty(String name) {
         _properties.remove(name);
     }
 
-    @Override
     public String getProperty(String name) {
         return _properties.getProperty(name);
     }
@@ -101,6 +98,4 @@ public class DefaultProgramOptions implements ProgramOptions {
     public String getConnect() {
         return _connect;
     }
-
-
 }

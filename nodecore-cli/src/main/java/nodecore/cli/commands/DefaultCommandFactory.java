@@ -7,15 +7,25 @@
 
 package nodecore.cli.commands;
 
-import com.google.inject.Inject;
+import nodecore.cli.Configuration;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.Command;
+import nodecore.cli.contracts.CommandDefinition;
+import nodecore.cli.contracts.CommandFactory;
+import nodecore.cli.contracts.CommandFactoryResult;
+import nodecore.cli.contracts.Output;
+import nodecore.cli.contracts.PeerEndpoint;
 import org.reflections.Reflections;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
+import org.veriblock.shell.core.Result;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DefaultCommandFactory implements CommandFactory {
 
@@ -42,7 +52,6 @@ public class DefaultCommandFactory implements CommandFactory {
         }
     }
 
-    @Inject
     public DefaultCommandFactory(
             Configuration configuration,
             Map<String, Command> commands) {

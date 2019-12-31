@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
@@ -17,7 +16,8 @@ import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.SignMessagePayload;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.Command;
+import nodecore.cli.contracts.CommandContext;
 import nodecore.cli.utilities.CommandUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,6 @@ public class SignHexMessageCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(SignMessageCommand.class);
     private Configuration _configuration;
 
-    @Inject
     public SignHexMessageCommand(Configuration configuration) {
         _configuration = configuration;
     }

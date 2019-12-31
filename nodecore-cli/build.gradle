@@ -12,12 +12,16 @@ configurations.all {
 dependencies {
     implementation project(':veriblock-core')
     implementation project(':nodecore-grpc')
+    implementation project(':veriblock-shell')
+
     implementation 'ch.qos.logback:logback-classic:1.2.3'
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
     implementation group: 'commons-io', name: 'commons-io', version: '2.5'
-    implementation group: 'com.google.inject', name: 'guice', version: '4.1.0'
-    implementation group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.1.0'
-    implementation group: 'com.google.inject.extensions', name: 'guice-assistedinject', version: '4.1.0'
+
+    // Dependency Injection
+    implementation "org.koin:koin-core:1.0.1"
+    implementation 'org.koin:koin-java:2.0.1'
+
     implementation group: 'joda-time', name: 'joda-time', version: '2.9.9'
     implementation group: 'org.reflections', name: 'reflections', version: '0.9.11'
     implementation group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'

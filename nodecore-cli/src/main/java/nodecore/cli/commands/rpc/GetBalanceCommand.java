@@ -8,7 +8,6 @@
 package nodecore.cli.commands.rpc;
 
 import com.google.gson.annotations.SerializedName;
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
@@ -51,7 +50,6 @@ public class GetBalanceCommand implements Command {
         List<OutputInfo> unconfirmed = new ArrayList<>();
     }
 
-    @Inject
     public GetBalanceCommand() {
     }
 

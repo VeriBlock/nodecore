@@ -16,7 +16,6 @@ public class CommandUtility {
     private CommandUtility(){}
 
     public static void handleRuntimeException(Result result, StatusRuntimeException e, Logger logger) {
-
         String resultMessage = "Remote service call failure";
         String resultDetails = e.toString();
         String resultCode = "V800";

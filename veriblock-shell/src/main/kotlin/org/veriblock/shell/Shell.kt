@@ -8,11 +8,14 @@
 
 package org.veriblock.shell
 
+import com.google.common.base.Stopwatch
 import com.google.gson.GsonBuilder
+import org.jline.reader.Completer
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
+import org.jline.reader.impl.LineReaderImpl
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.AttributedStringBuilder
@@ -46,10 +49,18 @@ open class Shell(
     }.build()
     val reader: LineReader = LineReaderBuilder.builder()
         .terminal(terminal)
+        .completer(getCompleter())
         .build()
 
     init {
         currentShell = this
+    }
+
+    protected open fun getCompleter(): Completer? = null
+
+    protected fun refreshCompleter() {
+        (reader as LineReaderImpl).completer = getCompleter()
+        reader.setOpt(LineReader.Option.DISABLE_EVENT_EXPANSION)
     }
 
     private fun getPrompt() = AttributedStringBuilder()
@@ -67,6 +78,8 @@ open class Shell(
     } catch (eof: EndOfFileException) {
         null
     }
+
+    fun passwordPrompt(prompt: String): String? = reader.readLine(prompt, '*')
 
     private fun startRunning() {
         running = true
@@ -99,11 +112,13 @@ open class Shell(
             if (input.isEmpty())
                 continue
 
+            val stopwatch = Stopwatch.createStarted()
+
             var clear: Boolean? = null
             val executeResult: Result = try {
                 val commandResult = commandFactory.getInstance(input)
-                val context = CommandContext(this, commandResult.parameters)
-                val result = commandResult.command.execute(context)
+                val context = CommandContext(this, commandResult.command, commandResult.parameters)
+                val result = commandResult.command.action(context)
 
                 if (!result.isFailed) {
                     if (context.quit) {
@@ -112,6 +127,8 @@ open class Shell(
 
                     clear = context.clear
                 }
+
+                handleResult(context, result)
 
                 result
             } catch (se: ShellException) {
@@ -134,11 +151,15 @@ open class Shell(
             }
 
             printResultWithFormat(executeResult)
+            printStyled("($stopwatch)\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW));
 
             if (clear != null && clear) {
                 clear()
             }
         }
+    }
+
+    protected open fun handleResult(context: CommandContext, result: Result) {
     }
 
     private fun clear() {
@@ -212,17 +233,29 @@ open class Shell(
         printWarning("${t.message}\n\n")
     }
 
-    fun printStyled(message: String, style: AttributedStyle) {
-        terminal.writer().println(
-            AttributedStringBuilder()
-                .style(style)
-                .append(message)
-                .toAnsi(terminal)
-        )
-        terminal.writer().flush()
+    fun printStyled(message: String, style: AttributedStyle, newLine: Boolean = true) {
+        if (newLine) {
+            terminal.writer().println(
+                AttributedStringBuilder()
+                    .style(style)
+                    .append(message)
+                    .toAnsi(terminal)
+            )
+            terminal.writer().flush()
+        } else {
+            terminal.writer().print(
+                AttributedStringBuilder()
+                    .style(style)
+                    .append(message)
+                    .toAnsi(terminal)
+            )
+        }
     }
 
     fun getCommands() = commandFactory.getCommands()
+
+    fun getCommand(alias: String) = commandFactory.getCommands()[alias]
+        ?: error("Command $alias not found!")
 
     fun registerCommand(command: Command) {
         commandFactory.registerCommand(command)

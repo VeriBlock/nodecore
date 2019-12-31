@@ -8,16 +8,16 @@
 package nodecore.cli;
 
 import com.google.gson.GsonBuilder;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import nodecore.cli.commands.CommandFactoryModule;
-import nodecore.cli.contracts.Configuration;
-import nodecore.cli.contracts.ProgramOptions;
 import nodecore.cli.contracts.Result;
 import nodecore.cli.contracts.Shell;
+import org.koin.core.KoinApplication;
+import org.koin.java.KoinJavaComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.SharedConstants;
+
+import static nodecore.cli.CLIModuleKt.defaultModule;
+import static org.koin.core.context.GlobalContext.start;
 
 public class Program {
     private static final Logger _logger = LoggerFactory.getLogger(Program.class);
@@ -28,21 +28,20 @@ public class Program {
     private int run(String[] args) {
         System.out.print(SharedConstants.LICENSE);
 
-        Injector injector = Guice.createInjector(
-                new DefaultModule(),
-                new CommandFactoryModule());
+        KoinApplication startupInjector = KoinApplication.create().modules(defaultModule);
+        start(startupInjector);
 
         Object objDiagnostics = org.veriblock.core.utilities.DiagnosticUtility.getDiagnosticInfo();
         String strDiagnostics = (new GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics));
         _logger.info(strDiagnostics);
 
-        ProgramOptions options = injector.getInstance(ProgramOptions.class);
+        ProgramOptions options = KoinJavaComponent.get(ProgramOptions.class);
         options.parse(args);
 
-        Configuration configuration = injector.getInstance(Configuration.class);
+        Configuration configuration = KoinJavaComponent.get(Configuration.class);
         configuration.load();
 
-        Shell shell = injector.getInstance(Shell.class);
+        Shell shell = KoinJavaComponent.get(Shell.class);
         shell.initialize(options.getConnect());
         Result result = shell.run();
         return result.didFail() ? 1 : 0;

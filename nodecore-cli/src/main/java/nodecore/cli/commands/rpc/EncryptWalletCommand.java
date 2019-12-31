@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.cli.annotations.CommandSpec;
@@ -30,7 +29,6 @@ import java.util.Arrays;
 public class EncryptWalletCommand implements Command {
     private static final Logger logger = LoggerFactory.getLogger(EncryptWalletCommand.class);
 
-    @Inject
     public EncryptWalletCommand() {
     }
 

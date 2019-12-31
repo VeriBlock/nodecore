@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.cli.annotations.CommandParameterType;
@@ -35,7 +34,6 @@ import java.util.Collections;
 public class GetPopCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(GetPopCommand.class);
 
-    @Inject
     public GetPopCommand() {
     }
 

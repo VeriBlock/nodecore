@@ -7,12 +7,20 @@
 
 package nodecore.cli.commands;
 
-import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.serialization.FormattableObject;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.AdminService;
+import nodecore.cli.contracts.CommandContext;
+import nodecore.cli.contracts.OutputWriter;
+import nodecore.cli.contracts.ProtocolEndpointType;
+import nodecore.cli.contracts.Shell;
 import org.jline.utils.AttributedStyle;
+import org.veriblock.shell.Command;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalInt;
 
 public class DefaultCommandContext implements CommandContext {
     private final ShellWriter shellWriter;
@@ -46,50 +54,10 @@ public class DefaultCommandContext implements CommandContext {
     }
 
     @Override
-    public void outputObject(FormattableObject obj) {
+    public void outputObject(Object obj) {
         for (OutputWriter writer : outputWriters) {
             writer.outputObject(this, obj);
         }
-    }
-
-    @Override
-    public void outputStatus(String message) {
-
-        shellWriter.status(message);
-
-    }
-
-    @Override
-    public ShellWriter write() {
-        return shellWriter;
-    }
-
-    @Override
-    public void suggestCommands(List<Class<? extends Command>> suggestions) {
-        if (suggestions == null || suggestions.size() == 0) return;
-
-        Map<String, String> commandSummaries = new HashMap<>(suggestions.size());
-        for (Class<? extends Command> c : suggestions) {
-            CommandSpec annotation = c.getAnnotation(CommandSpec.class);
-
-            commandSummaries.put(annotation.form(), annotation.description());
-        }
-
-        OptionalInt max = commandSummaries.keySet().stream().mapToInt(String::length).max();
-
-        String formatPattern = "";
-        if (max.isPresent()) {
-            formatPattern = String.format("  %%1$-%ds", max.getAsInt() + 1);
-        }
-
-        shellWriter.format(AttributedStyle.BOLD, AttributedStyle.MAGENTA,
-                "You may also find the following command(s) useful ('help' for syntax):\n");
-
-        for (String key : commandSummaries.keySet()) {
-            shellWriter.format(AttributedStyle.BOLD, AttributedStyle.WHITE, formatPattern, key);
-            shellWriter.format(AttributedStyle.BOLD, AttributedStyle.CYAN," (%s)\n", commandSummaries.get(key));
-        }
-
     }
 
     @Override

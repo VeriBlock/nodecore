@@ -7,52 +7,43 @@
 
 package nodecore.cli;
 
-import com.google.common.base.Stopwatch;
-import com.google.inject.Inject;
 import nodecore.cli.annotations.CommandServiceType;
-import nodecore.cli.commands.DefaultCommandContext;
-import nodecore.cli.commands.rpc.GetBalanceCommand;
-import nodecore.cli.commands.rpc.GetInfoCommand;
-import nodecore.cli.commands.rpc.GetNewAddressCommand;
-import nodecore.cli.commands.rpc.StartSoloPoolCommand;
-import nodecore.cli.commands.shell.StartPoPMinerCommand;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.ConnectionFailedException;
+import nodecore.cli.contracts.ProtocolEndpoint;
+import nodecore.cli.contracts.ProtocolEndpointType;
 import nodecore.cli.services.AdminServiceClient;
 import org.jline.reader.Completer;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.impl.LineReaderImpl;
 import org.jline.reader.impl.completer.StringsCompleter;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
-import org.jline.utils.InfoCmp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.shell.Command;
+import org.veriblock.shell.CommandContext;
+import org.veriblock.shell.Shell;
+import org.veriblock.shell.core.Result;
 
 import javax.net.ssl.SSLException;
-import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class DefaultShell implements Shell {
-    private static final Logger _logger = LoggerFactory.getLogger(DefaultShell.class);
+public class CliShell extends Shell {
+    private static final Logger _logger = LoggerFactory.getLogger(CliShell.class);
 
     private final ProtocolEndpointContainer _endpointContainer = new ProtocolEndpointContainer();
     private final AtomicBoolean connected = new AtomicBoolean(false);
 
     private AdminServiceClient _adminServiceClient;
-    private CommandFactory _commandFactory;
     private Configuration _configuration;
-    private boolean _running;
-    private Terminal terminal;
-    private LineReader reader;
-    private CommandFactory _factory;
+
+    public void onStart() {
+    }
+
+    public void onStop() {
+        disconnect();
+    }
 
     public boolean connect(ProtocolEndpoint endpoint, boolean save) throws SSLException, ConnectionFailedException {
         if (save) {
@@ -68,8 +59,7 @@ public class DefaultShell implements Shell {
                     try {
                         _adminServiceClient.connect();
                         _endpointContainer.setProtocolEndpoint(endpoint);
-                        ((LineReaderImpl)reader).setCompleter(getCompleter());
-                        reader.setOpt(LineReader.Option.DISABLE_EVENT_EXPANSION);
+                        refreshCompleter();
                         connected.set(true);
 
                         return true;
@@ -104,7 +94,7 @@ public class DefaultShell implements Shell {
             if (_adminServiceClient != null) {
                 _adminServiceClient.shutdown();
                 _adminServiceClient = null;
-                ((LineReaderImpl)reader).setCompleter(getCompleter());
+                refreshCompleter();
             }
 
             _endpointContainer.setProtocolEndpoint(null);
@@ -113,196 +103,80 @@ public class DefaultShell implements Shell {
         }
     }
 
-    private void clearScreen() {
-        terminal.puts(InfoCmp.Capability.clear_screen);
-        terminal.flush();
-    }
-
-    private void stopRunning() {
-        _running = false;
-    }
-
-    private void startRunning() {
-        _running = true;
-    }
-
-    @Inject
-    public DefaultShell(
-            Configuration configuration,
-            CommandFactory commandFactory,
-            CommandFactory factory) throws IOException {
-        _commandFactory = commandFactory;
+    public CliShell(Configuration configuration) {
         _configuration = configuration;
-
-        terminal = TerminalBuilder.builder()
-                .system(true)
-                .build();
-
-        _factory = factory;
-
-        reader = LineReaderBuilder.builder()
-                .terminal(terminal).completer(getCompleter())
-                .build();
     }
 
     @Override
-    public Result run() {
+    protected void handleResult(CommandContext context, Result result) {
+        boolean failed = result.isFailed();
 
-
-        Result result = new DefaultResult();
-
-        startRunning();
-        Runtime.getRuntime().addShutdownHook(new Thread(this::stopRunning));
-
-        while (_running) {
-            int result_code = 200;
-
-            String line = reader.readLine(formatPromptAsString());
-            System.out.println(line);
-
-            if (line.isEmpty())
-                continue;
-
-            Boolean clear = null;
-            Result executeResult = null;
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            if (line.equals("close")) {
-                line = "quit";
-            } else if (line.equals("exit")) {
-                line = "quit";
+        try {
+            Boolean disconnect = context.getExtraData("disconnect");
+            if (disconnect != null && disconnect) {
+                disconnect();
             }
 
-            CommandFactoryResult factoryResult = _commandFactory.getInstance(line);
-            if (!factoryResult.didFail()) {
-                try {
-                    CommandContext context = new DefaultCommandContext(
-                            this,
-                            _adminServiceClient,
-                            factoryResult.getParameters());
-                    executeResult = factoryResult.getInstance().execute(context);
-                    if (executeResult.didFail()) {
-                        result_code = 500;
-                    } else {
-                        Boolean quit = context.getData("quit");
-                        if (quit != null && quit)
-                            stopRunning();
-
-                        Boolean disconnect = context.getData("disconnect");
-                        if (disconnect != null && disconnect) {
-                            disconnect();
-                        }
-
-                        ProtocolEndpoint endpoint = context.getData("connect");
-                        if (endpoint != null) {
-                            if (endpoint.port() == 8500 || endpoint.port() == 8501) {
-                                executeResult.addMessage("V023",
-                                        "Connect Failed",
-                                        "NodeCore reserves ports 8500 and 8501 for mining pool operations",
-                                        true);
-                                result_code = 500;
-                            } else {
-                                try {
-                                    // TODO: Refactor all this. Shell shouldn't be responsible for establishing connection
-                                    connect(endpoint, true);
-                                    format(AttributedStyle.BOLD,
-                                            AttributedStyle.GREEN,
-                                            "Successfully connected to NodeCore!\n");
-
-                                    List<Class<? extends Command>> suggestedCommands = new ArrayList<>(Arrays.asList(
-                                            GetInfoCommand.class,
-                                            GetNewAddressCommand.class,
-                                            GetBalanceCommand.class,
-                                            StartSoloPoolCommand.class
-                                    ));
-                                    if (!GraphicsEnvironment.isHeadless()) {
-                                        suggestedCommands.add(StartPoPMinerCommand.class);
-                                    }
-
-                                    context.suggestCommands(suggestedCommands);
-                                } catch (ConnectionFailedException connEx) {
-                                    String errorMessage = connEx.getMessage() +
-                                            "\n\n" +
-                                            "Note: NodeCore does not begin listening for RPC connections until after " +
-                                            "loading the blockchain, which may take several minutes. " +
-                                            "By default, NodeCore MainNet listens on port 10500 and " +
-                                            "NodeCore TestNet listens on port 10501. ";
-                                    executeResult.addMessage("V023",
-                                            "Connect Failed",
-                                            errorMessage + "Please ensure that you have also started up NodeCore!",
-                                            true);
-                                    result_code = 500;
-                                }
-                            }
-                        }
-
-                        clear = context.getData("clear");
-                    }
-                } catch (IllegalArgumentException | SSLException argEx) {
-                    factoryResult.addMessage(
-                            "V024",
-                            "TLS configuration failed",
-                            argEx.getMessage(),
+            ProtocolEndpoint endpoint = context.getExtraData("connect");
+            if (endpoint != null) {
+                if (endpoint.port() == 8500 || endpoint.port() == 8501) {
+                    result.addMessage("V023", "Connect Failed", "NodeCore reserves ports 8500 and 8501 for mining pool operations", true);
+                    failed = true;
+                } else {
+                    try {
+                        // TODO: Refactor all this. Shell shouldn't be responsible for establishing connection
+                        connect(endpoint, true);
+                        format(AttributedStyle.BOLD, AttributedStyle.GREEN, "Successfully connected to NodeCore!\n");
+                    } catch (ConnectionFailedException connEx) {
+                        String errorMessage =
+                            connEx.getMessage() + "\n\n" + "Note: NodeCore does not begin listening for RPC connections until after " +
+                                "loading the blockchain, which may take several minutes. " + "By default, NodeCore MainNet listens on port 10500 and " +
+                                "NodeCore TestNet listens on port 10501. ";
+                        result.addMessage("V023",
+                            "Connect Failed",
+                            errorMessage + "Please ensure that you have also started up NodeCore!",
                             true);
-                    result_code = 500;
-                    _logger.error("V024: TLS configuration failed", argEx);
-                    disconnect();
-                } catch (Exception e) {
-                    //check if connected
-                    if (_adminServiceClient == null)
-                    {
-                        //Error from not connected yet
-                        factoryResult.addMessage(
-                                "V999",
-                                "Not connected to NodeCore yet, please run the connect command!",
-                                "Example: connect 127.0.0.1:10501",
-                                true);
-                        result_code = 500;
-                    }
-                    else
-                    {
-                        //Some other unhandled exception
-                        factoryResult.addMessage(
-                                "V999",
-                                "Unhandled exception",
-                                e.toString(),
-                                true);
-                        result_code = 500;
-                        _logger.error("V999: Unhandled Exception", e);
+                        failed = true;
                     }
                 }
+            }
+        } catch (IllegalArgumentException | SSLException argEx) {
+            result.addMessage(
+                "V024",
+                "TLS configuration failed",
+                argEx.getMessage(),
+                true);
+            failed = true;
+            _logger.error("V024: TLS configuration failed", argEx);
+            disconnect();
+        } catch (Exception e) {
+            //check if connected
+            if (_adminServiceClient == null) {
+                //Error from not connected yet
+                result.addMessage(
+                    "V999",
+                    "Not connected to NodeCore yet, please run the connect command!",
+                    "Example: connect 127.0.0.1:10501",
+                    true);
+                failed = true;
             }
             else {
-                result_code = 500;
-            }
-
-            stopwatch.stop();
-
-            formatResult(factoryResult);
-            if(executeResult != null)
-                formatResult(executeResult);
-
-            switch (result_code) {
-                case 200 : {
-                    format(AttributedStyle.DEFAULT, AttributedStyle.GREEN, "200 success ");
-                    break;
-                }
-                case 500 : {
-                    format(AttributedStyle.DEFAULT, AttributedStyle.RED,"500 failure ");
-                    break;
-                }
-            }
-
-            format(AttributedStyle.DEFAULT, AttributedStyle.YELLOW, String.format("(%s)\n\n", stopwatch.toString()));
-
-            // N.B. clear is a special case because we want it to completely clear the terminal
-            if (clear != null && clear) {
-                clearScreen();
+                //Some other unhandled exception
+                result.addMessage(
+                    "V999",
+                    "Unhandled exception",
+                    e.toString(),
+                    true);
+                failed = true;
+                _logger.error("V999: Unhandled Exception", e);
             }
         }
 
-        disconnect();
-
-        return result;
+        if (!failed) {
+            format(AttributedStyle.DEFAULT, AttributedStyle.GREEN, "200 success ");
+        } else {
+            format(AttributedStyle.DEFAULT, AttributedStyle.RED,"500 failure ");
+        }
     }
 
     private String formatPromptAsString() {
@@ -336,15 +210,14 @@ public class DefaultShell implements Shell {
         return prompt;
     }
 
-    private Completer getCompleter() {
+    @Override
+    protected Completer getCompleter() {
 
         List<String> commands = new ArrayList<>();
 
-        for (String key : _factory.getDefinitions().keySet()) {
-            CommandDefinition def = _factory.getDefinitions().get(key);
-            if(_endpointContainer.getProtocolEndpoint() != null ||
-                    (_endpointContainer.getProtocolEndpoint() == null && def.getSpec().service() == CommandServiceType.SHELL)) {
-                commands.add(def.getSpec().form());
+        for (Command command : getCommands().values()) {
+            if (_endpointContainer.getProtocolEndpoint() != null || command.getExtraData().equals(CommandServiceType.SHELL.name())) {
+                commands.add(command.getForm());
             }
         }
 
@@ -353,7 +226,6 @@ public class DefaultShell implements Shell {
         return new StringsCompleter(commands);
     }
 
-    @Override
     public void initialize(String host) {
 
         printIntro();
@@ -372,10 +244,7 @@ public class DefaultShell implements Shell {
                             .append("\n\n")
                             .toAnsi();
 
-                    terminal.writer().println(msg);
-                    terminal.flush();
-                    reader.callWidget(LineReader.REDRAW_LINE);
-                    reader.callWidget(LineReader.REDISPLAY);
+                    printInfo(msg);
                 }
             } catch (Exception e) {
             }
@@ -401,10 +270,7 @@ public class DefaultShell implements Shell {
                                     .append("\n\n")
                                     .toAnsi();
 
-                            terminal.writer().println(msg);
-                            terminal.flush();
-                            reader.callWidget(LineReader.REDRAW_LINE);
-                            reader.callWidget(LineReader.REDISPLAY);
+                            printInfo(msg);
 
                             return;
                         }
@@ -555,22 +421,9 @@ public class DefaultShell implements Shell {
         terminal.flush();
     }
 
-    @Override
     public ProtocolEndpointType type() {
         if (_endpointContainer.getProtocolEndpoint() == null)
             return ProtocolEndpointType.NONE;
         return _endpointContainer.getProtocolEndpoint().type();
-    }
-
-    @Override
-    public void format(String fmt, Object... args) {
-        terminal.writer().print(String.format(fmt, args));
-        terminal.flush();
-    }
-
-    @Override
-    public String passwordPrompt(String prompt) {
-        Character mask = '*';
-        return reader.readLine(prompt, mask);
     }
 }

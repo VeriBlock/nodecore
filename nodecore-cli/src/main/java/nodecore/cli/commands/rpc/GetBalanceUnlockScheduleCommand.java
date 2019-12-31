@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
@@ -36,7 +35,6 @@ import java.util.List;
 public class GetBalanceUnlockScheduleCommand implements Command {
     private static final Logger logger = LoggerFactory.getLogger(GetBalanceUnlockScheduleCommand.class);
 
-    @Inject
     public GetBalanceUnlockScheduleCommand() {}
 
     @Override
