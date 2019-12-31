@@ -16,6 +16,8 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.alt.AutoMineConfig
+import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -24,11 +26,9 @@ import kotlin.random.Random
 private val logger = createLogger {}
 
 class TestConfig(
-    val host: String = "http://localhost:10600/api",
+    override val host: String = "http://localhost:10600/api",
     val autoMinePeriod: Int? = null
-)
-
-private val config = Configuration.extract("securityInheriting.test") ?: TestConfig()
+) : ChainConfig()
 
 private data class VbkInfo(
     val lastBlock: VbkBlockData
@@ -54,22 +54,24 @@ private class BtcBlockData(
     val header: String
 )
 
-private fun getInfo(): VbkInfo = config.host.httpPost()
-    .body(JsonRpcRequestBody("getinfo", Any()).toJson())
-    .rpcResponse()
-
-private fun getLastBitcoinBlockHash() = config.host.httpPost()
-    .body(JsonRpcRequestBody("getlastbitcoinblock", Any()).toJson())
-    .rpcResponse<BtcBlockData>().hash
-
-private fun getLastBlockHash() = config.host.httpPost()
-    .body(JsonRpcRequestBody("getlastblock", Any()).toJson())
-    .rpcResponse<BlockHeaderContainer>().header.hash
-
 @PluginSpec(name = "Test", key = "test")
 class TestChain : SecurityInheritingChain {
 
+    override val config = Configuration.extract("securityInheriting.test") ?: TestConfig()
+
     val operations = HashMap<String, String>()
+
+    private fun getInfo(): VbkInfo = config.host.httpPost()
+        .body(JsonRpcRequestBody("getinfo", Any()).toJson())
+        .rpcResponse()
+
+    private fun getLastBitcoinBlockHash() = config.host.httpPost()
+        .body(JsonRpcRequestBody("getlastbitcoinblock", Any()).toJson())
+        .rpcResponse<BtcBlockData>().hash
+
+    private fun getLastBlockHash() = config.host.httpPost()
+        .body(JsonRpcRequestBody("getlastblock", Any()).toJson())
+        .rpcResponse<BlockHeaderContainer>().header.hash
 
     override fun getChainIdentifier(): Long {
         return -1L

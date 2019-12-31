@@ -12,11 +12,10 @@ import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.VeriBlockPublication
 
 interface SecurityInheritingChain {
+
+    val config: ChainConfig
+
     fun getChainIdentifier(): Long
-
-    fun shouldAutoMine(): Boolean
-
-    fun shouldAutoMine(blockHeight: Int): Boolean
 
     fun getBestBlockHeight(): Int
 
@@ -31,4 +30,8 @@ interface SecurityInheritingChain {
     fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
         TODO()
     }
+
+    fun shouldAutoMine(): Boolean = config.shouldAutoMine()
+
+    fun shouldAutoMine(blockHeight: Int): Boolean = config.shouldAutoMine(blockHeight)
 }
