@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.shell;
 
-import com.google.inject.Inject;
 import nodecore.cli.annotations.CommandServiceType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.contracts.Command;
@@ -26,7 +25,6 @@ import org.slf4j.LoggerFactory;
 public class QuitCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(QuitCommand.class);
 
-    @Inject
     public QuitCommand() {
     }
 

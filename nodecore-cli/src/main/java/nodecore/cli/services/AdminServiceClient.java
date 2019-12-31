@@ -13,8 +13,8 @@ import nodecore.api.grpc.AdminGrpc;
 import nodecore.api.grpc.AdminRpcConfiguration;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ChannelBuilder;
+import nodecore.cli.Configuration;
 import nodecore.cli.contracts.AdminService;
-import nodecore.cli.contracts.Configuration;
 import nodecore.cli.contracts.EndpointTransportType;
 
 import javax.net.ssl.SSLException;

@@ -8,18 +8,18 @@
 package nodecore.cli.contracts;
 
 import nodecore.cli.commands.ShellWriter;
-import nodecore.cli.commands.serialization.FormattableObject;
+import org.veriblock.shell.Command;
 
 import java.util.List;
 
 public interface CommandContext {
     void quit();
 
-    void outputObject(FormattableObject arg);
+    void outputObject(Object arg);
 
     void outputStatus(String message);
 
-    void suggestCommands(List<Class<? extends Command>> suggestions);
+    void suggestCommands(List<Command> suggestions);
 
     ShellWriter write();
 

@@ -7,14 +7,21 @@
 
 package nodecore.cli.commands.shell;
 
-import com.google.inject.Inject;
 import nodecore.cli.annotations.CommandParameterType;
 import nodecore.cli.annotations.CommandServiceType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.Command;
+import nodecore.cli.contracts.CommandContext;
+import nodecore.cli.contracts.CommandDefinition;
+import nodecore.cli.contracts.CommandFactory;
+import nodecore.cli.contracts.ProtocolEndpointType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @CommandSpec(
         name = "Help",
@@ -26,7 +33,6 @@ import java.util.*;
 public class HelpCommand implements Command {
     private CommandFactory _factory;
 
-    @Inject
     public HelpCommand(CommandFactory factory) {
         _factory = factory;
     }

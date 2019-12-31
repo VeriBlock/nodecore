@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
@@ -38,7 +37,6 @@ import org.veriblock.core.utilities.Utility;
 public class SubmitPopCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(SubmitPopCommand.class);
 
-    @Inject
     public SubmitPopCommand() {
     }
 

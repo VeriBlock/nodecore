@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.cli.annotations.CommandParameterType;
@@ -32,7 +31,6 @@ import org.veriblock.core.utilities.Utility;
 public class SubmitTxCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(SubmitTxCommand.class);
 
-    @Inject
     public SubmitTxCommand() {
     }
 

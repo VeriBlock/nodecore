@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.rpc;
 
-import com.google.inject.Inject;
 import io.grpc.StatusRuntimeException;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringUtility;
@@ -16,7 +15,8 @@ import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.annotations.CommandSpecParameter;
 import nodecore.cli.commands.serialization.FormattableObject;
 import nodecore.cli.commands.serialization.SubmitMultisigTxPayload;
-import nodecore.cli.contracts.*;
+import nodecore.cli.contracts.Command;
+import nodecore.cli.contracts.CommandContext;
 import nodecore.cli.utilities.CommandUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,6 @@ public class SubmitMultisigTxCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(ValidateAddressCommand.class);
     private Configuration _configuration;
 
-    @Inject
     public SubmitMultisigTxCommand(Configuration configuration) {
         _configuration = configuration;
     }

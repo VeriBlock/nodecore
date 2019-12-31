@@ -7,7 +7,6 @@
 
 package nodecore.cli.commands.shell;
 
-import com.google.inject.Inject;
 import nodecore.cli.annotations.CommandServiceType;
 import nodecore.cli.annotations.CommandSpec;
 import nodecore.cli.commands.rpc.StartPoolCommand;
@@ -35,7 +34,6 @@ import java.util.Collections;
 public class StartCPUMinerCommand implements Command {
     private static final Logger _logger = LoggerFactory.getLogger(StartCPUMinerCommand.class);
 
-    @Inject
     public StartCPUMinerCommand() {
     }
 

@@ -7,17 +7,20 @@
 
 package nodecore.cli;
 
-import com.google.inject.Inject;
-import nodecore.cli.contracts.Configuration;
-import nodecore.cli.contracts.ProgramOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Properties;
 
-public class DefaultConfiguration implements Configuration {
-    private static final Logger _logger = LoggerFactory.getLogger(DefaultConfiguration.class);
+public class Configuration {
+    private static final Logger _logger = LoggerFactory.getLogger(Configuration.class);
     private Properties _properties = new Properties();
     private final Properties _defaultProperties = new Properties();
     private ProgramOptions _options;
@@ -32,27 +35,21 @@ public class DefaultConfiguration implements Configuration {
         return value;
     }
 
-    @Inject
-    public DefaultConfiguration(ProgramOptions options) {
+    public Configuration(ProgramOptions options) {
         _options = options;
         loadDefaults();
         _properties = new Properties(_defaultProperties);
-
     }
 
-    @Override
     public void clearProperties() {
         _properties.clear();
     }
 
-    @Override
     public boolean isDebugEnabled() {
         String flag = getPropertyOverrideOrDefault("debug.enabled");
         return flag.equalsIgnoreCase("true");
     }
 
-
-    @Override
     public void load() {
         try
         {
@@ -66,7 +63,6 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public void load(InputStream inputStream) {
         try {
             _properties.load(inputStream);
@@ -79,7 +75,7 @@ public class DefaultConfiguration implements Configuration {
         try
         {
 
-            try (InputStream stream = DefaultConfiguration.class
+            try (InputStream stream = Configuration.class
                     .getClassLoader()
                     .getResourceAsStream(Constants.DEFAULT_PROPERTIES)) {
                 _defaultProperties.load(stream);
@@ -89,7 +85,6 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public void save() {
         try {
             File configFile = new File(_options.getConfigPath());
@@ -104,7 +99,6 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public void save(OutputStream outputStream) {
         try {
             _properties.store(outputStream, "NodeCore Configuration");
@@ -114,12 +108,10 @@ public class DefaultConfiguration implements Configuration {
         }
     }
 
-    @Override
     public String getPrivateKeyPath() {
         return getPropertyOverrideOrDefault(ConfigurationKeys.SECURITY_PRIVATE_KEY_PATH);
     }
 
-    @Override
     public String getCertificateChainPath() {
         return getPropertyOverrideOrDefault(ConfigurationKeys.SECURITY_CERT_CHAIN_PATH);
     }

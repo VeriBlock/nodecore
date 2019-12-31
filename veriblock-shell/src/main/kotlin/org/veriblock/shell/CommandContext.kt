@@ -8,14 +8,20 @@
 
 package org.veriblock.shell
 
+import com.google.gson.GsonBuilder
+import org.jline.utils.AttributedStyle
+
 class CommandContext(
     private val shell: Shell,
+    val command: Command,
     private val parameters: Map<String, Any>
 ) {
     var quit = false
         private set
     var clear = false
         private set
+    val outputFile = parameters[FILENAME_SELECTOR]
+    val extraData = mutableMapOf<String, Any>()
 
     @Suppress("UNCHECKED_CAST")
     fun <T> getParameter(name: String) = parameters[name] as T
@@ -28,7 +34,50 @@ class CommandContext(
         clear = true
     }
 
+    fun <T> getExtraData(key: String) = extraData[key] as? T
+
     fun printInfo(message: String) {
         shell.printInfo(message)
+    }
+
+    fun suggestCommands() {
+        if (command.suggestedCommands.isEmpty()) {
+            return
+        }
+        val commandSummaries = command.suggestedCommands.associateWith {
+            shell.getCommand(it).description
+        }
+        val maxLength = commandSummaries.keys.map {
+            it.length
+        }.max() ?:0
+
+        shell.printStyled(
+            "You may also find the following command(s) useful ('help' for syntax):",
+            AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA)
+        )
+
+        val formatPattern = "  %%1$-${maxLength + 1}s"
+        for (key in commandSummaries.keys) {
+            shell.printStyled(
+                String.format(formatPattern, key),
+                AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
+                false
+            )
+            shell.printStyled(
+                "(${commandSummaries[key]})",
+                AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+            )
+        }
+    }
+
+    fun outputObject(obj: Any) {
+        shell.printStyled(
+            GsonBuilder().setPrettyPrinting().create().toJson(obj) + "\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+        )
+
+        if (outputFile != null) {
+            FileOutputWriter().outputObject(obj)
+        }
     }
 }

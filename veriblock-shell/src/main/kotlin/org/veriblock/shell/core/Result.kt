@@ -34,3 +34,12 @@ class Result(
 
 inline fun success(builder: Result.() -> Unit = {}) = Result(false).apply { builder() }
 inline fun failure(builder: Result.() -> Unit = {}) = Result(true).apply { builder() }
+
+fun success(code: String, message: String, details: String) = success {
+    addMessage(code, message, details, true)
+}
+
+fun failure(code: String, message: String, details: String) = failure {
+    addMessage(code, message, details, true)
+}
+
