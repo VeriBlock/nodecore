@@ -20,6 +20,8 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.alt.AutoMineConfig
+import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -28,19 +30,12 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 private val logger = createLogger {}
 
 class NxtConfig(
-    val host: String = "http://localhost:8332",
+    override val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
-    val autoMine: NxtAutoMineConfig? = null,
+    override val autoMine: AutoMineConfig? = null,
     val payoutAddress: String? = null
-)
-
-class NxtAutoMineConfig(
-    val round1: Boolean = false,
-    val round2: Boolean = false,
-    val round3: Boolean = false,
-    val round4: Boolean = false
-)
+) : ChainConfig()
 
 private data class NxtBlockData(
     val height: Int
@@ -87,7 +82,7 @@ class NxtFamilyChain(
     val name: String
 ) : SecurityInheritingChain {
 
-    private val config = Configuration.extract("securityInheriting.$key") ?: NxtConfig()
+    override val config = Configuration.extract("securityInheriting.$key") ?: NxtConfig()
 
     private fun Request.authenticate() = if (config.username != null && config.password != null) {
         authentication().basic(config.username, config.password)
@@ -97,21 +92,6 @@ class NxtFamilyChain(
 
     override fun getChainIdentifier(): Long {
         return id
-    }
-
-    override fun shouldAutoMine(): Boolean {
-        return config.autoMine != null && (config.autoMine.round1 || config.autoMine.round2 || config.autoMine.round3 || config.autoMine.round4)
-    }
-
-    override fun shouldAutoMine(blockHeight: Int): Boolean {
-        // TODO proper round calculation for each alt
-        val round = blockHeight % 5
-        return config.autoMine != null && (
-            (round == 1 && config.autoMine.round1) ||
-            (round == 2 && config.autoMine.round2) ||
-            (round == 3 && config.autoMine.round3) ||
-            (round == 4 && config.autoMine.round4)
-        )
     }
 
     override fun getBestBlockHeight(): Int {
