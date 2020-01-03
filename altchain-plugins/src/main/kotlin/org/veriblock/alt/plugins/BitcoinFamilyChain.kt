@@ -32,8 +32,8 @@ class BtcConfig(
     val username: String? = null,
     val password: String? = null,
     val payoutAddress: String? = null,
-    override val keystonePeriod: Int = 5, // TODO: Decide good default value
-    override val blockRoundIndices: IntArray = intArrayOf(3, 1, 2, 1, 2), // TODO: Decide good default value
+    override val keystonePeriod: Int = 5,
+    override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 1, 2),
     override val autoMineRounds: List<Int> = emptyList()
 ) : ChainConfig()
 
