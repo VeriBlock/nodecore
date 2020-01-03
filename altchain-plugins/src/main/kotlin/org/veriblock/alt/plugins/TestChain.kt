@@ -16,7 +16,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
-import org.veriblock.sdk.alt.AutoMineConfig
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
@@ -27,6 +26,8 @@ private val logger = createLogger {}
 
 class TestConfig(
     override val host: String = "http://localhost:10600/api",
+    override val keystonePeriod: Int = 1,
+    override val blockRoundIndices: IntArray = intArrayOf(1),
     val autoMinePeriod: Int? = null
 ) : ChainConfig()
 

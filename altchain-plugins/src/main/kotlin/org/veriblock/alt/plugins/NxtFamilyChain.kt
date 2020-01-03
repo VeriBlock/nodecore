@@ -20,7 +20,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.AltPublication
 import org.veriblock.sdk.PublicationData
 import org.veriblock.sdk.VeriBlockPublication
-import org.veriblock.sdk.alt.AutoMineConfig
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
@@ -33,8 +32,10 @@ class NxtConfig(
     override val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
-    override val autoMine: AutoMineConfig? = null,
-    val payoutAddress: String? = null
+    val payoutAddress: String? = null,
+    override val keystonePeriod: Int = 5, // TODO: Decide good default value
+    override val blockRoundIndices: IntArray = intArrayOf(3, 1, 2, 1, 2), // TODO: Decide good default value
+    override val autoMineRounds: List<Int> = emptyList()
 ) : ChainConfig()
 
 private data class NxtBlockData(

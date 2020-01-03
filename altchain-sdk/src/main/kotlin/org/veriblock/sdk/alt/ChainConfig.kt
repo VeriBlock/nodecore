@@ -2,27 +2,20 @@ package org.veriblock.sdk.alt
 
 abstract class ChainConfig {
     abstract val host: String
-    open val autoMine: AutoMineConfig? = null
+    abstract val keystonePeriod: Int
+    abstract val blockRoundIndices: IntArray
+    open val autoMineRounds: List<Int> = emptyList()
 
     fun shouldAutoMine(): Boolean {
-        val autoMine = autoMine
-        return autoMine != null && autoMine.enabledRounds.isNotEmpty()
+        return autoMineRounds.isNotEmpty()
     }
 
     fun shouldAutoMine(blockHeight: Int): Boolean {
-        val autoMine = autoMine
-            ?: return false
-        val blockIndex = blockHeight % autoMine.keystonePeriod
-        val roundIndex = autoMine.blockRoundIndices[blockIndex]
-        return autoMine.enabledRounds.contains(roundIndex)
+        val blockIndex = blockHeight % keystonePeriod
+        val roundIndex = blockRoundIndices[blockIndex]
+        return autoMineRounds.contains(roundIndex)
     }
-}
 
-class AutoMineConfig(
-    val keystonePeriod: Int,
-    val blockRoundIndices: IntArray,
-    val enabledRounds: List<Int> = emptyList()
-) {
     init {
         require(keystonePeriod > 0) {
             "The keystone period must be a positive non-zero number!"
@@ -31,9 +24,9 @@ class AutoMineConfig(
             "You must specify a round index for each block along the keystone period! ($keystonePeriod)"
         }
         val roundIndices = blockRoundIndices.distinct()
-        for (enabledRound in enabledRounds) {
+        for (enabledRound in autoMineRounds) {
             require(enabledRound in roundIndices) {
-                "Round $enabledRound is not defined in the block round indices!"
+                "Round $enabledRound is not defined in the chain's block round indices!"
             }
         }
     }
