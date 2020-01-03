@@ -36,6 +36,7 @@ dependencies {
     compile group: 'org.jline', name: 'jline-terminal-jansi', version: '3.13.1'
 
     compile 'com.google.guava:guava:20.0'
+    implementation group: 'com.opencsv', name: 'opencsv', version: '4.3.2'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.3.0'

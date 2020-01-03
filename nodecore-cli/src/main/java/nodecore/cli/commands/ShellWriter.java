@@ -8,7 +8,7 @@
 package nodecore.cli.commands;
 
 import com.google.gson.GsonBuilder;
-import nodecore.cli.commands.serialization.FormattableObject;
+import nodecore.cli.serialization.FormattableObject;
 import nodecore.cli.contracts.CommandContext;
 import nodecore.cli.contracts.OutputWriter;
 import nodecore.cli.contracts.Shell;

@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.SharedConstants;
 
-import static nodecore.cli.CLIModuleKt.defaultModule;
+import static nodecore.cli.CliModuleKt.defaultModule;
 import static org.koin.core.context.GlobalContext.start;
 
 public class Program {
