@@ -20,11 +20,14 @@ class CommandContext(
         private set
     var clear = false
         private set
-    val outputFile = parameters[FILENAME_SELECTOR]
+    val outputFile: String? = getOptionalParameter(FILENAME_SELECTOR)
     val extraData = mutableMapOf<String, Any>()
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> getParameter(name: String) = parameters[name] as T
+    fun <T> getParameter(name: String) = parameters.getValue(name) as T
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getOptionalParameter(name: String) = parameters[name] as T?
 
     fun quit() {
         quit = true
@@ -77,7 +80,8 @@ class CommandContext(
         )
 
         if (outputFile != null) {
-            FileOutputWriter().outputObject(obj)
+            val outputFormat: String? = getOptionalParameter(FORMAT_SELECTOR)
+            FileOutputWriter().outputObject(obj, outputFile, outputFormat)
         }
     }
 }

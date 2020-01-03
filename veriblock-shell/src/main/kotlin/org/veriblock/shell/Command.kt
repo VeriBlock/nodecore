@@ -35,7 +35,12 @@ enum class CommandParameterType {
     STANDARD_ADDRESS,
     COMMA_SEPARATED_STANDARD_ADDRESSES,
     STANDARD_OR_MULTISIG_ADDRESS,
-    HASH
+    HASH,
+    HEXSTRING,
+    BOOLEAN,
+    COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES,
+    COMMA_SEPARATED_SIGNATURES,
+    MULTISIG_ADDRESS
 }
 
 fun Shell.command(
@@ -44,8 +49,9 @@ fun Shell.command(
     description: String,
     parameters: List<CommandParameter> = emptyList(),
     suggestedCommands: List<String> = emptyList(),
+    extraData: String? = null,
     action: CommandContext.() -> Result
 ) {
-    val command = Command(name, form, description, parameters, suggestedCommands, action)
+    val command = Command(name, form, description, parameters, suggestedCommands, extraData, action)
     registerCommand(command)
 }

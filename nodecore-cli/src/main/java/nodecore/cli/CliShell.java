@@ -8,6 +8,7 @@
 package nodecore.cli;
 
 import nodecore.cli.annotations.CommandServiceType;
+import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
@@ -22,6 +23,7 @@ import org.veriblock.shell.Command;
 import org.veriblock.shell.CommandContext;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
+import org.veriblock.shell.core.ResultMessage;
 
 import javax.net.ssl.SSLException;
 import java.util.ArrayList;
@@ -108,7 +110,7 @@ public class CliShell extends Shell {
     }
 
     @Override
-    protected void handleResult(CommandContext context, Result result) {
+    protected Result handleResult(CommandContext context, Result result) {
         boolean failed = result.isFailed();
 
         try {
@@ -126,7 +128,7 @@ public class CliShell extends Shell {
                     try {
                         // TODO: Refactor all this. Shell shouldn't be responsible for establishing connection
                         connect(endpoint, true);
-                        format(AttributedStyle.BOLD, AttributedStyle.GREEN, "Successfully connected to NodeCore!\n");
+                        printStyled("Successfully connected to NodeCore!", AttributedStyle.BOLD.foreground(AttributedStyle.GREEN));
                     } catch (ConnectionFailedException connEx) {
                         String errorMessage =
                             connEx.getMessage() + "\n\n" + "Note: NodeCore does not begin listening for RPC connections until after " +
@@ -172,11 +174,15 @@ public class CliShell extends Shell {
             }
         }
 
-        if (!failed) {
-            format(AttributedStyle.DEFAULT, AttributedStyle.GREEN, "200 success ");
-        } else {
-            format(AttributedStyle.DEFAULT, AttributedStyle.RED,"500 failure ");
+        if (failed) {
+            Result failure = new Result(true);
+            for (ResultMessage rm : result.getMessages()) {
+                failure.addMessage(rm);
+            }
+            return failure;
         }
+
+        return result;
     }
 
     private String formatPromptAsString() {
@@ -257,8 +263,7 @@ public class CliShell extends Shell {
                     for (int i = 10500 ; i <= 10502; i++) {
                         if (bound(i)) {
                             String msg = new AttributedStringBuilder()
-                                    .style(AttributedStyle.BOLD)
-                                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
+                                    .style(AttributedStyle.BOLD.foreground(AttributedStyle.GREEN))
                                     .append("\n\nA local NodeCore " + (i == 10500 ? ("MainNet") : (i == 10501 ? ("TestNet") : ("AlphaNet"))) + " Instance is present on 127.0.0.1:")
                                     .append(Integer.toString(i))
                                     .append("!\n ")
@@ -296,134 +301,152 @@ public class CliShell extends Shell {
     }
 
     private void printIntro() {
-
-        format(AttributedStyle.BOLD, AttributedStyle.GREEN,
-                "===[ VeriBlock " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.GREEN,
-                "\t\thttps://www.veriblock.org/\n\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.MAGENTA,
-                "To begin, you must connect this CLI to a running instance of NodeCore.\n" +
-                        "By default, NodeCore will be available on 127.0.0.1:10500.\n\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.CYAN,
-                "To connect to NodeCore type: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "connect 127.0.0.1:10500\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.CYAN,
-                "To see available commands, type: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "help\n\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.MAGENTA,
-                "Note: If you are using the regular \"all\" package, then the CLI can \nautomatically start many of the other VeriBlock-related services for you!\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.CYAN,
-                "  To start NodeCore, type: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "startnodecore\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.CYAN,
-                "  To start the Proof-of-Proof (PoP) miner, type: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "startpopminer\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.YELLOW,
-                "    Note: for the PoP miner to work, you must have already started\n    NodeCore," +
-                        "and connected to it in this CLI (");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "connect 127.0.0.1:10500");
-
-        format(AttributedStyle.BOLD, AttributedStyle.YELLOW,
-                ")!\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.CYAN,
-                "  To start the Proof-of-Work (PoW) CPU miner, type: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "startcpuminer\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.YELLOW,
-                "    Note: for the PoW miner to work, you must have already started\n    NodeCore," +
-                        " connected to it in this CLI (");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "connect 127.0.0.1:10500");
-
-        format(AttributedStyle.BOLD, AttributedStyle.YELLOW,
-                "),\n    and have run either \"");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "startpool");
-
-        format(AttributedStyle.BOLD, AttributedStyle.YELLOW,
-                "\" or \"");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "startsolopool");
-
-        format(AttributedStyle.BOLD, AttributedStyle.YELLOW,
-                "\"!\n\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.CYAN,
-                "To stay up to date on the status of the VeriBlock Network and \n" +
-                        "ensure you are running the latest software, frequently check:\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.GREEN,
-                "\tDiscord: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "https://discord.gg/wJZEjry\n");
-
-        format(AttributedStyle.BOLD, AttributedStyle.GREEN,
-                "\tVeriBlock Explorer: ");
-
-        format(AttributedStyle.BOLD, AttributedStyle.WHITE,
-                "https://explore.veriblock.org\n\n");
-
-        terminal.flush();
-    }
-
-    public void format(AttributedStyle style, int fColor, String str) {
-
-        // workaround for high intensity color
-        if(style == AttributedStyle.BOLD) {
-            fColor += 8;
-        }
-
-        String msg = new AttributedStringBuilder()
-                .style(style)
-                .style(AttributedStyle.DEFAULT.foreground(fColor))
-                .append(str)
-                .toAnsi();
-        terminal.writer().print(msg);
-    }
-
-    private void formatResult(Result result) {
-        for (ResultMessage message : result.getMessages()) {
-            String level = message.isError() ? "ERROR: " : "INFO:  ";
-            int color = message.isError() ? AttributedStyle.RED : AttributedStyle.YELLOW;
-            String msg = String.format("%s[%s] %s\n", level, message.getCode(), message.getMessage());
-            format(AttributedStyle.BOLD, color, msg);
-            String detail = message.getDetails();
-            if (detail != null && detail.length() > 0) {
-                format(AttributedStyle.BOLD, color, String.format("       %s\n", detail));
-            }
-        }
-
-        terminal.flush();
+        printStyled(
+            "===[ VeriBlock " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+        );
+        printStyled(
+            "\t\thttps://www.veriblock.org/\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+        );
+        printStyled(
+            "To begin, you must connect this CLI to a running instance of NodeCore.\n" +
+                "By default, NodeCore will be available on 127.0.0.1:10500.\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA)
+        );
+        printStyled(
+            "To connect to NodeCore type: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
+            false
+        );
+        printStyled(
+            "connect 127.0.0.1:10500",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
+        printStyled(
+            "To see available commands, type: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
+            false
+        );
+        printStyled(
+            "help\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
+        printStyled(
+            "Note: If you are using the regular \"all\" package, then the CLI can \nautomatically start many of the other VeriBlock-related services for you!",
+            AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA)
+        );
+        printStyled(
+            "  To start NodeCore, type: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
+            false
+        );
+        printStyled(
+                "startnodecore",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
+        printStyled(
+            "  To start the Proof-of-Proof (PoP) miner, type: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
+            false
+        );
+        printStyled(
+            "startpopminer",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
+        printStyled(
+            "    Note: for the PoP miner to work, you must have already started\n    NodeCore," +
+                "and connected to it in this CLI (",
+            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
+            false
+        );
+        printStyled(
+            "connect 127.0.0.1:10500",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
+            false
+        );
+        printStyled(
+            ")!",
+            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW)
+        );
+        printStyled(
+            "  To start the Proof-of-Work (PoW) CPU miner, type: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
+            false
+        );
+        printStyled(
+            "startcpuminer",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
+        printStyled(
+            "    Note: for the PoW miner to work, you must have already started\n    NodeCore," +
+                " connected to it in this CLI (",
+            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
+            false
+        );
+        printStyled(
+            "connect 127.0.0.1:10500",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
+            false
+        );
+        printStyled(
+            "),\n    and have run either \"",
+            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
+            false
+        );
+        printStyled(
+            "startpool",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
+            false
+        );
+        printStyled(
+            "\" or \"",
+            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
+            false
+        );
+        printStyled(
+            "startsolopool",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
+            false
+        );
+        printStyled(
+            "\"!\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
+            false
+        );
+        printStyled(
+            "To stay up to date on the status of the VeriBlock Network and \n" +
+                "ensure you are running the latest software, frequently check:",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN)
+        );
+        printStyled(
+            "\tDiscord: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN),
+            false
+        );
+        printStyled(
+            "https://discord.gg/wJZEjry",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
+            false
+        );
+        printStyled(
+            "\tVeriBlock Explorer: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN),
+            false
+        );
+        printStyled(
+            "https://explore.veriblock.org",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
     }
 
     public ProtocolEndpointType type() {
         if (_endpointContainer.getProtocolEndpoint() == null)
             return ProtocolEndpointType.NONE;
         return _endpointContainer.getProtocolEndpoint().type();
+    }
+
+    public AdminService getAdminService() {
+        return _adminServiceClient;
     }
 }

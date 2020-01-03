@@ -151,7 +151,12 @@ open class Shell(
             }
 
             printResultWithFormat(executeResult)
-            printStyled("($stopwatch)\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW));
+            if (!executeResult.isFailed) {
+                printStyled("200 success ", AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN), false)
+            } else {
+                printStyled("500 failure ", AttributedStyle.DEFAULT.foreground(AttributedStyle.RED), false)
+            }
+            printStyled("($stopwatch)", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
 
             if (clear != null && clear) {
                 clear()
@@ -159,8 +164,7 @@ open class Shell(
         }
     }
 
-    protected open fun handleResult(context: CommandContext, result: Result) {
-    }
+    protected open fun handleResult(context: CommandContext, result: Result): Result = result
 
     private fun clear() {
         terminal.puts(InfoCmp.Capability.clear_screen)
@@ -233,6 +237,7 @@ open class Shell(
         printWarning("${t.message}\n\n")
     }
 
+    @JvmOverloads
     fun printStyled(message: String, style: AttributedStyle, newLine: Boolean = true) {
         if (newLine) {
             terminal.writer().println(
