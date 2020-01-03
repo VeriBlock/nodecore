@@ -1,8 +1,14 @@
 package org.veriblock.alt.plugins;
 
 
+import org.veriblock.core.utilities.Utility;
+
 public class SegwitAddressUtility {
     private static final String BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+
+    public static void main(String[] args) {
+        System.out.println(Utility.bytesToHex(generatePayoutScriptFromSegwitAddress("bcrt1qv6rz22y5xmrv2n2kxmfz7jmdu9adk4myf3ejsw", "bcrt1")));
+    }
 
     public static byte[] generatePayoutScriptFromSegwitAddress(String segwitAddress, String hrp) {
         if (segwitAddress == null) {
@@ -38,8 +44,6 @@ public class SegwitAddressUtility {
         String addressWithoutHRP = segwitAddress.substring(hrp.length());
         String addressDataSection = addressWithoutHRP.substring(1, addressWithoutHRP.length() - 6); // Remove checksum
         String addressChecksum = segwitAddress.substring(segwitAddress.length() - 6);
-        System.out.println("Address data: " + addressDataSection);
-        System.out.println("Address checksum: " + addressChecksum);
 
         if (addressDataSection.charAt(0) != 'q') {
             throw new IllegalArgumentException("generatePayoutScriptFromSegwitAddress cannot be called with an " +
