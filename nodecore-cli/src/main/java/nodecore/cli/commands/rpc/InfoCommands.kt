@@ -3,6 +3,7 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.AddressHistoryInfo
@@ -74,7 +75,7 @@ fun CliShell.infoCommands() {
         form = "gethistory",
         description = "Gets transaction history for an address",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
         ),
         suggestedCommands = { listOf("getbalance", "gettransaction") }
     ) {

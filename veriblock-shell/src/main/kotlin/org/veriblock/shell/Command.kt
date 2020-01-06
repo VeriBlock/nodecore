@@ -24,7 +24,7 @@ class Command(
 
 class CommandParameter(
     val name: String,
-    val type: CommandParameterType,
+    val mapper: CommandParameterMapper,
     val required: Boolean = true
 ) {
     override fun toString() = name

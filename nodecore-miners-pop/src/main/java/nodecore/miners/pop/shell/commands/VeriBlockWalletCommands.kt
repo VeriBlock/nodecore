@@ -14,7 +14,7 @@ import nodecore.miners.pop.contracts.PoPEndorsementInfo
 import nodecore.miners.pop.services.NodeCoreService
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
@@ -47,7 +47,7 @@ fun Shell.veriBlockWalletCommands(
         form = "unlockwallet",
         description = "Unlocks an encrypted VeriBlock wallet to allow creation of PoP transactions",
         parameters = listOf(
-            CommandParameter("passphrase", CommandParameterType.STRING, true)
+            CommandParameter("passphrase", CommandParameterMappers.STRING, true)
         )
     ) {
         try {

@@ -3,6 +3,7 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.BitcoinBlockPayload
@@ -10,8 +11,8 @@ import nodecore.cli.serialization.BlockchainPayload
 import nodecore.cli.serialization.BlocksPayload
 import nodecore.cli.serialization.GetBlockTemplatePayload
 import org.veriblock.core.utilities.Utility
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.blockCommands() {
     rpcCommand(
@@ -36,7 +37,7 @@ fun CliShell.blockCommands() {
         form = "getblockfromhash",
         description = "Returns the block for the specified hash",
         parameters = listOf(
-            CommandParameter(name = "blockHash", type = CommandParameterType.HASH, required = true)
+            CommandParameter(name = "blockHash", mapper = ShellCommandParameterMappers.HASH, required = true)
         ),
         suggestedCommands = { listOf("getblockfromindex", "gettransaction") }
     ) {
@@ -57,7 +58,7 @@ fun CliShell.blockCommands() {
         form = "getblockfromindex",
         description = "Returns the block for the given block index",
         parameters = listOf(
-            CommandParameter(name = "blockIndex", type = CommandParameterType.INTEGER, required = true)
+            CommandParameter(name = "blockIndex", mapper = CommandParameterMappers.INTEGER, required = true)
         ),
         suggestedCommands = { listOf("getblockfromhash", "gettransaction") }
     ) {
@@ -77,8 +78,8 @@ fun CliShell.blockCommands() {
         form = "getblocktemplate",
         description = "Returns a block template along with candidate transactions",
         parameters = listOf(
-            CommandParameter(name = "mode", type = CommandParameterType.STRING, required = false),
-            CommandParameter(name = "capabilities", type = CommandParameterType.STRING, required = false)
+            CommandParameter(name = "mode", mapper = CommandParameterMappers.STRING, required = false),
+            CommandParameter(name = "capabilities", mapper = CommandParameterMappers.STRING, required = false)
         )
     ) {
         val mode = if (getOptionalParameter<String>("mode").isNullOrEmpty()) {
@@ -120,7 +121,7 @@ fun CliShell.blockCommands() {
         form = "submitblock",
         description = "Attempts to add the specified raw block",
         parameters = listOf(
-            CommandParameter(name = "rawBlock", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "rawBlock", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val rawBlock: String = getParameter("rawBlock")

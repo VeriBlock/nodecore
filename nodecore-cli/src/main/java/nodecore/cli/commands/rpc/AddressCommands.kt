@@ -3,14 +3,15 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.GenerateMultisigAddressPayload
 import nodecore.cli.serialization.NewAddressPayload
 import nodecore.cli.serialization.TransactionInfo
 import nodecore.cli.serialization.ValidateAddressPayload
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.addressCommands() {
     rpcCommand(
@@ -18,7 +19,7 @@ fun CliShell.addressCommands() {
         form = "validateaddress|validateaddr",
         description = "Returns details about an address if it is valid",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
@@ -38,7 +39,7 @@ fun CliShell.addressCommands() {
         form = "setdefaultaddress",
         description = "Sets the default address of a NodeCore instance",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory", "sigindex") }
     ) {
@@ -57,7 +58,7 @@ fun CliShell.addressCommands() {
         form = "getnewaddress",
         description = "Gets {count} new address from the wallet (default: 1)",
         parameters = listOf(
-            CommandParameter(name = "count", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "count", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = { listOf("backupwallet", "getbalance", "gethistory", "sigindex") }
     ) {
@@ -77,8 +78,8 @@ fun CliShell.addressCommands() {
         form = "generatemultisigaddress|multisigaddress|maddress|maddr",
         description = "(Generates a multisig address from the provided standard addresses)",
         parameters = listOf(
-            CommandParameter(name = "csvaddresses", type = CommandParameterType.COMMA_SEPARATED_STANDARD_ADDRESSES, required = true),
-            CommandParameter(name = "signatureThreshold", type = CommandParameterType.INTEGER, required = true)
+            CommandParameter(name = "csvaddresses", mapper = ShellCommandParameterMappers.COMMA_SEPARATED_STANDARD_ADDRESSES, required = true),
+            CommandParameter(name = "signatureThreshold", mapper = CommandParameterMappers.INTEGER, required = true)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory", "makeunsignedmultisigtx", "submitmultisigtx") }
     ) {
@@ -101,8 +102,8 @@ fun CliShell.addressCommands() {
         form = "drainaddress",
         description = "Transfers the entire balance of coins for an address",
         parameters = listOf(
-            CommandParameter(name = "sourceAddress", type = CommandParameterType.STANDARD_ADDRESS, required = true),
-            CommandParameter(name = "destinationAddress", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = true)
+            CommandParameter(name = "sourceAddress", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true),
+            CommandParameter(name = "destinationAddress", mapper = ShellCommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true)
         )
     ) {
         val sourceAddress: String = getParameter("sourceAddress")

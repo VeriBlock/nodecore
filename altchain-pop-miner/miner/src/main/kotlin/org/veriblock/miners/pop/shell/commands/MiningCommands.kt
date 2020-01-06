@@ -13,7 +13,7 @@ import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
@@ -27,8 +27,8 @@ fun Shell.miningCommands(miner: Miner) {
         form = "mine",
         description = "Begins a proof of proof mining operation",
         parameters = listOf(
-            CommandParameter("chain", CommandParameterType.STRING),
-            CommandParameter("block", CommandParameterType.INTEGER, false)
+            CommandParameter("chain", CommandParameterMappers.STRING),
+            CommandParameter("block", CommandParameterMappers.INTEGER, false)
         )
     ) {
         val chain: String = getParameter("chain")
@@ -56,7 +56,7 @@ fun Shell.miningCommands(miner: Miner) {
         form = "getoperation",
         description = "Gets the details of the supplied operation",
         parameters = listOf(
-            CommandParameter("id", CommandParameterType.STRING)
+            CommandParameter("id", CommandParameterMappers.STRING)
         )
     ) {
         val id: String = getParameter("id")
@@ -75,7 +75,7 @@ fun Shell.miningCommands(miner: Miner) {
         form = "getoperationvtb",
         description = "Gets the VTB details of the supplied operation",
         parameters = listOf(
-            CommandParameter("id", CommandParameterType.STRING)
+            CommandParameter("id", CommandParameterMappers.STRING)
         )
     ) {
         val id: String = getParameter("id")

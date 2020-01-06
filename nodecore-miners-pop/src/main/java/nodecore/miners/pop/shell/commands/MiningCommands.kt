@@ -14,6 +14,7 @@ import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.contracts.PoPOperationInfo
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameterType
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
@@ -29,7 +30,7 @@ fun Shell.miningCommands(
         form = "mine",
         description = "Begins a proof of proof mining operation",
         parameters = listOf(
-            CommandParameter("blockNumber", CommandParameterType.INTEGER, false)
+            CommandParameter("blockNumber", CommandParameterMappers.INTEGER, false)
         )
     ) {
         val blockNumber: Int? = getParameter("blockNumber")
@@ -62,7 +63,7 @@ fun Shell.miningCommands(
         form = "getoperation",
         description = "Gets the details of the supplied operation",
         parameters = listOf(
-            CommandParameter("id", CommandParameterType.STRING)
+            CommandParameter("id", CommandParameterMappers.STRING)
         )
     ) {
         val id: String = getParameter("id")
@@ -82,7 +83,7 @@ fun Shell.miningCommands(
         form = "resubmit",
         description = "Resubmits an operation",
         parameters = listOf(
-            CommandParameter("id", CommandParameterType.STRING, true)
+            CommandParameter("id", CommandParameterMappers.STRING, true)
         )
     ) {
         val id: String = getParameter("id")

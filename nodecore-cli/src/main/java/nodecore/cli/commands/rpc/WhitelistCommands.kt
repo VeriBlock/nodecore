@@ -2,11 +2,11 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.cli.CliShell
-import nodecore.cli.serialization.ListAllowedPayload
-import nodecore.cli.rpcCommand
 import nodecore.cli.prepareResult
+import nodecore.cli.rpcCommand
+import nodecore.cli.serialization.ListAllowedPayload
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.whitelistCommands() {
     rpcCommand(
@@ -14,7 +14,7 @@ fun CliShell.whitelistCommands() {
         form = "addallowed",
         description = "Add allowed addresses",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "address", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val value: String = getParameter("address")
@@ -56,7 +56,7 @@ fun CliShell.whitelistCommands() {
         form = "removeallowed",
         description = "Remove allowed addresses",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "address", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val value: String = getParameter("address")

@@ -4,12 +4,13 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.ImportPrivateKeyInfo
 import nodecore.cli.serialization.PrivateKeyInfo
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.privateKeyCommands() {
     rpcCommand(
@@ -17,7 +18,7 @@ fun CliShell.privateKeyCommands() {
         form = "dumpprivatekey|dumpprivkey",
         description = "Gets private key for an address",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true)
         ),
         suggestedCommands = { listOf("backupwallet", "importwallet", "importprivatekey") }
     ) {
@@ -41,7 +42,7 @@ fun CliShell.privateKeyCommands() {
         form = "importprivatekey|importprivkey",
         description = "Imports the provided private key into NodeCore",
         parameters = listOf(
-            CommandParameter(name = "privateKey", type = CommandParameterType.HEXSTRING, required = true)
+            CommandParameter(name = "privateKey", mapper = CommandParameterMappers.HEX_STRING, required = true)
         ),
         suggestedCommands = { listOf("dumpprivatekey", "backupwallet", "importwallet") }
     ) {
