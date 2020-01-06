@@ -15,12 +15,12 @@ import org.veriblock.shell.CommandParameterType
 fun CliShell.addressCommands() {
     rpcCommand(
         name = "Validate Address",
-        form = "validateaddress",
+        form = "validateaddress|validateaddr",
         description = "Returns details about an address if it is valid",
         parameters = listOf(
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory")
+        suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val request = VeriBlockMessages.ValidateAddressRequest.newBuilder().apply {
             address = ByteStringAddressUtility.createProperByteStringAutomatically(getParameter("address"))
@@ -40,7 +40,7 @@ fun CliShell.addressCommands() {
         parameters = listOf(
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory", "sigindex")
+        suggestedCommands = { listOf("getbalance", "gethistory", "sigindex") }
     ) {
         val address: String = getParameter("address")
 
@@ -59,7 +59,7 @@ fun CliShell.addressCommands() {
         parameters = listOf(
             CommandParameter(name = "count", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("backupwallet", "getbalance", "gethistory", "sigindex")
+        suggestedCommands = { listOf("backupwallet", "getbalance", "gethistory", "sigindex") }
     ) {
         val count = (getParameter("count") ?: 1).coerceAtLeast(1)
 
@@ -74,13 +74,13 @@ fun CliShell.addressCommands() {
 
     rpcCommand(
         name = "Generate Multisig Address",
-        form = "generatemultisigaddress",
+        form = "generatemultisigaddress|multisigaddress|maddress|maddr",
         description = "(Generates a multisig address from the provided standard addresses)",
         parameters = listOf(
             CommandParameter(name = "csvaddresses", type = CommandParameterType.COMMA_SEPARATED_STANDARD_ADDRESSES, required = true),
             CommandParameter(name = "signatureThreshold", type = CommandParameterType.INTEGER, required = true)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory", "makeunsignedmultisigtx", "submitmultisigtx")
+        suggestedCommands = { listOf("getbalance", "gethistory", "makeunsignedmultisigtx", "submitmultisigtx") }
     ) {
         val requestBuilder = VeriBlockMessages.GenerateMultisigAddressRequest.newBuilder()
         val signatureThreshold: Int = getParameter("signatureThreshold")

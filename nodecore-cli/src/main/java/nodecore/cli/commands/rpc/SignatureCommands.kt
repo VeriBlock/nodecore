@@ -5,10 +5,10 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.prepareResult
+import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.SignMessagePayload
 import nodecore.cli.serialization.SignatureIndexPayload
-import nodecore.cli.rpcCommand
-import nodecore.cli.prepareResult
 import org.veriblock.core.utilities.Utility
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
@@ -16,12 +16,12 @@ import org.veriblock.shell.CommandParameterType
 fun CliShell.signatureCommands() {
     rpcCommand(
         name = "Signature Index",
-        form = "sigindex",
+        form = "sigindex|signatureindex",
         description = "Gets the signature index for the specified address",
         parameters = listOf(
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = false)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory")
+        suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val address: String? = getOptionalParameter("address")
         val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder()

@@ -14,7 +14,6 @@ import nodecore.cli.commands.rpc.poolCommands
 import nodecore.cli.commands.rpc.popCommands
 import nodecore.cli.commands.rpc.privateKeyCommands
 import nodecore.cli.commands.rpc.signatureCommands
-import nodecore.cli.commands.rpc.submitCommands
 import nodecore.cli.commands.rpc.transactionCommands
 import nodecore.cli.commands.rpc.walletCommands
 import nodecore.cli.commands.rpc.whitelistCommands
@@ -76,7 +75,7 @@ inline fun CommandContext.prepareResult(
     }
 }
 
-fun CliShell.command(
+fun CliShell.cliCommand(
     name: String,
     form: String,
     description: String,
@@ -102,4 +101,4 @@ fun CliShell.rpcCommand(
     parameters: List<CommandParameter> = emptyList(),
     suggestedCommands: () -> List<String> = { emptyList() },
     action: CommandContext.() -> Result
-) = command(name, form, description, parameters, suggestedCommands, CommandServiceType.RPC, action)
+) = cliCommand(name, form, description, parameters, suggestedCommands, CommandServiceType.RPC, action)

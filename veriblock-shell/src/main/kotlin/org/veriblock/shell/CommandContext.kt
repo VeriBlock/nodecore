@@ -44,10 +44,11 @@ class CommandContext(
     }
 
     fun suggestCommands() {
-        if (command.suggestedCommands.isEmpty()) {
+        val suggestedCommands = command.suggestedCommands()
+        if (suggestedCommands.isEmpty()) {
             return
         }
-        val commandSummaries = command.suggestedCommands.associateWith {
+        val commandSummaries = suggestedCommands.associateWith {
             shell.getCommand(it).description
         }
         val maxLength = commandSummaries.keys.map {
@@ -59,7 +60,7 @@ class CommandContext(
             AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA)
         )
 
-        val formatPattern = "  %%1$-${maxLength + 1}s"
+        val formatPattern = String.format("  %%1$-%ds", maxLength + 1);
         for (key in commandSummaries.keys) {
             shell.printStyled(
                 String.format(formatPattern, key),

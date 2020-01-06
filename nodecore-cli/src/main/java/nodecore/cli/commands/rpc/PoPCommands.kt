@@ -14,6 +14,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
+import java.awt.GraphicsEnvironment
 
 private val logger = createLogger {}
 
@@ -27,7 +28,7 @@ fun CliShell.popCommands() {
             CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false),
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory")
+        suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val address: String? = getOptionalParameter("address")
         val request = VeriBlockMessages.TroubleshootPoPTransactionsRequest.newBuilder()
@@ -55,7 +56,13 @@ fun CliShell.popCommands() {
         parameters = listOf(
             CommandParameter(name = "block", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("startpopminer") //TODO: suggest only if !GraphicsEnvironment.isHeadless()
+        suggestedCommands = {
+            if (!GraphicsEnvironment.isHeadless()) {
+                listOf("startpopminer")
+            } else {
+                emptyList()
+            }
+        }
     ) {
         val request = VeriBlockMessages.GetPopRequest.newBuilder()
             .setBlockNum(getOptionalParameter("block") ?: 0)
@@ -76,7 +83,7 @@ fun CliShell.popCommands() {
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true),
             CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("getprotectedchildren", "getprotectingparents", "startpopminer")
+        suggestedCommands = { listOf("getprotectedchildren", "getprotectingparents", "startpopminer") }
     ) {
         val address: String = getParameter("address")
         val searchLength: Int? = getOptionalParameter("searchLength")
@@ -129,17 +136,6 @@ fun CliShell.popCommands() {
         prepareResult(result.success, result.resultsList)
     }
 
-
-
-
-
-
-
-
-
-
-
-
     rpcCommand(
         name = "Get Protecting Parents",
         form = "getprotectingparents",
@@ -148,7 +144,7 @@ fun CliShell.popCommands() {
             CommandParameter(name = "blockhash", type = CommandParameterType.HASH, required = true),
             CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("getprotectedchildren", "getpopendorsementsinfo", "startpopminer")
+        suggestedCommands = { listOf("getprotectedchildren", "getpopendorsementsinfo", "startpopminer") }
     ) {
         val hash: String = getParameter("blockhash")
         val searchLength: Int? = getOptionalParameter("searchLength")
@@ -176,7 +172,7 @@ fun CliShell.popCommands() {
             CommandParameter(name = "blockhash", type = CommandParameterType.HASH, required = true),
             CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("getprotectingparents", "getpopendorsementsinfo", "startpopminer")
+        suggestedCommands = { listOf("getprotectingparents", "getpopendorsementsinfo", "startpopminer") }
     ) {
         val hash: String = getParameter("blockhash")
         val searchLength: Int? = getOptionalParameter("searchLength")

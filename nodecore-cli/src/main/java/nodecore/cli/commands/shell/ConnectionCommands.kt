@@ -1,7 +1,7 @@
 package nodecore.cli.commands.shell
 
 import nodecore.cli.CliShell
-import nodecore.cli.command
+import nodecore.cli.cliCommand
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
 import nodecore.cli.contracts.ProtocolEndpointType
@@ -11,7 +11,7 @@ import org.veriblock.shell.core.success
 import java.awt.GraphicsEnvironment
 
 fun CliShell.connectionCommands() {
-    command(
+    cliCommand(
         name = "Connect",
         form = "connect",
         description = "Connect to a NodeCore RPC endpoint. Note: NodeCore does not begin listening for RPC " +
@@ -30,7 +30,7 @@ fun CliShell.connectionCommands() {
         }
     ) {
         val type = ProtocolEndpointType.RPC
-        val peer: PeerEndpoint = getParameter("peer")
+        val peer: PeerEndpoint = PeerEndpoint(getParameter("peer"))
         val passwordParam: String? = getOptionalParameter("password")
         val endpoint = ProtocolEndpoint(peer.toString(), type, passwordParam)
 
@@ -39,7 +39,7 @@ fun CliShell.connectionCommands() {
         success()
     }
 
-    command(
+    cliCommand(
         name = "Disconnect",
         form = "disconnect",
         description = "Disconnect from the open P2P or RPC connection"

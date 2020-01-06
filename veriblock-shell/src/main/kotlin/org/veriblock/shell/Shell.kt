@@ -63,7 +63,7 @@ open class Shell(
         reader.setOpt(LineReader.Option.DISABLE_EVENT_EXPANSION)
     }
 
-    private fun getPrompt() = AttributedStringBuilder()
+    protected open fun getPrompt() = AttributedStringBuilder()
         .style(AttributedStyle.BOLD.foreground(AttributedStyle.GREEN))
         .append(" > ")
         .toAnsi(terminal)
@@ -257,7 +257,9 @@ open class Shell(
         }
     }
 
-    fun getCommands() = commandFactory.getCommands()
+    fun getCommandsByAlias() = commandFactory.getCommands()
+
+    fun getCommands() = commandFactory.getCommands().values.distinct()
 
     fun getCommand(alias: String) = commandFactory.getCommands()[alias]
         ?: error("Command $alias not found!")

@@ -7,13 +7,12 @@
 
 package nodecore.cli
 
-import org.koin.dsl.module
+import org.koin.dsl.module.module
 
 @JvmField
 val defaultModule = module {
     single { ProgramOptions() }
     single { Configuration(get()) }
-    //single { DefaultCommandContext(get(), get(), get()) } // Map?
     single {
         CliShell(get()).apply {
             registerCommands()

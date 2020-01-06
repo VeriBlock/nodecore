@@ -3,22 +3,22 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
-import nodecore.cli.serialization.AddressBalanceSchedulePayload
-import nodecore.cli.serialization.BalancePayload
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
+import nodecore.cli.serialization.AddressBalanceSchedulePayload
+import nodecore.cli.serialization.BalancePayload
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
 
 fun CliShell.balanceCommands() {
     rpcCommand(
         name = "Get Balance",
-        form = "getbalance",
+        form = "getbalance|getbal|bal",
         description = "See the balances of all of your addresses",
         parameters = listOf(
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
         ),
-        suggestedCommands = listOf("gethistory", "getnewaddress")
+        suggestedCommands = { listOf("gethistory", "getnewaddress") }
     ) {
         val address: String = getParameter("address")
         val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
@@ -39,7 +39,7 @@ fun CliShell.balanceCommands() {
         parameters = listOf(
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = false)
         ),
-        suggestedCommands = listOf("getbalance")
+        suggestedCommands = { listOf("getbalance") }
     ) {
         val address: String = getParameter("address")
         val request = VeriBlockMessages.GetBalanceUnlockScheduleRequest.newBuilder()

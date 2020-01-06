@@ -5,14 +5,14 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.prepareResult
+import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.AbandonTransactionFromTxIDInfo
 import nodecore.cli.serialization.AbandonTransactionsFromAddressInfo
 import nodecore.cli.serialization.MakeUnsignedMultisigTxPayload
 import nodecore.cli.serialization.SendCoinsPayload
 import nodecore.cli.serialization.TransactionInfo
 import nodecore.cli.serialization.TransactionReferencesPayload
-import nodecore.cli.prepareResult
-import nodecore.cli.rpcCommand
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.shell.CommandParameter
@@ -71,7 +71,7 @@ fun CliShell.transactionCommands() {
         name = "Get Pending Transactions",
         form = "getpendingtransactions",
         description = "Returns the transactions pending on the network",
-        suggestedCommands = listOf("send", "getbalance", "gethistory", "sigindex")
+        suggestedCommands = { listOf("send", "getbalance", "gethistory", "sigindex") }
     ) {
         val request = VeriBlockMessages.GetPendingTransactionsRequest.newBuilder().build()
         val result = adminService.getPendingTransactions(request)
@@ -89,7 +89,7 @@ fun CliShell.transactionCommands() {
             CommandParameter(name = "txId", type = CommandParameterType.STRING, required = true),
             CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory")
+        suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val transactionId: String = getParameter("txId")
         val searchLength: Int? = getOptionalParameter("searchLength")
@@ -109,14 +109,14 @@ fun CliShell.transactionCommands() {
 
     rpcCommand(
         name = "Send",
-        form = "send",
+        form = "send|sendtoaddress|sendtoaddr",
         description = "Send coins to the specified address",
         parameters = listOf(
             CommandParameter(name = "amount", type = CommandParameterType.STRING, required = true),
             CommandParameter(name = "destinationAddress", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = true),
             CommandParameter(name = "sourceAddress", type = CommandParameterType.STANDARD_ADDRESS, required = false)
         ),
-        suggestedCommands = listOf("gethistory", "getbalance")
+        suggestedCommands = { listOf("gethistory", "getbalance") }
     ) {
         val amount: String = getParameter("amount")
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(amount)
@@ -162,7 +162,7 @@ fun CliShell.transactionCommands() {
 
     rpcCommand(
         name = "Make Unsigned Multisig Tx",
-        form = "makeunsignedmultisigtx",
+        form = "makeunsignedmultisigtx|unsignedmultisigtx|makemultisigtx|multisigtx|generateunsignedmultisigtx",
         description = "(Generates an unsigned multisig transaction)",
         parameters = listOf(
             CommandParameter(name = "sourceAddress", type = CommandParameterType.MULTISIG_ADDRESS, required = true),
@@ -171,7 +171,7 @@ fun CliShell.transactionCommands() {
             CommandParameter(name = "transactionFee", type = CommandParameterType.STRING, required = false),
             CommandParameter(name = "signatureIndex", type = CommandParameterType.INTEGER, required = false)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory", "generatemultisigaddress", "submitmultisigtx")
+        suggestedCommands = { listOf("getbalance", "gethistory", "generatemultisigaddress", "submitmultisigtx") }
     ) {
         val amount: String = getParameter("amount")
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(amount)
@@ -226,7 +226,7 @@ fun CliShell.transactionCommands() {
             CommandParameter(name = "csvpublickeysoraddresses", type = CommandParameterType.COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES, required = true),
             CommandParameter(name = "csvsignatureshex", type = CommandParameterType.COMMA_SEPARATED_SIGNATURES, required = true)
         ),
-        suggestedCommands = listOf("getbalance", "gethistory", "generatemultisigaddress", "makeunsignedmultisigtx")
+        suggestedCommands = { listOf("getbalance", "gethistory", "generatemultisigaddress", "makeunsignedmultisigtx") }
     ) {
         val unsignedTransactionBytes = Utility.hexToBytes(getParameter("unsignedtransactionhex"))
         val publicKeysOrAddressesStr: String = getParameter("csvpublickeysoraddresses")

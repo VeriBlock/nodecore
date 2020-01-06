@@ -1,19 +1,19 @@
 package nodecore.cli.commands.shell
 
+import nodecore.cli.CliShell
 import nodecore.cli.annotations.CommandServiceType
-import nodecore.cli.command
-import nodecore.cli.contracts.CommandDefinition
+import nodecore.cli.cliCommand
 import nodecore.cli.contracts.ProtocolEndpointType
+import org.jline.utils.AttributedStyle
+import org.veriblock.shell.Command
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
-import org.veriblock.shell.Shell
-import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.util.*
 
-fun Shell.standardCommands() {
-    command(
+fun CliShell.standardCommands() {
+    cliCommand(
         name = "Clear Screen",
         form = "clear",
         description = "Clears the terminal screen"
@@ -22,9 +22,9 @@ fun Shell.standardCommands() {
         success()
     }
 
-    command(
+    cliCommand(
         name = "Quit",
-        form = "quit",
+        form = "quit|leave|close|exit",
         description = "Quit the command line shell"
     ) {
         quit()
@@ -32,9 +32,9 @@ fun Shell.standardCommands() {
         success()
     }
 
-    command(
+    cliCommand(
         name = "Help",
-        form = "help",
+        form = "help|?|/?|h|/h|h?|showcommands",
         description = "Returns this help message",
         parameters = listOf(
             CommandParameter(name = "command", type = CommandParameterType.STRING, required = false)
@@ -43,51 +43,62 @@ fun Shell.standardCommands() {
         val command: String? = getOptionalParameter("command")
 
         if (command == null) {
-            val categories = HashMap<CommandServiceType, List<CommandDefinition>>()
+            val categories = HashMap<CommandServiceType, MutableList<Command>>()
 
-            for (key in getDefinitions().keys) {
-                val def = _factory.getDefinitions().get(key)
-                if (!isValidType(def.getSpec().service(), context.getProtocolType()))
+            for (def in getCommands()) {
+                val commandServiceType = CommandServiceType.valueOf(
+                    checkNotNull(def.extraData) { "Command $def's extra data must not be null!" }
+                )
+
+                val requiresConnection = commandServiceType == CommandServiceType.RPC
+
+                if (!isValidType(commandServiceType, getProtocolType()))
                     continue
 
-                if (def.getSpec().requiresConnection() && !context.isConnected())
+                if (requiresConnection && !isConnected())
                     continue
 
-                val list = (categories as java.util.Map<CommandServiceType, List<CommandDefinition>>).computeIfAbsent(
-                    def.getSpec().service()
-                ) { k -> ArrayList() }
+                val list = categories.getOrPut(commandServiceType) { ArrayList() }
                 list.add(def)
-                list.sort(Comparator.comparing<CommandDefinition, String> { a -> a.spec.form() })
+                list.sortBy { it.form }
             }
 
-            context.write().normal("Commands:\n")
-            for (category in categories.keys) {
-                context.write().inverted(String.format("\n %s: \n", category.name))
-                val list = categories[category]
+            printInfo("Commands:")
+            for ((category, list) in categories) {
+                printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
                 for (def in list) {
-                    context.write().normal(String.format("    %s", def.getSpec().form()))
-                    formatParameters(context, def.getParams())
-                    context.write().normal("\n")
+                    printStyled("    ${def.form}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                    formatParameters(def.parameters)
+                    printInfo("")
                 }
-
             }
 
-            printInfo("\n")
-            printInfo("    All RPC Commands support following selectors:\n")
-            printInfo("        -o <filename>       Saves command output into a file\n")
+            printInfo("")
+            printInfo("    All RPC Commands support following selectors:")
+            printInfo("        -o <filename>       Saves command output into a file")
             printInfo("        Example: getinfo -o abcde.json")
-            printInfo("\n")
+            success()
         } else {
-            val def = getCommands()[command]
-            if (def != null
-                && isValidType(def!!.getSpec().service(), context.getProtocolType())
-                && (!def!!.getSpec().requiresConnection() || def!!.getSpec().requiresConnection() && context.isConnected())) {
-                context.write().normal(String.format("\nCommand: %s\n", def!!.getSpec().name()))
-                context.write().normal(String.format("\n%s", def!!.getSpec().form()))
-                formatParameters(context, def!!.getParams())
-                context.write().normal(String.format("\n%s\n\n", def!!.getSpec().description()))
+            val def = getCommandsByAlias()[command]
+            if (def != null) {
+                val commandServiceType = CommandServiceType.valueOf(
+                    checkNotNull(def.extraData) { "Command $def's extra data must not be null!" }
+                )
+                val requiresConnection = commandServiceType == CommandServiceType.RPC
+                if (
+                    isValidType(commandServiceType, getProtocolType())
+                    && (!requiresConnection || (requiresConnection && isConnected()))
+                ) {
+                    printStyled("\nCommand: ${def.name}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                    printStyled("\n${def.form}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                    formatParameters(def.parameters)
+                    printStyled("\n${def.description}\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                    success()
+                } else {
+                    failure("V004", "Unknown command", "The command $command is unknown. Type 'help' to view all commands.")
+                }
             } else {
-                failure("V004", "Unknown protocol command", "The command $command is unknown. Type 'help' to view all commands.")
+                failure("V004", "Unknown command", "The command $command is unknown. Type 'help' to view all commands.")
             }
         }
     }
@@ -97,4 +108,17 @@ private fun isValidType(serviceType: CommandServiceType, protocolType: ProtocolE
     return (serviceType == CommandServiceType.PEER && protocolType == ProtocolEndpointType.PEER
         || serviceType == CommandServiceType.RPC && protocolType == ProtocolEndpointType.RPC
         || serviceType == CommandServiceType.SHELL)
+}
+
+private fun CliShell.formatParameters(params: List<CommandParameter>) {
+    if (params.isNotEmpty()) {
+        printStyled(" ", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+        for (param in params) {
+            if (param.required) {
+                printStyled("<${param.name}> ", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+            } else {
+                printStyled("[${param.name}] ", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+            }
+        }
+    }
 }

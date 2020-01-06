@@ -9,6 +9,9 @@
 package org.veriblock.shell
 
 import org.slf4j.LoggerFactory
+import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.utilities.extensions.countChar
+import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.shell.core.ResultMessage
 import java.math.BigDecimal
 import kotlin.collections.set
@@ -77,23 +80,160 @@ class CommandFactory {
 
     private fun extractTypedParam(param: CommandParameter, suppliedParam: String, command: Command): Any {
         return when (param.type) {
+
             CommandParameterType.STRING -> suppliedParam
+
             CommandParameterType.LONG -> suppliedParam.asPositiveLong()
                 ?: throw syntaxError(
                     command,
                     "parameter '${param.name}' must be a positive 64-bit integer"
                 )
+
             CommandParameterType.INTEGER -> suppliedParam.asPositiveInteger()
                 ?: throw syntaxError(
                     command,
                     "parameter '${param.name}' must be a positive 32-bit integer"
                 )
+
             CommandParameterType.AMOUNT -> try {
                 BigDecimal(suppliedParam)
             } catch (e: NumberFormatException) {
                 throw syntaxError(command, "parameter '${param.name}' must be an amount in BTC to send. e.g. 0.1")
             }
-            else -> TODO("Command type ${param.type} is still to be implemented")
+
+            CommandParameterType.HASH, CommandParameterType.HEXSTRING -> if (suppliedParam.isHex()) {
+                suppliedParam
+            } else {
+                throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a hexadecimal string"
+                )
+            }
+
+            CommandParameterType.PEER -> if (suppliedParam.countChar(':') == 1) {
+                suppliedParam
+            } else {
+                throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a string in the form: host:port"
+                )
+            }
+
+            CommandParameterType.STANDARD_ADDRESS -> if (AddressUtility.isValidStandardAddress(suppliedParam)) {
+                suppliedParam
+            } else {
+                throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a valid standard address"
+                )
+            }
+
+            CommandParameterType.MULTISIG_ADDRESS -> if (AddressUtility.isValidMultisigAddress(suppliedParam)) {
+                suppliedParam
+            } else {
+                throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a valid standard address"
+                )
+            }
+
+            CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS -> if (AddressUtility.isValidStandardOrMultisigAddress(suppliedParam)) {
+                suppliedParam
+            } else {
+                throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a valid standard address"
+                )
+            }
+
+            CommandParameterType.COMMA_SEPARATED_STANDARD_ADDRESSES -> {
+                val addresses = suppliedParam.split(",")
+                if (addresses.size !in 2..58) {
+                    throw syntaxError(
+                        command,
+                        "parameter '${param.name}' must be comprised of between 2 and 58 standard addresses separated by commas!"
+                    )
+                }
+
+                addresses.forEach {
+                    throw syntaxError(
+                        command,
+                        "parameter '${param.name}' must be comprised of multiple standard addresses separated by commas, and '$it' is not a valid standard address"
+                    )
+                }
+
+                suppliedParam
+            }
+
+            CommandParameterType.BOOLEAN -> {
+               val lowerCase = suppliedParam.toLowerCase()
+                if (lowerCase == "true" || lowerCase == "t") {
+                    true
+                } else if (lowerCase == "false" || lowerCase == "f") {
+                    false
+                } else {
+                    throw syntaxError(
+                        command,
+                        "parameter '${param.name}' must be a boolean (true/false or t/f)"
+                    )
+                }
+            }
+
+            CommandParameterType.COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES -> {
+                val publicKeysOrAddresses = suppliedParam.split(",")
+                if (publicKeysOrAddresses.size !in 2..58) {
+                    throw syntaxError(
+                        command,
+                        "parameter '${param.name}' must be comprised of between 2 and 58 addresses or hex-encoded public keys separated by commas!"
+                    )
+                }
+
+                publicKeysOrAddresses.forEach {
+                    if (!AddressUtility.isValidStandardAddress(it)) {
+                        if (!it.isHex()) {
+                            throw syntaxError(
+                                command,
+                                "parameter '${param.name}' must be comprised of multiple hex-encoded public keys or addresses separated by commas, and '$it' is not a valid hex-encoded public key or standard address!"
+                            )
+                        }
+
+                        if (it.isNotEmpty() && it.length != 176) {
+                            throw syntaxError(
+                                command,
+                                "parameter '${param.name}' must be comprised of multiple hex-encoded public keys or addresses separated by commas, and '$it' is not a valid hex-encoded public key or standard address (should be 88 bytes, or valid standard address)!"
+                            )
+                        }
+                    }
+                }
+
+                suppliedParam
+            }
+
+            CommandParameterType.COMMA_SEPARATED_SIGNATURES -> {
+                val signatures = suppliedParam.split(",")
+                if (signatures.size !in 2..58) {
+                    throw syntaxError(
+                        command,
+                        "parameter '${param.name}' must be comprised of between 2 and 58 hex-encoded public keys separated by commas!"
+                    )
+                }
+
+                signatures.forEach {
+                    if (!it.isHex()) {
+                        throw syntaxError(
+                            command,
+                            "parameter '${param.name}' must be comprised of multiple hex-encoded signatures separated by commas, and '$it' is not a valid hex-encoded signature!"
+                        )
+                    }
+                    if (it.isNotEmpty() && (it.length < 120 || it.length > 144)) {
+                        throw syntaxError(
+                            command,
+                            "parameter '${param.name}' must be comprised of multiple hex-encoded public keys addresses separated by commas, and '$it' is not a valid hex-encoded public key (should be between 60 and 72 bytes, unless blank)!"
+                        )
+                    }
+                }
+                suppliedParam
+            }
         }
     }
 
