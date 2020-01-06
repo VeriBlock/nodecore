@@ -47,6 +47,7 @@ open class Shell(
             system(true)
         }
     }.build()
+
     val reader: LineReader = LineReaderBuilder.builder()
         .terminal(terminal)
         .completer(getCompleter())
@@ -156,7 +157,7 @@ open class Shell(
             } else {
                 printStyled("500 failure ", AttributedStyle.DEFAULT.foreground(AttributedStyle.RED), false)
             }
-            printStyled("($stopwatch)", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
+            printStyled("($stopwatch)\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
 
             if (clear != null && clear) {
                 clear()

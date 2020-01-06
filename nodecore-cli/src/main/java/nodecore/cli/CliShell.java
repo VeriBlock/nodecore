@@ -14,6 +14,7 @@ import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
 import nodecore.cli.services.AdminServiceClient;
 import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
@@ -270,6 +271,8 @@ public class CliShell extends Shell {
                                     .toAnsi();
 
                             printInfo(msg);
+                            getReader().callWidget(LineReader.REDRAW_LINE);
+                            getReader().callWidget(LineReader.REDISPLAY);
 
                             return;
                         }
@@ -421,7 +424,7 @@ public class CliShell extends Shell {
         printStyled(
             "https://discord.gg/wJZEjry",
             AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
-            false
+            true
         );
         printStyled(
             "\tVeriBlock Explorer: ",
@@ -429,8 +432,8 @@ public class CliShell extends Shell {
             false
         );
         printStyled(
-            "https://explore.veriblock.org",
-            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+                "https://explore.veriblock.org\n\n",
+                AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
         );
     }
 

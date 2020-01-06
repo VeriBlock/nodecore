@@ -106,7 +106,7 @@ fun unknownCommandError(form: String) = ShellException(
     ResultMessage(
         "V004",
         "Unknown protocol command",
-        "The command '$form' is not supported",
+        "The command '$form' is not supported. Type 'help' to view all commands.",
         true
     )
 )

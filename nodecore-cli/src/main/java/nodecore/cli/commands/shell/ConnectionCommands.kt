@@ -24,9 +24,9 @@ fun CliShell.connectionCommands() {
         ),
         suggestedCommands = {
             if (GraphicsEnvironment.isHeadless()) {
-                listOf("getnewaddress", "getbalance", "startsolopool")
+                listOf("getinfo", "getnewaddress", "getbalance", "startsolopool")
             } else {
-                listOf("getnewaddress", "getbalance", "startsolopool", "startpopminer")
+                listOf("getinfo", "getnewaddress", "getbalance", "startsolopool", "startpopminer")
             }
         }
     ) {
