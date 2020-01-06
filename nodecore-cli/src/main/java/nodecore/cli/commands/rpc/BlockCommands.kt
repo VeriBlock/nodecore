@@ -3,12 +3,12 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.prepareResult
+import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.BitcoinBlockPayload
 import nodecore.cli.serialization.BlockchainPayload
 import nodecore.cli.serialization.BlocksPayload
 import nodecore.cli.serialization.GetBlockTemplatePayload
-import nodecore.cli.rpcCommand
-import nodecore.cli.prepareResult
 import org.veriblock.core.utilities.Utility
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
@@ -18,7 +18,7 @@ fun CliShell.blockCommands() {
         name = "Get Blockchains",
         form = "getblockchains",
         description = "Returns blockchain information",
-        suggestedCommands = listOf("getinfo")
+        suggestedCommands = { listOf("getinfo") }
     ) {
         val request = VeriBlockMessages.GetBlockchainsRequest.newBuilder().build()
         val result = adminService.getBlockchains(request)
@@ -38,7 +38,7 @@ fun CliShell.blockCommands() {
         parameters = listOf(
             CommandParameter(name = "blockHash", type = CommandParameterType.HASH, required = true)
         ),
-        suggestedCommands = listOf("getblockfromindex", "gettransaction")
+        suggestedCommands = { listOf("getblockfromindex", "gettransaction") }
     ) {
         val hash: String = getParameter("blockHash")
         val request = VeriBlockMessages.GetBlocksRequest
@@ -59,7 +59,7 @@ fun CliShell.blockCommands() {
         parameters = listOf(
             CommandParameter(name = "blockIndex", type = CommandParameterType.INTEGER, required = true)
         ),
-        suggestedCommands = listOf("getblockfromhash", "gettransaction")
+        suggestedCommands = { listOf("getblockfromhash", "gettransaction") }
     ) {
         val index: Int = getParameter("blockIndex")
         val request = VeriBlockMessages.GetBlocksRequest.newBuilder()

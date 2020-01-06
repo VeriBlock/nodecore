@@ -110,6 +110,31 @@ public class CliShell extends Shell {
     }
 
     @Override
+    protected String getPrompt() {
+        if (_endpointContainer.getProtocolEndpoint() == null) {
+            return new AttributedStringBuilder()
+                .style(AttributedStyle.BOLD)
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW+8))
+                .append("(VBK_CLI ")
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.RED+8))
+                .append("[NOT CONNECTED]")
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW+8))
+                .append(") > ")
+                .toAnsi();
+        } else {
+            return new AttributedStringBuilder()
+                .style(AttributedStyle.BOLD)
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN+8))
+                .append("(VBK_CLI ")
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN+8))
+                .append(_endpointContainer.getProtocolEndpoint().toString())
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN+8))
+                .append(") > ")
+                .toAnsi();
+        }
+    }
+
+    @Override
     protected Result handleResult(CommandContext context, Result result) {
         boolean failed = result.isFailed();
 
@@ -185,43 +210,12 @@ public class CliShell extends Shell {
         return result;
     }
 
-    private String formatPromptAsString() {
-
-        String prompt;
-
-        if (_endpointContainer.getProtocolEndpoint() == null) {
-
-            prompt = new AttributedStringBuilder()
-                    .style(AttributedStyle.BOLD)
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW+8))
-                    .append("(VBK_CLI ")
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.RED+8))
-                    .append("[NOT CONNECTED]")
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW+8))
-                    .append(") > ")
-                    .toAnsi();
-        } else {
-
-            prompt = new AttributedStringBuilder()
-                    .style(AttributedStyle.BOLD)
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN+8))
-                    .append("(VBK_CLI ")
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN+8))
-                    .append(_endpointContainer.getProtocolEndpoint().toString())
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN+8))
-                    .append(") > ")
-                    .toAnsi();
-        }
-
-        return prompt;
-    }
-
     @Override
     protected Completer getCompleter() {
 
         List<String> commands = new ArrayList<>();
 
-        for (Command command : getCommands().values()) {
+        for (Command command : getCommands()) {
             if (_endpointContainer.getProtocolEndpoint() != null || command.getExtraData().equals(CommandServiceType.SHELL.name())) {
                 commands.add(command.getForm());
             }
@@ -440,7 +434,7 @@ public class CliShell extends Shell {
         );
     }
 
-    public ProtocolEndpointType type() {
+    public ProtocolEndpointType getProtocolType() {
         if (_endpointContainer.getProtocolEndpoint() == null)
             return ProtocolEndpointType.NONE;
         return _endpointContainer.getProtocolEndpoint().type();
@@ -448,5 +442,9 @@ public class CliShell extends Shell {
 
     public AdminService getAdminService() {
         return _adminServiceClient;
+    }
+
+    public boolean isConnected() {
+        return _adminServiceClient != null;
     }
 }

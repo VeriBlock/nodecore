@@ -15,16 +15,20 @@ class Command(
     val form: String,
     val description: String,
     val parameters: List<CommandParameter>,
-    val suggestedCommands: List<String> = emptyList(),
+    val suggestedCommands: () -> List<String> = { emptyList() },
     val extraData: String? = null,
     val action: (CommandContext) -> Result
-)
+) {
+    override fun toString() = form
+}
 
 class CommandParameter(
     val name: String,
     val type: CommandParameterType,
     val required: Boolean = true
-)
+) {
+    override fun toString() = name
+}
 
 enum class CommandParameterType {
     STRING,
@@ -48,7 +52,7 @@ fun Shell.command(
     form: String,
     description: String,
     parameters: List<CommandParameter> = emptyList(),
-    suggestedCommands: List<String> = emptyList(),
+    suggestedCommands: () -> List<String> = { emptyList() },
     extraData: String? = null,
     action: CommandContext.() -> Result
 ) {

@@ -3,13 +3,13 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
+import nodecore.cli.prepareResult
+import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.AddressHistoryInfo
 import nodecore.cli.serialization.GetDiagnosticInfoPayload
 import nodecore.cli.serialization.GetInfoPayload
 import nodecore.cli.serialization.GetStateInfoPayload
 import nodecore.cli.serialization.PeerInfoPayload
-import nodecore.cli.rpcCommand
-import nodecore.cli.prepareResult
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterType
 
@@ -29,9 +29,9 @@ fun CliShell.infoCommands() {
 
     rpcCommand(
         name = "Get Info",
-        form = "getinfo",
+        form = "getinfo|info|inf|i",
         description = "Returns information about the node and the current blockchain",
-        suggestedCommands = listOf("getbalance", "gettransaction", "getblockfromindex", "getblockfromhash", "getstateinfo")
+        suggestedCommands = { listOf("getbalance", "gettransaction", "getblockfromindex", "getblockfromhash", "getstateinfo") }
     ) {
         val request = VeriBlockMessages.GetInfoRequest.newBuilder().build()
         val result = adminService.getInfo(request)
@@ -45,7 +45,7 @@ fun CliShell.infoCommands() {
         name = "Get Peer Info",
         form = "getpeerinfo",
         description = "Returns a list of connected peers",
-        suggestedCommands = listOf("addnode", "removenode")
+        suggestedCommands = { listOf("addnode", "removenode") }
     ) {
         val request = VeriBlockMessages.GetPeerInfoRequest.newBuilder().build()
         val result = adminService.getPeerInfo(request)
@@ -57,9 +57,9 @@ fun CliShell.infoCommands() {
 
     rpcCommand(
         name = "Get state Info",
-        form = "getstateinfo",
+        form = "getstateinfo|stateinfo|state|getstate",
         description = "Returns blockchain, operating, and network state information",
-        suggestedCommands = listOf("getinfo")
+        suggestedCommands = { listOf("getinfo") }
     ) {
         val request = VeriBlockMessages.GetStateInfoRequest.newBuilder().build()
         val result = adminService.getStateInfo(request)
@@ -76,7 +76,7 @@ fun CliShell.infoCommands() {
         parameters = listOf(
             CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
         ),
-        suggestedCommands = listOf("getbalance", "gettransaction")
+        suggestedCommands = { listOf("getbalance", "gettransaction") }
     ) {
         val address: String? = getOptionalParameter("address")
         val request = VeriBlockMessages.GetHistoryRequest.newBuilder()

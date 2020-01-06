@@ -18,7 +18,7 @@ fun CliShell.nodeCommands() {
         ),
         suggestedCommands = { listOf("removenode") }
     ) {
-        val peer: PeerEndpoint = getParameter("peer")
+        val peer: PeerEndpoint = PeerEndpoint(getParameter("peer"))
         val request = VeriBlockMessages.Endpoint.newBuilder().setAddress(peer.address())
             .setPort(peer.port().toInt()).build()
         val result = adminService.addNode(
@@ -37,7 +37,7 @@ fun CliShell.nodeCommands() {
         ),
         suggestedCommands = { listOf("addnode") }
     ) {
-        val peer: PeerEndpoint = getParameter("peer")
+        val peer: PeerEndpoint = PeerEndpoint(getParameter("peer"))
         val request = VeriBlockMessages.Endpoint.newBuilder().setAddress(peer.address())
             .setPort(peer.port().toInt()).build()
         val result = adminService.removeNode(

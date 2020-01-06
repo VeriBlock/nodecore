@@ -47,12 +47,12 @@ fun Shell.standardCommands() {
 
         val result = if (command == null) {
             printInfo("Commands:")
-            for ((alias, definition) in getCommands()) {
+            for ((alias, definition) in getCommandsByAlias()) {
                 printInfo("    $alias ${definition.parameters.format()}")
             }
             success()
         } else {
-            val def = getCommands()[command]
+            val def = getCommandsByAlias()[command]
             if (def != null) {
                 printInfo("Command: ${def.name}")
                 printInfo("${def.form} ${def.parameters.format()}")

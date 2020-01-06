@@ -20,7 +20,6 @@ dependencies {
 
     // Dependency Injection
     implementation "org.koin:koin-core:1.0.1"
-    implementation 'org.koin:koin-java:2.0.1'
 
     implementation group: 'joda-time', name: 'joda-time', version: '2.9.9'
     implementation group: 'org.reflections', name: 'reflections', version: '0.9.11'
@@ -71,7 +70,7 @@ jar {
 }
 
 applicationName = 'nodecore-cli'
-mainClassName = 'nodecore.cli.Program'
+mainClassName = 'nodecore.cli.ProgramKt'
 
 distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
 distTar.archiveName = "$applicationName-${prettyVersion()}.tar"

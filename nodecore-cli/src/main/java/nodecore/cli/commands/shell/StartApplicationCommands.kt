@@ -1,18 +1,19 @@
 package nodecore.cli.commands.shell
 
+import nodecore.cli.CliShell
+import nodecore.cli.cliCommand
 import nodecore.cli.utilities.ExtendedIllegalStateException
 import nodecore.cli.utilities.ExternalProgramUtilities
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.ResultMessage
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.awt.GraphicsEnvironment
 
-fun Shell.startApplicationCommands() {
-    command(
+fun CliShell.startApplicationCommands() {
+    cliCommand(
         name = "Start NodeCore",
-        form = "startnodecore",
+        form = "startnodecore|launchnodecore",
         description = "Attempts to start NodeCore in a new window"
     ) {
         if (GraphicsEnvironment.isHeadless()) {
@@ -33,11 +34,11 @@ fun Shell.startApplicationCommands() {
         }
     }
 
-    command(
+    cliCommand(
         name = "Start CPU Miner",
-        form = "startcpuminer",
+        form = "startcpuminer|launchcpuminer",
         description = "Attempts to start the CPU PoW Miner in a new window",
-        suggestedCommands = listOf("startpool", "startsolopool")
+        suggestedCommands = { listOf("startpool", "startsolopool") }
     ) {
         if (GraphicsEnvironment.isHeadless()) {
             failure(
@@ -57,9 +58,9 @@ fun Shell.startApplicationCommands() {
         }
     }
 
-    command(
+    cliCommand(
         name = "Start PoP Miner",
-        form = "startpopminer",
+        form = "startpopminer|launchpopminer|startpowminer|launchpowminer",
         description = "Attempts to start the PoP Miner in a new window"
     ) {
         if (GraphicsEnvironment.isHeadless()) {
