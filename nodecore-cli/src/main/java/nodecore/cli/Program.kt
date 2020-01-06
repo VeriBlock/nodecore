@@ -12,6 +12,7 @@ import org.koin.standalone.StandAloneContext.startKoin
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.core.utilities.createLogger
+import kotlin.system.exitProcess
 
 private val logger = createLogger {}
 
@@ -45,5 +46,5 @@ private fun run(args: Array<String>): Int {
 }
 
 fun main(args: Array<String>) {
-    System.exit(run(args))
+    exitProcess(run(args))
 }
