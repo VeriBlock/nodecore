@@ -7,7 +7,7 @@ import nodecore.cli.contracts.ProtocolEndpointType
 import org.jline.utils.AttributedStyle
 import org.veriblock.shell.Command
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.util.*
@@ -37,7 +37,7 @@ fun CliShell.standardCommands() {
         form = "help|?|/?|h|/h|h?|showcommands",
         description = "Returns this help message",
         parameters = listOf(
-            CommandParameter(name = "command", type = CommandParameterType.STRING, required = false)
+            CommandParameter(name = "command", mapper = CommandParameterMappers.STRING, required = false)
         )
     ) {
         val command: String? = getOptionalParameter("command")

@@ -5,6 +5,7 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.PoPEndorsementsInfo
@@ -13,7 +14,7 @@ import nodecore.cli.serialization.TroubleshootPoPTransactionsPayload
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import java.awt.GraphicsEnvironment
 
 private val logger = createLogger {}
@@ -24,9 +25,9 @@ fun CliShell.popCommands() {
         form = "troubleshootpopbyaddress",
         description = "(Returns a troubleshooting report of the PoP transaction(s) matching the provided address in the specified history)",
         parameters = listOf(
-            CommandParameter(name = "onlyFailures", type = CommandParameterType.BOOLEAN, required = true),
-            CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false),
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
+            CommandParameter(name = "onlyFailures", mapper = CommandParameterMappers.BOOLEAN, required = true),
+            CommandParameter(name = "searchLength", mapper = CommandParameterMappers.INTEGER, required = false),
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
@@ -54,7 +55,7 @@ fun CliShell.popCommands() {
         form = "getpop",
         description = "Gets the data VeriBlock wants Proof-of-Proof published to Bitcoin",
         parameters = listOf(
-            CommandParameter(name = "block", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "block", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = {
             if (!GraphicsEnvironment.isHeadless()) {
@@ -80,8 +81,8 @@ fun CliShell.popCommands() {
         form = "getpopendorsementsinfo",
         description = "Returns the PoP endorsements related to a particular address given the particular search length",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true),
-            CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true),
+            CommandParameter(name = "searchLength", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = { listOf("getprotectedchildren", "getprotectingparents", "startpopminer") }
     ) {
@@ -106,11 +107,11 @@ fun CliShell.popCommands() {
         form = "submitpop",
         description = "Submit a Proof-of-Proof transaction",
         parameters = listOf(
-            CommandParameter(name = "endorsedBlockHeader", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "bitcoinTransaction", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "bitcoinMerklePathToRoot", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "bitcoinBlockHeader", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
+            CommandParameter(name = "endorsedBlockHeader", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "bitcoinTransaction", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "bitcoinMerklePathToRoot", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "bitcoinBlockHeader", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
         )
     ) {
         val endorsedBlockHeader: String = getParameter("endorsedBlockHeader")
@@ -141,8 +142,8 @@ fun CliShell.popCommands() {
         form = "getprotectingparents",
         description = "Returns the pop endorsement information of parents protecting the provided block hash",
         parameters = listOf(
-            CommandParameter(name = "blockhash", type = CommandParameterType.HASH, required = true),
-            CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "blockhash", mapper = ShellCommandParameterMappers.HASH, required = true),
+            CommandParameter(name = "searchLength", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = { listOf("getprotectedchildren", "getpopendorsementsinfo", "startpopminer") }
     ) {
@@ -169,8 +170,8 @@ fun CliShell.popCommands() {
         form = "getprotectedchildren",
         description = "Returns the children protected by PoP transactions in a particular VeriBlock block identified by the provided block hash",
         parameters = listOf(
-            CommandParameter(name = "blockhash", type = CommandParameterType.HASH, required = true),
-            CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "blockhash", mapper = ShellCommandParameterMappers.HASH, required = true),
+            CommandParameter(name = "searchLength", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = { listOf("getprotectingparents", "getpopendorsementsinfo", "startpopminer") }
     ) {

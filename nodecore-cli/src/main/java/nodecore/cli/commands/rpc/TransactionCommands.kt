@@ -5,6 +5,7 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.AbandonTransactionFromTxIDInfo
@@ -16,7 +17,7 @@ import nodecore.cli.serialization.TransactionReferencesPayload
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 
 fun CliShell.transactionCommands() {
@@ -25,7 +26,7 @@ fun CliShell.transactionCommands() {
         form = "abandontransactionfromtxid",
         description = "Abandons the specified pending transaction and all dependent transactions",
         parameters = listOf(
-            CommandParameter(name = "txId", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "txId", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val txid: String = getParameter("txId")
@@ -45,8 +46,8 @@ fun CliShell.transactionCommands() {
         form = "abandontransactionsfromaddress",
         description = "Abandons all pending transactions from a particular source address (optionally above a particular signature index), and all dependent transactions",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "index", type = CommandParameterType.LONG, required = false)
+            CommandParameter(name = "address", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "index", mapper = CommandParameterMappers.LONG, required = false)
         )
     ) {
         val address: String = getParameter("address")
@@ -86,8 +87,8 @@ fun CliShell.transactionCommands() {
         form = "gettransaction",
         description = "Gets information regarding provided TxID",
         parameters = listOf(
-            CommandParameter(name = "txId", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "searchLength", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "txId", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "searchLength", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
@@ -112,9 +113,9 @@ fun CliShell.transactionCommands() {
         form = "send|sendtoaddress|sendtoaddr",
         description = "Send coins to the specified address",
         parameters = listOf(
-            CommandParameter(name = "amount", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "destinationAddress", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = true),
-            CommandParameter(name = "sourceAddress", type = CommandParameterType.STANDARD_ADDRESS, required = false)
+            CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "destinationAddress", mapper = ShellCommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true),
+            CommandParameter(name = "sourceAddress", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
         ),
         suggestedCommands = { listOf("gethistory", "getbalance") }
     ) {
@@ -150,7 +151,7 @@ fun CliShell.transactionCommands() {
         form = "settxfee",
         description = "Set the transaction fee for future transactions",
         parameters = listOf(
-            CommandParameter(name = "transactionFee", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "transactionFee", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val fee = Utility.convertDecimalCoinToAtomicLong(getParameter("transactionFee"))
@@ -165,11 +166,11 @@ fun CliShell.transactionCommands() {
         form = "makeunsignedmultisigtx|unsignedmultisigtx|makemultisigtx|multisigtx|generateunsignedmultisigtx",
         description = "(Generates an unsigned multisig transaction)",
         parameters = listOf(
-            CommandParameter(name = "sourceAddress", type = CommandParameterType.MULTISIG_ADDRESS, required = true),
-            CommandParameter(name = "amount", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "destinationAddress", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = true),
-            CommandParameter(name = "transactionFee", type = CommandParameterType.STRING, required = false),
-            CommandParameter(name = "signatureIndex", type = CommandParameterType.INTEGER, required = false)
+            CommandParameter(name = "sourceAddress", mapper = ShellCommandParameterMappers.MULTISIG_ADDRESS, required = true),
+            CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "destinationAddress", mapper = ShellCommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true),
+            CommandParameter(name = "transactionFee", mapper = CommandParameterMappers.STRING, required = false),
+            CommandParameter(name = "signatureIndex", mapper = CommandParameterMappers.INTEGER, required = false)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory", "generatemultisigaddress", "submitmultisigtx") }
     ) {
@@ -205,7 +206,7 @@ fun CliShell.transactionCommands() {
         form = "submittx",
         description = "Submit a raw transaction to be added to the mempool",
         parameters = listOf(
-            CommandParameter(name = "rawTransaction", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "rawTransaction", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val rawTransaction: String = getParameter("rawTransaction")
@@ -222,9 +223,9 @@ fun CliShell.transactionCommands() {
         form = "submitmultisigtx",
         description = "(Submits an signed multisig transaction)",
         parameters = listOf(
-            CommandParameter(name = "unsignedtransactionhex", type = CommandParameterType.HEXSTRING, required = true),
-            CommandParameter(name = "csvpublickeysoraddresses", type = CommandParameterType.COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES, required = true),
-            CommandParameter(name = "csvsignatureshex", type = CommandParameterType.COMMA_SEPARATED_SIGNATURES, required = true)
+            CommandParameter(name = "unsignedtransactionhex", mapper = CommandParameterMappers.HEX_STRING, required = true),
+            CommandParameter(name = "csvpublickeysoraddresses", mapper = ShellCommandParameterMappers.COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES, required = true),
+            CommandParameter(name = "csvsignatureshex", mapper = ShellCommandParameterMappers.COMMA_SEPARATED_SIGNATURES, required = true)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory", "generatemultisigaddress", "makeunsignedmultisigtx") }
     ) {

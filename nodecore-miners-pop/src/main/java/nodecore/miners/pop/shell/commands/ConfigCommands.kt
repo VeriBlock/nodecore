@@ -10,7 +10,7 @@ package nodecore.miners.pop.shell.commands
 
 import nodecore.miners.pop.Configuration
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
@@ -36,8 +36,8 @@ fun Shell.configCommands(configuration: Configuration) {
         form = "setconfig",
         description = "Sets a new value for a config property",
         parameters = listOf(
-            CommandParameter(name = "key", type = CommandParameterType.STRING, required = true),
-            CommandParameter(name = "value", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "key", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "value", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val key: String = getParameter("key");

@@ -12,7 +12,7 @@ import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
@@ -52,8 +52,8 @@ fun Shell.bitcoinWalletCommands(
         form = "importwallet",
         description = "Imports a Bitcoin wallet using comma-separated list of seed words and, optionally, a wallet creation date",
         parameters = listOf(
-            CommandParameter("seedWords", CommandParameterType.STRING, true),
-            CommandParameter("creationTime", CommandParameterType.LONG, false)
+            CommandParameter("seedWords", CommandParameterMappers.STRING, true),
+            CommandParameter("creationTime", CommandParameterMappers.LONG, false)
         )
     ) {
         val seedWords: String = getParameter("seedWords")
@@ -79,8 +79,8 @@ fun Shell.bitcoinWalletCommands(
         form = "withdrawbitcointoaddress",
         description = "Sends a Bitcoin amount to a given address",
         parameters = listOf(
-            CommandParameter("address", CommandParameterType.STRING, true),
-            CommandParameter("amount", CommandParameterType.AMOUNT, true)
+            CommandParameter("address", CommandParameterMappers.STRING, true),
+            CommandParameter("amount", CommandParameterMappers.AMOUNT, true)
         )
     ) {
         val address: String = getParameter("address")

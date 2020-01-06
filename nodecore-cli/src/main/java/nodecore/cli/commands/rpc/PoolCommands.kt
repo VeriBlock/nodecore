@@ -4,11 +4,12 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.PoolStatePayload
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 import java.io.UnsupportedEncodingException
 
 fun CliShell.poolCommands() {
@@ -28,7 +29,7 @@ fun CliShell.poolCommands() {
         form = "startsolopool",
         description = "Starts the built-in pool service in NodeCore in solo mode",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = false)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
         ),
         suggestedCommands = { listOf("stoppool", "getbalance", "setdefaultaddress") }
     ) {
@@ -60,7 +61,7 @@ fun CliShell.poolCommands() {
         form = "startpool",
         description = "Starts the built-in pool service in NodeCore",
         parameters = listOf(
-            CommandParameter(name = "type", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "type", mapper = CommandParameterMappers.STRING, required = true)
         ),
         suggestedCommands = { listOf("stoppool", "getbalance") }
     ) {

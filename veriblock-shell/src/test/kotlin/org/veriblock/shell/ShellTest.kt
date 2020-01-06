@@ -47,7 +47,7 @@ class ShellTest {
                 form = "greet",
                 description = "Greets someone",
                 parameters = listOf(
-                    CommandParameter("who", CommandParameterType.STRING)
+                    CommandParameter("who", CommandParameterMappers.STRING)
                 )
             ) {
                 val who: String = getParameter("who")

@@ -2,11 +2,11 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.nodeCommands() {
     rpcCommand(
@@ -14,11 +14,11 @@ fun CliShell.nodeCommands() {
         form = "addnode",
         description = "Add a peer node to the local configuration and connect",
         parameters = listOf(
-            CommandParameter(name = "peer", type = CommandParameterType.PEER, required = true)
+            CommandParameter(name = "peer", mapper = ShellCommandParameterMappers.PEER, required = true)
         ),
         suggestedCommands = { listOf("removenode") }
     ) {
-        val peer: PeerEndpoint = PeerEndpoint(getParameter("peer"))
+        val peer: PeerEndpoint = getParameter("peer")
         val request = VeriBlockMessages.Endpoint.newBuilder().setAddress(peer.address())
             .setPort(peer.port().toInt()).build()
         val result = adminService.addNode(
@@ -33,11 +33,11 @@ fun CliShell.nodeCommands() {
         form = "removenode",
         description = "Removes the peer address from the configuration",
         parameters = listOf(
-            CommandParameter(name = "peer", type = CommandParameterType.PEER, required = true)
+            CommandParameter(name = "peer", mapper = ShellCommandParameterMappers.PEER, required = true)
         ),
         suggestedCommands = { listOf("addnode") }
     ) {
-        val peer: PeerEndpoint = PeerEndpoint(getParameter("peer"))
+        val peer: PeerEndpoint = getParameter("peer")
         val request = VeriBlockMessages.Endpoint.newBuilder().setAddress(peer.address())
             .setPort(peer.port().toInt()).build()
         val result = adminService.removeNode(

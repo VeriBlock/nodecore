@@ -5,13 +5,14 @@ import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.WalletTransactionInfo
 import nodecore.cli.utilities.CommandUtility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.File
@@ -25,7 +26,7 @@ fun CliShell.walletCommands() {
         form = "backupwallet",
         description = "Backup the wallet of a NodeCore instance",
         parameters = listOf(
-            CommandParameter(name = "targetLocation", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "targetLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
         suggestedCommands = { listOf("importwallet", "dumpprivatekey", "importprivatekey") }
     ) {
@@ -84,8 +85,8 @@ fun CliShell.walletCommands() {
         form = "getwallettransactions",
         description = "Writes transaction history for an address to a local file. This could take a while.",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true),
-            CommandParameter(name = "type", type = CommandParameterType.STRING, required = false)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true),
+            CommandParameter(name = "type", mapper = CommandParameterMappers.STRING, required = false)
         ),
         suggestedCommands = { listOf("getbalance", "gettransaction") }
     ) {
@@ -151,7 +152,7 @@ fun CliShell.walletCommands() {
         form = "importwallet",
         description = "Import a NodeCore wallet backup",
         parameters = listOf(
-            CommandParameter(name = "sourceLocation", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "sourceLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
         suggestedCommands = { listOf("dumpprivatekey", "importprivatekey", "backupwallet") }
     ) {

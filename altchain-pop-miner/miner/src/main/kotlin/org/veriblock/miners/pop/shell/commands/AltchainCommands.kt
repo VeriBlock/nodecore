@@ -12,7 +12,7 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.util.Utils
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
@@ -25,7 +25,7 @@ fun Shell.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: Plug
         form = "updatecontext",
         description = "Utility to test the vtb and atv submission for an altchain",
         parameters = listOf(
-            CommandParameter("chain", CommandParameterType.STRING)
+            CommandParameter("chain", CommandParameterMappers.STRING)
         )
     ) {
         val chain: String = getParameter("chain")

@@ -9,7 +9,7 @@
 package nodecore.miners.pop.shell.commands
 
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
@@ -40,7 +40,7 @@ fun Shell.standardCommands() {
         form = "help",
         description = "Returns this help message",
         parameters = listOf(
-            CommandParameter("command", CommandParameterType.STRING, false)
+            CommandParameter("command", CommandParameterMappers.STRING, false)
         )
     ) {
         val command: String? = getParameter("command")

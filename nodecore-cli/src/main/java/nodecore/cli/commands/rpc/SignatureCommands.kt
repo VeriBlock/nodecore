@@ -5,13 +5,14 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.CliShell
+import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.SignMessagePayload
 import nodecore.cli.serialization.SignatureIndexPayload
 import org.veriblock.core.utilities.Utility
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.signatureCommands() {
     rpcCommand(
@@ -19,7 +20,7 @@ fun CliShell.signatureCommands() {
         form = "sigindex|signatureindex",
         description = "Gets the signature index for the specified address",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_OR_MULTISIG_ADDRESS, required = false)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = false)
         ),
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
@@ -40,8 +41,8 @@ fun CliShell.signatureCommands() {
         form = "signhexmessage",
         description = "(Signs a hex-encoded message with the addresses private key)",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true),
-            CommandParameter(name = "message", type = CommandParameterType.HEXSTRING, required = true)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true),
+            CommandParameter(name = "message", mapper = CommandParameterMappers.HEX_STRING, required = true)
         )
     ) {
         val address: String = getParameter("address")
@@ -61,8 +62,8 @@ fun CliShell.signatureCommands() {
         form = "signmessage",
         description = "Signs a message with the addresses private key",
         parameters = listOf(
-            CommandParameter(name = "address", type = CommandParameterType.STANDARD_ADDRESS, required = true),
-            CommandParameter(name = "message", type = CommandParameterType.STRING, required = true)
+            CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = true),
+            CommandParameter(name = "message", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val address: String = getParameter("address")
