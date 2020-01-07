@@ -13,7 +13,6 @@ import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
 import nodecore.cli.services.AdminServiceClient;
-import org.jetbrains.annotations.NotNull;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.impl.completer.StringsCompleter;

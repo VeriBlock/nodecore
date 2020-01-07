@@ -12,7 +12,6 @@ import nodecore.cli.serialization.GetInfoPayload
 import nodecore.cli.serialization.GetStateInfoPayload
 import nodecore.cli.serialization.PeerInfoPayload
 import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterType
 
 fun CliShell.infoCommands() {
     rpcCommand(

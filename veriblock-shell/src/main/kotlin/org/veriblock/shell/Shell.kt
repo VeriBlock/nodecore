@@ -119,7 +119,7 @@ open class Shell(
             val executeResult: Result = try {
                 val commandResult = commandFactory.getInstance(input)
                 val context = CommandContext(this, commandResult.command, commandResult.parameters)
-                val result = commandResult.command.action(context)
+                var result = commandResult.command.action(context)
 
                 if (!result.isFailed) {
                     if (context.quit) {
@@ -127,10 +127,14 @@ open class Shell(
                     }
 
                     clear = context.clear
-                    context.suggestCommands()
                 }
 
-                handleResult(context, result)
+                result = handleResult(context, result)
+
+                // Suggest commands after the command has been handled and only if it has not failed
+                if (!result.isFailed) {
+                    context.suggestCommands()
+                }
 
                 result
             } catch (se: ShellException) {
