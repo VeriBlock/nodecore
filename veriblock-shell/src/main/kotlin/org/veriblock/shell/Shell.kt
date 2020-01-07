@@ -127,6 +127,7 @@ open class Shell(
                     }
 
                     clear = context.clear
+                    context.suggestCommands()
                 }
 
                 handleResult(context, result)

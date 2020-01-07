@@ -70,7 +70,6 @@ inline fun CommandContext.prepareResult(
         failure(results)
     } else {
         outputObject(payloadSupplier())
-        suggestCommands()
         success(results)
     }
 }
