@@ -13,6 +13,7 @@ import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
 import nodecore.cli.services.AdminServiceClient;
+import org.jetbrains.annotations.NotNull;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.impl.completer.StringsCompleter;
@@ -208,6 +209,21 @@ public class CliShell extends Shell {
             return failure;
         }
 
+        return result;
+    }
+
+    @Override
+    protected Result handleException(Exception exception) {
+        Result result = super.handleException(exception);
+        if (_adminServiceClient == null) {
+            //Error from not connected yet
+            result.addMessage(
+                "V999",
+                "Not connected to NodeCore yet, please run the connect command!",
+                "Example: connect 127.0.0.1:10501",
+                true
+            );
+        }
         return result;
     }
 
