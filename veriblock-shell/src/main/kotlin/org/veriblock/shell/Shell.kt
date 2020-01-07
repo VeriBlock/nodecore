@@ -140,16 +140,7 @@ open class Shell(
                     }
                 }
             } catch (e: Exception) {
-                logger.error("V999: Unhandled Exception", e)
-
-                failure {
-                    addMessage(
-                        "V999",
-                        "Unhandled exception",
-                        e.toString(),
-                        true
-                    )
-                }
+                handleException(e)
             }
 
             printResultWithFormat(executeResult)
@@ -167,6 +158,19 @@ open class Shell(
     }
 
     protected open fun handleResult(context: CommandContext, result: Result): Result = result
+
+    protected open fun handleException(exception: Exception): Result {
+        logger.error("V999: Unhandled Exception", exception)
+
+        return failure {
+            addMessage(
+                "V999",
+                "Unhandled exception",
+                exception.toString(),
+                true
+            )
+        }
+    }
 
     private fun clear() {
         terminal.puts(InfoCmp.Capability.clear_screen)
