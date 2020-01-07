@@ -235,6 +235,11 @@ open class Shell(
         printLogger.warn(message)
     }
 
+    fun printNormal(message: String) {
+        printStyled(message, AttributedStyle.BOLD.foreground(AttributedStyle.WHITE))
+        printLogger.warn(message)
+    }
+
     fun renderFromThrowable(t: Throwable) {
         printWarning("${t.message}\n\n")
     }

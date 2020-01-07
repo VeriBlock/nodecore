@@ -20,7 +20,7 @@ fun CliShell.balanceCommands() {
         ),
         suggestedCommands = { listOf("gethistory", "getnewaddress") }
     ) {
-        val address: String = getParameter("address")
+        val address: String? = getOptionalParameter("address")
         val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
@@ -41,7 +41,7 @@ fun CliShell.balanceCommands() {
         ),
         suggestedCommands = { listOf("getbalance") }
     ) {
-        val address: String = getParameter("address")
+        val address: String? = getOptionalParameter("address")
         val request = VeriBlockMessages.GetBalanceUnlockScheduleRequest.newBuilder()
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))

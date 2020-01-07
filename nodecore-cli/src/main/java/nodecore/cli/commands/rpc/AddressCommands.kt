@@ -10,8 +10,8 @@ import nodecore.cli.serialization.GenerateMultisigAddressPayload
 import nodecore.cli.serialization.NewAddressPayload
 import nodecore.cli.serialization.TransactionInfo
 import nodecore.cli.serialization.ValidateAddressPayload
-import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 
 fun CliShell.addressCommands() {
     rpcCommand(
@@ -62,7 +62,7 @@ fun CliShell.addressCommands() {
         ),
         suggestedCommands = { listOf("backupwallet", "getbalance", "gethistory", "sigindex") }
     ) {
-        val count = (getParameter("count") ?: 1).coerceAtLeast(1)
+        val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
 
         val result = adminService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
             .setCount(count)
