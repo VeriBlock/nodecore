@@ -117,6 +117,6 @@ fun syntaxError(command: Command, message: String) = ShellException(
         "Syntax error",
         "Usage: ${command.form}${command.parameters.joinToString("") {
             if (it.required) " <${it.name}>" else " [${it.name}]"
-        }} ERROR: $message",
+        }}\nERROR: $message",
         true)
 )

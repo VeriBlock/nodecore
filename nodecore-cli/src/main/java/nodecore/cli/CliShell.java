@@ -409,7 +409,7 @@ public class CliShell extends Shell {
         printStyled(
             "\"!\n",
             AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
-            false
+            true
         );
         printStyled(
             "To stay up to date on the status of the VeriBlock Network and \n" +

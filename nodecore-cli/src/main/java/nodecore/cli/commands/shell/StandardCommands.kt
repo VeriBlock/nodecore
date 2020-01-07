@@ -63,7 +63,7 @@ fun CliShell.standardCommands() {
                 list.sortBy { it.form }
             }
 
-            print("Commands:\n")
+            printNormal("Commands:")
             for ((category, list) in categories) {
                 printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
                 for (def in list) {
@@ -73,10 +73,10 @@ fun CliShell.standardCommands() {
                 }
             }
 
-            print("\n")
-            print("    All RPC Commands support following selectors:\n")
-            print("        -o <filename>       Saves command output into a file\n")
-            print("        Example: getinfo -o abcde.json\n\n")
+            printNormal("")
+            printNormal("    All RPC Commands support following selectors:")
+            printNormal("        -o <filename>       Saves command output into a file")
+            printNormal("        Example: getinfo -o abcde.json")
             success()
         } else {
             val def = getCommandsByAlias()[command]

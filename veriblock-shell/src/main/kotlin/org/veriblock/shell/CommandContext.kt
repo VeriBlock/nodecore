@@ -69,7 +69,7 @@ class CommandContext(
             )
             shell.printStyled(
                 "(${commandSummaries[key]})",
-                AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+                AttributedStyle.BOLD.foreground(AttributedStyle.CYAN)
             )
         }
     }
