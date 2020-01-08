@@ -31,6 +31,8 @@ class BtcConfig(
     override val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
+    val hrps: Map<String, String> = mapOf("mainnet" to "bc", "testnet" to "tb", "regtest" to "bcrt"),
+    val network: String = "mainnet",
     val payoutAddress: String? = null,
     override val keystonePeriod: Int = 5,
     override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 1, 2),
@@ -55,9 +57,26 @@ class BitcoinFamilyChain(
     override val config: BtcConfig = Configuration.extract("securityInheriting.$key")
         ?: error("Please configure the securityInheriting.$key section")
 
+    private val payoutAddressScript: ByteArray
+
     init {
-        if (config.payoutAddress == null || !config.payoutAddress.isHex()) {
-            error("$key's payoutAddress configuration must be a properly formed hex string")
+        checkNotNull(config.payoutAddress) {
+            "$key's payoutAddress must be configured!"
+        }
+        val addressHrp = config.hrps[config.network]
+        checkNotNull(addressHrp) {
+            "$key's network must be one of ${config.hrps.keys}!"
+        }
+        payoutAddressScript = when {
+            config.payoutAddress.startsWith(addressHrp) -> try {
+                SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress, addressHrp)
+            } catch (e: Exception) {
+                error("Invalid segwit address: ${e.message}")
+            }
+            config.payoutAddress.isHex() ->
+                config.payoutAddress.asHexBytes()
+            else ->
+                error("$key's payoutAddress configuration must be a properly formed hex script or a valid segwit address")
         }
     }
 
@@ -92,13 +111,10 @@ class BitcoinFamilyChain(
             .body(jsonBody)
             .rpcResponse()
 
-        val payoutAddress = config.payoutAddress
-            ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
-
         val publicationData = PublicationData(
             getChainIdentifier(),
             response.block_header.asHexBytes(),
-            payoutAddress.asHexBytes(),//.toByteArray(Charsets.US_ASCII),
+            payoutAddressScript,
             response.raw_contextinfocontainer.asHexBytes()
         )
         if (response.last_known_veriblock_blocks.isEmpty()) {

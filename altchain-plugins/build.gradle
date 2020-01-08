@@ -35,6 +35,8 @@ dependencies {
     implementation 'io.github.microutils:kotlin-logging:1.6.26'
 
     testImplementation 'junit:junit:4.12'
+    testImplementation 'io.kotlintest:kotlintest-assertions:3.4.2'
+    testImplementation "io.mockk:mockk:1.9.3"
 }
 
 test {
