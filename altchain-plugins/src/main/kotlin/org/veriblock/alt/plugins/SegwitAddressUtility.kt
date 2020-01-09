@@ -43,42 +43,42 @@ object SegwitAddressUtility {
         val bech32String = inputBech32.toLowerCase()
         // Check to ensure all characters are bech32
         for (i in bech32String.indices) {
-            require(BECH32_CHARSET.contains("" + bech32String[i])) {
+            require(BECH32_CHARSET.contains(bech32String[i])) {
                 "decodeBech32 cannot be called with a non-bech32 String ($bech32String has character '${bech32String[i]}' at index $i!"
             }
         }
         val decoded = ByteArray(bech32String.length * 5 / 8 + if (bech32String.length * 5 % 8 == 0) 0 else 1)
         for (i in bech32String.indices) {
-            val decodedValue = BECH32_CHARSET.indexOf(bech32String[i]) and 0x1F
+            val decodedValue = BECH32_CHARSET.indexOf(bech32String[i]) and 0b00011111
             val byteIndex = (i + 1) * 5 / 8
             when (i % 8) {
                 0 -> {
-                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue shl 3) and 0xFF).toByte()
+                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue shl 3) and 0b11111111).toByte()
                 }
                 1 -> {
-                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue ushr 2) and 0x07).toByte()
-                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0x03) shl 6).toByte()
+                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue ushr 2) and 0b00000111).toByte()
+                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0b00000011) shl 6).toByte()
                 }
                 2 -> {
                     decoded[byteIndex] = decoded[byteIndex] or (decodedValue shl 1).toByte()
                 }
                 3 -> {
-                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue and 0x10) ushr 4).toByte()
-                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0x0F) shl 4).toByte()
+                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue and 0b00010000) ushr 4).toByte()
+                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0b00001111) shl 4).toByte()
                 }
                 4 -> {
-                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue and 0x1E) shr 1).toByte()
-                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0x01) shl 7).toByte()
+                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue and 0b00011110) shr 1).toByte()
+                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0b00000001) shl 7).toByte()
                 }
                 5 -> {
-                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue shl 2) and 0x7C).toByte()
+                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue shl 2) and 0b01111100).toByte()
                 }
                 6 -> {
-                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue and 0x18) shr 3).toByte()
-                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0x07) shl 5).toByte()
+                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or ((decodedValue and 0b00011000) shr 3).toByte()
+                    decoded[byteIndex] = decoded[byteIndex] or ((decodedValue and 0b00000111) shl 5).toByte()
                 }
                 7 -> {
-                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or (decodedValue and 0x1F).toByte()
+                    decoded[byteIndex - 1] = decoded[byteIndex - 1] or (decodedValue and 0b00011111).toByte()
                 }
             }
         }
