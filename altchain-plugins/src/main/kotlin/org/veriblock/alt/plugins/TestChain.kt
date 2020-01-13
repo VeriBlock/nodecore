@@ -123,8 +123,3 @@ class TestChain : SecurityInheritingChain {
         return "Test successful!"
     }
 }
-
-fun main() {
-    val conf = Configuration.extract("securityInheriting.test") ?: TestConfig()
-    println(conf)
-}
