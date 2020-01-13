@@ -22,10 +22,10 @@ val minerModule = module {
     if (!mockMiningEnabled) {
         single { NodeCoreLiteKit(Context) }
         single<Miner> { AltchainPopMiner(get(), get(), get()) }
-        single { SecurityInheritingService(get(), get()) }
     } else {
         single<Miner> { MockMiner(get()) }
     }
+    single { SecurityInheritingService(get(), get()) }
     single {
         Shell().apply {
             configure(get())
