@@ -10,16 +10,16 @@ package org.veriblock.miners.pop.core
 
 import mu.KLogger
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.miners.pop.TX_DEPTH_COMPLETE
-import org.veriblock.sdk.VeriBlockBlock
-import org.veriblock.sdk.VeriBlockMerklePath
-import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.PublicationDataWithContext
-import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.models.VeriBlockPublication
 import java.util.*
 
 private val logger = createLogger {}
@@ -133,7 +133,7 @@ class MiningOperation(
         logger.warn { "Operation $id failed for reason: $reason" }
         status = OperationStatus.FAILED
         detachTransactionListeners(state.transaction)
-        setState(OperationState.Failed)
+        setState(OperationState.Failed(state))
     }
 
     private fun complete() {
@@ -150,7 +150,7 @@ class MiningOperation(
 
     private fun onReorganized() {
         fail("Reorganized") // FIXME
-        setState(OperationState.Reorganized)
+        setState(OperationState.Reorganized(state))
     }
 
     private fun attachTransactionListeners(transaction: WalletTransaction) {

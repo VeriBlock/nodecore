@@ -22,8 +22,8 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TM_FILE_EXTENSION
 import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.lite.wallet.loadTransactionMonitor
-import org.veriblock.sdk.Address
-import org.veriblock.sdk.BlockStoreException
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
 import java.io.IOException
 
@@ -57,7 +57,6 @@ class NodeCoreLiteKit(
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
         blockChain = BlockChain(context.networkParameters, blockStore)
-
 
         network = NodeCoreNetwork(
             NodeCoreGateway(context.networkParameters),

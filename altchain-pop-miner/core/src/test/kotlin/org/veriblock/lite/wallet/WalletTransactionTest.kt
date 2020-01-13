@@ -10,8 +10,16 @@ package org.veriblock.lite.wallet
 
 import io.kotlintest.shouldBe
 import org.junit.Test
-import org.veriblock.lite.core.*
-import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.lite.core.Context
+import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.lite.core.randomAddress
+import org.veriblock.lite.core.randomCoin
+import org.veriblock.lite.core.randomOutput
+import org.veriblock.lite.core.randomPublicationData
+import org.veriblock.lite.core.randomTransactionMeta
+import org.veriblock.lite.core.randomVeriBlockMerklePath
+import org.veriblock.lite.core.randomWalletTransaction
+import org.veriblock.sdk.models.VeriBlockTransaction
 
 class WalletTransactionTest {
 
@@ -23,7 +31,7 @@ class WalletTransactionTest {
         val sourceAmount= randomCoin()
         val outputs = (1..10).map { randomOutput() }
         val signatureIndex: Long = 7
-        val data = ByteArray(8)
+        val publicationData = randomPublicationData()
         val signature = ByteArray(10)
         val publicKey = ByteArray(8)
         val networkByte: Byte? = Context.networkParameters.transactionPrefix
@@ -32,7 +40,7 @@ class WalletTransactionTest {
 
         // When
         val walletTransaction = randomWalletTransaction(type, sourceAddress, sourceAmount,
-            outputs, signatureIndex, data, signature, publicKey, networkByte, transactionMeta, merklePath)
+            outputs, signatureIndex, publicationData, signature, publicKey, networkByte, transactionMeta, merklePath)
 
         // Then
         walletTransaction.type shouldBe type
@@ -40,7 +48,7 @@ class WalletTransactionTest {
         walletTransaction.sourceAmount shouldBe sourceAmount
         walletTransaction.outputs shouldBe outputs
         walletTransaction.signatureIndex shouldBe signatureIndex
-        walletTransaction.data shouldBe data
+        walletTransaction.publicationData shouldBe publicationData
         walletTransaction.signature shouldBe signature
         walletTransaction.publicKey shouldBe publicKey
         walletTransaction.networkByte shouldBe networkByte
@@ -56,14 +64,14 @@ class WalletTransactionTest {
         val sourceAmount= randomCoin()
         val outputs = (1..10).map { randomOutput() }
         val signatureIndex: Long = 7
-        val data = ByteArray(8)
+        val publicationData = randomPublicationData()
         val signature = ByteArray(10)
         val publicKey = ByteArray(8)
         val networkByte: Byte? = Context.networkParameters.transactionPrefix
 
         // When
         val veriblockTransaction = VeriBlockTransaction(type, sourceAddress, sourceAmount, outputs,
-            signatureIndex, data, signature, publicKey, networkByte)
+            signatureIndex, publicationData, signature, publicKey, networkByte)
         val walletTransaction = WalletTransaction.wrap(veriblockTransaction)
 
         // Then
@@ -72,7 +80,7 @@ class WalletTransactionTest {
         walletTransaction.sourceAmount shouldBe sourceAmount
         walletTransaction.outputs shouldBe outputs
         walletTransaction.signatureIndex shouldBe signatureIndex
-        walletTransaction.data shouldBe data
+        walletTransaction.publicationData shouldBe publicationData
         walletTransaction.signature shouldBe signature
         walletTransaction.publicKey shouldBe publicKey
         walletTransaction.networkByte shouldBe networkByte

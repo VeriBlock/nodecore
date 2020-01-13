@@ -9,16 +9,23 @@
 package org.veriblock.miners.pop
 
 import org.koin.dsl.module.module
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.shell.Shell
 
+private val mockMiningEnabled = Configuration.getBoolean("mockMining") ?: false
+
 val minerModule = module {
-    single { NodeCoreLiteKit(Context) }
-    single { Miner(get(), get(), get()) }
-    single { SecurityInheritingService(get(), get()) }
+    if (!mockMiningEnabled) {
+        single { NodeCoreLiteKit(Context) }
+        single<Miner> { AltchainPopMiner(get(), get(), get()) }
+        single { SecurityInheritingService(get(), get()) }
+    } else {
+        single<Miner> { MockMiner(get()) }
+    }
     single {
         Shell().apply {
             configure(get())

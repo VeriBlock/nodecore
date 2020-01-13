@@ -9,7 +9,7 @@
 package org.veriblock.sdk.alt
 
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.PublicationData
+import org.veriblock.sdk.models.PublicationData
 
 class PublicationDataWithContext(
     val publicationData: PublicationData,

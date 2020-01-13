@@ -14,16 +14,16 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.core.StateChangeEvent
-import org.veriblock.sdk.Address
-import org.veriblock.sdk.BitcoinBlock
-import org.veriblock.sdk.BitcoinTransaction
-import org.veriblock.sdk.MerklePath
-import org.veriblock.sdk.PublicationData
-import org.veriblock.sdk.VeriBlockBlock
-import org.veriblock.sdk.VeriBlockMerklePath
-import org.veriblock.sdk.VeriBlockPoPTransaction
-import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.BitcoinBlock
+import org.veriblock.sdk.models.BitcoinTransaction
+import org.veriblock.sdk.models.MerklePath
+import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.*
 
@@ -37,7 +37,9 @@ object StateSerializer {
 
         builder.blockHeight = operation.blockHeight ?: 0
 
-        val state = operation.state
+        val state = operation.state.let {
+            if (it !is OperationState.Failed) it else it.previous
+        }
         if (state is OperationState.PublicationData) {
             builder.publicationData = serialize(state.publicationDataWithContext.publicationData)
             for (context in state.publicationDataWithContext.context) {
@@ -131,6 +133,10 @@ object StateSerializer {
 
             if (serialized.proofOfProofId != null && serialized.proofOfProofId.isNotEmpty()) {
                 setProofOfProofId(serialized.proofOfProofId)
+            }
+
+            if (status == OperationStatus.FAILED) {
+                fail("Loaded as failed")
             }
         }
     }

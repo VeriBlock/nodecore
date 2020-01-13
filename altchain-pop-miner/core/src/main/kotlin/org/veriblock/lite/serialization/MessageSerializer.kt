@@ -15,18 +15,18 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.BlockMetaPackage
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
-import org.veriblock.sdk.Address
-import org.veriblock.sdk.BitcoinTransaction
-import org.veriblock.sdk.Coin
-import org.veriblock.sdk.MerklePath
-import org.veriblock.sdk.Output
-import org.veriblock.sdk.Sha256Hash
-import org.veriblock.sdk.VBlakeHash
-import org.veriblock.sdk.VeriBlockBlock
-import org.veriblock.sdk.VeriBlockMerklePath
-import org.veriblock.sdk.VeriBlockPoPTransaction
-import org.veriblock.sdk.VeriBlockPublication
-import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.BitcoinTransaction
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.MerklePath
+import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
@@ -89,7 +89,7 @@ fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(params: N
             Output.of(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address), o.amount)
         },
         signatureIndex,
-        txMessage.data.toByteArray(),
+        SerializeDeserializeService.parsePublicationData(txMessage.data.toByteArray()),
         signature.toByteArray(),
         publicKey.toByteArray(),
         params.transactionPrefix
@@ -106,7 +106,7 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(p
             Output.of(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address), o.amount)
         },
         signatureIndex,
-        txMessage.data.toByteArray(),
+        SerializeDeserializeService.parsePublicationData(txMessage.data.toByteArray()),
         ByteArray(0),
         ByteArray(0),
         params.transactionPrefix

@@ -9,7 +9,7 @@
 package org.veriblock.lite.core
 
 import org.veriblock.lite.params.NetworkParameters
-import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.util.BitcoinUtils
 
 import java.math.BigDecimal

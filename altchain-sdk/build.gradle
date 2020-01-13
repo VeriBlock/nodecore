@@ -17,7 +17,7 @@ plugins {
 }
 
 dependencies {
-    api files("lib/integrations-sdk-0.1.4.jar")
+    api "com.github.veriblock.alt-integration:core:0.0.3"
 
     implementation project(":veriblock-core")
 

@@ -8,8 +8,8 @@
 
 package org.veriblock.sdk.alt
 
-import org.veriblock.sdk.AltPublication
-import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.models.AltPublication
+import org.veriblock.sdk.models.VeriBlockPublication
 
 interface SecurityInheritingChain {
 

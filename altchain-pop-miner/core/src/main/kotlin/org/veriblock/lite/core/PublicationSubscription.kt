@@ -8,7 +8,7 @@
 
 package org.veriblock.lite.core
 
-import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.models.VeriBlockPublication
 
 class PublicationSubscription(
     val keystoneHash: String,

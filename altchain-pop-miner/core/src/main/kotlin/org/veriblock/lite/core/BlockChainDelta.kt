@@ -8,7 +8,7 @@
 
 package org.veriblock.lite.core
 
-import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockBlock
 
 class BlockChainDelta(
     val removed: List<VeriBlockBlock>,

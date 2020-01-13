@@ -45,7 +45,7 @@ class TransactionMonitorTest {
         walletTransaction.sourceAmount shouldBe transaction.sourceAmount
         walletTransaction.outputs shouldBe transaction.outputs
         walletTransaction.signatureIndex shouldBe transaction.signatureIndex
-        walletTransaction.data shouldBe transaction.data
+        walletTransaction.publicationData shouldBe transaction.publicationData
         walletTransaction.signature shouldBe transaction.signature
         walletTransaction.publicKey shouldBe transaction.publicKey
         walletTransaction.networkByte shouldBe transaction.networkByte

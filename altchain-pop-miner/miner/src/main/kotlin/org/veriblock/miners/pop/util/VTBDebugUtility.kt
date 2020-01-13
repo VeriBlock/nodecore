@@ -9,9 +9,9 @@
 package org.veriblock.miners.pop.util
 
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.BitcoinBlock
-import org.veriblock.sdk.VeriBlockPoPTransaction
-import org.veriblock.sdk.VeriBlockPublication
+import org.veriblock.sdk.models.BitcoinBlock
+import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPublication
 
 /**
  * Note: no methods in this class are to be used in consensus-related code; these methods are strictly for debugging

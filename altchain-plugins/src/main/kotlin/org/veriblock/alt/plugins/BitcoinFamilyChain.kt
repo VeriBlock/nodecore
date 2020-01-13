@@ -16,13 +16,13 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.AltPublication
-import org.veriblock.sdk.PublicationData
-import org.veriblock.sdk.VeriBlockPublication
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.models.AltPublication
+import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}

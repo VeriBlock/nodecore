@@ -13,19 +13,29 @@ import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.wallet.AddressKeyGenerator
 import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.lite.wallet.WalletTransaction
-import org.veriblock.sdk.*
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.BitcoinBlock
+import org.veriblock.sdk.models.BitcoinTransaction
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.MerklePath
+import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockTransaction
 import java.security.MessageDigest
-import java.util.*
+import kotlin.random.Random
 
-private val random = Random()
+fun randomBoolean() = Random.nextBoolean()
 
-fun randomBoolean() = random.nextBoolean()
+fun randomInt(bound: Int) = Random.nextInt(bound)
 
-fun randomInt(bound: Int) = random.nextInt(bound)
+fun randomInt(min: Int, max: Int) = Random.nextInt(max - min) + min
 
-fun randomInt(min: Int, max: Int) = random.nextInt(max - min) + min
-
-fun randomLong(min: Long, max: Long) = (random.nextDouble() * (max - min)).toLong() + min
+fun randomLong(min: Long, max: Long) = (Random.nextDouble() * (max - min)).toLong() + min
 
 fun randomAlphabeticString(length: Int = 10): String =
     RandomStringUtils.randomAlphabetic(length)
@@ -51,13 +61,15 @@ fun randomAddress(): Address {
     return Address(address)
 }
 
+fun randomPublicationData(): PublicationData = TODO()
+
 fun randomWalletTransaction(
     type: Byte = 0x01,
     sourceAddress: Address = randomAddress(),
     sourceAmount: Coin = randomCoin(),
     outputs: List<Output> = (1..10).map { randomOutput() },
     signatureIndex: Long = 7,
-    data: ByteArray = ByteArray(8),
+    publicationData: PublicationData = randomPublicationData(),
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
     networkByte: Byte? = Context.networkParameters.transactionPrefix,
@@ -70,7 +82,7 @@ fun randomWalletTransaction(
         sourceAmount,
         outputs,
         signatureIndex,
-        data,
+        publicationData,
         signature,
         publicKey,
         networkByte,
@@ -141,7 +153,7 @@ fun randomVeriBlockTransaction(
     sourceAmount: Coin = randomCoin(),
     outputs: List<Output> =  (1..10).map { randomOutput() },
     signatureIndex: Long = 7,
-    data: ByteArray = ByteArray(8),
+    publicationData: PublicationData = randomPublicationData(),
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
     networkByte: Byte? = Context.networkParameters.transactionPrefix
@@ -152,7 +164,7 @@ fun randomVeriBlockTransaction(
         sourceAmount,
         outputs,
         signatureIndex,
-        data,
+        publicationData,
         signature,
         publicKey,
         networkByte
