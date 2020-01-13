@@ -60,6 +60,7 @@ class BitcoinFamilyChain(
     private val payoutAddressScript: ByteArray
 
     init {
+        config.checkValidity()
         checkNotNull(config.payoutAddress) {
             "$key's payoutAddress must be configured!"
         }

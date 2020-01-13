@@ -62,6 +62,10 @@ class TestChain : SecurityInheritingChain {
 
     val operations = HashMap<String, String>()
 
+    init {
+        config.checkValidity()
+    }
+
     private fun getInfo(): VbkInfo = config.host.httpPost()
         .body(JsonRpcRequestBody("getinfo", Any()).toJson())
         .rpcResponse()
@@ -118,4 +122,9 @@ class TestChain : SecurityInheritingChain {
         }
         return "Test successful!"
     }
+}
+
+fun main() {
+    val conf = Configuration.extract("securityInheriting.test") ?: TestConfig()
+    println(conf)
 }

@@ -17,13 +17,13 @@ import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.models.AltPublication
+import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
@@ -84,6 +84,10 @@ class NxtFamilyChain(
 ) : SecurityInheritingChain {
 
     override val config = Configuration.extract("securityInheriting.$key") ?: NxtConfig()
+
+    init {
+        config.checkValidity()
+    }
 
     private fun Request.authenticate() = if (config.username != null && config.password != null) {
         authentication().basic(config.username, config.password)
