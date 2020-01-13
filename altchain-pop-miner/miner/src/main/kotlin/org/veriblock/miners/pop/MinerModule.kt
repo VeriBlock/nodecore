@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.shell.Shell
 
-private val mockMiningEnabled = Configuration.getBoolean("mockMining") ?: false
+private val mockMiningEnabled = Configuration.getBoolean("miner.mock") ?: false
 
 val minerModule = module {
     if (!mockMiningEnabled) {

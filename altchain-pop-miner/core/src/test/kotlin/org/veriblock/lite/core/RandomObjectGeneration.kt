@@ -61,7 +61,12 @@ fun randomAddress(): Address {
     return Address(address)
 }
 
-fun randomPublicationData(): PublicationData = TODO()
+fun randomPublicationData() = PublicationData(
+    randomLong(0, 10000),
+    randomByteArray(64),
+    randomByteArray(32),
+    randomByteArray(32)
+)
 
 fun randomWalletTransaction(
     type: Byte = 0x01,
