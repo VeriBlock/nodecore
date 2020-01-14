@@ -13,12 +13,13 @@ import com.google.protobuf.CodedOutputStream
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.sdk.Address
-import org.veriblock.sdk.Coin
-import org.veriblock.sdk.Output
-import org.veriblock.sdk.Sha256Hash
-import org.veriblock.sdk.VBlakeHash
-import org.veriblock.sdk.VeriBlockMerklePath
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -52,7 +53,7 @@ class TransactionMonitorProtobufSerializer {
         it.signatureIndex = signatureIndex
         it.signature = ByteStringUtility.bytesToByteString(signature)
         it.publicKey = ByteStringUtility.bytesToByteString(publicKey)
-        it.data = ByteStringUtility.bytesToByteString(data)
+        it.data = ByteStringUtility.bytesToByteString(SerializeDeserializeService.serialize(publicationData))
         merklePath?.let { merklePath ->
             it.merkleBranch = merklePath.toProto()
         }
@@ -124,7 +125,7 @@ class TransactionMonitorProtobufSerializer {
             Output.of(transactionOutput.address, transactionOutput.amount)
         },
         signatureIndex,
-        data.toByteArray(),
+        SerializeDeserializeService.parsePublicationData(data.toByteArray()),
         signature.toByteArray(),
         publicKey.toByteArray(),
         Context.networkParameters.transactionPrefix,

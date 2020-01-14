@@ -13,8 +13,8 @@ import org.koin.standalone.inject
 import org.veriblock.alt.plugins.FamilyPluginsContainer
 import org.veriblock.alt.plugins.NormalPluginsContainer
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.alt.SecurityInheritingChain
 
 private val logger = createLogger {}
 
@@ -34,8 +34,8 @@ class PluginService() : KoinComponent {
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }
-        logger.info { "Implemented normal plugins: ${normalPlugins.keys.joinToString()}" }
-        logger.info { "Implemented family plugins: ${familyPlugins.keys.joinToString()}" }
+        logger.info { "Loaded normal plugins: ${normalPlugins.keys.joinToString()}" }
+        logger.info { "Loaded family plugins: ${familyPlugins.keys.joinToString()}" }
 
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
             val family = config.family

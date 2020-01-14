@@ -1,6 +1,6 @@
 package org.veriblock.miners.pop.util
 
-import org.veriblock.sdk.Coin
+import org.veriblock.sdk.models.Coin
 import kotlin.math.abs
 
 private const val ATOMIC_UNITS_DECIMAL_PLACES = 8

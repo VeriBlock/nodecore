@@ -8,11 +8,11 @@
 
 package org.veriblock.lite.core
 
-import org.veriblock.sdk.Coin
+import org.veriblock.sdk.models.Coin
 
 class Balance(
-        var confirmedBalance: Coin,
-        pendingBalanceChanges: Coin = Coin.ZERO
+    var confirmedBalance: Coin,
+    pendingBalanceChanges: Coin = Coin.ZERO
 ) {
     var pendingBalanceChanges: Coin = pendingBalanceChanges
         private set

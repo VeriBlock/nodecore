@@ -9,8 +9,8 @@
 package org.veriblock.lite.core
 
 import org.veriblock.lite.util.Threading
-import org.veriblock.sdk.Sha256Hash
-import org.veriblock.sdk.VBlakeHash
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
 import java.util.*
 
 class TransactionMeta(

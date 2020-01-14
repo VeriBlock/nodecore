@@ -19,11 +19,10 @@ import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.PublicationSubscription
 import org.veriblock.lite.util.Threading
 import org.veriblock.lite.wallet.TransactionMonitor
-import org.veriblock.sdk.BlockStoreException
-import org.veriblock.sdk.VBlakeHash
-import org.veriblock.sdk.VeriBlockBlock
-import org.veriblock.sdk.VeriBlockTransaction
-import java.util.*
+import org.veriblock.sdk.models.BlockStoreException
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockTransaction
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean

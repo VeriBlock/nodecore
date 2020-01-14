@@ -8,35 +8,30 @@
 
 package org.veriblock.lite.core
 
-import org.veriblock.sdk.*
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.*
 
-class FullBlock : VeriBlockBlock {
-    val normalTransactions: List<VeriBlockTransaction>
-    val popTransactions: List<VeriBlockPoPTransaction>
+class FullBlock(
+    height: Int,
+    version: Short,
+    previousBlock: VBlakeHash,
+    previousKeystone: VBlakeHash,
+    secondPreviousKeystone: VBlakeHash,
+    merkleRoot: Sha256Hash,
+    timestamp: Int,
+    difficulty: Int,
+    nonce: Int,
+    val normalTransactions: List<VeriBlockTransaction>,
+    val popTransactions: List<VeriBlockPoPTransaction>,
     val metaPackage: BlockMetaPackage
-
-    constructor(
-        height: Int,
-        version: Short,
-        previousBlock: VBlakeHash,
-        previousKeystone: VBlakeHash,
-        secondPreviousKeystone: VBlakeHash,
-        merkleRoot: Sha256Hash,
-        timestamp: Int,
-        difficulty: Int,
-        nonce: Int,
-        normalTransactions: List<VeriBlockTransaction>,
-        popTransactions: List<VeriBlockPoPTransaction>,
-        metaPackage: BlockMetaPackage
-    ) : super(
-        height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot, timestamp, difficulty, nonce
-    ) {
-        this.normalTransactions = normalTransactions
-        this.popTransactions = popTransactions
-        this.metaPackage = metaPackage
-    }
+) : VeriBlockBlock(
+    height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot, timestamp, difficulty, nonce
+) {
 
     override fun equals(other: Any?): Boolean {
         return this === other || other != null &&

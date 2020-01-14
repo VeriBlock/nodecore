@@ -14,7 +14,7 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.util.VTBDebugUtility
-import org.veriblock.sdk.AltPublication
+import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.core.utilities.createLogger
 

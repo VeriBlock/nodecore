@@ -9,26 +9,32 @@
 package org.veriblock.lite.wallet
 
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.sdk.*
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.models.VeriBlockTransaction
 
 class WalletTransaction(
-        type: Byte,
-        sourceAddress: Address,
-        sourceAmount: Coin,
-        outputs: List<Output>,
-        signatureIndex: Long,
-        data: ByteArray,
-        signature: ByteArray,
-        publicKey: ByteArray,
-        networkByte: Byte?,
-        val transactionMeta: TransactionMeta
+    type: Byte,
+    sourceAddress: Address,
+    sourceAmount: Coin,
+    outputs: List<Output>,
+    signatureIndex: Long,
+    publicationData: PublicationData,
+    signature: ByteArray,
+    publicKey: ByteArray,
+    networkByte: Byte?,
+    val transactionMeta: TransactionMeta
 ) : VeriBlockTransaction(
         type,
         sourceAddress,
         sourceAmount,
         outputs,
         signatureIndex,
-        data,
+        publicationData,
         signature,
         publicKey,
         networkByte
@@ -36,10 +42,10 @@ class WalletTransaction(
     var merklePath: VeriBlockMerklePath? = null
 
     constructor(
-        id: Sha256Hash, type: Byte, sourceAddress: Address, sourceAmount: Coin, outputs: List<Output>, signatureIndex: Long, data: ByteArray,
-        signature: ByteArray, publicKey: ByteArray, networkByte: Byte?
+        id: Sha256Hash, type: Byte, sourceAddress: Address, sourceAmount: Coin, outputs: List<Output>, signatureIndex: Long,
+        publicationData: PublicationData, signature: ByteArray, publicKey: ByteArray, networkByte: Byte?
     ) : this(
-        type, sourceAddress, sourceAmount, outputs, signatureIndex, data, signature, publicKey, networkByte, TransactionMeta(id)
+        type, sourceAddress, sourceAmount, outputs, signatureIndex, publicationData, signature, publicKey, networkByte, TransactionMeta(id)
     )
 
     companion object {
@@ -50,7 +56,7 @@ class WalletTransaction(
                     tx.sourceAmount,
                     tx.outputs,
                     tx.signatureIndex,
-                    tx.data,
+                    tx.publicationData,
                     tx.signature,
                     tx.publicKey,
                     tx.networkByte)

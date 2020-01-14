@@ -14,11 +14,11 @@ import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.sdk.Address
-import org.veriblock.sdk.Sha256Hash
-import org.veriblock.sdk.VBlakeHash
-import org.veriblock.sdk.VeriBlockBlock
-import org.veriblock.sdk.VeriBlockTransaction
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

@@ -26,15 +26,13 @@ import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
-import org.veriblock.sdk.Coin
-import org.veriblock.sdk.VeriBlockBlock
-import org.veriblock.sdk.VeriBlockPublication
-import org.veriblock.sdk.VeriBlockTransaction
-import java.util.*
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.models.VeriBlockTransaction
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
 import kotlin.math.abs
-
 
 private val logger = createLogger {}
 

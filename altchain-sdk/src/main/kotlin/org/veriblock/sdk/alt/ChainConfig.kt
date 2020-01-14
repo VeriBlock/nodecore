@@ -16,7 +16,7 @@ abstract class ChainConfig {
         return autoMineRounds.contains(roundIndex)
     }
 
-    init {
+    fun checkValidity() {
         require(keystonePeriod > 0) {
             "The keystone period must be a positive non-zero number!"
         }

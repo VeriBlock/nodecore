@@ -7,10 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.lite.store
 
-import org.veriblock.sdk.Constants
-import org.veriblock.sdk.Sha256Hash
-import org.veriblock.sdk.VBlakeHash
-import org.veriblock.sdk.VeriBlockBlock
+import org.veriblock.sdk.models.Constants
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.Utils
 import java.math.BigInteger
