@@ -19,6 +19,7 @@ public class TransactionReferenceInfo {
         endorsedBlockHash = ByteStringUtility.byteStringToHex(transactionInfo.getEndorsedBlockHash());
         bitcoinBlockHash = ByteStringUtility.byteStringToHex(transactionInfo.getBitcoinBlockHash());
         bitcoinTxID = ByteStringUtility.byteStringToHex(transactionInfo.getBitcoinTxId());
+        bitcoinConfirmations = transactionInfo.getBitcoinConfirmations();
     }
 
     public int timestamp;
@@ -34,4 +35,6 @@ public class TransactionReferenceInfo {
     public String bitcoinBlockHash;
 
     public String bitcoinTxID;
+
+    public int bitcoinConfirmations;
 }
