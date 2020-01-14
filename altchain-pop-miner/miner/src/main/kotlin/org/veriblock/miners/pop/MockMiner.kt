@@ -78,7 +78,8 @@ class MockMiner(
             key
         )
 
-        chain.submit(atv, listOf(vtb))
+        val submissionResult = chain.submit(atv, listOf(vtb))
+        logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         return success()
     }
