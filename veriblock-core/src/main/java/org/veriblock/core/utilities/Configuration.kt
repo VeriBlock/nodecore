@@ -15,12 +15,16 @@ import java.lang.ClassLoader.getSystemResourceAsStream
 import java.nio.file.Paths
 
 private const val CONFIG_FILE_ENV_VAR = "CONFIG_FILE"
-private const val CONFIG_FILE = "./application.conf"
 private const val CONFIG_RESOURCE_FILE = "application.conf"
+private const val DEFAULT_CONFIG_FILE = "./application.conf"
 private const val DEFAULT_CONFIG_RESOURCE_FILE = "application-default.conf"
 
 object Configuration {
     private var config: Config = loadConfig()
+
+    fun initialize(configFilePath: String) {
+        config = loadConfig(configFilePath)
+    }
 
     fun <T> getOrNull(path: String, extractor: Config.(String) -> T) = if (config.hasPath(path)) {
         config.extractor(path)
@@ -56,10 +60,10 @@ object Configuration {
 
 private val logger = createLogger {}
 
-private fun loadConfig(): Config {
+private fun loadConfig(configFilePath: String = DEFAULT_CONFIG_FILE): Config {
     val isDocker = System.getenv("DOCKER")?.toBoolean() ?: false
     // Attempt to load config file
-    val configFile = Paths.get(System.getenv(CONFIG_FILE_ENV_VAR) ?: CONFIG_FILE).toFile()
+    val configFile = Paths.get(System.getenv(CONFIG_FILE_ENV_VAR) ?: configFilePath).toFile()
     val appConfig = if (configFile.exists()) {
         // Parse it if it exists
         logger.debug { "Loading config file $configFile" }
