@@ -11,6 +11,7 @@ package org.veriblock.core.utilities
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
+import java.io.File
 import java.lang.ClassLoader.getSystemResourceAsStream
 import java.nio.file.Paths
 
@@ -24,6 +25,21 @@ object Configuration {
 
     fun initialize(configFilePath: String) {
         config = loadConfig(configFilePath)
+
+        // If the config file path is different from the default one we will have to check if the default one should be deleted
+        if (configFilePath != DEFAULT_CONFIG_FILE) {
+            val defaultConfigFile = File(DEFAULT_CONFIG_FILE)
+            val defaultConfigResource = getSystemResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE)
+            if (defaultConfigFile.exists() && defaultConfigResource != null) {
+                // Check the context of the config file that's in the default path and the resource we use to place its default contents
+                val defaultConfigFileText = defaultConfigFile.readText()
+                val defaultConfigResourceText = defaultConfigResource.bufferedReader().readText()
+                // If both files' contents are the same, that means we are safe to delete the file
+                if (defaultConfigFileText == defaultConfigResourceText) {
+                    defaultConfigFile.delete()
+                }
+            }
+        }
     }
 
     fun <T> getOrNull(path: String, extractor: Config.(String) -> T) = if (config.hasPath(path)) {
