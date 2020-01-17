@@ -70,11 +70,7 @@ class MockMiner(
         val publicationData = chain.getPublicationData(block)
 
         val key = KeyGenerator.generate()
-        val atv = mine(
-            publicationData.publicationData,
-            SerializeDeserializeService.parseVeriBlockBlock(publicationData.context[0]),
-            key
-        )
+        val atv = mine(publicationData.publicationData, veriBlockBlockchain.chainHead, key)
 
         val vtb = vpm.mine(
             veriBlockBlockchain.chainHead,
