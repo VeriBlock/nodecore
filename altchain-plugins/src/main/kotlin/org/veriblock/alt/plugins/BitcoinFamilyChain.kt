@@ -76,8 +76,20 @@ class BitcoinFamilyChain(
             }
             config.payoutAddress.isHex() ->
                 config.payoutAddress.asHexBytes()
-            else ->
-                error("$key's payoutAddress configuration must be a properly formed hex script or a valid segwit address")
+            else -> {
+                // Find if the user's input matches with any of the existing networks' hrps
+                val candidateNetwork = config.hrps.entries.sortedByDescending {
+                    it.value.length // Check the longest ones first for a better matching in case of multiple matches
+                }.find {
+                    config.payoutAddress.startsWith(it.value)
+                }?.key
+                error(
+                    "$key's payoutAddress configuration must be a properly formed hex script or a valid segwit address!" +
+                    candidateNetwork?.let {
+                        " Or was it a $it address? If so, make sure to set 'network' to '$it' in the config"
+                    } ?: ""
+                )
+            }
         }
     }
 
