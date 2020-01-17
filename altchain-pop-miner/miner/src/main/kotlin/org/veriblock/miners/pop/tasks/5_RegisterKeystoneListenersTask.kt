@@ -8,13 +8,13 @@
 
 package org.veriblock.miners.pop.tasks
 
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 

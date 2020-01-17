@@ -1,6 +1,7 @@
 package org.veriblock.miners.pop
 
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.service.PluginService
@@ -51,9 +52,9 @@ class MockMiner(
     override fun start() {
         logger.info { "Mock mining enabled!"}
         veriBlockBlockchain.bootstrap(VeriBlockDefaults.bootstrap)
-        logger.info { "Mocked VeriBlock chain bootstrap: ${VeriBlockDefaults.bootstrap.blocks.joinToString { it.hash.toString() }}"}
+        logger.info { "Mocked VeriBlock chain bootstrap: ${VeriBlockDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}"}
         bitcoinBlockchain.bootstrap(BitcoinDefaults.bootstrap)
-        logger.info { "Mocked Bitcoin chain bootstrap: ${BitcoinDefaults.bootstrap.blocks.joinToString { it.hash.toString() }}"}
+        logger.info { "Mocked Bitcoin chain bootstrap: ${BitcoinDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}"}
     }
 
     override fun shutdown() {
