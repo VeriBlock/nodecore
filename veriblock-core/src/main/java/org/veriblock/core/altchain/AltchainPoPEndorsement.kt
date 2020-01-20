@@ -110,7 +110,7 @@ class AltchainPoPEndorsement(
         }
         val data = ByteArray(length)
         // Read actual data
-        require(read(data) >= data.size) {
+        require(data.isEmpty() || read(data) >= data.size) {
             "While creating an AltchainPoPEndorsement, the $name bytes were unable to be read in full from the endorsement: ${rawData.toHex()}"
         }
         return data
