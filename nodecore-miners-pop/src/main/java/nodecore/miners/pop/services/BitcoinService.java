@@ -144,7 +144,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
     private WalletAppKit createWalletAppKit(Context context, String filePrefix, DeterministicSeed seed) {
         isBlockchainDownloaded = false;
 
-        WalletAppKit kit = new WalletAppKit(context.getParams(), Script.ScriptType.P2WPKH, null, new File("."), filePrefix) {
+        WalletAppKit kit = new WalletAppKit(context, Script.ScriptType.P2WPKH, null, new File("."), filePrefix) {
             @Override
             protected void onSetupCompleted() {
                 super.onSetupCompleted();
