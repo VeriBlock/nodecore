@@ -128,6 +128,16 @@ message AddressSet {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
+message AddressUpdateHeightPair {
+    bytes address = 1 [(address_encoded)=true];
+    int32 number = 2;
+}
+
+message AddressUpdateDeltaTable {
+    repeated AddressUpdateHeightPair address_index_pairs = 1;
+}
+
+
 message TransactionSet {
     repeated bytes txids = 1 [(hex_encoded)=true];
 }
