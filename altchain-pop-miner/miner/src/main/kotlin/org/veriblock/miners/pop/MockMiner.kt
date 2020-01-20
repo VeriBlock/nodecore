@@ -18,6 +18,7 @@ import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -72,10 +73,14 @@ class MockMiner(
         val key = KeyGenerator.generate()
         val atv = mine(publicationData.publicationData, veriBlockBlockchain.chainHead, key)
 
+        val lastKnownBtcBlockHash = publicationData.btcContext.last()
+        val lastKnownVbkBlockHash = publicationData.context.last()
+        val lastKnownBtcBlock = bitcoinBlockchain[Sha256Hash.wrap(lastKnownBtcBlockHash)]
+        val lastKnownVbkBlock = veriBlockBlockchain[VBlakeHash.wrap(lastKnownVbkBlockHash)]
         val vtb = vpm.mine(
             veriBlockBlockchain.chainHead,
-            veriBlockBlockchain.chainHead,
-            bitcoinBlockchain.chainHead,
+            lastKnownVbkBlock,
+            lastKnownBtcBlock,
             key
         )
 
