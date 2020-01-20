@@ -18,11 +18,11 @@ import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun Shell.miningCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: PluginService) {
+fun Shell.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: PluginService) {
 
     command(
-        name = "Debug",
-        form = "debug",
+        name = "Update Context",
+        form = "updatecontext",
         description = "Utility to test the vtb and atv submission for an altchain",
         parameters = listOf(
             CommandParameter("chain", CommandParameterType.STRING)
@@ -32,13 +32,13 @@ fun Shell.miningCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: Plugin
 
         if (!nodeCoreLiteKit.network.isHealthy()) {
             return@command failure {
-                addMessage("V010", "Unable to debug", "Cannot connect to NodeCore", true)
+                addMessage("V010", "Unable to run command", "Cannot connect to NodeCore", true)
             }
         }
 
         val securityInheritingChain = pluginService[chain]
             ?: return@command failure {
-                addMessage("V010", "Unable to debug", "Unable to load plugin $chain", true)
+                addMessage("V010", "Unable to run command", "Unable to load plugin $chain", true)
             }
 
         val publicationData = try {

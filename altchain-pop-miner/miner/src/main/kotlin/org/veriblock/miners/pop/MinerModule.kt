@@ -28,7 +28,7 @@ val minerModule = module {
     single { SecurityInheritingService(get(), get()) }
     single {
         Shell().apply {
-            configure(get())
+            configure(get(), get(), get())
         }
     }
 }

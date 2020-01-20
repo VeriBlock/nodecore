@@ -109,8 +109,12 @@ class AltchainPoPEndorsement(
             "An AltchainPoPEndorsement was attempted to be created which contained a $name length that was negative ($length)!"
         }
         val data = ByteArray(length)
+        if (data.isEmpty()) {
+            return data
+        }
         // Read actual data
-        require(data.isEmpty() || read(data) >= data.size) {
+        val readResult = read(data)
+        require(readResult >= data.size) {
             "While creating an AltchainPoPEndorsement, the $name bytes were unable to be read in full from the endorsement: ${rawData.toHex()}"
         }
         return data
