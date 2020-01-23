@@ -8,7 +8,6 @@
 package org.veriblock.lite.store
 
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.extensions.invoke
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VBlakeHash
@@ -26,6 +25,7 @@ import java.nio.channels.FileLock
 import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private const val RECORD_SIZE = StoredVeriBlockBlock.SIZE
 /** The default number of headers that will be stored in the ring buffer.  */
@@ -92,7 +92,7 @@ class VeriBlockBlockStore(
         val buffer = this.buffer
             ?: throw BlockStoreException("Store closed")
 
-        return lock {
+        return lock.withLock {
             if (fileSeriesNumber == null) {
                 buffer.position(40)
                 fileSeriesNumber = buffer.getInt()
@@ -105,7 +105,7 @@ class VeriBlockBlockStore(
         val buffer = this.buffer
             ?: throw BlockStoreException("Store closed")
 
-        lock {
+        lock.withLock {
             fileSeriesNumber = value
             buffer.position(40)
             buffer.putInt(fileSeriesNumber!!)
@@ -171,14 +171,14 @@ class VeriBlockBlockStore(
     fun getChainHead(): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             if (lastChainHead == null) {
                 val headHash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
                 buffer.position(8)
                 buffer.get(headHash)
                 val hash = VBlakeHash.wrap(headHash)
                 if (VBlakeHash.EMPTY_HASH == hash) {
-                    return@lock null
+                    return@withLock null
                 }
 
                 val block = get(hash)
@@ -193,7 +193,7 @@ class VeriBlockBlockStore(
     fun setChainHead(chainHead: StoredVeriBlockBlock): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             val previous = lastChainHead
             lastChainHead = chainHead
             val headHash = chainHead.block.hash.bytes
@@ -214,7 +214,7 @@ class VeriBlockBlockStore(
     fun put(storedBlock: StoredVeriBlockBlock): StoredVeriBlockBlock {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             var cursor = getRingCursor(buffer)
             if (cursor == getFileSize()) {
                 // Wrapped around.
@@ -238,7 +238,7 @@ class VeriBlockBlockStore(
     fun replace(hash: VBlakeHash, storedBlock: StoredVeriBlockBlock): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             var cursor = getRingCursor(buffer)
             val startingPoint = cursor
             val fileSize = getFileSize()
@@ -258,11 +258,11 @@ class VeriBlockBlockStore(
                     val replaced = StoredVeriBlockBlock.deserialize(buffer)
                     buffer.position(cursor)
                     storedBlock.serialize(buffer)
-                    return@lock replaced
+                    return@withLock replaced
                 }
             } while (cursor != startingPoint)
 
-            return@lock null
+            return@withLock null
         }
     }
 
@@ -270,9 +270,9 @@ class VeriBlockBlockStore(
     fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             if (notFoundCache[hash] != null) {
-                return@lock null
+                return@withLock null
             }
 
             // Starting from the current tip of the ring work backwards until we have either found the block or
@@ -300,12 +300,12 @@ class VeriBlockBlockStore(
                 buffer.get(scratch)
                 if (Arrays.equals(scratch, targeVBlakeHashBytes)) {
                     // Found the target.
-                    return@lock StoredVeriBlockBlock.deserialize(buffer)
+                    return@withLock StoredVeriBlockBlock.deserialize(buffer)
                 }
             } while (cursor != startingPoint)
 
             notFoundCache[hash] = NOT_FOUND_MARKER
-            return@lock null
+            return@withLock null
         }
     }
 
@@ -317,9 +317,9 @@ class VeriBlockBlockStore(
             return emptyList()
         }
 
-        return lock {
+        return lock.withLock {
             if (notFoundCache[hash] != null) {
-                return@lock emptyList()
+                return@withLock emptyList()
             }
 
             // Starting from the current tip of the ring work backwards until we have either found the block or
@@ -369,9 +369,9 @@ class VeriBlockBlockStore(
     fun getFromChain(hash: VBlakeHash, blocksAgo: Int): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             if (notFoundCache[hash] != null) {
-                return@lock null
+                return@withLock null
             }
 
             // Starting from the current tip of the ring work backwards until we have either found the block or
@@ -396,7 +396,7 @@ class VeriBlockBlockStore(
                     counter++
 
                     if (counter == blocksAgo) {
-                        return@lock StoredVeriBlockBlock.deserialize(buffer)
+                        return@withLock StoredVeriBlockBlock.deserialize(buffer)
                     }
 
                     // Update the intermediate target with the previous block
@@ -417,7 +417,7 @@ class VeriBlockBlockStore(
     fun scanBestChain(hash: VBlakeHash): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
-        return lock {
+        return lock.withLock {
             // Starting from the current tip of the ring work backwards until we have either found the block or
             // wrapped around.
             var cursor = getRingCursor(buffer)
@@ -442,7 +442,7 @@ class VeriBlockBlockStore(
                 if (Arrays.equals(scratch, intermediateTarget)) {
                     if (ArrayUtils.matches(intermediateTarget, targeVBlakeHashBytes)) {
                         // Found the ACTUAL target.
-                        return@lock StoredVeriBlockBlock.deserialize(buffer)
+                        return@withLock StoredVeriBlockBlock.deserialize(buffer)
                     }
                     // Update the intermediate target with the previous block
                     buffer.position(cursor + 42)
@@ -454,8 +454,9 @@ class VeriBlockBlockStore(
             null
         }
     }
+
     @Throws(BlockStoreException::class)
-    open fun close() {
+    fun close() {
         try {
             buffer!!.force()
             buffer = null  // Allow it to be GCd and the underlying file mapping to go away.
@@ -484,7 +485,7 @@ class VeriBlockBlockStore(
             }
 
         }
-        lock {
+        lock.withLock {
             try {
                 FileInputStream(workingStoreFile).use { inputStream ->
                     FileOutputStream(archive).use { stream ->
@@ -513,7 +514,7 @@ class VeriBlockBlockStore(
     private fun initNewStore() {
         val headerBytes: ByteArray = header.toByteArray(StandardCharsets.US_ASCII)
 
-        lock {
+        lock.withLock {
             buffer!!.put(headerBytes)
             setFileSeriesNumber(0)
             setRingCursor(buffer!!, FILE_PROLOGUE_BYTES)
@@ -535,7 +536,7 @@ class VeriBlockBlockStore(
     fun reset() {
         val headerBytes: ByteArray = header.toByteArray(StandardCharsets.US_ASCII)
 
-        lock {
+        lock.withLock {
             buffer!!.position(0)
             buffer!!.put(headerBytes)
             setFileSeriesNumber(0)

@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference
 class BlockStore {
     private val chainHead = AtomicReference<VeriBlockHeader>()
 
-    fun getChainHead(): VeriBlockHeader {
+    fun getChainHead(): VeriBlockHeader? {
         return chainHead.get()
     }
 

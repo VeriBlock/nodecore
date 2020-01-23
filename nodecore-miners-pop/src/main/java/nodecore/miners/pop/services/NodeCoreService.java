@@ -297,56 +297,60 @@ public class NodeCoreService {
     }
 
     private void poll() {
-        if (isHealthy() && isSynchronized()) {
-            if (!isNodeCoreSynchronized()) {
-                _synchronized.set(false);
-                InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
-                return;
-            }
-
-            VeriBlockHeader latestBlock;
-            try {
-                latestBlock = getLastBlock();
-            } catch (Exception e) {
-                _logger.error("NodeCore Error", e);
-                healthy.set(false);
-                InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
-                return;
-            }
-
-            VeriBlockHeader chainHead = blockStore.getChainHead();
-            if (!latestBlock.equals(chainHead)) {
-                blockStore.setChainHead(latestBlock);
-                InternalEventBus.getInstance().post(new NewVeriBlockFoundEvent(latestBlock, chainHead));
-            }
-        } else {
-            if (ping()) {
-                if (!isHealthy()) {
-                    InternalEventBus.getInstance().post(new NodeCoreHealthyEvent());
+        try {
+            if (isHealthy() && isSynchronized()) {
+                if (!isNodeCoreSynchronized()) {
+                    _synchronized.set(false);
+                    InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                    return;
                 }
-                healthy.set(true);
 
-                if (isNodeCoreSynchronized()) {
-                    if (!isSynchronized()) {
-                        InternalEventBus.getInstance().post(new NodeCoreSynchronizedEvent());
+                VeriBlockHeader latestBlock;
+                try {
+                    latestBlock = getLastBlock();
+                } catch (Exception e) {
+                    _logger.error("NodeCore Error", e);
+                    healthy.set(false);
+                    InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
+                    return;
+                }
+
+                VeriBlockHeader chainHead = blockStore.getChainHead();
+                if (!latestBlock.equals(chainHead)) {
+                    blockStore.setChainHead(latestBlock);
+                    InternalEventBus.getInstance().post(new NewVeriBlockFoundEvent(latestBlock, chainHead));
+                }
+            } else {
+                if (ping()) {
+                    if (!isHealthy()) {
+                        InternalEventBus.getInstance().post(new NodeCoreHealthyEvent());
                     }
-                    _synchronized.set(true);
+                    healthy.set(true);
+
+                    if (isNodeCoreSynchronized()) {
+                        if (!isSynchronized()) {
+                            InternalEventBus.getInstance().post(new NodeCoreSynchronizedEvent());
+                        }
+                        _synchronized.set(true);
+                    } else {
+                        if (isSynchronized()) {
+                            InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                        }
+                        _synchronized.set(false);
+                    }
                 } else {
+                    if (isHealthy()) {
+                        InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
+                    }
                     if (isSynchronized()) {
                         InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
                     }
+                    healthy.set(false);
                     _synchronized.set(false);
                 }
-            } else {
-                if (isHealthy()) {
-                    InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
-                }
-                if (isSynchronized()) {
-                    InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
-                }
-                healthy.set(false);
-                _synchronized.set(false);
             }
+        } catch (Exception e) {
+            _logger.error("Error while polling NodeCore", e);
         }
     }
 }

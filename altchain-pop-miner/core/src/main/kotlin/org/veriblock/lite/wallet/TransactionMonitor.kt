@@ -9,7 +9,6 @@
 package org.veriblock.lite.wallet
 
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.extensions.invoke
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.MerkleTree
@@ -25,6 +24,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 const val TM_FILE_EXTENSION = ".txmon"
@@ -49,7 +49,7 @@ class TransactionMonitor(
     private fun save(serializer: TransactionMonitorProtobufSerializer) {
         val diskWallet = File(Context.directory, Context.filePrefix + TM_FILE_EXTENSION)
 
-        lock {
+        lock.withLock {
             try {
                 FileOutputStream(diskWallet).use { stream ->
                     with(serializer) { stream.writeTransactionMonitor(this@TransactionMonitor) }
@@ -60,9 +60,9 @@ class TransactionMonitor(
         }
     }
 
-    fun commitTransaction(transaction: VeriBlockTransaction) = lock {
+    fun commitTransaction(transaction: VeriBlockTransaction) = lock.withLock {
         if (transactions.containsKey(transaction.id)) {
-            return@lock
+            return@withLock
         }
 
         val walletTransaction = WalletTransaction.wrap(transaction)
@@ -75,11 +75,11 @@ class TransactionMonitor(
             ?: error("Unable to find transaction $transactionId in the monitored address")
     }
 
-    private fun handleReorganizedBlocks(blocks: List<VeriBlockBlock>) = lock {
+    private fun handleReorganizedBlocks(blocks: List<VeriBlockBlock>) = lock.withLock {
         removeConfirmations(blocks.size)
     }
 
-    private fun handleNewBlock(block: FullBlock) = lock {
+    private fun handleNewBlock(block: FullBlock) = lock.withLock {
         logger.debug { "New VBK block received at height ${block.height}: ${block.hash}" }
         val blockTransactions = filterTransactionsFrom(block)
 
@@ -112,7 +112,7 @@ class TransactionMonitor(
         balanceChanged
     }
 
-    private fun removeConfirmations(amount: Int) = lock {
+    private fun removeConfirmations(amount: Int) = lock.withLock {
         for (tx in transactions.values) {
             val meta = tx.transactionMeta
             if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
@@ -145,7 +145,7 @@ class TransactionMonitor(
     }
 
     fun onBlockChainDownloaded(blocks: Map<VBlakeHash, FullBlock>) {
-        lock {
+        lock.withLock {
             for (tx in transactions.values) {
                 // TODO: Fix this
                 if (
