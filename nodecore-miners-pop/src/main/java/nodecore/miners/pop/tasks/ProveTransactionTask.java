@@ -55,10 +55,10 @@ public class ProveTransactionTask extends BaseTask {
                         BitcoinMerklePath merklePath = new BitcoinMerklePath(path);
                         logger.info("Computed Merkle Root: {}", merklePath.getMerkleRoot());
                         if (merklePath.getMerkleRoot().equalsIgnoreCase(block.getMerkleRoot().toString())) {
-                            failureReason = "Block Merkle root does not match computed Merkle root";
-                        } else {
                             state.onTransactionProven(merklePath.getCompactFormat());
                             return TaskResult.succeed(state, getNext());
+                        } else {
+                            failureReason = "Block Merkle root does not match computed Merkle root";
                         }
                     } catch (Exception e) {
                         logger.error("Unable to validate Merkle path for transaction", e);
