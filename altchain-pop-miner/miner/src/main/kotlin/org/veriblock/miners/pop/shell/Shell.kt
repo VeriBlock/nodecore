@@ -8,10 +8,7 @@
 
 package org.veriblock.miners.pop.shell
 
-import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.Miner
-import org.veriblock.miners.pop.service.PluginService
-import org.veriblock.miners.pop.shell.commands.altchainCommands
 import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
 import org.veriblock.miners.pop.shell.commands.standardCommands
@@ -19,13 +16,10 @@ import org.veriblock.miners.pop.shell.commands.walletCommands
 import org.veriblock.shell.Shell
 
 fun Shell.configure(
-    miner: Miner,
-    nodeCoreLiteKit: NodeCoreLiteKit,
-    pluginService: PluginService
+    miner: Miner
 ) {
     standardCommands()
     configCommands()
     miningCommands(miner)
     walletCommands(miner)
-    altchainCommands(nodeCoreLiteKit, pluginService)
 }

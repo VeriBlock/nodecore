@@ -13,6 +13,7 @@ import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
+import org.veriblock.miners.pop.shell.commands.altchainCommands
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.shell.Shell
 
@@ -28,7 +29,10 @@ val minerModule = module {
     single { SecurityInheritingService(get(), get()) }
     single {
         Shell().apply {
-            configure(get(), get(), get())
+            configure(get())
+            if (!mockMiningEnabled) {
+                altchainCommands(get(), get())
+            }
         }
     }
 }
