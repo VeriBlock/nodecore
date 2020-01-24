@@ -1,6 +1,10 @@
 
 generated
 
+mock
+mock.dat
+mock-shm
+mock-wal
 pop.dat
 *.spvchain
 *.wallet
