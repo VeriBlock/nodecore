@@ -43,8 +43,9 @@ private val logger = createLogger {}
 class MockMiner(
     private val pluginFactory: PluginService
 ) : Miner {
-    private val veriBlockStore = VeriBlockStore(ConnectionSelector.setConnectionInMemory())
-    private val bitcoinStore = BitcoinStore(ConnectionSelector.setConnectionInMemory())
+    private val connection = ConnectionSelector.setConnection("mock")
+    private val veriBlockStore = VeriBlockStore(connection)
+    private val bitcoinStore = BitcoinStore(connection)
     private val veriBlockBlockchain = VeriBlockBlockchain(VeriBlockDefaults.networkParameters, veriBlockStore, bitcoinStore)
     private val bitcoinBlockchain = BitcoinBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
