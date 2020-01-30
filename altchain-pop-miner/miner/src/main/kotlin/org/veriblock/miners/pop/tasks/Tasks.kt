@@ -9,10 +9,8 @@
 package org.veriblock.miners.pop.tasks
 
 import org.veriblock.alt.plugins.HttpException
-import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.PublicationSubscription
@@ -330,7 +328,8 @@ class SubmitProofOfProofTask(
             val siTxId = securityInheritingChain.submit(proofOfProof, veriBlockPublications)
 
             val chainSymbol = operation.chainId.toUpperCase()
-            logger.info(operation) { "VTB submitted to $chainSymbol! $chainSymbol PoP TxId: $siTxId. Waiting for VBK depth completion..." }
+            logger.info(operation) { "VTB submitted to $chainSymbol! $chainSymbol PoP TxId: $siTxId" }
+            logger.info(operation) { "Waiting for VBK depth completion..." }
             operation.setProofOfProofId(siTxId)
         } catch (e: Exception) {
             logger.error("Error submitting proof of proof", e)
