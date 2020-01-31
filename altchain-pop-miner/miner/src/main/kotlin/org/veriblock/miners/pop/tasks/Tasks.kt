@@ -9,8 +9,10 @@
 package org.veriblock.miners.pop.tasks
 
 import org.veriblock.alt.plugins.HttpException
+import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.PublicationSubscription
