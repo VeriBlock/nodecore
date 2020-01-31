@@ -72,7 +72,9 @@ class NodeCoreLiteKit(
         blockChain.newBestBlockEvent.register(transactionMonitor) {
             val balanceChanged = transactionMonitor.onNewBestBlock(it)
             if (balanceChanged) {
-                balanceChangedEvent.trigger(network.getBalance())
+                if (network.isHealthy()) {
+                    balanceChangedEvent.trigger(network.getBalance())
+                }
             }
         }
         blockChain.blockChainReorganizedEvent.register(transactionMonitor) {

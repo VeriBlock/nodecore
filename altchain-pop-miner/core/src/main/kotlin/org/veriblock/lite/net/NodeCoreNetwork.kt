@@ -48,7 +48,7 @@ class NodeCoreNetwork(
     fun isHealthy(): Boolean =
         healthy.get()
 
-    fun isSynchronized(): Boolean =
+    private fun isSynchronized(): Boolean =
         synchronized.get()
 
     fun startAsync(): ListenableFuture<Boolean> {
@@ -89,36 +89,33 @@ class NodeCoreNetwork(
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine
                 if (!isHealthy()) {
+                    healthy.set(true)
                     healthyEvent.trigger()
                 }
-                healthy.set(true)
                 connected.set(true)
-
                 // Verify the remote NodeCore sync status
                 if (gateway.isNodeCoreSynchronized()) {
                     if (!isSynchronized()) {
+                        synchronized.set(true)
                         healthySyncEvent.trigger()
                     }
-                    synchronized.set(true)
                 } else {
                     if (isSynchronized()) {
+                        synchronized.set(false)
                         unhealthySyncEvent.trigger()
                     }
-                    synchronized.set(false)
                 }
             } else {
                 // At this point the APM<->NodeCore can't be made
                 if (isHealthy()) {
+                    healthy.set(false)
                     unhealthyEvent.trigger()
                 }
-                healthy.set(false)
-                connected.set(false)
                 if (isSynchronized()) {
+                    synchronized.set(false)
                     unhealthySyncEvent.trigger()
                 }
-                synchronized.set(false)
             }
-
             if (isHealthy() && isSynchronized()) {
                 // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
                 // the APM can continue with its work
@@ -126,8 +123,8 @@ class NodeCoreNetwork(
                     gateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.error(e) { "Unable to get the last block from NodeCore" }
-                    unhealthyEvent.trigger()
                     healthy.set(false)
+                    unhealthyEvent.trigger()
                     return
                 }
                 try {
@@ -145,7 +142,7 @@ class NodeCoreNetwork(
                     logger.info { "Cannot proceed because the APM can't connect with the NodeCore..." }
                 } else {
                     if (!isSynchronized()) {
-                        logger.info { "Cannot proceed because the NodeCore is not synchronized..." }
+                       logger.info { "Cannot proceed because the NodeCore is not synchronized..." }
                     }
                 }
             }
