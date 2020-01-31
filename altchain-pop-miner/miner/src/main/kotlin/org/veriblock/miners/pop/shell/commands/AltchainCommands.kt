@@ -53,6 +53,14 @@ fun Shell.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: Plug
             Utils.encodeHex(publicationData.context[0]),
             Utils.encodeHex(publicationData.btcContext[0])
         )
+        debugVeriBlockPublications.forEach {
+            if (it.firstBlock == null || it.firstBitcoinBlock == null) {
+                return@command failure {
+                    addMessage("V010", "NodeCore failure", "Invalid VBK publications from NodeCore:" +
+                        " at least one of the received publications has no VBK blocks or no BTC blocks", true)
+                }
+            }
+        }
 
         val siTxId = securityInheritingChain.updateContext(debugVeriBlockPublications)
         printInfo(siTxId)
