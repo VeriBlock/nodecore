@@ -59,6 +59,7 @@ class AltchainPopMiner(
         this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
 
         nodeCoreLiteKit.network.healthyEvent.register(this) {
+            logger.info { "Connected to NodeCore!" }
             addReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
         nodeCoreLiteKit.network.unhealthyEvent.register(this) {
@@ -91,10 +92,12 @@ class AltchainPopMiner(
 
     private fun isReady(): Boolean {
         // FIXME: This is a hack to force-trigger balance retrieval in the ready check
-        getBalance()?.let {
-            if (it != currentBalance) {
-                currentBalance = it
-                nodeCoreLiteKit.balanceChangedEvent.trigger(it)
+        if (nodeCoreLiteKit.network.isHealthy() && nodeCoreLiteKit.network.isSynchronized()) {
+            getBalance()?.let {
+                if (it != currentBalance) {
+                    currentBalance = it
+                    nodeCoreLiteKit.balanceChangedEvent.trigger(it)
+                }
             }
         }
         return readyConditions.size == ReadyCondition.values().size
