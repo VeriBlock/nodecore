@@ -72,7 +72,9 @@ class NodeCoreLiteKit(
         blockChain.newBestBlockEvent.register(transactionMonitor) {
             val balanceChanged = transactionMonitor.onNewBestBlock(it)
             if (balanceChanged) {
-                balanceChangedEvent.trigger(network.getBalance())
+                if (network.isHealthy()) {
+                    balanceChangedEvent.trigger(network.getBalance())
+                }
             }
         }
         blockChain.blockChainReorganizedEvent.register(transactionMonitor) {
@@ -83,8 +85,9 @@ class NodeCoreLiteKit(
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
         network.startAsync().addListener(Runnable {
-            logger.info { "Connected to NodeCore!" }
-            balanceChangedEvent.trigger(network.getBalance())
+            if (network.isHealthy()) {
+                balanceChangedEvent.trigger(network.getBalance())
+            }
         }, Threading.LISTENER_THREAD)
     }
 

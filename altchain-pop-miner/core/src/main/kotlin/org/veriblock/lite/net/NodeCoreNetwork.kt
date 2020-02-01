@@ -39,7 +39,6 @@ class NodeCoreNetwork(
     private val synchronized = AtomicBoolean(false)
     private val publicationSubscriptions = ConcurrentHashMap<String, PublicationSubscription>()
     private val connected = SettableFuture.create<Boolean>()
-    private var firstPollAttempt = true
 
     val healthyEvent = EmptyEvent()
     val unhealthyEvent = EmptyEvent()
@@ -86,66 +85,70 @@ class NodeCoreNetwork(
 
     private fun poll() {
         try {
-            if (isHealthy() && isSynchronized()) {
-                if (!gateway.isNodeCoreSynchronized()) {
-                    unhealthySyncEvent.trigger()
-                    synchronized.set(false)
-                    return
+            // Verify if we can make a connection with the remote NodeCore
+            if (gateway.ping()) {
+                // At this point the APM<->NodeCore connection is fine
+                if (!isHealthy()) {
+                    healthy.set(true)
+                    healthyEvent.trigger()
                 }
-
+                connected.set(true)
+                // Verify the remote NodeCore sync status
+                if (gateway.isNodeCoreSynchronized()) {
+                    if (!isSynchronized()) {
+                        synchronized.set(true)
+                        healthySyncEvent.trigger()
+                    }
+                } else {
+                    if (isSynchronized()) {
+                        synchronized.set(false)
+                        unhealthySyncEvent.trigger()
+                    }
+                }
+            } else {
+                // At this point the APM<->NodeCore can't be made
+                if (isHealthy()) {
+                    healthy.set(false)
+                    unhealthyEvent.trigger()
+                }
+                if (isSynchronized()) {
+                    synchronized.set(false)
+                    unhealthySyncEvent.trigger()
+                }
+            }
+            if (isHealthy() && isSynchronized()) {
+                // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
+                // the APM can continue with its work
                 val lastBlock: VeriBlockBlock = try {
                     gateway.getLastBlock()
                 } catch (e: Exception) {
-                    logger.error("NodeCore Error", e)
-                    unhealthyEvent.trigger()
+                    logger.error(e) { "Unable to get the last block from NodeCore" }
                     healthy.set(false)
+                    unhealthyEvent.trigger()
                     return
                 }
-
                 try {
                     val currentChainHead = blockChain.getChainHead()
-                    //logger.trace { "Checking chain head... Last Block: ${lastBlock.hash}; Known last block: ${currentChainHead?.hash}" }
                     if (currentChainHead == null || currentChainHead != lastBlock) {
                         logger.debug { "New chain head detected!" }
                         reconcileBlockChain(currentChainHead, lastBlock)
                         pollForVeriBlockPublications()
                     }
                 } catch (e: BlockStoreException) {
-                    logger.error("VeriBlockBlock store exception", e)
+                    logger.error(e) {"VeriBlockBlock store exception" }
                 }
             } else {
-                if (gateway.ping()) {
-                    if (!isHealthy()) {
-                        healthyEvent.trigger()
-                    }
-                    healthy.set(true)
-                    connected.set(true)
-
-                    if (gateway.isNodeCoreSynchronized()) {
-                        if (!isSynchronized()) {
-                            healthySyncEvent.trigger()
-                        }
-                        synchronized.set(true)
-                    } else {
-                        if (isSynchronized()) {
-                            unhealthySyncEvent.trigger()
-                        }
-                        synchronized.set(false)
-                    }
+                if (!isHealthy()) {
+                    logger.info { "Cannot proceed because the APM can't connect with the NodeCore..." }
                 } else {
-                    if (isHealthy() || firstPollAttempt) {
-                        unhealthyEvent.trigger()
+                    if (!isSynchronized()) {
+                       logger.info { "Cannot proceed because the NodeCore is not synchronized..." }
                     }
-                    if (isSynchronized()) {
-                        unhealthySyncEvent.trigger()
-                    }
-                    healthy.set(false)
-                    synchronized.set(false)
                 }
             }
-            firstPollAttempt = false
         } catch (e: Exception) {
-            logger.error(e) { "Error when polling NodeCore" }
+            logger.error { "Error when polling NodeCore" }
+            logger.debug(e) { "Stack Trace:"  }
         }
     }
 
