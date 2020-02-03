@@ -12,6 +12,7 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.models.PublicationData
 
 class PublicationDataWithContext(
+    val endorsedBlockHeight: Int,
     val publicationData: PublicationData,
     val context: List<ByteArray>,
     val btcContext: List<ByteArray>

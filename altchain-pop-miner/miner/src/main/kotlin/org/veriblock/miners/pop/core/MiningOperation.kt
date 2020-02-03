@@ -29,7 +29,7 @@ class MiningOperation(
     val chainId: String,
     changeHistory: List<StateChangeEvent> = emptyList(),
     status: OperationStatus = OperationStatus.UNKNOWN,
-    val blockHeight: Int?
+    var blockHeight: Int?
 ) {
     val stateChangedEvent = AsyncEvent<OperationState>(Threading.MINER_THREAD)
 
@@ -54,6 +54,7 @@ class MiningOperation(
     }
 
     fun setPublicationDataWithContext(publicationDataWithContext: PublicationDataWithContext) {
+        blockHeight = publicationDataWithContext.endorsedBlockHeight
         setState(OperationState.PublicationData(publicationDataWithContext))
     }
 
