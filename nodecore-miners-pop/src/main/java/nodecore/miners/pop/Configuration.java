@@ -186,6 +186,10 @@ public class Configuration {
         }
     }
 
+    public int getMaxPeerConnections() {
+        return Integer.valueOf(getPropertyOverrideOrDefault(Keys.BITCOINJ_MAX_PEER_CONNECTIONS));
+    }
+
     public ConfigurationResult setNodeCoreHost(String value) {
         ConfigurationResult result = new ConfigurationResult();
         if (StringUtils.isBlank(value)) {
@@ -578,6 +582,7 @@ public class Configuration {
         private static final String NODECORE_PASSWORD_KEY = "nodecore.rpc.password";
         private static final String NODECORE_CERT_CHAIN_PATH_KEY = "nodecore.rpc.cert.chain.path";
         private static final String BITCOINJ_MINIMAL_PROTOCOL_VERSION = "bitcoinj.minimal.protocol.version";
+        private static final String BITCOINJ_MAX_PEER_CONNECTIONS = "bitcoinj.max.peer.connections";
 
         private static final String SCHEDULE = "pop.cron.schedule";
         private static final String ACTION_TIMEOUT = "pop.action.timeout";
@@ -602,6 +607,7 @@ public class Configuration {
             keys.add(SCHEDULE);
             keys.add(ACTION_TIMEOUT);
             keys.add(BITCOINJ_MINIMAL_PROTOCOL_VERSION);
+            keys.add(BITCOINJ_MAX_PEER_CONNECTIONS);
             return keys;
         }
     }
