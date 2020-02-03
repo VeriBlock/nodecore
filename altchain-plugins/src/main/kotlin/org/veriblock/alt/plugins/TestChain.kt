@@ -108,7 +108,7 @@ class TestChain : SecurityInheritingChain {
             "give it to me".toByteArray(),
             context
         )
-        return PublicationDataWithContext(publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
+        return PublicationDataWithContext(blockHeight ?: getBestBlockHeight(), publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {

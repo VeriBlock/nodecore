@@ -133,7 +133,7 @@ class BitcoinFamilyChain(
         if (response.last_known_veriblock_blocks.isEmpty()) {
             error("Publication data's context (last known VeriBlock blocks) must not be empty!")
         }
-        return PublicationDataWithContext(publicationData, response.last_known_veriblock_blocks.map { it.asHexBytes() }, response.last_known_bitcoin_blocks.map { it.asHexBytes() })
+        return PublicationDataWithContext(actualBlockHeight, publicationData, response.last_known_veriblock_blocks.map { it.asHexBytes() }, response.last_known_bitcoin_blocks.map { it.asHexBytes() })
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {

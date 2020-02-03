@@ -98,6 +98,7 @@ object StateSerializer {
         ).apply {
             if (serialized.publicationData != null) {
                 setPublicationDataWithContext(PublicationDataWithContext(
+                    serialized.blockHeight,
                     deserialize(serialized.publicationData),
                     serialized.publicationContextList.map { it.toByteArray() },
                     serialized.publicationBtcContextList.map { it.toByteArray() }

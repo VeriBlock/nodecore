@@ -144,6 +144,7 @@ class NxtFamilyChain(
             response.contextInfoContainer.asHexBytes()
         )
         return PublicationDataWithContext(
+            actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },
             response.last_known_bitcoin_blocks.map { it.asHexBytes() }

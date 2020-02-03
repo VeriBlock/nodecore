@@ -152,7 +152,7 @@ class AltchainPopMiner(
     override fun listOperations() = operations.values.asSequence().sortedBy {
         it.timestamp
     }.map {
-        "${it.id}: ${it.chainId} | ${it.state}"
+        "${it.id}: ${it.chainId} (${it.blockHeight}) | ${it.state}"
     }.toList()
 
     override fun getOperation(id: String): MiningOperation? {
