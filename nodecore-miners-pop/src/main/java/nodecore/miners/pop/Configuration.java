@@ -175,10 +175,15 @@ public class Configuration {
     }
 
     public NetworkParameters.ProtocolVersion getProtocolVersion() {
-        return Arrays.stream(NetworkParameters.ProtocolVersion.values())
-                .filter(it -> it.name().equalsIgnoreCase(getPropertyOverrideOrDefault(Keys.BITCOINJ_MINIMAL_PROTOCOL_VERSION)))
-                .findFirst()
-                .orElse(NetworkParameters.ProtocolVersion.BLOOM_FILTER);
+        final String config = getPropertyOverrideOrDefault(Keys.BITCOINJ_MINIMAL_PROTOCOL_VERSION);
+        switch(config) {
+            case "MINIMUM": return NetworkParameters.ProtocolVersion.MINIMUM;
+            case "PONG": return NetworkParameters.ProtocolVersion.PONG;
+            case "BLOOM_FILTER_BIP111": return NetworkParameters.ProtocolVersion.BLOOM_FILTER_BIP111;
+            case "WITNESS_VERSION": return NetworkParameters.ProtocolVersion.WITNESS_VERSION;
+            case "CURRENT": return NetworkParameters.ProtocolVersion.CURRENT;
+            default: return NetworkParameters.ProtocolVersion.BLOOM_FILTER;
+        }
     }
 
     public ConfigurationResult setNodeCoreHost(String value) {
