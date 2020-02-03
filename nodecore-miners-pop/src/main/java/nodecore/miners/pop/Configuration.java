@@ -17,6 +17,7 @@ import nodecore.miners.pop.contracts.MissingConfigurationValueResultMessage;
 import nodecore.miners.pop.contracts.SuccessResultMessage;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.Utility;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -170,6 +172,13 @@ public class Configuration {
 
     public String getNodeCoreHost() {
         return getPropertyOverrideOrDefault(Keys.NODECORE_HOST_KEY);
+    }
+
+    public NetworkParameters.ProtocolVersion getProtocolVersion() {
+        return Arrays.stream(NetworkParameters.ProtocolVersion.values())
+                .filter(it -> it.name().equalsIgnoreCase(getPropertyOverrideOrDefault(Keys.BITCOINJ_MINIMAL_PROTOCOL_VERSION)))
+                .findFirst()
+                .orElse(NetworkParameters.ProtocolVersion.BLOOM_FILTER);
     }
 
     public ConfigurationResult setNodeCoreHost(String value) {
@@ -563,6 +572,7 @@ public class Configuration {
         private static final String NODECORE_PORT_KEY = "nodecore.rpc.port";
         private static final String NODECORE_PASSWORD_KEY = "nodecore.rpc.password";
         private static final String NODECORE_CERT_CHAIN_PATH_KEY = "nodecore.rpc.cert.chain.path";
+        private static final String BITCOINJ_MINIMAL_PROTOCOL_VERSION = "bitcoinj.minimal.protocol.version";
 
         private static final String SCHEDULE = "pop.cron.schedule";
         private static final String ACTION_TIMEOUT = "pop.action.timeout";
@@ -586,6 +596,7 @@ public class Configuration {
             keys.add(NODECORE_CERT_CHAIN_PATH_KEY);
             keys.add(SCHEDULE);
             keys.add(ACTION_TIMEOUT);
+            keys.add(BITCOINJ_MINIMAL_PROTOCOL_VERSION);
             return keys;
         }
     }
