@@ -11,12 +11,12 @@ package org.veriblock.miners.pop
 import org.koin.log.EmptyLogger
 import org.koin.standalone.StandAloneContext.startKoin
 import org.veriblock.alt.plugins.pluginsModule
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.miners.pop.service.serviceModule
 import org.veriblock.miners.pop.storage.repositoryModule
 import org.veriblock.miners.pop.tasks.taskModule
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.Shell
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -42,14 +42,16 @@ private fun run(): Int {
     val securityInheritingService: SecurityInheritingService = koin.get()
     val shell: Shell = koin.get()
     val pluginFactory: PluginService = koin.get()
-    shell.initialize()
+
     try {
+        shell.initialize()
+        miner.initialize()
         pluginFactory.loadPlugins()
         miner.start()
         securityInheritingService.start()
         shell.run()
     } catch (e: Exception) {
-        logger.warn(e) { "Error in shell: ${e.message}" }
+        logger.warn(e) { "Fatal error: ${e.message}" }
     } finally {
         shutdownSignal.countDown()
     }

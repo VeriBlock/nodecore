@@ -51,8 +51,11 @@ class MockMiner(
     private val bitcoinBlockchain = BitcoinBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
 
+    override fun initialize() {
+        logger.info { "Mock mining enabled!" }
+    }
+
     override fun start() {
-        logger.info { "Mock mining enabled!"}
         veriBlockBlockchain.bootstrap(VeriBlockDefaults.bootstrap)
         logger.info { "Mocked VeriBlock chain bootstrap: ${VeriBlockDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}"}
         bitcoinBlockchain.bootstrap(BitcoinDefaults.bootstrap)
