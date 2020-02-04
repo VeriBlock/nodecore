@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package wallet;
 
-option java_package = "org.veriblock.lite.wallet";
+option java_package = "org.veriblock.lite.transactionmonitor";
 option java_outer_classname = "Protos";
 
 message TransactionMeta {
