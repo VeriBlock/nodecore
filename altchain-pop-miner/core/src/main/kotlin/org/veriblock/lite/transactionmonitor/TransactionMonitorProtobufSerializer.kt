@@ -11,7 +11,6 @@ package org.veriblock.lite.transactionmonitor
 import com.google.protobuf.CodedInputStream
 import com.google.protobuf.CodedOutputStream
 import nodecore.api.grpc.utilities.ByteStringUtility
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.sdk.models.Address
@@ -130,7 +129,9 @@ private fun Protos.WalletTransaction.toModel(): WalletTransaction = WalletTransa
     Context.networkParameters.transactionPrefix,
     meta.toModel()
 ).apply {
-    merklePath = merkleBranch.toModel()
+    if (merkleBranch.subject.size() != 0) {
+        merklePath = merkleBranch.toModel()
+    }
 }
 
 private fun Protos.MerkleBranch.toModel(): VeriBlockMerklePath = VeriBlockMerklePath(
@@ -138,21 +139,16 @@ private fun Protos.MerkleBranch.toModel(): VeriBlockMerklePath = VeriBlockMerkle
         merklePathHashesList.joinToString(":") { Sha256Hash.wrap(it.toByteArray()).toString() }
 )
 
-private fun Protos.TransactionMeta.toModel(): TransactionMeta {
-    val txId = txId.toByteArray()
-    return TransactionMeta(
-        try {
-            Sha256Hash.wrap(txId)
-        } catch (e: Exception) {
-            throw IllegalStateException("Invalid transaction id: ${txId.toHex()}", e)
-        }
-    ).also {
-        it.setState(TransactionMeta.MetaState.forNumber(stateValue))
+private fun Protos.TransactionMeta.toModel(): TransactionMeta = TransactionMeta(
+    Sha256Hash.wrap(txId.toByteArray())
+).also {
+    it.setState(TransactionMeta.MetaState.forNumber(stateValue))
+    if (appearsInBestChainBlock.size() != 0) {
         it.appearsInBestChainBlock = VBlakeHash.wrap(appearsInBestChainBlock.toByteArray())
-
-        appearsInBlocksList.forEach { bytes -> it.addBlockAppearance(VBlakeHash.wrap(bytes.toByteArray())) }
-
-        it.appearsAtChainHeight = appearsAtHeight
-        it.depth = depth
     }
+
+    appearsInBlocksList.forEach { bytes -> it.addBlockAppearance(VBlakeHash.wrap(bytes.toByteArray())) }
+
+    it.appearsAtChainHeight = appearsAtHeight
+    it.depth = depth
 }
