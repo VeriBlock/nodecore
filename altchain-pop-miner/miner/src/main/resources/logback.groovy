@@ -6,18 +6,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+import ch.qos.logback.classic.filter.ThresholdFilter
 import org.veriblock.shell.LoggingLineAppender
 
 def logRootPath = System.getProperty("logging.path", System.getenv('APM_LOG_PATH')) ?: 'logs/'
 def logLevel = System.getProperty("logging.level", System.getenv('APM_LOG_LEVEL')) ?: ''
 
-//appender("STDOUT", ConsoleAppender) {
-//    encoder(PatternLayoutEncoder) {
-//        pattern = "%d{yyyy-MM-dd HH:mm:ss.SSSXX} %boldWhite(%-16.-16thread) %highlight(%-5level) %gray(%-16.-16logger{0}) - %msg%n"
-//    }
-//}
-
 appender("TERMINAL", LoggingLineAppender) {
+    filter(ThresholdFilter) {
+        level = toLevel(logLevel, INFO)
+    }
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
     }
@@ -36,9 +34,8 @@ appender("FILE", RollingFileAppender) {
     }
 }
 
-def level = toLevel(logLevel, INFO)
-logger("org.veriblock", level)
+logger("org.veriblock", DEBUG)
+
 logger("shell-printing", INFO, ["FILE"], false)
 
-//root(ERROR, ["STDOUT"])
 root(ERROR, ["TERMINAL", "FILE"])
