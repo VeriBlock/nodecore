@@ -12,9 +12,9 @@ import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.support.ConnectionSource
 import com.j256.ormlite.table.TableUtils
-import org.veriblock.miners.pop.storage.OperationStateData
-import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.miners.pop.storage.OperationRepository
+import org.veriblock.miners.pop.storage.OperationStateData
 import java.sql.SQLException
 
 private val logger = createLogger {}
@@ -23,24 +23,18 @@ class OrmLitePoPRepository(
     connectionSource: ConnectionSource
 ) : OperationRepository {
 
-    private var connectionSource: ConnectionSource? = null
-    private var operationStateDataDao: Dao<OperationStateData, String>? = null
+    private val operationStateDataDao: Dao<OperationStateData, String>
 
     init {
-        try {
-            this.connectionSource = connectionSource
-            TableUtils.createTableIfNotExists(connectionSource, OperationStateData::class.java)
-            operationStateDataDao = DaoManager.createDao(connectionSource, OperationStateData::class.java)
+        TableUtils.createTableIfNotExists(connectionSource, OperationStateData::class.java)
+        operationStateDataDao = DaoManager.createDao(connectionSource, OperationStateData::class.java)
 
-            operationStateDataDao!!.executeRaw("PRAGMA journal_mode=WAL;")
-        } catch (e: SQLException) {
-            logger.error(e) { "SQL Error: ${e.sqlState}" }
-        }
+        operationStateDataDao.executeRaw("PRAGMA journal_mode=WAL;")
     }
 
     override fun getActiveOperations(): Iterator<OperationStateData> {
         try {
-            return operationStateDataDao!!.queryBuilder()
+            return operationStateDataDao.queryBuilder()
                 .where()
                 .eq("status", 1)
                 .iterator()
@@ -52,7 +46,7 @@ class OrmLitePoPRepository(
 
     override fun getOperation(id: String): OperationStateData? {
         try {
-            return operationStateDataDao!!.queryForId(id)
+            return operationStateDataDao.queryForId(id)
         } catch (e: SQLException) {
             logger.error(e) { "SQL Error: ${e.sqlState}" }
         }
@@ -62,10 +56,9 @@ class OrmLitePoPRepository(
 
     override fun saveOperationState(stateData: OperationStateData) {
         try {
-            operationStateDataDao!!.createOrUpdate(stateData)
+            operationStateDataDao.createOrUpdate(stateData)
         } catch (e: SQLException) {
             logger.error(e) { "SQL Error: ${e.sqlState}" }
         }
-
     }
 }

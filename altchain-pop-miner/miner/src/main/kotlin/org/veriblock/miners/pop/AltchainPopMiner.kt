@@ -146,7 +146,6 @@ class AltchainPopMiner(
         try {
             nodeCoreLiteKit.start()
         } catch (e: IOException) {
-            logger.error("Unable to start the NodeCore kit", e)
             throw IllegalStateException("Miner could not be started", e)
         }
     }
@@ -210,8 +209,6 @@ class AltchainPopMiner(
     }
 
     private fun loadSuspendedOperations() {
-        logger.info("Loading suspended operations")
-
         try {
             val activeOperations = operationService.getActiveOperations { txId ->
                 val hash = Sha256Hash.wrap(txId)
@@ -222,6 +219,7 @@ class AltchainPopMiner(
                 registerToStateChangedEvent(state)
                 operations[state.id] = state
             }
+            logger.info("Loaded ${activeOperations.size} suspended operations")
         } catch (e: Exception) {
             logger.error("Unable to load suspended operations", e)
         }

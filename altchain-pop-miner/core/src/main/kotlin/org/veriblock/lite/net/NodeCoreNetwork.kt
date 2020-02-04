@@ -118,7 +118,7 @@ class NodeCoreNetwork(
             }
             if (isHealthy() && isSynchronized()) {
                 // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
-                // the APM can continue with its work
+                // APM can continue with its work
                 val lastBlock: VeriBlockBlock = try {
                     gateway.getLastBlock()
                 } catch (e: Exception) {
@@ -139,10 +139,10 @@ class NodeCoreNetwork(
                 }
             } else {
                 if (!isHealthy()) {
-                    logger.info { "Cannot proceed because the APM can't connect with the NodeCore..." }
+                    logger.info { "Cannot proceed: waiting for connection with NodeCore..." }
                 } else {
                     if (!isSynchronized()) {
-                       logger.info { "Cannot proceed because the NodeCore is not synchronized..." }
+                       logger.info { "Cannot proceed because NodeCore is not synchronized..." }
                     }
                 }
             }
