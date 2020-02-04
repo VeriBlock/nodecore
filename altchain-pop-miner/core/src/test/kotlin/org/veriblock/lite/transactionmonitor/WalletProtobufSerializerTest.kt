@@ -10,16 +10,15 @@ package org.veriblock.lite.core
 
 import io.kotlintest.shouldBe
 import org.junit.Test
-import org.veriblock.lite.wallet.TransactionMonitorProtobufSerializer
+import org.veriblock.lite.transactionmonitor.readTransactionMonitor
+import org.veriblock.lite.transactionmonitor.writeTransactionMonitor
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 class WalletProtobufSerializerTest {
 
-    private val serializer = TransactionMonitorProtobufSerializer()
-
     @Test
-    fun roundTrip() = with(serializer) {
+    fun roundTrip() {
         // Given
         val wallet = randomTransactionMonitor()
         val outputStream = ByteArrayOutputStream()

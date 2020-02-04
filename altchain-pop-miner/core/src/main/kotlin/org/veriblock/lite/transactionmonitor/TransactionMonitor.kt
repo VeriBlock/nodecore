@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.wallet
+package org.veriblock.lite.transactionmonitor
 
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Context
@@ -33,7 +33,6 @@ class TransactionMonitor(
     val address: Address,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
-    private val serializer = TransactionMonitorProtobufSerializer()
     private val lock = ReentrantLock(true)
     private val transactions: MutableMap<Sha256Hash, WalletTransaction> = HashMap()
 
@@ -46,13 +45,13 @@ class TransactionMonitor(
     fun getTransactions(): Collection<WalletTransaction> =
         Collections.unmodifiableCollection(transactions.values)
 
-    private fun save(serializer: TransactionMonitorProtobufSerializer) {
+    private fun save() {
         val diskWallet = File(Context.directory, Context.filePrefix + TM_FILE_EXTENSION)
 
         lock.withLock {
             try {
                 FileOutputStream(diskWallet).use { stream ->
-                    with(serializer) { stream.writeTransactionMonitor(this@TransactionMonitor) }
+                    stream.writeTransactionMonitor(this@TransactionMonitor)
                 }
             } catch (e: IOException) {
                 logger.error("Unable to save VBK wallet to disk", e)
@@ -162,7 +161,7 @@ class TransactionMonitor(
             }
         }
 
-        save(serializer)
+        save()
     }
 
     fun onBlockChainReorganized(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {
@@ -171,13 +170,13 @@ class TransactionMonitor(
            handleNewBlock(block)
         }
 
-        save(serializer)
+        save()
     }
 
     fun onNewBestBlock(newBlock: FullBlock): Boolean {
         val balanceChanged = handleNewBlock(newBlock)
 
-        save(serializer)
+        save()
 
         return balanceChanged
     }
@@ -214,17 +213,13 @@ class TransactionMonitor(
         if (outputs.any { it.address == address }) {
             return true
         }
-        // TODO: Proof-of-Proof endorsing chain
-        // TODO: Alt-chain endorsement
         return false
     }
 }
 
 fun File.loadTransactionMonitor(): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
-        with (TransactionMonitorProtobufSerializer()) {
-            stream.readTransactionMonitor()
-        }
+        stream.readTransactionMonitor()
     }
 } catch (e: IOException) {
     throw IllegalStateException("Unable to read VBK wallet from disk")

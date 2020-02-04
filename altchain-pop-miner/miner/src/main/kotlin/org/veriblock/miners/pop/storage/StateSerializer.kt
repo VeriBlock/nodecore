@@ -9,7 +9,7 @@
 package org.veriblock.miners.pop.storage
 
 import com.google.protobuf.ByteString
-import org.veriblock.lite.wallet.WalletTransaction
+import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus

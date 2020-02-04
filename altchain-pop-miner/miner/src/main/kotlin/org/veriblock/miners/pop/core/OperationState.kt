@@ -9,7 +9,7 @@
 package org.veriblock.miners.pop.core
 
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.wallet.WalletTransaction
+import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath

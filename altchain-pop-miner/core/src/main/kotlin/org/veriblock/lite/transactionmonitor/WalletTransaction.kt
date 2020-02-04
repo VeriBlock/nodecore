@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.wallet
+package org.veriblock.lite.transactionmonitor
 
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.sdk.models.Address

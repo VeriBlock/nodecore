@@ -9,13 +9,13 @@
 package org.veriblock.miners.pop.service
 
 import com.google.protobuf.InvalidProtocolBufferException
-import org.veriblock.lite.wallet.WalletTransaction
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateData
 import org.veriblock.miners.pop.storage.Pop
 import org.veriblock.miners.pop.storage.StateSerializer
-import org.veriblock.core.utilities.createLogger
 import java.util.*
 
 private val logger = createLogger {}
