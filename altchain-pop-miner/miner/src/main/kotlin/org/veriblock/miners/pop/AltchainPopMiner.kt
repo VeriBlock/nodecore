@@ -54,7 +54,9 @@ class AltchainPopMiner(
     private var operationsSubmitted = false
     private var lastConfirmedBalance = Coin.ZERO
 
-    init {
+    override fun initialize() {
+        nodeCoreLiteKit.initialize()
+
         // Restore operations (including re-attach listeners) before the network starts
         this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
 

@@ -13,6 +13,8 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.shell.core.Result
 
 interface Miner {
+    fun initialize()
+
     fun start()
 
     fun listOperations(): List<String>

@@ -34,26 +34,21 @@ private const val WALLET_FILE_EXTENSION = ".wallet"
 class NodeCoreLiteKit(
     private val context: Context
 ) {
-    val blockStore: VeriBlockBlockStore
-    val blockChain: BlockChain
-    val addressManager: AddressManager
-    val transactionMonitor: TransactionMonitor
-    val network: NodeCoreNetwork
+    lateinit var blockStore: VeriBlockBlockStore
+    lateinit var blockChain: BlockChain
+    lateinit var addressManager: AddressManager
+    lateinit var transactionMonitor: TransactionMonitor
+    lateinit var network: NodeCoreNetwork
 
     var beforeNetworkStart: () -> Unit = {}
     val balanceChangedEvent = Event<Balance>()
 
-    init {
+    fun initialize() {
         if (!context.directory.exists() && !context.directory.mkdirs()) {
             throw IOException("Unable to create directory")
         }
 
-        try {
-            this.blockStore = createBlockStore()
-        } catch (e: BlockStoreException) {
-            throw IOException("Unable to initialize VBK block store", e)
-        }
-
+        this.blockStore = createBlockStore()
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
         blockChain = BlockChain(context.networkParameters, blockStore)
@@ -92,34 +87,43 @@ class NodeCoreLiteKit(
     }
 
     fun shutdown() {
-        network.shutdown()
+        if (this::network.isInitialized) {
+            network.shutdown()
+        }
     }
 
     fun getAddress(): String = addressManager.defaultAddress.hash
 
-    @Throws(BlockStoreException::class)
-    private fun createBlockStore(): VeriBlockBlockStore {
+    private fun createBlockStore(): VeriBlockBlockStore = try {
         val chainFile = File(context.directory, context.filePrefix + ".spvchain")
-        return VeriBlockBlockStore(chainFile)
+        VeriBlockBlockStore(chainFile)
+    } catch (e: BlockStoreException) {
+        throw IOException("Unable to initialize VBK block store", e)
     }
 
     private fun createOrLoadTransactionMonitor(): TransactionMonitor {
         val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
         return if (file.exists()) {
-            file.loadTransactionMonitor()
+            try {
+                file.loadTransactionMonitor()
+            } catch (e: Exception) {
+                throw IOException("Unable to load the transaction monitoring data", e)
+            }
         } else {
             val address = Address(addressManager.defaultAddress.hash)
             TransactionMonitor(address)
         }
     }
 
-    private fun loadAddressManager(): AddressManager {
+    private fun loadAddressManager(): AddressManager = try {
         val addressManager = DefaultAddressManager()
         val file = File(context.directory, context.filePrefix + WALLET_FILE_EXTENSION)
         addressManager.load(file)
         if (!file.exists()) {
             addressManager.save()
         }
-        return addressManager
+        addressManager
+    } catch (e: Exception) {
+        throw IOException("Unable to load the address manager", e)
     }
 }
