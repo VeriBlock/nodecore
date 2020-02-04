@@ -13,8 +13,8 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
-import org.veriblock.lite.wallet.WalletTransaction
 import org.veriblock.miners.pop.TX_DEPTH_COMPLETE
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.models.VeriBlockBlock

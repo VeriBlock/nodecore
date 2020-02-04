@@ -11,8 +11,8 @@ package org.veriblock.lite.core
 import org.apache.commons.lang3.RandomStringUtils
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.wallet.AddressKeyGenerator
-import org.veriblock.lite.wallet.TransactionMonitor
-import org.veriblock.lite.wallet.WalletTransaction
+import org.veriblock.lite.transactionmonitor.TransactionMonitor
+import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction

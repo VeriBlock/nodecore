@@ -18,10 +18,10 @@ import org.veriblock.lite.core.Event
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.store.VeriBlockBlockStore
+import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
+import org.veriblock.lite.transactionmonitor.TransactionMonitor
+import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
 import org.veriblock.lite.util.Threading
-import org.veriblock.lite.wallet.TM_FILE_EXTENSION
-import org.veriblock.lite.wallet.TransactionMonitor
-import org.veriblock.lite.wallet.loadTransactionMonitor
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import java.io.File

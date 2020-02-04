@@ -17,8 +17,8 @@ import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.EmptyEvent
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.PublicationSubscription
+import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
-import org.veriblock.lite.wallet.TransactionMonitor
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock

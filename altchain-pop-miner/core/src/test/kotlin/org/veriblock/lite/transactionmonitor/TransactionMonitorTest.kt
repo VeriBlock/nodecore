@@ -6,14 +6,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.wallet
+package org.veriblock.lite.transactionmonitor
 
 import io.kotlintest.matchers.collections.shouldContain
 import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import org.junit.Test
-import org.veriblock.lite.core.*
+import org.veriblock.lite.core.MerkleTree
+import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.lite.core.randomAddress
+import org.veriblock.lite.core.randomCoin
+import org.veriblock.lite.core.randomFullBlock
+import org.veriblock.lite.core.randomTransactionMeta
+import org.veriblock.lite.core.randomTransactionMonitor
+import org.veriblock.lite.core.randomVeriBlockBlock
+import org.veriblock.lite.core.randomVeriBlockTransaction
+import org.veriblock.lite.core.randomWalletTransaction
 
 class TransactionMonitorTest {
 
