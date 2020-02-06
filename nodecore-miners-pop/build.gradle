@@ -40,7 +40,10 @@ dependencies {
     // Http API
     compile "io.ktor:ktor-server-netty:1.1.4"
     compile "io.ktor:ktor-gson:1.1.4"
+
+    // Logging
     compile "io.github.microutils:kotlin-logging:1.6.25"
+    runtimeOnly 'org.fusesource.jansi:jansi:1.18'
 
     // Dependency Injection
     compile 'org.koin:koin-core:2.0.1'
