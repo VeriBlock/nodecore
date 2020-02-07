@@ -85,6 +85,7 @@ class NodeCoreNetwork(
 
     private fun poll() {
         try {
+            var nodeCoreSyncStatus: NodeCoreGateway.NodeCoreSyncStatus? = null
             // Verify if we can make a connection with the remote NodeCore
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine
@@ -94,7 +95,7 @@ class NodeCoreNetwork(
                 }
                 connected.set(true)
                 // Verify the remote NodeCore sync status
-                val nodeCoreSyncStatus = gateway.getNodeCoreSyncStatus()
+                nodeCoreSyncStatus = gateway.getNodeCoreSyncStatus()
                 if (nodeCoreSyncStatus.isSynchronized) {
                     if (!isSynchronized()) {
                         synchronized.set(true)
@@ -141,10 +142,13 @@ class NodeCoreNetwork(
                 }
             } else {
                 if (!isHealthy()) {
-                    logger.info { "Cannot proceed: waiting for connection with NodeCore..." }
+                    logger.warn { "Cannot proceed: waiting for connection with NodeCore..." }
                 } else {
                     if (!isSynchronized()) {
-                       logger.info { "Cannot proceed because NodeCore is not synchronized" }
+                        logger.warn { "Cannot proceed because NodeCore is not synchronized" }
+                        nodeCoreSyncStatus?.let {
+                            logger.warn { "Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
+                        }
                     }
                 }
             }
