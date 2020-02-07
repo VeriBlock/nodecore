@@ -1,17 +1,17 @@
 package nodecore.cli.commands.shell
 
-import nodecore.cli.CliShell
 import nodecore.cli.cliCommand
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
 import nodecore.cli.contracts.ProtocolEndpointType
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
 import java.awt.GraphicsEnvironment
 
-fun CliShell.connectionCommands() {
+fun CommandFactory.connectionCommands() {
     cliCommand(
         name = "Connect",
         form = "connect",

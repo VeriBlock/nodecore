@@ -12,13 +12,13 @@ import com.google.gson.GsonBuilder
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
 
-fun Shell.miningCommands(miner: Miner) {
+fun CommandFactory.miningCommands(miner: Miner) {
 
     val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
 

@@ -4,17 +4,18 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.SignMessagePayload
 import nodecore.cli.serialization.SignatureIndexPayload
 import org.veriblock.core.utilities.Utility
-import org.veriblock.shell.CommandParameterMappers
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 
-fun CliShell.signatureCommands() {
+fun CommandFactory.signatureCommands() {
     rpcCommand(
         name = "Signature Index",
         form = "sigindex|signatureindex",
@@ -29,7 +30,7 @@ fun CliShell.signatureCommands() {
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
-        val result = adminService.getSignatureIndex(request.build())
+        val result = cliShell.adminService.getSignatureIndex(request.build())
 
         prepareResult(result.success, result.resultsList) {
             SignatureIndexPayload(result)
@@ -50,7 +51,7 @@ fun CliShell.signatureCommands() {
         val request = VeriBlockMessages.SignMessageRequest.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .setMessage(ByteString.copyFrom(message))
-        val result = adminService.signMessage(request.build())
+        val result = cliShell.adminService.signMessage(request.build())
 
         prepareResult(result.success, result.resultsList) {
             SignMessagePayload(address, result)
@@ -71,7 +72,7 @@ fun CliShell.signatureCommands() {
         val request = VeriBlockMessages.SignMessageRequest.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .setMessage(ByteStringUtility.base64ToByteString(message))
-        val result = adminService.signMessage(request.build())
+        val result = cliShell.adminService.signMessage(request.build())
 
         prepareResult(result.success, result.resultsList) {
             SignMessagePayload(address, result)

@@ -23,11 +23,12 @@ import nodecore.cli.commands.shell.startApplicationCommands
 import nodecore.cli.serialization.EmptyPayload
 import org.veriblock.shell.Command
 import org.veriblock.shell.CommandContext
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 
-fun CliShell.registerCommands() {
+fun CommandFactory.registerCommands() {
     // Shell commands
     standardCommands()
     startApplicationCommands()
@@ -74,7 +75,9 @@ inline fun CommandContext.prepareResult(
     }
 }
 
-fun CliShell.cliCommand(
+val CommandContext.cliShell get() = shell as CliShell
+
+fun CommandFactory.cliCommand(
     name: String,
     form: String,
     description: String,
@@ -93,7 +96,7 @@ fun CliShell.cliCommand(
     registerCommand(command)
 }
 
-fun CliShell.rpcCommand(
+fun CommandFactory.rpcCommand(
     name: String,
     form: String,
     description: String,

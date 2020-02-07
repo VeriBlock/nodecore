@@ -1,14 +1,15 @@
 package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.ListAllowedPayload
-import org.veriblock.shell.CommandParameterMappers
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 
-fun CliShell.whitelistCommands() {
+fun CommandFactory.whitelistCommands() {
     rpcCommand(
         name = "Add Whitelist Address",
         form = "addallowed",
@@ -22,7 +23,7 @@ fun CliShell.whitelistCommands() {
             .setCommand(VeriBlockMessages.SetAllowedRequest.Command.ADD)
             .setValue(value)
             .build()
-        val result = adminService.setAllowed(request)
+        val result = cliShell.adminService.setAllowed(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -33,7 +34,7 @@ fun CliShell.whitelistCommands() {
         description = "Clears the list of allowed addresses"
     ) {
         val request = VeriBlockMessages.ClearAllowedRequest.newBuilder().build()
-        val result = adminService.clearAllowed(request)
+        val result = cliShell.adminService.clearAllowed(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -44,7 +45,7 @@ fun CliShell.whitelistCommands() {
         description = "Returns a list of allowed addresses"
     ) {
         val request = VeriBlockMessages.ListAllowedRequest.newBuilder().build()
-        val result = adminService.listAllowed(request)
+        val result = cliShell.adminService.listAllowed(request)
 
         prepareResult(result.success, result.resultsList) {
             ListAllowedPayload(result)
@@ -64,7 +65,7 @@ fun CliShell.whitelistCommands() {
             .setCommand(VeriBlockMessages.SetAllowedRequest.Command.REMOVE)
             .setValue(value)
             .build()
-        val result = adminService.setAllowed(request)
+        val result = cliShell.adminService.setAllowed(request)
 
         prepareResult(result.success, result.resultsList)
     }

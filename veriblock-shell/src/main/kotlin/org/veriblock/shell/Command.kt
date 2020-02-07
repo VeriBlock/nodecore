@@ -30,24 +30,7 @@ class CommandParameter(
     override fun toString() = name
 }
 
-enum class CommandParameterType {
-    STRING,
-    INTEGER,
-    LONG,
-    AMOUNT,
-    PEER,
-    STANDARD_ADDRESS,
-    COMMA_SEPARATED_STANDARD_ADDRESSES,
-    STANDARD_OR_MULTISIG_ADDRESS,
-    HASH,
-    HEXSTRING,
-    BOOLEAN,
-    COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES,
-    COMMA_SEPARATED_SIGNATURES,
-    MULTISIG_ADDRESS
-}
-
-fun Shell.command(
+fun CommandFactory.command(
     name: String,
     form: String,
     description: String,

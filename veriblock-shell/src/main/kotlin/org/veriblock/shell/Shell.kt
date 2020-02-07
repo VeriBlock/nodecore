@@ -16,6 +16,7 @@ import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.reader.impl.LineReaderImpl
+import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.AttributedStringBuilder
@@ -32,10 +33,11 @@ import java.util.*
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 private val printLogger = LoggerFactory.getLogger("shell-printing")
 
+@Suppress("LeakingThis")
 open class Shell(
+    private val commandFactory: CommandFactory,
     testData: ShellTestData? = null
 ) {
-    private val commandFactory = CommandFactory()
     private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     private var running = false
@@ -57,14 +59,12 @@ open class Shell(
         currentShell = this
     }
 
-    protected open fun getCompleter(): Completer? = null
-
-    protected fun refreshCompleter() {
+    fun refreshCompleter() {
         (reader as LineReaderImpl).completer = getCompleter()
         reader.setOpt(LineReader.Option.DISABLE_EVENT_EXPANSION)
     }
 
-    protected open fun getPrompt() = AttributedStringBuilder()
+    protected open fun getPrompt(): String = AttributedStringBuilder()
         .style(AttributedStyle.BOLD.foreground(AttributedStyle.GREEN))
         .append(" > ")
         .toAnsi(terminal)
@@ -279,7 +279,15 @@ open class Shell(
     fun getCommand(alias: String) = commandFactory.getCommands()[alias]
         ?: error("Command $alias not found!")
 
-    fun registerCommand(command: Command) {
-        commandFactory.registerCommand(command)
+    private fun getCompleter(): Completer {
+        val commands = getCommands().asSequence().filter {
+            it.shouldAutoComplete()
+        }.map {
+            it.form.split('|').first()
+        }.toList()
+
+        return StringsCompleter(commands)
     }
+
+    protected open fun Command.shouldAutoComplete(): Boolean = true
 }

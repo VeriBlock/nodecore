@@ -3,16 +3,18 @@ package nodecore.cli.commands.shell
 import nodecore.cli.CliShell
 import nodecore.cli.annotations.CommandServiceType
 import nodecore.cli.cliCommand
+import nodecore.cli.cliShell
 import nodecore.cli.contracts.ProtocolEndpointType
 import org.jline.utils.AttributedStyle
 import org.veriblock.shell.Command
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.util.*
 
-fun CliShell.standardCommands() {
+fun CommandFactory.standardCommands() {
     cliCommand(
         name = "Clear Screen",
         form = "clear",
@@ -40,22 +42,23 @@ fun CliShell.standardCommands() {
             CommandParameter(name = "command", mapper = CommandParameterMappers.STRING, required = false)
         )
     ) {
+        val shell = cliShell
         val command: String? = getOptionalParameter("command")
-
         if (command == null) {
             val categories = HashMap<CommandServiceType, MutableList<Command>>()
 
-            for (def in getCommands()) {
-                val commandServiceType = CommandServiceType.valueOf(
-                    checkNotNull(def.extraData) { "Command $def's extra data must not be null!" }
-                )
+            for (def in shell.getCommands()) {
+                val extraData = checkNotNull(def.extraData) {
+                    "Command $def's extra data must not be null!"
+                }
+                val commandServiceType = CommandServiceType.valueOf(extraData)
 
                 val requiresConnection = commandServiceType == CommandServiceType.RPC
 
-                if (!isValidType(commandServiceType, getProtocolType()))
+                if (!isValidType(commandServiceType, shell.protocolType))
                     continue
 
-                if (requiresConnection && !isConnected())
+                if (requiresConnection && !shell.isConnected())
                     continue
 
                 val list = categories.getOrPut(commandServiceType) { ArrayList() }
@@ -63,36 +66,36 @@ fun CliShell.standardCommands() {
                 list.sortBy { it.form }
             }
 
-            printNormal("Commands:")
+            shell.printNormal("Commands:")
             for ((category, list) in categories) {
-                printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
+                shell.printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
                 for (def in list) {
-                    printStyled("    ${def.form.split("|").first()}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
-                    formatParameters(def.parameters)
+                    shell.printStyled("    ${def.form.split("|").first()}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                    shell.formatParameters(def.parameters)
                     printInfo("")
                 }
             }
 
-            printNormal("")
-            printNormal("    All RPC Commands support following selectors:")
-            printNormal("        -o <filename>       Saves command output into a file")
-            printNormal("        Example: getinfo -o abcde.json")
+            shell.printNormal("")
+            shell.printNormal("    All RPC Commands support following selectors:")
+            shell.printNormal("        -o <filename>       Saves command output into a file")
+            shell.printNormal("        Example: getinfo -o abcde.json")
             success()
         } else {
-            val def = getCommandsByAlias()[command]
+            val def = shell.getCommandsByAlias()[command]
             if (def != null) {
                 val commandServiceType = CommandServiceType.valueOf(
                     checkNotNull(def.extraData) { "Command $def's extra data must not be null!" }
                 )
                 val requiresConnection = commandServiceType == CommandServiceType.RPC
                 if (
-                    isValidType(commandServiceType, getProtocolType())
-                    && (!requiresConnection || (requiresConnection && isConnected()))
+                    isValidType(commandServiceType, shell.getProtocolType())
+                    && (!requiresConnection || (requiresConnection && shell.isConnected()))
                 ) {
-                    printStyled("\nCommand: ${def.name}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
-                    printStyled("\n${def.form}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
-                    formatParameters(def.parameters)
-                    printStyled("\n${def.description}\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                    shell.printStyled("\nCommand: ${def.name}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                    shell.printStyled("\n${def.form}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                    shell.formatParameters(def.parameters)
+                    shell.printStyled("\n${def.description}\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
                     success()
                 } else {
                     failure("V004", "Unknown command", "The command $command is unknown. Type 'help' to view all commands.")

@@ -36,12 +36,7 @@ class ShellTest {
 
         // and a shell configured with the greet command
         val outStream = ByteArrayOutputStream()
-        val shell = Shell(
-            ShellTestData(
-                inputStream = inputStream,
-                outputStream =  outStream
-            )
-        ).apply {
+        val commandFactory = CommandFactory().apply {
             command(
                 name = "Greet",
                 form = "greet",
@@ -55,6 +50,13 @@ class ShellTest {
                 success()
             }
         }
+        val shell = Shell(
+            commandFactory,
+            ShellTestData(
+                inputStream = inputStream,
+                outputStream =  outStream
+            )
+        )
 
         // When
         shell.run()

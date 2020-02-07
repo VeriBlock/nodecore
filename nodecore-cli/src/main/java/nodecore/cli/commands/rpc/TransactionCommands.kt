@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
@@ -16,11 +16,12 @@ import nodecore.cli.serialization.TransactionInfo
 import nodecore.cli.serialization.TransactionReferencesPayload
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 
-fun CliShell.transactionCommands() {
+fun CommandFactory.transactionCommands() {
     rpcCommand(
         name = "Abandon Transaction From TxID",
         form = "abandontransactionfromtxid",
@@ -34,7 +35,7 @@ fun CliShell.transactionCommands() {
             .setTxids(VeriBlockMessages.TransactionSet.newBuilder()
                 .addTxids(ByteString.copyFrom(Utility.hexToBytes(txid)))
             ).build()
-        val result = adminService.abandonTransactionRequest(request)
+        val result = cliShell.adminService.abandonTransactionRequest(request)
 
         prepareResult(result.success, result.resultsList) {
             AbandonTransactionFromTxIDInfo(result)
@@ -61,7 +62,7 @@ fun CliShell.transactionCommands() {
                             .setStartingSignatureIndex(index)))
             .build()
 
-        val result = adminService.abandonTransactionRequest(request)
+        val result = cliShell.adminService.abandonTransactionRequest(request)
 
         prepareResult(result.success, result.resultsList) {
             AbandonTransactionsFromAddressInfo(result)
@@ -75,7 +76,7 @@ fun CliShell.transactionCommands() {
         suggestedCommands = { listOf("send", "getbalance", "gethistory", "sigindex") }
     ) {
         val request = VeriBlockMessages.GetPendingTransactionsRequest.newBuilder().build()
-        val result = adminService.getPendingTransactions(request)
+        val result = cliShell.adminService.getPendingTransactions(request)
 
         prepareResult(result.success, result.resultsList) {
             result.transactionsList.map { TransactionInfo(it) }
@@ -101,7 +102,7 @@ fun CliShell.transactionCommands() {
             request.searchLength = searchLength
         }
 
-        val result = adminService.getTransactions(request.build())
+        val result = cliShell.adminService.getTransactions(request.build())
 
         prepareResult(result.success, result.resultsList) {
             TransactionReferencesPayload(result.transactionsList)
@@ -135,7 +136,7 @@ fun CliShell.transactionCommands() {
                 request.sourceAddress = ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress)
             }
 
-            val result = adminService.sendCoins(request.build())
+            val result = cliShell.adminService.sendCoins(request.build())
 
             prepareResult(result.success, result.resultsList) {
                 SendCoinsPayload(result)
@@ -156,7 +157,7 @@ fun CliShell.transactionCommands() {
     ) {
         val fee = Utility.convertDecimalCoinToAtomicLong(getParameter("transactionFee"))
         val request = VeriBlockMessages.SetTransactionFeeRequest.newBuilder().setAmount(fee).build()
-        val result = adminService.setTransactionFee(request)
+        val result = cliShell.adminService.setTransactionFee(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -194,7 +195,7 @@ fun CliShell.transactionCommands() {
             request.signatureIndexString = ByteString.copyFrom(("" + signatureIndex).toByteArray())
         }
 
-        val result = adminService.makeUnsignedMultisigTx(request.build())
+        val result = cliShell.adminService.makeUnsignedMultisigTx(request.build())
 
         prepareResult(result.success, result.resultsList) {
             MakeUnsignedMultisigTxPayload(result)
@@ -213,7 +214,7 @@ fun CliShell.transactionCommands() {
         val request = VeriBlockMessages.SubmitTransactionsRequest
             .newBuilder().addTransactions(VeriBlockMessages.TransactionUnion.parseFrom(Utility.hexToBytes(rawTransaction)))
             .build()
-        val result = adminService.submitTransactions(request)
+        val result = cliShell.adminService.submitTransactions(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -277,7 +278,7 @@ fun CliShell.transactionCommands() {
                     val request = VeriBlockMessages.SubmitMultisigTxRequest.newBuilder().apply {
                         multisigTransaction = signedMultisigTxBuilder.build()
                     }
-                    val result = adminService.submitMultisigTx(request.build())
+                    val result = cliShell.adminService.submitMultisigTx(request.build())
 
                     prepareResult(result.success, result.resultsList)
                 }

@@ -1,15 +1,15 @@
 package nodecore.cli.commands.shell
 
-import nodecore.cli.CliShell
 import nodecore.cli.cliCommand
 import nodecore.cli.utilities.ExtendedIllegalStateException
 import nodecore.cli.utilities.ExternalProgramUtilities
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.core.ResultMessage
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.awt.GraphicsEnvironment
 
-fun CliShell.startApplicationCommands() {
+fun CommandFactory.startApplicationCommands() {
     cliCommand(
         name = "Start NodeCore",
         form = "startnodecore|launchnodecore",
@@ -25,7 +25,7 @@ fun CliShell.startApplicationCommands() {
             try {
                 val successFile = ExternalProgramUtilities.startupExternalProcess("../../", "nodecore-0", "nodecore", "NodeCore")
                 outputObject(ResultMessage("V200", "Started", "Successfully started NodeCore $successFile", false))
-                printWarning("Please note that NodeCore may take several minutes to load before you can connect to it!")
+                shell.printWarning("Please note that NodeCore may take several minutes to load before you can connect to it!")
                 success()
             } catch (e: ExtendedIllegalStateException) {
                 failure("V004", e.message, e.extraMessage)
