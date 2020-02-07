@@ -9,13 +9,13 @@
 package nodecore.miners.pop.shell.commands
 
 import nodecore.miners.pop.Configuration
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
 
-fun Shell.configCommands(configuration: Configuration) {
+fun CommandFactory.configCommands(configuration: Configuration) {
     command(
         name = "List Config",
         form = "listconfig",

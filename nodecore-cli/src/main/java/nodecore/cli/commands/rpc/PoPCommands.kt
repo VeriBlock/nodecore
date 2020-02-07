@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
@@ -13,13 +13,14 @@ import nodecore.cli.serialization.PopPayload
 import nodecore.cli.serialization.TroubleshootPoPTransactionsPayload
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import java.awt.GraphicsEnvironment
 
 private val logger = createLogger {}
 
-fun CliShell.popCommands() {
+fun CommandFactory.popCommands() {
     rpcCommand(
         name = "Troubleshoot PoP By Address",
         form = "troubleshootpopbyaddress",
@@ -43,7 +44,7 @@ fun CliShell.popCommands() {
         request.onlyFailures = getParameter("onlyFailures")
         request.searchLength = getOptionalParameter("searchLength") ?: 2000
 
-        val result = adminService.troubleshootPoPTransactions(request.build())
+        val result = cliShell.adminService.troubleshootPoPTransactions(request.build())
 
         prepareResult(result.success, result.resultsList) {
             TroubleshootPoPTransactionsPayload(result)
@@ -69,7 +70,7 @@ fun CliShell.popCommands() {
             .setBlockNum(getOptionalParameter("block") ?: 0)
             .build()
 
-        val result = adminService.getPop(request)
+        val result = cliShell.adminService.getPop(request)
 
         prepareResult(result.success, result.resultsList) {
             PopPayload(result)
@@ -95,7 +96,7 @@ fun CliShell.popCommands() {
             request.searchLength = searchLength
         }
 
-        val result = adminService.getPoPEndorsementsInfo(request.build())
+        val result = cliShell.adminService.getPoPEndorsementsInfo(request.build())
 
         prepareResult(result.success, result.resultsList) {
             result.popEndorsementsList.map { PoPEndorsementsInfo(it) }
@@ -132,7 +133,7 @@ fun CliShell.popCommands() {
         if (address != null) {
             request.address = ByteStringAddressUtility.createProperByteStringAutomatically(address)
         }
-        val result = adminService.submitPop(request.build())
+        val result = cliShell.adminService.submitPop(request.build())
 
         prepareResult(result.success, result.resultsList)
     }
@@ -156,7 +157,7 @@ fun CliShell.popCommands() {
             request.searchLength = searchLength
         }
 
-        val result = adminService.getProtectingParents(request.build())
+        val result = cliShell.adminService.getProtectingParents(request.build())
 
         logger.info("We received a total of ${result.popEndorsementsCount} pop endorsements!")
 
@@ -184,7 +185,7 @@ fun CliShell.popCommands() {
             request.searchLength = searchLength
         }
 
-        val result = adminService.getProtectedChildren(request.build())
+        val result = cliShell.adminService.getProtectedChildren(request.build())
 
         logger.info("We received a total of ${result.popEndorsementsCount} pop endorsements!")
 

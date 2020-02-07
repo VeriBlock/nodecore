@@ -11,14 +11,14 @@ package org.veriblock.miners.pop.shell.commands
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.util.Utils
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun Shell.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: PluginService) {
+fun CommandFactory.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginService: PluginService) {
 
     command(
         name = "Update Context",

@@ -13,15 +13,14 @@ import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.contracts.PoPOperationInfo
 import nodecore.miners.pop.shell.toShellResult
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.CommandParameterType
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun Shell.miningCommands(
+fun CommandFactory.miningCommands(
     miner: PoPMiner,
     prettyPrintGson: Gson
 ) {

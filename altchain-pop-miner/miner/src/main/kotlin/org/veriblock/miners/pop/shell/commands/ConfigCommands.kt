@@ -9,13 +9,13 @@
 package org.veriblock.miners.pop.shell.commands
 
 import org.veriblock.core.utilities.Configuration
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
 
-fun Shell.configCommands() {
+fun CommandFactory.configCommands() {
     command(
         name = "List Config",
         form = "listconfig",

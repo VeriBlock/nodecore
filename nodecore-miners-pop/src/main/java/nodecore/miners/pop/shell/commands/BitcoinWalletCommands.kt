@@ -11,15 +11,15 @@ package nodecore.miners.pop.shell.commands
 import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.shell.toShellResult
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.math.BigDecimal
 
-fun Shell.bitcoinWalletCommands(
+fun CommandFactory.bitcoinWalletCommands(
     miner: PoPMiner
 ) {
     command(

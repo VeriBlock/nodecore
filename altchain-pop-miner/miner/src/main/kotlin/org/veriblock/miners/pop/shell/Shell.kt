@@ -13,9 +13,9 @@ import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
 import org.veriblock.miners.pop.shell.commands.standardCommands
 import org.veriblock.miners.pop.shell.commands.walletCommands
-import org.veriblock.shell.Shell
+import org.veriblock.shell.CommandFactory
 
-fun Shell.configure(
+fun CommandFactory.configure(
     miner: Miner
 ) {
     standardCommands()

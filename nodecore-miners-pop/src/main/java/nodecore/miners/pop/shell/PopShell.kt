@@ -9,7 +9,6 @@ package nodecore.miners.pop.shell
 
 import com.google.common.eventbus.Subscribe
 import com.google.gson.GsonBuilder
-import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.PoPMiner
@@ -21,17 +20,11 @@ import nodecore.miners.pop.events.PoPMinerReadyEvent
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent
 import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent
 import nodecore.miners.pop.services.MessageService
-import nodecore.miners.pop.services.NodeCoreService
-import nodecore.miners.pop.shell.commands.bitcoinWalletCommands
-import nodecore.miners.pop.shell.commands.configCommands
-import nodecore.miners.pop.shell.commands.diagnosticCommands
-import nodecore.miners.pop.shell.commands.miningCommands
-import nodecore.miners.pop.shell.commands.standardCommands
-import nodecore.miners.pop.shell.commands.veriBlockWalletCommands
 import org.jline.utils.AttributedStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.DiagnosticUtility
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
@@ -39,22 +32,13 @@ import kotlin.system.exitProcess
 class PopShell(
     private val miner: PoPMiner,
     private val messageService: MessageService,
-    configuration: Configuration,
-    nodeCoreService: NodeCoreService
-) : Shell() {
+    commandFactory: CommandFactory
+) : Shell(commandFactory) {
     private var messageHandler: CompletableFuture<Void?>? = null
     private var mustAcceptWalletSeed = false
 
     init {
         InternalEventBus.getInstance().register(this)
-
-        val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
-        standardCommands()
-        configCommands(configuration)
-        miningCommands(miner, prettyPrintGson)
-        bitcoinWalletCommands(miner)
-        veriBlockWalletCommands(nodeCoreService, prettyPrintGson)
-        diagnosticCommands(miner)
     }
 
     override fun initialize() {

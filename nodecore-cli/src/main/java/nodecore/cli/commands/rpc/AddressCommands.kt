@@ -2,7 +2,7 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
@@ -10,10 +10,11 @@ import nodecore.cli.serialization.GenerateMultisigAddressPayload
 import nodecore.cli.serialization.NewAddressPayload
 import nodecore.cli.serialization.TransactionInfo
 import nodecore.cli.serialization.ValidateAddressPayload
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 
-fun CliShell.addressCommands() {
+fun CommandFactory.addressCommands() {
     rpcCommand(
         name = "Validate Address",
         form = "validateaddress|validateaddr",
@@ -27,7 +28,7 @@ fun CliShell.addressCommands() {
             address = ByteStringAddressUtility.createProperByteStringAutomatically(getParameter("address"))
         }.build()
 
-        val result = adminService.validateAddress(request)
+        val result = cliShell.adminService.validateAddress(request)
 
         prepareResult(result.success, result.resultsList) {
             ValidateAddressPayload(result)
@@ -45,7 +46,7 @@ fun CliShell.addressCommands() {
     ) {
         val address: String = getParameter("address")
 
-        val result = adminService.setDefaultAddress(
+        val result = cliShell.adminService.setDefaultAddress(
             VeriBlockMessages.SetDefaultAddressRequest.newBuilder()
                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                 .build()
@@ -64,7 +65,7 @@ fun CliShell.addressCommands() {
     ) {
         val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
 
-        val result = adminService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
+        val result = cliShell.adminService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
             .setCount(count)
             .build()
         )
@@ -91,7 +92,7 @@ fun CliShell.addressCommands() {
             requestBuilder.addSourceAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
 
-        val result = adminService.generateMultisigAddress(requestBuilder.build())
+        val result = cliShell.adminService.generateMultisigAddress(requestBuilder.build())
         prepareResult(result.success, result.resultsList) {
             GenerateMultisigAddressPayload(result)
         }
@@ -109,7 +110,7 @@ fun CliShell.addressCommands() {
         val sourceAddress: String = getParameter("sourceAddress")
         val destinationAddress: String = getParameter("destinationAddress")
 
-        val result = adminService.drainAddress(VeriBlockMessages.DrainAddressRequest.newBuilder()
+        val result = cliShell.adminService.drainAddress(VeriBlockMessages.DrainAddressRequest.newBuilder()
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress))
             .setDestinationAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
             .build()

@@ -2,15 +2,16 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.AddressBalanceSchedulePayload
 import nodecore.cli.serialization.BalancePayload
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 
-fun CliShell.balanceCommands() {
+fun CommandFactory.balanceCommands() {
     rpcCommand(
         name = "Get Balance",
         form = "getbalance|getbal|bal",
@@ -25,7 +26,7 @@ fun CliShell.balanceCommands() {
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
         }
-        val result = adminService.getBalance(request.build())
+        val result = cliShell.adminService.getBalance(request.build())
 
         prepareResult(result.success, result.resultsList) {
             BalancePayload(result)
@@ -46,7 +47,7 @@ fun CliShell.balanceCommands() {
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
-        val result = adminService.getBalanceUnlockSchedule(request.build())
+        val result = cliShell.adminService.getBalanceUnlockSchedule(request.build())
 
         prepareResult(result.success, result.resultsList) {
             result.addressScheduleList.map {

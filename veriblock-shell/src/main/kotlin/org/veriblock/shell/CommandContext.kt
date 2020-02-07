@@ -12,7 +12,7 @@ import com.google.gson.GsonBuilder
 import org.jline.utils.AttributedStyle
 
 class CommandContext(
-    private val shell: Shell,
+    val shell: Shell,
     val command: Command,
     private val parameters: Map<String, Any>
 ) {
@@ -37,6 +37,7 @@ class CommandContext(
         clear = true
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> getExtraData(key: String) = extraData[key] as? T
 
     fun printInfo(message: String) {

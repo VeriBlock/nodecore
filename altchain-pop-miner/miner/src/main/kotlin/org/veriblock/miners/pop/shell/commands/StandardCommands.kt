@@ -8,14 +8,14 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun Shell.standardCommands() {
+fun CommandFactory.standardCommands() {
 
     command(
         name = "Clear Screen",
@@ -47,12 +47,12 @@ fun Shell.standardCommands() {
 
         val result = if (command == null) {
             printInfo("Commands:")
-            for ((alias, definition) in getCommandsByAlias()) {
+            for ((alias, definition) in shell.getCommandsByAlias()) {
                 printInfo("    $alias ${definition.parameters.format()}")
             }
             success()
         } else {
-            val def = getCommandsByAlias()[command]
+            val def = shell.getCommandsByAlias()[command]
             if (def != null) {
                 printInfo("Command: ${def.name}")
                 printInfo("${def.form} ${def.parameters.format()}")

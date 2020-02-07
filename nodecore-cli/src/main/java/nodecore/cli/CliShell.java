@@ -13,23 +13,20 @@ import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
 import nodecore.cli.services.AdminServiceClient;
-import org.jline.reader.Completer;
+import org.jetbrains.annotations.NotNull;
 import org.jline.reader.LineReader;
-import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.shell.Command;
 import org.veriblock.shell.CommandContext;
+import org.veriblock.shell.CommandFactory;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
 
 import javax.net.ssl.SSLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CliShell extends Shell {
@@ -106,7 +103,8 @@ public class CliShell extends Shell {
         }
     }
 
-    public CliShell(Configuration configuration) {
+    public CliShell(CommandFactory commandFactory, Configuration configuration) {
+        super(commandFactory, null);
         _configuration = configuration;
     }
 
@@ -227,19 +225,10 @@ public class CliShell extends Shell {
     }
 
     @Override
-    protected Completer getCompleter() {
-
-        List<String> commands = new ArrayList<>();
-
-        for (Command command : getCommands()) {
-            if (_endpointContainer.getProtocolEndpoint() != null || command.getExtraData().equals(CommandServiceType.SHELL.name())) {
-                commands.add(command.getForm());
-            }
-        }
-
-        Collections.sort(commands);
-
-        return new StringsCompleter(commands);
+    protected boolean shouldAutoComplete(@NotNull Command command) {
+        String extraData = command.getExtraData();
+        return (_endpointContainer != null && _endpointContainer.getProtocolEndpoint() != null) ||
+            (extraData != null && extraData.equals(CommandServiceType.SHELL.name()));
     }
 
     public void initialize(String host) {

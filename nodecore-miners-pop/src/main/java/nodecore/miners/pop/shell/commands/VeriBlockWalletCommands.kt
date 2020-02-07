@@ -13,14 +13,14 @@ import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.contracts.PoPEndorsementInfo
 import nodecore.miners.pop.services.NodeCoreService
 import nodecore.miners.pop.shell.toShellResult
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
-import org.veriblock.shell.Shell
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun Shell.veriBlockWalletCommands(
+fun CommandFactory.veriBlockWalletCommands(
     nodeCoreService: NodeCoreService,
     prettyPrintGson: Gson
 ) {

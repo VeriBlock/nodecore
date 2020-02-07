@@ -12,13 +12,13 @@ import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.common.Utility
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Utils
-import org.veriblock.shell.Shell
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream
 
-fun Shell.diagnosticCommands(miner: PoPMiner) {
+fun CommandFactory.diagnosticCommands(miner: PoPMiner) {
     command(
         name = "Show Last Bitcoin Block",
         form = "showlastbitcoinblock",

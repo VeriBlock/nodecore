@@ -3,16 +3,17 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.ImportPrivateKeyInfo
 import nodecore.cli.serialization.PrivateKeyInfo
-import org.veriblock.shell.CommandParameterMappers
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 
-fun CliShell.privateKeyCommands() {
+fun CommandFactory.privateKeyCommands() {
     rpcCommand(
         name = "Dump Private Key",
         form = "dumpprivatekey|dumpprivkey",
@@ -27,7 +28,7 @@ fun CliShell.privateKeyCommands() {
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .build()
 
-        val result = adminService.dumpPrivateKey(request)
+        val result = cliShell.adminService.dumpPrivateKey(request)
 
         prepareResult(result.success, result.resultsList) {
             PrivateKeyInfo(result)
@@ -50,7 +51,7 @@ fun CliShell.privateKeyCommands() {
         val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder()
             .setPrivateKey(ByteStringUtility.hexToByteString(privateKeyHex))
             .build()
-        val result = adminService.importPrivateKey(request)
+        val result = cliShell.adminService.importPrivateKey(request)
 
         prepareResult(result.success, result.resultsList) {
             ImportPrivateKeyInfo(result)

@@ -5,14 +5,16 @@ import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.WalletTransactionInfo
 import nodecore.cli.utilities.CommandUtility
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.shell.CommandParameterMappers
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.File
@@ -20,7 +22,7 @@ import java.io.FileWriter
 
 private val logger = createLogger {}
 
-fun CliShell.walletCommands() {
+fun CommandFactory.walletCommands() {
     rpcCommand(
         name = "Backup Wallet",
         form = "backupwallet",
@@ -34,7 +36,7 @@ fun CliShell.walletCommands() {
         val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
             .setTargetLocation(ByteString.copyFrom(targetLocation.toByteArray()))
             .build()
-        val result = adminService.backupWallet(request)
+        val result = cliShell.adminService.backupWallet(request)
 
         prepareResult(result.success, result.resultsList) {
             printInfo("Note: The backed-up wallet file is saved on the computer where NodeCore is running.")
@@ -48,11 +50,11 @@ fun CliShell.walletCommands() {
         description = "Decrypts the wallet loaded in NodeCore",
         suggestedCommands = { listOf("encryptwallet") }
     ) {
-        val passphrase = passwordPrompt("Enter passphrase: ")
+        val passphrase = shell.passwordPrompt("Enter passphrase: ")
         val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
             .setPassphrase(passphrase)
             .build()
-        val result = adminService.decryptWallet(request)
+        val result = cliShell.adminService.decryptWallet(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -63,15 +65,15 @@ fun CliShell.walletCommands() {
         description = "Encrypts the wallet loaded in NodeCore with a passphrase",
         suggestedCommands = { listOf("decryptwallet", "unlockwallet", "lockwallet") }
     ) {
-        val passphrase = passwordPrompt("Enter passphrase: ")
+        val passphrase = shell.passwordPrompt("Enter passphrase: ")
         if (passphrase.isNullOrEmpty()) {
             failure("V060", "Invalid Passphrase", "Passphrase cannot be empty")
         } else {
-            val confirmation = passwordPrompt("Confirm passphrase: ")
+            val confirmation = shell.passwordPrompt("Confirm passphrase: ")
             if (passphrase == confirmation) {
                 val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
                     .setPassphrase(passphrase).build()
-                val result = adminService.encryptWallet(request)
+                val result = cliShell.adminService.encryptWallet(request)
 
                 prepareResult(result.success, result.resultsList)
             } else {
@@ -110,7 +112,7 @@ fun CliShell.walletCommands() {
             //Delete the file if it exists, in preparation for creating new file
             startFileHeader(outputFile)
             while (!done) { //get the data
-                val reply = getTransactions(address, pageNum, pageSize, transactionType)
+                val reply = cliShell.getTransactions(address, pageNum, pageSize, transactionType)
                 try {
                     if (reply == null) {
                         result = failure()
@@ -157,7 +159,7 @@ fun CliShell.walletCommands() {
         suggestedCommands = { listOf("dumpprivatekey", "importprivatekey", "backupwallet") }
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
-        val passphrase = passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
+        val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
         val request = VeriBlockMessages.ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFrom(sourceLocation.toByteArray()))
 
@@ -165,7 +167,7 @@ fun CliShell.walletCommands() {
             request.passphrase = passphrase
         }
 
-        val result = adminService.importWallet(request.build())
+        val result = cliShell.adminService.importWallet(request.build())
 
         prepareResult(result.success, result.resultsList)
     }
@@ -177,7 +179,7 @@ fun CliShell.walletCommands() {
         suggestedCommands = { listOf("unlockwallet") }
     ) {
         val request = VeriBlockMessages.LockWalletRequest.newBuilder().build()
-        val result = adminService.lockWallet(request)
+        val result = cliShell.adminService.lockWallet(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -188,10 +190,10 @@ fun CliShell.walletCommands() {
         description = "Temporarily unlocks the NodeCore wallet",
         suggestedCommands = { listOf("lockwallet") }
     ) {
-        val passphrase = passwordPrompt("Enter passphrase: ")
+        val passphrase = shell.passwordPrompt("Enter passphrase: ")
         val request = VeriBlockMessages.UnlockWalletRequest.newBuilder()
             .setPassphrase(passphrase).build()
-        val result = adminService.unlockWallet(request)
+        val result = cliShell.adminService.unlockWallet(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -202,7 +204,7 @@ fun CliShell.walletCommands() {
         description = "Rescans the blockchain for transactions belonging to imported wallets"
     ) {
         val request = VeriBlockMessages.RefreshWalletCacheRequest.newBuilder().build()
-        val result = adminService.refreshWalletCache(request)
+        val result = cliShell.adminService.refreshWalletCache(request)
 
         prepareResult(result.success, result.resultsList)
     }

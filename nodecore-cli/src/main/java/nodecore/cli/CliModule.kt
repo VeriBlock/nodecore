@@ -8,13 +8,15 @@
 package nodecore.cli
 
 import org.koin.dsl.module.module
+import org.veriblock.shell.CommandFactory
 
 val defaultModule = module {
     single { ProgramOptions() }
     single { Configuration(get()) }
     single {
-        CliShell(get()).apply {
+        CommandFactory().apply {
             registerCommands()
         }
     }
+    single { CliShell(get(), get()) }
 }

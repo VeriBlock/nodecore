@@ -2,7 +2,7 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
@@ -11,10 +11,11 @@ import nodecore.cli.serialization.BlockchainPayload
 import nodecore.cli.serialization.BlocksPayload
 import nodecore.cli.serialization.GetBlockTemplatePayload
 import org.veriblock.core.utilities.Utility
-import org.veriblock.shell.CommandParameterMappers
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 
-fun CliShell.blockCommands() {
+fun CommandFactory.blockCommands() {
     rpcCommand(
         name = "Get Blockchains",
         form = "getblockchains",
@@ -22,7 +23,7 @@ fun CliShell.blockCommands() {
         suggestedCommands = { listOf("getinfo") }
     ) {
         val request = VeriBlockMessages.GetBlockchainsRequest.newBuilder().build()
-        val result = adminService.getBlockchains(request)
+        val result = cliShell.adminService.getBlockchains(request)
 
         prepareResult(result.success, result.resultsList) {
             BlockchainPayload().apply {
@@ -46,7 +47,7 @@ fun CliShell.blockCommands() {
             .newBuilder().addFilters(
                 VeriBlockMessages.BlockFilter.newBuilder().setHash(ByteStringUtility.hexToByteString(hash))
             ).build()
-        val result = adminService.getBlocks(request)
+        val result = cliShell.adminService.getBlocks(request)
 
         prepareResult(result.success, result.resultsList) {
             BlocksPayload(result.blocksList)
@@ -66,7 +67,7 @@ fun CliShell.blockCommands() {
         val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
             .addFilters(VeriBlockMessages.BlockFilter.newBuilder().setIndex(index))
             .build()
-        val result = adminService.getBlocks(request)
+        val result = cliShell.adminService.getBlocks(request)
 
         prepareResult(result.success, result.resultsList) {
             BlocksPayload(result.blocksList)
@@ -96,7 +97,7 @@ fun CliShell.blockCommands() {
             request.addCapabilities(flag)
         }
 
-        val result = adminService.getBlockTemplate(request.build())
+        val result = cliShell.adminService.getBlockTemplate(request.build())
 
         prepareResult(result.success, result.resultsList) {
             GetBlockTemplatePayload(result)
@@ -109,7 +110,7 @@ fun CliShell.blockCommands() {
         description = "Returns the last Bitcoin block known by NodeCore"
     ) {
         val request = VeriBlockMessages.GetLastBitcoinBlockRequest.newBuilder().build()
-        val result = adminService.getLastBitcoinBlock(request)
+        val result = cliShell.adminService.getLastBitcoinBlock(request)
 
         prepareResult(result.success, result.resultsList) {
             BitcoinBlockPayload(result)
@@ -126,7 +127,7 @@ fun CliShell.blockCommands() {
     ) {
         val rawBlock: String = getParameter("rawBlock")
         val request = VeriBlockMessages.SubmitBlocksRequest.parseFrom(Utility.base64ToBytes(rawBlock))
-        val result = adminService.submitBlocks(request)
+        val result = cliShell.adminService.submitBlocks(request)
 
         prepareResult(result.success, result.resultsList)
     }

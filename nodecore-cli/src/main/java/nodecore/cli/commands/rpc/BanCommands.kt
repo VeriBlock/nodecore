@@ -1,20 +1,21 @@
 package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.cli.CliShell
-import nodecore.cli.serialization.ListBannedMinersPayload
-import nodecore.cli.serialization.ListBannedPayload
+import nodecore.cli.cliShell
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
+import nodecore.cli.serialization.ListBannedMinersPayload
+import nodecore.cli.serialization.ListBannedPayload
+import org.veriblock.shell.CommandFactory
 
-fun CliShell.banCommands() {
+fun CommandFactory.banCommands() {
     rpcCommand(
         name = "Clear banned peers",
         form = "clearbannedpeers",
         description = "Clears the list of peer connections that have been banned"
     ) {
         val request = VeriBlockMessages.ClearBannedRequest.newBuilder().build()
-        val result = adminService.clearBanned(request)
+        val result = cliShell.adminService.clearBanned(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -25,7 +26,7 @@ fun CliShell.banCommands() {
         description = "Clears the list of pool connections that have been banned"
     ) {
         val request = VeriBlockMessages.ClearBannedMinersRequest.newBuilder().build()
-        val result = adminService.clearBannedMiners(request)
+        val result = cliShell.adminService.clearBannedMiners(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -36,7 +37,7 @@ fun CliShell.banCommands() {
         description = "Returns a list of peers that are currently banned"
     ) {
         val request = VeriBlockMessages.ListBannedRequest.newBuilder().build()
-        val result = adminService.listBanned(request)
+        val result = cliShell.adminService.listBanned(request)
 
         prepareResult(result.success, result.resultsList) {
             ListBannedPayload(result)
@@ -49,7 +50,7 @@ fun CliShell.banCommands() {
         description = "Returns a list of UCP clients that are currently banned"
     ) {
         val request = VeriBlockMessages.ListBannedMinersRequest.newBuilder().build()
-        val result = adminService.listBannedMiners(request)
+        val result = cliShell.adminService.listBannedMiners(request)
 
         prepareResult(result.success, result.resultsList) {
             ListBannedMinersPayload(result)

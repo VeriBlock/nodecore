@@ -1,14 +1,15 @@
 package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 
-fun CliShell.nodeCommands() {
+fun CommandFactory.nodeCommands() {
     rpcCommand(
         name = "Add Node",
         form = "addnode",
@@ -21,7 +22,7 @@ fun CliShell.nodeCommands() {
         val peer: PeerEndpoint = getParameter("peer")
         val request = VeriBlockMessages.Endpoint.newBuilder().setAddress(peer.address())
             .setPort(peer.port().toInt()).build()
-        val result = adminService.addNode(
+        val result = cliShell.adminService.addNode(
             VeriBlockMessages.NodeRequest.newBuilder().addEndpoint(request).build()
         )
 
@@ -40,7 +41,7 @@ fun CliShell.nodeCommands() {
         val peer: PeerEndpoint = getParameter("peer")
         val request = VeriBlockMessages.Endpoint.newBuilder().setAddress(peer.address())
             .setPort(peer.port().toInt()).build()
-        val result = adminService.removeNode(
+        val result = cliShell.adminService.removeNode(
             VeriBlockMessages.NodeRequest.newBuilder().addEndpoint(request).build()
         )
 

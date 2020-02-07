@@ -3,23 +3,24 @@ package nodecore.cli.commands.rpc
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.cli.CliShell
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.PoolStatePayload
-import org.veriblock.shell.CommandParameterMappers
+import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 import java.io.UnsupportedEncodingException
 
-fun CliShell.poolCommands() {
+fun CommandFactory.poolCommands() {
     rpcCommand(
         name = "Stop Pool",
         form = "stoppool|stopsolopool",
         description = "Stops the built-in pool service in NodeCore"
     ) {
         val request = VeriBlockMessages.StopPoolRequest.newBuilder().build()
-        val result = adminService.stopPool(request)
+        val result = cliShell.adminService.stopPool(request)
 
         prepareResult(result.success, result.resultsList)
     }
@@ -41,7 +42,7 @@ fun CliShell.poolCommands() {
         } else {
             VeriBlockMessages.StartSoloPoolRequest.newBuilder().build()
         }
-        val result = adminService.startSoloPool(request)
+        val result = cliShell.adminService.startSoloPool(request)
 
         prepareResult(result.success, result.resultsList) {
             printInfo(
@@ -72,7 +73,7 @@ fun CliShell.poolCommands() {
                 e.printStackTrace()
             }
         }.build()
-        val result = adminService.startPool(request)
+        val result = cliShell.adminService.startPool(request)
 
         prepareResult(result.success, result.resultsList) {
             printInfo(
@@ -95,7 +96,7 @@ fun CliShell.poolCommands() {
         suggestedCommands = { listOf("getinfo", "getstateinfo", "startpool", "stoppool") }
     ) {
         val request = VeriBlockMessages.GetPoolStateRequest.newBuilder().build()
-        val result = adminService.getPoolState(request)
+        val result = cliShell.adminService.getPoolState(request)
 
         prepareResult(result.success, result.resultsList) {
             PoolStatePayload(result)
@@ -108,7 +109,7 @@ fun CliShell.poolCommands() {
         description = "Restarts the built-in pool web server"
     ) {
         val request = VeriBlockMessages.RestartPoolWebServerRequest.newBuilder().build()
-        val result = adminService.restartPoolWebServer(request)
+        val result = cliShell.adminService.restartPoolWebServer(request)
 
         prepareResult(result.success, result.resultsList)
     }
