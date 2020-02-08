@@ -1,5 +1,6 @@
 package org.veriblock.miners.pop
 
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -20,6 +21,7 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
@@ -40,6 +42,8 @@ import java.sql.SQLException
 import java.util.*
 
 private val logger = createLogger {}
+
+private val mockEndorsementsPerBlock = Configuration.getInt("miner.mockEndorsementsPerBlock") ?: 5
 
 class MockMiner(
     private val pluginFactory: PluginService
@@ -75,25 +79,36 @@ class MockMiner(
         val publicationData = chain.getPublicationData(block)
 
         val key = KeyGenerator.generate()
-        val atv = mine(publicationData.publicationData, veriBlockBlockchain.chainHead, key)
+
+        val vbkTip = veriBlockBlockchain.chainHead
+        val atv = mine(publicationData.publicationData, vbkTip, key)
 
         val lastKnownBtcBlockHash = publicationData.btcContext.last()
         val lastKnownVbkBlockHash = publicationData.context.last()
         val lastKnownBtcBlock = bitcoinBlockchain[Sha256Hash.wrap(lastKnownBtcBlockHash)]
         val lastKnownVbkBlock = veriBlockBlockchain[VBlakeHash.wrap(lastKnownVbkBlockHash)]
-        val vtb = vpm.mine(
-            veriBlockBlockchain.chainHead,
-            lastKnownVbkBlock,
-            lastKnownBtcBlock,
-            key
-        )
 
-        val submissionResult = chain.submit(atv, listOf(vtb))
+        val vtbs = ArrayList<VeriBlockPublication>()
+        var blockToEndorse = vbkTip
+        for (i in 1..mockEndorsementsPerBlock) {
+            vtbs += vpm.mine(
+                blockToEndorse,
+                lastKnownVbkBlock,
+                lastKnownBtcBlock,
+                key
+            )
+            blockToEndorse = veriBlockBlockchain[blockToEndorse.previousBlock]
+            if (blockToEndorse == null) {
+                logger.warn("Unable to endorse more than ${vtbs.size} blocks as the mocked VBK chain has only this amount of blocks right now.")
+                break
+            }
+        }
+
+        val submissionResult = chain.submit(atv, vtbs)
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         return success()
     }
-
 
     // retrieve the blocks between lastKnownBlock and getChainHead()
     @Throws(SQLException::class)
