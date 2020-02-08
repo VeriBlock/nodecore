@@ -13,7 +13,6 @@ import com.google.protobuf.CodedOutputStream
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.lite.wallet.Protos
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output

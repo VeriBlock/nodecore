@@ -83,11 +83,12 @@ class BitcoinFamilyChain(
                 }.find {
                     config.payoutAddress.startsWith(it.value)
                 }?.key
+                val extraError = candidateNetwork?.let {
+                    " Or was it a $it address? If so, make sure to set 'network' to '$it' in the config"
+                } ?: ""
                 error(
                     "$key's payoutAddress configuration must be a properly formed hex script or a valid segwit address!" +
-                    candidateNetwork?.let {
-                        " Or was it a $it address? If so, make sure to set 'network' to '$it' in the config"
-                    } ?: ""
+                    extraError
                 )
             }
         }
