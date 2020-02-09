@@ -8,8 +8,9 @@
 
 package org.veriblock.miners.pop.service
 
-import org.koin.standalone.KoinComponent
-import org.koin.standalone.inject
+import org.koin.core.KoinComponent
+import org.koin.core.inject
+import org.koin.core.qualifier.named
 import org.veriblock.alt.plugins.FamilyPluginsContainer
 import org.veriblock.alt.plugins.NormalPluginsContainer
 import org.veriblock.core.utilities.Configuration
@@ -24,9 +25,9 @@ class PluginConfig(
     val name: String? = null
 )
 
-class PluginService() : KoinComponent {
-    val normalPlugins: NormalPluginsContainer by inject("normal-plugins")
-    val familyPlugins: FamilyPluginsContainer by inject("family-plugins")
+class PluginService : KoinComponent {
+    val normalPlugins: NormalPluginsContainer by inject(named("normal-plugins"))
+    val familyPlugins: FamilyPluginsContainer by inject(named("family-plugins"))
 
     private var loadedPlugins: Map<String, SecurityInheritingChain> = emptyMap()
 

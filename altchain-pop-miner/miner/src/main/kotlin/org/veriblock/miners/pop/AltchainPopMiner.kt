@@ -150,11 +150,7 @@ class AltchainPopMiner(
         }
     }
 
-    override fun listOperations() = operations.values.asSequence().sortedBy {
-        it.timestamp
-    }.map {
-        "${it.id}: ${it.chainId} (${it.blockHeight}) | ${it.state}"
-    }.toList()
+    override fun getOperations() = operations.values.sortedBy { it.timestamp }
 
     override fun getOperation(id: String): MiningOperation? {
         return operations[id]
@@ -198,9 +194,13 @@ class AltchainPopMiner(
         if (state.status != OperationStatus.UNKNOWN) {
             logger.info { "Created operation [${state.id}] on chain ${state.chainId}" }
 
-            return success()
+            return success {
+                addMessage("v000", state.id, "")
+            }
         } else {
-            return failure()
+            return failure {
+                addMessage("v500", "Unable to mine", "Operation initialization error")
+            }
         }
     }
 

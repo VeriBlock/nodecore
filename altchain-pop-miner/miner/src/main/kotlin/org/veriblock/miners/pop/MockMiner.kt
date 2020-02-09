@@ -30,13 +30,9 @@ import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.nio.charset.StandardCharsets
-import java.security.InvalidKeyException
 import java.security.KeyPair
-import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.PublicKey
-import java.security.SignatureException
-import java.sql.SQLException
 import java.util.*
 
 private val logger = createLogger {}
@@ -96,23 +92,23 @@ class MockMiner(
         return success()
     }
 
-    // retrieve the blocks between lastKnownBlock and getChainHead()
-    @Throws(SQLException::class)
-    fun createVeriBlockContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock?> {
-        val context: MutableList<VeriBlockBlock?> = ArrayList()
+    private fun createVeriBlockContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock> {
+        // Retrieve the blocks between lastKnownBlock and getChainHead()
+        val context: MutableList<VeriBlockBlock> = ArrayList()
         var prevBlock = veriBlockBlockchain[veriBlockBlockchain.chainHead.previousBlock]
         while (prevBlock != null && prevBlock != lastKnownBlock) {
             context.add(prevBlock)
             prevBlock = veriBlockBlockchain[prevBlock.previousBlock]
         }
-        Collections.reverse(context)
+        context.reverse()
         return context
     }
 
-    @Throws(SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
     private fun signTransaction(tx: VeriBlockTransaction, privateKey: PrivateKey): VeriBlockTransaction {
-        val signature = Utils.signMessageWithPrivateKey(SerializeDeserializeService.getId(tx).bytes,
-            privateKey)
+        val signature = Utils.signMessageWithPrivateKey(
+            SerializeDeserializeService.getId(tx).bytes,
+            privateKey
+        )
         return VeriBlockTransaction(
             tx.type,
             tx.sourceAddress,
@@ -122,7 +118,8 @@ class MockMiner(
             tx.publicationData,
             signature,
             tx.publicKey,
-            tx.networkByte)
+            tx.networkByte
+        )
     }
 
     private fun deriveAddress(key: PublicKey): Address {
@@ -133,8 +130,7 @@ class MockMiner(
         return Address(data + checksum)
     }
 
-    @Throws(SQLException::class, SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
-    fun mine(publicationData: PublicationData?, lastKnownVBKBlock: VeriBlockBlock, key: KeyPair): AltPublication {
+    private fun mine(publicationData: PublicationData?, lastKnownVBKBlock: VeriBlockBlock, key: KeyPair): AltPublication {
         val address = deriveAddress(key.public)
         val endorsementTx = signTransaction(
             VeriBlockTransaction(
@@ -145,8 +141,10 @@ class MockMiner(
                 7,
                 publicationData, ByteArray(1),
                 key.public.encoded,
-                veriBlockBlockchain.networkParameters.transactionMagicByte),
-            key.private)
+                veriBlockBlockchain.networkParameters.transactionMagicByte
+            ),
+            key.private
+        )
         // publish the endorsement transaction to VeriBlock
         val blockData = VeriBlockBlockData()
         blockData.regularTransactions.add(endorsementTx)
@@ -156,10 +154,11 @@ class MockMiner(
         return AltPublication(endorsementTx,
             blockData.getRegularMerklePath(0),
             block,
-            context)
+            context
+        )
     }
 
-    override fun listOperations(): List<String> = emptyList()
+    override fun getOperations(): List<MiningOperation> = emptyList()
 
     override fun getOperation(id: String): MiningOperation? = null
 

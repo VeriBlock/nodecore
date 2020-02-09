@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.storage
 
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource
 import com.j256.ormlite.support.ConnectionSource
-import org.koin.dsl.module.module
+import org.koin.dsl.module
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.storage.ormlite.OrmLiteKeyValueRepository
 import org.veriblock.miners.pop.storage.ormlite.OrmLitePoPRepository

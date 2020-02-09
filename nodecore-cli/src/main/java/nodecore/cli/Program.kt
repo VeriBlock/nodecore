@@ -19,7 +19,7 @@ private val logger = createLogger {}
 private fun run(args: Array<String>): Int {
     print(SharedConstants.LICENSE)
 
-    val koin = startKoin (
+    val koin = startKoin(
         listOf(defaultModule),
         logger = EmptyLogger()
     ).koinContext
