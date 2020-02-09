@@ -153,8 +153,14 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 peerGroup = this.peerGroup();
 
                 peerGroup.setUseLocalhostPeerWhenPossible(configuration.isBitcoinUseLocalhostPeer());
-                peerGroup.setMinRequiredProtocolVersion(configuration.getProtocolVersion().getBitcoinProtocolVersion());
-                peerGroup.setMaxConnections(configuration.getMaxPeerConnections());
+                peerGroup.setMinRequiredProtocolVersion(configuration.getBitcoinProtocolVersion().getBitcoinProtocolVersion());
+                peerGroup.setMaxConnections(configuration.getBitcoinMaxPeerConnections());
+                peerGroup.setPeerDiscoveryTimeoutMillis(configuration.getBitcoinPeerDiscoveryTimeoutMillis());
+                peerGroup.setDownloadTxDependencies(configuration.getBitcoinDownloadTxDependencies());
+                peerGroup.setRequiredServices(configuration.getBitcoinRequiredServices());
+                peerGroup.setMinBroadcastConnections(configuration.getBitcoinMinPeerBroadcastConnections());
+                peerGroup.setMaxPeersToDiscoverCount(configuration.getBitcoinMaxPeersToDiscoverCount());
+                peerGroup.setPingIntervalMsec(configuration.getBitcoinPeerPingIntervalMsec());
 
                 wallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) -> InternalEventBus.getInstance()
                         .post(new CoinsReceivedEvent(tx, prevBalance, newBalance)));
