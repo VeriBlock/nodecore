@@ -37,12 +37,18 @@ dependencies {
     implementation 'com.github.veriblock.alt-integration:mock-pop-mining:0.0.4'
 
     // Dependency Injection
-    implementation "org.koin:koin-core:1.0.1"
+    implementation "org.koin:koin-core:2.0.1"
 
     // Coroutines
-    def coroutinesVersion = '1.2.2'
+    def coroutinesVersion = '1.3.3'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion"
+
+    // Http API
+    def ktorVersion = '1.3.1'
+    implementation "io.ktor:ktor-server-netty:$ktorVersion"
+    implementation "io.ktor:ktor-locations:$ktorVersion"
+    implementation "io.ktor:ktor-gson:$ktorVersion"
 
     // Logging
     implementation 'io.github.microutils:kotlin-logging:1.6.26'

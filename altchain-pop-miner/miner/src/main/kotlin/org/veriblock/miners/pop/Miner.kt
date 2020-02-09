@@ -17,7 +17,7 @@ interface Miner {
 
     fun start()
 
-    fun listOperations(): List<String>
+    fun getOperations(): List<MiningOperation>
 
     fun getOperation(id: String): MiningOperation?
 

@@ -8,10 +8,11 @@
 
 package org.veriblock.miners.pop
 
-import org.koin.log.EmptyLogger
-import org.koin.standalone.StandAloneContext.startKoin
+import org.koin.core.context.startKoin
 import org.veriblock.alt.plugins.pluginsModule
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.miners.pop.api.ApiServer
+import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.miners.pop.service.serviceModule
@@ -31,17 +32,17 @@ private fun run(): Int {
     })
 
     logger.info { "Starting dependency injection" }
-    val koin = startKoin(
-        listOf(
-            serviceModule, taskModule, minerModule, repositoryModule, pluginsModule
-        ),
-        logger = EmptyLogger()
-    ).koinContext
+    val koin = startKoin {
+        modules(listOf(
+            serviceModule, taskModule, minerModule, repositoryModule, pluginsModule, webApiModule
+        ))
+    }.koin
 
     val miner: Miner = koin.get()
-    val securityInheritingService: SecurityInheritingService = koin.get()
-    val shell: Shell = koin.get()
     val pluginFactory: PluginService = koin.get()
+    val securityInheritingService: SecurityInheritingService = koin.get()
+    val apiServer: ApiServer = koin.get()
+    val shell: Shell = koin.get()
 
     try {
         shell.initialize()
@@ -49,6 +50,7 @@ private fun run(): Int {
         pluginFactory.loadPlugins()
         miner.start()
         securityInheritingService.start()
+        apiServer.start()
         shell.run()
     } catch (e: Exception) {
         logger.warn(e) { "Fatal error: ${e.message}" }
@@ -58,6 +60,8 @@ private fun run(): Int {
 
     try {
         shutdownSignal.await()
+
+        apiServer.shutdown()
         securityInheritingService.stop()
         miner.shutdown()
 

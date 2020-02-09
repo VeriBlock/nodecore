@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop
 
-import org.koin.dsl.module.module
+import org.koin.dsl.module
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context

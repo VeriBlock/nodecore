@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.tasks
 
-import org.koin.dsl.module.module
+import org.koin.dsl.module
 
 val taskModule = module {
     single { WorkflowAuthority(get(), get()) }

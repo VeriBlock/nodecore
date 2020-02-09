@@ -42,7 +42,9 @@ fun CommandFactory.miningCommands(miner: Miner) {
         form = "listoperations",
         description = "Lists the current running operations"
     ) {
-        val operations = miner.listOperations()
+        val operations = miner.getOperations().map {
+            "${it.id}: ${it.chainId} (${it.blockHeight}) | ${it.state}"
+        }
 
         for (operation in operations) {
             printInfo(operation)

@@ -8,7 +8,8 @@
 
 package org.veriblock.alt.plugins
 
-import org.koin.dsl.module.module
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
 typealias NormalPluginsContainer = Map<String, SecurityInheritingChain>
@@ -16,13 +17,13 @@ typealias FamilyPluginsContainer = Map<String, (Long, String, String) -> Securit
 
 val pluginsModule = module {
     // Normal plugins
-    single<NormalPluginsContainer>("normal-plugins") {
+    single<NormalPluginsContainer>(named("normal-plugins")) {
         mapOf(
             "test" to TestChain()
         )
     }
     // Family plugins
-    single<FamilyPluginsContainer>("family-plugins") {
+    single<FamilyPluginsContainer>(named("family-plugins")) {
         mapOf(
             "btc" to { id, key, name -> BitcoinFamilyChain(id, key, name) },
             "nxt" to { id, key, name -> NxtFamilyChain(id, key, name) }

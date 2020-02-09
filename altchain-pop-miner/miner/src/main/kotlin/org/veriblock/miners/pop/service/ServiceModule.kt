@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.service
 
-import org.koin.dsl.module.module
+import org.koin.dsl.module
 
 val serviceModule = module {
     single { OperationService(get()) }
