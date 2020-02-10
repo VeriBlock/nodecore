@@ -17,12 +17,10 @@ import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
 import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
 import nodecore.miners.pop.events.TransactionConfirmedEvent;
-import org.bitcoinj.core.Block;
-import org.bitcoinj.core.FilteredBlock;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.BlockUtility;
 
 import javax.annotation.Nullable;
@@ -84,12 +82,25 @@ public class PoPMiningOperationState {
     public void onTransactionCreated(Transaction transaction) {
         List<String> messages = new ArrayList<>();
 
-        setTransaction(transaction);
-        setTransactionBytes(transaction.bitcoinSerialize());
-        messages.add("Signed Bitcoin transaction: " + Utility.bytesToHex(transaction.bitcoinSerialize()));
+        ExpTransaction exposedTransaction = new ExpTransaction(NetworkParameters.fromID(NetworkParameters.ID_TESTNET), transaction.unsafeBitcoinSerialize());
 
-        setSubmittedTransactionId(transaction.getHashAsString());
-        messages.add("Submitted Bitcoin transaction: " + transaction.getHashAsString());
+        setTransaction(transaction);
+
+        byte[] txBytes = exposedTransaction.getFilteredTransaction();
+
+        logger.info("TxID: " + Utility.bytesToHex(transaction.getTxId().getBytes()));
+        logger.info("wTxID: " + Utility.bytesToHex(transaction.getWTxId().getBytes()));
+        logger.info("Recalculated TxID: " + Utility.bytesToHex(Utility.flip(new Crypto().SHA256D(txBytes))));
+
+        logger.info("Unfiltered Tx: " + Utility.bytesToHex(transaction.unsafeBitcoinSerialize()));
+        logger.info("Filtered Tx: " + Utility.bytesToHex(txBytes));
+
+
+        setTransactionBytes(txBytes);
+        messages.add("Signed Bitcoin transaction: " + Utility.bytesToHex(txBytes));
+
+        setSubmittedTransactionId(transaction.getTxId().toString());
+        messages.add("Submitted Bitcoin transaction: " + transaction.getTxId().toString());
 
         setTransactionStatus(TransactionStatus.UNCONFIRMED);
         messages.add("Transaction status: UNCONFIRMED");

@@ -17,6 +17,7 @@ import nodecore.miners.pop.contracts.MissingConfigurationValueResultMessage;
 import nodecore.miners.pop.contracts.SuccessResultMessage;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.NetworkParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.Utility;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -170,6 +172,46 @@ public class Configuration {
 
     public String getNodeCoreHost() {
         return getPropertyOverrideOrDefault(Keys.NODECORE_HOST_KEY);
+    }
+
+    public NetworkParameters.ProtocolVersion getBitcoinProtocolVersion() {
+        final String config = getPropertyOverrideOrDefault(Keys.BITCOINJ_MINIMAL_PEER_PROTOCOL_VERSION);
+        switch(config) {
+            case "MINIMUM": return NetworkParameters.ProtocolVersion.MINIMUM;
+            case "PONG": return NetworkParameters.ProtocolVersion.PONG;
+            case "BLOOM_FILTER_BIP111": return NetworkParameters.ProtocolVersion.BLOOM_FILTER_BIP111;
+            case "WITNESS_VERSION": return NetworkParameters.ProtocolVersion.WITNESS_VERSION;
+            case "CURRENT": return NetworkParameters.ProtocolVersion.CURRENT;
+            default: return NetworkParameters.ProtocolVersion.BLOOM_FILTER;
+        }
+    }
+
+    public int getBitcoinMaxPeerConnections() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_MAX_PEER_CONNECTIONS));
+    }
+
+    public int getBitcoinPeerDiscoveryTimeoutMillis() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_PEER_DISCOVERY_TIMEOUT_MILLIS));
+    }
+
+    public int getBitcoinDownloadTxDependencies() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_PEER_DOWNLOAD_TX_DEPENDENCY_DEPTH));
+    }
+
+    public int getBitcoinRequiredServices() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_REQUIRED_PEER_SERVICES));
+    }
+
+    public int getBitcoinMinPeerBroadcastConnections() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_MIN_PEER_BROADCAST_CONNECTIONS));
+    }
+
+    public int getBitcoinMaxPeersToDiscoverCount() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_MAX_PEERS_TO_DISCOVER_COUNT));
+    }
+
+    public int getBitcoinPeerPingIntervalMsec() {
+        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_PEER_PING_INTERVAL_MSEC));
     }
 
     public ConfigurationResult setNodeCoreHost(String value) {
@@ -564,29 +606,47 @@ public class Configuration {
         private static final String NODECORE_PASSWORD_KEY = "nodecore.rpc.password";
         private static final String NODECORE_CERT_CHAIN_PATH_KEY = "nodecore.rpc.cert.chain.path";
 
+        // EXPERIMENTAL USAGE
+        private static final String BITCOINJ_MINIMAL_PEER_PROTOCOL_VERSION = "bitcoinj.minimal.peer.protocol.version";
+        private static final String BITCOINJ_MAX_PEER_CONNECTIONS = "bitcoinj.max.peer.connections";
+        private static final String BITCOINJ_PEER_DISCOVERY_TIMEOUT_MILLIS = "bitcoinj.peer.discovery.timeout.millis";
+        private static final String BITCOINJ_PEER_DOWNLOAD_TX_DEPENDENCY_DEPTH = "bitcoinj.peer.download.tx.dependency.depth";
+        private static final String BITCOINJ_REQUIRED_PEER_SERVICES = "bitcoinj.required.peer.services";
+        private static final String BITCOINJ_MIN_PEER_BROADCAST_CONNECTIONS = "bitcoinj.min.peer.broadcast.connections";
+        private static final String BITCOINJ_MAX_PEERS_TO_DISCOVER_COUNT = "bitcoinj.max.peers.to.discover.count";
+        private static final String BITCOINJ_PEER_PING_INTERVAL_MSEC = "bitcoinj.peer.ping.interval.msec";
+
         private static final String SCHEDULE = "pop.cron.schedule";
         private static final String ACTION_TIMEOUT = "pop.action.timeout";
 
         private static List<String> getAll() {
-            List<String> keys = new ArrayList<>();
-            keys.add(AUTO_MINE_ROUND1);
-            keys.add(AUTO_MINE_ROUND2);
-            keys.add(AUTO_MINE_ROUND3);
-            keys.add(AUTO_MINE_ROUND4);
-            keys.add(HTTP_API_ADDRESS);
-            keys.add(HTTP_API_PORT);
-            keys.add(BITCOIN_NETWORK_KEY);
-            keys.add(BITCOIN_MAX_TRANSACTION_FEE_KEY);
-            keys.add(BITCOIN_TRANSACTION_FEE_PER_KB_KEY);
-            keys.add(BITCOIN_MINIMUM_RELAY_FEE_ENFORCED_KEY);
-            keys.add(NODECORE_HOST_KEY);
-            keys.add(NODECORE_PORT_KEY);
-            keys.add(NODECORE_USE_SSL_KEY);
-            keys.add(NODECORE_PASSWORD_KEY);
-            keys.add(NODECORE_CERT_CHAIN_PATH_KEY);
-            keys.add(SCHEDULE);
-            keys.add(ACTION_TIMEOUT);
-            return keys;
+            return Arrays.asList(
+                AUTO_MINE_ROUND1,
+                AUTO_MINE_ROUND2,
+                AUTO_MINE_ROUND3,
+                AUTO_MINE_ROUND4,
+                HTTP_API_ADDRESS,
+                HTTP_API_PORT,
+                BITCOIN_NETWORK_KEY,
+                BITCOIN_MAX_TRANSACTION_FEE_KEY,
+                BITCOIN_TRANSACTION_FEE_PER_KB_KEY,
+                BITCOIN_MINIMUM_RELAY_FEE_ENFORCED_KEY,
+                NODECORE_HOST_KEY,
+                NODECORE_PORT_KEY,
+                NODECORE_USE_SSL_KEY,
+                NODECORE_PASSWORD_KEY,
+                NODECORE_CERT_CHAIN_PATH_KEY,
+                SCHEDULE,
+                ACTION_TIMEOUT,
+                BITCOINJ_MINIMAL_PEER_PROTOCOL_VERSION,
+                BITCOINJ_MAX_PEER_CONNECTIONS,
+                BITCOINJ_PEER_DISCOVERY_TIMEOUT_MILLIS,
+                BITCOINJ_PEER_DOWNLOAD_TX_DEPENDENCY_DEPTH,
+                BITCOINJ_REQUIRED_PEER_SERVICES,
+                BITCOINJ_MIN_PEER_BROADCAST_CONNECTIONS,
+                BITCOINJ_MAX_PEERS_TO_DISCOVER_COUNT,
+                BITCOINJ_PEER_PING_INTERVAL_MSEC
+            );
         }
     }
 }

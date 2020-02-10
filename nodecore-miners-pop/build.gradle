@@ -35,7 +35,7 @@ dependencies {
     compile group: 'com.j256.ormlite', name: 'ormlite-core', version: '5.1'
     compile group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '5.1'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
-    compile group: 'org.bitcoinj', name: 'bitcoinj-core', version: '0.14.7'
+    compile group: 'org.bitcoinj', name: 'bitcoinj-core', version: '0.15.6'
 
     // Http API
     compile "io.ktor:ktor-server-netty:1.1.4"
@@ -87,7 +87,7 @@ test {
 run {
     standardInput = System.in
     standardOutput = System.out
-
+    
     //if (System.getProperty('DEBUG', 'false') == 'true') {
     //    jvmArgs '-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9009'
     //}

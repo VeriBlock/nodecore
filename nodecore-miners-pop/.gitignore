@@ -99,7 +99,4 @@ testledgerout.txt
 scripts/certs/
 
 certs/
-commit.bat
-
-.scannerwork
-.idea
+libs

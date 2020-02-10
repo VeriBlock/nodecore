@@ -29,6 +29,7 @@ import org.veriblock.shell.Shell
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
 
+
 class PopShell(
     private val miner: PoPMiner,
     private val messageService: MessageService,
@@ -113,7 +114,7 @@ class PopShell(
     }
 
     @Subscribe
-    fun onPoPMinerReady(event: PoPMinerReadyEvent?) {
+    fun onPoPMinerReady(event: PoPMinerReadyEvent) {
         try {
             printInfo("**********************************************************************************************")
             printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
@@ -136,7 +137,7 @@ class PopShell(
     }
 
     @Subscribe
-    fun onWalletSeedAgreementMissing(event: WalletSeedAgreementMissingEvent?) {
+    fun onWalletSeedAgreementMissing(event: WalletSeedAgreementMissingEvent) {
         this.mustAcceptWalletSeed = true
     }
 

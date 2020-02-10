@@ -34,7 +34,7 @@ public class SubmitPoPEndorsementTask extends BaseTask {
         try {
             PoPMiningTransaction popMiningTransaction = new PoPMiningTransaction(
                 state.getMiningInstruction(),
-                state.getTransaction(),
+                state.getTransactionBytes(),
                 state.getMerklePath(),
                 state.getBitcoinBlockHeaderOfProof(),
                 state.getBitcoinContextBlocks()

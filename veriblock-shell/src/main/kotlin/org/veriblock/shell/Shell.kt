@@ -290,4 +290,8 @@ open class Shell(
     }
 
     protected open fun Command.shouldAutoComplete(): Boolean = true
+
+    fun interrupt() {
+        terminal.raise(Terminal.Signal.INT)
+    }
 }

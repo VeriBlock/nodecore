@@ -75,6 +75,7 @@ set CLASSPATH=$classpath
 :end
 @rem End local scope for the variables with windows NT shell
 if "%ERRORLEVEL%"=="0" goto mainEnd
+if "%ERRORLEVEL%"=="2" goto init
 
 :fail
 rem Set variable ${exitEnvironmentVar} if you need the _script_ return code instead of

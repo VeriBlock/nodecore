@@ -53,7 +53,7 @@ public class CreateBitcoinTransactionTask extends BaseTask {
                 @Override
                 public void onSuccess(@Nullable Transaction result) {
                     if (result != null) {
-                        logger.info("Successfully broadcast transaction {}", result.getHashAsString());
+                        logger.info("Successfully broadcast transaction {}", result.getTxId());
                         state.onTransactionCreated(result);
                     } else {
                         logger.error("Create Bitcoin transaction returned no transaction");

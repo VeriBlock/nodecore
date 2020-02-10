@@ -8,6 +8,7 @@ import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import mu.KotlinLogging
+import java.io.IOException
 
 private val logger = KotlinLogging.logger {}
 
@@ -28,6 +29,10 @@ fun Application.statusPages() {
         }
         exception<CallFailureException> {
             call.respond(HttpStatusCode.InternalServerError, it.message)
+        }
+        exception<IOException> {
+            logger.warn("Unhandled exception", it)
+            call.respond(HttpStatusCode.InternalServerError, "")
         }
         exception<Exception> {
             //logger.warn("Unhandled exception", it)

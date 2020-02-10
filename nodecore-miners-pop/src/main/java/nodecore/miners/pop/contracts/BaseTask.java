@@ -29,7 +29,12 @@ public abstract class BaseTask {
     }
 
     public TaskResult execute(PoPMiningOperationState state) {
-        return executeImpl(state);
+        try {
+            return executeImpl(state);
+        } catch (Throwable t) {
+            logger.error("Fatal error", t);
+            return failProcess(state, "Fatal error");
+        }
     }
 
     protected TaskResult failProcess(PoPMiningOperationState state, String reason) {
