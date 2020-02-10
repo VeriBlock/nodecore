@@ -32,7 +32,7 @@ fun CommandFactory.miningCommands(miner: Miner) {
         )
     ) {
         val chain: String = getParameter("chain")
-        val block: Int? = getParameter("block")
+        val block: Int? = getOptionalParameter("block")
 
         miner.mine(chain, block)
     }

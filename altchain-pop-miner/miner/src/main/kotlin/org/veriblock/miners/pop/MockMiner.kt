@@ -3,7 +3,9 @@ package org.veriblock.miners.pop
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
+import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
@@ -47,6 +49,8 @@ class MockMiner(
     private val bitcoinBlockchain = BitcoinBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
 
+    private val operations = HashMap<String, MiningOperation>()
+
     override fun initialize() {
         logger.info { "Mock mining enabled!" }
     }
@@ -68,27 +72,57 @@ class MockMiner(
             return failure()
         }
 
-        val publicationData = chain.getPublicationData(block)
+        val operation = MiningOperation(
+            chainId = chainId,
+            status = OperationStatus.RUNNING
+        )
+        operations[operation.id] = operation
+
+        val publicationData = try {
+            chain.getPublicationData(block)
+        } catch (e: Exception) {
+            operation.fail(e.message ?: "Unknown reason")
+            throw e
+        }
+
+        operation.setPublicationDataWithContext(publicationData)
 
         val key = KeyGenerator.generate()
 
         val vbkTip = veriBlockBlockchain.chainHead
         val atv = mine(publicationData.publicationData, vbkTip, key)
 
+        // Update operation state
+        operation.setTransaction(WalletTransaction.wrap(atv.transaction))
+        operation.setConfirmed()
+        operation.setBlockOfProof(atv.containingBlock)
+        operation.setMerklePath(atv.merklePath)
+        operation.setKeystoneOfProof(vbkTip)
+
         val lastKnownBtcBlockHash = publicationData.btcContext.last()
         val lastKnownVbkBlockHash = publicationData.context.last()
         val lastKnownBtcBlock = bitcoinBlockchain[Sha256Hash.wrap(lastKnownBtcBlockHash)]
         val lastKnownVbkBlock = veriBlockBlockchain[VBlakeHash.wrap(lastKnownVbkBlockHash)]
+
         val vtb = vpm.mine(
             vbkTip,
             lastKnownVbkBlock,
             lastKnownBtcBlock,
             key
         )
+        val vtbs = listOf(vtb)
+        operation.setVeriBlockPublications(vtbs)
 
-        val submissionResult = chain.submit(atv, listOf(vtb))
+        val submissionResult = try {
+            chain.submit(atv, vtbs)
+        } catch (e: Exception) {
+            operation.fail(e.message ?: "Unknown reason")
+            throw e
+        }
+        operation.setProofOfProofId(submissionResult)
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
+        operation.complete()
         return success()
     }
 
@@ -158,9 +192,9 @@ class MockMiner(
         )
     }
 
-    override fun getOperations(): List<MiningOperation> = emptyList()
+    override fun getOperations(): List<MiningOperation> = operations.values.sortedBy { it.timestamp }
 
-    override fun getOperation(id: String): MiningOperation? = null
+    override fun getOperation(id: String): MiningOperation? = operations[id]
 
     override fun getAddress(): String = "NO ADDRESS"
 
