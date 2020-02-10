@@ -143,11 +143,7 @@ public final class BlockUtility {
             return false;
         }
 
-        try {
-            return isMinerHashBelowTarget(blockHeader);
-        } catch (Exception e) {
-            return false;
-        }
+        return isMinerHashBelowTarget(blockHeader);
     }
 
     /**
@@ -163,7 +159,7 @@ public final class BlockUtility {
         BigInteger difficulty = BitcoinUtilities.decodeCompactBits(extractDifficultyFromBlockHeader(blockHeader));
 
         if (difficulty.compareTo(BigInteger.ZERO) < 0 || !isEmbeddedDifficultyValid(difficulty) ) {
-            throw new IllegalArgumentException("Difficulty extracted from block header is not valid");
+            return false;
         }
 
         BigInteger target = SharedConstants.DIFFICULTY_CALCULATOR_MAXIMUM_TARGET.divide(difficulty.multiply(BigInteger.valueOf(1)));
