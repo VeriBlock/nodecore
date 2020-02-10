@@ -29,7 +29,7 @@ class MiningOperation(
     val chainId: String,
     changeHistory: List<StateChangeEvent> = emptyList(),
     status: OperationStatus = OperationStatus.UNKNOWN,
-    var blockHeight: Int?
+    var blockHeight: Int? = null
 ) {
     val stateChangedEvent = AsyncEvent<OperationState>(Threading.MINER_THREAD)
 
@@ -137,7 +137,7 @@ class MiningOperation(
         setState(OperationState.Failed(state))
     }
 
-    private fun complete() {
+    fun complete() {
         val currentState = state
         if (currentState !is OperationState.SubmittedPopData) {
             fail("Trying to mark the process as complete without having submitted the PoP data")
