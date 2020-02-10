@@ -16,7 +16,6 @@ appender("TERMINAL", LoggingLineAppender) {
     filter(ThresholdFilter) {
         level = toLevel(logLevel, INFO)
     }
-    withJansi = true
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
     }

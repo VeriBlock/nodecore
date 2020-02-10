@@ -43,7 +43,6 @@ dependencies {
 
     // Logging
     compile "io.github.microutils:kotlin-logging:1.6.25"
-    runtimeOnly 'org.fusesource.jansi:jansi:1.18'
 
     // Dependency Injection
     compile 'org.koin:koin-core:2.0.1'
