@@ -26,10 +26,10 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
 
-@Location("/miner") class miner
-@Location("/miner/mine") class mineAction
-@Location("/miner/operations") class minerOperations
-@Location("/miner/operations/{id}") class minerOperation(val id: String)
+@Location("/api/miner") class miner
+@Location("/api/miner/mine") class mineAction
+@Location("/api/miner/operations") class minerOperations
+@Location("/api/miner/operations/{id}") class minerOperation(val id: String)
 
 class MiningController(
     private val miner: Miner

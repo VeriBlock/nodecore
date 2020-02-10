@@ -18,7 +18,6 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.gson.gson
 import io.ktor.locations.Locations
-import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
@@ -79,11 +78,9 @@ class ApiServer(
 
             install(Locations)
             routing {
-                route("/api") {
-                    for (controller in controllers) {
-                        with(controller) {
-                            registerApi()
-                        }
+                for (controller in controllers) {
+                    with(controller) {
+                        registerApi()
                     }
                 }
             }
