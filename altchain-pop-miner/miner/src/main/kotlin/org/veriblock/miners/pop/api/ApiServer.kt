@@ -7,14 +7,19 @@
 
 package org.veriblock.miners.pop.api
 
+import de.nielsfalk.ktor.swagger.SwaggerSupport
+import de.nielsfalk.ktor.swagger.version.shared.Contact
+import de.nielsfalk.ktor.swagger.version.shared.Information
+import de.nielsfalk.ktor.swagger.version.v2.Swagger
+import de.nielsfalk.ktor.swagger.version.v3.OpenApi
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.gson.gson
 import io.ktor.locations.Locations
-import io.ktor.routing.Routing
 import io.ktor.routing.route
+import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -22,6 +27,9 @@ import mu.KotlinLogging
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
+import java.util.concurrent.TimeUnit
+
+const val API_VERSION = "0.1"
 
 private val logger = KotlinLogging.logger {}
 
@@ -51,8 +59,26 @@ class ApiServer(
                 gson()
             }
 
+            // Documentation
+            install(SwaggerSupport) {
+                forwardRoot = true
+                provideUi = true
+                val information = Information(
+                    version = API_VERSION,
+                    title = "Altchain PoP Miner API",
+                    description = "This is the APM's integrated API, through which you can monitor and control the application",
+                    contact = Contact("VeriBlock", "https://veriblock.org")
+                )
+                swagger = Swagger().apply {
+                    info = information
+                }
+                openApi = OpenApi().apply {
+                    info = information
+                }
+            }
+
             install(Locations)
-            install(Routing) {
+            routing {
                 route("/api") {
                     for (controller in controllers) {
                         with(controller) {
@@ -71,7 +97,7 @@ class ApiServer(
             return
         }
 
-        server?.stop(3000, 10000)
+        server?.stop(3, 10, TimeUnit.SECONDS)
         running = false
     }
 }

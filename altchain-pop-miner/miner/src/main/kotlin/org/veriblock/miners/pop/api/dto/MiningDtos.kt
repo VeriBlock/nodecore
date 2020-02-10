@@ -5,16 +5,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.miners.pop.api.model
+package org.veriblock.miners.pop.api.dto
 
 import org.veriblock.miners.pop.core.MiningOperation
 
-class MinerInfoResponse(
+data class MinerInfoResponse(
     val vbkAddress: String,
     val vbkBalance: Long
 )
 
-class OperationSummaryResponse(
+data class MineRequest(
+    val chainSymbol: String,
+    val height: Int? = null
+)
+
+data class OperationSummaryListResponse(
+    val operations: List<OperationSummaryResponse>
+)
+
+data class OperationSummaryResponse(
     val operationId: String,
     val chainId: String,
     val endorsedBlockNumber: Int?,
@@ -28,7 +37,7 @@ fun MiningOperation.toSummaryResponse() = OperationSummaryResponse(
     state.toString()
 )
 
-class OperationDetailResponse(
+data class OperationDetailResponse(
     val operationId: String,
     val chainId: String,
     val status: String,
