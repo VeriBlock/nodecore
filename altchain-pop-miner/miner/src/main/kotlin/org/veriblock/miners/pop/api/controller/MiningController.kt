@@ -7,52 +7,87 @@
 
 package org.veriblock.miners.pop.api.controller
 
+import de.nielsfalk.ktor.swagger.description
+import de.nielsfalk.ktor.swagger.get
+import de.nielsfalk.ktor.swagger.notFound
+import de.nielsfalk.ktor.swagger.ok
+import de.nielsfalk.ktor.swagger.post
+import de.nielsfalk.ktor.swagger.responds
 import io.ktor.application.call
-import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.locations.post
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import org.veriblock.miners.pop.Miner
-import org.veriblock.miners.pop.api.model.MinerInfoResponse
-import org.veriblock.miners.pop.api.model.toDetailedResponse
-import org.veriblock.miners.pop.api.model.toSummaryResponse
+import org.veriblock.miners.pop.api.dto.MineRequest
+import org.veriblock.miners.pop.api.dto.MinerInfoResponse
+import org.veriblock.miners.pop.api.dto.OperationDetailResponse
+import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
+import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
+import org.veriblock.miners.pop.api.dto.toDetailedResponse
+import org.veriblock.miners.pop.api.dto.toSummaryResponse
 
-@KtorExperimentalLocationsAPI
+@Location("/miner") class miner
+@Location("/miner/mine") class mineAction
+@Location("/miner/operations") class minerOperations
+@Location("/miner/operations/{id}") class minerOperation(val id: String)
+
 class MiningController(
     private val miner: Miner
 ) : ApiController {
-    @Location("/miner") class MinerLocation {
-        @Location("/operations") class Operations {
-            @Location("/{id}") class ById(val id: String)
-        }
-        @Location("/mine") class Mine(val chainSymbol: String, val height: Int? = null)
-    }
 
     override fun Route.registerApi() {
-        get<MinerLocation> {
+        get<miner>(
+            "miner"
+                .description("Get miner data")
+                .responds(
+                    ok<MinerInfoResponse>()
+                )
+        ) {
             val responseModel = MinerInfoResponse(
                 vbkAddress = miner.getAddress(),
                 vbkBalance = miner.getBalance()?.confirmedBalance?.atomicUnits ?: 0
             )
             call.respond(responseModel)
         }
-        post<MinerLocation.Mine> { location ->
-            val result = miner.mine(location.chainSymbol, location.height)
+        post<mineAction, MineRequest>(
+            "mine"
+                .description("Start mining operation")
+                .responds(
+                    ok<OperationSummaryResponse>()
+                )
+        ) { location, mineRequest ->
+            val result = miner.mine(mineRequest.chainSymbol, mineRequest.height)
             val firstMsg = result.getMessages().first()
             if (result.isFailed) {
                 throw CallFailureException("${firstMsg.message} | ${firstMsg.details}")
             }
-            call.respond(firstMsg.message)
+            call.respond(OperationSummaryResponse(
+                firstMsg.message,
+                mineRequest.chainSymbol,
+                mineRequest.height,
+                "Starting..."
+            ))
         }
-        get<MinerLocation.Operations> {
+        get<minerOperations>(
+            "operations"
+                .description("Get operations list")
+                .responds(
+                    ok<OperationSummaryListResponse>()
+                )
+        ) {
             val operationSummaries = miner.getOperations()
 
             val responseModel = operationSummaries.map { it.toSummaryResponse() }
-            call.respond(responseModel)
+            call.respond(OperationSummaryListResponse(responseModel))
         }
-        get<MinerLocation.Operations.ById> { location ->
+        get<minerOperation>(
+            "operation"
+                .description("Get operation details")
+                .responds(
+                    ok<OperationDetailResponse>(),
+                    notFound<ApiError>()
+                )
+        ) { location ->
             val id = location.id
 
             val operationState = miner.getOperation(id)
