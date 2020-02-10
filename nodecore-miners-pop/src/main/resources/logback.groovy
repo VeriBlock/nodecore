@@ -6,10 +6,11 @@ import static ch.qos.logback.classic.Level.INFO
 
 def logRootPath = System.getenv('VPM_LOG_PATH') ?: 'logs/'
 def logLevel = System.getenv('VPM_LOG_LEVEL') ?: ''
+def consoleLogLevel = System.getenv('VPM_CONSOLE_LOG_LEVEL') ?: ''
 
 appender("TERMINAL", LoggingLineAppender) {
     filter(ThresholdFilter) {
-        level = toLevel(logLevel, INFO)
+        level = toLevel(consoleLogLevel, INFO)
     }
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
@@ -41,9 +42,7 @@ appender("BITCOINJ-FILE", RollingFileAppender) {
     }
 }
 
-def level = toLevel(logLevel, INFO)
-
-logger("nodecore.miners.pop", DEBUG)
+logger("nodecore.miners.pop", toLevel(logLevel, DEBUG))
 
 logger("org.bitcoinj", INFO, ["BITCOINJ-FILE"], false)
 logger("shell-printing", INFO, ["FILE"], false)

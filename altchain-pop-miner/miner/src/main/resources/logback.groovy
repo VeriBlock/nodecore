@@ -11,10 +11,11 @@ import org.veriblock.shell.LoggingLineAppender
 
 def logRootPath = System.getProperty("logging.path", System.getenv('APM_LOG_PATH')) ?: 'logs/'
 def logLevel = System.getProperty("logging.level", System.getenv('APM_LOG_LEVEL')) ?: ''
+def consoleLogLevel = System.getProperty("logging.level.console", System.getenv('APM_CONSOLE_LOG_LEVEL')) ?: ''
 
 appender("TERMINAL", LoggingLineAppender) {
     filter(ThresholdFilter) {
-        level = toLevel(logLevel, INFO)
+        level = toLevel(consoleLogLevel, INFO)
     }
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
@@ -34,7 +35,7 @@ appender("FILE", RollingFileAppender) {
     }
 }
 
-logger("org.veriblock", DEBUG)
+logger("org.veriblock", toLevel(logLevel, DEBUG))
 
 logger("shell-printing", INFO, ["FILE"], false)
 
