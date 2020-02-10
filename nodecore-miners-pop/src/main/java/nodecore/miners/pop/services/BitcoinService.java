@@ -603,4 +603,8 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
         logger.info("Releasing create transaction lock");
         txGate.release();
     }
+
+    public Context getContext() {
+        return context;
+    }
 }

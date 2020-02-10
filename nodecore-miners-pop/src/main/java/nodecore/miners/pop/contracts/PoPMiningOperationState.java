@@ -79,10 +79,13 @@ public class PoPMiningOperationState {
         broadcast(messages);
     }
 
-    public void onTransactionCreated(Transaction transaction) {
+    public void onTransactionCreated(Transaction transaction, NetworkParameters networkParameters) {
         List<String> messages = new ArrayList<>();
 
-        ExpTransaction exposedTransaction = new ExpTransaction(NetworkParameters.fromID(NetworkParameters.ID_TESTNET), transaction.unsafeBitcoinSerialize());
+        ExpTransaction exposedTransaction = new ExpTransaction(
+            networkParameters,
+            transaction.unsafeBitcoinSerialize()
+        );
 
         setTransaction(transaction);
 

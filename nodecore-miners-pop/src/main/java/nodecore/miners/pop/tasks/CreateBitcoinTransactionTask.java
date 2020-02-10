@@ -54,7 +54,7 @@ public class CreateBitcoinTransactionTask extends BaseTask {
                 public void onSuccess(@Nullable Transaction result) {
                     if (result != null) {
                         logger.info("Successfully broadcast transaction {}", result.getTxId());
-                        state.onTransactionCreated(result);
+                        state.onTransactionCreated(result, bitcoinService.getContext().getParams());
                     } else {
                         logger.error("Create Bitcoin transaction returned no transaction");
                         failProcess(state, "Create Bitcoin transaction returned no transaction");
