@@ -36,7 +36,7 @@ class CommandFactory {
             throw malformedCommandError()
         }
 
-        val parts = request.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val parts = request.split(" ").dropLastWhile { it.isEmpty() }
         if (parts.isEmpty()) {
             throw malformedCommandError()
         }
@@ -45,20 +45,37 @@ class CommandFactory {
         val command = commands[form]
             ?: throw unknownCommandError(form)
 
-        val parameters = extractParameters(command, parts)
+        // Handle selectors in a generic way
+        val params = ArrayList<String>()
+        val selectors = HashMap<String, String>()
+        var i = 1
+        while (i < parts.size) {
+            val param = parts[i]
+            if (param.startsWith("-")) {
+                if (i + 1 >= parts.size) {
+                    throw selectorError(command, param)
+                }
+                selectors[param] = parts[i + 1]
+                i += 2
+                continue
+            }
+            params += param
+            i++
+        }
 
-        return CommandResult(command, parameters)
+        val parameters = extractParameters(command, params)
+
+        return CommandResult(command, parameters + selectors)
     }
 
-    private fun extractParameters(command: Command, suppliedParams: Array<String>): Map<String, Any> {
-        if (suppliedParams.size - 1 > command.parameters.size) {
+    private fun extractParameters(command: Command, suppliedParams: List<String>): Map<String, Any> {
+        if (suppliedParams.size > command.parameters.size) {
             throw syntaxError(command, "too many parameters provided")
         }
 
         return command.parameters.asSequence().mapIndexedNotNull { index, param ->
-            val suppliedParamIndex = index + 1
-            if (suppliedParamIndex < suppliedParams.size) {
-                val suppliedParam = suppliedParams[suppliedParamIndex]
+            if (index < suppliedParams.size) {
+                val suppliedParam = suppliedParams[index]
                 param.name to extractTypedParam(param, suppliedParam, command)
             } else {
                 if (param.required) {
@@ -118,5 +135,15 @@ fun syntaxError(command: Command, message: String) = ShellException(
         "Usage: ${command.form}${command.parameters.joinToString("") {
             if (it.required) " <${it.name}>" else " [${it.name}]"
         }}\nERROR: $message",
+        true)
+)
+
+fun selectorError(command: Command, selector: String) = ShellException(
+    ResultMessage(
+        "V010",
+        "Selector $selector's parameter missing",
+        "Usage: ${command.form}${command.parameters.joinToString("") {
+            if (it.required) " <${it.name}>" else " [${it.name}]"
+        }} $selector [parameter]\nERROR: Selector $selector's parameter missing",
         true)
 )
