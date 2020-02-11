@@ -31,10 +31,9 @@ fun CommandFactory.privateKeyCommands() {
         val result = cliShell.adminService.dumpPrivateKey(request)
 
         prepareResult(result.success, result.resultsList) {
-            PrivateKeyInfo(result)
-
             printInfo("Anyone with access to this private key can steal any funds held in $address! " +
                 "Make sure that this private key is stored SECURELY!")
+            PrivateKeyInfo(result)
         }
     }
 

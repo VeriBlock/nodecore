@@ -3,8 +3,8 @@ package nodecore.cli.commands
 import nodecore.cli.contracts.PeerEndpoint
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.extensions.isHex
-import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.CommandParameterMapper
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.syntaxError
 
 object ShellCommandParameterMappers {
@@ -63,12 +63,14 @@ object ShellCommandParameterMappers {
             )
         }
         addresses.forEach {
-            throw syntaxError(
-                command,
-                "parameter '${param.name}' must be comprised of multiple standard addresses separated by commas, and '$it' is not a valid standard address"
-            )
+            if (!AddressUtility.isValidStandardAddress(it)) {
+                throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be comprised of multiple standard addresses separated by commas, and '$it' is not a valid standard address"
+                )
+            }
         }
-        suppliedParam
+        addresses
     }
 
     val COMMA_SEPARATED_PUBLIC_KEYS_OR_ADDRESSES: CommandParameterMapper = { suppliedParam ->

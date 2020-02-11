@@ -87,7 +87,7 @@ fun CommandFactory.addressCommands() {
         val requestBuilder = VeriBlockMessages.GenerateMultisigAddressRequest.newBuilder()
         val signatureThreshold: Int = getParameter("signatureThreshold")
         requestBuilder.signatureThresholdM = signatureThreshold
-        val addresses = getParameter<String>("csvaddresses").split(",")
+        val addresses = getParameter<List<String>>("csvaddresses")
         for (address in addresses) {
             requestBuilder.addSourceAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
