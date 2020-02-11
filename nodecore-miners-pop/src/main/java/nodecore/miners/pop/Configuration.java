@@ -18,6 +18,7 @@ import nodecore.miners.pop.contracts.SuccessResultMessage;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.VersionMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.Utility;
@@ -198,8 +199,33 @@ public class Configuration {
         return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_PEER_DOWNLOAD_TX_DEPENDENCY_DEPTH));
     }
 
-    public int getBitcoinRequiredServices() {
-        return Integer.parseInt(getPropertyOverrideOrDefault(Keys.BITCOINJ_REQUIRED_PEER_SERVICES));
+    public long getBitcoinRequiredServices() {
+        final String value = getPropertyOverrideOrDefault(Keys.BITCOINJ_REQUIRED_PEER_SERVICES);
+        final String[] split = value.split(",");
+        long mask = 0;
+        for (int i = 0; i < split.length; i++) {
+            switch(split[i]) {
+                case "NODE_NETWORK":
+                    mask |= VersionMessage.NODE_NETWORK;
+                    break;
+                case "NODE_GETUTXOS":
+                    mask |= VersionMessage.NODE_GETUTXOS;
+                    break;
+                case "NODE_BLOOM":
+                    mask |= VersionMessage.NODE_BLOOM;
+                    break;
+                case "NODE_WITNESS":
+                    mask |= VersionMessage.NODE_WITNESS;
+                    break;
+                case "NODE_NETWORK_LIMITED":
+                    mask |= VersionMessage.NODE_NETWORK_LIMITED;
+                    break;
+                case "NODE_BITCOIN_CASH":
+                    mask |= VersionMessage.NODE_BITCOIN_CASH;
+                    break;
+            }
+        }
+        return mask;
     }
 
     public int getBitcoinMinPeerBroadcastConnections() {
