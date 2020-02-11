@@ -200,7 +200,7 @@ public class Configuration {
     }
 
     public long getBitcoinRequiredServices() {
-        final String value = getPropertyOverrideOrDefault(Keys.BITCOINJ_REQUIRED_PEER_SERVICES);
+        final String value = getPropertyOverrideOrDefault(Keys.BITCOINJ_REQUIRED_PEER_SERVICES).replace(" ", "");
         final String[] split = value.split(",");
         long mask = 0;
         for (int i = 0; i < split.length; i++) {
