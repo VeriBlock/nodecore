@@ -32,7 +32,7 @@ fun CommandFactory.miningCommands(
             CommandParameter("blockNumber", CommandParameterMappers.INTEGER, false)
         )
     ) {
-        val blockNumber: Int? = getParameter("blockNumber")
+        val blockNumber: Int? = getOptionalParameter("blockNumber")
         miner.mine(blockNumber).toShellResult()
     }
 
@@ -82,7 +82,7 @@ fun CommandFactory.miningCommands(
         form = "resubmit",
         description = "Resubmits an operation",
         parameters = listOf(
-            CommandParameter("id", CommandParameterMappers.STRING, true)
+            CommandParameter("id", CommandParameterMappers.STRING)
         )
     ) {
         val id: String = getParameter("id")

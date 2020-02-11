@@ -52,7 +52,7 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "importwallet",
         description = "Imports a Bitcoin wallet using comma-separated list of seed words and, optionally, a wallet creation date",
         parameters = listOf(
-            CommandParameter("seedWords", CommandParameterMappers.STRING, true),
+            CommandParameter("seedWords", CommandParameterMappers.STRING),
             CommandParameter("creationTime", CommandParameterMappers.LONG, false)
         )
     ) {
@@ -64,7 +64,7 @@ fun CommandFactory.bitcoinWalletCommands(
             }
         }
 
-        val creationTime: Long? = getParameter("creationTime")
+        val creationTime: Long? = getOptionalParameter("creationTime")
         if (!miner.importWallet(words, creationTime)) {
             return@command failure {
                 addMessage("V500", "Unable to Import", "Unable to import the wallet from the seed supplied. Check the logs for more detail.", true)
@@ -79,8 +79,8 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "withdrawbitcointoaddress",
         description = "Sends a Bitcoin amount to a given address",
         parameters = listOf(
-            CommandParameter("address", CommandParameterMappers.STRING, true),
-            CommandParameter("amount", CommandParameterMappers.AMOUNT, true)
+            CommandParameter("address", CommandParameterMappers.STRING),
+            CommandParameter("amount", CommandParameterMappers.AMOUNT)
         )
     ) {
         val address: String = getParameter("address")

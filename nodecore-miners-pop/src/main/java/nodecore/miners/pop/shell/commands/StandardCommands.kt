@@ -43,7 +43,7 @@ fun CommandFactory.standardCommands() {
             CommandParameter("command", CommandParameterMappers.STRING, false)
         )
     ) {
-        val command: String? = getParameter("command")
+        val command: String? = getOptionalParameter("command")
 
         val result = if (command == null) {
             printInfo("Commands:")

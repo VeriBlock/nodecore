@@ -36,8 +36,8 @@ fun CommandFactory.configCommands(configuration: Configuration) {
         form = "setconfig",
         description = "Sets a new value for a config property",
         parameters = listOf(
-            CommandParameter(name = "key", mapper = CommandParameterMappers.STRING, required = true),
-            CommandParameter(name = "value", mapper = CommandParameterMappers.STRING, required = true)
+            CommandParameter(name = "key", mapper = CommandParameterMappers.STRING),
+            CommandParameter(name = "value", mapper = CommandParameterMappers.STRING)
         )
     ) {
         val key: String = getParameter("key");

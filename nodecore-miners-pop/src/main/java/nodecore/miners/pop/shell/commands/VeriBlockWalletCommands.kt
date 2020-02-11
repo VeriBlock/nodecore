@@ -47,7 +47,7 @@ fun CommandFactory.veriBlockWalletCommands(
         form = "unlockwallet",
         description = "Unlocks an encrypted VeriBlock wallet to allow creation of PoP transactions",
         parameters = listOf(
-            CommandParameter("passphrase", CommandParameterMappers.STRING, true)
+            CommandParameter("passphrase", CommandParameterMappers.STRING)
         )
     ) {
         try {
