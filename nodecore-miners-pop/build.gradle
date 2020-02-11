@@ -43,16 +43,16 @@ dependencies {
 
     // Coroutines
     def coroutinesVersion = '1.2.3'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion"
 
     // Http API
     def ktorVersion = '1.2.5'
-    implementation "io.ktor:ktor-server-netty:$ktorVersion"
-    implementation "io.ktor:ktor-locations:$ktorVersion"
-    implementation "io.ktor:ktor-gson:$ktorVersion"
+    compile "io.ktor:ktor-server-netty:$ktorVersion"
+    compile "io.ktor:ktor-locations:$ktorVersion"
+    compile "io.ktor:ktor-gson:$ktorVersion"
     // Swagger integration, expecting an official integration to be released soon
-    implementation "com.github.nielsfalk:ktor-swagger:0.5.0"
+    compile "com.github.nielsfalk:ktor-swagger:0.5.0"
 
     // Logging
     compile "io.github.microutils:kotlin-logging:1.6.25"
