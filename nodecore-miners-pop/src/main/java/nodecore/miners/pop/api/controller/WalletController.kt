@@ -1,19 +1,27 @@
 package nodecore.miners.pop.api.controller
 
-import io.ktor.application.call
+import de.nielsfalk.ktor.swagger.description
+import de.nielsfalk.ktor.swagger.post
+import de.nielsfalk.ktor.swagger.version.shared.Group
+import io.ktor.locations.Location
 import io.ktor.routing.Route
-import io.ktor.routing.post
 import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.api.model.WithdrawRequest
+
+@Group("Wallet") @Location("/api/wallet/btc/withdraw") class withdrawBtc
 
 class WalletController(
     private val miner: PoPMiner
 ) : ApiController {
 
     override fun Route.registerApi() {
-        post("/wallet/btc/withdraw") {
-            val address: String = call.parameters["address"]
-                ?: throw BadRequestException("Parameter 'address' was not supplied")
-            val amountString: String = call.parameters["amount"]
+        post<withdrawBtc, WithdrawRequest>(
+            "withdrawbtc"
+                .description("Withdraws BTC from the PoP Miner")
+        ) { _, request ->
+            val address: String = request.destinationAddress
+                ?: throw BadRequestException("Parameter 'destinationAddress' was not supplied")
+            val amountString: String = request.amount
                 ?: throw BadRequestException("Parameter 'amount' was not supplied")
             val amount = amountString.toBigDecimalOrNull()
                 ?: throw BadRequestException("Parameter 'amount' is not a valid number")

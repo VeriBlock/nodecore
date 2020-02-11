@@ -7,13 +7,18 @@
 
 package nodecore.miners.pop.api
 
+import de.nielsfalk.ktor.swagger.SwaggerSupport
+import de.nielsfalk.ktor.swagger.version.shared.Contact
+import de.nielsfalk.ktor.swagger.version.shared.Information
+import de.nielsfalk.ktor.swagger.version.v2.Swagger
+import de.nielsfalk.ktor.swagger.version.v3.OpenApi
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.gson.gson
-import io.ktor.routing.Routing
-import io.ktor.routing.route
+import io.ktor.locations.Locations
+import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -21,6 +26,8 @@ import mu.KotlinLogging
 import nodecore.miners.pop.api.controller.ApiController
 import nodecore.miners.pop.api.controller.statusPages
 import java.util.concurrent.TimeUnit
+
+const val API_VERSION = "0.3"
 
 class ApiServer(
     private val controllers: List<ApiController>
@@ -37,15 +44,6 @@ class ApiServer(
             field = value
         }
 
-    var address: String = "0.0.0.0"
-        set(value) {
-            if (running) {
-                error("Address cannot be set after the server has started")
-            }
-
-            field = value
-        }
-
     var server: ApplicationEngine? = null
 
     fun start() {
@@ -53,10 +51,10 @@ class ApiServer(
             return
         }
 
-        logger.info("Starting HTTP API on {}:{}", address, port)
+        logger.info { "Starting HTTP API on port $port" }
 
         server = try {
-            embeddedServer(Netty, port = port, host = address) {
+            embeddedServer(Netty, port = port) {
                 install(DefaultHeaders)
                 install(CallLogging)
 
@@ -66,12 +64,30 @@ class ApiServer(
                     gson()
                 }
 
-                install(Routing) {
-                    route("/api") {
-                        for (controller in controllers) {
-                            with(controller) {
-                                registerApi()
-                            }
+
+                // Documentation
+                install(SwaggerSupport) {
+                    forwardRoot = true
+                    provideUi = true
+                    val information = Information(
+                        version = API_VERSION,
+                        title = "VeriBlock PoP Miner API",
+                        description = "This is the VPM's integrated API, through which you can monitor and control the application",
+                        contact = Contact("VeriBlock", "https://veriblock.org")
+                    )
+                    swagger = Swagger().apply {
+                        info = information
+                    }
+                    openApi = OpenApi().apply {
+                        info = information
+                    }
+                }
+
+                install(Locations)
+                routing {
+                    for (controller in controllers) {
+                        with(controller) {
+                            registerApi()
                         }
                     }
                 }

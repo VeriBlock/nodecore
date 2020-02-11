@@ -7,22 +7,35 @@
 
 package nodecore.miners.pop.api.controller
 
+import de.nielsfalk.ktor.swagger.description
+import de.nielsfalk.ktor.swagger.get
+import de.nielsfalk.ktor.swagger.ok
+import de.nielsfalk.ktor.swagger.responds
+import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
+import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import io.ktor.routing.get
 import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.api.models.ShowLastBitcoinBlockResponse
 import nodecore.miners.pop.common.Utility
 import org.bitcoinj.core.Utils
 import java.io.ByteArrayOutputStream
 
+@Group("Bitcoin") @Location("/api/lastbitcoinblock") class lastBitcoinBlock
+
 class LastBitcoinBlockController(
     private val miner: PoPMiner
 ) : ApiController {
 
     override fun Route.registerApi() {
-        get("/lastbitcoinblock") {
+        get<lastBitcoinBlock>(
+            "lastbitcoinblock"
+                .description("Get latest bitcoin block known by the PoP Miner")
+                .responds(
+                    ok<ShowLastBitcoinBlockResponse>()
+                )
+        ) {
             val lastBlock = miner.lastBitcoinBlock
             val lastBlockHeader = lastBlock.header
 

@@ -28,6 +28,10 @@ class PoPDataResponse(
     val minerAddress: String?
 )
 
+class OperationSummaryListResponse(
+    val operations: List<OperationSummaryResponse>
+)
+
 class OperationSummaryResponse(
     val operationId: String?,
     val endorsedBlockNumber: Int,

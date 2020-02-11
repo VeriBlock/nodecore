@@ -367,14 +367,6 @@ public class Configuration {
         return result;
     }
 
-    public String getHttpApiAddress() {
-        String address = getPropertyOverrideOrDefault(Keys.HTTP_API_ADDRESS);
-        if (address == null) {
-            return "127.0.0.1";
-        }
-        return address;
-    }
-
     public int getHttpApiPort() {
         Integer port = Ints.tryParse(getPropertyOverrideOrDefault(Keys.HTTP_API_PORT));
         if (port == null) {
@@ -401,13 +393,6 @@ public class Configuration {
             case Keys.AUTO_MINE_ROUND3:
             case Keys.AUTO_MINE_ROUND4:
                 result = setBoolean(key, value);
-                break;
-            case Keys.HTTP_API_ADDRESS:
-                result.addMessage("V052",
-                        "Runtime configuration not allowed",
-                        String.format("Property '%s' cannot be changed at runtime. Edit properties file and restart.", Keys.HTTP_API_ADDRESS),
-                        false);
-                result.fail();
                 break;
             case Keys.HTTP_API_PORT:
                 result.addMessage("V052",
@@ -592,7 +577,6 @@ public class Configuration {
         private static final String AUTO_MINE_ROUND2 = "auto.mine.round2";
         private static final String AUTO_MINE_ROUND3 = "auto.mine.round3";
         private static final String AUTO_MINE_ROUND4 = "auto.mine.round4";
-        private static final String HTTP_API_ADDRESS = "http.api.address";
         private static final String HTTP_API_PORT = "http.api.port";
 
         private static final String BITCOIN_NETWORK_KEY = "bitcoin.network";
@@ -625,7 +609,6 @@ public class Configuration {
                 AUTO_MINE_ROUND2,
                 AUTO_MINE_ROUND3,
                 AUTO_MINE_ROUND4,
-                HTTP_API_ADDRESS,
                 HTTP_API_PORT,
                 BITCOIN_NETWORK_KEY,
                 BITCOIN_MAX_TRANSACTION_FEE_KEY,

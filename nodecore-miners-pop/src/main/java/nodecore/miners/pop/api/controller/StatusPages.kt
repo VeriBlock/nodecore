@@ -16,28 +16,32 @@ class BadRequestException(override val message: String) : Exception()
 class NotFoundException(override val message: String) : Exception()
 class CallFailureException(override val message: String) : Exception()
 
+data class ApiError(
+    val message: String
+)
+
 fun Application.statusPages() {
     install(StatusPages) {
         exception<BadRequestException> {
             call.respond(HttpStatusCode.BadRequest, it.message)
         }
         exception<JsonSyntaxException> {
-            call.respond(HttpStatusCode.BadRequest, "")
+            call.respond(HttpStatusCode.BadRequest, ApiError(""))
         }
         exception<NotFoundException> {
-            call.respond(HttpStatusCode.NotFound, it.message)
+            call.respond(HttpStatusCode.NotFound, ApiError(it.message))
         }
         exception<CallFailureException> {
-            call.respond(HttpStatusCode.InternalServerError, it.message)
+            call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
         }
         exception<IOException> {
             logger.warn("Unhandled exception", it)
-            call.respond(HttpStatusCode.InternalServerError, "")
+            call.respond(HttpStatusCode.InternalServerError, ApiError(""))
         }
         exception<Exception> {
             //logger.warn("Unhandled exception", it)
             //call.respondError(HttpStatusCode.InternalServerError, "Unhandled exception [${it::class.simpleName}]: ${it.message}")
-            call.respond(HttpStatusCode.InternalServerError, "")
+            call.respond(HttpStatusCode.InternalServerError, ApiError(""))
         }
     }
 }

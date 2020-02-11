@@ -7,11 +7,18 @@
 
 package nodecore.miners.pop.api.model
 
-class MineRequestPayload {
-    var block: Int? = null
-}
+class EmptyRequest
 
-class SetConfigRequestPayload {
-    var key: String? = null
-    var value: String? = null
-}
+class MineRequest(
+    val block: Int?
+)
+
+class WithdrawRequest(
+    var destinationAddress: String?,
+    var amount: String?
+)
+
+class SetConfigRequest(
+    val key: String?,
+    val value: String?
+)

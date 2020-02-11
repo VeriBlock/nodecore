@@ -7,26 +7,34 @@
 
 package nodecore.miners.pop.api.controller
 
+import de.nielsfalk.ktor.swagger.description
+import de.nielsfalk.ktor.swagger.post
+import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
+import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import io.ktor.routing.post
 import mu.KotlinLogging
 import nodecore.miners.pop.InternalEventBus
+import nodecore.miners.pop.api.model.EmptyRequest
 import nodecore.miners.pop.events.ProgramQuitEvent
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
 
 private val logger = KotlinLogging.logger {}
 
+@Group("Quit") @Location("/api/quit") class quit(val restart: Boolean = false)
+
 class QuitController : ApiController {
 
     override fun Route.registerApi() {
-        post("/quit") {
+        post<quit, EmptyRequest>(
+            "quit"
+                .description("Exits the application")
+        ) { location, _ ->
             logger.info("Terminating the miner now")
-            val restart = call.parameters["restart"]?.toBoolean() ?: false
-            val quitReason = if (restart) 1 else 0
+            val quitReason = if (location.restart) 1 else 0
             val quitExecutor = Executors.newSingleThreadExecutor()
             quitExecutor.submit {
                 sleep(1000)

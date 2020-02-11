@@ -67,7 +67,6 @@ class Program {
         val scheduler: PoPMiningScheduler = startupInjector.get()
         val eventEngine: PoPEventEngine = startupInjector.get()
         val apiServer: ApiServer = startupInjector.get()
-        apiServer.address = configuration.httpApiAddress
         apiServer.port = configuration.httpApiPort
         shell = startupInjector.get()
         shell.initialize()
