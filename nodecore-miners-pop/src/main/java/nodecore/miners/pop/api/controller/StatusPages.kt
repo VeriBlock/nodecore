@@ -4,6 +4,7 @@ import com.google.gson.JsonSyntaxException
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.features.ContentTransformationException
 import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
@@ -37,6 +38,9 @@ fun Application.statusPages() {
         exception<IOException> {
             logger.warn("Unhandled exception", it)
             call.respond(HttpStatusCode.InternalServerError, ApiError(""))
+        }
+        exception<ContentTransformationException> {
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Empty POST request are not supported"))
         }
         exception<Exception> {
             //logger.warn("Unhandled exception", it)
