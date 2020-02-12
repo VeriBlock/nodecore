@@ -439,7 +439,7 @@ public class Peer {
 
     public static Peer createOutboundPeer(String address, int port, Selector selector) {
         try {
-            logger.info("Attempting to establish client connection to peer " + address + ":" + port);
+            logger.debug("Attempting to establish client connection to peer " + address + ":" + port);
             SocketAddress socketAddress = new InetSocketAddress(address, port);
             SocketChannel socketChannel = SocketChannel.open(socketAddress);
             socketChannel.configureBlocking(false);
