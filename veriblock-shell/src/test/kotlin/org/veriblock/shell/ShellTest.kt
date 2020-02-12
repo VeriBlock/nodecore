@@ -71,7 +71,8 @@ class ShellTest {
             output shouldContain "The command 'test' is not supported"
             output shouldContain "[V009] Syntax error"
             output shouldContain "[V004] Unknown protocol command"
-            output shouldContain "Usage: greet <who> ERROR: parameter 'who' is required"
+            output shouldContain "Usage: greet <who>"
+            output shouldContain "ERROR: parameter 'who' is required"
             output shouldContain "Hello World!"
         }
     }
