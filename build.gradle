@@ -76,6 +76,10 @@ sonarqube {
     }
 }
 
+jacoco {
+    toolVersion = '0.8.5'
+}
+
 wrapper {
     gradleVersion = '5.6.4'
 }
