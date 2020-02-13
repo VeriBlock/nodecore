@@ -37,7 +37,7 @@ class QuitController : ApiController {
             val quitReason = if (location.restart) 1 else 0
             val quitExecutor = Executors.newSingleThreadExecutor()
             quitExecutor.submit {
-                sleep(1000)
+                sleep(100)
                 InternalEventBus.getInstance().post(ProgramQuitEvent(quitReason))
             }
 
