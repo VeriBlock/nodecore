@@ -25,10 +25,11 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
+import org.veriblock.miners.pop.core.OperationStatus
 
 @Location("/api/miner") class miner
 @Location("/api/miner/mine") class mineAction
-@Location("/api/miner/operations") class minerOperations
+@Location("/api/miner/operations") class minerOperations(val status: String?, val limit: Int?, val offset: Int?)
 @Location("/api/miner/operations/{id}") class minerOperation(val id: String)
 
 class MiningController(
@@ -74,10 +75,40 @@ class MiningController(
                 .responds(
                     ok<OperationSummaryListResponse>()
                 )
-        ) {
-            val operationSummaries = miner.getOperations()
-
+        ) { location ->
+            // Get all the operations
+            var operationSummaries = miner.getOperations()
+            // Get the given status filter
+            val operationStatus: OperationStatus? = location.status?.let {
+                OperationStatus.valueOf(it)
+            }
+            // Get the given limit filter
+            val limit = location.limit ?: operationSummaries.size
+            // Get the given offset filter
+            val offset = location.offset ?: 0
+            // Filter the operations by the status
+            if (operationStatus != null) {
+                operationSummaries = operationSummaries.filter {
+                    it.status == operationStatus
+                }
+            }
+            // Filter the operations by the offset
+            if (offset != null) {
+                operationSummaries = operationSummaries.filter { miningOperation ->
+                    miningOperation.blockHeight?.let {
+                        val valid = it >= offset
+                        valid
+                    }
+                    false
+                }
+            }
+            // Filter the operations by the limit
+            if (operationSummaries.size > limit) {
+                operationSummaries = operationSummaries.subList(0, limit)
+            }
+            // Create the model
             val responseModel = operationSummaries.map { it.toSummaryResponse() }
+            // Respond the model
             call.respond(OperationSummaryListResponse(responseModel))
         }
         get<minerOperation>(
