@@ -35,17 +35,16 @@ fun Application.statusPages() {
         exception<CallFailureException> {
             call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
         }
+        exception<ContentTransformationException> {
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Unable to process request! Make sure the request is properly formed."))
+        }
         exception<IOException> {
             logger.warn("Unhandled exception", it)
-            call.respond(HttpStatusCode.InternalServerError, ApiError(""))
-        }
-        exception<ContentTransformationException> {
-            call.respond(HttpStatusCode.InternalServerError, ApiError("Empty POST request are not supported"))
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Unhandled exception! Check the console logs for details."))
         }
         exception<Exception> {
-            //logger.warn("Unhandled exception", it)
-            //call.respondError(HttpStatusCode.InternalServerError, "Unhandled exception [${it::class.simpleName}]: ${it.message}")
-            call.respond(HttpStatusCode.InternalServerError, ApiError(""))
+            logger.warn("Unhandled exception", it)
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Unhandled exception! Check the console logs for details."))
         }
     }
 }
