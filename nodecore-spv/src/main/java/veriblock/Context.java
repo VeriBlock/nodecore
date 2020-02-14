@@ -31,7 +31,7 @@ import veriblock.net.PeerDiscovery;
 import veriblock.net.PeerTable;
 import veriblock.net.impl.P2PServiceImpl;
 import veriblock.net.impl.PeerTableImpl;
-import veriblock.params.NetworkParameters;
+import veriblock.conf.NetworkParameters;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
 import veriblock.service.impl.AdminApiServiceImpl;

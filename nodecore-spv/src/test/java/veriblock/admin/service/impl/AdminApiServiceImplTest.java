@@ -19,7 +19,7 @@ import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.net.LocalhostDiscovery;
 import veriblock.net.PeerTable;
-import veriblock.params.TestNetParameters;
+import veriblock.conf.TestNetParameters;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
 import veriblock.service.TransactionFactory;
