@@ -10,7 +10,7 @@ import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.net.LocalhostDiscovery;
 import veriblock.net.Peer;
-import veriblock.params.TestNetParameters;
+import veriblock.conf.TestNetParameters;
 import veriblock.service.PendingTransactionContainer;
 
 import java.util.ArrayList;

@@ -12,7 +12,7 @@ import veriblock.model.Output;
 import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.net.LocalhostDiscovery;
-import veriblock.params.MainNetParameters;
+import veriblock.conf.MainNetParameters;
 
 import java.util.ArrayList;
 

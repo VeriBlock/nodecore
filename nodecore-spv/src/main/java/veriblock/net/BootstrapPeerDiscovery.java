@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.TextParseException;
 import veriblock.model.PeerAddress;
-import veriblock.params.NetworkParameters;
+import veriblock.conf.NetworkParameters;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -9,7 +9,7 @@ package veriblock.net;
 
 import veriblock.Context;
 import veriblock.model.PeerAddress;
-import veriblock.params.NetworkParameters;
+import veriblock.conf.NetworkParameters;
 
 import java.util.Collection;
 import java.util.Collections;
