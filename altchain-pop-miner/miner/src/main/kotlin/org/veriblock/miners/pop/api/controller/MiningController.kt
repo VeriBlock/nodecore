@@ -25,10 +25,11 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
+import org.veriblock.miners.pop.core.OperationStatus
 
 @Location("/api/miner") class miner
 @Location("/api/miner/mine") class mineAction
-@Location("/api/miner/operations") class minerOperations
+@Location("/api/miner/operations") class minerOperations(val status: String?, val limit: Int?, val offset: Int?)
 @Location("/api/miner/operations/{id}") class minerOperation(val id: String)
 
 class MiningController(
@@ -55,7 +56,7 @@ class MiningController(
                 .responds(
                     ok<OperationSummaryResponse>()
                 )
-        ) { location, mineRequest ->
+        ) { _, mineRequest ->
             val result = miner.mine(mineRequest.chainSymbol, mineRequest.height)
             val firstMsg = result.getMessages().first()
             if (result.isFailed) {
@@ -74,11 +75,31 @@ class MiningController(
                 .responds(
                     ok<OperationSummaryListResponse>()
                 )
-        ) {
-            val operationSummaries = miner.getOperations()
-
-            val responseModel = operationSummaries.map { it.toSummaryResponse() }
-            call.respond(OperationSummaryListResponse(responseModel))
+        ) { location ->
+            // Get all the operations
+            val allOperations = miner.getOperations()
+            // Get the given status filter
+            val filteredOperations = if (location.status != null) {
+                val operationStatus = try {
+                    OperationStatus.valueOf(location.status)
+                } catch (e: Exception) {
+                    throw BadRequestException("Invalid operation status: ${location.status}")
+                }
+                allOperations.filter {
+                    it.status === operationStatus
+                }
+            } else {
+                allOperations
+            }
+            // Get the given offset filter
+            val offset = location.offset ?: 0
+            // Get the given limit filter
+            val limit = location.limit ?: filteredOperations.size
+            // Paginate and map operations
+            val result = filteredOperations.asSequence().drop(offset).take(limit).map {
+                it.toSummaryResponse()
+            }.toList()
+            call.respond(result)
         }
         get<minerOperation>(
             "operation"
