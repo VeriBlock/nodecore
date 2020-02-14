@@ -56,7 +56,7 @@ class MiningController(
                 .responds(
                     ok<OperationSummaryResponse>()
                 )
-        ) { location, mineRequest ->
+        ) { _, mineRequest ->
             val result = miner.mine(mineRequest.chainSymbol, mineRequest.height)
             val firstMsg = result.getMessages().first()
             if (result.isFailed) {
@@ -77,39 +77,29 @@ class MiningController(
                 )
         ) { location ->
             // Get all the operations
-            var operationSummaries = miner.getOperations()
+            val allOperations = miner.getOperations()
             // Get the given status filter
-            val operationStatus: OperationStatus? = location.status?.let {
-                OperationStatus.valueOf(it)
+            val filteredOperations = if (location.status != null) {
+                val operationStatus = try {
+                    OperationStatus.valueOf(location.status)
+                } catch (e: Exception) {
+                    throw BadRequestException("Invalid operation status: ${location.status}")
+                }
+                allOperations.filter {
+                    it.status === operationStatus
+                }
+            } else {
+                allOperations
             }
-            // Get the given limit filter
-            val limit = location.limit ?: operationSummaries.size
             // Get the given offset filter
             val offset = location.offset ?: 0
-            // Filter the operations by the status
-            if (operationStatus != null) {
-                operationSummaries = operationSummaries.filter {
-                    it.status == operationStatus
-                }
-            }
-            // Filter the operations by the offset
-            if (offset != null) {
-                operationSummaries = operationSummaries.filter { miningOperation ->
-                    miningOperation.blockHeight?.let {
-                        val valid = it >= offset
-                        valid
-                    }
-                    false
-                }
-            }
-            // Filter the operations by the limit
-            if (operationSummaries.size > limit) {
-                operationSummaries = operationSummaries.subList(0, limit)
-            }
-            // Create the model
-            val responseModel = operationSummaries.map { it.toSummaryResponse() }
-            // Respond the model
-            call.respond(OperationSummaryListResponse(responseModel))
+            // Get the given limit filter
+            val limit = location.limit ?: filteredOperations.size
+            // Paginate and map operations
+            val result = filteredOperations.asSequence().drop(offset).take(limit).map {
+                it.toSummaryResponse()
+            }.toList()
+            call.respond(result)
         }
         get<minerOperation>(
             "operation"
