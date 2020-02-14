@@ -34,7 +34,7 @@ dependencies {
 
     implementation project(':altchain-plugins')
 
-    implementation 'com.github.veriblock.alt-integration:mock-pop-mining:0.0.4'
+    implementation 'com.github.veriblock.alt-integration:mock-pop-mining:0.0.5'
 
     // Dependency Injection
     implementation "org.koin:koin-core:2.0.1"
