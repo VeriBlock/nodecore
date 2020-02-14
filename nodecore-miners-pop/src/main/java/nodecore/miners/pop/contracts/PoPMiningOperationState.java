@@ -17,7 +17,11 @@ import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
 import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
 import nodecore.miners.pop.events.TransactionConfirmedEvent;
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.FilteredBlock;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.crypto.Crypto;
@@ -92,11 +96,11 @@ public class PoPMiningOperationState {
         byte[] txBytes = exposedTransaction.getFilteredTransaction();
 
         logger.info("TxID: " + Utility.bytesToHex(transaction.getTxId().getBytes()));
-        logger.info("wTxID: " + Utility.bytesToHex(transaction.getWTxId().getBytes()));
-        logger.info("Recalculated TxID: " + Utility.bytesToHex(Utility.flip(new Crypto().SHA256D(txBytes))));
+        logger.debug("wTxID: " + Utility.bytesToHex(transaction.getWTxId().getBytes()));
+        logger.debug("Recalculated TxID: " + Utility.bytesToHex(Utility.flip(new Crypto().SHA256D(txBytes))));
 
-        logger.info("Unfiltered Tx: " + Utility.bytesToHex(transaction.unsafeBitcoinSerialize()));
-        logger.info("Filtered Tx: " + Utility.bytesToHex(txBytes));
+        logger.debug("Unfiltered Tx: " + Utility.bytesToHex(transaction.unsafeBitcoinSerialize()));
+        logger.debug("Filtered Tx: " + Utility.bytesToHex(txBytes));
 
 
         setTransactionBytes(txBytes);
@@ -203,7 +207,7 @@ public class PoPMiningOperationState {
         messages.add(setStatus(PoPMiningOperationStatus.COMPLETE));
 
         broadcast(messages);
-        InternalEventBus.getInstance().post(new PoPMiningOperationCompletedEvent(_this.getOperationId()));
+        InternalEventBus.getInstance().post(new PoPMiningOperationCompletedEvent(getOperationId()));
     }
 
     public void fail(String reason) {
@@ -236,15 +240,15 @@ public class PoPMiningOperationState {
             @Override
             public void onSuccess(@Nullable TransactionConfidence result) {
                 if (result != null) {
-                    logger.info("[{}] Transaction has reached depth: {}", _this.getOperationId(), result.getDepthInBlocks());
+                    logger.info("[{}] Transaction has reached depth: {}", getOperationId(), result.getDepthInBlocks());
                 }
-                _this.complete();
+                complete();
             }
 
             @Override
             public void onFailure(Throwable t) {
                 logger.error("Failure in depth future callback", t);
-                _this.complete();
+                complete();
             }
         }, Threading.TASK_POOL);
     }
@@ -263,10 +267,9 @@ public class PoPMiningOperationState {
 
     // Setters and Getters for data
 
-    private PoPMiningOperationState _this = this;
     private TransactionConfidence.Listener txConfidenceListener = (confidence, reason) -> {
-        logger.info("[{}] TransactionConfidence listener called: {} - {}",
-                _this.getOperationId(),
+        logger.debug("[{}] TransactionConfidence listener called: {} - {}",
+                getOperationId(),
                 reason.name(),
                 confidence.getConfidenceType().name());
         if (reason != TransactionConfidence.Listener.ChangeReason.TYPE) {
@@ -276,7 +279,7 @@ public class PoPMiningOperationState {
         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
             onBitcoinReorganize();
         } else if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-            InternalEventBus.getInstance().post(new TransactionConfirmedEvent(_this));
+            InternalEventBus.getInstance().post(new TransactionConfirmedEvent(PoPMiningOperationState.this));
         }
     };
     private ListenableFuture<TransactionConfidence> futureDepthListener;

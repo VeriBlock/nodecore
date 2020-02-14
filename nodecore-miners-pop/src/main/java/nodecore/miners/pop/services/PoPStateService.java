@@ -91,7 +91,7 @@ public class PoPStateService {
                 stateData.endorsedBlockHash = operationState.getMiningInstruction().getBlockHashAsString();
                 stateData.endorsedBlockNumber = operationState.getBlockNumber();
             }
-
+            logger.info("Operation [" + operationState.getOperationId() + "] new status: " + stateData.status);
             repository.saveOperationState(stateData);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

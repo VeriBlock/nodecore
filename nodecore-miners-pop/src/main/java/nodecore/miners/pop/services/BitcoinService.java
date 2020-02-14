@@ -349,7 +349,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 return block.getPartialMerkleTree();
             }
         } catch (TimeoutException | InterruptedException | ExecutionException e) {
-            logger.error("Unable to download Bitcoin block", e);
+            logger.debug("Unable to download Bitcoin block", e);
         }
 
         return null;

@@ -48,4 +48,3 @@ fun Application.statusPages() {
         }
     }
 }
-
