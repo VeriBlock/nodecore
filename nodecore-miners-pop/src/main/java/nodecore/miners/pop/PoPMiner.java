@@ -88,6 +88,7 @@ public class PoPMiner implements Runnable {
     private final KeyValueRepository keyValueRepository;
     private final ProcessManager processManager;
 
+    private boolean isShuttingDown;
     private boolean stateRestored;
     private EnumSet<PoPMinerDependencies> readyConditions;
 
@@ -194,6 +195,11 @@ public class PoPMiner implements Runnable {
             result.fail();
             List<String> reasons = listPendingReadyConditions();
             result.addMessage(new DefaultResultMessage("V412", "Miner is not ready", reasons, true));
+            return result;
+        }
+
+        if (isShuttingDown) {
+            result.addMessage(new DefaultResultMessage("V412", "Miner is not ready", "The miner is currently shutting down", true));
             return result;
         }
 
@@ -459,6 +465,10 @@ public class PoPMiner implements Runnable {
         }
 
         stateRestored = true;
+    }
+
+    public void setIsShuttingDown(boolean b) {
+        isShuttingDown = b;
     }
 
     @Subscribe

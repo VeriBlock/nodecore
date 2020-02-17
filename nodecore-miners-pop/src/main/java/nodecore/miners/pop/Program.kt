@@ -30,6 +30,7 @@ private val logger = KotlinLogging.logger {}
 class Program {
     private val shutdownSignal: CountDownLatch = CountDownLatch(1)
     private lateinit var shell: PopShell
+    private lateinit var popMiner: PoPMiner
     var externalQuit = false
 
     init {
@@ -63,7 +64,7 @@ class Program {
                 logger.error("Exception running listener", e)
             }
         }
-        val popMiner: PoPMiner = startupInjector.get()
+        popMiner = startupInjector.get()
         val scheduler: PoPMiningScheduler = startupInjector.get()
         val eventEngine: PoPEventEngine = startupInjector.get()
         val apiServer: ApiServer = startupInjector.get()
@@ -115,6 +116,7 @@ class Program {
         ///HACK: imitate an "exit" command in the console
         if (event.reason == 1) {
             externalQuit = true
+            popMiner.setIsShuttingDown(true)
         }
         shell.interrupt()
     }
