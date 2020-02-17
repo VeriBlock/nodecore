@@ -20,3 +20,13 @@ YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/p
 and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).
 
 ![yourkit logo](https://www.yourkit.com/images/yklogo.png)
+
+#### FAQ
+
+1. IDEA can't see class VeriBlockMessages (class is too large). 
+    Step 1 Open the menu item: «Help» → «Edit Custom Properties» 
+    Step 2 Set the parameter: 
+        idea.max.intellisense.filesize=999999 
+        idea.max.content.load.filesize=200000
+    Step 3 Restart IntelliJ IDEA.
+
