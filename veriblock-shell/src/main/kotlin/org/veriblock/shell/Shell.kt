@@ -27,6 +27,7 @@ import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.core.ActivityLevel
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
+import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -252,23 +253,20 @@ open class Shell(
         printWarning("${t.message}\n\n")
     }
 
+    private val printStyledStringBuilder = StringBuilder()
+
     @JvmOverloads
     fun printStyled(message: String, style: AttributedStyle, newLine: Boolean = true) {
+        printStyledStringBuilder.append(
+            AttributedStringBuilder()
+                .style(style)
+                .append(message)
+                .toAnsi(terminal)
+        )
+
         if (newLine) {
-            terminal.writer().println(
-                AttributedStringBuilder()
-                    .style(style)
-                    .append(message)
-                    .toAnsi(terminal)
-            )
-            terminal.writer().flush()
-        } else {
-            terminal.writer().print(
-                AttributedStringBuilder()
-                    .style(style)
-                    .append(message)
-                    .toAnsi(terminal)
-            )
+            reader.printAbove(printStyledStringBuilder.toString())
+            printStyledStringBuilder.clear()
         }
     }
 
