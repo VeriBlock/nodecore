@@ -8,34 +8,31 @@
 
 package org.veriblock.miners.pop.securityinheriting
 
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.service.PluginService
-import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 
 class SecurityInheritingService(
-    private val miner: Miner,
     private val pluginFactory: PluginService
 ) {
-    private val autoMiners = HashMap<String, SecurityInheritingAutoMiner>()
+    private val monitors = HashMap<String, SecurityInheritingMonitor>()
 
-    fun start() {
+    fun start(miner: Miner) {
         for ((chainId, chain) in pluginFactory.getPlugins()) {
-            if (chain.shouldAutoMine()) {
-                logger.debug { "Auto-mining on $chainId is enabled! Starting..." }
-                val autoMiner = SecurityInheritingAutoMiner(miner, chainId, chain)
-                autoMiner.start()
-                autoMiners[chainId] = autoMiner
-            } else {
-                logger.debug { "Auto-mining on $chainId is disabled" }
-            }
+            logger.debug { "Starting $chainId monitor..." }
+            val autoMiner = SecurityInheritingMonitor(chainId, chain)
+            autoMiner.start(miner)
+            monitors[chainId] = autoMiner
         }
     }
 
     fun stop() {
-        autoMiners.values.forEach {
+        monitors.values.forEach {
             it.stop()
         }
     }
+
+    fun getMonitor(chainId: String) = monitors[chainId]
 }

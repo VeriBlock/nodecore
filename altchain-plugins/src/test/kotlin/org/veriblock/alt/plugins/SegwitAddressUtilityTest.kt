@@ -20,11 +20,10 @@ class SegwitAddressUtilityTest {
     @Test
     fun test() {
         // Given
-        val hrp = "bcrt"
         val address = "bcrt1qv6rz22y5xmrv2n2kxmfz7jmdu9adk4myf3ejsw"
 
         // When
-        val payoutScript = SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(address, hrp)
+        val payoutScript = SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(address)
 
         // Then
         payoutScript.toHex() shouldBe "0014668625289436C6C54D5636D22F4B6DE17ADB5764"
@@ -33,11 +32,10 @@ class SegwitAddressUtilityTest {
     @Test
     fun test2() {
         // Given
-        val hrp = "bc"
         val address = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
 
         // When
-        val payoutScript = SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(address, hrp)
+        val payoutScript = SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(address)
 
         // Then
         payoutScript.toHex() shouldBe "0014751E76E8199196D454941C45D1B3A323F1433BD6"

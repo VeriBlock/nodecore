@@ -127,7 +127,10 @@ class MockMiner(
         operation.setProofOfProofId(submissionResult)
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
-        operation.complete()
+        // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
+        operation.setAltEndorsementTransactionConfirmed()
+        operation.setAltEndorsedBlockHash("")
+        operation.complete("", 0.0)
         return success()
     }
 

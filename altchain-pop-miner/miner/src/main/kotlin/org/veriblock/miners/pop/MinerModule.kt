@@ -42,7 +42,7 @@ val minerModule = module {
     } else {
         single<Miner> { MockMiner(get(), get()) }
     }
-    single { SecurityInheritingService(get(), get()) }
+    single { SecurityInheritingService(get()) }
     single {
         CommandFactory().apply {
             configure(get(), get(), get())

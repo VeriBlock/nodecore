@@ -6,6 +6,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.miners.pop
+package org.veriblock.sdk.util
 
-const val TX_DEPTH_COMPLETE = 125
+inline fun checkSuccess(block: () -> Any?): Boolean = try {
+    block()
+    true
+} catch (ignored: Exception) {
+    false
+}

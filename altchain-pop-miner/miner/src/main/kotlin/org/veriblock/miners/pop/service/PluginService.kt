@@ -55,8 +55,14 @@ class PluginService(
                 val chainSupplier = familyPlugins[family]
                     ?: return@mapNotNull null
 
+                val chain = try {
+                    chainSupplier(chainId, key, config.name ?: "")
+                } catch (e: Exception) {
+                    logger.warn { "Error loading chain $key: ${e.message}" }
+                    return@mapNotNull null
+                }
                 logger.info { "Loaded plugin $key ($family family) from config" }
-                key to chainSupplier(chainId, key, config.name ?: "")
+                key to chain
             }
         }.associate {
             it.first to it.second
