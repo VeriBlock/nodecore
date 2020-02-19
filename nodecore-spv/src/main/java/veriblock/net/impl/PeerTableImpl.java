@@ -109,6 +109,8 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                 new ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build());
         this.discovery = peerDiscovery;
         addPendingTransactionDownloadedEventListeners(executor, Context.getPendingTransactionDownloadedListener());
+
+        discoverPeers();
     }
 
 

@@ -19,7 +19,7 @@ import java.util.Base64;
  */
 public class AlphaNetParameters extends NetworkParameters {
     private static final String alphaNetworkGenesisBlock = "AAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzyAl7A64qKMlSV/rWVALUFx5fAIEBfXhAw0E3w==";
-    public static final String NETWORK = "Alpha";
+    public static final String NETWORK = "alpha";
 
     private AlphaNetParameters(){
         this.adminHost = LOCALHOST;
@@ -52,6 +52,16 @@ public class AlphaNetParameters extends NetworkParameters {
     @Override
     public Integer getProtocolVersion() {
         return 3;
+    }
+
+
+    private static AlphaNetParameters instance;
+
+    public static synchronized AlphaNetParameters get() {
+        if (instance == null) {
+            instance = new AlphaNetParameters();
+        }
+        return instance;
     }
 
 }

@@ -6,6 +6,8 @@ import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.shell.CommandParameterMapper
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.syntaxError
+import veriblock.conf.NetworkParameters
+import veriblock.conf.NetworkParametersFactory
 
 object ShellCommandParameterMappers {
     val HASH: CommandParameterMapper = CommandParameterMappers.HEX_STRING
@@ -17,6 +19,17 @@ object ShellCommandParameterMappers {
             throw syntaxError(
                 command,
                 "parameter '${param.name}' must be a string in the form: host:port"
+            )
+        }
+    }
+
+    var NET: CommandParameterMapper = { suppliedParam ->
+        try {
+            NetworkParametersFactory.get(suppliedParam)
+        } catch(ignored: Exception) {
+            throw syntaxError(
+                    command,
+                    "parameter '${param.name}' must be a string in the form: main / test / alpha"
             )
         }
     }

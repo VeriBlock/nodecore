@@ -20,7 +20,7 @@ import java.util.Base64;
 public class TestNetParameters extends NetworkParameters {
 
     public static final String GENESIS_BLOCK = "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ==";
-    public static final String NETWORK = "TestNet";
+    public static final String NETWORK = "test";
 
     private TestNetParameters(){
         this.adminHost = LOCALHOST;
