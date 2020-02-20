@@ -1,6 +1,7 @@
 package nodecore.cli.commands.shell
 
 import nodecore.cli.cliCommand
+import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.EndpointTransportType
 import nodecore.cli.contracts.PeerEndpoint
@@ -12,6 +13,7 @@ import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
 import veriblock.Context
 import veriblock.conf.NetworkParameters
+import veriblock.model.DownloadStatusResponse
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
 import veriblock.net.PeerDiscovery
@@ -60,6 +62,7 @@ fun CommandFactory.connectionCommands() {
             listOf("getinfo", "getbalance", "send")
         }
     ) {
+        val shell = cliShell
         val net: NetworkParameters = getParameter("net")
         val peer: String? = getOptionalParameter("peer")
 
@@ -67,9 +70,25 @@ fun CommandFactory.connectionCommands() {
         var peerDiscovery: PeerDiscovery = if (peer != null && peer == "local") LocalhostDiscovery() else BootstrapPeerDiscovery(net)
 
         Context.init(net, peerDiscovery, true)
+        Context.getPeerTable().start()
+
+        while (true){
+            var status: DownloadStatusResponse = Context.getPeerTable().getDownloadStatus()
+            if(status.downloadStatus.isDiscovering){
+                shell.printInfo("Connecting to peers.");
+            } else if(status.downloadStatus.isDownloading){
+                shell.printInfo("SPV Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight)
+            } else{
+                shell.printInfo("SPV is ready.")
+                break
+            }
+
+            Thread.sleep(5000L)
+        }
 
         val endpoint = ProtocolEndpoint(net.adminHost.toString(), net.adminPort.toShort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP)
         this.extraData["connect"] = endpoint
+
 
         success()
     }

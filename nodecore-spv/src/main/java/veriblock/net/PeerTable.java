@@ -9,10 +9,12 @@
 package veriblock.net;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import veriblock.model.DownloadStatusResponse;
 import veriblock.model.LedgerContext;
 import veriblock.model.Transaction;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Service for working with peers.
@@ -32,5 +34,7 @@ public interface PeerTable {
     Integer getBestBlockHeight();
 
     Map<String, LedgerContext> getAddressState();
+
+    DownloadStatusResponse getDownloadStatus() throws ExecutionException, InterruptedException;
 
 }
