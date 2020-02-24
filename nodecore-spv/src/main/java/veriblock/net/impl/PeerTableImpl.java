@@ -95,7 +95,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private final ListeningScheduledExecutorService executor;
     private final ScheduledExecutorService messageExecutor;
 
-    private SettableFuture<Boolean> startupFuture = SettableFuture.create();
     private int maximumPeers = DEFAULT_CONNECTIONS;
     private Peer downloadPeer;
     private BloomFilter bloomFilter;
@@ -115,22 +114,20 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         this.discovery = peerDiscovery;
         addPendingTransactionDownloadedEventListeners(executor, Context.getPendingTransactionDownloadedListener());
 
-        discoverPeers();
     }
 
 
-    public ListenableFuture<Boolean> start() {
-        if (startupFuture.isDone()) return startupFuture;
-
+    @Override
+    public void start() {
         running.set(true);
+
+        discoverPeers();
 
         this.executor.scheduleAtFixedRate(this::requestAddressState, 5, 60, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::discoverPeers, 0, 60, TimeUnit.SECONDS);
 
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
         this.messageExecutor.scheduleWithFixedDelay(this::processIncomingMessages, 1, 1, TimeUnit.SECONDS);
-
-        return startupFuture;
     }
 
     public void shutdown() {
@@ -349,10 +346,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
             // Attach listeners
             peer.addMessageReceivedEventListeners(executor, this);
-
-//            if (!startupFuture.isDone()) {
-//                startupFuture.set(true);
-//            }
 
             peer.setFilter(this.bloomFilter);
 

@@ -32,6 +32,7 @@ local.properties
 
 # IDEA
 .idea/
+.idea/*
 
 ## File-based project format:
 *.iws

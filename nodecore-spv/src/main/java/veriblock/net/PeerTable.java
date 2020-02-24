@@ -23,7 +23,7 @@ public interface PeerTable {
 
     void advertise(Transaction signedTransaction);
 
-    ListenableFuture<Boolean> start();
+    void start();
 
     void shutdown();
 
