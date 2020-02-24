@@ -128,6 +128,8 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
         this.messageExecutor.scheduleWithFixedDelay(this::processIncomingMessages, 1, 1, TimeUnit.SECONDS);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
     }
 
     public void shutdown() {
