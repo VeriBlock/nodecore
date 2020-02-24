@@ -81,6 +81,14 @@ startScripts {
     windowsStartScriptGenerator.template = resources.text.fromFile("windowsStartScript.txt")
 }
 
+tasks.withType(CreateStartScripts).each { task ->
+    task.doLast {
+        // This will replace the long classpath string (which contains a reference to every single lib on the project)
+        // for a simple lib\* (which will load all the libs on the project without reference them directly)
+        task.windowsScript.write task.windowsScript.text.replaceFirst(/(set CLASSPATH=%APP_HOME%\\lib\\).*/, { "${it[1]}*" })
+    }
+}
+
 apply plugin: 'jacoco'
 
 jacocoTestReport {
