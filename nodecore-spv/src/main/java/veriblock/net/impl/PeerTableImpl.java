@@ -255,7 +255,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                             break;
                         case ADVERTISE_BLOCKS:
                             VeriBlockMessages.AdvertiseBlocks advertiseBlocks = message.getMessage().getAdvertiseBlocks();
-                            LOGGER.info("PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.getHeadersList().size());
+                            LOGGER.info("PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.getHeadersList().size(), blockchain.getChainHead().getHeight());
 
                             List<VeriBlockBlock> veriBlockBlocks = advertiseBlocks.getHeadersList()
                                     .stream()
