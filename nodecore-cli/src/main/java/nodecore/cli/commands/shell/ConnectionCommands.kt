@@ -75,11 +75,11 @@ fun CommandFactory.connectionCommands() {
         while (true){
             var status: DownloadStatusResponse = Context.getPeerTable().getDownloadStatus()
             if(status.downloadStatus.isDiscovering){
-                shell.printInfo("Connecting to peers.");
+                shell.printInfo("Waiting for peers response.");
             } else if(status.downloadStatus.isDownloading){
-                shell.printInfo("SPV Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight)
+                shell.printInfo("Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight)
             } else{
-                shell.printInfo("SPV is ready.")
+                shell.printInfo("Blockchain is ready. Current height " + status.currentHeight)
                 break
             }
 
