@@ -134,7 +134,7 @@ class MiningOperation(
         logger.warn { "Operation $id failed for reason: $reason" }
         status = OperationStatus.FAILED
         detachTransactionListeners(state.transaction)
-        setState(OperationState.Failed(state))
+        setState(OperationState.Failed(state, reason))
     }
 
     fun complete() {

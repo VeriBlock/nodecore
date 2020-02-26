@@ -103,15 +103,16 @@ sealed class OperationState {
     }
 
     open class Failed(
-        val previous: OperationState
+        val previous: OperationState,
+        private val reason: String
     ) : OperationState() {
-        override fun toString() = "Failed"
+        override fun toString() = "Failed: $reason"
         override fun getDetailedInfo() = previous.getDetailedInfo()
     }
 
     class Reorganized(
         previous: OperationState
-    ) : Failed(previous) {
+    ) : Failed(previous, "SP Chain has reorganized") {
         override fun toString() = "SP Chain has reorganized"
     }
 }
