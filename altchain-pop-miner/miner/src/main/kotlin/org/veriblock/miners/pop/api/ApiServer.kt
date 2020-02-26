@@ -38,6 +38,7 @@ class ApiServer(
     private var running = false
 
     private val port: Int = Configuration.getInt("miner.api.port") ?: 8080
+    private val host: String = Configuration.getString("miner.api.host") ?: "0.0.0.0"
 
     var server: ApplicationEngine? = null
 
@@ -46,9 +47,9 @@ class ApiServer(
             return
         }
 
-        logger.info { "Starting HTTP API on port $port" }
+        logger.info { "Starting HTTP API on port $host:$port" }
 
-        server = embeddedServer(Netty, port = port) {
+        server = embeddedServer(Netty, host = host, port = port) {
             install(DefaultHeaders)
             install(CallLogging)
 
