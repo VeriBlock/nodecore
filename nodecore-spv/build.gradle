@@ -37,10 +37,6 @@ dependencies {
     //veriblock-core and nodecore-grpc plus their dependencies
     compile fileTree(dir: "$projectDir/../lib/", include: '*.jar')
 
-    //Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.10'
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
-
     //Guice
     compile group: 'com.google.inject', name: 'guice', version: '4.2.2'
     compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.2.2'
