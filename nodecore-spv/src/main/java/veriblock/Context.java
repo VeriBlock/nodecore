@@ -152,7 +152,9 @@ public class Context {
 
     public static void shutdown(){
         peerTable.shutdown();
-        server.shutdown();
+        if(server!= null) {
+            server.shutdown();
+        }
     }
 
     private static Server createAdminServer() throws IOException, NumberFormatException {
