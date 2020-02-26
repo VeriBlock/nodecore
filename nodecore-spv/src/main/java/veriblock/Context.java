@@ -92,7 +92,7 @@ public class Context {
      */
     public static synchronized void init(NetworkParameters networkParam, File baseDir, String filePr, PeerDiscovery peerDiscovery, boolean runAdminServer) {
         try {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> Context.shutdown(), "ShutdownHook"));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> Context.shutdown(), "ShutdownHook nodecore-spv"));
 
             networkParameters = networkParam;
             directory = baseDir;
