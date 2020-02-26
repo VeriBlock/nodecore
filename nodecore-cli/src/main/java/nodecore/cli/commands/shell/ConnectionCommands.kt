@@ -88,7 +88,9 @@ fun CommandFactory.connectionCommands() {
 
         val endpoint = ProtocolEndpoint(net.adminHost.toString(), net.adminPort.toShort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP)
         this.extraData["connect"] = endpoint
-
+        this.extraData["disconnectCallBack"] = Runnable {
+            Context.shutdown()
+        }
 
         success()
     }
