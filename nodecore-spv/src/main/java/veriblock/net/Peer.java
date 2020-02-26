@@ -153,6 +153,7 @@ public class Peer implements PeerSocketClosedEventListener {
                 bestBlockHeight = message.getHeartbeat().getBlock().getNumber();
                 bestBlockHash = ByteStringUtility.byteStringToHex(message.getHeartbeat().getBlock().getHash());
 
+                notifyMessageReceived(message);
                 break;
 
             case TX_REQUEST:

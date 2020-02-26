@@ -125,6 +125,7 @@ public class Context {
             adminServerInterceptor = new AdminServerInterceptor();
 
             if(runAdminServer) {
+                peerTable.start();
                 server = createAdminServer();
             }
 

@@ -106,7 +106,14 @@ public class AdminApiServiceImpl implements AdminApiService {
 
     public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
         VeriBlockMessages.SendCoinsReply.Builder replyBuilder = VeriBlockMessages.SendCoinsReply.newBuilder();
-        String requestedSourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
+        ByteString sourceAddress = request.getSourceAddress();
+        String requestedSourceAddress;
+
+        if(sourceAddress.isEmpty()){
+            requestedSourceAddress = addressManager.getDefaultAddress().getHash();
+        } else {
+            requestedSourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
+        }
 
         long totalOutputAmount = 0;
         ArrayList<Output> outputList = new ArrayList<>();

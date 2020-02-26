@@ -19,7 +19,7 @@ import java.util.Base64;
  */
 public class MainNetParameters extends NetworkParameters {
     private static final String genesisBlock = "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAp+Xyt+yUKRdntNZ7SjNoLVyYfgsGAOjUET2FTQ==";
-    public static final String NETWORK = "MainNet";
+    public static final String NETWORK = "main";
 
     private MainNetParameters() {
         this.adminHost = LOCALHOST;

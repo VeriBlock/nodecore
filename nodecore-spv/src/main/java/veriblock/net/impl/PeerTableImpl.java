@@ -25,6 +25,8 @@ import org.veriblock.sdk.util.Base58;
 import spark.utils.CollectionUtils;
 import veriblock.Context;
 import veriblock.listeners.PendingTransactionDownloadedListener;
+import veriblock.model.DownloadStatus;
+import veriblock.model.DownloadStatusResponse;
 import veriblock.model.LedgerContext;
 import veriblock.model.ListenerRegistration;
 import veriblock.model.NetworkMessage;
@@ -59,6 +61,7 @@ import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedTransferQueue;
@@ -75,6 +78,8 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     public static final int DEFAULT_CONNECTIONS = 12;
     public static final int BLOOM_FILTER_TWEAK = 710699166;
     public static final double BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.02;
+    public static final int BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER = 200;
+    public static final int AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 50;
 
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -90,7 +95,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private final ListeningScheduledExecutorService executor;
     private final ScheduledExecutorService messageExecutor;
 
-    private SettableFuture<Boolean> startupFuture = SettableFuture.create();
     private int maximumPeers = DEFAULT_CONNECTIONS;
     private Peer downloadPeer;
     private BloomFilter bloomFilter;
@@ -109,13 +113,15 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                 new ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build());
         this.discovery = peerDiscovery;
         addPendingTransactionDownloadedEventListeners(executor, Context.getPendingTransactionDownloadedListener());
+
     }
 
 
-    public ListenableFuture<Boolean> start() {
-        if (startupFuture.isDone()) return startupFuture;
-
+    @Override
+    public void start() {
         running.set(true);
+
+        discoverPeers();
 
         this.executor.scheduleAtFixedRate(this::requestAddressState, 5, 60, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::discoverPeers, 0, 60, TimeUnit.SECONDS);
@@ -123,9 +129,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
         this.messageExecutor.scheduleWithFixedDelay(this::processIncomingMessages, 1, 1, TimeUnit.SECONDS);
 
-        startupFuture.addListener(this::startBlockchainDownload, executor);
-
-        return startupFuture;
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
     }
 
     public void shutdown() {
@@ -175,14 +179,15 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         peer.setConnection(handler);
     }
 
-    public void startBlockchainDownload() {
+    public void startBlockchainDownload(Peer peer) {
         LOGGER.info("Beginning blockchain download");
-        // Choose a peer
-        Optional<Peer> first = peers.values().stream().findFirst();
-        if (first.isPresent()) {
-            setDownloadPeer(first.get());
-
-            first.get().startBlockchainDownload();
+        try {
+            setDownloadPeer(peer);
+            peer.startBlockchainDownload();
+        } catch (Exception ex){
+            setDownloadPeer(null);
+            //TODO SPV-70 add bun on some time.
+            LOGGER.error(ex.getMessage(), ex);
         }
     }
 
@@ -241,12 +246,18 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
                     switch (message.getMessage().getResultsCase()) {
                         case HEARTBEAT:
-                            // Decide here if this peer is better than the existing download peer?
                             VeriBlockMessages.Heartbeat heartbeat = message.getMessage().getHeartbeat();
+
+                            if(downloadPeer == null && heartbeat.getBlock().getNumber()>0){
+                                startBlockchainDownload(message.getSender());
+                            } else if(downloadPeer != null &&
+                                    heartbeat.getBlock().getNumber() - downloadPeer.getBestBlockHeight()  > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER){
+                                startBlockchainDownload(message.getSender());
+                            }
                             break;
                         case ADVERTISE_BLOCKS:
                             VeriBlockMessages.AdvertiseBlocks advertiseBlocks = message.getMessage().getAdvertiseBlocks();
-                            LOGGER.info("PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.getHeadersList().size());
+                            LOGGER.info("PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.getHeadersList().size(), blockchain.getChainHead().getHeight());
 
                             List<VeriBlockBlock> veriBlockBlocks = advertiseBlocks.getHeadersList()
                                     .stream()
@@ -338,10 +349,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
             // Attach listeners
             peer.addMessageReceivedEventListeners(executor, this);
 
-            if (!startupFuture.isDone()) {
-                startupFuture.set(true);
-            }
-
             peer.setFilter(this.bloomFilter);
 
         } finally {
@@ -357,7 +364,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
             peers.remove(peer.getAddress());
 
             if (downloadPeer != null && downloadPeer.getAddress().equalsIgnoreCase(peer.getAddress())) {
-                // TODO: Select a new peer
                 downloadPeer = null;
             }
         } finally {
@@ -416,6 +422,22 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                 .mapToInt(v -> v)
                 .max()
                 .orElse(0);
+    }
+
+    @Override
+    public DownloadStatusResponse getDownloadStatus() {
+        DownloadStatus status;
+        Integer currentHeight = blockchain.getChainHead().getHeight();
+        Integer bestBlockHeight = downloadPeer==null ? 0 : downloadPeer.getBestBlockHeight();
+        if(downloadPeer==null){
+            status = DownloadStatus.DISCOVERING;
+        } else if(bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING){
+            status = DownloadStatus.READY;
+        } else {
+            status = DownloadStatus.DOWNLOADING;
+        }
+
+        return new DownloadStatusResponse(status, currentHeight, bestBlockHeight);
     }
 
     public PeerDiscovery getDiscovery() {
