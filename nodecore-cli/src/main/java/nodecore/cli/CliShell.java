@@ -37,6 +37,7 @@ public class CliShell extends Shell {
 
     private AdminServiceClient _adminServiceClient;
     private Configuration _configuration;
+    private Runnable disconnectCallBack;
 
     public void onStart() {
     }
@@ -95,6 +96,11 @@ public class CliShell extends Shell {
                 _adminServiceClient.shutdown();
                 _adminServiceClient = null;
                 refreshCompleter();
+
+                if(this.disconnectCallBack != null){
+                    this.disconnectCallBack.run();
+                    this.disconnectCallBack = null;
+                }
             }
 
             _endpointContainer.setProtocolEndpoint(null);
@@ -138,6 +144,11 @@ public class CliShell extends Shell {
         boolean failed = result.isFailed();
 
         try {
+            Runnable disconnectCallBack = context.getExtraData("disconnectCallBack");
+            if(disconnectCallBack != null){
+                this.disconnectCallBack = disconnectCallBack;
+            }
+
             Boolean disconnect = context.getExtraData("disconnect");
             if (disconnect != null && disconnect) {
                 disconnect();

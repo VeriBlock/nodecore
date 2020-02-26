@@ -92,6 +92,8 @@ public class Context {
      */
     public static synchronized void init(NetworkParameters networkParam, File baseDir, String filePr, PeerDiscovery peerDiscovery, boolean runAdminServer) {
         try {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> Context.shutdown(), "ShutdownHook nodecore-spv"));
+
             networkParameters = networkParam;
             directory = baseDir;
             filePrefix = filePr;
@@ -146,6 +148,13 @@ public class Context {
      */
     public static synchronized void init(NetworkParameters networkParameters, PeerDiscovery peerDiscovery, boolean runAdminServer) {
         init(networkParameters, new File("."), String.format("vbk-%s", networkParameters.getNetworkName()), peerDiscovery, runAdminServer);
+    }
+
+    public static void shutdown(){
+        peerTable.shutdown();
+        if(server!= null) {
+            server.shutdown();
+        }
     }
 
     private static Server createAdminServer() throws IOException, NumberFormatException {
