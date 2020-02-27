@@ -16,6 +16,7 @@ import org.veriblock.miners.pop.core.error
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.core.utilities.createLogger
+import java.util.concurrent.TimeUnit
 
 private val logger = createLogger {}
 
@@ -39,7 +40,7 @@ class WorkflowAuthority(
             operation.begin()
             // Initial task
             executeTask(GetPublicationDataTask(nodeCoreLiteKit, chain), operation)
-        }
+        }.get(5, TimeUnit.SECONDS)
     }
 
     fun restore(operation: MiningOperation) {
