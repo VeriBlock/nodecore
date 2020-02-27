@@ -123,6 +123,10 @@ public class Blockchain {
 
         for (VeriBlockBlock veriBlockBlock : veriBlockBlocks) {
             BigInteger work = blockWorks.get(veriBlockBlock.getPreviousBlock().toString());
+            //This block is from fork, our Blockchain doesn't have this previousBlock.
+            if(work == null){
+                continue;
+            }
             BigInteger workOfCurrentBlock = work.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.getDifficulty()));
             blockWorks.put(veriBlockBlock.getHash().toString().substring(24), workOfCurrentBlock);
 
