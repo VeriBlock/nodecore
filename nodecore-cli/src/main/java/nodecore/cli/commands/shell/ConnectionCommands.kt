@@ -55,7 +55,7 @@ fun CommandFactory.connectionCommands() {
         description = "Connect to a NodeCore RPC endpoint in the spv mode. Note: NodeCore does not begin listening for RPC " +
             "connections until after loading the blockchain, which may take several minutes.",
         parameters = listOf(
-            CommandParameter(name = "net", mapper = ShellCommandParameterMappers.NET, required = true),
+            CommandParameter(name = "mainnet/testnet/alphanet", mapper = ShellCommandParameterMappers.NET, required = true),
             CommandParameter(name = "peer", mapper = CommandParameterMappers.STRING, required = false)
         ),
         suggestedCommands = {
@@ -63,7 +63,7 @@ fun CommandFactory.connectionCommands() {
         }
     ) {
         val shell = cliShell
-        val net: NetworkParameters = getParameter("net")
+        val net: NetworkParameters = getParameter("mainnet/testnet/alphanet")
         val peer: String? = getOptionalParameter("peer")
 
         // Work with bootstraps peers by default.

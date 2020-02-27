@@ -19,7 +19,7 @@ import java.util.Base64;
  */
 public class AlphaNetParameters extends NetworkParameters {
     private static final String alphaNetworkGenesisBlock = "AAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzyAl7A64qKMlSV/rWVALUFx5fAIEBfXhAw0E3w==";
-    public static final String NETWORK = "alpha";
+    public static final String NETWORK = "alphanet";
 
     private AlphaNetParameters(){
         this.adminHost = LOCALHOST;
