@@ -20,11 +20,11 @@ import java.util.Base64;
 public class TestNetParameters extends NetworkParameters {
 
     public static final String GENESIS_BLOCK = "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ==";
-    public static final String NETWORK = "test";
+    public static final String NETWORK = "testnet";
 
     private TestNetParameters(){
         this.adminHost = LOCALHOST;
-        this.adminPort = 10502;
+        this.adminPort = 10501;
         this.p2pPort = 7501;
         this.bootstrapDns = "seedtestnet.veriblock.org";
         this.databaseName = "database-test.sqlite";

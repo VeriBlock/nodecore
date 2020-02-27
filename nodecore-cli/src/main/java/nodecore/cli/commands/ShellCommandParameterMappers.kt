@@ -29,7 +29,7 @@ object ShellCommandParameterMappers {
         } catch(ignored: Exception) {
             throw syntaxError(
                     command,
-                    "parameter '${param.name}' must be a string in the form: main / test / alpha"
+                    "parameter '${param.name}' must be a string in the form: mainnet / testnet / alphanet"
             )
         }
     }
