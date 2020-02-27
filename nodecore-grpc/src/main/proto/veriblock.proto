@@ -787,6 +787,8 @@ message GetBalanceReply {
     repeated Result results = 2;
     repeated AddressBalance confirmed = 3;
     repeated Output unconfirmed = 4;
+    int64 total_confirmed = 5;
+    int64 total_unconfirmed = 6;
 }
 
 message SubmitPopRequest {
