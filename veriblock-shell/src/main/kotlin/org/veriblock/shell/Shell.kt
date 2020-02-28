@@ -276,6 +276,19 @@ open class Shell(
 
     fun getCommands() = commandFactory.getCommands().values.distinct()
 
+    fun getCommandsSpv() = mutableListOf(
+                "getbalance [address]",
+                "send <amount> <destinationAddress> [sourceAddress]",
+                "lockWallet",
+                "unlockWallet",
+                "decryptWallet",
+                "encryptWallet",
+                "importwallet <sourceLocation>",
+                "importprivatekey <privateKey>",
+                "backupwallet <targetLocation>",
+                "getnewaddress [count]"
+                )
+
     fun getCommand(alias: String) = commandFactory.getCommands()[alias]
         ?: error("Command $alias not found!")
 
