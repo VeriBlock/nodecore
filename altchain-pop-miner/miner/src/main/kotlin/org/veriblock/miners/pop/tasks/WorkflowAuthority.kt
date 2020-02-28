@@ -35,12 +35,13 @@ class WorkflowAuthority(
             onWorkflowStateChanged(it, operation, chain)
         }
 
+        // Begin running
+        operation.begin()
+
         Threading.TASK_POOL.submit {
-            // Begin running
-            operation.begin()
             // Initial task
             executeTask(GetPublicationDataTask(nodeCoreLiteKit, chain), operation)
-        }.get(5, TimeUnit.SECONDS)
+        }
     }
 
     fun restore(operation: MiningOperation) {

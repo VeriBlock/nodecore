@@ -191,14 +191,14 @@ class AltchainPopMiner(
         workflowAuthority.submit(state)
         operations[state.id] = state
 
-        return if (state.status != OperationStatus.UNKNOWN) {
+        if (state.status != OperationStatus.UNKNOWN) {
             logger.info { "Created operation [${state.id}] on chain ${state.chainId}" }
 
-            success {
+            return success {
                 addMessage("v000", state.id, "")
             }
         } else {
-            failure {
+            return failure {
                 addMessage("v500", "Unable to mine", "Operation initialization error")
             }
         }
