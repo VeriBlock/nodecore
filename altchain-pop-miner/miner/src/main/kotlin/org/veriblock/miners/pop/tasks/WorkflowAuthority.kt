@@ -16,6 +16,7 @@ import org.veriblock.miners.pop.core.error
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.core.utilities.createLogger
+import java.util.concurrent.TimeUnit
 
 private val logger = createLogger {}
 
@@ -34,9 +35,10 @@ class WorkflowAuthority(
             onWorkflowStateChanged(it, operation, chain)
         }
 
+        // Begin running
+        operation.begin()
+
         Threading.TASK_POOL.submit {
-            // Begin running
-            operation.begin()
             // Initial task
             executeTask(GetPublicationDataTask(nodeCoreLiteKit, chain), operation)
         }
