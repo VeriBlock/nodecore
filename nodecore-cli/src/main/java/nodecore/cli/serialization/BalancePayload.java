@@ -12,22 +12,22 @@ public class BalancePayload {
         for (final VeriBlockMessages.AddressBalance balanceInfo : reply.getConfirmedList()) {
             confirmed.add(new AddressBalanceInfo(balanceInfo));
         }
-        total_confirmed = Utility.formatAtomicLongWithDecimal(reply.getTotalConfirmed());
+        totalConfirmed = Utility.formatAtomicLongWithDecimal(reply.getTotalConfirmed());
         for (final VeriBlockMessages.Output output : reply.getUnconfirmedList()) {
             unconfirmed.add(new OutputInfo(output));
         }
-        total_unconfirmed = Utility.formatAtomicLongWithDecimal(reply.getTotalUnconfirmed());
+        totalUnconfirmed = Utility.formatAtomicLongWithDecimal(reply.getTotalUnconfirmed());
     }
 
     @SerializedName("confirmed")
     List<AddressBalanceInfo> confirmed = new ArrayList<>();
 
     @SerializedName("total_confirmed")
-    public String total_confirmed;
+    public String totalConfirmed;
 
     @SerializedName("unconfirmed")
     List<OutputInfo> unconfirmed = new ArrayList<>();
 
     @SerializedName("total_unconfirmed")
-    public String total_unconfirmed;
+    public String totalUnconfirmed;
 }
