@@ -1,6 +1,6 @@
 package org.veriblock.sdk.alt.model
 
-class SecurityInheritingBlock(
+data class SecurityInheritingBlock(
     val hash: String,
     val height: Int,
     val confirmations: Int,

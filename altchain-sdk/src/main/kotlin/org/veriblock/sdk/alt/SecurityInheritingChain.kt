@@ -34,34 +34,26 @@ interface SecurityInheritingChain {
      * Returns the block for the given [hash] retrieved from the SI chain daemon,
      * or null if it does not exist.
      */
-    fun getBlock(hash: String): SecurityInheritingBlock? {
-        TODO()
-    }
+    fun getBlock(hash: String): SecurityInheritingBlock?
 
     /**
      * Returns the block in the best chain for the given [height] retrieved from the SI chain daemon,
      * or null if the height is out of the chain's bounds.
      */
-    fun getBlock(height: Int): SecurityInheritingBlock? {
-        TODO()
-    }
+    fun getBlock(height: Int): SecurityInheritingBlock?
 
     /**
      * Retrieves the block in the best chain for the given [height] from the SI chain daemon.
      * If it does not exist, it returns false.
      * If it exists, it compares returns the comparison result of its header with [blockHeaderToCheck].
      */
-    fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
-        TODO()
-    }
+    fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean
 
     /**
      * Returns the transaction for the given [txId] retrieved from the SI chain daemon,
      * or null if it does not exist.
      */
-    fun getTransaction(txId: String): SecurityInheritingTransaction? {
-        TODO()
-    }
+    fun getTransaction(txId: String): SecurityInheritingTransaction?
 
     /**
      * Returns this security inheriting chain's payout interval, in blocks.
@@ -83,9 +75,7 @@ interface SecurityInheritingChain {
     /**
      * Updates the chain's context with a set of VTBs ([veriBlockPublications])
      */
-    fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
-        TODO()
-    }
+    fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String
 
     /**
      * Whether or not this chain is configured to perform any automining

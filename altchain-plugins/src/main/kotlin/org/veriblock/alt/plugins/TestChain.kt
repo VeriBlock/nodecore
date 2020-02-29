@@ -192,7 +192,7 @@ class TestChain(
 
     private fun createBlock(height: Int, minerAddress: String = ""): SecurityInheritingBlock {
         val hash = Random.nextBytes(16).toHex()
-        val coinbase = createTransaction(hash, Random.nextDouble(10.0, 100.0), minerAddress)
+        val coinbase = createTransaction(Random.nextDouble(10.0, 100.0), minerAddress)
         val block = SecurityInheritingBlock(
             hash,
             height,
@@ -209,13 +209,11 @@ class TestChain(
     }
 
     private fun createTransaction(
-        blockHash: String,
         amount: Double,
         receiver: String
     ): SecurityInheritingTransaction {
         val transaction = SecurityInheritingTransaction(
             Random.nextBytes(22).toHex(),
-            blockHash,
             100,
             listOf(
                 SecurityInheritingTransactionVout(amount, receiver)
