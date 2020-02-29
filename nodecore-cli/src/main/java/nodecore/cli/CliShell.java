@@ -7,6 +7,7 @@
 
 package nodecore.cli;
 
+import nodecore.cli.annotations.ModeType;
 import nodecore.cli.annotations.CommandServiceType;
 import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.ConnectionFailedException;
@@ -38,6 +39,7 @@ public class CliShell extends Shell {
     private AdminServiceClient _adminServiceClient;
     private Configuration _configuration;
     private Runnable disconnectCallBack;
+    private ModeType modeType = ModeType.STANDARD;
 
     public void onStart() {
     }
@@ -460,6 +462,14 @@ public class CliShell extends Shell {
 
     public AdminService getAdminService() {
         return _adminServiceClient;
+    }
+
+    public ModeType getModeType() {
+        return modeType;
+    }
+
+    public void setModeType(ModeType modeType) {
+        this.modeType = modeType;
     }
 
     public boolean isConnected() {

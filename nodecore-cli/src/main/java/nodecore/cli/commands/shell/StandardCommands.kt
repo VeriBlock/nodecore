@@ -45,41 +45,51 @@ fun CommandFactory.standardCommands() {
         val shell = cliShell
         val command: String? = getOptionalParameter("command")
         if (command == null) {
-            val categories = HashMap<CommandServiceType, MutableList<Command>>()
+            if(shell.modeType.isStandard) {
+                val categories = HashMap<CommandServiceType, MutableList<Command>>()
 
-            for (def in shell.getCommands()) {
-                val extraData = checkNotNull(def.extraData) {
-                    "Command $def's extra data must not be null!"
+                for (def in shell.getCommands()) {
+                    val extraData = checkNotNull(def.extraData) {
+                        "Command $def's extra data must not be null!"
+                    }
+                    val commandServiceType = CommandServiceType.valueOf(extraData)
+
+                    val requiresConnection = commandServiceType == CommandServiceType.RPC
+
+                    if (!isValidType(commandServiceType, shell.protocolType))
+                        continue
+
+                    if (requiresConnection && !shell.isConnected())
+                        continue
+
+                    val list = categories.getOrPut(commandServiceType) { ArrayList() }
+                    list.add(def)
+                    list.sortBy { it.form }
                 }
-                val commandServiceType = CommandServiceType.valueOf(extraData)
 
-                val requiresConnection = commandServiceType == CommandServiceType.RPC
+                shell.printNormal("Commands:")
+                for ((category, list) in categories) {
+                    shell.printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
+                    for (def in list) {
+                        shell.printStyled("    ${def.form.split("|").first()}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                        shell.formatParameters(def.parameters)
+                        printInfo("")
+                    }
+                }
 
-                if (!isValidType(commandServiceType, shell.protocolType))
-                    continue
-
-                if (requiresConnection && !shell.isConnected())
-                    continue
-
-                val list = categories.getOrPut(commandServiceType) { ArrayList() }
-                list.add(def)
-                list.sortBy { it.form }
+                shell.printNormal("")
+                shell.printNormal("    All RPC Commands support following selectors:")
+                shell.printNormal("        -o <filename>       Saves command output into a file")
+                shell.printNormal("        Example: getinfo -o abcde.json")
+            } else if(shell.modeType.isSPV){
+                shell.printNormal("Commands:")
+                shell.printNormal("")
+                for (command in shell.getCommandsSpv()){
+                    shell.printStyled("    $command", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                }
             }
 
-            shell.printNormal("Commands:")
-            for ((category, list) in categories) {
-                shell.printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
-                for (def in list) {
-                    shell.printStyled("    ${def.form.split("|").first()}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
-                    shell.formatParameters(def.parameters)
-                    printInfo("")
-                }
-            }
 
-            shell.printNormal("")
-            shell.printNormal("    All RPC Commands support following selectors:")
-            shell.printNormal("        -o <filename>       Saves command output into a file")
-            shell.printNormal("        Example: getinfo -o abcde.json")
             success()
         } else {
             val def = shell.getCommandsByAlias()[command]

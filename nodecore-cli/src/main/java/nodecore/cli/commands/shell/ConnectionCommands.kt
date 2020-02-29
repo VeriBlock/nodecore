@@ -1,5 +1,6 @@
 package nodecore.cli.commands.shell
 
+import nodecore.cli.annotations.ModeType
 import nodecore.cli.cliCommand
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -38,12 +39,14 @@ fun CommandFactory.connectionCommands() {
             }
         }
     ) {
+        val shell = cliShell
         val type = ProtocolEndpointType.RPC
         val peer: PeerEndpoint = getParameter("peer")
         val passwordParam: String? = getOptionalParameter("password")
         val endpoint = ProtocolEndpoint(peer.toString(), type, passwordParam)
 
         this.extraData["connect"] = endpoint
+        shell.modeType = ModeType.STANDARD
 
         success()
     }
@@ -59,7 +62,7 @@ fun CommandFactory.connectionCommands() {
             CommandParameter(name = "peer", mapper = CommandParameterMappers.STRING, required = false)
         ),
         suggestedCommands = {
-            listOf("getinfo", "getbalance", "send")
+            listOf("getbalance", "send")
         }
     ) {
         val shell = cliShell
@@ -91,6 +94,7 @@ fun CommandFactory.connectionCommands() {
         this.extraData["disconnectCallBack"] = Runnable {
             Context.shutdown()
         }
+        shell.modeType = ModeType.SPV
 
         success()
     }
@@ -100,7 +104,9 @@ fun CommandFactory.connectionCommands() {
         form = "disconnect",
         description = "Disconnect from the open P2P or RPC connection"
     ) {
+        val shell = cliShell
         this.extraData["disconnect"] = true
+        shell.modeType = ModeType.STANDARD
 
         success()
     }
