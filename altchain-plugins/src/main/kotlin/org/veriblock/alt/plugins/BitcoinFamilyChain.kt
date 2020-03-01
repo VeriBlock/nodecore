@@ -92,18 +92,16 @@ class BitcoinFamilyChain(
         checkNotNull(config.payoutAddress) {
             "$key's payoutAddress must be configured!"
         }
-        val addressHrp = config.hrps[config.network]
-        checkNotNull(addressHrp) {
-            "$key's network must be one of ${config.hrps.keys}!"
-        }
-        payoutAddressScript = if (config.payoutAddress.isHex()) {
-            config.payoutAddress.asHexBytes()
-        } else {
-            try {
-                SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress)
-            } catch (e: Exception) {
-                logger.debug(e) { "Invalid segwit address: ${config.payoutAddress}" }
-                error("$key's payoutAddress configuration must be a properly formed hex script or a valid segwit address!")
+        payoutAddressScript = when {
+            config.payoutAddress.isHex() ->
+                config.payoutAddress.asHexBytes()
+            else -> {
+                val addressHrp = config.payoutAddress.substringBefore('1')
+                try {
+                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress, addressHrp)
+                } catch (e: Exception) {
+                    error("Invalid segwit address: ${e.message}")
+                }
             }
         }
     }

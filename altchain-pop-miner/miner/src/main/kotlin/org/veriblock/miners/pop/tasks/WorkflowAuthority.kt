@@ -22,8 +22,6 @@ import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.core.utilities.createLogger
-import java.util.concurrent.TimeUnit
 
 private val logger = createLogger {}
 

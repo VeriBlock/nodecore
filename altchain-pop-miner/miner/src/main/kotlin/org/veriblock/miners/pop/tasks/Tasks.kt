@@ -262,11 +262,12 @@ class RegisterVeriBlockPublicationPollingTask(
 }
 
 class DeregisterVeriBlockPublicationPollingTask(
+    miner: Miner
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain,
     securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
         get() = null
