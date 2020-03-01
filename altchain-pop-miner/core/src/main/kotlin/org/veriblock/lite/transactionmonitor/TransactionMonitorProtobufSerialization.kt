@@ -32,13 +32,13 @@ fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor)
 }
 
 @Throws(IOException::class)
-fun InputStream.readTransactionMonitor(): TransactionMonitor {
+fun InputStream.readTransactionMonitor(context: Context): TransactionMonitor {
     val codedInput = CodedInputStream.newInstance(this)
-    return Protos.TransactionMonitor.parseFrom(codedInput).toModel()
+    return Protos.TransactionMonitor.parseFrom(codedInput).toModel(context)
 }
 
 private fun TransactionMonitor.toProto(): Protos.TransactionMonitor = Protos.TransactionMonitor.newBuilder().also {
-    it.network = Context.networkParameters.network
+    it.network = context.networkParameters.network
     it.address = address.toString()
 
     for (transaction in getTransactions()) {
@@ -103,19 +103,20 @@ private fun buildTransactionOutput(address: Address, amount: Coin): Protos.Trans
         .build()
 }
 
-private fun Protos.TransactionMonitor.toModel(): TransactionMonitor {
-    check(Context.networkParameters.network == network) {
-        "Network ${Context.networkParameters.network} attempting to read VBK wallet for $network"
+private fun Protos.TransactionMonitor.toModel(context: Context): TransactionMonitor {
+    check(context.networkParameters.network == network) {
+        "Network ${context.networkParameters.network} attempting to read VBK wallet for $network"
     }
     return TransactionMonitor(
+        context,
         Address(address),
         transactionsList.map {
-            it.toModel()
+            it.toModel(context)
         }
     )
 }
 
-private fun Protos.WalletTransaction.toModel(): WalletTransaction = WalletTransaction(
+private fun Protos.WalletTransaction.toModel(context: Context): WalletTransaction = WalletTransaction(
     0x01.toByte(),
     Address(input.address),
     Coin.valueOf(input.amount),
@@ -126,7 +127,7 @@ private fun Protos.WalletTransaction.toModel(): WalletTransaction = WalletTransa
     SerializeDeserializeService.parsePublicationData(data.toByteArray()),
     signature.toByteArray(),
     publicKey.toByteArray(),
-    Context.networkParameters.transactionPrefix,
+    context.networkParameters.transactionPrefix,
     meta.toModel()
 ).apply {
     if (merkleBranch.subject.size() != 0) {

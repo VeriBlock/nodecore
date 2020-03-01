@@ -12,26 +12,41 @@ import org.koin.dsl.module
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
+import org.veriblock.lite.params.NetworkConfig
+import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.shell.commands.altchainCommands
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 
-private val mockMiningEnabled = Configuration.getBoolean("miner.mock") ?: false
-
 val minerModule = module {
-    if (!mockMiningEnabled) {
-        single { NodeCoreLiteKit(Context) }
-        single<Miner> { AltchainPopMiner(get(), get(), get()) }
+    // Config
+    val configuration = Configuration()
+    val minerConfig: MinerConfig = configuration.extract("miner") ?: MinerConfig()
+    single { configuration }
+    single { minerConfig }
+
+    // Context
+    single {
+        val config = configuration.extract("nodecore")
+            ?: NetworkConfig()
+        NetworkParameters(config)
+    }
+    single { Context(get(), get()) }
+
+    // Miner
+    if (!minerConfig.mock) {
+        single { NodeCoreLiteKit(get()) }
+        single<Miner> { AltchainPopMiner(get(), get(), get(), get(), get()) }
     } else {
-        single<Miner> { MockMiner(get()) }
+        single<Miner> { MockMiner(get(), get()) }
     }
     single { SecurityInheritingService(get(), get()) }
     single {
         CommandFactory().apply {
-            configure(get())
-            if (!mockMiningEnabled) {
+            configure(get(), get(), get())
+            if (!minerConfig.mock) {
                 altchainCommands(get(), get())
             }
         }

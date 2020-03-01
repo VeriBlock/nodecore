@@ -8,7 +8,6 @@
 
 package org.veriblock.miners.pop
 
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
@@ -24,19 +23,14 @@ import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.IOException
-import java.util.*
+import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
 
-class MinerConfig(
-    val feePerByte: Long = 1_000,
-    val maxFee: Long = 10_000_000
-)
-
-val minerConfig = Configuration.extract("miner") ?: MinerConfig()
-
 class AltchainPopMiner(
+    private val config: MinerConfig,
+    private val context: Context,
     private val workflowAuthority: WorkflowAuthority,
     private val nodeCoreLiteKit: NodeCoreLiteKit,
     private val operationService: OperationService
@@ -79,9 +73,9 @@ class AltchainPopMiner(
         nodeCoreLiteKit.balanceChangedEvent.register(this) {
             if (lastConfirmedBalance != it.confirmedBalance) {
                 lastConfirmedBalance = it.confirmedBalance
-                logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}" }
+                logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
             }
-            if (it.confirmedBalance.atomicUnits >= minerConfig.maxFee) {
+            if (it.confirmedBalance.atomicUnits >= config.maxFee) {
                 addReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
             } else {
                 removeReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
@@ -130,8 +124,8 @@ class AltchainPopMiner(
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
             """
                 PoP wallet does not contain sufficient funds
-                         Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${Context.vbkTokenName}
-                         Minimum required: ${minerConfig.maxFee.formatCoinAmount()}, need ${(minerConfig.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more
+                         Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}
+                         Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more
                          Send VBK coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
             """.trimIndent()
         }
@@ -248,4 +242,10 @@ class AltchainPopMiner(
             operationService.storeOperation(operation)
         }
     }
+
+    override val feePerByte: Long
+        get() = config.feePerByte
+
+    override val maxFee: Long
+        get() = config.maxFee
 }

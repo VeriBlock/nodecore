@@ -13,6 +13,8 @@ import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import org.junit.Test
+import org.veriblock.core.utilities.Configuration
+import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.core.randomAddress
@@ -23,16 +25,20 @@ import org.veriblock.lite.core.randomTransactionMonitor
 import org.veriblock.lite.core.randomVeriBlockBlock
 import org.veriblock.lite.core.randomVeriBlockTransaction
 import org.veriblock.lite.core.randomWalletTransaction
+import org.veriblock.lite.params.NetworkConfig
+import org.veriblock.lite.params.NetworkParameters
 
 class TransactionMonitorTest {
+    private val networkParameters = NetworkParameters(NetworkConfig())
+    private val context = Context(Configuration(), networkParameters)
 
     @Test
     fun loadTransactions() {
         // Given
-        val walletTransactions = (1..10).map { randomWalletTransaction() }
+        val walletTransactions = (1..10).map { randomWalletTransaction(context) }
 
         // When
-        val transactionMonitor = randomTransactionMonitor(walletTransactions = walletTransactions)
+        val transactionMonitor = randomTransactionMonitor(context, walletTransactions = walletTransactions)
 
         // Then
         transactionMonitor.getTransactions() shouldContainExactlyInAnyOrder walletTransactions
@@ -41,8 +47,8 @@ class TransactionMonitorTest {
     @Test
     fun commitTransaction() {
         // Given
-        val transaction = randomVeriBlockTransaction()
-        val transactionMonitor = randomTransactionMonitor()
+        val transaction = randomVeriBlockTransaction(context)
+        val transactionMonitor = randomTransactionMonitor(context)
 
         // When
         transactionMonitor.commitTransaction(transaction)
@@ -67,25 +73,25 @@ class TransactionMonitorTest {
         // Given
         val address = randomAddress()
         val confirmedTransactionsWithWrongBlocks = (1..10).map {
-            randomWalletTransaction(transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
+            randomWalletTransaction(context, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
         }
         val confirmedTransactionsWithRightBlocks = (1..10).map {
-            randomWalletTransaction(transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
+            randomWalletTransaction(context, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
         }
         val unknownTransactionsWithRightBlocks = (1..10).map {
-            randomWalletTransaction(sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.UNKNOWN))
+            randomWalletTransaction(context, sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.UNKNOWN))
         }
         val confirmedTransactionBlocks = (1..10).map {
-            confirmedTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock()
+            confirmedTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock(context)
         }.toMap()
 
         val unknownTransactionBlocks = (1..1).map {
-            unknownTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock(normalTransactions = unknownTransactionsWithRightBlocks)
+            unknownTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock(context, normalTransactions = unknownTransactionsWithRightBlocks)
         }.toMap()
 
         val allTransactions = confirmedTransactionsWithWrongBlocks + confirmedTransactionsWithRightBlocks + unknownTransactionsWithRightBlocks
         val allBlocks =  confirmedTransactionBlocks + unknownTransactionBlocks
-        val transactionMonitor = randomTransactionMonitor(address, allTransactions)
+        val transactionMonitor = randomTransactionMonitor(context, address, allTransactions)
 
         // When
         transactionMonitor.onBlockChainDownloaded(allBlocks)
@@ -122,18 +128,18 @@ class TransactionMonitorTest {
             randomVeriBlockBlock()
         }
         val confirmedWithWrongDepthTransactions = (1..5).map {
-            randomWalletTransaction(sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  50))
+            randomWalletTransaction(context, sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  50))
         }
         val confirmedWithRightDepthTransactions = (1..5).map {
-            randomWalletTransaction(sourceAddress = address, sourceAmount = randomCoin(5), transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  oldBlocks.size))
+            randomWalletTransaction(context, sourceAddress = address, sourceAmount = randomCoin(5), transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount =  oldBlocks.size))
         }
 
         val allTransactions = confirmedWithWrongDepthTransactions + confirmedWithRightDepthTransactions
         val newBlocks = (1..20).map {
-            randomFullBlock(normalTransactions = confirmedWithRightDepthTransactions)
+            randomFullBlock(context, normalTransactions = confirmedWithRightDepthTransactions)
         }
 
-        val transactionMonitor = randomTransactionMonitor(address = address, walletTransactions = allTransactions)
+        val transactionMonitor = randomTransactionMonitor(context, address = address, walletTransactions = allTransactions)
 
         // When
         transactionMonitor.onBlockChainReorganized(oldBlocks, newBlocks)

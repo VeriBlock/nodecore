@@ -16,8 +16,9 @@ import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun CommandFactory.walletCommands(miner: Miner) {
-
+fun CommandFactory.walletCommands(
+    context: Context, miner: Miner
+) {
     command(
         name = "Get Loaded Address",
         form = "getaddress",
@@ -39,8 +40,8 @@ fun CommandFactory.walletCommands(miner: Miner) {
                 addMessage("V010", "Unable to retrieve balance", "Connection to NodeCore is not healthy")
             }
         }
-        printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} ${Context.vbkTokenName}")
-        printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} ${Context.vbkTokenName}")
+        printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}")
+        printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} ${context.vbkTokenName}")
 
         success()
     }

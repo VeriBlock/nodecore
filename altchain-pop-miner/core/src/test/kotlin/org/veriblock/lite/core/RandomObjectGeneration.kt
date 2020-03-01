@@ -69,6 +69,7 @@ fun randomPublicationData() = PublicationData(
 )
 
 fun randomWalletTransaction(
+    context: Context,
     type: Byte = 0x01,
     sourceAddress: Address = randomAddress(),
     sourceAmount: Coin = randomCoin(),
@@ -77,7 +78,7 @@ fun randomWalletTransaction(
     publicationData: PublicationData = randomPublicationData(),
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
-    networkByte: Byte? = Context.networkParameters.transactionPrefix,
+    networkByte: Byte? = context.networkParameters.transactionPrefix,
     transactionMeta: TransactionMeta = randomTransactionMeta(),
     merklePath: VeriBlockMerklePath = randomVeriBlockMerklePath()
 ): WalletTransaction {
@@ -127,9 +128,10 @@ fun randomSha256Hash(): Sha256Hash {
 }
 
 fun randomTransactionMonitor(
+    context: Context,
     address: Address = randomAddress(),
-    walletTransactions: List<WalletTransaction> = (0..randomInt(20)).map { randomWalletTransaction() }
-) = TransactionMonitor(address, walletTransactions)
+    walletTransactions: List<WalletTransaction> = (0..randomInt(20)).map { randomWalletTransaction(context) }
+) = TransactionMonitor(context, address, walletTransactions)
 
 fun randomVeriBlockMerklePath(
     treeIndex: Int = randomInt(1, 65535),
@@ -153,6 +155,7 @@ fun randomMerklePath(
 }
 
 fun randomVeriBlockTransaction(
+    context: Context,
     type: Byte = 0x01,
     sourceAddress: Address = randomAddress(),
     sourceAmount: Coin = randomCoin(),
@@ -161,7 +164,7 @@ fun randomVeriBlockTransaction(
     publicationData: PublicationData = randomPublicationData(),
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
-    networkByte: Byte? = Context.networkParameters.transactionPrefix
+    networkByte: Byte? = context.networkParameters.transactionPrefix
 ): VeriBlockTransaction {
     return VeriBlockTransaction(
         type,
@@ -177,6 +180,7 @@ fun randomVeriBlockTransaction(
 }
 
 fun randomFullBlock(
+    context: Context,
     height: Int = randomInt(0, Int.MAX_VALUE),
     version: Short = randomInt(0, Short.MAX_VALUE.toInt()).toShort(),
     previousBlock: VBlakeHash = randomVBlakeHash(),
@@ -186,8 +190,8 @@ fun randomFullBlock(
     timestamp: Int = randomInt(0, Int.MAX_VALUE),
     difficulty: Int = randomInt(0, Int.MAX_VALUE),
     nonce: Int = randomInt(0, Int.MAX_VALUE),
-    normalTransactions: List<VeriBlockTransaction> = (1..10).map { randomVeriBlockTransaction() },
-    poPTransactions: List<VeriBlockPoPTransaction> = (1..10).map { randomVeriBlockPoPTransaction() },
+    normalTransactions: List<VeriBlockTransaction> = (1..10).map { randomVeriBlockTransaction(context) },
+    poPTransactions: List<VeriBlockPoPTransaction> = (1..10).map { randomVeriBlockPoPTransaction(context) },
     metaPackage: BlockMetaPackage = randomBlockMetaPackage()
 ): FullBlock {
     return FullBlock(
@@ -213,6 +217,7 @@ fun randomBlockMetaPackage(
 }
 
 fun randomVeriBlockPoPTransaction(
+    context: Context,
     address: Address = randomAddress(),
     publishedBlock: VeriBlockBlock = randomVeriBlockBlock(),
     bitcoinTransaction: BitcoinTransaction = randomBitcoinTransaction(),
@@ -221,7 +226,7 @@ fun randomVeriBlockPoPTransaction(
     blockOfProofContext: List<BitcoinBlock> = (1..10).map { randomBitcoinBlock() },
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
-    networkByte: Byte? = Context.networkParameters.transactionPrefix
+    networkByte: Byte? = context.networkParameters.transactionPrefix
 ): VeriBlockPoPTransaction {
     return VeriBlockPoPTransaction(
         address,

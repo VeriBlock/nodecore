@@ -8,22 +8,27 @@
 
 package org.veriblock.miners.pop.tasks
 
+import org.koin.core.KoinComponent
+import org.koin.core.inject
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.error
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.core.utilities.createLogger
-import java.util.concurrent.TimeUnit
 
 private val logger = createLogger {}
 
 class WorkflowAuthority(
     private val pluginFactory: PluginService,
     private val nodeCoreLiteKit: NodeCoreLiteKit
-) {
+) : KoinComponent {
+
+    val miner: Miner by inject()
+
     fun submit(operation: MiningOperation) {
         val chain = pluginFactory[operation.chainId]
         if (chain == null) {
@@ -40,7 +45,7 @@ class WorkflowAuthority(
 
         Threading.TASK_POOL.submit {
             // Initial task
-            executeTask(GetPublicationDataTask(nodeCoreLiteKit, chain), operation)
+            executeTask(GetPublicationDataTask(miner, nodeCoreLiteKit, chain), operation)
         }
     }
 
@@ -77,16 +82,16 @@ class WorkflowAuthority(
         // after Confirmed will evaluate `is OperationState.Confirmed` to true, and what we are looking at is the exact state
         when (state.javaClass) {
             OperationState.Confirmed::class.java -> Threading.TASK_POOL.submit {
-                executeTask(DetermineBlockOfProofTask(nodeCoreLiteKit, chain), operation)
+                executeTask(DetermineBlockOfProofTask(miner, nodeCoreLiteKit, chain), operation)
             }
             OperationState.KeystoneOfProof::class.java -> Threading.TASK_POOL.submit {
-                executeTask(RegisterVeriBlockPublicationPollingTask(nodeCoreLiteKit, chain), operation)
+                executeTask(RegisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain), operation)
             }
             OperationState.VeriBlockPublications::class.java -> Threading.TASK_POOL.submit {
-                executeTask(SubmitProofOfProofTask(nodeCoreLiteKit, chain), operation)
+                executeTask(SubmitProofOfProofTask(miner, nodeCoreLiteKit, chain), operation)
             }
             OperationState.Reorganized::class.java -> Threading.TASK_POOL.submit {
-                executeTask(DeregisterVeriBlockPublicationPollingTask(nodeCoreLiteKit, chain), operation)
+                executeTask(DeregisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain), operation)
             }
         }
     }

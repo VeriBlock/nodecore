@@ -35,11 +35,13 @@ import java.nio.charset.StandardCharsets
 import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.PublicKey
-import java.util.*
+import java.util.ArrayList
+import java.util.HashMap
 
 private val logger = createLogger {}
 
 class MockMiner(
+    private val config: MinerConfig,
     private val pluginFactory: PluginService
 ) : Miner {
     private val connection = ConnectionSelector.setConnection("mock")
@@ -199,4 +201,10 @@ class MockMiner(
     override fun getAddress(): String = "NO ADDRESS"
 
     override fun getBalance(): Balance? = null
+
+    override val feePerByte: Long
+        get() = config.feePerByte
+
+    override val maxFee: Long
+        get() = config.maxFee
 }

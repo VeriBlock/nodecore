@@ -15,7 +15,9 @@ import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
 
-fun CommandFactory.configCommands() {
+fun CommandFactory.configCommands(
+    configuration: Configuration
+) {
     command(
         name = "List Config",
         form = "listconfig",
@@ -23,7 +25,7 @@ fun CommandFactory.configCommands() {
     ) {
         printInfo("Configuration Properties:")
 
-        val properties = Configuration.list()
+        val properties = configuration.list()
         for ((prop, value) in properties) {
             printInfo("\t$prop=$value")
         }
@@ -42,7 +44,7 @@ fun CommandFactory.configCommands() {
         val key: String = getParameter("key");
         val value: String = getParameter("value");
 
-        Configuration.setProperty(key, value);
+        configuration.setProperty(key, value);
 
         success()
     }

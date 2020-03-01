@@ -9,7 +9,6 @@
 package org.veriblock.alt.plugins
 
 import com.github.kittinunf.fuel.httpPost
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
@@ -56,11 +55,11 @@ private class BtcBlockData(
 )
 
 @PluginSpec(name = "Test", key = "test")
-class TestChain : SecurityInheritingChain {
+class TestChain(
+    override val config: TestConfig
+) : SecurityInheritingChain {
 
-    override val config = Configuration.extract("securityInheriting.test") ?: TestConfig()
-
-    val operations = HashMap<String, String>()
+    private val operations = HashMap<String, String>()
 
     init {
         config.checkValidity()
