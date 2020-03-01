@@ -16,17 +16,19 @@ import org.junit.Test
  */
 class TestChainTest {
 
+    private val chain = TestChain(TestConfig())
+
     @Test
     @Ignore
     fun getBestBlockHeight() {
-        val data = TestChain().getBestBlockHeight()
+        val data = chain.getBestBlockHeight()
         println(data)
     }
 
     @Test
     @Ignore
     fun getPublicationData() {
-        val data = TestChain().getPublicationData(null)
+        val data = chain.getPublicationData(null)
         println(data)
     }
 }

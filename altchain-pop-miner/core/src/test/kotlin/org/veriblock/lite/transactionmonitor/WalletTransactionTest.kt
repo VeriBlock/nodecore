@@ -10,6 +10,7 @@ package org.veriblock.lite.transactionmonitor
 
 import io.kotlintest.shouldBe
 import org.junit.Test
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.core.randomAddress
@@ -19,9 +20,13 @@ import org.veriblock.lite.core.randomPublicationData
 import org.veriblock.lite.core.randomTransactionMeta
 import org.veriblock.lite.core.randomVeriBlockMerklePath
 import org.veriblock.lite.core.randomWalletTransaction
+import org.veriblock.lite.params.NetworkConfig
+import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockTransaction
 
 class WalletTransactionTest {
+    private val networkParameters = NetworkParameters(NetworkConfig())
+    private val context = Context(Configuration(), networkParameters)
 
     @Test
     fun transactionDataByData() {
@@ -34,12 +39,12 @@ class WalletTransactionTest {
         val publicationData = randomPublicationData()
         val signature = ByteArray(10)
         val publicKey = ByteArray(8)
-        val networkByte: Byte? = Context.networkParameters.transactionPrefix
+        val networkByte: Byte? = networkParameters.transactionPrefix
         val transactionMeta: TransactionMeta = randomTransactionMeta()
         val merklePath = randomVeriBlockMerklePath()
 
         // When
-        val walletTransaction = randomWalletTransaction(type, sourceAddress, sourceAmount,
+        val walletTransaction = randomWalletTransaction(context, type, sourceAddress, sourceAmount,
             outputs, signatureIndex, publicationData, signature, publicKey, networkByte, transactionMeta, merklePath)
 
         // Then
@@ -67,7 +72,7 @@ class WalletTransactionTest {
         val publicationData = randomPublicationData()
         val signature = ByteArray(10)
         val publicKey = ByteArray(8)
-        val networkByte: Byte? = Context.networkParameters.transactionPrefix
+        val networkByte: Byte? = networkParameters.transactionPrefix
 
         // When
         val veriblockTransaction = VeriBlockTransaction(type, sourceAddress, sourceAmount, outputs,

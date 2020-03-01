@@ -16,10 +16,10 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.PublicationSubscription
+import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
-import org.veriblock.miners.pop.minerConfig
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.AltPublication
@@ -31,13 +31,14 @@ import org.veriblock.sdk.util.Utils
 private val logger = createLogger {}
 
 class GetPublicationDataTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
-        get() = CreateProofTransactionTask(nodeCoreLiteKit, securityInheritingChain)
+        get() = CreateProofTransactionTask(miner, nodeCoreLiteKit, securityInheritingChain)
 
     override fun executeImpl(operation: MiningOperation) {
         logger.info(operation) { "Getting the publication data..." }
@@ -61,10 +62,11 @@ class GetPublicationDataTask(
 }
 
 class CreateProofTransactionTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
         get() = null // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
@@ -90,8 +92,8 @@ class CreateProofTransactionTask(
             }
             nodeCoreLiteKit.network.submitEndorsement(
                 endorsementData,
-                minerConfig.feePerByte,
-                minerConfig.maxFee
+                miner.feePerByte,
+                miner.maxFee
             )
         } catch (e: Exception) {
             failOperation(operation, "Could not create endorsement VBK transaction")
@@ -105,13 +107,14 @@ class CreateProofTransactionTask(
 }
 
 class DetermineBlockOfProofTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
-        get() = ProveTransactionTask(nodeCoreLiteKit, securityInheritingChain)
+        get() = ProveTransactionTask(miner, nodeCoreLiteKit, securityInheritingChain)
 
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
@@ -133,13 +136,14 @@ class DetermineBlockOfProofTask(
 }
 
 class ProveTransactionTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
-        get() = RegisterKeystoneListenersTask(nodeCoreLiteKit, securityInheritingChain)
+        get() = RegisterKeystoneListenersTask(miner, nodeCoreLiteKit, securityInheritingChain)
 
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
@@ -165,10 +169,11 @@ class ProveTransactionTask(
 }
 
 class RegisterKeystoneListenersTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
         get() = null // We are going to wait for the next Keystone, which will trigger RegisterVeriBlockPublicationPollingTask
@@ -209,10 +214,11 @@ class RegisterKeystoneListenersTask(
 }
 
 class RegisterVeriBlockPublicationPollingTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
         get() = null // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
@@ -247,13 +253,14 @@ class RegisterVeriBlockPublicationPollingTask(
 }
 
 class SubmitProofOfProofTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
-        get() = DeregisterVeriBlockPublicationPollingTask(nodeCoreLiteKit, securityInheritingChain)
+        get() = DeregisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, securityInheritingChain)
 
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
@@ -341,10 +348,11 @@ class SubmitProofOfProofTask(
 }
 
 class DeregisterVeriBlockPublicationPollingTask(
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain
 ) : BaseTask(
-    nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain
 ) {
     override val next: BaseTask?
         get() = null

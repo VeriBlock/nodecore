@@ -12,6 +12,12 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.shell.core.Result
 
+class MinerConfig(
+    val feePerByte: Long = 1_000,
+    val maxFee: Long = 10_000_000,
+    val mock: Boolean = false
+)
+
 interface Miner {
     fun initialize()
 
@@ -28,4 +34,7 @@ interface Miner {
     fun mine(chainId: String, block: Int?): Result
 
     fun shutdown()
+
+    val feePerByte: Long
+    val maxFee: Long
 }

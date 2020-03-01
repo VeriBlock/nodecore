@@ -13,7 +13,6 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
@@ -78,12 +77,11 @@ private data class NxtTransactionData(
 
 @FamilyPluginSpec(name = "NxtFamily", key = "nxt")
 class NxtFamilyChain(
+    override val config: NxtConfig,
     val id: Long,
     val key: String,
     val name: String
 ) : SecurityInheritingChain {
-
-    override val config = Configuration.extract("securityInheriting.$key") ?: NxtConfig()
 
     init {
         config.checkValidity()

@@ -16,10 +16,10 @@ import org.veriblock.miners.pop.storage.ormlite.OrmLiteKeyValueRepository
 import org.veriblock.miners.pop.storage.ormlite.OrmLitePoPRepository
 import java.sql.SQLException
 
-val sqliteDbFile = Context.directory.resolve("pop.dat")
-
 val repositoryModule = module {
     single<ConnectionSource> {
+        val context: Context = get()
+        val sqliteDbFile = context.directory.resolve("pop.dat")
         val url = "jdbc:sqlite:$sqliteDbFile"
         try {
             JdbcPooledConnectionSource(url)

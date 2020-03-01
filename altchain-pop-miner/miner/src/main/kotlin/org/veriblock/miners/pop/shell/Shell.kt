@@ -8,6 +8,8 @@
 
 package org.veriblock.miners.pop.shell
 
+import org.veriblock.core.utilities.Configuration
+import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
@@ -16,10 +18,12 @@ import org.veriblock.miners.pop.shell.commands.walletCommands
 import org.veriblock.shell.CommandFactory
 
 fun CommandFactory.configure(
+    configuration: Configuration,
+    context: Context,
     miner: Miner
 ) {
     standardCommands()
-    configCommands()
+    configCommands(configuration)
     miningCommands(miner)
-    walletCommands(miner)
+    walletCommands(context, miner)
 }

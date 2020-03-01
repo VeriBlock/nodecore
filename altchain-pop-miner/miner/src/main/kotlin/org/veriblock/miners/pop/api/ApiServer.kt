@@ -22,23 +22,24 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import mu.KotlinLogging
 import org.veriblock.core.utilities.Configuration
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
 import java.util.concurrent.TimeUnit
 
 const val API_VERSION = "0.1"
 
-private val logger = KotlinLogging.logger {}
+private val logger = createLogger {}
 
 class ApiServer(
+    configuration: Configuration,
     private val controllers: List<ApiController>
 ) {
     private var running = false
 
-    private val port: Int = Configuration.getInt("miner.api.port") ?: 8080
-    private val host: String = Configuration.getString("miner.api.host") ?: "0.0.0.0"
+    private val port: Int = configuration.getInt("miner.api.port") ?: 8080
+    private val host: String = configuration.getString("miner.api.host") ?: "0.0.0.0"
 
     var server: ApplicationEngine? = null
 

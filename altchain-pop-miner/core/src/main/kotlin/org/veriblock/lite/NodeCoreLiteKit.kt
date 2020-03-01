@@ -105,13 +105,13 @@ class NodeCoreLiteKit(
         val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
         return if (file.exists()) {
             try {
-                file.loadTransactionMonitor()
+                file.loadTransactionMonitor(context)
             } catch (e: Exception) {
                 throw IOException("Unable to load the transaction monitoring data", e)
             }
         } else {
             val address = Address(addressManager.defaultAddress.hash)
-            TransactionMonitor(address)
+            TransactionMonitor(context, address)
         }
     }
 

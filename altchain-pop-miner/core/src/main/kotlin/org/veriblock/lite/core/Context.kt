@@ -8,16 +8,18 @@
 
 package org.veriblock.lite.core
 
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
+import org.veriblock.lite.params.NetworkParameters
 import java.io.File
 
-object Context {
+class Context(
+    configuration: Configuration,
+    val networkParameters: NetworkParameters
+) {
     val dataDir = System.getenv("DATA_DIR")
-        ?: Configuration.extract("dataDir")
+        ?: configuration.extract("dataDir")
         ?: "./"
 
-    val networkParameters = NetworkParameters
     val directory: File = File(dataDir)
     val filePrefix: String = "vbk-${networkParameters.network}"
 

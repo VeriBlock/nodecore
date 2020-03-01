@@ -11,7 +11,6 @@ package org.veriblock.alt.plugins
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpPost
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
@@ -31,8 +30,6 @@ class BtcConfig(
     override val host: String = "http://localhost:8332",
     val username: String? = null,
     val password: String? = null,
-    val hrps: Map<String, String> = mapOf("mainnet" to "bc", "testnet" to "tb", "regtest" to "bcrt"),
-    val network: String = "mainnet",
     val payoutAddress: String? = null,
     override val keystonePeriod: Int = 5,
     override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 1, 2),
@@ -49,14 +46,11 @@ private data class BtcPublicationData(
 
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
 class BitcoinFamilyChain(
+    override val config: BtcConfig,
     val id: Long,
     val key: String,
     val name: String
 ) : SecurityInheritingChain {
-
-    override val config: BtcConfig = Configuration.extract("securityInheriting.$key")
-        ?: error("Please configure the securityInheriting.$key section")
-
     private val payoutAddressScript: ByteArray
 
     init {
@@ -64,32 +58,16 @@ class BitcoinFamilyChain(
         checkNotNull(config.payoutAddress) {
             "$key's payoutAddress must be configured!"
         }
-        val addressHrp = config.hrps[config.network]
-        checkNotNull(addressHrp) {
-            "$key's network must be one of ${config.hrps.keys}!"
-        }
         payoutAddressScript = when {
-            config.payoutAddress.startsWith(addressHrp) -> try {
-                SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress, addressHrp)
-            } catch (e: Exception) {
-                error("Invalid segwit address: ${e.message}")
-            }
             config.payoutAddress.isHex() ->
                 config.payoutAddress.asHexBytes()
             else -> {
-                // Find if the user's input matches with any of the existing networks' hrps
-                val candidateNetwork = config.hrps.entries.sortedByDescending {
-                    it.value.length // Check the longest ones first for a better matching in case of multiple matches
-                }.find {
-                    config.payoutAddress.startsWith(it.value)
-                }?.key
-                val extraError = candidateNetwork?.let {
-                    " Or was it a $it address? If so, make sure to set 'network' to '$it' in the config"
-                } ?: ""
-                error(
-                    "$key's payoutAddress configuration must be a properly formed hex script or a valid segwit address!" +
-                    extraError
-                )
+                val addressHrp = config.payoutAddress.substringBefore('1')
+                try {
+                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress, addressHrp)
+                } catch (e: Exception) {
+                    error("Invalid segwit address: ${e.message}")
+                }
             }
         }
     }

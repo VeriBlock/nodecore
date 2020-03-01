@@ -22,7 +22,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.*
+import java.util.Collections
+import java.util.HashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -30,6 +31,7 @@ private val logger = createLogger {}
 const val TM_FILE_EXTENSION = ".txmon"
 
 class TransactionMonitor(
+    val context: Context,
     val address: Address,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
@@ -46,7 +48,7 @@ class TransactionMonitor(
         Collections.unmodifiableCollection(transactions.values)
 
     private fun save() {
-        val diskWallet = File(Context.directory, Context.filePrefix + TM_FILE_EXTENSION)
+        val diskWallet = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
 
         lock.withLock {
             try {
@@ -217,9 +219,9 @@ class TransactionMonitor(
     }
 }
 
-fun File.loadTransactionMonitor(): TransactionMonitor = try {
+fun File.loadTransactionMonitor(context: Context): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
-        stream.readTransactionMonitor()
+        stream.readTransactionMonitor(context)
     }
 } catch (e: IOException) {
     throw IllegalStateException("Unable to read VBK wallet from disk")

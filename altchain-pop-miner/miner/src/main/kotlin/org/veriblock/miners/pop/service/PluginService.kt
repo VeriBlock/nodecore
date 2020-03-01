@@ -25,13 +25,15 @@ class PluginConfig(
     val name: String? = null
 )
 
-class PluginService : KoinComponent {
+class PluginService(
+    configuration: Configuration
+) : KoinComponent {
     val normalPlugins: NormalPluginsContainer by inject(named("normal-plugins"))
     val familyPlugins: FamilyPluginsContainer by inject(named("family-plugins"))
 
     private var loadedPlugins: Map<String, SecurityInheritingChain> = emptyMap()
 
-    private val configuredPlugins: Map<String, PluginConfig> = Configuration.extract("securityInheriting") ?: emptyMap()
+    private val configuredPlugins: Map<String, PluginConfig> = configuration.extract("securityInheriting") ?: emptyMap()
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }

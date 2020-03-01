@@ -12,5 +12,5 @@ import org.koin.dsl.module
 
 val serviceModule = module {
     single { OperationService(get()) }
-    single { PluginService() }
+    single { PluginService(get()) }
 }

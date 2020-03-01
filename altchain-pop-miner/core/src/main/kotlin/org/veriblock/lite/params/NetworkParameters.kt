@@ -8,7 +8,6 @@
 
 package org.veriblock.lite.params
 
-import org.veriblock.core.utilities.Configuration
 import java.math.BigInteger
 
 class NetworkConfig(
@@ -20,12 +19,11 @@ class NetworkConfig(
     val adminPassword: String? = null
 )
 
-private val config: NetworkConfig = Configuration.extract("nodecore")
-    ?: NetworkConfig()
-
 const val LOCALHOST = "127.0.0.1"
 
-object NetworkParameters {
+class NetworkParameters(
+    config: NetworkConfig
+) {
     val network: String
     val adminHost: String
     val adminPort: Int
