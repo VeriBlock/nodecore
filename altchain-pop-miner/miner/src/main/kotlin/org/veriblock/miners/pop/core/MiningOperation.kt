@@ -19,7 +19,9 @@ import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPublication
-import java.util.*
+import java.util.ArrayList
+import java.util.Collections
+import java.util.UUID
 
 private val logger = createLogger {}
 

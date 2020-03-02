@@ -8,6 +8,9 @@
 
 package org.veriblock.miners.pop.tasks
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.utilities.createLogger
@@ -33,6 +36,8 @@ class WorkflowAuthority(
 
     val miner: Miner by inject()
 
+    val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
+
     fun submit(operation: MiningOperation) {
         val chain = pluginFactory[operation.chainId]
         if (chain == null) {
@@ -53,9 +58,9 @@ class WorkflowAuthority(
         // Begin running
         operation.begin()
 
-        Threading.TASK_POOL.submit {
+        coroutineScope.launch {
             // Initial task
-            executeTask(GetPublicationDataTask(miner, nodeCoreLiteKit, chain, monitor), operation)
+            runTasks(miner, nodeCoreLiteKit, chain, operation, monitor)
         }
     }
 
@@ -93,36 +98,7 @@ class WorkflowAuthority(
         }
     }
 
-    private fun onWorkflowStateChanged(
-        state: OperationState,
-        operation: MiningOperation,
-        chain: SecurityInheritingChain,
-        monitor: SecurityInheritingMonitor
-    ) {
-        // We have to check by java class because each next state inherits from the previous, so for example all states
-        // after Confirmed will evaluate `is OperationState.Confirmed` to true, and what we are looking at is the exact state
-        when (state.javaClass) {
-            OperationState.Confirmed::class.java -> Threading.TASK_POOL.submit {
-                executeTask(DetermineBlockOfProofTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-            OperationState.KeystoneOfProof::class.java -> Threading.TASK_POOL.submit {
-                executeTask(RegisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-            OperationState.VeriBlockPublications::class.java -> Threading.TASK_POOL.submit {
-                executeTask(SubmitProofOfProofTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-            OperationState.SubmittedPopData::class.java -> Threading.TASK_POOL.submit {
-                executeTask(AltEndorsementTransactionConfirmationTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-            OperationState.AltEndorsementTransactionConfirmed::class.java -> Threading.TASK_POOL.submit {
-                executeTask(AltEndorsedBlockConfirmationTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-            OperationState.AltEndorsedBlockConfirmed::class.java -> Threading.TASK_POOL.submit {
-                executeTask(PayoutDetectionTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-            OperationState.Failed::class.java -> Threading.TASK_POOL.submit {
-                executeTask(DeregisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain, monitor), operation)
-            }
-        }
+    // TODO delete me
+    private fun onWorkflowStateChanged(state: OperationState, operation: MiningOperation, chain: SecurityInheritingChain) {
     }
 }

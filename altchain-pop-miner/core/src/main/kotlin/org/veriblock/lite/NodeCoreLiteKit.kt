@@ -75,6 +75,12 @@ class NodeCoreLiteKit(
         blockChain.blockChainReorganizedEvent.register(transactionMonitor) {
             transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
         }
+        blockChain.blockChainReorganizedEvent.register(this) {
+            for (newBlock in it.newBlocks) {
+                blockChain.newBestBlockEvent.trigger(newBlock)
+                blockChain.newBestBlockChannel.offer(newBlock)
+            }
+        }
 
         logger.info { "Send funds to the VBK wallet ${addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
