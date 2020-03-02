@@ -31,7 +31,9 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import javax.net.ssl.SSLException
+import kotlin.concurrent.withLock
 import kotlin.math.abs
 
 private val logger = createLogger {}
@@ -252,9 +254,11 @@ class NodeCoreGateway(
         return BlockChainDelta(removed, added)
     }
 
+    private val lock = ReentrantLock()
+
     fun submitEndorsementTransaction(
         publicationData: ByteArray, addressManager: AddressManager, feePerByte: Long, maxFee: Long
-    ): VeriBlockTransaction {
+    ): VeriBlockTransaction = lock.withLock {
         logger.debug { "Creating endorsement transaction..." }
         val sourceAddressByteString = ByteStringAddressUtility.createProperByteStringAutomatically(
             addressManager.defaultAddress.hash
