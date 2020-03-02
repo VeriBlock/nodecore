@@ -26,11 +26,12 @@ import kotlin.concurrent.withLock
 private val logger = createLogger {}
 
 class SecurityInheritingMonitor(
+    configuration: Configuration,
     private val chainId: String,
     private val chain: SecurityInheritingChain
 ) {
-    private val pollingPeriodSeconds = Configuration.getLong("securityInheriting.$chainId.pollingPeriodSeconds") ?: 20L
-    private val neededConfirmations = Configuration.getInt("securityInheriting.$chainId.neededConfirmations") ?: 10
+    private val pollingPeriodSeconds = configuration.getLong("securityInheriting.$chainId.pollingPeriodSeconds") ?: 20L
+    private val neededConfirmations = configuration.getInt("securityInheriting.$chainId.neededConfirmations") ?: 10
 
     private val lock = ReentrantLock()
 
@@ -47,6 +48,9 @@ class SecurityInheritingMonitor(
     private val blockListeners = HashMap<String, AltchainBlockListener>()
     private val transactionListeners = HashMap<String, AltchainTransactionListener>()
 
+    /**
+     * Starts monitoring the corresponding chain with a polling schedule
+     */
     fun start(miner: Miner) {
         this.miner = miner
         pollSchedule = Threading.SI_POLL_THREAD.scheduleWithFixedDelay({
@@ -59,11 +63,18 @@ class SecurityInheritingMonitor(
         }, Threading.SI_POLL_THREAD)
     }
 
+    /**
+     * Stops the polling schedule
+     */
     fun stop() {
         pollSchedule?.cancel(false)
         pollSchedule = null
     }
 
+    /**
+     * Checks for the best chain's block height. If it changed, it handles all registered listeners.
+     * Automining is also triggered here.
+     */
     private fun poll() {
         try {
             if (healthy.get()) {
@@ -81,11 +92,12 @@ class SecurityInheritingMonitor(
                         miner.mine(chainId, bestBlockHeight)
                     }
 
-                    handleBlockHeightListeners(bestBlockHeight)
+                    this.bestBlockHeight = bestBlockHeight
+
+                    handleBlockHeightListeners()
                     handleBlockListeners()
                     handleTransactionListeners()
 
-                    this.bestBlockHeight = bestBlockHeight
                 }
             } else {
                 val pinged = checkSuccess { chain.getBestBlockHeight() }
@@ -94,36 +106,25 @@ class SecurityInheritingMonitor(
                     connected.set(true)
                 }
             }
-        } catch (e: Throwable) {
-            logger.error(e) { "Error when polling SI Chain ($chainId)" }
+        } catch (t: Throwable) {
+            logger.error(t) { "Error when polling SI Chain ($chainId)" }
         }
     }
 
-    private fun handleBlockHeightListeners(bestBlockHeight: Int) {
+    /**
+     * Checks for the height listeners. If any of them is registered for a height not higher than the best,
+     * it checks for the best block in the registered height and its confirmations.
+     */
+    private fun handleBlockHeightListeners() {
         val triggeredBlocks = ArrayList<Int>()
-        for ((height, listener) in blockHeightListeners) {
-            if (height > bestBlockHeight) {
-                continue
-            }
-            try {
-                val block = chain.getBlock(listener.blockHeight)
-                if (block == null) {
-                    triggeredBlocks += height
-                    listener.onError(IllegalStateException(
-                        "Unable to find block with height $height while the best chain height is $bestBlockHeight!"
-                    ))
-                    continue
-                }
-
-                if (block.confirmations >= neededConfirmations) {
-                    triggeredBlocks += height
-                    listener.onComplete(block)
-                }
-            } catch (e: Exception) {
-                logger.warn(e) { "Error when polling for block ${height}" }
+        for (listener in blockHeightListeners.values) {
+            val handled = handleBlockHeightListener(listener)
+            if (handled) {
+                triggeredBlocks += listener.blockHeight
             }
         }
 
+        // Remove triggered listeners
         lock.withLock {
             triggeredBlocks.forEach {
                 blockHeightListeners.remove(it)
@@ -131,17 +132,58 @@ class SecurityInheritingMonitor(
         }
     }
 
+    private fun handleBlockHeightListener(listener: AltchainBlockHeightListener): Boolean {
+        // Ignore if we didn't still reach the registered height yet
+        if (listener.blockHeight > bestBlockHeight) {
+            return false
+        }
+        // Retrieve block from SI chain
+        val block = try {
+            chain.getBlock(listener.blockHeight)
+        } catch (e: Exception) {
+            logger.warn(e) { "Error when polling for block ${listener.blockHeight}" }
+            return false
+        }
+        if (block == null) {
+            // The best block should never be null if the chain's integrity is not compromised
+            try {
+                listener.onError(
+                    IllegalStateException("Unable to find block with height ${listener.blockHeight} while the best chain height is $bestBlockHeight!")
+                )
+            } catch (t: Throwable) {
+                logger.warn(t) { t.message }
+            }
+            return true
+        }
+
+        // Check for the needed confirmations and trigger the listener if the block has enough of them
+        if (block.confirmations >= neededConfirmations) {
+            try {
+                listener.onComplete(block)
+            } catch (e: Exception) {
+                logger.warn(e) { e.message }
+                return false
+            }
+            return true
+        }
+        return false
+    }
+
     private fun handleBlockListeners() {
         val triggeredBlocks = ArrayList<String>()
         for (listener in blockListeners.values) {
+            // Ignore if the block does not exist in the chain yet
             val block = chain.getBlock(listener.blockHash)
                 ?: continue
 
             try {
+                // Check for the needed confirmations and trigger the listener if the block has enough of them
                 if (block.confirmations >= neededConfirmations) {
                     triggeredBlocks += block.hash
                     listener.onComplete(block)
-                } else if (block.confirmations < 0) {
+                }
+                // Also check if a reorg has taken place
+                else if (block.confirmations < 0) {
                     triggeredBlocks += block.hash
                     listener.onError(AltchainBlockReorgException(block))
                 }
@@ -150,6 +192,7 @@ class SecurityInheritingMonitor(
             }
         }
 
+        // Remove triggered listeners
         lock.withLock {
             triggeredBlocks.forEach {
                 blockListeners.remove(it)
@@ -160,14 +203,18 @@ class SecurityInheritingMonitor(
     private fun handleTransactionListeners() {
         val triggeredTransactions = ArrayList<String>()
         for (listener in transactionListeners.values) {
+            // Ignore if the transaction does not exist in the chain yet
             val transaction = chain.getTransaction(listener.txId)
                 ?: continue
 
             try {
+                // Check for the needed confirmations and trigger the listener if the transaction has enough of them
                 if (transaction.confirmations >= neededConfirmations) {
                     triggeredTransactions += transaction.txId
                     listener.onComplete(transaction)
-                } else if (transaction.confirmations < 0) {
+                }
+                // Also check if a reorg has taken place
+                else if (transaction.confirmations < 0) {
                     triggeredTransactions += transaction.txId
                     listener.onError(AltchainTransactionReorgException(transaction))
                 }
@@ -176,6 +223,7 @@ class SecurityInheritingMonitor(
             }
         }
 
+        // Remove triggered listeners
         lock.withLock {
             triggeredTransactions.forEach {
                 transactionListeners.remove(it)
@@ -183,8 +231,13 @@ class SecurityInheritingMonitor(
         }
     }
 
-    fun registerBlockHeightListener(blockListener: AltchainBlockHeightListener) = lock.withLock {
-        blockHeightListeners[blockListener.blockHeight] = blockListener
+    fun registerBlockHeightListener(blockListener: AltchainBlockHeightListener) {
+        val handled = handleBlockHeightListener(blockListener)
+        if (!handled) {
+            lock.withLock {
+                blockHeightListeners[blockListener.blockHeight] = blockListener
+            }
+        }
     }
 
     fun registerBlockListener(blockListener: AltchainBlockListener) = lock.withLock {

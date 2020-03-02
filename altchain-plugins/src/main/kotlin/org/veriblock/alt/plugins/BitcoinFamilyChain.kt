@@ -12,7 +12,6 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpPost
 import org.bouncycastle.util.Arrays
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
@@ -96,9 +95,8 @@ class BitcoinFamilyChain(
             config.payoutAddress.isHex() ->
                 config.payoutAddress.asHexBytes()
             else -> {
-                val addressHrp = config.payoutAddress.substringBefore('1')
                 try {
-                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress, addressHrp)
+                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress)
                 } catch (e: Exception) {
                     error("Invalid segwit address: ${e.message}")
                 }

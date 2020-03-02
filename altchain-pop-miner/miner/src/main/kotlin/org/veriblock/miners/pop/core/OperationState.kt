@@ -108,7 +108,7 @@ sealed class OperationState {
     ) : AltEndorsementTransactionConfirmed(previous) {
         override fun toString() = "Alt Endorsement Block confirmed, waiting for payout block"
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Alt Endorsement Block Hash: $proofOfProofId"
+            "Alt Endorsement Block Hash: $altEndorsementBlockHash"
     }
 
     class Completed(

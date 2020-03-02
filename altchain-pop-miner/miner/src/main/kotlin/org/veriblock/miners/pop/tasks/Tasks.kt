@@ -262,7 +262,7 @@ class RegisterVeriBlockPublicationPollingTask(
 }
 
 class DeregisterVeriBlockPublicationPollingTask(
-    miner: Miner
+    miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
     securityInheritingChain: SecurityInheritingChain,
     securityInheritingMonitor: SecurityInheritingMonitor
