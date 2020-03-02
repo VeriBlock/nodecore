@@ -189,6 +189,10 @@ class NodeCoreGateway(
                 publications.add(pubMsg.deserialize(params))
             }
             return publications
+        } else {
+            for (error in reply.resultsList) {
+                logger.warn { "${error.message} | ${error.details}" }
+            }
         }
 
         return emptyList()

@@ -19,6 +19,7 @@ import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.services.SerializeDeserializeService
 import kotlin.random.Random
 
 private val logger = createLogger {}
@@ -120,5 +121,24 @@ class TestChain(
             error("Expected publication data context differs from the one PoP supplied back")
         }
         return "Test successful!"
+    }
+
+    override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
+        logger.info {
+            """Update context called with the following data:
+            |ATVs: ${veriBlockPublications.map {
+                it.transaction
+            }.flatMap {
+                it.blocks
+            }.map {
+                SerializeDeserializeService.getHeaderBytesBitcoinBlock(it).toHex()
+            }}
+            |VTBs: ${veriBlockPublications.flatMap {
+                it.blocks
+            }.map {
+                SerializeDeserializeService.serializeHeaders(it).toHex()
+            }}""".trimMargin()
+        }
+        return ""
     }
 }

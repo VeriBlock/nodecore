@@ -53,11 +53,18 @@ fun CommandFactory.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginServ
             Utils.encodeHex(publicationData.context[0]),
             Utils.encodeHex(publicationData.btcContext[0])
         )
+        if (debugVeriBlockPublications.isEmpty()) {
+            return@command failure {
+                addMessage("V010", "NodeCore failure", "Invalid VBK publications from NodeCore: an empty list has been received!", true)
+            }
+        }
         debugVeriBlockPublications.forEach {
             if (it.firstBlock == null || it.firstBitcoinBlock == null) {
                 return@command failure {
-                    addMessage("V010", "NodeCore failure", "Invalid VBK publications from NodeCore:" +
-                        " at least one of the received publications has no VBK blocks or no BTC blocks", true)
+                    addMessage(
+                        "V010", "NodeCore failure",
+                        "Invalid VBK publications from NodeCore: at least one of the received publications has no VBK blocks or no BTC blocks", true
+                    )
                 }
             }
         }
