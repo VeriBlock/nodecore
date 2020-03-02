@@ -136,8 +136,18 @@ class BitcoinFamilyChain(
     override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
         val jsonBody = JsonRpcRequestBody("updatecontext", listOf(
-            veriBlockPublications.map { it.transaction }.flatMap { it.blocks }.map { SerializeDeserializeService.serialize(it) },
-            veriBlockPublications.flatMap { it.blocks }.map { SerializeDeserializeService.serialize(it).toHex() }
+            veriBlockPublications.map {
+                it.transaction
+            }.flatMap {
+                it.blocks
+            }.map {
+                SerializeDeserializeService.getHeaderBytesBitcoinBlock(it).toHex()
+            },
+            veriBlockPublications.flatMap {
+                it.blocks
+            }.map {
+                SerializeDeserializeService.serializeHeaders(it).toHex()
+            }
         )).toJson()
 
         return config.host.httpPost()
