@@ -55,11 +55,11 @@ class AltchainPopMiner(
         this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
 
         nodeCoreLiteKit.network.healthyEvent.register(this) {
-            logger.info { "Connected to NodeCore!" }
+            logger.info { "Successfully connected to NodeCore, waiting for the sync status..." }
             addReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
         nodeCoreLiteKit.network.unhealthyEvent.register(this) {
-            logger.warn { "Unable to connect to NodeCore!" }
+            logger.info { "Unable to connect to NodeCore at this time, trying to reconnect..." }
             removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
         nodeCoreLiteKit.network.healthySyncEvent.register(this) {
@@ -67,7 +67,6 @@ class AltchainPopMiner(
             addReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
         nodeCoreLiteKit.network.unhealthySyncEvent.register(this) {
-            logger.warn { "The connected NodeCore is not synchronized" }
             removeReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
         nodeCoreLiteKit.balanceChangedEvent.register(this) {

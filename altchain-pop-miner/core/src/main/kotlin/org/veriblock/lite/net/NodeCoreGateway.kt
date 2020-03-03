@@ -205,7 +205,8 @@ class NodeCoreGateway(
                 .ping(VeriBlockMessages.PingRequest.newBuilder().build())
             true
         } catch (e: StatusRuntimeException) {
-            logger.debug("Unable to connect ping NodeCore at this time")
+            // NodeCore is not reachable at this point
+            logger.debug("Unable to connect to NodeCore at this time")
             false
         }
     }
@@ -229,7 +230,7 @@ class NodeCoreGateway(
                 request.networkHeight > 0 && blockDifference < 4
             )
         } catch (e: StatusRuntimeException) {
-            logger.warn("Unable to perform GetStateInfoRequest to NodeCore")
+            logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
             NodeCoreSyncStatus(0,0, 0,false)
         }
     }

@@ -105,7 +105,7 @@ class NodeCoreNetwork(
                     if (isSynchronized()) {
                         synchronized.set(false)
                         unhealthySyncEvent.trigger()
-                        logger.warn { "Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
+                        logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
                     }
                 }
             } else {
@@ -126,8 +126,10 @@ class NodeCoreNetwork(
                     gateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.error(e) { "Unable to get the last block from NodeCore" }
-                    healthy.set(false)
-                    unhealthyEvent.trigger()
+                    if (isHealthy()) {
+                        healthy.set(false)
+                        unhealthyEvent.trigger()
+                    }
                     return
                 }
                 try {
@@ -142,12 +144,11 @@ class NodeCoreNetwork(
                 }
             } else {
                 if (!isHealthy()) {
-                    logger.warn { "Cannot proceed: waiting for connection with NodeCore..." }
+                    logger.debug { "Cannot proceed: waiting for connection with NodeCore..." }
                 } else {
                     if (!isSynchronized()) {
-                        logger.warn { "Cannot proceed because NodeCore is not synchronized" }
                         nodeCoreSyncStatus?.let {
-                            logger.warn { "Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
+                            logger.debug { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
                         }
                     }
                 }
