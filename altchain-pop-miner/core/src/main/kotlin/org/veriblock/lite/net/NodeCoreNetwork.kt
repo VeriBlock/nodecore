@@ -150,7 +150,7 @@ class NodeCoreNetwork(
                         logger.debug { "Cannot proceed because NodeCore is not synchronized" }
 
                         nodeCoreSyncStatus?.let {
-                            if (nodeCoreSyncStatus?.networkHeight != 0) {
+                            if (nodeCoreSyncStatus.networkHeight != 0) {
                                 logger.debug { "Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
                             } else {
                                 logger.debug { "Still not connected to the network" }
