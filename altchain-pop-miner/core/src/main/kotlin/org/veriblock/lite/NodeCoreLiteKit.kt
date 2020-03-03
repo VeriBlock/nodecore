@@ -77,7 +77,7 @@ class NodeCoreLiteKit(
         }
 
         logger.info { "Send funds to the VBK wallet ${addressManager.defaultAddress.hash}" }
-        logger.info { "Trying to connect to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
+        logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
         network.startAsync().addListener(Runnable {
             if (network.isHealthy()) {
