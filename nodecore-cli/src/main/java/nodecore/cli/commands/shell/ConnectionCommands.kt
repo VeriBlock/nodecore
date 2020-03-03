@@ -72,29 +72,12 @@ fun CommandFactory.connectionCommands() {
         // Work with bootstraps peers by default.
         var peerDiscovery: PeerDiscovery = if (peer != null && peer == "local") LocalhostDiscovery() else BootstrapPeerDiscovery(net)
 
-        Context.init(net, peerDiscovery, true)
-        Context.getPeerTable().start()
+        val endpoint = shell.startSPV(net, peerDiscovery)
 
-        while (true){
-            var status: DownloadStatusResponse = Context.getPeerTable().getDownloadStatus()
-            if(status.downloadStatus.isDiscovering){
-                shell.printInfo("Waiting for peers response.");
-            } else if(status.downloadStatus.isDownloading){
-                shell.printInfo("Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight)
-            } else{
-                shell.printInfo("Blockchain is ready. Current height " + status.currentHeight)
-                break
-            }
-
-            Thread.sleep(5000L)
-        }
-
-        val endpoint = ProtocolEndpoint(net.adminHost.toString(), net.adminPort.toShort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP)
         this.extraData["connect"] = endpoint
         this.extraData["disconnectCallBack"] = Runnable {
             Context.shutdown()
         }
-        shell.modeType = ModeType.SPV
 
         success()
     }
