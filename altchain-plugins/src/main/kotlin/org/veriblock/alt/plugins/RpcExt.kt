@@ -50,6 +50,9 @@ inline fun <reified T : Any> Request.rpcResponse(): T = try {
     rpcLogger.debug { "Request Body: ${this.body.asString("application/json")}" }
     rpcLogger.debug { "Response Body: ${responseBody.trim()}" }
     if (result is Result.Failure && response.statusCode != 500) {
+        if (response.statusCode == -1) {
+            throw HttpException(-1, "Unable to connect to RPC API: ${result.error.message}")
+        }
         throw HttpException(response.statusCode, "Call to RPC API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
     }
     val type: Type = object : TypeToken<T>() {}.type
