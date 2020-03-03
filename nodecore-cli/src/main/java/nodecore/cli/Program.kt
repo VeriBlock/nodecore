@@ -35,7 +35,7 @@ private fun run(args: Array<String>): Int {
     configuration.load()
 
     val shell: CliShell = koin.get()
-    shell.initialize(options.connect)
+    shell.initialize(options)
 
     return try {
         shell.run()

@@ -13,6 +13,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import veriblock.conf.NetworkParameters;
+import veriblock.conf.NetworkParametersFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,7 @@ public class ProgramOptions {
     private Properties _properties = new Properties();
 
     private String _connect;
+    private NetworkParameters spvNetworkParameters;
 
     public ProgramOptions() {
         resetToDefaults();
@@ -54,10 +57,19 @@ public class ProgramOptions {
                 .longOpt("connect")
                 .build();
 
+        Option startSPV = Option.builder("startspv")
+                .argName("net")
+                .hasArg()
+                .required(false)
+                .desc("Specify a node to connect to on startup")
+                .longOpt("startspv")
+                .build();
+
         Options options = new Options();
         options.addOption(configFileOption);
         options.addOption(paramOption);
         options.addOption(connectOption);
+        options.addOption(startSPV);
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -68,8 +80,11 @@ public class ProgramOptions {
             if (commandLine.hasOption("c"))
                 _configPath = commandLine.getOptionValue('c');
 
-            if (commandLine.hasOption("connect"))
+            if(commandLine.hasOption("startspv")){
+                spvNetworkParameters = NetworkParametersFactory.get(commandLine.getOptionValue("startspv"));
+            } else if (commandLine.hasOption("connect")) {
                 _connect = commandLine.getOptionValue("connect");
+            }
 
             return true;
         } catch (ParseException e) {
@@ -97,5 +112,9 @@ public class ProgramOptions {
 
     public String getConnect() {
         return _connect;
+    }
+
+    public NetworkParameters getSpvNetworkParameters() {
+        return spvNetworkParameters;
     }
 }
