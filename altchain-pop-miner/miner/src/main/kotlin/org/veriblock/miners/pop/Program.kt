@@ -26,7 +26,7 @@ private val logger = createLogger {}
 
 private val shutdownSignal = CountDownLatch(1)
 
-fun run(): Int {
+private fun run(): Int {
     Runtime.getRuntime().addShutdownHook(Thread {
         shutdownSignal.countDown()
     })
