@@ -105,7 +105,7 @@ class NodeCoreNetwork(
                     if (isSynchronized()) {
                         synchronized.set(false)
                         unhealthySyncEvent.trigger()
-                        logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
+                        logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}, waiting until it synchronizes..." }
                     }
                 }
             } else {
