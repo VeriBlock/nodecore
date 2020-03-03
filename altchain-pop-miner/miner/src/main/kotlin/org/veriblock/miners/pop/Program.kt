@@ -26,63 +26,57 @@ private val logger = createLogger {}
 
 private val shutdownSignal = CountDownLatch(1)
 
-class Program {
-    private lateinit var miner: Miner
+fun run(): Int {
+    Runtime.getRuntime().addShutdownHook(Thread {
+        shutdownSignal.countDown()
+    })
 
-    fun run(): Int {
-        Runtime.getRuntime().addShutdownHook(Thread {
-            shutdownSignal.countDown()
-        })
+    logger.info { "Starting dependency injection" }
+    val koin = startKoin {
+        modules(listOf(
+            serviceModule, taskModule, minerModule, repositoryModule, pluginsModule, webApiModule
+        ))
+    }.koin
 
-        logger.info { "Starting dependency injection" }
-        val koin = startKoin {
-            modules(listOf(
-                serviceModule, taskModule, minerModule, repositoryModule, pluginsModule, webApiModule
-            ))
-        }.koin
+    val miner: Miner = koin.get()
+    val pluginFactory: PluginService = koin.get()
+    val securityInheritingService: SecurityInheritingService = koin.get()
+    val apiServer: ApiServer = koin.get()
+    val shell: Shell = koin.get()
 
-        miner = koin.get()
-        val pluginFactory: PluginService = koin.get()
-        val securityInheritingService: SecurityInheritingService = koin.get()
-        val apiServer: ApiServer = koin.get()
-        val shell: Shell = koin.get()
-
-        try {
-            shell.initialize()
-            miner.initialize()
-            pluginFactory.loadPlugins()
-            miner.start()
-            securityInheritingService.start()
-            apiServer.start()
-            shell.run()
-        } catch (e: Exception) {
-            logger.warn(e) { "Fatal error: ${e.message}" }
-        } finally {
-            shutdownSignal.countDown()
-        }
-
-        try {
-            shutdownSignal.await()
-            miner.setIsShuttingDown(true)
-            apiServer.shutdown()
-            securityInheritingService.stop()
-            miner.shutdown()
-
-            logger.info("Application exit")
-        } catch (e: InterruptedException) {
-            logger.error("Shutdown signal was interrupted", e)
-            return 1
-        } catch (e: Exception) {
-            logger.error("Could not shut down services cleanly", e)
-            return 1
-        }
-
-        return 0
+    try {
+        shell.initialize()
+        miner.initialize()
+        pluginFactory.loadPlugins()
+        miner.start()
+        securityInheritingService.start()
+        apiServer.start()
+        shell.run()
+    } catch (e: Exception) {
+        logger.warn(e) { "Fatal error: ${e.message}" }
+    } finally {
+        shutdownSignal.countDown()
     }
+
+    try {
+        shutdownSignal.await()
+        miner.setIsShuttingDown(true)
+        apiServer.shutdown()
+        securityInheritingService.stop()
+        miner.shutdown()
+
+        logger.info("Application exit")
+    } catch (e: InterruptedException) {
+        logger.error("Shutdown signal was interrupted", e)
+        return 1
+    } catch (e: Exception) {
+        logger.error("Could not shut down services cleanly", e)
+        return 1
+    }
+
+    return 0
 }
 
-
 fun main() {
-    val main = Program()
-    exitProcess(main.run())
+    exitProcess(run())
 }
