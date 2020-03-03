@@ -21,6 +21,7 @@ import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
+import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.AltchainBlockHeightListener
 import org.veriblock.miners.pop.securityinheriting.AltchainTransactionListener
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
@@ -52,37 +53,31 @@ suspend fun runTasks(
     securityInheritingMonitor: SecurityInheritingMonitor
     operation: MiningOperation
 ) {
+    if (operation.state is OperationState.Failed) {
+        logger.warn(operation) { "Attempted to run tasks for a failed operation!" }
+        return
+    }
+
     // GetPublicationDataTask
-    run {
+    if (operation.state !is OperationState.PublicationData) {
         logger.info(operation) { "Getting the publication data..." }
-        val state = operation.state
-        if (state is OperationState.PublicationData) {
-            logger.info(operation) { "Successfully retrieved the publication data!" }
-        } else {
-            try {
-                val publicationData = securityInheritingChain.getPublicationData(operation.blockHeight)
-                operation.setPublicationDataWithContext(publicationData)
-                logger.info(operation) { "Successfully added the publication data!" }
-                return@run
-            } catch (e: HttpException) {
-                failOperation(
-                    operation,
-                    "Http error (${e.responseStatusCode}) while trying to get PoP publication data from the ${operation.chainId} daemon: ${e.message}"
-                )
-            } catch (e: Exception) {
-                failOperation(operation, "Error while trying to get PoP publication data from the ${operation.chainId} daemon: ${e.message}")
-            }
+        try {
+            val publicationData = securityInheritingChain.getPublicationData(operation.blockHeight)
+            operation.setPublicationDataWithContext(publicationData)
+            logger.info(operation) { "Successfully added the publication data!" }
+        } catch (e: HttpException) {
+            failOperation(
+                operation,
+                "Http error (${e.responseStatusCode}) while trying to get PoP publication data from the ${operation.chainId} daemon: ${e.message}"
+            )
+        } catch (e: Exception) {
+            failOperation(operation, "Error while trying to get PoP publication data from the ${operation.chainId} daemon: ${e.message}")
         }
     }
 
     // CreateProofTransactionTask
-    run {
+    if (operation.state !is OperationState.EndorsementTransaction) {
         val state = operation.state
-        if (state is OperationState.EndorsementTransaction) {
-            logger.info(operation) { "Successfully retrieved the VBK transaction: ${state.transaction.id}!" }
-            return@run
-        }
-
         if (state !is OperationState.PublicationData) {
             failTask("CreateProofTransactionTask called without publication data!")
         }
@@ -108,9 +103,16 @@ suspend fun runTasks(
         operation.setTransaction(walletTransaction)
         logger.info(operation) { "Successfully added the VBK transaction: ${walletTransaction.id}!" }
         logger.info(operation) { "Waiting for the transaction to be included in VeriBlock block..." }
+    }
 
+    // ConfirmTransactionTask
+    if (operation.state !is OperationState.Confirmed) {
+        val state = operation.state
+        if (state !is OperationState.EndorsementTransaction) {
+            failTask("ConfirmTransactionTask called without wallet transaction!")
+        }
         // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
-        val txMetaChannel = walletTransaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
+        val txMetaChannel = state.transaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
         txMetaChannel.receive() // Skip first state change (PENDING)
         do {
             val metaState = txMetaChannel.receive()
@@ -126,7 +128,7 @@ suspend fun runTasks(
     }
 
     // DetermineBlockOfProofTask
-    run {
+    if (operation.state !is OperationState.BlockOfProof) {
         val state = operation.state
         val transaction = (state as? OperationState.EndorsementTransaction)?.transaction
             ?: failTask("The operation has no transaction set!")
@@ -145,7 +147,7 @@ suspend fun runTasks(
     }
 
     // ProveTransactionTask
-    run {
+    if (operation.state !is OperationState.TransactionProved) {
         val state = operation.state
         if (state !is OperationState.BlockOfProof) {
             failTask("ProveTransactionTask called without VBK block of proof!")
@@ -171,7 +173,7 @@ suspend fun runTasks(
     }
 
     // RegisterKeystoneListenersTask
-    run {
+    if (operation.state !is OperationState.KeystoneOfProof) {
         val state = operation.state
         if (state !is OperationState.BlockOfProof) {
             failTask("RegisterKeystoneListenersTask called without block of proof!")
@@ -181,13 +183,16 @@ suspend fun runTasks(
 
         logger.info(operation) { "Waiting for the next VBK Keystone..." }
         val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first {
+            if (it.height > blockOfProof.height + 20) {
+                failOperation(operation, "The next VBK Keystone was not received!")
+            }
             it.height == blockOfProof.height / 20 * 20 + 20
         }
         operation.setKeystoneOfProof(keystoneOfProof)
     }
 
     // RegisterVeriBlockPublicationPollingTask
-    run {
+    if (operation.state !is OperationState.VeriBlockPublications) {
         val state = operation.state
         if (state !is OperationState.KeystoneOfProof) {
             failTask("RegisterVeriBlockPublicationPollingTask called without keystone of proof!")
@@ -202,7 +207,7 @@ suspend fun runTasks(
     }
 
     // SubmitProofOfProofTask
-    run {
+    if (operation.state !is OperationState.SubmittedPopData) {
         val state = operation.state
         if (state !is OperationState.VeriBlockPublications) {
             failTask("SubmitProofOfProofTask called without VeriBlock publications!")
@@ -290,12 +295,6 @@ suspend fun runTasks(
             logger.error("Error submitting proof of proof", e)
             failTask("Error submitting proof of proof")
         }
-    }
-
-    // DeregisterVeriBlockPublicationPollingTask
-    run {
-        nodeCoreLiteKit.network.removeVeriBlockPublicationSubscription(operation.id)
-        logger.info(operation) { "Successfully removed the publication subscription!" }
     }
 }
 

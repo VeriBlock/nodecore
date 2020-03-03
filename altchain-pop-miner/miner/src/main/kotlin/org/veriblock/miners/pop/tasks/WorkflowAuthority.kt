@@ -24,7 +24,6 @@ import org.veriblock.miners.pop.core.error
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.PluginService
-import org.veriblock.sdk.alt.SecurityInheritingChain
 
 private val logger = createLogger {}
 
@@ -36,7 +35,7 @@ class WorkflowAuthority(
 
     val miner: Miner by inject()
 
-    val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
+    private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
     fun submit(operation: MiningOperation) {
         val chain = pluginFactory[operation.chainId]
@@ -51,16 +50,12 @@ class WorkflowAuthority(
             return
         }
 
-        operation.stateChangedEvent.register(this) {
-            onWorkflowStateChanged(it, operation, chain, monitor)
-        }
-
         // Begin running
         operation.begin()
 
         coroutineScope.launch {
             // Initial task
-            runTasks(miner, nodeCoreLiteKit, chain, operation, monitor)
+            runTasks(miner, nodeCoreLiteKit, chain, monitor, operation)
         }
     }
 
@@ -79,26 +74,10 @@ class WorkflowAuthority(
 
         val changeHistory = operation.getChangeHistory()
         if (changeHistory.isNotEmpty()) {
-            onWorkflowStateChanged(operation.state, operation, chain, monitor)
-        }
-    }
-
-    private fun executeTask(task: BaseTask, operation: MiningOperation) {
-        try {
-            // Execute
-            task.execute(operation)
-
-            // Start next if any (recursive call)
-            val next = task.next
-            if (next != null) {
-                executeTask(next, operation)
+            coroutineScope.launch {
+                // Initial task
+                runTasks(miner, nodeCoreLiteKit, chain, monitor, operation)
             }
-        } catch (e: Exception) {
-            logger.error(operation) { "Workflow failed (${e.message})" }
         }
-    }
-
-    // TODO delete me
-    private fun onWorkflowStateChanged(state: OperationState, operation: MiningOperation, chain: SecurityInheritingChain) {
     }
 }

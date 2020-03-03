@@ -198,9 +198,9 @@ class NodeCoreNetwork(
         logger.info { "Waiting for this operation's veriblock publication..." }
 
         while (publications == null) {
-            if (error != null) {
+            error?.let {
                 removeVeriBlockPublicationSubscription(operationId)
-                error("Unable to get publications")
+                throw it
             }
             delay(1000)
         }
