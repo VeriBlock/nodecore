@@ -6,7 +6,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+import ch.qos.logback.classic.filter.LevelFilter
 import ch.qos.logback.classic.filter.ThresholdFilter
+import ch.qos.logback.core.spi.FilterReply
 import org.veriblock.shell.LoggingLineAppender
 
 def logRootPath = System.getProperty("logging.path", System.getenv('APM_LOG_PATH')) ?: 'logs/'
@@ -35,8 +37,21 @@ appender("FILE", RollingFileAppender) {
     }
 }
 
+appender("FILE-ERROR", FileAppender) {
+    file = "${logRootPath}org.veriblock.nodecore-pop-error.log"
+    filter(LevelFilter) {
+        level = ERROR
+        onMatch = FilterReply.ACCEPT
+        onMismatch = FilterReply.DENY
+    }
+
+    encoder(PatternLayoutEncoder) {
+        pattern = "%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"
+    }
+}
+
 logger("org.veriblock", toLevel(logLevel, DEBUG))
 
 logger("shell-printing", INFO, ["FILE"], false)
 
-root(ERROR, ["TERMINAL", "FILE"])
+root(ERROR, ["TERMINAL", "FILE", "FILE-ERROR"])
