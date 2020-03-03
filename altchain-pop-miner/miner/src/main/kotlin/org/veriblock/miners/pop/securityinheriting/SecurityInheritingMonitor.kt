@@ -115,7 +115,7 @@ class SecurityInheritingMonitor(
      * Checks for the height listeners. If any of them is registered for a height not higher than the best,
      * it checks for the best block in the registered height and its confirmations.
      */
-    private fun handleBlockHeightListeners() {
+    private fun handleBlockHeightListeners() = lock.withLock {
         val triggeredBlocks = ArrayList<Int>()
         for (listener in blockHeightListeners.values) {
             val handled = handleBlockHeightListener(listener)
@@ -125,10 +125,8 @@ class SecurityInheritingMonitor(
         }
 
         // Remove triggered listeners
-        lock.withLock {
-            triggeredBlocks.forEach {
-                blockHeightListeners.remove(it)
-            }
+        triggeredBlocks.forEach {
+            blockHeightListeners.remove(it)
         }
     }
 
@@ -169,7 +167,7 @@ class SecurityInheritingMonitor(
         return false
     }
 
-    private fun handleBlockListeners() {
+    private fun handleBlockListeners() = lock.withLock {
         val triggeredBlocks = ArrayList<String>()
         for (listener in blockListeners.values) {
             // Ignore if the block does not exist in the chain yet
@@ -193,14 +191,12 @@ class SecurityInheritingMonitor(
         }
 
         // Remove triggered listeners
-        lock.withLock {
-            triggeredBlocks.forEach {
-                blockListeners.remove(it)
-            }
+        triggeredBlocks.forEach {
+            blockListeners.remove(it)
         }
     }
 
-    private fun handleTransactionListeners() {
+    private fun handleTransactionListeners() = lock.withLock {
         val triggeredTransactions = ArrayList<String>()
         for (listener in transactionListeners.values) {
             // Ignore if the transaction does not exist in the chain yet
@@ -224,10 +220,8 @@ class SecurityInheritingMonitor(
         }
 
         // Remove triggered listeners
-        lock.withLock {
-            triggeredTransactions.forEach {
-                transactionListeners.remove(it)
-            }
+        triggeredTransactions.forEach {
+            transactionListeners.remove(it)
         }
     }
 

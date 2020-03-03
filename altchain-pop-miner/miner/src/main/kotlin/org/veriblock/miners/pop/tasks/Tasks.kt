@@ -481,10 +481,16 @@ class PayoutDetectionTask(
                     it.addressHash == state.publicationDataWithContext.publicationData.payoutInfo.toHex()
                 }
                 if (rewardVout != null) {
-                    logger.info(operation) { "${operation.chainId.toUpperCase()} PoP Payout detected! Amount: ${rewardVout.value} ${operation.chainId.toUpperCase()}" }
+                    logger.info(operation) {
+                        "${operation.chainId.toUpperCase()} PoP Payout detected! Amount: ${rewardVout.value} ${operation.chainId.toUpperCase()}"
+                    }
                     operation.complete(payoutBlock.hash, rewardVout.value)
                 } else {
-                    failOperation(operation, "Unable to find ${operation.chainId.toUpperCase()} PoP payout transaction in the expected block's coinbase!")
+                    failOperation(
+                        operation,
+                        "Unable to find ${operation.chainId.toUpperCase()} PoP payout transaction in the expected block's coinbase!" +
+                            " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
+                    )
                 }
             },
             onError = {
