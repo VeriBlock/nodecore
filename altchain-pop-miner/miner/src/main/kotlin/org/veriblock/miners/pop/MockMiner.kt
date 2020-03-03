@@ -64,6 +64,9 @@ class MockMiner(
         logger.info { "Mocked Bitcoin chain bootstrap: ${BitcoinDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}"}
     }
 
+    override fun setIsShuttingDown(b: Boolean) {
+    }
+
     override fun shutdown() {
     }
 

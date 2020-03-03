@@ -35,6 +35,8 @@ interface Miner {
 
     fun shutdown()
 
+    fun setIsShuttingDown(b: Boolean)
+
     val feePerByte: Long
     val maxFee: Long
 }

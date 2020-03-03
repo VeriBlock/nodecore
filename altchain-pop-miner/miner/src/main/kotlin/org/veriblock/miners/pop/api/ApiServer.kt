@@ -96,7 +96,7 @@ class ApiServer(
             return
         }
 
-        server?.stop(3, 10, TimeUnit.SECONDS)
+        server?.stop(100, 100, TimeUnit.MILLISECONDS)
         running = false
     }
 }

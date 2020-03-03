@@ -60,7 +60,7 @@ private fun run(): Int {
 
     try {
         shutdownSignal.await()
-
+        miner.setIsShuttingDown(true)
         apiServer.shutdown()
         securityInheritingService.stop()
         miner.shutdown()

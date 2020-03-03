@@ -36,6 +36,7 @@ class AltchainPopMiner(
     private val operationService: OperationService
 ) : Miner {
     private val operations = ConcurrentHashMap<String, MiningOperation>()
+    private var isShuttingDown: Boolean = false
 
     private enum class ReadyCondition {
         SUFFICIENT_FUNDS,
@@ -173,6 +174,11 @@ class AltchainPopMiner(
                 addMessage("V010", "Unable to mine", "Cannot connect to NodeCore", true)
             }
         }
+        if (isShuttingDown) {
+            return failure {
+                addMessage("V412", "Miner is not ready", "The miner is currently shutting down", true)
+            }
+        }
 
         val state = MiningOperation(
             chainId = chainId,
@@ -199,6 +205,10 @@ class AltchainPopMiner(
 
     override fun shutdown() {
         nodeCoreLiteKit.shutdown()
+    }
+
+    override fun setIsShuttingDown(b: Boolean) {
+        isShuttingDown = b
     }
 
     private fun loadSuspendedOperations() {
