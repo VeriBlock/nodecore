@@ -236,7 +236,7 @@ object StateSerializer {
         val blockOfProofContext = tx.blockOfProofContext
         if (blockOfProofContext != null && blockOfProofContext.size > 0) {
             for (block in blockOfProofContext) {
-                builder.addBitcoinContext(ByteString.copyFrom(SerializeDeserializeService.serialize(block)))
+                builder.addBitcoinContext(ByteString.copyFrom(SerializeDeserializeService.getHeaderBytesBitcoinBlock(block)))
             }
         }
 
