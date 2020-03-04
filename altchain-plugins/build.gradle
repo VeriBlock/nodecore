@@ -48,13 +48,42 @@ test {
 jar {
     archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
-        attributes 'Name': 'veriblock/examples',
+        attributes 'Name': 'veriblock/alt/plugins',
                 'Specification-Title': 'VeriBlock Altchain Plugins',
                 'Specification-Version': prettyVersion(),
                 'Specification-Vendor': 'VeriBlock Foundation',
-                'Implementation-Title': 'veriblock.alt',
+                'Implementation-Title': 'org.veriblock.alt.plugins',
                 'Implementation-Version': prettyVersion(),
                 'Implementation-Vendor': 'VeriBlock Foundation'
+    }
+}
+
+artifactory {
+    contextUrl = artifactory_url
+    publish {
+        repository {
+            repoKey = artifactory_repoKey
+            username = artifactory_user
+            password = artifactory_password
+            maven = true
+        }
+
+        defaults {
+            publications('mavenJava')
+            publishArtifacts = true
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'veriblock'
+            artifactId = 'altchain-plugins'
+            version = prettyVersion()
+
+            from components.java
+        }
     }
 }
 
