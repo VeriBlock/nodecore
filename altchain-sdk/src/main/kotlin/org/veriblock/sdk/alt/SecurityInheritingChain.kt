@@ -21,9 +21,19 @@ interface SecurityInheritingChain {
     val config: ChainConfig
 
     /**
-     * Returns this security inheriting chain's identifier, usually the token symbol.
+     * Returns this security inheriting chain's unique identifier.
      */
-    fun getChainIdentifier(): Long
+    val id: Long
+
+    /**
+     * Returns this security inheriting chain's key, usually the token symbol.
+     */
+    val key: String
+
+    /**
+     * Returns this security inheriting chain's name.
+     */
+    val name: String
 
     /**
      * Returns the best block height retrieved from the SI chain daemon.

@@ -86,9 +86,9 @@ class TestChain(
         .body(JsonRpcRequestBody("getlastblock", Any()).toJson())
         .rpcResponse<BlockHeaderContainer>().header.hash
 
-    override fun getChainIdentifier(): Long {
-        return -1L
-    }
+    override val id get() = -1L
+    override val key get() = "test"
+    override val name get() = "Test"
 
     override fun shouldAutoMine(): Boolean {
         return config.autoMinePeriod != null
@@ -150,7 +150,7 @@ class TestChain(
         val context = Random.nextBytes(100)
         operations[header] = context.toHex()
         val publicationData = PublicationData(
-            getChainIdentifier(),
+            id,
             header.asHexBytes(),
             minerAddress.asHexBytes(),
             context

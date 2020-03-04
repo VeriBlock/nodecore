@@ -52,7 +52,7 @@ private data class BtcBlock(
     val hash: String,
     val height: Int,
     val confirmations: Int,
-    val version: Int,
+    val version: Short,
     val nonce: Int,
     val merkleroot: String,
     val difficulty: Double,
@@ -80,9 +80,9 @@ private data class BtcScriptPubKey(
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
 class BitcoinFamilyChain(
     override val config: BtcConfig,
-    val id: Long,
-    val key: String,
-    val name: String
+    override val id: Long,
+    override val key: String,
+    override val name: String
 ) : SecurityInheritingChain {
     private val payoutAddressScript: ByteArray
 
@@ -108,10 +108,6 @@ class BitcoinFamilyChain(
         authentication().basic(config.username, config.password)
     } else {
         this
-    }
-
-    override fun getChainIdentifier(): Long {
-        return id
     }
 
     override fun getBestBlockHeight(): Int {
@@ -243,7 +239,7 @@ class BitcoinFamilyChain(
             .rpcResponse()
 
         val publicationData = PublicationData(
-            getChainIdentifier(),
+            id,
             response.block_header.asHexBytes(),
             payoutAddressScript,
             response.raw_contextinfocontainer.asHexBytes()

@@ -80,9 +80,9 @@ private data class NxtTransactionData(
 @FamilyPluginSpec(name = "NxtFamily", key = "nxt")
 class NxtFamilyChain(
     override val config: NxtConfig,
-    val id: Long,
-    val key: String,
-    val name: String
+    override val id: Long,
+    override val key: String,
+    override val name: String
 ) : SecurityInheritingChain {
 
     init {
@@ -93,10 +93,6 @@ class NxtFamilyChain(
         authentication().basic(config.username, config.password)
     } else {
         this
-    }
-
-    override fun getChainIdentifier(): Long {
-        return id
     }
 
     override fun getBestBlockHeight(): Int {
@@ -154,7 +150,7 @@ class NxtFamilyChain(
         }
 
         val publicationData = PublicationData(
-            getChainIdentifier(),
+            id,
             response.blockHeader.asHexBytes(),
             payoutAddress.toByteArray(Charsets.US_ASCII),
             response.contextInfoContainer.asHexBytes()

@@ -4,7 +4,7 @@ data class SecurityInheritingBlock(
     val hash: String,
     val height: Int,
     val confirmations: Int,
-    val version: Int,
+    val version: Short,
     val nonce: Int,
     val merkleRoot: String,
     val difficulty: Double,
