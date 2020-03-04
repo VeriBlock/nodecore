@@ -11,6 +11,8 @@ plugins {
     id "idea"
     id "java-library"
     id 'org.jetbrains.kotlin.jvm'
+    id "com.jfrog.artifactory"
+    id "maven-publish"
     id "com.github.johnrengelman.shadow" version "4.0.0"
 }
 
