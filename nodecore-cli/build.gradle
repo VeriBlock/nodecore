@@ -14,6 +14,7 @@ dependencies {
     implementation project(':veriblock-core')
     implementation project(':nodecore-grpc')
     implementation project(':veriblock-shell')
+    implementation project(':nodecore-spv')
 
     implementation 'ch.qos.logback:logback-classic:1.2.3'
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'

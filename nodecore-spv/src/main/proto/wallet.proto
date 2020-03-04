@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package wallet;
+
+option java_package = "veriblock.wallet";
+option java_outer_classname = "Protos";
+
+message TransactionMeta {
+    enum MetaState {
+        UNKNOWN = 0;
+        PENDING = 1;
+        CONFIRMED = 2;
+        DEAD = 3;
+    }
+    bytes tx_id = 1;
+    MetaState state = 2;
+    bytes appears_in_best_chain_block = 3;
+    repeated bytes appears_in_blocks = 4;
+    int32 appears_at_height = 5;
+    int32 depth = 6;
+}
+
+message TransactionInput {
+    string address = 1;
+    int64 amount = 2;
+}
+
+message TransactionOutput {
+    string address = 1;
+    int64 amount = 2;
+}
+
+message MerkleBranch {
+    enum SubTree {
+        NORMAL_TRANSACTIONS = 0;
+        POP_TRANSACTIONS = 1;
+        METAPACKAGE = 2;
+    }
+    bytes subject = 1;
+    int32 index = 2;
+    repeated bytes merkle_path_hashes = 3;
+    SubTree merkle_sub_tree = 4;
+}
+
+message Transaction {
+    bytes tx_id = 1;
+    TransactionInput input = 2;
+    repeated TransactionOutput outputs = 3;
+    int64 signature_index = 4;
+    bytes data = 5;
+    MerkleBranch merkle_branch = 6;
+    TransactionMeta meta = 7;
+}
+
+message Key {
+    bytes public = 1;
+    bytes private = 2;
+}
+
+message LedgerEntry {
+    enum Status {
+        PENDING = 0;
+        CONFIRMED = 1;
+        FINALIZED = 2;
+    }
+    string address = 1;
+    bytes tx_id = 2;
+    int64 debit_amount = 3;
+    int64 credit_amount = 4;
+    sint64 signature_index = 5;
+    int32 position_index = 6;
+    Status status = 7;
+}
+
+message AddressLedger {
+    string address = 1;
+    int64 starting_balance = 2;
+    int64 starting_signature_index = 3;
+    repeated LedgerEntry entries = 4;
+}
+
+message Wallet {
+    string network = 1;
+    string default_address = 2;
+    repeated Key keys = 3;
+    repeated AddressLedger ledger = 4;
+    repeated Transaction transactions = 5;
+}

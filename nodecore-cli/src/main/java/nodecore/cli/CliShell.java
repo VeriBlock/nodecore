@@ -7,9 +7,11 @@
 
 package nodecore.cli;
 
+import nodecore.cli.annotations.ModeType;
 import nodecore.cli.annotations.CommandServiceType;
 import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.ConnectionFailedException;
+import nodecore.cli.contracts.EndpointTransportType;
 import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
 import nodecore.cli.services.AdminServiceClient;
@@ -25,8 +27,14 @@ import org.veriblock.shell.CommandFactory;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
+import veriblock.Context;
+import veriblock.conf.NetworkParameters;
+import veriblock.model.DownloadStatusResponse;
+import veriblock.net.BootstrapPeerDiscovery;
+import veriblock.net.PeerDiscovery;
 
 import javax.net.ssl.SSLException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CliShell extends Shell {
@@ -37,6 +45,8 @@ public class CliShell extends Shell {
 
     private AdminServiceClient _adminServiceClient;
     private Configuration _configuration;
+    private Runnable disconnectCallBack;
+    private ModeType modeType = ModeType.STANDARD;
 
     public void onStart() {
     }
@@ -95,6 +105,11 @@ public class CliShell extends Shell {
                 _adminServiceClient.shutdown();
                 _adminServiceClient = null;
                 refreshCompleter();
+
+                if(this.disconnectCallBack != null){
+                    this.disconnectCallBack.run();
+                    this.disconnectCallBack = null;
+                }
             }
 
             _endpointContainer.setProtocolEndpoint(null);
@@ -138,6 +153,11 @@ public class CliShell extends Shell {
         boolean failed = result.isFailed();
 
         try {
+            Runnable disconnectCallBack = context.getExtraData("disconnectCallBack");
+            if(disconnectCallBack != null){
+                this.disconnectCallBack = disconnectCallBack;
+            }
+
             Boolean disconnect = context.getExtraData("disconnect");
             if (disconnect != null && disconnect) {
                 disconnect();
@@ -231,14 +251,30 @@ public class CliShell extends Shell {
             (extraData != null && extraData.equals(CommandServiceType.SHELL.name()));
     }
 
-    public void initialize(String host) {
+    public void initialize(ProgramOptions programOptions) {
+        ProtocolEndpoint endpoint = null;
+        String host = null;
 
         printIntro();
 
-        if(host != null) {
-            ProtocolEndpoint endpoint = new ProtocolEndpoint(host, ProtocolEndpointType.RPC, null);
+        if(programOptions.getSpvNetworkParameters() != null){
+            try {
+                endpoint = startSPV(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
+                host = programOptions.getSpvNetworkParameters().getAdminHost() + ":" + programOptions.getSpvNetworkParameters().getAdminPort();
+
+                disconnectCallBack = Context::shutdown;
+            } catch (Exception e) {
+                _logger.error(e.getMessage(), e);
+            }
+        } else if(programOptions.getConnect() != null) {
+            host = programOptions.getConnect();
+            endpoint = new ProtocolEndpoint(host, ProtocolEndpointType.RPC, null);
+        }
+
+        if(endpoint != null && host != null){
             try {
                 connect(endpoint, true);
+
                 if(!connected.get()) {
                 } else {
                     String msg = new AttributedStringBuilder()
@@ -299,6 +335,29 @@ public class CliShell extends Shell {
         });
 
         t.start();
+    }
+
+    public ProtocolEndpoint startSPV(NetworkParameters net, PeerDiscovery peerDiscovery) throws ExecutionException, InterruptedException {
+        Context.init(net, peerDiscovery, true);
+        Context.getPeerTable().start();
+
+        while (true){
+            DownloadStatusResponse status = Context.getPeerTable().getDownloadStatus();
+            if(status.getDownloadStatus().isDiscovering()){
+                printInfo("Waiting for peers response.");
+            } else if(status.getDownloadStatus().isDownloading()){
+                printInfo("Blockchain is downloading. " + status.getCurrentHeight() + " / " + status.getBestHeight());
+            } else{
+                printInfo("Blockchain is ready. Current height " + status.getCurrentHeight());
+                break;
+            }
+
+            Thread.sleep(5000L);
+        }
+
+        setModeType(ModeType.SPV);
+        ProtocolEndpoint endpoint = new ProtocolEndpoint(net.getAdminHost(), (short) net.getAdminPort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP);
+        return endpoint;
     }
 
     private void printIntro() {
@@ -449,6 +508,14 @@ public class CliShell extends Shell {
 
     public AdminService getAdminService() {
         return _adminServiceClient;
+    }
+
+    public ModeType getModeType() {
+        return modeType;
+    }
+
+    public void setModeType(ModeType modeType) {
+        this.modeType = modeType;
     }
 
     public boolean isConnected() {
