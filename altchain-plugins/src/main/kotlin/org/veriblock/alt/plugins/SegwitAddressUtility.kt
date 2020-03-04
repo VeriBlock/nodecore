@@ -5,11 +5,8 @@ import kotlin.experimental.or
 object SegwitAddressUtility {
     private const val BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
-    fun generatePayoutScriptFromSegwitAddress(segwitAddress: String, hrp: String): ByteArray {
-        require(segwitAddress.startsWith(hrp)) {
-            "generatePayoutScriptFromSegwitAddress cannot be called with an address ($segwitAddress)" +
-                " which doesn't start with the provided hrp String!"
-        }
+    fun generatePayoutScriptFromSegwitAddress(segwitAddress: String): ByteArray {
+        val hrp = segwitAddress.substringBefore("1")
         // P2WPKH: 33 + 6 + hrp.length() + 1
         //  P2WSH: 53 + 6 + hrp.length() + 1
         require(segwitAddress.length == 39 + hrp.length + 1 || segwitAddress.length == 59 + hrp.length + 1) {

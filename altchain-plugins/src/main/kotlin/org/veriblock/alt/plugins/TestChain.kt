@@ -16,10 +16,14 @@ import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.SecurityInheritingBlock
+import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.util.TreeMap
 import kotlin.random.Random
 
 private val logger = createLogger {}
@@ -31,28 +35,28 @@ class TestConfig(
     val autoMinePeriod: Int? = null
 ) : ChainConfig()
 
-private data class VbkInfo(
-    val lastBlock: VbkBlockData
-)
+//private data class VbkInfo(
+//    val lastBlock: VbkBlockData
+//)
+
+//private class VbkBlockData(
+//    val hash: String,
+//    val number: Int
+//)
 
 private class BlockHeaderContainer(
     val header: BlockHeader
 )
 
 private class BlockHeader(
-    val hash: String,
-    val header: String
-)
-
-private class VbkBlockData(
-    val hash: String,
-    val number: Int
+    val hash: String
+    //val header: String
 )
 
 private class BtcBlockData(
-    val hash: String,
-    val height: Int,
-    val header: String
+    val hash: String
+    //val height: Int,
+    //val header: String
 )
 
 @PluginSpec(name = "Test", key = "test")
@@ -61,14 +65,18 @@ class TestChain(
 ) : SecurityInheritingChain {
 
     private val operations = HashMap<String, String>()
+    private val blocks = TreeMap<Int, SecurityInheritingBlock>()
+    private val transactions = HashMap<String, SecurityInheritingTransaction>()
+
+    private val minerAddress = "give it to me".toByteArray().toHex()
 
     init {
         config.checkValidity()
     }
 
-    private fun getInfo(): VbkInfo = config.host.httpPost()
-        .body(JsonRpcRequestBody("getinfo", Any()).toJson())
-        .rpcResponse()
+    //private fun getInfo(): VbkInfo = config.host.httpPost()
+    //    .body(JsonRpcRequestBody("getinfo", Any()).toJson())
+    //    .rpcResponse()
 
     private fun getLastBitcoinBlockHash() = config.host.httpPost()
         .body(JsonRpcRequestBody("getlastbitcoinblock", Any()).toJson())
@@ -91,7 +99,40 @@ class TestChain(
     }
 
     override fun getBestBlockHeight(): Int {
-        return (System.currentTimeMillis() / 10000).toInt() // "New block" every 10 seconds
+        val expectedHeight = (System.currentTimeMillis() / 10000).toInt()
+        // "New block" every 10 seconds
+        if (blocks.isEmpty() || blocks.lastKey() < expectedHeight) {
+            createBlock(expectedHeight, minerAddress).height
+        }
+        return expectedHeight
+    }
+
+    override fun getBlock(hash: String): SecurityInheritingBlock? {
+        return blocks.values.find { it.hash == hash }
+    }
+
+    override fun getBlock(height: Int): SecurityInheritingBlock? {
+        if (height > getBestBlockHeight()) {
+            return null
+        }
+        return blocks.getOrPut(height) {
+            createBlock(height)
+        }
+    }
+
+    override fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
+        val block = blocks[height]
+            ?: return false
+
+        return blockHeaderToCheck.toHex().startsWith(block.hash)
+    }
+
+    override fun getTransaction(txId: String): SecurityInheritingTransaction? {
+        return transactions[txId]
+    }
+
+    override fun getPayoutInterval(): Int {
+        return 100
     }
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
@@ -99,16 +140,22 @@ class TestChain(
         val lastVbkHash = getLastBlockHash().asHexBytes()
         val lastBtcHash = getLastBitcoinBlockHash().asHexBytes()
 
-        val header = Random.nextBytes(20)
+        val finalBlockHeight = blockHeight ?: getBestBlockHeight()
+        if (blocks.isEmpty()) {
+            // If there are no blocks, trigger their creation
+            getBestBlockHeight()
+        }
+
+        val header = blocks[finalBlockHeight]!!.hash + Random.nextBytes(64 - 16).toHex()
         val context = Random.nextBytes(100)
-        operations[header.toHex()] = context.toHex()
+        operations[header] = context.toHex()
         val publicationData = PublicationData(
             getChainIdentifier(),
-            header,
-            "give it to me".toByteArray(),
+            header.asHexBytes(),
+            minerAddress.asHexBytes(),
             context
         )
-        return PublicationDataWithContext(blockHeight ?: getBestBlockHeight(), publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
+        return PublicationDataWithContext(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
@@ -120,7 +167,8 @@ class TestChain(
         if (publicationDataContextInfo != expectedContextInfo) {
             error("Expected publication data context differs from the one PoP supplied back")
         }
-        return "Test successful!"
+        val block = createBlock((System.currentTimeMillis() / 10000).toInt(), minerAddress)
+        return block.coinbaseTransactionId
     }
 
     override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
@@ -140,5 +188,38 @@ class TestChain(
             }}""".trimMargin()
         }
         return ""
+    }
+
+    private fun createBlock(height: Int, minerAddress: String = ""): SecurityInheritingBlock {
+        val hash = Random.nextBytes(16).toHex()
+        val coinbase = createTransaction(Random.nextDouble(10.0, 100.0), minerAddress)
+        val block = SecurityInheritingBlock(
+            hash,
+            height,
+            100,
+            0,
+            0,
+            "",
+            0.0,
+            coinbase.txId,
+            listOf()
+        )
+        blocks[block.height] = block
+        return block
+    }
+
+    private fun createTransaction(
+        amount: Double,
+        receiver: String
+    ): SecurityInheritingTransaction {
+        val transaction = SecurityInheritingTransaction(
+            Random.nextBytes(22).toHex(),
+            100,
+            listOf(
+                SecurityInheritingTransactionVout(amount, receiver)
+            )
+        )
+        transactions[transaction.txId] = transaction
+        return transaction
     }
 }

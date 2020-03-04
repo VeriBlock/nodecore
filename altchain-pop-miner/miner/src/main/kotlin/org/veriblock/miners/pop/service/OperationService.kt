@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateData
 import org.veriblock.miners.pop.storage.Pop
 import org.veriblock.miners.pop.storage.StateSerializer
-import java.util.*
+import java.util.ArrayList
 
 private val logger = createLogger {}
 
@@ -38,7 +38,6 @@ class OperationService(
             } catch (e: Exception) {
                 logger.error("Unable to construct saved workflow", e)
             }
-
         }
 
         return workflows

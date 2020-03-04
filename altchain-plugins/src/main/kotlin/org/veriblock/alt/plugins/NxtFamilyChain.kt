@@ -20,6 +20,8 @@ import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.SecurityInheritingBlock
+import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -104,6 +106,22 @@ class NxtFamilyChain(
         )).authenticate().httpResponse<NxtBlockData>().height
     }
 
+    override fun getBlock(hash: String): SecurityInheritingBlock? {
+        TODO("Not yet implemented")
+    }
+
+    override fun getBlock(height: Int): SecurityInheritingBlock? {
+        TODO("Not yet implemented")
+    }
+
+    override fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun getTransaction(txId: String): SecurityInheritingTransaction? {
+        TODO("Not yet implemented")
+    }
+
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
@@ -165,6 +183,10 @@ class NxtFamilyChain(
 
         return submitResponse.transaction?.signature
             ?: error("Unable to retrieve $key's submission response data")
+    }
+
+    override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
+        TODO("Not yet implemented")
     }
 
     private fun Any.toJson() = Gson().toJson(this)

@@ -84,7 +84,7 @@ class NodeCoreGateway(
             val lastBlock = blockingStub
                 .withDeadlineAfter(10, TimeUnit.SECONDS)
                 .getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
-            lastBlock.header.deserialize(params)
+            lastBlock.header.deserialize()
         } catch (e: Exception) {
             logger.error("Unable to get last VBK block", e)
             throw e
@@ -103,7 +103,7 @@ class NodeCoreGateway(
             .withDeadlineAfter(5, TimeUnit.SECONDS)
             .getBlocks(request)
         if (reply.success && reply.blocksCount > 0) {
-            val deserialized = reply.getBlocks(0).deserialize(params)
+            val deserialized = reply.getBlocks(0).deserialize(params.transactionPrefix)
             return deserialized
         }
 
@@ -122,7 +122,7 @@ class NodeCoreGateway(
             .withDeadlineAfter(5, TimeUnit.SECONDS)
             .getBlocks(request)
         if (reply.success && reply.blocksCount > 0) {
-            val deserialized = reply.getBlocks(0).deserialize(params)
+            val deserialized = reply.getBlocks(0).deserialize(params.transactionPrefix)
             return deserialized
         }
 
@@ -162,7 +162,7 @@ class NodeCoreGateway(
             .getVeriBlockPublications(request)
         if (reply.success) {
             return reply.publicationsList.map {
-                it.deserialize(params)
+                it.deserialize(params.transactionPrefix)
             }
         } else {
             for (error in reply.resultsList) {
@@ -186,7 +186,7 @@ class NodeCoreGateway(
         if (reply.success) {
             val publications = ArrayList<VeriBlockPublication>()
             for (pubMsg in reply.publicationsList) {
-                publications.add(pubMsg.deserialize(params))
+                publications.add(pubMsg.deserialize(params.transactionPrefix))
             }
             return publications
         } else {
@@ -254,8 +254,8 @@ class NodeCoreGateway(
         if (!reply.success) {
             error("Unable to retrieve changes since VBK block $hash")
         }
-        val removed = reply.removedList.map { msg -> msg.deserialize(params) }
-        val added = reply.addedList.map { msg -> msg.deserialize(params) }
+        val removed = reply.removedList.map { msg -> msg.deserialize() }
+        val added = reply.addedList.map { msg -> msg.deserialize() }
         return BlockChainDelta(removed, added)
     }
 
@@ -306,7 +306,7 @@ class NodeCoreGateway(
             error("Unable to submit endorsement transaction (Publication Data: ${publicationData.toHex()})")
         }
 
-        return signedTransaction.deserializeStandardTransaction(params)
+        return signedTransaction.deserializeStandardTransaction(params.transactionPrefix)
     }
 
     private fun generateSignedRegularTransaction(

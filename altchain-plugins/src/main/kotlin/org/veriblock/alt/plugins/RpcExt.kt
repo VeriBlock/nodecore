@@ -13,6 +13,7 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.result.Result
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import com.google.gson.JsonNull
 import com.google.gson.reflect.TypeToken
 import org.veriblock.core.utilities.createLogger
 import java.lang.reflect.Type
@@ -24,7 +25,7 @@ data class JsonRpcRequestBody(
 )
 
 data class RpcResponse(
-    val result: JsonElement?,
+    val result: JsonElement,
     val error: RpcError?
 )
 
@@ -32,6 +33,12 @@ data class RpcError(
     val code: Int,
     val message: String
 )
+
+class RpcException(
+    val responseStatusCode: Int,
+    val errorCode: Int,
+    override val message: String
+) : RuntimeException()
 
 private val gson = Gson()
 
@@ -42,16 +49,19 @@ inline fun <reified T : Any> Request.rpcResponse(): T = try {
     val responseBody = response.body().asString("application/json")
     rpcLogger.debug { "Request Body: ${this.body.asString("application/json")}" }
     rpcLogger.debug { "Response Body: ${responseBody.trim()}" }
-    if (result is Result.Failure) {
+    if (result is Result.Failure && response.statusCode != 500) {
+        if (response.statusCode == -1) {
+            throw HttpException(-1, "Unable to connect to RPC API: ${result.error.message}")
+        }
         throw HttpException(response.statusCode, "Call to RPC API failed! Cause: ${result.error.message}; Response body: $responseBody", result.error)
     }
     val type: Type = object : TypeToken<T>() {}.type
     val rpcResponse: RpcResponse = responseBody.fromJson(object : TypeToken<RpcResponse>() {}.type)
     when {
-        rpcResponse.result != null ->
+        rpcResponse.result !is JsonNull ->
             rpcResponse.result.fromJson<T>(type)
         rpcResponse.error != null ->
-            throw HttpException(response.statusCode, rpcResponse.error.message)
+            throw RpcException(response.statusCode, rpcResponse.error.code, rpcResponse.error.message)
         else ->
             throw IllegalStateException()
     }

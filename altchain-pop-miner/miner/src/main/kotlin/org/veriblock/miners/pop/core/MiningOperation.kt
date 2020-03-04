@@ -15,7 +15,6 @@ import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
-import org.veriblock.miners.pop.TX_DEPTH_COMPLETE
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
@@ -42,6 +41,14 @@ class MiningOperation(
         private set
 
     val timestamp = System.currentTimeMillis()
+
+    init {
+        this.changeHistory = ArrayList(changeHistory)
+    }
+
+    fun begin() {
+        status = OperationStatus.RUNNING
+    }
 
     fun getChangeHistory(): List<StateChangeEvent> {
         return Collections.unmodifiableList(changeHistory)
@@ -116,18 +123,28 @@ class MiningOperation(
     fun setProofOfProofId(proofOfProofId: String) {
         val currentState = state
         if (currentState !is OperationState.VeriBlockPublications) {
-            fail("Trying to set VeriBlock proof of proof id without having the publication data")
+            fail("Trying to set VeriBlock Proof of Proof id without having the publication data")
             return
         }
         setState(OperationState.SubmittedPopData(currentState, proofOfProofId))
     }
 
-    init {
-        this.changeHistory = ArrayList(changeHistory)
+    fun setAltEndorsementTransactionConfirmed() {
+        val currentState = state
+        if (currentState !is OperationState.SubmittedPopData) {
+            fail("Trying to confirm Altchain Endorsement Transaction without having its id")
+            return
+        }
+        setState(OperationState.AltEndorsementTransactionConfirmed(currentState))
     }
 
-    fun begin() {
-        status = OperationStatus.RUNNING
+    fun setAltEndorsedBlockHash(hash: String) {
+        val currentState = state
+        if (currentState !is OperationState.AltEndorsementTransactionConfirmed) {
+            fail("Trying to confirm Altchain Endorsement Block without having confirmed the corresponding transaction")
+            return
+        }
+        setState(OperationState.AltEndorsedBlockConfirmed(currentState, hash))
     }
 
     fun fail(reason: String) {
@@ -137,34 +154,24 @@ class MiningOperation(
         setState(OperationState.Failed(state, reason))
     }
 
-    fun complete() {
+    fun complete(payoutBlockHash: String, payoutAmount: Double) {
         val currentState = state
-        if (currentState !is OperationState.SubmittedPopData) {
+        if (currentState !is OperationState.AltEndorsedBlockConfirmed) {
             fail("Trying to mark the process as complete without having submitted the PoP data")
             return
         }
         logger.info { "Operation $id has completed!" }
         status = OperationStatus.COMPLETED
         detachTransactionListeners(state.transaction)
-        setState(OperationState.Completed(currentState))
-    }
-
-    private fun onReorganized() {
-        fail("Reorganized") // FIXME
-        setState(OperationState.Reorganized(state))
+        setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
     }
 
     private fun attachTransactionListeners(transaction: WalletTransaction) {
         transaction.transactionMeta.stateChangedEvent.register(this) { metaState ->
             if (metaState === TransactionMeta.MetaState.PENDING) {
-                onReorganized()
+                fail("VeriBlock chain has been reorganized!")
             } else if (metaState === TransactionMeta.MetaState.CONFIRMED) {
                 setConfirmed()
-            }
-        }
-        transaction.transactionMeta.depthChangedEvent.register(this) { depth ->
-            if (depth >= TX_DEPTH_COMPLETE && state is OperationState.SubmittedPopData) {
-                complete()
             }
         }
     }

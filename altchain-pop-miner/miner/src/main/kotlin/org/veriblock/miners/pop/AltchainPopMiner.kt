@@ -230,6 +230,7 @@ class AltchainPopMiner(
 
     private fun submitSuspendedOperations() {
         if (operations.isEmpty()) {
+            operationsSubmitted = true
             return
         }
 

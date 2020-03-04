@@ -25,7 +25,7 @@ import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPoPTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.util.*
+import java.util.ArrayList
 
 object StateSerializer {
     fun serialize(operation: MiningOperation): Pop.WorkflowState {
@@ -74,6 +74,15 @@ object StateSerializer {
 
         if (state is OperationState.SubmittedPopData) {
             builder.proofOfProofId = state.proofOfProofId
+        }
+
+        if (state is OperationState.AltEndorsedBlockConfirmed) {
+            builder.altEndorsementBlockHash = state.altEndorsementBlockHash
+        }
+
+        if (state is OperationState.Completed) {
+            builder.payoutBlockHash = state.payoutBlockHash
+            builder.payoutAmount = state.payoutAmount
         }
 
         val changeHistory = operation.getChangeHistory().toList()
@@ -136,6 +145,15 @@ object StateSerializer {
                 setProofOfProofId(serialized.proofOfProofId)
             }
 
+            if (serialized.altEndorsementBlockHash != null && serialized.altEndorsementBlockHash.isNotEmpty()) {
+                setAltEndorsementTransactionConfirmed()
+                setAltEndorsedBlockHash(serialized.altEndorsementBlockHash)
+            }
+
+            if (serialized.payoutBlockHash != null && serialized.payoutBlockHash.isNotEmpty()) {
+                complete(serialized.payoutBlockHash, serialized.payoutAmount)
+            }
+
             if (status == OperationStatus.FAILED) {
                 fail("Loaded as failed")
             }
@@ -180,7 +198,8 @@ object StateSerializer {
         val context = publication.context
         if (context != null && context.size > 0) {
             for (block in context) {
-                builder.addContext(ByteString.copyFrom(SerializeDeserializeService.serialize(block)))
+                val serializedBlock = SerializeDeserializeService.serializeHeaders(block)
+                builder.addContext(ByteString.copyFrom(serializedBlock))
             }
         }
 
@@ -269,7 +288,8 @@ object StateSerializer {
             context,
             serialized.signature.toByteArray(),
             serialized.publicKey.toByteArray(),
-            networkByte)
+            networkByte
+        )
     }
 
     private fun deserialize(serialized: Pop.VeriBlockPublication): VeriBlockPublication {
@@ -282,7 +302,8 @@ object StateSerializer {
             deserialize(serialized.transaction),
             VeriBlockMerklePath(serialized.merklePath),
             SerializeDeserializeService.parseVeriBlockBlock(serialized.containingBlock.toByteArray()),
-            context)
+            context
+        )
     }
 
     private fun deserialize(serialized: Pop.PublicationData): PublicationData {
@@ -290,6 +311,7 @@ object StateSerializer {
             serialized.identifier,
             serialized.header.toByteArray(),
             serialized.payoutInfo.toByteArray(),
-            serialized.veriblockContext.toByteArray())
+            serialized.veriblockContext.toByteArray()
+        )
     }
 }

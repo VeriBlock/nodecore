@@ -15,7 +15,7 @@ class PublicationSubscription(
     val contextHash: String,
     val btcContextHash: String,
     private val listener: (List<VeriBlockPublication>) -> Unit,
-    private val failureListener: (Exception) -> Unit
+    private val failureListener: (Throwable) -> Unit
 ) {
     var results: List<VeriBlockPublication>? = null
         private set

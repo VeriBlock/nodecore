@@ -11,6 +11,7 @@ package org.veriblock.alt.plugins
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpPost
+import org.bouncycastle.util.Arrays
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
@@ -19,6 +20,9 @@ import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.SecurityInheritingBlock
+import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -44,6 +48,35 @@ private data class BtcPublicationData(
     val first_address: String? = null
 )
 
+private data class BtcBlock(
+    val hash: String,
+    val height: Int,
+    val confirmations: Int,
+    val version: Int,
+    val nonce: Int,
+    val merkleroot: String,
+    val difficulty: Double,
+    val tx: List<String>
+)
+
+private data class BtcTransaction(
+    val txid: String,
+    val confirmations: Int,
+    val vout: List<BtcTransactionVout>
+)
+
+private data class BtcTransactionVout(
+    val value: Double,
+    val scriptPubKey: BtcScriptPubKey
+)
+
+private data class BtcScriptPubKey(
+    val asm: String,
+    val hex: String,
+    val reqSigs: Int,
+    val type: String
+)
+
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
 class BitcoinFamilyChain(
     override val config: BtcConfig,
@@ -62,9 +95,8 @@ class BitcoinFamilyChain(
             config.payoutAddress.isHex() ->
                 config.payoutAddress.asHexBytes()
             else -> {
-                val addressHrp = config.payoutAddress.substringBefore('1')
                 try {
-                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress, addressHrp)
+                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress)
                 } catch (e: Exception) {
                     error("Invalid segwit address: ${e.message}")
                 }
@@ -89,6 +121,113 @@ class BitcoinFamilyChain(
             .authenticate()
             .body(jsonBody)
             .rpcResponse()
+    }
+
+    override fun getBlock(hash: String): SecurityInheritingBlock? {
+        logger.debug { "Retrieving block $hash..." }
+        val jsonBody = JsonRpcRequestBody("getblock", listOf(hash, 1)).toJson()
+        val btcBlock: BtcBlock = try {
+            config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+        } catch (e: RpcException) {
+            if (e.errorCode == -5) {
+                // Block not found
+                return null
+            } else {
+                throw e
+            }
+        }
+        return SecurityInheritingBlock(
+            btcBlock.hash,
+            btcBlock.height,
+            btcBlock.confirmations,
+            btcBlock.version,
+            btcBlock.nonce,
+            btcBlock.merkleroot,
+            btcBlock.difficulty,
+            btcBlock.tx[0],
+            btcBlock.tx.drop(1)
+        )
+    }
+
+    private fun getBlockHash(height: Int): String? {
+        logger.debug { "Retrieving block hash @$height..." }
+        val jsonBody = JsonRpcRequestBody("getblockhash", listOf(height)).toJson()
+        return try {
+            config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+        } catch (e: RpcException) {
+            if (e.errorCode == -8) {
+                // Block height out of range
+                return null
+            } else {
+                throw e
+            }
+        }
+    }
+
+    override fun getBlock(height: Int): SecurityInheritingBlock? {
+        logger.debug { "Retrieving block @$height..." }
+        val blockHash = getBlockHash(height)
+            ?: return null
+        return getBlock(blockHash)
+    }
+
+    override fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
+        logger.debug { "Checking block @$height has header ${blockHeaderToCheck.toHex()}..." }
+        val blockHash = getBlockHash(height)
+            ?: return false
+        // Get raw block
+        val jsonBody = JsonRpcRequestBody("getblock", listOf(blockHash, 0)).toJson()
+        val rawBlock: String = try {
+            config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+        } catch (e: RpcException) {
+            if (e.errorCode == -5) {
+                // Block not found
+                return false
+            } else {
+                throw e
+            }
+        }
+        // Extract header
+        val header: ByteArray = Arrays.copyOf(rawBlock.asHexBytes(), blockHeaderToCheck.size)
+        // Check header
+        return header.contentEquals(blockHeaderToCheck)
+    }
+
+    override fun getTransaction(txId: String): SecurityInheritingTransaction? {
+        logger.debug { "Retrieving transaction $txId..." }
+        val jsonBody = JsonRpcRequestBody("getrawtransaction", listOf(txId, 1)).toJson()
+        val btcTransaction: BtcTransaction = try {
+            config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+        } catch (e: RpcException) {
+            if (e.errorCode == -5) {
+                // Block not found
+                return null
+            } else {
+                throw e
+            }
+        }
+        return SecurityInheritingTransaction(
+            btcTransaction.txid,
+            btcTransaction.confirmations,
+            btcTransaction.vout.map {
+                SecurityInheritingTransactionVout(
+                    it.value,
+                    it.scriptPubKey.hex
+                )
+            }
+        )
     }
 
     override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {

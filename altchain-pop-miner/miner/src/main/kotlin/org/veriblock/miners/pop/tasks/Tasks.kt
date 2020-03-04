@@ -20,6 +20,9 @@ import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.info
+import org.veriblock.miners.pop.securityinheriting.AltchainBlockHeightListener
+import org.veriblock.miners.pop.securityinheriting.AltchainTransactionListener
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.AltPublication
@@ -33,12 +36,13 @@ private val logger = createLogger {}
 class GetPublicationDataTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
-        get() = CreateProofTransactionTask(miner, nodeCoreLiteKit, securityInheritingChain)
+        get() = CreateProofTransactionTask(miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor)
 
     override fun executeImpl(operation: MiningOperation) {
         logger.info(operation) { "Getting the publication data..." }
@@ -64,9 +68,10 @@ class GetPublicationDataTask(
 class CreateProofTransactionTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
         get() = null // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
@@ -96,7 +101,7 @@ class CreateProofTransactionTask(
                 miner.maxFee
             )
         } catch (e: Exception) {
-            failOperation(operation, "Could not create endorsement VBK transaction")
+            failOperation(operation, "Could not create endorsement VBK transaction: ${e.message}")
         }
 
         val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)
@@ -109,12 +114,13 @@ class CreateProofTransactionTask(
 class DetermineBlockOfProofTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
-        get() = ProveTransactionTask(miner, nodeCoreLiteKit, securityInheritingChain)
+        get() = ProveTransactionTask(miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor)
 
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
@@ -138,12 +144,13 @@ class DetermineBlockOfProofTask(
 class ProveTransactionTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
-        get() = RegisterKeystoneListenersTask(miner, nodeCoreLiteKit, securityInheritingChain)
+        get() = RegisterKeystoneListenersTask(miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor)
 
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
@@ -171,9 +178,10 @@ class ProveTransactionTask(
 class RegisterKeystoneListenersTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
         get() = null // We are going to wait for the next Keystone, which will trigger RegisterVeriBlockPublicationPollingTask
@@ -216,9 +224,10 @@ class RegisterKeystoneListenersTask(
 class RegisterVeriBlockPublicationPollingTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
         get() = null // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
@@ -252,15 +261,33 @@ class RegisterVeriBlockPublicationPollingTask(
     }
 }
 
+class DeregisterVeriBlockPublicationPollingTask(
+    miner: Miner,
+    nodeCoreLiteKit: NodeCoreLiteKit,
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
+) : BaseTask(
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
+) {
+    override val next: BaseTask?
+        get() = null
+
+    override fun executeImpl(operation: MiningOperation) {
+        nodeCoreLiteKit.network.removeVeriBlockPublicationSubscription(operation.id)
+        logger.info(operation) { "Successfully removed the publication subscription!" }
+    }
+}
+
 class SubmitProofOfProofTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
-        get() = DeregisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, securityInheritingChain)
+        get() = null
 
     override fun executeImpl(operation: MiningOperation) {
         val state = operation.state
@@ -338,8 +365,12 @@ class SubmitProofOfProofTask(
 
             val chainSymbol = operation.chainId.toUpperCase()
             logger.info(operation) { "VTB submitted to $chainSymbol! $chainSymbol PoP TxId: $siTxId" }
-            logger.info(operation) { "Waiting for VBK depth completion..." }
+
+            nodeCoreLiteKit.network.removeVeriBlockPublicationSubscription(operation.id)
+            logger.info(operation) { "Successfully removed the publication subscription!" }
+
             operation.setProofOfProofId(siTxId)
+            logger.info(operation) { "Waiting for $chainSymbol PoP Transaction to be confirmed..." }
         } catch (e: Exception) {
             logger.error("Error submitting proof of proof", e)
             failTask("Error submitting proof of proof")
@@ -347,18 +378,124 @@ class SubmitProofOfProofTask(
     }
 }
 
-class DeregisterVeriBlockPublicationPollingTask(
+class AltEndorsementTransactionConfirmationTask(
     miner: Miner,
     nodeCoreLiteKit: NodeCoreLiteKit,
-    securityInheritingChain: SecurityInheritingChain
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
 ) : BaseTask(
-    miner, nodeCoreLiteKit, securityInheritingChain
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
 ) {
     override val next: BaseTask?
         get() = null
 
     override fun executeImpl(operation: MiningOperation) {
-        nodeCoreLiteKit.network.removeVeriBlockPublicationSubscription(operation.id)
-        logger.info(operation) { "Successfully removed the publication subscription!" }
+        val state = operation.state
+        if (state !is OperationState.SubmittedPopData) {
+            failTask("AltEndorsementTransactionConfirmationTask called without proof of proof txId!")
+        }
+
+        securityInheritingMonitor.registerTransactionListener(AltchainTransactionListener(
+            txId = state.proofOfProofId,
+            onComplete = { _ ->
+                // Successfully confirmed endorsement
+                val chainSymbol = operation.chainId.toUpperCase()
+                logger.info(operation) { "Successfully confirmed $chainSymbol endorsement transaction!" }
+                operation.setAltEndorsementTransactionConfirmed()
+                logger.info(operation) { "Waiting for $chainSymbol endorsed block to be confirmed..." }
+            },
+            onError = {
+                failOperation(operation, it.message ?: "")
+            }
+        ))
+    }
+}
+
+class AltEndorsedBlockConfirmationTask(
+    miner: Miner,
+    nodeCoreLiteKit: NodeCoreLiteKit,
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
+) : BaseTask(
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
+) {
+    override val next: BaseTask?
+        get() = null
+
+    override fun executeImpl(operation: MiningOperation) {
+        val state = operation.state
+        if (state !is OperationState.AltEndorsementTransactionConfirmed) {
+            failTask("AltEndorsedBlockConfirmationTask called without having confirmed the transaction!")
+        }
+
+        val endorsedBlockHeight = state.publicationDataWithContext.endorsedBlockHeight
+        securityInheritingMonitor.registerBlockHeightListener(AltchainBlockHeightListener(
+            blockHeight = endorsedBlockHeight,
+            onComplete = { endorsedBlock ->
+                val endorsedBlockHeader = state.publicationDataWithContext.publicationData.header
+                val belongsToMainChain = securityInheritingChain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
+                if (!belongsToMainChain) {
+                    failOperation(
+                        operation,
+                        "Endorsed block header ${endorsedBlockHeader.toHex()} @ $endorsedBlockHeight is not in ${operation.chainId.toUpperCase()}'s main chain"
+                    )
+                }
+
+                // Successfully confirmed endorsing block
+                val chainSymbol = operation.chainId.toUpperCase()
+                logger.info(operation) { "Successfully confirmed $chainSymbol endorsed block ${endorsedBlock.hash}!" }
+                operation.setAltEndorsedBlockHash(endorsedBlock.hash)
+                logger.info(operation) { "Waiting for $chainSymbol payout..." }
+            },
+            onError = {
+                failOperation(operation, it.message ?: "")
+            }
+        ))
+    }
+}
+
+class PayoutDetectionTask(
+    miner: Miner,
+    nodeCoreLiteKit: NodeCoreLiteKit,
+    securityInheritingChain: SecurityInheritingChain,
+    securityInheritingMonitor: SecurityInheritingMonitor
+) : BaseTask(
+    miner, nodeCoreLiteKit, securityInheritingChain, securityInheritingMonitor
+) {
+    override val next: BaseTask?
+        get() = null
+
+    override fun executeImpl(operation: MiningOperation) {
+        val state = operation.state
+        if (state !is OperationState.SubmittedPopData) {
+            failTask("PayoutDetectionTask called without having confirmed the endorsed block!")
+        }
+
+        val endorsedBlockHeight = state.publicationDataWithContext.endorsedBlockHeight
+        securityInheritingMonitor.registerBlockHeightListener(AltchainBlockHeightListener(
+            blockHeight = endorsedBlockHeight + securityInheritingChain.getPayoutInterval(),
+            onComplete = { payoutBlock ->
+                val coinbaseTransaction = securityInheritingChain.getTransaction(payoutBlock.coinbaseTransactionId)
+                    ?: error("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
+                val rewardVout = coinbaseTransaction.vout.find {
+                    it.addressHash == state.publicationDataWithContext.publicationData.payoutInfo.toHex()
+                }
+                if (rewardVout != null) {
+                    logger.info(operation) {
+                        "${operation.chainId.toUpperCase()} PoP Payout detected! Amount: ${rewardVout.value} ${operation.chainId.toUpperCase()}"
+                    }
+                    operation.complete(payoutBlock.hash, rewardVout.value)
+                } else {
+                    failOperation(
+                        operation,
+                        "Unable to find ${operation.chainId.toUpperCase()} PoP payout transaction in the expected block's coinbase!" +
+                            " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
+                    )
+                }
+            },
+            onError = {
+                failOperation(operation, it.message ?: "")
+            }
+        ))
     }
 }

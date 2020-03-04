@@ -14,7 +14,6 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.BlockMetaPackage
 import org.veriblock.lite.core.FullBlock
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.Coin
@@ -31,21 +30,21 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
 
-fun VeriBlockMessages.BlockHeader.deserialize(params: NetworkParameters): VeriBlockBlock =
+fun VeriBlockMessages.BlockHeader.deserialize(): VeriBlockBlock =
     SerializeDeserializeService.parseVeriBlockBlock(header.toByteArray())
 
-private fun VeriBlockMessages.TransactionUnion.deserializeNormalTransaction(params: NetworkParameters): VeriBlockTransaction {
+private fun VeriBlockMessages.TransactionUnion.deserializeNormalTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     return when (transactionCase) {
-        VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED -> signed.deserializeStandardTransaction(params)
-        VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED_MULTISIG -> signedMultisig.deserializeMultisigTransaction(params)
+        VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED -> signed.deserializeStandardTransaction(transactionPrefix)
+        VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED_MULTISIG -> signedMultisig.deserializeMultisigTransaction(transactionPrefix)
         else -> error("Can't deserialize a transaction with a transaction case: $transactionCase.") // Should be impossible
     }
 }
 
-fun VeriBlockMessages.TransactionUnion.deserializePoPTransaction(params: NetworkParameters): VeriBlockPoPTransaction =
-    signed.deserializePoPTransaction(params)
+fun VeriBlockMessages.TransactionUnion.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPoPTransaction =
+    signed.deserializePoPTransaction(transactionPrefix)
 
-fun VeriBlockMessages.Block.deserialize(params: NetworkParameters): FullBlock {
+fun VeriBlockMessages.Block.deserialize(transactionPrefix: Byte?): FullBlock {
     return FullBlock(
         number,
         version.toShort(),
@@ -56,13 +55,13 @@ fun VeriBlockMessages.Block.deserialize(params: NetworkParameters): FullBlock {
         timestamp,
         encodedDifficulty,
         winningNonce,
-        regularTransactionsList.map { tx -> tx.deserializeNormalTransaction(params) },
-        popTransactionsList.map { tx -> tx.deserializePoPTransaction(params) },
+        regularTransactionsList.map { tx -> tx.deserializeNormalTransaction(transactionPrefix) },
+        popTransactionsList.map { tx -> tx.deserializePoPTransaction(transactionPrefix) },
         BlockMetaPackage(Sha256Hash.wrap(blockContentMetapackage.hash.toByteArray()))
     )
 }
 
-fun VeriBlockMessages.SignedTransaction.deserializePoPTransaction(params: NetworkParameters): VeriBlockPoPTransaction {
+fun VeriBlockMessages.SignedTransaction.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPoPTransaction {
     val txMessage = transaction
     return VeriBlockPoPTransaction(
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
@@ -75,11 +74,11 @@ fun VeriBlockMessages.SignedTransaction.deserializePoPTransaction(params: Networ
         },
         signature.toByteArray(),
         publicKey.toByteArray(),
-        params.transactionPrefix
+        transactionPrefix
     )
 }
 
-fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(params: NetworkParameters): VeriBlockTransaction {
+fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     val txMessage = transaction
     return VeriBlockTransaction(
         txMessage.type.number.toByte(),
@@ -92,11 +91,11 @@ fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(params: N
         SerializeDeserializeService.parsePublicationData(txMessage.data.toByteArray()),
         signature.toByteArray(),
         publicKey.toByteArray(),
-        params.transactionPrefix
+        transactionPrefix
     )
 }
 
-fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(params: NetworkParameters): VeriBlockTransaction {
+fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     val txMessage = transaction
     return VeriBlockTransaction(
         txMessage.type.number.toByte(),
@@ -109,11 +108,11 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(p
         SerializeDeserializeService.parsePublicationData(txMessage.data.toByteArray()),
         ByteArray(0),
         ByteArray(0),
-        params.transactionPrefix
+        transactionPrefix
     )
 }
 
-fun VeriBlockMessages.VeriBlockPublication.deserialize(params: NetworkParameters): VeriBlockPublication {
+fun VeriBlockMessages.VeriBlockPublication.deserialize(transactionPrefix: Byte?): VeriBlockPublication {
     val context: List<VeriBlockBlock> =
         contextToEndorsedList.map {
             SerializeDeserializeService.parseVeriBlockBlock(it.toByteArray())
@@ -124,7 +123,7 @@ fun VeriBlockMessages.VeriBlockPublication.deserialize(params: NetworkParameters
         }
 
     return VeriBlockPublication(
-        popTransaction.deserializePoPTransaction(params),
+        popTransaction.deserializePoPTransaction(transactionPrefix),
         VeriBlockMerklePath(compactMerklePath),
         SerializeDeserializeService.parseVeriBlockBlock(containingBlock.toByteArray()),
         context

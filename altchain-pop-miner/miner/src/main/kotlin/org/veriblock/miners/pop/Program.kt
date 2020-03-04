@@ -49,7 +49,7 @@ private fun run(): Int {
         miner.initialize()
         pluginFactory.loadPlugins()
         miner.start()
-        securityInheritingService.start()
+        securityInheritingService.start(miner)
         apiServer.start()
         shell.run()
     } catch (e: Exception) {

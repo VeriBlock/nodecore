@@ -91,15 +91,36 @@ sealed class OperationState {
         previous: VeriBlockPublications,
         val proofOfProofId: String
     ) : VeriBlockPublications(previous, previous.veriBlockPublications) {
-        override fun toString() = "Publications submitted, waiting for depth completion"
+        override fun toString() = "Publications submitted, waiting Alt Endorsement Transaction to be confirmed"
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Proof of Proof Id: $proofOfProofId"
     }
 
-    class Completed(
+    open class AltEndorsementTransactionConfirmed(
         previous: SubmittedPopData
     ) : SubmittedPopData(previous, previous.proofOfProofId) {
+        override fun toString() = "Alt Endorsement Transaction confirmed, waiting for Endorsing Block to be confirmed"
+    }
+
+    open class AltEndorsedBlockConfirmed(
+        previous: AltEndorsementTransactionConfirmed,
+        val altEndorsementBlockHash: String
+    ) : AltEndorsementTransactionConfirmed(previous) {
+        override fun toString() = "Alt Endorsement Block confirmed, waiting for payout block"
+        override fun getDetailedInfo() = super.getDetailedInfo() +
+            "Alt Endorsement Block Hash: $altEndorsementBlockHash"
+    }
+
+    class Completed(
+        previous: AltEndorsedBlockConfirmed,
+        val payoutBlockHash: String,
+        val payoutAmount: Double
+    ) : AltEndorsedBlockConfirmed(previous, previous.altEndorsementBlockHash) {
         override fun toString() = "Completed"
+        override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
+            "Payout Block Hash: $payoutBlockHash",
+            "Payout Amount: $payoutAmount"
+        )
     }
 
     open class Failed(
@@ -108,11 +129,5 @@ sealed class OperationState {
     ) : OperationState() {
         override fun toString() = "Failed: $reason"
         override fun getDetailedInfo() = previous.getDetailedInfo()
-    }
-
-    class Reorganized(
-        previous: OperationState
-    ) : Failed(previous, "SP Chain has reorganized") {
-        override fun toString() = "SP Chain has reorganized"
     }
 }

@@ -11,12 +11,15 @@ package org.veriblock.miners.pop.tasks
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.error
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
@@ -24,7 +27,8 @@ private val logger = createLogger {}
 
 class WorkflowAuthority(
     private val pluginFactory: PluginService,
-    private val nodeCoreLiteKit: NodeCoreLiteKit
+    private val nodeCoreLiteKit: NodeCoreLiteKit,
+    private val securityInheritingService: SecurityInheritingService
 ) : KoinComponent {
 
     val miner: Miner by inject()
@@ -36,8 +40,14 @@ class WorkflowAuthority(
             return
         }
 
+        val monitor = securityInheritingService.getMonitor(operation.chainId)
+        if (monitor == null) {
+            logger.warn { "Unable to find monitor service ${operation.chainId} for operation $operation" }
+            return
+        }
+
         operation.stateChangedEvent.register(this) {
-            onWorkflowStateChanged(it, operation, chain)
+            onWorkflowStateChanged(it, operation, chain, monitor)
         }
 
         // Begin running
@@ -45,7 +55,7 @@ class WorkflowAuthority(
 
         Threading.TASK_POOL.submit {
             // Initial task
-            executeTask(GetPublicationDataTask(miner, nodeCoreLiteKit, chain), operation)
+            executeTask(GetPublicationDataTask(miner, nodeCoreLiteKit, chain, monitor), operation)
         }
     }
 
@@ -56,9 +66,15 @@ class WorkflowAuthority(
             return
         }
 
+        val monitor = securityInheritingService.getMonitor(operation.chainId)
+        if (monitor == null) {
+            logger.warn { "Unable to find monitor service ${operation.chainId} for operation $operation" }
+            return
+        }
+
         val changeHistory = operation.getChangeHistory()
         if (changeHistory.isNotEmpty()) {
-            onWorkflowStateChanged(operation.state, operation, chain)
+            onWorkflowStateChanged(operation.state, operation, chain, monitor)
         }
     }
 
@@ -77,21 +93,35 @@ class WorkflowAuthority(
         }
     }
 
-    private fun onWorkflowStateChanged(state: OperationState, operation: MiningOperation, chain: SecurityInheritingChain) {
+    private fun onWorkflowStateChanged(
+        state: OperationState,
+        operation: MiningOperation,
+        chain: SecurityInheritingChain,
+        monitor: SecurityInheritingMonitor
+    ) {
         // We have to check by java class because each next state inherits from the previous, so for example all states
         // after Confirmed will evaluate `is OperationState.Confirmed` to true, and what we are looking at is the exact state
         when (state.javaClass) {
             OperationState.Confirmed::class.java -> Threading.TASK_POOL.submit {
-                executeTask(DetermineBlockOfProofTask(miner, nodeCoreLiteKit, chain), operation)
+                executeTask(DetermineBlockOfProofTask(miner, nodeCoreLiteKit, chain, monitor), operation)
             }
             OperationState.KeystoneOfProof::class.java -> Threading.TASK_POOL.submit {
-                executeTask(RegisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain), operation)
+                executeTask(RegisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain, monitor), operation)
             }
             OperationState.VeriBlockPublications::class.java -> Threading.TASK_POOL.submit {
-                executeTask(SubmitProofOfProofTask(miner, nodeCoreLiteKit, chain), operation)
+                executeTask(SubmitProofOfProofTask(miner, nodeCoreLiteKit, chain, monitor), operation)
             }
-            OperationState.Reorganized::class.java -> Threading.TASK_POOL.submit {
-                executeTask(DeregisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain), operation)
+            OperationState.SubmittedPopData::class.java -> Threading.TASK_POOL.submit {
+                executeTask(AltEndorsementTransactionConfirmationTask(miner, nodeCoreLiteKit, chain, monitor), operation)
+            }
+            OperationState.AltEndorsementTransactionConfirmed::class.java -> Threading.TASK_POOL.submit {
+                executeTask(AltEndorsedBlockConfirmationTask(miner, nodeCoreLiteKit, chain, monitor), operation)
+            }
+            OperationState.AltEndorsedBlockConfirmed::class.java -> Threading.TASK_POOL.submit {
+                executeTask(PayoutDetectionTask(miner, nodeCoreLiteKit, chain, monitor), operation)
+            }
+            OperationState.Failed::class.java -> Threading.TASK_POOL.submit {
+                executeTask(DeregisterVeriBlockPublicationPollingTask(miner, nodeCoreLiteKit, chain, monitor), operation)
             }
         }
     }

@@ -14,6 +14,7 @@ import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.error
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
 private val logger = createLogger {}
@@ -21,7 +22,8 @@ private val logger = createLogger {}
 abstract class BaseTask protected constructor(
     protected val miner: Miner,
     protected val nodeCoreLiteKit: NodeCoreLiteKit,
-    protected val securityInheritingChain: SecurityInheritingChain
+    protected val securityInheritingChain: SecurityInheritingChain,
+    protected val securityInheritingMonitor: SecurityInheritingMonitor
 ) {
     abstract val next: BaseTask?
 
