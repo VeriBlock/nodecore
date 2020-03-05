@@ -13,10 +13,10 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
+import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.BlockEndorsement
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext

@@ -8,7 +8,7 @@
 
 package org.veriblock.sdk.alt
 
-import org.veriblock.sdk.BlockEndorsement
+import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication

@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.sdk
+package org.veriblock.core.contracts
 
 data class BlockEndorsement(
     val height: Int,

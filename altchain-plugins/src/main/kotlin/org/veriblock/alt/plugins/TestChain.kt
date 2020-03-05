@@ -9,10 +9,10 @@
 package org.veriblock.alt.plugins
 
 import com.github.kittinunf.fuel.httpPost
+import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.BlockEndorsement
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
