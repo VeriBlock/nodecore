@@ -68,84 +68,57 @@ class MiningOperation(
     }
 
     fun setTransaction(transaction: WalletTransaction) {
-        val currentState = state
-        if (currentState !is OperationState.PublicationData) {
-            fail("Trying to set transaction without having the publication data")
-            return
-        }
+        val currentState = state as? OperationState.PublicationData
+            ?: error("Trying to set transaction without having the publication data")
         attachTransactionListeners(transaction)
         setState(OperationState.EndorsementTransaction(currentState, transaction))
     }
 
     fun setConfirmed() {
-        val currentState = state
-        if (currentState !is OperationState.EndorsementTransaction) {
-            fail("Trying to set as transaction confirmed without such transaction")
-            return
-        }
+        val currentState = state as? OperationState.EndorsementTransaction
+            ?: error("Trying to set as transaction confirmed without such transaction")
         setState(OperationState.Confirmed(currentState))
     }
 
     fun setBlockOfProof(blockOfProof: VeriBlockBlock) {
-        val currentState = state
-        if (currentState !is OperationState.Confirmed) {
-            fail("Trying to set block of proof without having confirmed the transaction")
-            return
-        }
+        val currentState = state as? OperationState.Confirmed
+            ?: error("Trying to set block of proof without having confirmed the transaction")
         setState(OperationState.BlockOfProof(currentState, blockOfProof))
     }
 
     fun setMerklePath(merklePath: VeriBlockMerklePath) {
-        val currentState = state
-        if (currentState !is OperationState.BlockOfProof) {
-            fail("Trying to set merkle path without the block of proof")
-            return
-        }
+        val currentState = state as? OperationState.BlockOfProof
+            ?: error("Trying to set merkle path without the block of proof")
         setState(OperationState.TransactionProved(currentState, merklePath))
     }
 
     fun setKeystoneOfProof(block: VeriBlockBlock) {
-        val currentState = state
-        if (currentState !is OperationState.TransactionProved) {
-            fail("Trying to set keystone of proof without having proved the transaction")
-            return
-        }
+        val currentState = state as? OperationState.TransactionProved
+            ?: error("Trying to set keystone of proof without having proved the transaction")
         setState(OperationState.KeystoneOfProof(currentState, block))
     }
 
     fun setVeriBlockPublications(veriBlockPublications: List<VeriBlockPublication>) {
-        val currentState = state
-        if (currentState !is OperationState.KeystoneOfProof) {
-            fail("Trying to set VeriBlock publications without the keystone of proof")
-            return
-        }
+        val currentState = state as? OperationState.KeystoneOfProof
+            ?: error("Trying to set VeriBlock publications without the keystone of proof")
         setState(OperationState.VeriBlockPublications(currentState, veriBlockPublications))
     }
 
     fun setProofOfProofId(proofOfProofId: String) {
-        val currentState = state
-        if (currentState !is OperationState.VeriBlockPublications) {
-            fail("Trying to set VeriBlock Proof of Proof id without having the publication data")
-            return
-        }
+        val currentState = state as? OperationState.VeriBlockPublications
+            ?: error("Trying to set VeriBlock Proof of Proof id without having the publication data")
         setState(OperationState.SubmittedPopData(currentState, proofOfProofId))
     }
 
     fun setAltEndorsementTransactionConfirmed() {
-        val currentState = state
-        if (currentState !is OperationState.SubmittedPopData) {
-            fail("Trying to confirm Altchain Endorsement Transaction without having its id")
-            return
-        }
+        val currentState = state as? OperationState.SubmittedPopData
+            ?: error("Trying to confirm Altchain Endorsement Transaction without having its id")
         setState(OperationState.AltEndorsementTransactionConfirmed(currentState))
     }
 
     fun setAltEndorsedBlockHash(hash: String) {
-        val currentState = state
-        if (currentState !is OperationState.AltEndorsementTransactionConfirmed) {
-            fail("Trying to confirm Altchain Endorsement Block without having confirmed the corresponding transaction")
-            return
-        }
+        val currentState = state as? OperationState.AltEndorsementTransactionConfirmed
+            ?: error("Trying to confirm Altchain Endorsement Block without having confirmed the corresponding transaction")
         setState(OperationState.AltEndorsedBlockConfirmed(currentState, hash))
     }
 

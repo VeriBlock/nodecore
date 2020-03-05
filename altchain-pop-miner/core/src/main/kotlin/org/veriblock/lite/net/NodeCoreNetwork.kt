@@ -167,6 +167,7 @@ class NodeCoreNetwork(
         }
     }
 
+    // FIXME This implementation not good enough. Use channels.
     suspend fun getVeriBlockPublications(
         operationId: String,
         keystoneHash: String,
@@ -197,15 +198,18 @@ class NodeCoreNetwork(
         }
         logger.info { "Waiting for this operation's veriblock publication..." }
 
-        while (publications == null) {
-            error?.let {
-                removeVeriBlockPublicationSubscription(operationId)
-                throw it
+        try {
+            while (publications == null) {
+                error?.let {
+                    removeVeriBlockPublicationSubscription(operationId)
+                    throw it
+                }
+                delay(1000)
             }
-            delay(1000)
+        } finally {
+            removeVeriBlockPublicationSubscription(operationId)
         }
 
-        removeVeriBlockPublicationSubscription(operationId)
         return publications!!
     }
 
