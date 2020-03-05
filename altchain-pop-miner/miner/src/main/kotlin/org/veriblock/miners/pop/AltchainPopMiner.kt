@@ -209,7 +209,7 @@ class AltchainPopMiner(
                 addMessage(
                     "V412",
                     "Miner is not ready",
-                    "The alt chain is not synchronized",
+                    "The alt chain ${chain.name}(${chain.id}) is not synchronized",
                     true
                 )
             }
