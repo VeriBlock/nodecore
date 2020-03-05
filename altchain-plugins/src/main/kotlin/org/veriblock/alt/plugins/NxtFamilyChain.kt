@@ -35,6 +35,7 @@ class NxtConfig(
     val password: String? = null,
     val payoutAddress: String? = null,
     override val keystonePeriod: Int = 10,
+    override val neededConfirmations: Int = 10,
     override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
     override val autoMineRounds: List<Int> = emptyList()
 ) : ChainConfig()

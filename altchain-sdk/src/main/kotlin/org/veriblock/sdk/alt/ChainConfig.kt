@@ -3,6 +3,7 @@ package org.veriblock.sdk.alt
 abstract class ChainConfig {
     abstract val host: String
     abstract val keystonePeriod: Int
+    abstract val neededConfirmations: Int
     abstract val blockRoundIndices: IntArray
     open val autoMineRounds: List<Int> = emptyList()
 

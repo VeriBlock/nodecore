@@ -31,6 +31,7 @@ private val logger = createLogger {}
 class TestConfig(
     override val host: String = "http://localhost:10600/api",
     override val keystonePeriod: Int = 1,
+    override val neededConfirmations: Int = 10,
     override val blockRoundIndices: IntArray = intArrayOf(1),
     val autoMinePeriod: Int? = null
 ) : ChainConfig()

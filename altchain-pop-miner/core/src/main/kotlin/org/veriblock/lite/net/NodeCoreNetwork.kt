@@ -10,6 +10,7 @@ package org.veriblock.lite.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import kotlinx.coroutines.delay
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Balance
@@ -22,6 +23,7 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -161,8 +163,54 @@ class NodeCoreNetwork(
             }
         } catch (e: Exception) {
             logger.error { "Error when polling NodeCore" }
-            logger.debug(e) { "Stack Trace:"  }
+            logger.debug(e) { "Stack Trace:" }
         }
+    }
+
+    // FIXME This implementation not good enough. Use channels.
+    suspend fun getVeriBlockPublications(
+        operationId: String,
+        keystoneHash: String,
+        contextHash: String,
+        btcContextHash: String
+    ): List<VeriBlockPublication> {
+        var publications: List<VeriBlockPublication>? = null
+        var error: Throwable? = null
+        val subscription = PublicationSubscription(
+            keystoneHash,
+            contextHash,
+            btcContextHash,
+            {
+                publications = it
+            },
+            {
+                error = it
+            }
+        )
+
+        addVeriBlockPublicationSubscription(operationId, subscription)
+
+        logger.info {
+            """Successfully added publication subscription!
+                |   - Keystone Hash: ${subscription.keystoneHash}
+                |   - VBK Context Hash: ${subscription.contextHash}
+                |   - BTC Context Hash: ${subscription.btcContextHash}""".trimMargin()
+        }
+        logger.info { "Waiting for this operation's veriblock publication..." }
+
+        try {
+            while (publications == null) {
+                error?.let {
+                    removeVeriBlockPublicationSubscription(operationId)
+                    throw it
+                }
+                delay(1000)
+            }
+        } finally {
+            removeVeriBlockPublicationSubscription(operationId)
+        }
+
+        return publications!!
     }
 
     private fun pollForVeriBlockPublications() {

@@ -8,6 +8,8 @@
 
 package org.veriblock.lite.core
 
+import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.store.StoredVeriBlockBlock
@@ -31,12 +33,13 @@ class BlockChain(
     private val veriBlockStore: VeriBlockBlockStore
 ) {
     val newBestBlockEvent = AsyncEvent<FullBlock>(Threading.LISTENER_THREAD)
+    val newBestBlockChannel = BroadcastChannel<FullBlock>(CONFLATED)
+
     val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>(Threading.LISTENER_THREAD)
 
     fun getChainHead(): VeriBlockBlock? = veriBlockStore.getChainHead()?.block
 
-    fun get(hash: VBlakeHash): VeriBlockBlock?
-        = veriBlockStore.get(hash)?.block
+    fun get(hash: VBlakeHash): VeriBlockBlock? = veriBlockStore.get(hash)?.block
 
     fun add(block: VeriBlockBlock) {
         // Lightweight verification of the header
@@ -91,6 +94,7 @@ class BlockChain(
 
     private fun informListenersNewBestBlock(block: FullBlock) {
         newBestBlockEvent.trigger(block)
+        newBestBlockChannel.offer(block)
     }
 
     private fun informListenersBlockChainReorganized(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {
