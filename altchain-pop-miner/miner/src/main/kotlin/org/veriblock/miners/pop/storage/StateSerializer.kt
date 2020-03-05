@@ -192,7 +192,7 @@ object StateSerializer {
         }
 
         if (publication.containingBlock != null) {
-            builder.containingBlock = ByteString.copyFrom(SerializeDeserializeService.serialize(publication.containingBlock))
+            builder.containingBlock = ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(publication.containingBlock))
         }
 
         val context = publication.context

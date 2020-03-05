@@ -174,7 +174,7 @@ class NodeCoreNetwork(
         btcContextHash: String
     ): List<VeriBlockPublication> {
         var publications: List<VeriBlockPublication>? = null
-        var error: Exception? = null
+        var error: Throwable? = null
         val subscription = PublicationSubscription(
             keystoneHash,
             contextHash,
