@@ -218,11 +218,11 @@ object StateSerializer {
         }
 
         if (tx.publishedBlock != null) {
-            builder.publishedBlock = ByteString.copyFrom(SerializeDeserializeService.serialize(tx.publishedBlock))
+            builder.publishedBlock = ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(tx.publishedBlock))
         }
 
         if (tx.bitcoinTransaction != null) {
-            builder.bitcoinTx = ByteString.copyFrom(SerializeDeserializeService.serialize(tx.bitcoinTransaction))
+            builder.bitcoinTx = ByteString.copyFrom(tx.bitcoinTransaction.rawBytes)
         }
 
         if (tx.merklePath != null) {
@@ -230,7 +230,7 @@ object StateSerializer {
         }
 
         if (tx.blockOfProof != null) {
-            builder.blockOfProof = ByteString.copyFrom(SerializeDeserializeService.serialize(tx.blockOfProof))
+            builder.blockOfProof = ByteString.copyFrom(SerializeDeserializeService.getHeaderBytesBitcoinBlock(tx.blockOfProof))
         }
 
         val blockOfProofContext = tx.blockOfProofContext

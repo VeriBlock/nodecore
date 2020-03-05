@@ -116,7 +116,7 @@ class TestChain(
             return null
         }
         return blocks.getOrPut(height) {
-            createBlock(height)
+            createBlock(height, minerAddress)
         }
     }
 
