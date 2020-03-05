@@ -376,7 +376,8 @@ private suspend inline fun MiningOperation.runTask(
                 delay(secondsToWait * 1000L)
                 logger.info(this) { "Performing attempt #$attempts..." }
             } else {
-                error("Maximum reattempt amount exceeded for task '$taskName'")
+                logger.warn(this) { "Maximum reattempt amount exceeded for task '$taskName'" }
+                throw e
             }
         }
     } while (!success)

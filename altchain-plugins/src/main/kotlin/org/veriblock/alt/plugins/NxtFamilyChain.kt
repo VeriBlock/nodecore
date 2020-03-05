@@ -16,6 +16,7 @@ import com.google.gson.Gson
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
+import org.veriblock.sdk.BlockEndorsement
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
@@ -172,7 +173,8 @@ class NxtFamilyChain(
         ).toJson()
         val submitResponse: NxtSubmitResponse = "${config.host}/nxt".httpPost(listOf(
             "requestType" to "submitPop"
-        )).authenticate().header("content-type", "application/json").body(jsonBody).httpResponse()
+        )
+        ).authenticate().header("content-type", "application/json").body(jsonBody).httpResponse()
 
         if (submitResponse.error != null) {
             error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
@@ -182,9 +184,9 @@ class NxtFamilyChain(
             ?: error("Unable to retrieve $key's submission response data")
     }
 
-    override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
-        TODO("Not yet implemented")
-    }
+    override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String = TODO()
+
+    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
 
     private fun Any.toJson() = Gson().toJson(this)
 }

@@ -12,6 +12,7 @@ import com.github.kittinunf.fuel.httpPost
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
+import org.veriblock.sdk.BlockEndorsement
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
@@ -190,6 +191,8 @@ class TestChain(
         }
         return ""
     }
+
+    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
 
     private fun createBlock(height: Int, minerAddress: String = ""): SecurityInheritingBlock {
         val hash = Random.nextBytes(16).toHex()

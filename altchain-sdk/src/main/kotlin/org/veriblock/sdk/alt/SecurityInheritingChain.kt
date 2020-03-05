@@ -8,6 +8,7 @@
 
 package org.veriblock.sdk.alt
 
+import org.veriblock.sdk.BlockEndorsement
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
@@ -86,6 +87,11 @@ interface SecurityInheritingChain {
      * Updates the chain's context with a set of VTBs ([veriBlockPublications])
      */
     fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String
+
+    /**
+     * Extracts a block endorsement from the given data (coming from a VBK PoP Transaction)
+     */
+    fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement
 
     /**
      * Whether or not this chain is configured to perform any automining
