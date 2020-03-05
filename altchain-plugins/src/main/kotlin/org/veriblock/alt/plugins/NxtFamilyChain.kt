@@ -186,4 +186,8 @@ class NxtFamilyChain(
     }
 
     private fun Any.toJson() = Gson().toJson(this)
+
+    override fun isConnected(): Boolean = true
+
+    override fun isSynchronized(): Boolean = true
 }

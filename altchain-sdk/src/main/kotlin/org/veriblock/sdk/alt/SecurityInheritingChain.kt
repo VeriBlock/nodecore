@@ -96,4 +96,14 @@ interface SecurityInheritingChain {
      * Whether or not this chain is configured to automine the block at the given [blockHeight]
      */
     fun shouldAutoMine(blockHeight: Int): Boolean = config.shouldAutoMine(blockHeight)
+
+    /**
+     * @return true if the chain is connected
+     */
+    fun isConnected(): Boolean
+
+    /**
+     * @return true if the chain is synchronized
+     */
+    fun isSynchronized(): Boolean
 }

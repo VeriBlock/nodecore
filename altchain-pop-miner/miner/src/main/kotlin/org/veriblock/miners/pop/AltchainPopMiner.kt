@@ -15,6 +15,7 @@ import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.OperationService
+import org.veriblock.miners.pop.service.PluginService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.models.Coin
@@ -33,7 +34,8 @@ class AltchainPopMiner(
     private val context: Context,
     private val workflowAuthority: WorkflowAuthority,
     private val nodeCoreLiteKit: NodeCoreLiteKit,
-    private val operationService: OperationService
+    private val operationService: OperationService,
+    private val pluginFactory: PluginService
 ) : Miner {
     private val operations = ConcurrentHashMap<String, MiningOperation>()
     private var isShuttingDown: Boolean = false
@@ -159,6 +161,15 @@ class AltchainPopMiner(
     }
 
     override fun mine(chainId: String, block: Int?): Result {
+        val chain = pluginFactory[chainId] ?: return failure {
+            addMessage(
+                "V500",
+                "Miner is not ready",
+                "Unable to load the $chainId plugin",
+                true
+            )
+        }
+
         if (!isReady()) {
             return failure {
                 addMessage(
@@ -169,14 +180,38 @@ class AltchainPopMiner(
                 )
             }
         }
+
         if (!nodeCoreLiteKit.network.isHealthy()) {
             return failure {
                 addMessage("V010", "Unable to mine", "Cannot connect to NodeCore", true)
             }
         }
+
         if (isShuttingDown) {
             return failure {
                 addMessage("V412", "Miner is not ready", "The miner is currently shutting down", true)
+            }
+        }
+
+        if (!chain.isConnected()) {
+            return failure {
+                addMessage(
+                    "V412",
+                    "Miner is not ready",
+                    "The alt chain ${chain.name}(${chain.id}) is not connected",
+                    true
+                )
+            }
+        }
+
+        if (!chain.isSynchronized()) {
+            return failure {
+                addMessage(
+                    "V412",
+                    "Miner is not ready",
+                    "The alt chain is not synchronized",
+                    true
+                )
             }
         }
 

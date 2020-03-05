@@ -77,6 +77,13 @@ private data class BtcScriptPubKey(
     val type: String
 )
 
+private data class BtcSyncStatus(
+    val networkHeight: Int,
+    val localBlockchainHeight: Int,
+    val blockDifference: Int,
+    val isSynchronized: Boolean
+)
+
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
 class BitcoinFamilyChain(
     override val config: BtcConfig,
@@ -289,5 +296,27 @@ class BitcoinFamilyChain(
             .authenticate()
             .body(jsonBody)
             .rpcResponse()
+    }
+
+    override fun isConnected(): Boolean {
+        val jsonBody = JsonRpcRequestBody("ping").toJson()
+        return try{
+            val response: String = config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override fun isSynchronized(): Boolean {
+        val jsonBody = JsonRpcRequestBody("getstateinfo").toJson()
+        val response: BtcSyncStatus = config.host.httpPost()
+            .authenticate()
+            .body(jsonBody)
+            .rpcResponse()
+        return response.isSynchronized
     }
 }
