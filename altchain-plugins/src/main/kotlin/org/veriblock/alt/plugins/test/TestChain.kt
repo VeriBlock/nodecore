@@ -166,11 +166,11 @@ class TestChain(
     }
 
     override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = BlockEndorsement(
-        Utility.byteArrayToInt(blockHeader.copyOfRange(0, 4)),
-        BlockEndorsementHash(blockHeader.copyOfRange(4, 20).toHex()),
-        BlockEndorsementHash(context.copyOfRange(0, 16).toHex()),
-        BlockEndorsementHash(context.copyOfRange(16, 32).toHex()),
-        BlockEndorsementHash(context.copyOfRange(31, 48).toHex())
+        Utility.byteArrayToInt(blockHeader),
+        BlockEndorsementHash(blockHeader.toHex()),
+        BlockEndorsementHash(context.copyOfRange(0, 4).toHex()),
+        BlockEndorsementHash(context.copyOfRange(4, 8).toHex()),
+        BlockEndorsementHash(context.copyOfRange(8, 12).toHex())
     )
 
     private fun createBlock(height: Int): TestBlock {
