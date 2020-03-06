@@ -34,9 +34,9 @@ enum class OperationStateType(
     FAILED(-1, "Failed");
 
     infix fun hasType(type: OperationStateType): Boolean = if (type != FAILED) {
-        this == FAILED
-    } else {
         id >= type.id
+    } else {
+        this == FAILED
     }
 }
 
