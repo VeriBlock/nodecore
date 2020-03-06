@@ -1,4 +1,4 @@
-package org.veriblock.alt.plugins
+package org.veriblock.alt.plugins.bitcoin
 
 import kotlin.experimental.or
 

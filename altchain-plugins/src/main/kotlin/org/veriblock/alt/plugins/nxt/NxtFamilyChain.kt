@@ -6,18 +6,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins
+package org.veriblock.alt.plugins.nxt
 
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
+import org.veriblock.alt.plugins.util.httpResponse
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -29,55 +29,6 @@ import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
-
-class NxtConfig(
-    override val host: String = "http://localhost:8332",
-    val username: String? = null,
-    val password: String? = null,
-    val payoutAddress: String? = null,
-    override val keystonePeriod: Int = 10,
-    override val neededConfirmations: Int = 10,
-    override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
-    override val autoMineRounds: List<Int> = emptyList()
-) : ChainConfig()
-
-private data class NxtBlockData(
-    val height: Int
-)
-
-private abstract class NxtResponse(
-    val errorCode: Int? = null,
-    val error: String? = null,
-    val errorDescription: String? = null
-)
-
-private class NxtPublicationData(
-    val blockHeader: String? = null,
-    val contextInfoContainer: String? = null,
-    val last_known_veriblock_blocks: List<String>? = null,
-    val last_known_bitcoin_blocks: List<String>? = null,
-    errorCode: Int? = null,
-    error: String? = null,
-    errorDescription: String? = null
-) : NxtResponse(errorCode, error, errorDescription)
-
-private data class NxtSubmitData(
-    val atv: String,
-    val vtb: List<String>
-)
-
-private class NxtSubmitResponse(
-    val requestProcessingTime: Int? = null,
-    val transaction: NxtTransactionData? = null,
-    errorCode: Int? = null,
-    error: String? = null,
-    errorDescription: String? = null
-) : NxtResponse(errorCode, error, errorDescription)
-
-private data class NxtTransactionData(
-    val senderPublicKey: String,
-    val signature: String
-)
 
 @FamilyPluginSpec(name = "NxtFamily", key = "nxt")
 class NxtFamilyChain(
@@ -190,3 +141,41 @@ class NxtFamilyChain(
 
     private fun Any.toJson() = Gson().toJson(this)
 }
+
+private data class NxtBlockData(
+    val height: Int
+)
+
+private abstract class NxtResponse(
+    val errorCode: Int? = null,
+    val error: String? = null,
+    val errorDescription: String? = null
+)
+
+private class NxtPublicationData(
+    val blockHeader: String? = null,
+    val contextInfoContainer: String? = null,
+    val last_known_veriblock_blocks: List<String>? = null,
+    val last_known_bitcoin_blocks: List<String>? = null,
+    errorCode: Int? = null,
+    error: String? = null,
+    errorDescription: String? = null
+) : NxtResponse(errorCode, error, errorDescription)
+
+private data class NxtSubmitData(
+    val atv: String,
+    val vtb: List<String>
+)
+
+private class NxtSubmitResponse(
+    val requestProcessingTime: Int? = null,
+    val transaction: NxtTransactionData? = null,
+    errorCode: Int? = null,
+    error: String? = null,
+    errorDescription: String? = null
+) : NxtResponse(errorCode, error, errorDescription)
+
+private data class NxtTransactionData(
+    val senderPublicKey: String,
+    val signature: String
+)

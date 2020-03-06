@@ -6,18 +6,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins
+package org.veriblock.alt.plugins.bitcoin
 
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpPost
 import org.bouncycastle.util.Arrays
+import org.veriblock.alt.plugins.util.JsonRpcRequestBody
+import org.veriblock.alt.plugins.util.RpcException
+import org.veriblock.alt.plugins.util.rpcResponse
+import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -31,57 +34,9 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
 
-class BtcConfig(
-    override val host: String = "http://localhost:8332",
-    val username: String? = null,
-    val password: String? = null,
-    val payoutAddress: String? = null,
-    override val keystonePeriod: Int = 5,
-    override val neededConfirmations: Int = 10,
-    override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 1, 2),
-    override val autoMineRounds: List<Int> = emptyList()
-) : ChainConfig()
-
-private data class BtcPublicationData(
-    val block_header: String,
-    val raw_contextinfocontainer: String,
-    val last_known_veriblock_blocks: List<String>,
-    val last_known_bitcoin_blocks: List<String>,
-    val first_address: String? = null
-)
-
-private data class BtcBlock(
-    val hash: String,
-    val height: Int,
-    val confirmations: Int,
-    val version: Short,
-    val nonce: Int,
-    val merkleroot: String,
-    val difficulty: Double,
-    val tx: List<String>
-)
-
-private data class BtcTransaction(
-    val txid: String,
-    val confirmations: Int,
-    val vout: List<BtcTransactionVout>
-)
-
-private data class BtcTransactionVout(
-    val value: Double,
-    val scriptPubKey: BtcScriptPubKey
-)
-
-private data class BtcScriptPubKey(
-    val asm: String,
-    val hex: String,
-    val reqSigs: Int,
-    val type: String
-)
-
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
 class BitcoinFamilyChain(
-    override val config: BtcConfig,
+    override val config: BitcoinConfig,
     override val id: Long,
     override val key: String,
     override val name: String
@@ -295,3 +250,40 @@ class BitcoinFamilyChain(
 
     override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
 }
+
+private data class BtcPublicationData(
+    val block_header: String,
+    val raw_contextinfocontainer: String,
+    val last_known_veriblock_blocks: List<String>,
+    val last_known_bitcoin_blocks: List<String>,
+    val first_address: String? = null
+)
+
+private data class BtcBlock(
+    val hash: String,
+    val height: Int,
+    val confirmations: Int,
+    val version: Short,
+    val nonce: Int,
+    val merkleroot: String,
+    val difficulty: Double,
+    val tx: List<String>
+)
+
+private data class BtcTransaction(
+    val txid: String,
+    val confirmations: Int,
+    val vout: List<BtcTransactionVout>
+)
+
+private data class BtcTransactionVout(
+    val value: Double,
+    val scriptPubKey: BtcScriptPubKey
+)
+
+private data class BtcScriptPubKey(
+    val asm: String,
+    val hex: String,
+    val reqSigs: Int,
+    val type: String
+)

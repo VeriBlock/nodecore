@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins
+package org.veriblock.alt.plugins.bitcoin
 
 import io.kotlintest.shouldBe
 import org.junit.Test

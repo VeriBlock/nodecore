@@ -11,7 +11,6 @@ package org.veriblock.miners.pop.tasks
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
-import org.veriblock.alt.plugins.HttpException
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
@@ -57,10 +56,6 @@ suspend fun runTasks(
             try {
                 val publicationData = securityInheritingChain.getPublicationData(operation.blockHeight)
                 operation.setPublicationDataWithContext(publicationData)
-            } catch (e: HttpException) {
-                error(
-                    "Http error (${e.responseStatusCode}) while trying to get PoP publication data from ${securityInheritingChain.name}: ${e.message}"
-                )
             } catch (e: Exception) {
                 error("Error while trying to get PoP publication data from ${securityInheritingChain.name}: ${e.message}")
             }

@@ -10,12 +10,23 @@ package org.veriblock.alt.plugins
 
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.veriblock.alt.plugins.bitcoin.BitcoinFamilyChain
+import org.veriblock.alt.plugins.nxt.NxtConfig
+import org.veriblock.alt.plugins.nxt.NxtFamilyChain
+import org.veriblock.alt.plugins.test.TestChain
+import org.veriblock.alt.plugins.test.TestConfig
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
 typealias NormalPluginsContainer = Map<String, SecurityInheritingChain>
 typealias FamilyPluginsContainer = Map<String, (Long, String, String) -> SecurityInheritingChain>
 
+/**
+ * Module that will be used by APM and ABFI.
+ * Very useful for type safety and boot speed, but it adds a dependency to the Koin library
+ *
+ * TODO: Migrate to a more lightweight alternative, such as reflection or mutating static plugin containers
+ */
 val pluginsModule = module {
 
     // Normal plugins

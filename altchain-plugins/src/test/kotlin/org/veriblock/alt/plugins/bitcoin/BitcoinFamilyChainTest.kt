@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins
+package org.veriblock.alt.plugins.bitcoin
 
 import org.junit.Ignore
 import org.junit.Test
@@ -18,7 +18,7 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 @Ignore
 class BitcoinFamilyChainTest {
 
-    private val chain = BitcoinFamilyChain(BtcConfig(), 0, "btc", "Bitcoin")
+    private val chain = BitcoinFamilyChain(BitcoinConfig(), 0, "btc", "Bitcoin")
 
     @Test
     fun getBestBlockHeight() {

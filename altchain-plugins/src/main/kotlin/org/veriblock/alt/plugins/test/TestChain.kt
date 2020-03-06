@@ -6,14 +6,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins
+package org.veriblock.alt.plugins.test
 
 import com.github.kittinunf.fuel.httpPost
+import org.veriblock.alt.plugins.util.JsonRpcRequestBody
+import org.veriblock.alt.plugins.util.rpcResponse
+import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -29,38 +31,6 @@ import kotlin.random.Random
 
 private val logger = createLogger {}
 
-class TestConfig(
-    override val host: String = "http://localhost:10600/api",
-    override val keystonePeriod: Int = 1,
-    override val neededConfirmations: Int = 10,
-    override val blockRoundIndices: IntArray = intArrayOf(1),
-    val autoMinePeriod: Int? = null
-) : ChainConfig()
-
-//private data class VbkInfo(
-//    val lastBlock: VbkBlockData
-//)
-
-//private class VbkBlockData(
-//    val hash: String,
-//    val number: Int
-//)
-
-private class BlockHeaderContainer(
-    val header: BlockHeader
-)
-
-private class BlockHeader(
-    val hash: String
-    //val header: String
-)
-
-private class BtcBlockData(
-    val hash: String
-    //val height: Int,
-    //val header: String
-)
-
 @PluginSpec(name = "Test", key = "test")
 class TestChain(
     override val config: TestConfig
@@ -70,7 +40,6 @@ class TestChain(
     private val blocks = TreeMap<Int, SecurityInheritingBlock>()
     private val transactions = HashMap<String, SecurityInheritingTransaction>()
 
-    private val minerAddress = "give it to me".toByteArray().toHex()
 
     init {
         config.checkValidity()
@@ -104,7 +73,7 @@ class TestChain(
         val expectedHeight = (System.currentTimeMillis() / 10000).toInt()
         // "New block" every 10 seconds
         if (blocks.isEmpty() || blocks.lastKey() < expectedHeight) {
-            createBlock(expectedHeight, minerAddress).height
+            createBlock(expectedHeight).height
         }
         return expectedHeight
     }
@@ -118,7 +87,7 @@ class TestChain(
             return null
         }
         return blocks.getOrPut(height) {
-            createBlock(height, minerAddress)
+            createBlock(height)
         }
     }
 
@@ -154,7 +123,7 @@ class TestChain(
         val publicationData = PublicationData(
             id,
             header.asHexBytes(),
-            minerAddress.asHexBytes(),
+            config.payoutAddress.asHexBytes(),
             context
         )
         return PublicationDataWithContext(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
@@ -169,7 +138,7 @@ class TestChain(
         if (publicationDataContextInfo != expectedContextInfo) {
             error("Expected publication data context differs from the one PoP supplied back")
         }
-        val block = createBlock((System.currentTimeMillis() / 10000).toInt(), minerAddress)
+        val block = createBlock((System.currentTimeMillis() / 10000).toInt())
         return block.coinbaseTransactionId
     }
 
@@ -194,9 +163,9 @@ class TestChain(
 
     override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
 
-    private fun createBlock(height: Int, minerAddress: String = ""): SecurityInheritingBlock {
+    private fun createBlock(height: Int): SecurityInheritingBlock {
         val hash = Random.nextBytes(16).toHex()
-        val coinbase = createTransaction(Random.nextDouble(10.0, 100.0), minerAddress)
+        val coinbase = createTransaction(Random.nextDouble(10.0, 100.0), config.payoutAddress)
         val block = SecurityInheritingBlock(
             hash,
             height,
@@ -227,3 +196,27 @@ class TestChain(
         return transaction
     }
 }
+
+//private data class VbkInfo(
+//    val lastBlock: VbkBlockData
+//)
+
+//private class VbkBlockData(
+//    val hash: String,
+//    val number: Int
+//)
+
+private class BlockHeaderContainer(
+    val header: BlockHeader
+)
+
+private class BlockHeader(
+    val hash: String
+    //val header: String
+)
+
+private class BtcBlockData(
+    val hash: String
+    //val height: Int,
+    //val header: String
+)
