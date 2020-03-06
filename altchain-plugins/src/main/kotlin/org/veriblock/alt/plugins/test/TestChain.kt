@@ -98,7 +98,7 @@ class TestChain(
         val block = blocks[height]
             ?: return false
 
-        return blockHeaderToCheck.toHex().startsWith(block.data.hash)
+        return blockHeaderToCheck.toHex().contains(block.data.hash)
     }
 
     override fun getTransaction(txId: String): SecurityInheritingTransaction? {
@@ -121,12 +121,8 @@ class TestChain(
         }
 
         val endorsedBlock = blocks[finalBlockHeight]!!
-        val header = Utility.intToByteArray(endorsedBlock.data.height).toHex() +
-            endorsedBlock.hash + Random.nextBytes(64 - 4 - 16).toHex()
-        val context = endorsedBlock.previousBlock.hash +
-            endorsedBlock.previousKeystone.hash +
-            endorsedBlock.secondPreviousKeystone.hash +
-            Random.nextBytes(100 - 16 * 3).toHex()
+        val header = endorsedBlock.hash
+        val context = endorsedBlock.previousBlock.hash + endorsedBlock.previousKeystone.hash + endorsedBlock.secondPreviousKeystone.hash
         operations[header] = context
         val publicationData = PublicationData(
             id,
@@ -178,8 +174,8 @@ class TestChain(
     )
 
     private fun createBlock(height: Int): TestBlock {
-        val hash = Random.nextBytes(16).toHex()
-        val coinbase = createTransaction(Random.nextDouble(10.0, 100.0), config.payoutAddress)
+        val hash = Utility.intToByteArray(height).toHex()
+        val coinbase = createTransaction(config.payoutAddress)
         val blockData = SecurityInheritingBlock(
             hash,
             height,
@@ -223,14 +219,13 @@ class TestChain(
     }
 
     private fun createTransaction(
-        amount: Double,
         receiver: String
     ): SecurityInheritingTransaction {
         val transaction = SecurityInheritingTransaction(
             Random.nextBytes(22).toHex(),
             100,
             listOf(
-                SecurityInheritingTransactionVout(amount, receiver)
+                SecurityInheritingTransactionVout(20.0, receiver)
             )
         )
         transactions[transaction.txId] = transaction

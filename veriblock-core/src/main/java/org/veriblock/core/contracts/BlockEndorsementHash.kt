@@ -49,7 +49,9 @@ class BlockEndorsementHash(
     }
 
     override fun toString(): String {
-        return "BlockHash(hash='$hash', significantHash='$significantHash')"
+        val extraHash = hash.removeSuffix(significantHash)
+        val extraHashPrefix = if (extraHash.isNotEmpty()) "$extraHash|" else ""
+        return "[$extraHashPrefix$significantHash]"
     }
 
     /**
