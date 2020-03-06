@@ -13,6 +13,8 @@ import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.rpcResponse
 import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.contracts.BlockEndorsement
+import org.veriblock.core.contracts.BlockEndorsementHash
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
@@ -37,7 +39,7 @@ class TestChain(
 ) : SecurityInheritingChain {
 
     private val operations = HashMap<String, String>()
-    private val blocks = TreeMap<Int, SecurityInheritingBlock>()
+    private val blocks = TreeMap<Int, TestBlock>()
     private val transactions = HashMap<String, SecurityInheritingTransaction>()
 
 
@@ -73,13 +75,13 @@ class TestChain(
         val expectedHeight = (System.currentTimeMillis() / 10000).toInt()
         // "New block" every 10 seconds
         if (blocks.isEmpty() || blocks.lastKey() < expectedHeight) {
-            createBlock(expectedHeight).height
+            createBlock(expectedHeight).data.height
         }
         return expectedHeight
     }
 
     override fun getBlock(hash: String): SecurityInheritingBlock? {
-        return blocks.values.find { it.hash == hash }
+        return blocks.values.find { it.data.hash == hash }?.data
     }
 
     override fun getBlock(height: Int): SecurityInheritingBlock? {
@@ -88,14 +90,14 @@ class TestChain(
         }
         return blocks.getOrPut(height) {
             createBlock(height)
-        }
+        }.data
     }
 
     override fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
         val block = blocks[height]
             ?: return false
 
-        return blockHeaderToCheck.toHex().startsWith(block.hash)
+        return blockHeaderToCheck.toHex().startsWith(block.data.hash)
     }
 
     override fun getTransaction(txId: String): SecurityInheritingTransaction? {
@@ -117,14 +119,19 @@ class TestChain(
             getBestBlockHeight()
         }
 
-        val header = blocks[finalBlockHeight]!!.hash + Random.nextBytes(64 - 16).toHex()
-        val context = Random.nextBytes(100)
-        operations[header] = context.toHex()
+        val endorsedBlock = blocks[finalBlockHeight]!!
+        val header = Utility.intToByteArray(endorsedBlock.data.height).toHex() +
+            endorsedBlock.hash + Random.nextBytes(64 - 4 - 16).toHex()
+        val context = endorsedBlock.previousBlock.hash +
+            endorsedBlock.previousKeystone +
+            endorsedBlock.secondPreviousKeystone +
+            Random.nextBytes(100 - 16 * 3).toHex()
+        operations[header] = context
         val publicationData = PublicationData(
             id,
             header.asHexBytes(),
             config.payoutAddress.asHexBytes(),
-            context
+            context.asHexBytes()
         )
         return PublicationDataWithContext(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
@@ -139,7 +146,7 @@ class TestChain(
             error("Expected publication data context differs from the one PoP supplied back")
         }
         val block = createBlock((System.currentTimeMillis() / 10000).toInt())
-        return block.coinbaseTransactionId
+        return block.data.coinbaseTransactionId
     }
 
     override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
@@ -161,12 +168,18 @@ class TestChain(
         return ""
     }
 
-    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
+    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = BlockEndorsement(
+        Utility.byteArrayToInt(blockHeader.copyOfRange(0, 4)),
+        BlockEndorsementHash(blockHeader.copyOfRange(4, 20).toHex()),
+        BlockEndorsementHash(context.copyOfRange(0, 16).toHex()),
+        BlockEndorsementHash(context.copyOfRange(16, 32).toHex()),
+        BlockEndorsementHash(context.copyOfRange(31, 48).toHex())
+    )
 
-    private fun createBlock(height: Int): SecurityInheritingBlock {
+    private fun createBlock(height: Int): TestBlock {
         val hash = Random.nextBytes(16).toHex()
         val coinbase = createTransaction(Random.nextDouble(10.0, 100.0), config.payoutAddress)
-        val block = SecurityInheritingBlock(
+        val blockData = SecurityInheritingBlock(
             hash,
             height,
             100,
@@ -177,7 +190,34 @@ class TestChain(
             coinbase.txId,
             listOf()
         )
-        blocks[block.height] = block
+        val previousBlockHeight = height - 1
+        val previousBlock = if (previousBlockHeight > 0) {
+            blocks[previousBlockHeight] ?: createBlock(previousBlockHeight)
+        } else {
+            null
+        }
+        val keystoneOffset = if (height % config.keystonePeriod <= 1) {
+            config.keystonePeriod
+        } else {
+            0
+        }
+        val previousKeystoneHeight = height -
+            height % config.keystonePeriod -
+            keystoneOffset
+        val previousKeystone = if (previousKeystoneHeight > 0) {
+            blocks[previousKeystoneHeight] ?: createBlock(previousKeystoneHeight)
+        } else {
+            null
+        }
+        val secondPreviousKeystoneHeight = previousKeystoneHeight - config.keystonePeriod
+        val secondPreviousKeystone = if (secondPreviousKeystoneHeight > 0) {
+            blocks[secondPreviousKeystoneHeight] ?: createBlock(secondPreviousKeystoneHeight)
+        } else {
+            null
+        }
+
+        val block = TestBlock(blockData, previousBlock, previousKeystone, secondPreviousKeystone)
+        blocks[height] = block
         return block
     }
 
@@ -196,6 +236,15 @@ class TestChain(
         return transaction
     }
 }
+
+private data class TestBlock(
+    val data: SecurityInheritingBlock,
+    val previousBlock: TestBlock?,
+    val previousKeystone: TestBlock?,
+    val secondPreviousKeystone: TestBlock?
+)
+
+private val TestBlock?.hash get() = if (this != null) data.hash else "00000000000000000000000000000000"
 
 //private data class VbkInfo(
 //    val lastBlock: VbkBlockData
