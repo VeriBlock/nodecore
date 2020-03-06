@@ -137,7 +137,7 @@ class NxtFamilyChain(
 
     override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String = TODO()
 
-    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
+    override fun extractBlockEndorsement(context: ByteArray): BlockEndorsement = TODO()
 
     private fun Any.toJson() = Gson().toJson(this)
 }

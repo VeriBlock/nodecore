@@ -122,7 +122,8 @@ class TestChain(
 
         val endorsedBlock = blocks[finalBlockHeight]!!
         val header = endorsedBlock.hash
-        val context = endorsedBlock.previousBlock.hash + endorsedBlock.previousKeystone.hash + endorsedBlock.secondPreviousKeystone.hash
+        val context = endorsedBlock.hash + endorsedBlock.previousBlock.hash +
+            endorsedBlock.previousKeystone.hash + endorsedBlock.secondPreviousKeystone.hash
         operations[header] = context
         val publicationData = PublicationData(
             id,
@@ -165,13 +166,16 @@ class TestChain(
         return ""
     }
 
-    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = BlockEndorsement(
-        Utility.byteArrayToInt(blockHeader),
-        BlockEndorsementHash(blockHeader.toHex()),
-        BlockEndorsementHash(context.copyOfRange(0, 4).toHex()),
-        BlockEndorsementHash(context.copyOfRange(4, 8).toHex()),
-        BlockEndorsementHash(context.copyOfRange(8, 12).toHex())
-    )
+    override fun extractBlockEndorsement(context: ByteArray): BlockEndorsement {
+        val hash = context.copyOfRange(0, 4)
+        return BlockEndorsement(
+            Utility.byteArrayToInt(hash),
+            BlockEndorsementHash(hash.toHex()),
+            BlockEndorsementHash(context.copyOfRange(4, 8).toHex()),
+            BlockEndorsementHash(context.copyOfRange(8, 12).toHex()),
+            BlockEndorsementHash(context.copyOfRange(12, 16).toHex())
+        )
+    }
 
     private fun createBlock(height: Int): TestBlock {
         val hash = Utility.intToByteArray(height).toHex()

@@ -248,7 +248,7 @@ class BitcoinFamilyChain(
             .rpcResponse()
     }
 
-    override fun extractBlockEndorsement(blockHeader: ByteArray, context: ByteArray): BlockEndorsement = TODO()
+    override fun extractBlockEndorsement(context: ByteArray): BlockEndorsement = TODO()
 }
 
 private data class BtcPublicationData(
