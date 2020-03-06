@@ -10,11 +10,9 @@ package org.veriblock.miners.pop.service
 
 import org.koin.core.KoinComponent
 import org.koin.core.inject
-import org.koin.core.qualifier.named
-import org.veriblock.alt.plugins.FamilyPluginsContainer
-import org.veriblock.alt.plugins.NormalPluginsContainer
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.alt.PluginsContainer
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
 private val logger = createLogger {}
@@ -28,8 +26,7 @@ class PluginConfig(
 class PluginService(
     configuration: Configuration
 ) : KoinComponent {
-    val normalPlugins: NormalPluginsContainer by inject(named("normal-plugins"))
-    val familyPlugins: FamilyPluginsContainer by inject(named("family-plugins"))
+    val plugins: PluginsContainer by inject()
 
     private var loadedPlugins: Map<String, SecurityInheritingChain> = emptyMap()
 
@@ -37,13 +34,13 @@ class PluginService(
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }
-        logger.info { "Loaded normal plugins: ${normalPlugins.keys.joinToString()}" }
-        logger.info { "Loaded family plugins: ${familyPlugins.keys.joinToString()}" }
+        logger.info { "Loaded normal plugins: ${plugins.normalPlugins.keys.joinToString()}" }
+        logger.info { "Loaded family plugins: ${plugins.familyPlugins.keys.joinToString()}" }
 
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
             val family = config.family
             if (family == null) {
-                val plugin = normalPlugins[key]
+                val plugin = plugins.normalPlugins[key]
                     ?: return@mapNotNull null
                 logger.info { "Loaded plugin $key from config" }
                 key to plugin
@@ -52,7 +49,7 @@ class PluginService(
                     logger.warn { "Chain $key is configured to family $family but it does not have an id! Ignoring..." }
                     return@mapNotNull null
                 }
-                val chainSupplier = familyPlugins[family]
+                val chainSupplier = plugins.familyPlugins[family]
                     ?: return@mapNotNull null
 
                 val chain = try {

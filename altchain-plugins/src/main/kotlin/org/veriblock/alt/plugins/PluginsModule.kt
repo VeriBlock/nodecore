@@ -8,7 +8,6 @@
 
 package org.veriblock.alt.plugins
 
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.veriblock.alt.plugins.bitcoin.BitcoinFamilyChain
 import org.veriblock.alt.plugins.nxt.NxtConfig
@@ -16,10 +15,8 @@ import org.veriblock.alt.plugins.nxt.NxtFamilyChain
 import org.veriblock.alt.plugins.test.TestChain
 import org.veriblock.alt.plugins.test.TestConfig
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.PluginsContainer
 
-typealias NormalPluginsContainer = Map<String, SecurityInheritingChain>
-typealias FamilyPluginsContainer = Map<String, (Long, String, String) -> SecurityInheritingChain>
 
 /**
  * Module that will be used by APM and ABFI.
@@ -29,35 +26,32 @@ typealias FamilyPluginsContainer = Map<String, (Long, String, String) -> Securit
  */
 val pluginsModule = module {
 
-    // Normal plugins
-    single<NormalPluginsContainer>(named("normal-plugins")) {
+    single {
         val configuration: Configuration = get()
-        mapOf(
-            "test" to TestChain(configuration.extract("securityInheriting.test") ?: TestConfig())
-        )
-    }
-    // Family plugins
-    single<FamilyPluginsContainer>(named("family-plugins")) {
-        val configuration: Configuration = get()
-        mapOf(
-            "btc" to { id, key, name ->
-                BitcoinFamilyChain(
-                    configuration.extract("securityInheriting.btc")
-                        ?: error("Please configure the securityInheriting.$key section"),
-                    id,
-                    key,
-                    name
-                )
-            },
-            "nxt" to { id, key, name ->
-                NxtFamilyChain(
-                    configuration.extract("securityInheriting.$key")
-                        ?: NxtConfig(),
-                    id,
-                    key,
-                    name
-                )
-            }
+        PluginsContainer(
+            normalPlugins = mapOf(
+                "test" to TestChain(configuration.extract("securityInheriting.test") ?: TestConfig())
+            ),
+            familyPlugins = mapOf(
+                "btc" to { id, key, name ->
+                    BitcoinFamilyChain(
+                        configuration.extract("securityInheriting.btc")
+                            ?: error("Please configure the securityInheriting.$key section"),
+                        id,
+                        key,
+                        name
+                    )
+                },
+                "nxt" to { id, key, name ->
+                    NxtFamilyChain(
+                        configuration.extract("securityInheriting.$key")
+                            ?: NxtConfig(),
+                        id,
+                        key,
+                        name
+                    )
+                }
+            )
         )
     }
 }
