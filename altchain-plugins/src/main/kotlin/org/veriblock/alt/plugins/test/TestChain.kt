@@ -42,6 +42,7 @@ class TestChain(
     private val blocks = TreeMap<Int, TestBlock>()
     private val transactions = HashMap<String, SecurityInheritingTransaction>()
 
+    private val startingHeight = (System.currentTimeMillis() / 10000).toInt()
 
     init {
         config.checkValidity()
@@ -123,8 +124,8 @@ class TestChain(
         val header = Utility.intToByteArray(endorsedBlock.data.height).toHex() +
             endorsedBlock.hash + Random.nextBytes(64 - 4 - 16).toHex()
         val context = endorsedBlock.previousBlock.hash +
-            endorsedBlock.previousKeystone +
-            endorsedBlock.secondPreviousKeystone +
+            endorsedBlock.previousKeystone.hash +
+            endorsedBlock.secondPreviousKeystone.hash +
             Random.nextBytes(100 - 16 * 3).toHex()
         operations[header] = context
         val publicationData = PublicationData(
@@ -191,7 +192,7 @@ class TestChain(
             listOf()
         )
         val previousBlockHeight = height - 1
-        val previousBlock = if (previousBlockHeight > 0) {
+        val previousBlock = if (previousBlockHeight > startingHeight) {
             blocks[previousBlockHeight] ?: createBlock(previousBlockHeight)
         } else {
             null
@@ -204,13 +205,13 @@ class TestChain(
         val previousKeystoneHeight = height -
             height % config.keystonePeriod -
             keystoneOffset
-        val previousKeystone = if (previousKeystoneHeight > 0) {
+        val previousKeystone = if (previousKeystoneHeight > startingHeight) {
             blocks[previousKeystoneHeight] ?: createBlock(previousKeystoneHeight)
         } else {
             null
         }
         val secondPreviousKeystoneHeight = previousKeystoneHeight - config.keystonePeriod
-        val secondPreviousKeystone = if (secondPreviousKeystoneHeight > 0) {
+        val secondPreviousKeystone = if (secondPreviousKeystoneHeight > startingHeight) {
             blocks[secondPreviousKeystoneHeight] ?: createBlock(secondPreviousKeystoneHeight)
         } else {
             null
@@ -237,7 +238,7 @@ class TestChain(
     }
 }
 
-private data class TestBlock(
+private class TestBlock(
     val data: SecurityInheritingBlock,
     val previousBlock: TestBlock?,
     val previousKeystone: TestBlock?,
