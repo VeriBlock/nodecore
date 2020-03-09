@@ -90,6 +90,9 @@ publishing {
             version = prettyVersion()
 
             from components.java
+            artifact (sourcesJar) {
+                classifier = 'sources'
+            }
         }
     }
 }

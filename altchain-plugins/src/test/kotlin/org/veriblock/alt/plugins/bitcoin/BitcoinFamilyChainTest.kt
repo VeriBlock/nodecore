@@ -18,7 +18,14 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 @Ignore
 class BitcoinFamilyChainTest {
 
-    private val chain = BitcoinFamilyChain(BitcoinConfig(), 0, "btc", "Bitcoin")
+    private val chain = BitcoinFamilyChain(
+        BitcoinConfig(
+            host = "http://localhost:18332",
+            username = "FILLME",
+            password = "FILLME",
+            payoutAddress = "FILLME"
+        ), 0, "btc", "Bitcoin"
+    )
 
     @Test
     fun getBestBlockHeight() {
