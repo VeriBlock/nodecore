@@ -16,6 +16,7 @@ import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.rpcResponse
 import org.veriblock.alt.plugins.util.toJson
+import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -29,8 +30,10 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.nio.ByteBuffer
 
 private val logger = createLogger {}
 
@@ -248,7 +251,22 @@ class BitcoinFamilyChain(
             .rpcResponse()
     }
 
-    override fun extractBlockEndorsement(context: ByteArray): BlockEndorsement = TODO()
+    override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
+        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
+        val height = contextBuffer.getInt()
+        val hash = Sha256Hash.of(altchainPopEndorsement.getHeader()).bytes
+        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
+        val previousKeystone = contextBuffer.getBytes(32)
+        val secondPreviousKeystone = contextBuffer.getBytes(32)
+
+        return BlockEndorsement(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
+    }
+}
+
+fun ByteBuffer.getBytes(count: Int): ByteArray {
+    val result = ByteArray(count)
+    get(result)
+    return result
 }
 
 private data class BtcPublicationData(

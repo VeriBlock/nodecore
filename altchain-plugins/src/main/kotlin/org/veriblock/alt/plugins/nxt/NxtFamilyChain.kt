@@ -14,6 +14,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
 import org.veriblock.alt.plugins.util.httpResponse
+import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -137,7 +138,7 @@ class NxtFamilyChain(
 
     override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String = TODO()
 
-    override fun extractBlockEndorsement(context: ByteArray): BlockEndorsement = TODO()
+    override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
 
     private fun Any.toJson() = Gson().toJson(this)
 }

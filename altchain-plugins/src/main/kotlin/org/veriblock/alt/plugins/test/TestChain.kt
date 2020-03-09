@@ -12,6 +12,7 @@ import com.github.kittinunf.fuel.httpPost
 import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.rpcResponse
 import org.veriblock.alt.plugins.util.toJson
+import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.contracts.BlockEndorsementHash
 import org.veriblock.core.utilities.Utility
@@ -166,7 +167,8 @@ class TestChain(
         return ""
     }
 
-    override fun extractBlockEndorsement(context: ByteArray): BlockEndorsement {
+    override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
+        val context = altchainPopEndorsement.getContextInfo()
         val hash = context.copyOfRange(0, 4)
         return BlockEndorsement(
             Utility.byteArrayToInt(hash),

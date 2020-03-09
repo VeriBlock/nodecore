@@ -14,4 +14,32 @@ data class BlockEndorsement(
     val previousHash: BlockEndorsementHash,
     val previousKeystone: BlockEndorsementHash,
     val secondKeystone: BlockEndorsementHash
-)
+) {
+    constructor(
+        height: Int,
+        hash: String,
+        previousHash: String,
+        previousKeystone: String,
+        secondKeystone: String
+    ) : this(
+        height,
+        BlockEndorsementHash(hash),
+        BlockEndorsementHash(previousHash),
+        BlockEndorsementHash(previousKeystone),
+        BlockEndorsementHash(secondKeystone)
+    )
+
+    constructor(
+        height: Int,
+        hash: ByteArray,
+        previousHash: ByteArray,
+        previousKeystone: ByteArray,
+        secondKeystone: ByteArray
+    ) : this(
+        height,
+        BlockEndorsementHash(hash),
+        BlockEndorsementHash(previousHash),
+        BlockEndorsementHash(previousKeystone),
+        BlockEndorsementHash(secondKeystone)
+    )
+}
