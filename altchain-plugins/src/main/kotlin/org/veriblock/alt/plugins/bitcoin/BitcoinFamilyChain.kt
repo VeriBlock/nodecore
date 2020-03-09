@@ -98,7 +98,7 @@ class BitcoinFamilyChain(
         return SecurityInheritingBlock(
             btcBlock.hash,
             btcBlock.height,
-            btcBlock.previousblockhash,
+            btcBlock.previousblockhash ?: "0000000000000000000000000000000000000000000000000000000000000000",
             btcBlock.confirmations,
             btcBlock.version,
             btcBlock.nonce,
@@ -289,7 +289,7 @@ private data class BtcBlock(
     val merkleroot: String,
     val difficulty: Double,
     val tx: List<String>,
-    val previousblockhash: String
+    val previousblockhash: String?
 )
 
 private data class BtcTransaction(
