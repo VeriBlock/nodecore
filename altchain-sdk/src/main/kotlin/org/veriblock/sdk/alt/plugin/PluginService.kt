@@ -9,6 +9,7 @@
 package org.veriblock.sdk.alt.plugin
 
 import org.reflections.Reflections
+import org.reflections.ReflectionsException
 import org.reflections.scanners.SubTypesScanner
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
@@ -25,8 +26,13 @@ class PluginService(
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }
-        val reflections = Reflections("org.veriblock.alt.plugin", SubTypesScanner())
-        val chainPluginImplementations = reflections.getSubTypesOf(SecurityInheritingChain::class.java)
+        val chainPluginImplementations = try {
+            val reflections = Reflections("org.veriblock.alt.plugin", SubTypesScanner())
+            reflections.getSubTypesOf(SecurityInheritingChain::class.java)
+        } catch (e: ReflectionsException) {
+            logger.warn { "No plugin implementations were found in the classpath!" }
+            emptyList()
+        }
         val plugins = chainPluginImplementations.filter {
             it.isAnnotationPresent(PluginSpec::class.java)
         }.associate { siClass ->
