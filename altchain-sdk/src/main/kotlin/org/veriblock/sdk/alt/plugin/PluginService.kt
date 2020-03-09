@@ -26,12 +26,12 @@ class PluginService(
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }
-        val chainPluginImplementations = try {
+        val chainPluginImplementations: Set<Class<out SecurityInheritingChain>> = try {
             val reflections = Reflections("org.veriblock.alt.plugin", SubTypesScanner())
             reflections.getSubTypesOf(SecurityInheritingChain::class.java)
         } catch (e: ReflectionsException) {
             logger.warn { "No plugin implementations were found in the classpath!" }
-            emptyList()
+            emptySet()
         }
         val plugins = chainPluginImplementations.filter {
             it.isAnnotationPresent(PluginSpec::class.java)
