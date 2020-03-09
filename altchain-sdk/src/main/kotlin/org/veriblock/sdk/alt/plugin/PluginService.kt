@@ -11,9 +11,15 @@ package org.veriblock.sdk.alt.plugin
 import org.reflections.Reflections
 import org.reflections.ReflectionsException
 import org.reflections.scanners.SubTypesScanner
+import org.reflections.util.ClasspathHelper
+import org.reflections.util.ConfigurationBuilder
+import org.reflections.util.FilterBuilder
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import java.io.File
+import java.net.MalformedURLException
+import java.net.URL
 
 private val logger = createLogger {}
 
@@ -26,14 +32,7 @@ class PluginService(
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }
-        val chainPluginImplementations: Set<Class<out SecurityInheritingChain>> = try {
-            val reflections = Reflections("org.veriblock.alt.plugin", SubTypesScanner())
-            reflections.getSubTypesOf(SecurityInheritingChain::class.java)
-        } catch (e: ReflectionsException) {
-            logger.warn { "No plugin implementations were found in the classpath!" }
-            emptySet()
-        }
-        val plugins = chainPluginImplementations.filter {
+        val plugins = getAltchainPluginImplementations().filter {
             it.isAnnotationPresent(PluginSpec::class.java)
         }.associate { siClass ->
             val annotation = siClass.getAnnotation(PluginSpec::class.java)
@@ -67,4 +66,34 @@ class PluginService(
     operator fun get(key: String): SecurityInheritingChain? {
         return loadedPlugins[key]
     }
+}
+
+/**
+ * Uses Reflections library to load all the subtypes of SecurityInheritingChain within the
+ * org.veriblock.alt.plugin package.
+ * There's a workaround for JVM 9+, as the original library does not load anything post JVM 8
+ */
+private fun getAltchainPluginImplementations(): Set<Class<out SecurityInheritingChain>> = try {
+    val configBuilder = ConfigurationBuilder().apply {
+        setScanners(SubTypesScanner())
+        setUrls(ClasspathHelper.forClassLoader())
+        if (urls.isEmpty()) {
+            // Workaround for JVM 9+
+            urls.addAll(
+                System.getProperty("java.class.path").split(File.pathSeparator).mapNotNull {
+                    try {
+                        URL("file://$it")
+                    } catch (ex: MalformedURLException) {
+                        null
+                    }
+                }
+            )
+        }
+        filterInputsBy(FilterBuilder().includePackage("org.veriblock.alt.plugin"))
+    }
+    val reflections = Reflections(configBuilder)
+    reflections.getSubTypesOf(SecurityInheritingChain::class.java)
+} catch (e: ReflectionsException) {
+    logger.warn { "No plugin implementations were found in the classpath!" }
+    emptySet()
 }
