@@ -10,13 +10,17 @@ package org.veriblock.alt.plugins.test
 
 import org.junit.Ignore
 import org.junit.Test
+import org.veriblock.sdk.alt.plugin.PluginConfig
 
 /**
  * Integration tests for development purposes
  */
 class TestChainTest {
 
-    private val chain = TestChain(TestConfig())
+    private val chain = TestChain(
+        "test",
+        PluginConfig()
+    )
 
     @Test
     @Ignore

@@ -24,6 +24,7 @@ import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
@@ -36,8 +37,14 @@ private val logger = createLogger {}
 
 @PluginSpec(name = "Test", key = "test")
 class TestChain(
-    override val config: TestConfig
+    override val key: String,
+    configuration: PluginConfig
 ) : SecurityInheritingChain {
+
+    override val config = TestConfig(configuration)
+
+    override val id get() = -1L
+    override val name get() = "Test"
 
     private val operations = HashMap<String, String>()
     private val blocks = TreeMap<Int, TestBlock>()
@@ -60,10 +67,6 @@ class TestChain(
     private fun getLastBlockHash() = config.host.httpPost()
         .body(JsonRpcRequestBody("getlastblock", Any()).toJson())
         .rpcResponse<BlockHeaderContainer>().header.hash
-
-    override val id get() = -1L
-    override val key get() = "test"
-    override val name get() = "Test"
 
     override fun shouldAutoMine(): Boolean {
         return config.autoMinePeriod != null

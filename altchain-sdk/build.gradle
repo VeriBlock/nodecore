@@ -31,6 +31,9 @@ dependencies {
     // Logging
     implementation 'io.github.microutils:kotlin-logging:1.6.26'
 
+    // Reflection
+    implementation "org.reflections:reflections:0.9.12"
+
     testImplementation 'junit:junit:4.12'
 }
 

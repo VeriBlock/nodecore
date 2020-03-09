@@ -11,6 +11,7 @@ package org.veriblock.alt.plugins.bitcoin
 import org.junit.Ignore
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.sdk.alt.plugin.PluginConfig
 
 /**
  * Integration tests for development purposes
@@ -19,12 +20,15 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 class BitcoinFamilyChainTest {
 
     private val chain = BitcoinFamilyChain(
-        BitcoinConfig(
+        "btc",
+        PluginConfig(
+            id = 0,
+            name = "Bitcoin",
             host = "http://localhost:18332",
             username = "FILLME",
             password = "FILLME",
             payoutAddress = "FILLME"
-        ), 0, "btc", "Bitcoin"
+        )
     )
 
     @Test

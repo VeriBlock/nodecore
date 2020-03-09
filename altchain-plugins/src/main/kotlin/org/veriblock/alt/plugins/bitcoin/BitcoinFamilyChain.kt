@@ -28,7 +28,8 @@ import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
-import org.veriblock.sdk.alt.plugin.FamilyPluginSpec
+import org.veriblock.sdk.alt.plugin.PluginConfig
+import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -37,13 +38,21 @@ import java.nio.ByteBuffer
 
 private val logger = createLogger {}
 
-@FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
+@PluginSpec(name = "BitcoinFamily", key = "btc")
 class BitcoinFamilyChain(
-    override val config: BitcoinConfig,
-    override val id: Long,
     override val key: String,
-    override val name: String
+    configuration: PluginConfig
 ) : SecurityInheritingChain {
+
+    override val config = BitcoinConfig(configuration)
+
+    override val id: Long = configuration.id
+        ?: error("Failed to load altchain plugin $key: please configure the chain 'id'!")
+
+    override val name: String = configuration.name
+        ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
+
+
     private val payoutAddressScript: ByteArray
 
     init {

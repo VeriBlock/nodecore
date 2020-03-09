@@ -23,7 +23,8 @@ import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
-import org.veriblock.sdk.alt.plugin.FamilyPluginSpec
+import org.veriblock.sdk.alt.plugin.PluginConfig
+import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -31,13 +32,19 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
 
-@FamilyPluginSpec(name = "NxtFamily", key = "nxt")
+@PluginSpec(name = "NxtFamily", key = "nxt")
 class NxtFamilyChain(
-    override val config: NxtConfig,
-    override val id: Long,
     override val key: String,
-    override val name: String
+    configuration: PluginConfig
 ) : SecurityInheritingChain {
+
+    override val config = NxtConfig(configuration)
+
+    override val id: Long = configuration.id
+        ?: error("Failed to load altchain plugin $key: please configure the chain 'id'!")
+
+    override val name: String = configuration.name
+        ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
     init {
         config.checkValidity()

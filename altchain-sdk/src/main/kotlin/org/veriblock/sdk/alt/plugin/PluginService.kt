@@ -8,21 +8,16 @@
 
 package org.veriblock.sdk.alt.plugin
 
+import org.reflections.Reflections
+import org.reflections.scanners.SubTypesScanner
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
 private val logger = createLogger {}
 
-class PluginConfig(
-    val id: Long? = null,
-    val family: String? = null,
-    val name: String? = null
-)
-
 class PluginService(
-    configuration: Configuration,
-    private val plugins: PluginsContainer
+    private val configuration: Configuration
 ) {
     private var loadedPlugins: Map<String, SecurityInheritingChain> = emptyMap()
 
@@ -30,33 +25,31 @@ class PluginService(
 
     fun loadPlugins() {
         logger.info { "Loading plugins..." }
-        logger.info { "Loaded normal plugins: ${plugins.normalPlugins.keys.joinToString()}" }
-        logger.info { "Loaded family plugins: ${plugins.familyPlugins.keys.joinToString()}" }
+        val reflections = Reflections("org.veriblock.alt.plugin", SubTypesScanner())
+        val chainPluginImplementations = reflections.getSubTypesOf(SecurityInheritingChain::class.java)
+        val plugins = chainPluginImplementations.filter {
+            it.isAnnotationPresent(PluginSpec::class.java)
+        }.associate { siClass ->
+            val annotation = siClass.getAnnotation(PluginSpec::class.java)
+            val constructor = try {
+                siClass.getDeclaredConstructor(String::class.java, PluginConfig::class.java)
+            } catch (e: NoSuchMethodException) {
+                error("The plugin config ${annotation.name} doesn't have a proper constructor. ${e.message}")
+            }
+            val supplier: (String, PluginConfig) -> SecurityInheritingChain = { key, config ->
+                constructor.newInstance(key, config)
+            }
+            annotation.key to supplier
+        }
+        logger.info { "Loaded plugin implementations: ${plugins.keys.joinToString()}" }
 
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
-            val family = config.family
-            if (family == null) {
-                val plugin = plugins.normalPlugins[key]
-                    ?: return@mapNotNull null
-                logger.info { "Loaded plugin $key from config" }
-                key to plugin
-            } else {
-                val chainId = config.id ?: run {
-                    logger.warn { "Chain $key is configured to family $family but it does not have an id! Ignoring..." }
-                    return@mapNotNull null
-                }
-                val chainSupplier = plugins.familyPlugins[family]
-                    ?: return@mapNotNull null
-
-                val chain = try {
-                    chainSupplier(chainId, key, config.name ?: "")
-                } catch (e: Exception) {
-                    logger.warn { "Error loading chain $key: ${e.message}" }
-                    return@mapNotNull null
-                }
-                logger.info { "Loaded plugin $key ($family family) from config" }
-                key to chain
-            }
+            val pluginKey = config.pluginKey ?: key
+            val pluginSupplier = plugins[pluginKey]
+                ?: return@mapNotNull null
+            val plugin = pluginSupplier(key, config)
+            logger.info { "Loaded plugin $key ($pluginKey impl) from config" }
+            key to plugin
         }.associate {
             it.first to it.second
         }

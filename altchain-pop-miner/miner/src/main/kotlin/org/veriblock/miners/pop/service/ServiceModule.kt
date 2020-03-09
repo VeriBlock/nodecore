@@ -13,5 +13,5 @@ import org.veriblock.sdk.alt.plugin.PluginService
 
 val serviceModule = module {
     single { OperationService(get()) }
-    single { PluginService(get(), get()) }
+    single { PluginService(get()) }
 }

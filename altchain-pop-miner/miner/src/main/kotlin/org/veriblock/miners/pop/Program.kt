@@ -9,7 +9,6 @@
 package org.veriblock.miners.pop
 
 import org.koin.core.context.startKoin
-import org.veriblock.alt.plugins.pluginsModule
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
@@ -34,7 +33,7 @@ private fun run(): Int {
     logger.info { "Starting dependency injection" }
     val koin = startKoin {
         modules(listOf(
-            serviceModule, taskModule, minerModule, repositoryModule, pluginsModule, webApiModule
+            serviceModule, taskModule, minerModule, repositoryModule, webApiModule
         ))
     }.koin
 
