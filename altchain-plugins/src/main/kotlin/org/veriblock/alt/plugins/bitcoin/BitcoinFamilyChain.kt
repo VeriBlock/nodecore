@@ -18,6 +18,7 @@ import org.veriblock.alt.plugins.util.rpcResponse
 import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
+import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
@@ -30,7 +31,6 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.alt.plugin.FamilyPluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
@@ -252,10 +252,12 @@ class BitcoinFamilyChain(
             .rpcResponse()
     }
 
+    private val crypto = Crypto()
+
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
-        val hash = Sha256Hash.of(altchainPopEndorsement.getHeader()).bytes
+        val hash = crypto.SHA256D(altchainPopEndorsement.getHeader())
         val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
         val previousKeystone = contextBuffer.getBytes(32)
         val secondPreviousKeystone = contextBuffer.getBytes(32)
