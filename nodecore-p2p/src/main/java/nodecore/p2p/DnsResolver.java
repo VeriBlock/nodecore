@@ -7,7 +7,6 @@
 
 package nodecore.p2p;
 
-import com.google.inject.Inject;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.TextParseException;
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DnsResolver {
-    @Inject
     public DnsResolver() {}
 
     public List<String> query(String dns) throws TextParseException {

@@ -9,8 +9,6 @@ package nodecore.p2p;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.net.InetAddresses;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import nodecore.p2p.events.ExternalPeerAdded;
 import nodecore.p2p.events.ExternalPeerRemoved;
 import nodecore.p2p.events.PeerBannedEvent;
@@ -36,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Singleton
 public class PeerTable {
 
     private static final Logger logger = LoggerFactory.getLogger(PeerTable.class);
@@ -65,7 +62,6 @@ public class PeerTable {
     private Runnable onConnected = null;
     private Runnable onDisconnected = null;
 
-    @Inject
     public PeerTable(P2PConfiguration configuration, PeerWarden warden, PeerTableBootstrapper bootstrapper) {
         this.networkParameters = configuration.getNetworkParameters();
         this.bootstrapPeerLimit = configuration.getBootstrapLimit();

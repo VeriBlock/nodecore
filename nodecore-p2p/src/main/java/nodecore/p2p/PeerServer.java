@@ -7,13 +7,16 @@
 
 package nodecore.p2p;
 
-import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.*;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,7 +31,6 @@ public class PeerServer {
     private final InetSocketAddress bindAddress;
     private final PeerTable peerTable;
 
-    @Inject
     public PeerServer(P2PConfiguration configuration, PeerTable peerTable) {
         this.bindAddress = new InetSocketAddress(configuration.getPeerBindAddress(), configuration.getPeerBindPort());
         this.peerTable = peerTable;

@@ -18,11 +18,7 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.2.3'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
     compile group: 'com.google.guava', name: 'guava', version: '24.1-jre'
-    compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
     compile group: 'dnsjava', name: 'dnsjava', version: '2.1.8'
-
-    // Configuration
-    implementation "io.github.config4k:config4k:0.4.0"
 }
 
 jar {

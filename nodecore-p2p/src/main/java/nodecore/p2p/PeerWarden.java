@@ -8,7 +8,6 @@
 package nodecore.p2p;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 import nodecore.p2p.events.PeerBannedEvent;
 import nodecore.p2p.events.PeerMisbehaviorEvent;
 import org.slf4j.Logger;
@@ -23,7 +22,6 @@ public class PeerWarden {
     private final ConcurrentHashMap<String, Integer> peerScores;
     private final int peerBanThreshold;
 
-    @Inject
     public PeerWarden(P2PConfiguration configuration) {
         this.peerScores = new ConcurrentHashMap<>();
         this.peerBanThreshold = configuration.getPeerBanThreshold();

@@ -7,7 +7,6 @@
 
 package nodecore.p2p;
 
-import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.params.NetworkParameters;
@@ -32,7 +31,6 @@ public class PeerTableBootstrapper {
 
     private int lastInitTimestamp;
 
-    @Inject
     public PeerTableBootstrapper(P2PConfiguration configuration, DnsResolver dnsResolver) {
         this.networkParameters = configuration.getNetworkParameters();
         this.dnsResolver = dnsResolver;
