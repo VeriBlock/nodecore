@@ -38,6 +38,11 @@ jar {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 artifactory {
     contextUrl = artifactory_url
     publish {
@@ -66,6 +71,9 @@ publishing {
             artifactId 'nodecore-p2p'
             version prettyVersion()
             from components.java
+            artifact (sourcesJar) {
+                classifier = 'sources'
+            }
         }
     }
 }

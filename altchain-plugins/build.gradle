@@ -60,6 +60,11 @@ jar {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 artifactory {
     contextUrl = artifactory_url
     publish {

@@ -47,6 +47,10 @@ jar {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
 
 artifactory {
     contextUrl = artifactory_url
@@ -72,6 +76,9 @@ publishing {
             artifactId 'veriblock-extensions'
             version prettyVersion()
             from components.java
+            artifact (sourcesJar) {
+                classifier = 'sources'
+            }
         }
     }
 }

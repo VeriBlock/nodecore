@@ -55,6 +55,11 @@ jar {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 artifactory {
     contextUrl = artifactory_url
     publish {
@@ -80,6 +85,9 @@ publishing {
             version = this.version
 
             from components.java
+            artifact (sourcesJar) {
+                classifier = 'sources'
+            }
         }
     }
 }
