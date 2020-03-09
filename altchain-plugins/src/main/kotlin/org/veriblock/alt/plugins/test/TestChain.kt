@@ -19,12 +19,12 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.PluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -182,17 +182,6 @@ class TestChain(
     private fun createBlock(height: Int): TestBlock {
         val hash = Utility.intToByteArray(height).toHex()
         val coinbase = createTransaction(config.payoutAddress)
-        val blockData = SecurityInheritingBlock(
-            hash,
-            height,
-            100,
-            0,
-            0,
-            "",
-            0.0,
-            coinbase.txId,
-            listOf()
-        )
         val previousBlockHeight = height - 1
         val previousBlock = if (previousBlockHeight > startingHeight) {
             blocks[previousBlockHeight] ?: createBlock(previousBlockHeight)
@@ -218,6 +207,21 @@ class TestChain(
         } else {
             null
         }
+
+        val blockData = SecurityInheritingBlock(
+            hash,
+            height,
+            previousBlock.hash,
+            100,
+            0,
+            0,
+            "",
+            0.0,
+            coinbase.txId,
+            listOf(),
+            previousKeystone.hash,
+            secondPreviousKeystone.hash
+        )
 
         val block = TestBlock(blockData, previousBlock, previousKeystone, secondPreviousKeystone)
         blocks[height] = block

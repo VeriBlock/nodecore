@@ -14,16 +14,12 @@ import kotlinx.coroutines.launch
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
-import org.veriblock.miners.pop.core.OperationState
-import org.veriblock.miners.pop.core.error
-import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.miners.pop.service.PluginService
+import org.veriblock.sdk.alt.plugin.PluginService
 
 private val logger = createLogger {}
 

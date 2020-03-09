@@ -15,7 +15,7 @@ import org.veriblock.alt.plugins.nxt.NxtFamilyChain
 import org.veriblock.alt.plugins.test.TestChain
 import org.veriblock.alt.plugins.test.TestConfig
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.sdk.alt.PluginsContainer
+import org.veriblock.sdk.alt.plugin.PluginsContainer
 
 
 /**

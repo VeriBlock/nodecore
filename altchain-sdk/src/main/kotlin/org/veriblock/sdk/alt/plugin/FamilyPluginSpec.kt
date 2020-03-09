@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.sdk.alt
+package org.veriblock.sdk.alt.plugin
 
 import java.lang.annotation.Inherited
 
@@ -14,7 +14,7 @@ import java.lang.annotation.Inherited
 @Inherited
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class PluginSpec(
+annotation class FamilyPluginSpec(
     val name: String,
     val key: String
 )

@@ -9,7 +9,7 @@
 package org.veriblock.miners.pop.shell.commands
 
 import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.miners.pop.service.PluginService
+import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.util.Utils
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter

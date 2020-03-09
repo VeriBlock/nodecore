@@ -6,13 +6,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.miners.pop.service
+package org.veriblock.sdk.alt.plugin
 
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.sdk.alt.PluginsContainer
 import org.veriblock.sdk.alt.SecurityInheritingChain
 
 private val logger = createLogger {}
@@ -24,10 +21,9 @@ class PluginConfig(
 )
 
 class PluginService(
-    configuration: Configuration
-) : KoinComponent {
-    val plugins: PluginsContainer by inject()
-
+    configuration: Configuration,
+    private val plugins: PluginsContainer
+) {
     private var loadedPlugins: Map<String, SecurityInheritingChain> = emptyMap()
 
     private val configuredPlugins: Map<String, PluginConfig> = configuration.extract("securityInheriting") ?: emptyMap()

@@ -11,7 +11,7 @@ package org.veriblock.miners.pop.securityinheriting
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.Miner
-import org.veriblock.miners.pop.service.PluginService
+import org.veriblock.sdk.alt.plugin.PluginService
 
 private val logger = createLogger {}
 

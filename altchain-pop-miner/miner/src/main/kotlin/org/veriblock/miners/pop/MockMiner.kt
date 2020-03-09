@@ -6,7 +6,7 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationStatus
-import org.veriblock.miners.pop.service.PluginService
+import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.sdk.mock.BitcoinBlockchain
@@ -42,7 +42,7 @@ private val logger = createLogger {}
 
 class MockMiner(
     private val config: MinerConfig,
-    private val pluginFactory: PluginService
+    private val pluginService: PluginService
 ) : Miner {
     private val connection = ConnectionSelector.setConnection("mock")
     private val veriBlockStore = VeriBlockStore(connection)
@@ -71,7 +71,7 @@ class MockMiner(
     }
 
     override fun mine(chainId: String, block: Int?): Result {
-        val chain = pluginFactory[chainId]
+        val chain = pluginService[chainId]
         if (chain == null) {
             logger.warn { "Unable to load plugin $chainId" }
             return failure()

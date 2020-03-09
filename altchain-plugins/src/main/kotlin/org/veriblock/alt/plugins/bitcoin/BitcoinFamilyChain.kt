@@ -22,12 +22,12 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.FamilyPluginSpec
 import org.veriblock.sdk.alt.PublicationDataWithContext
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.plugin.FamilyPluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.Sha256Hash
@@ -98,6 +98,7 @@ class BitcoinFamilyChain(
         return SecurityInheritingBlock(
             btcBlock.hash,
             btcBlock.height,
+            btcBlock.previousblockhash,
             btcBlock.confirmations,
             btcBlock.version,
             btcBlock.nonce,
@@ -285,7 +286,8 @@ private data class BtcBlock(
     val nonce: Int,
     val merkleroot: String,
     val difficulty: Double,
-    val tx: List<String>
+    val tx: List<String>,
+    val previousblockhash: String
 )
 
 private data class BtcTransaction(
