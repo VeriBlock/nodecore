@@ -107,7 +107,7 @@ public class SpvContext {
 
             auditStore = new AuditorChangesStore(ConnectionSelector.setConnectionDefault());
             transactionPool = new TransactionPool();
-            blockchain = new Blockchain(networkParameters, veriBlockStore);
+            blockchain = new Blockchain(networkParameters.getGenesisBlock(), veriBlockStore);
 
             pendingTransactionContainer = new PendingTransactionContainerImpl();
             p2PService = new P2PServiceImpl(pendingTransactionContainer, networkParameters);

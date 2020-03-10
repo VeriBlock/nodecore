@@ -39,7 +39,7 @@ public class TransactionFactoryImpl implements TransactionFactory {
 
         Transaction transaction =
             new StandardTransaction(message.getTransaction().getSourceAddress().toString(), message.getTransaction().getSourceAmount(),
-                serializer.deserializeOutputes(message.getTransaction().getOutputsList()), message.getSignatureIndex(), networkParameters
+                serializer.deserializeOutputs(message.getTransaction().getOutputsList()), message.getSignatureIndex(), networkParameters
             );
 
         transaction.addSignature(message.getSignature().toByteArray(), message.getPublicKey().toByteArray());
