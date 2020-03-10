@@ -1,6 +1,5 @@
 package veriblock.net.impl;
 
-import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ public class P2PServiceImpl implements P2PService {
 
     private PendingTransactionContainer pendingTransactionContainer;
 
-    @Inject
     public P2PServiceImpl(PendingTransactionContainer pendingTransactionContainer) {
         this.pendingTransactionContainer = pendingTransactionContainer;
     }

@@ -37,11 +37,6 @@ dependencies {
     //veriblock-core and nodecore-grpc plus their dependencies
     compile fileTree(dir: "$projectDir/../lib/", include: '*.jar')
 
-    //Guice
-    compile group: 'com.google.inject', name: 'guice', version: '4.2.2'
-    compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.2.2'
-    compile group: 'com.google.inject.extensions', name: 'guice-assistedinject', version: '4.2.2'
-
     // required if you want to use Mockito for unit tests
     testCompile 'org.mockito:mockito-core:2.7.22'
 }
