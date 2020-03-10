@@ -95,11 +95,7 @@ public class Blockchain {
 
         List<StoredVeriBlockBlock> storedBlocks = convertToStoreVeriBlocks(listToStore);
 
-        try {
-            blockStore.put(storedBlocks);
-        } catch (Exception ex){
-            System.out.printf("" + ex.getMessage(), ex);
-        }
+        blockStore.put(storedBlocks);
 
         // TODO: PoP fork resolution additional
         if (storedBlocks.get(storedBlocks.size() - 1).getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
