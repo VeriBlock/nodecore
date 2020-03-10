@@ -64,15 +64,6 @@ sourceSets {
     }
 }
 
-//repositories {
-//    flatDir {
-//        dirs 'lib'
-//    }
-//    flatDir {
-//        dirs 'lib', '/lib'
-//    }
-//}
-
 test {
     testLogging {
         exceptionFormat = 'full'
