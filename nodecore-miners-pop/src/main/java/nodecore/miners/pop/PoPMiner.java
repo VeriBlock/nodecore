@@ -19,7 +19,6 @@ import nodecore.miners.pop.contracts.OperationSummary;
 import nodecore.miners.pop.contracts.PoPMinerDependencies;
 import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
-import nodecore.miners.pop.contracts.PoPRepository;
 import nodecore.miners.pop.contracts.PreservedPoPMiningOperationState;
 import nodecore.miners.pop.contracts.Result;
 import nodecore.miners.pop.contracts.TransactionStatus;
@@ -29,7 +28,6 @@ import nodecore.miners.pop.events.BlockchainDownloadedEvent;
 import nodecore.miners.pop.events.CoinsReceivedEvent;
 import nodecore.miners.pop.events.ConfigurationChangedEvent;
 import nodecore.miners.pop.events.FundsAddedEvent;
-import nodecore.miners.pop.events.InfoMessageEvent;
 import nodecore.miners.pop.events.InsufficientFundsEvent;
 import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
 import nodecore.miners.pop.events.NodeCoreDesynchronizedEvent;
@@ -37,7 +35,6 @@ import nodecore.miners.pop.events.NodeCoreHealthyEvent;
 import nodecore.miners.pop.events.NodeCoreSynchronizedEvent;
 import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
 import nodecore.miners.pop.events.PoPMinerNotReadyEvent;
-import nodecore.miners.pop.events.PoPMinerReadyEvent;
 import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
 import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent;
 import nodecore.miners.pop.services.BitcoinService;
@@ -47,16 +44,9 @@ import nodecore.miners.pop.tasks.ProcessManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Context;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Context;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.StoredBlock;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.wallet.Wallet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.utilities.BlockUtility;
@@ -82,15 +72,13 @@ public class PoPMiner implements Runnable {
     private final BitcoinService bitcoinService;
     private final NodeCoreService nodeCoreService;
     private final PoPStateService stateService;
-    private final PoPRepository repository;
-    private final Context context;
     private final ConcurrentHashMap<String, PoPMiningOperationState> operations;
     private final KeyValueRepository keyValueRepository;
     private final ProcessManager processManager;
 
     private boolean isShuttingDown;
     private boolean stateRestored;
-    private EnumSet<PoPMinerDependencies> readyConditions;
+    private final EnumSet<PoPMinerDependencies> readyConditions;
 
     private boolean readyToMine() {
         ensureBitcoinServiceReady();
@@ -100,23 +88,20 @@ public class PoPMiner implements Runnable {
         return isReady();
     }
 
-    public PoPMiner(Configuration configuration,
-                    BitcoinService bitcoinService,
-                    NodeCoreService nodeCoreService,
-                    PoPStateService stateService,
-                    PoPRepository repository,
-                    KeyValueRepository keyValueRepository,
-                    ProcessManager processManager,
-                    Context context) {
-
+    public PoPMiner(
+        Configuration configuration,
+        BitcoinService bitcoinService,
+        NodeCoreService nodeCoreService,
+        PoPStateService stateService,
+        KeyValueRepository keyValueRepository,
+        ProcessManager processManager
+    ) {
         this.configuration = configuration;
         this.bitcoinService = bitcoinService;
         this.nodeCoreService = nodeCoreService;
         this.stateService = stateService;
-        this.repository = repository;
         this.keyValueRepository = keyValueRepository;
         this.processManager = processManager;
-        this.context = context;
         this.operations = new ConcurrentHashMap<>();
 
         this.stateRestored = false;
@@ -391,6 +376,7 @@ public class PoPMiner implements Runnable {
         Coin maximumTransactionFee = Coin.valueOf(configuration.getMaxTransactionFee());
         if (bitcoinService.getBalance().isGreaterThan(maximumTransactionFee)) {
             if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
+                logger.info("PoP wallet is sufficiently funded");
                 InternalEventBus.getInstance().post(new FundsAddedEvent());
             }
             addReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS);
@@ -407,14 +393,15 @@ public class PoPMiner implements Runnable {
             if (!stateRestored) {
                 restoreOperations();
             }
-            InternalEventBus.getInstance().post(new PoPMinerReadyEvent());
+            logger.info("PoP Miner: READY");
         }
     }
 
     private void removeReadyCondition(PoPMinerDependencies flag) {
         boolean removed = readyConditions.remove(flag);
         if (removed) {
-            InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(getMessageForDependencyCondition(flag), flag));
+            logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag));
+            InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(flag));
         }
     }
 
@@ -483,10 +470,9 @@ public class PoPMiner implements Runnable {
     @Subscribe
     public void onCoinsReceived(CoinsReceivedEvent event) {
         try {
-            InternalEventBus.getInstance()
-                    .post(new InfoMessageEvent(String.format("Received pending tx '%s', pending balance: '%s'",
-                            event.getTx().getHashAsString(),
-                            Utility.formatBTCFriendlyString(event.getNewBalance()))));
+            logger.info("Received pending tx '{}', pending balance: '{}'", event.getTx().getHashAsString(),
+                Utility.formatBTCFriendlyString(event.getNewBalance())
+            );
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -510,7 +496,8 @@ public class PoPMiner implements Runnable {
             if (!readyToMine()) {
                 EnumSet<PoPMinerDependencies> failed = EnumSet.complementOf(readyConditions);
                 for (PoPMinerDependencies flag : failed) {
-                    InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(getMessageForDependencyCondition(flag), flag));
+                    logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag));
+                    InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(flag));
                 }
             }
         } catch (Exception e) {
@@ -534,9 +521,8 @@ public class PoPMiner implements Runnable {
 
             ensureSufficientFunds();
 
-            InternalEventBus.getInstance()
-                    .post(new InfoMessageEvent("Available Bitcoin balance: " + Utility.formatBTCFriendlyString(bitcoinService.getBalance())));
-            InternalEventBus.getInstance().post(new InfoMessageEvent("Send Bitcoin to: " + bitcoinService.currentReceiveAddress()));
+            logger.info("Available Bitcoin balance: " + Utility.formatBTCFriendlyString(bitcoinService.getBalance()));
+            logger.info("Send Bitcoin to: " + bitcoinService.currentReceiveAddress());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

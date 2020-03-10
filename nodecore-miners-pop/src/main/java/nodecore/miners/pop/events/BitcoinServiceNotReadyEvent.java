@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class BitcoinServiceNotReadyEvent extends WarningMessageEvent {
-    public BitcoinServiceNotReadyEvent() {
-        super("Bitcoin service is not ready");
-    }
+public class BitcoinServiceNotReadyEvent {
 }

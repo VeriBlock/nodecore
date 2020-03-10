@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class NodeCoreDesynchronizedEvent extends SuccessMessageEvent {
-    public NodeCoreDesynchronizedEvent() {
-        super("The connected NodeCore is not synchronized");
-    }
+public class NodeCoreDesynchronizedEvent {
 }

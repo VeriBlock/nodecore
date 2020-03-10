@@ -7,8 +7,6 @@
 
 package nodecore.miners.pop.contracts;
 
-import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.events.ErrorMessageEvent;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import org.slf4j.Logger;
@@ -46,7 +44,8 @@ public abstract class BaseTask {
 
     protected TaskResult failTask(PoPMiningOperationState state, String reason) {
         String output = String.format("[%s] %s", state.getOperationId(), reason);
-        InternalEventBus.getInstance().post(new ErrorMessageEvent(output));
+
+        logger.error(output);
 
         return TaskResult.fail(state);
     }

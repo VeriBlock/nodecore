@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class BlockchainDownloadedEvent extends SuccessMessageEvent {
-    public BlockchainDownloadedEvent(String message) {
-        super(message);
-    }
+public class BlockchainDownloadedEvent {
 }

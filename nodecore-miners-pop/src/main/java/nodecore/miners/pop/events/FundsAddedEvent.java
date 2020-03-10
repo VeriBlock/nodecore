@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class FundsAddedEvent extends SuccessMessageEvent {
-    public FundsAddedEvent() {
-        super("PoP wallet is sufficiently funded");
-    }
+public class FundsAddedEvent {
 }

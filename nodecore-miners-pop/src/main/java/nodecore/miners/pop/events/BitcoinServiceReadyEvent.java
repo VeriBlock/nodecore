@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class BitcoinServiceReadyEvent extends SuccessMessageEvent {
-    public BitcoinServiceReadyEvent() {
-        super("Bitcoin service is ready");
-    }
+public class BitcoinServiceReadyEvent {
 }

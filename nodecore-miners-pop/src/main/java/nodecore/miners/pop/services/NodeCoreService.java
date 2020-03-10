@@ -40,8 +40,6 @@ import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningTransaction;
 import nodecore.miners.pop.contracts.Result;
 import nodecore.miners.pop.contracts.VeriBlockHeader;
-import nodecore.miners.pop.events.ErrorMessageEvent;
-import nodecore.miners.pop.events.InfoMessageEvent;
 import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
 import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
 import nodecore.miners.pop.events.NodeCoreDesynchronizedEvent;
@@ -96,18 +94,15 @@ public class NodeCoreService {
     }
 
     private void initializeClient() {
-        InternalEventBus.getInstance()
-                .post(new InfoMessageEvent(String.format("Connecting to NodeCore at %s:%d %s",
-                        configuration.getNodeCoreHost(),
-                        configuration.getNodeCorePort(),
-                        configuration.getNodeCoreUseSSL() ? "over SSL" : "")));
+        _logger.info("Connecting to NodeCore at {}:{} {}", configuration.getNodeCoreHost(), configuration.getNodeCorePort(),
+            configuration.getNodeCoreUseSSL() ? "over SSL" : ""
+        );
 
         try {
             _channel = channelBuilder.buildManagedChannel();
             _blockingStub = AdminGrpc.newBlockingStub(channelBuilder.attachPasswordInterceptor(_channel));
         } catch (SSLException e) {
-            _logger.error(e.getMessage(), e);
-            InternalEventBus.getInstance().post(new ErrorMessageEvent("NodeCore SSL configuration error, see log file for detail"));
+            _logger.error("NodeCore SSL configuration error", e);
         }
     }
 
@@ -303,6 +298,7 @@ public class NodeCoreService {
             if (isHealthy() && isSynchronized()) {
                 if (!isNodeCoreSynchronized()) {
                     _synchronized.set(false);
+                    _logger.info("The connected node is not synchronized");
                     InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
                     return;
                 }
@@ -325,17 +321,20 @@ public class NodeCoreService {
             } else {
                 if (ping()) {
                     if (!isHealthy()) {
+                        _logger.info("Connected to NodeCore");
                         InternalEventBus.getInstance().post(new NodeCoreHealthyEvent());
                     }
                     healthy.set(true);
 
                     if (isNodeCoreSynchronized()) {
                         if (!isSynchronized()) {
+                            _logger.info("The connected node is synchronized");
                             InternalEventBus.getInstance().post(new NodeCoreSynchronizedEvent());
                         }
                         _synchronized.set(true);
                     } else {
                         if (isSynchronized()) {
+                            _logger.info("The connected node is not synchronized");
                             InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
                         }
                         _synchronized.set(false);
@@ -345,6 +344,7 @@ public class NodeCoreService {
                         InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
                     }
                     if (isSynchronized()) {
+                        _logger.info("The connected node is not synchronized");
                         InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
                     }
                     healthy.set(false);

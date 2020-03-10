@@ -24,7 +24,6 @@ import nodecore.miners.pop.events.BitcoinServiceNotReadyEvent;
 import nodecore.miners.pop.events.BitcoinServiceReadyEvent;
 import nodecore.miners.pop.events.BlockchainDownloadedEvent;
 import nodecore.miners.pop.events.CoinsReceivedEvent;
-import nodecore.miners.pop.events.InfoMessageEvent;
 import nodecore.miners.pop.shims.WalletShim;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bitcoinj.core.Address;
@@ -118,8 +117,10 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
 
         this.isServiceReady = value;
         if (this.isServiceReady) {
+            logger.info("Bitcoin service is ready");
             InternalEventBus.getInstance().post(new BitcoinServiceReadyEvent());
         } else {
+            logger.warn("Bitcoin service is not ready");
             InternalEventBus.getInstance().post(new BitcoinServiceNotReadyEvent());
         }
     }
@@ -130,7 +131,7 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
         this.blockCache = cache;
         this.bitcoinNetwork = configuration.getBitcoinNetwork();
 
-        InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Using Bitcoin %s network", this.bitcoinNetwork.toString())));
+        logger.info("Using Bitcoin {} network", bitcoinNetwork.toString());
 
         this.serializer = new BitcoinSerializer(context.getParams(), true);
         this.kit = createWalletAppKit(context, getFilePrefix(bitcoinNetwork), null);
@@ -177,7 +178,8 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
             protected void doneDownload() {
                 if (!isBlockchainDownloaded) {
                     isBlockchainDownloaded = true;
-                    InternalEventBus.getInstance().post(new BlockchainDownloadedEvent("Bitcoin blockchain finished downloading"));
+                    logger.info("Bitcoin blockchain finished downloading");
+                    InternalEventBus.getInstance().post(new BlockchainDownloadedEvent());
                 }
             }
 
@@ -191,10 +193,10 @@ public final class BitcoinService implements BlocksDownloadedEventListener {
                 }
 
                 if ((int) pct % 5 == 0) {
-                    InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Blockchain downloading: %d%%", (int) pct)));
+                    logger.info("Blockchain downloading: {}%", (int) pct);
                 }
                 if (pct > 95.0 && blocksSoFar % 10 == 0) {
-                    InternalEventBus.getInstance().post(new InfoMessageEvent(String.format("Blockchain downloading: %d blocks to go", blocksSoFar)));
+                    logger.info("Blockchain downloading: {} blocks to go", blocksSoFar);
                 }
             }
         });

@@ -6,7 +6,6 @@ import nodecore.miners.pop.contracts.BlockStore
 import nodecore.miners.pop.services.BitcoinBlockCache
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.ChannelBuilder
-import nodecore.miners.pop.services.MessageService
 import nodecore.miners.pop.services.NodeCoreService
 import nodecore.miners.pop.services.PoPStateService
 import nodecore.miners.pop.shell.PopShell
@@ -47,8 +46,7 @@ val bootstrapModule = module {
     single { ProcessManager(get(), get()) }
     single { BitcoinBlockCache() }
     single { ChannelBuilder(get()) }
-    single { MessageService() }
-    single { PoPMiner(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { PoPMiner(get(), get(), get(), get(), get(), get()) }
     single { PoPStateService(get()) }
     single { NodeCoreService(get(), get(), get()) }
     single { BitcoinService(get(), get(), get()) }
@@ -68,5 +66,5 @@ val bootstrapModule = module {
             diagnosticCommands(miner)
         }
     }
-    single { PopShell(get(), get(), get()) }
+    single { PopShell(get(), get()) }
 }

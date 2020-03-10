@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class PoPMinerReadyEvent extends SuccessMessageEvent {
-    public PoPMinerReadyEvent() {
-        super("PoP Miner: READY");
-    }
+public class PoPMinerReadyEvent {
 }

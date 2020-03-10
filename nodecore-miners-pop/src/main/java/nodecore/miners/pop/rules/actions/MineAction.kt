@@ -6,10 +6,11 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules.actions
 
-import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.events.ErrorMessageEvent
 import org.apache.commons.lang3.StringUtils
+import org.veriblock.core.utilities.createLogger
+
+private val logger = createLogger {}
 
 class MineAction(
     private val miner: PoPMiner
@@ -25,7 +26,8 @@ class MineAction(
                     .append(": ")
                     .append(StringUtils.join(message.details, "; "))
             }
-            InternalEventBus.getInstance().post(ErrorMessageEvent(String.format("Mine Action Failed: %s", errorMessage.toString())))
+
+            logger.error { "Mine Action Failed: $errorMessage" }
         }
     }
 }

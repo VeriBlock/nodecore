@@ -9,15 +9,14 @@ package nodecore.miners.pop.events;
 
 import nodecore.miners.pop.contracts.PoPMinerDependencies;
 
-public class PoPMinerNotReadyEvent extends WarningMessageEvent {
+public class PoPMinerNotReadyEvent {
     private final PoPMinerDependencies failedDependency;
 
     public PoPMinerDependencies getFailedDependency() {
         return failedDependency;
     }
 
-    public PoPMinerNotReadyEvent(String message, PoPMinerDependencies failedDependency) {
-        super(String.format("PoP Miner: NOT READY (%s)", message));
+    public PoPMinerNotReadyEvent(PoPMinerDependencies failedDependency) {
         this.failedDependency = failedDependency;
     }
 }

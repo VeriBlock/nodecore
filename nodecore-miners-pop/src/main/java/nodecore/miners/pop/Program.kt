@@ -14,7 +14,6 @@ import nodecore.miners.pop.api.webApiModule
 import nodecore.miners.pop.events.ProgramQuitEvent
 import nodecore.miners.pop.events.ShellCompletedEvent
 import nodecore.miners.pop.rules.rulesModule
-import nodecore.miners.pop.services.MessageService
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.storage.repositoryModule
 import org.bitcoinj.core.Context
@@ -53,7 +52,6 @@ class Program {
         val configuration: Configuration = startupInjector.get()
         configuration.load()
         configuration.save()
-        val messageService: MessageService = startupInjector.get()
         val context: Context = startupInjector.get()
         Threading.ignoreLockCycles()
         Threading.USER_THREAD = Executor { command: Runnable ->
@@ -88,7 +86,6 @@ class Program {
             eventEngine.shutdown()
             scheduler.shutdown()
             popMiner.shutdown()
-            messageService.shutdown()
             nodecore.miners.pop.Threading.shutdown()
             configuration.save()
             logger.info("Application exit")

@@ -7,7 +7,6 @@
 
 package nodecore.miners.pop;
 
-import nodecore.miners.pop.events.InfoMessageEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Context;
 import org.quartz.CronScheduleBuilder;
@@ -92,7 +91,7 @@ public class PoPMiningScheduler {
                 SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 String info = String.format("Found cron schedule '" + configuration.getCronSchedule() + "', first trigger at %s",
                         dateFormatter.format(trigger.getNextFireTime()));
-                InternalEventBus.getInstance().post(new InfoMessageEvent(info));
+                logger.info(info);
             } catch (SchedulerException e) {
                 logger.error(e.getMessage(), e);
             }

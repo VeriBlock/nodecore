@@ -12,29 +12,23 @@ import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.MessageEvent
-import nodecore.miners.pop.contracts.MessageEvent.Level
 import nodecore.miners.pop.contracts.Result
 import nodecore.miners.pop.contracts.ResultMessage
 import nodecore.miners.pop.events.PoPMinerReadyEvent
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent
 import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent
-import nodecore.miners.pop.services.MessageService
 import org.jline.utils.AttributedStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
-import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
 
 class PopShell(
     private val miner: PoPMiner,
-    private val messageService: MessageService,
     commandFactory: CommandFactory
 ) : Shell(commandFactory) {
-    private var messageHandler: CompletableFuture<Void?>? = null
     private var mustAcceptWalletSeed = false
 
     init {
@@ -53,38 +47,15 @@ class PopShell(
 
     override fun onStart() {
         runOnce()
-        watchMessages()
     }
 
-    override fun onStop() {
-        messageHandler?.complete(null)
-    }
-
-    private fun watchMessages() {
-        messageHandler = CompletableFuture.supplyAsync {
-            messageService.getMessages()
-        }.thenAccept { messages: List<MessageEvent> ->
-            formatMessages(messages)
-        }.thenRun {
-            watchMessages()
-        }
-    }
-
-    private fun formatMessages(messages: List<MessageEvent>) {
-        for (msg in messages) {
-            when (msg.level) {
-                Level.ERROR -> logger.error(msg.message)
-                Level.WARN -> logger.warn(msg.message)
-                else -> logger.info(msg.message)
-            }
-        }
-    }
-
-    fun runOnce() {
+    private fun runOnce() {
         if (mustAcceptWalletSeed) {
             val walletSeed: List<String?>? = miner.walletSeed
             if (walletSeed != null) {
-                printInfo("This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue...")
+                printInfo(
+                    "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue..."
+                )
                 var counter = 0
                 while (readLine()!!.toUpperCase() != "Y") {
                     counter++

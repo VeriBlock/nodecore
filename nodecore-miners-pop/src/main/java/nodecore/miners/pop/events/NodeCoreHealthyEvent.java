@@ -7,8 +7,5 @@
 
 package nodecore.miners.pop.events;
 
-public class NodeCoreHealthyEvent extends SuccessMessageEvent {
-    public NodeCoreHealthyEvent() {
-        super("Connected to NodeCore");
-    }
+public class NodeCoreHealthyEvent {
 }
