@@ -11,7 +11,7 @@ package org.veriblock.sdk.alt
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.models.PublicationData
 
-class PublicationDataWithContext(
+class MiningInstruction(
     val endorsedBlockHeight: Int,
     val publicationData: PublicationData,
     val context: List<ByteArray>,

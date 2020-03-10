@@ -83,19 +83,19 @@ class MockMiner(
         )
         operations[operation.id] = operation
 
-        val publicationData = try {
-            chain.getPublicationData(block)
+        val miningInstruction = try {
+            chain.getMiningInstruction(block)
         } catch (e: Exception) {
             operation.fail(e.message ?: "Unknown reason")
             throw e
         }
 
-        operation.setPublicationDataWithContext(publicationData)
+        operation.setMiningInstruction(miningInstruction)
 
         val key = KeyGenerator.generate()
 
         val vbkTip = veriBlockBlockchain.chainHead
-        val atv = mine(publicationData.publicationData, vbkTip, key)
+        val atv = mine(miningInstruction.publicationData, vbkTip, key)
 
         // Update operation state
         operation.setTransaction(WalletTransaction.wrap(atv.transaction))
@@ -104,8 +104,8 @@ class MockMiner(
         operation.setMerklePath(atv.merklePath)
         operation.setKeystoneOfProof(vbkTip)
 
-        val lastKnownBtcBlockHash = publicationData.btcContext.last()
-        val lastKnownVbkBlockHash = publicationData.context.last()
+        val lastKnownBtcBlockHash = miningInstruction.btcContext.last()
+        val lastKnownVbkBlockHash = miningInstruction.context.last()
         val lastKnownBtcBlock = bitcoinBlockchain[Sha256Hash.wrap(lastKnownBtcBlockHash)]
         val lastKnownVbkBlock = veriBlockBlockchain[VBlakeHash.wrap(lastKnownVbkBlockHash)]
 

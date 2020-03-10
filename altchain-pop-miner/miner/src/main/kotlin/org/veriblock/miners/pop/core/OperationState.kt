@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.core
 
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.alt.MiningInstruction
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -20,7 +20,7 @@ enum class OperationStateType(
     val description: String
 ) {
     INITIAL(0, "Initial state, to be started"),
-    PUBLICATION_DATA(1, "Publication Data retrieved, Endorsement VBK Transaction to be submitted"),
+    INSTRUCTION(1, "Mining Instruction retrieved, Endorsement VBK Transaction to be submitted"),
     ENDORSEMEMT_TRANSACTION(2, "Endorsement VBK Transaction submitted and to be confirmed"),
     CONFIRMED(3, "Endorsement VBK Transaction confirmed, waiting for Block of Proof"),
     BLOCK_OF_PROOF(4, "Block of Proof received, Endorsement VBK Transaction to be proved"),
@@ -60,18 +60,18 @@ sealed class OperationState {
         override val type = OperationStateType.INITIAL
     }
 
-    open class PublicationData(
-        val publicationDataWithContext: PublicationDataWithContext
+    open class Instruction(
+        val miningInstruction: MiningInstruction
     ) : OperationState() {
-        override val type = OperationStateType.PUBLICATION_DATA
+        override val type = OperationStateType.INSTRUCTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            publicationDataWithContext.getDetailedInfo()
+            miningInstruction.getDetailedInfo()
     }
 
     open class EndorsementTransaction(
-        previous: PublicationData,
+        previous: Instruction,
         override val transaction: WalletTransaction
-    ) : PublicationData(previous.publicationDataWithContext) {
+    ) : Instruction(previous.miningInstruction) {
         override val type = OperationStateType.ENDORSEMEMT_TRANSACTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Endorsement Transaction: ${transaction.id.bytes.toHex()}"

@@ -73,10 +73,10 @@ interface SecurityInheritingChain {
     fun getPayoutInterval(): Int = 500
 
     /**
-     * Retrieves publication data from the SI chain for the given [blockHeight] (or the best block height
+     * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height
      * if [blockHeight] is null).
      */
-    fun getPublicationData(blockHeight: Int?): PublicationDataWithContext
+    fun getMiningInstruction(blockHeight: Int?): MiningInstruction
 
     /**
      * Submits ATV ([proofOfProof]) and VTBs ([veriBlockPublications]) to the altchain

@@ -51,26 +51,26 @@ suspend fun runTasks(
     val chainSymbol = securityInheritingChain.key.toUpperCase()
 
     try {
-        operation.runTask("Retrieve Publication Data from ${securityInheritingChain.name}", OperationStateType.PUBLICATION_DATA) {
-            logger.info(operation) { "Getting the publication data..." }
+        operation.runTask("Retrieve Mining Instruction from ${securityInheritingChain.name}", OperationStateType.INSTRUCTION) {
+            logger.info(operation) { "Getting the mining instruction..." }
             try {
-                val publicationData = securityInheritingChain.getPublicationData(operation.blockHeight)
-                operation.setPublicationDataWithContext(publicationData)
+                val publicationData = securityInheritingChain.getMiningInstruction(operation.blockHeight)
+                operation.setMiningInstruction(publicationData)
             } catch (e: Exception) {
-                error("Error while trying to get PoP publication data from ${securityInheritingChain.name}: ${e.message}")
+                error("Error while trying to get PoP Mining Instruction from ${securityInheritingChain.name}: ${e.message}")
             }
-            logger.info(operation) { "Successfully added the publication data!" }
+            logger.info(operation) { "Successfully added the mining instruction!" }
         }
         operation.runTask("Create Proof Transaction", OperationStateType.ENDORSEMEMT_TRANSACTION) {
             val state = operation.state
-            if (state !is OperationState.PublicationData) {
-                failTask("CreateProofTransactionTask called without publication data!")
+            if (state !is OperationState.Instruction) {
+                failTask("CreateProofTransactionTask called without mining instruction!")
             }
 
             // Something to fill in all the gaps
             logger.info(operation) { "Submitting endorsement VBK transaction..." }
             val transaction = try {
-                val endorsementData = SerializeDeserializeService.serialize(state.publicationDataWithContext.publicationData)
+                val endorsementData = SerializeDeserializeService.serialize(state.miningInstruction.publicationData)
                 endorsementData.checkForValidEndorsement {
                     logger.error(it) { "Invalid endorsement data" }
                     error("Invalid endorsement data: ${endorsementData.toHex()}")
@@ -174,8 +174,8 @@ suspend fun runTasks(
             // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
             val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
                 operation.id, state.keystoneOfProof.hash.toString(),
-                Utils.encodeHex(state.publicationDataWithContext.context[0]),
-                Utils.encodeHex(state.publicationDataWithContext.btcContext[0])
+                Utils.encodeHex(state.miningInstruction.context[0]),
+                Utils.encodeHex(state.miningInstruction.btcContext[0])
             )
             operation.setVeriBlockPublications(publications)
         }
@@ -195,7 +195,7 @@ suspend fun runTasks(
                 val veriBlockPublications = state.veriBlockPublications
 
                 try {
-                    val context = state.publicationDataWithContext
+                    val context = state.miningInstruction
                     val btcContext = context.btcContext
                     // List<byte[]> vbkContext = context.getContext();
 
@@ -289,13 +289,13 @@ suspend fun runTasks(
                 failTask("AltEndorsedBlockConfirmationTask called without having confirmed the transaction!")
             }
 
-            val endorsedBlockHeight = state.publicationDataWithContext.endorsedBlockHeight
+            val endorsedBlockHeight = state.miningInstruction.endorsedBlockHeight
             logger.info(operation) { "Waiting for $chainSymbol endorsed block ($endorsedBlockHeight) to be confirmed..." }
             val endorsedBlock = securityInheritingMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
                 block.confirmations >= securityInheritingChain.config.neededConfirmations
             }
 
-            val endorsedBlockHeader = state.publicationDataWithContext.publicationData.header
+            val endorsedBlockHeader = state.miningInstruction.publicationData.header
             val belongsToMainChain = securityInheritingChain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
             if (!belongsToMainChain) {
                 error(
@@ -313,7 +313,7 @@ suspend fun runTasks(
                 failTask("PayoutDetectionTask called without having confirmed the endorsed block!")
             }
 
-            val endorsedBlockHeight = state.publicationDataWithContext.endorsedBlockHeight
+            val endorsedBlockHeight = state.miningInstruction.endorsedBlockHeight
             val payoutBlockHeight = endorsedBlockHeight + securityInheritingChain.getPayoutInterval()
             logger.info(operation) { "Waiting for $chainSymbol payout block ($payoutBlockHeight) to be confirmed..." }
             val payoutBlock = securityInheritingMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
@@ -325,7 +325,7 @@ suspend fun runTasks(
             val coinbaseTransaction = securityInheritingChain.getTransaction(payoutBlock.coinbaseTransactionId)
                 ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
             val rewardVout = coinbaseTransaction.vout.find {
-                it.addressHash == state.publicationDataWithContext.publicationData.payoutInfo.toHex()
+                it.addressHash == state.miningInstruction.publicationData.payoutInfo.toHex()
             }
             if (rewardVout != null) {
                 logger.info(operation) {

@@ -23,7 +23,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.alt.MiningInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -196,9 +196,9 @@ class BitcoinFamilyChain(
         )
     }
 
-    override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
+    override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
         val actualBlockHeight = blockHeight
-            // Retrieve top block height from API if not supplied
+        // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
         logger.info { "Retrieving publication data at height $actualBlockHeight from $key daemon at ${config.host}..." }
@@ -217,7 +217,7 @@ class BitcoinFamilyChain(
         if (response.last_known_veriblock_blocks.isEmpty()) {
             error("Publication data's context (last known VeriBlock blocks) must not be empty!")
         }
-        return PublicationDataWithContext(
+        return MiningInstruction(
             actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },

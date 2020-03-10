@@ -19,7 +19,7 @@ import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.alt.MiningInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -79,17 +79,18 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
+    override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
 
         val actualBlockHeight = blockHeight
-            // Retrieve top block height from API if not supplied
+        // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
         logger.info { "Retrieving publication data at height $actualBlockHeight from $key daemon at ${config.host}..." }
-        val response: NxtPublicationData = "${config.host}/nxt".httpGet(listOf(
-            "requestType" to "getPopData",
+        val response: NxtPublicationData = "${config.host}/nxt".httpGet(
+            listOf(
+                "requestType" to "getPopData",
             "height" to actualBlockHeight
         )).authenticate().httpResponse()
 
@@ -116,7 +117,7 @@ class NxtFamilyChain(
             payoutAddress.toByteArray(Charsets.US_ASCII),
             response.contextInfoContainer.asHexBytes()
         )
-        return PublicationDataWithContext(
+        return MiningInstruction(
             actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },

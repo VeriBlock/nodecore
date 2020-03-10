@@ -14,7 +14,7 @@ import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.core.StateChangeEvent
-import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.alt.MiningInstruction
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
@@ -40,12 +40,12 @@ object StateSerializer {
         val state = operation.state.let {
             if (it !is OperationState.Failed) it else it.previous
         }
-        if (state is OperationState.PublicationData) {
-            builder.publicationData = serialize(state.publicationDataWithContext.publicationData)
-            for (context in state.publicationDataWithContext.context) {
+        if (state is OperationState.Instruction) {
+            builder.publicationData = serialize(state.miningInstruction.publicationData)
+            for (context in state.miningInstruction.context) {
                 builder.addPublicationContext(ByteString.copyFrom(context))
             }
-            for (context in state.publicationDataWithContext.btcContext) {
+            for (context in state.miningInstruction.btcContext) {
                 builder.addPublicationBtcContext(ByteString.copyFrom(context))
             }
         }
@@ -106,7 +106,7 @@ object StateSerializer {
             blockHeight = serialized.blockHeight
         ).apply {
             if (serialized.publicationData != null) {
-                setPublicationDataWithContext(PublicationDataWithContext(
+                setMiningInstruction(MiningInstruction(
                     serialized.blockHeight,
                     deserialize(serialized.publicationData),
                     serialized.publicationContextList.map { it.toByteArray() },

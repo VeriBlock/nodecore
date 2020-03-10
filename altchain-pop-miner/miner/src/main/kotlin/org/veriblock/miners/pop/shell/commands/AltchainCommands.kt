@@ -42,7 +42,7 @@ fun CommandFactory.altchainCommands(nodeCoreLiteKit: NodeCoreLiteKit, pluginServ
             }
 
         val publicationData = try {
-            securityInheritingChain.getPublicationData(null)
+            securityInheritingChain.getMiningInstruction(null)
         } catch (e: Exception) {
             return@command failure {
                 addMessage("V010", "SI failure", "Failed to get PoP publication data from SI chain $chain: ${e.message}", true)

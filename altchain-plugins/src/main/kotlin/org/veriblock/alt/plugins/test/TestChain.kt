@@ -19,7 +19,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.alt.MiningInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -113,7 +113,7 @@ class TestChain(
         return 100
     }
 
-    override fun getPublicationData(blockHeight: Int?): PublicationDataWithContext {
+    override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
         logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
         val lastVbkHash = getLastBlockHash().asHexBytes()
         val lastBtcHash = getLastBitcoinBlockHash().asHexBytes()
@@ -135,7 +135,7 @@ class TestChain(
             config.payoutAddress.asHexBytes(),
             context.asHexBytes()
         )
-        return PublicationDataWithContext(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
+        return MiningInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {

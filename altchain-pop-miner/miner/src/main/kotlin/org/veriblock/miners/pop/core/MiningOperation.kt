@@ -15,7 +15,7 @@ import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
-import org.veriblock.sdk.alt.PublicationDataWithContext
+import org.veriblock.sdk.alt.MiningInstruction
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -62,14 +62,14 @@ class MiningOperation(
         informStateChangedListeners(state)
     }
 
-    fun setPublicationDataWithContext(publicationDataWithContext: PublicationDataWithContext) {
-        blockHeight = publicationDataWithContext.endorsedBlockHeight
-        setState(OperationState.PublicationData(publicationDataWithContext))
+    fun setMiningInstruction(miningInstruction: MiningInstruction) {
+        blockHeight = miningInstruction.endorsedBlockHeight
+        setState(OperationState.Instruction(miningInstruction))
     }
 
     fun setTransaction(transaction: WalletTransaction) {
-        val currentState = state as? OperationState.PublicationData
-            ?: error("Trying to set transaction without having the publication data")
+        val currentState = state as? OperationState.Instruction
+            ?: error("Trying to set transaction without having the mining instruction")
         attachTransactionListeners(transaction)
         setState(OperationState.EndorsementTransaction(currentState, transaction))
     }

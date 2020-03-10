@@ -32,7 +32,7 @@ class TestChainTest {
     @Test
     @Ignore
     fun getPublicationData() {
-        val data = chain.getPublicationData(null)
+        val data = chain.getMiningInstruction(null)
         println(data)
     }
 }
