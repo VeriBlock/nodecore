@@ -19,6 +19,15 @@ public class SignedTransactionInfo {
         transaction = new TransactionInfo(signed.getTransaction());
     }
 
+    public SignedTransactionInfo(final VeriBlockMessages.SignedTransactionInfo signed) {
+        signatureIndex = signed.getSignatureIndex();
+        signature = ByteStringUtility.byteStringToHex(signed.getSignature());
+        publicKey = ByteStringUtility.byteStringToHex(signed.getPublicKey());
+        transaction = new TransactionInfo(signed.getTransaction().getTransaction());
+        confirmations = signed.getTransaction().getConfirmations();
+        bitcoinConfirmations = signed.getTransaction().getBitcoinConfirmations();
+    }
+
     public String signature;
 
     @SerializedName("public_key")
@@ -28,4 +37,10 @@ public class SignedTransactionInfo {
     public long signatureIndex;
 
     public TransactionInfo transaction;
+
+    @SerializedName("confirmations")
+    public int confirmations;
+
+    @SerializedName("bitcoinConfirmations")
+    public int bitcoinConfirmations;
 }

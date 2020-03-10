@@ -18,10 +18,10 @@ public class AddressHistoryInfo {
     public AddressHistoryInfo(final VeriBlockMessages.AddressHistory history) {
         balance = Utility.formatAtomicLongWithDecimal(history.getBalance());
         blocksMined = history.getBlocksMined();
-        for (final VeriBlockMessages.TransactionUnion union : history.getConfirmedTransactionsList()) {
+        for (final VeriBlockMessages.TransactionInfoUnion union : history.getConfirmedTransactionsList()) {
             confirmedTransactions.add(new TransactionUnionInfo(union));
         }
-        for (final VeriBlockMessages.TransactionUnion union : history.getPendingTransactionsList()) {
+        for (final VeriBlockMessages.TransactionInfoUnion union : history.getPendingTransactionsList()) {
             pendingTransactions.add(new TransactionUnionInfo(union));
         }
     }
