@@ -95,7 +95,11 @@ public class Blockchain {
 
         List<StoredVeriBlockBlock> storedBlocks = convertToStoreVeriBlocks(listToStore);
 
-        blockStore.put(storedBlocks);
+        try {
+            blockStore.put(storedBlocks);
+        } catch (Exception ex){
+            System.out.printf("" + ex.getMessage(), ex);
+        }
 
         // TODO: PoP fork resolution additional
         if (storedBlocks.get(storedBlocks.size() - 1).getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
@@ -125,7 +129,12 @@ public class Blockchain {
             BigInteger work = blockWorks.get(veriBlockBlock.getPreviousBlock().toString());
             //This block is from fork, our Blockchain doesn't have this previousBlock.
             if(work == null){
-                continue;
+                StoredVeriBlockBlock storedVeriBlockBlock = blockStore.get(veriBlockBlock.getPreviousBlock());
+                if(storedVeriBlockBlock == null) {
+                    //There is no such block.
+                    continue;
+                }
+                work = storedVeriBlockBlock.getWork();
             }
             BigInteger workOfCurrentBlock = work.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.getDifficulty()));
             blockWorks.put(veriBlockBlock.getHash().toString().substring(24), workOfCurrentBlock);

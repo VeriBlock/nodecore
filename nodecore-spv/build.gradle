@@ -17,7 +17,7 @@ dependencies {
     implementation project(':nodecore-grpc')
     implementation project(':nodecore-p2p')
 
-    implementation "com.github.veriblock.alt-integration:core:0.0.5"
+    implementation "com.github.veriblock.alt-integration:core:0.0.6"
 
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.28'
     compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.28'
@@ -64,7 +64,14 @@ sourceSets {
     }
 }
 
-
+//repositories {
+//    flatDir {
+//        dirs 'lib'
+//    }
+//    flatDir {
+//        dirs 'lib', '/lib'
+//    }
+//}
 
 test {
     testLogging {
