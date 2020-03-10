@@ -4,37 +4,12 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.contracts
 
-package nodecore.miners.pop.contracts;
+class NodeCoreReply<T> {
+    var success = false
 
-public class NodeCoreReply<T> {
-    private boolean success;
+    var resultMessage: String? = null
 
-    public boolean getSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    private String resultMessage;
-
-    public String getResultMessage() {
-        return resultMessage;
-    }
-
-    public void setResultMessage(String resultMessage) {
-        this.resultMessage = resultMessage;
-    }
-
-    private T result;
-
-    public T getResult() {
-        return result;
-    }
-
-    public void setResult(T result) {
-        this.result = result;
-    }
+    var result: T? = null
 }

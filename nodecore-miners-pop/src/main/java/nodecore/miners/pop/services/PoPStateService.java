@@ -12,9 +12,9 @@ import com.google.protobuf.ByteString;
 import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
-import nodecore.miners.pop.contracts.PoPRepository;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
 import nodecore.miners.pop.storage.OperationStateData;
+import nodecore.miners.pop.storage.PopRepository;
 import nodecore.miners.pop.storage.ProofOfProof;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 public class PoPStateService {
     private static final Logger logger = LoggerFactory.getLogger(PoPStateService.class);
 
-    private final PoPRepository repository;
+    private final PopRepository repository;
 
-    public PoPStateService(PoPRepository repository) {
+    public PoPStateService(PopRepository repository) {
         this.repository = repository;
         InternalEventBus.getInstance().register(this);
     }

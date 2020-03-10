@@ -12,8 +12,8 @@ import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.Result
-import nodecore.miners.pop.contracts.ResultMessage
+import nodecore.miners.pop.contracts.result.Result
+import nodecore.miners.pop.contracts.result.ResultMessage
 import nodecore.miners.pop.events.PoPMinerReadyEvent
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent
 import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent

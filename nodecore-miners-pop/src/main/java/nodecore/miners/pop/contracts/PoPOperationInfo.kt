@@ -4,83 +4,92 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.contracts
 
-package nodecore.miners.pop.contracts;
+import com.google.gson.annotations.SerializedName
+import nodecore.miners.pop.common.Utility
+import org.bitcoinj.core.Base58
+import org.veriblock.core.crypto.Crypto
+import java.util.stream.Collectors
 
-import com.google.gson.annotations.SerializedName;
-import nodecore.miners.pop.common.Utility;
-import org.bitcoinj.core.Base58;
-import org.veriblock.core.crypto.Crypto;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class PoPOperationInfo {
+class PoPOperationInfo(state: PreservedPoPMiningOperationState) {
     @SerializedName("operation_id")
-    public String operationId;
+    val operationId: String
 
     @SerializedName("status")
-    public String status;
+    val status: String?
 
     @SerializedName("detail")
-    public String detail;
+    val detail: String
 
     @SerializedName("current_action")
-    public String currentAction;
+    val currentAction: String?
 
     @SerializedName("pop_publication_data")
-    public String popPublicationData;
+    val popPublicationData: String?
 
     @SerializedName("endorsed_block_header")
-    public String endorsedBlockHeader;
+    val endorsedBlockHeader: String?
 
     @SerializedName("miner_address")
-    public String minerAddress;
+    val minerAddress: String?
 
     @SerializedName("endorsed_block_hash")
-    public String endorsedBlockHash;
+    val endorsedBlockHash: String?
 
     @SerializedName("bitcoin_transaction")
-    public String bitcoinTransaction;
+    val bitcoinTransaction: String?
 
     @SerializedName("bitcoin_transaction_id")
-    public String bitcoinTransactionId;
+    val bitcoinTransactionId: String
 
     @SerializedName("bitcoin_block_header_of_proof")
-    public String bitcoinBlockHeaderOfProof;
+    val bitcoinBlockHeaderOfProof: String?
 
     @SerializedName("bitcoin_context_blocks")
-    public List<String> bitcoinContextBlocks;
+    val bitcoinContextBlocks: List<String>?
 
     @SerializedName("bitcoin_merkle_path")
-    public String bitcoinMerklePath;
+    val bitcoinMerklePath: String
 
     @SerializedName("alternate_blocks_of_proof")
-    public List<String> alternateBlocksOfProof;
+    val alternateBlocksOfProof: List<String>?
 
     @SerializedName("pop_transaction_id")
-    public String popTransactionId;
+    val popTransactionId: String
 
-    public PoPOperationInfo(PreservedPoPMiningOperationState state) {
-        this.operationId = state.operationId;
-        this.status = state.status != null ? state.status.toString() : null;
-        this.detail = state.detail;
-        this.currentAction = state.currentAction != null ? state.currentAction.toString() : null;
+    init {
+        operationId = state.operationId
+        status = if (state.status != null) state.status.toString() else null
+        detail = state.detail
+        currentAction = if (state.currentAction != null) state.currentAction.toString() else null
         if (state.miningInstruction != null) {
-            this.popPublicationData = Utility.bytesToHex(state.miningInstruction.publicationData);
-            this.endorsedBlockHeader = Utility.bytesToHex(state.miningInstruction.endorsedBlockHeader);
-            this.minerAddress = Base58.encode(state.miningInstruction.minerAddress);
-            this.endorsedBlockHash = new Crypto().vBlakeReturnHex(state.miningInstruction.endorsedBlockHeader);
+            popPublicationData = Utility.bytesToHex(state.miningInstruction.publicationData)
+            endorsedBlockHeader = Utility.bytesToHex(state.miningInstruction.endorsedBlockHeader)
+            minerAddress = Base58.encode(state.miningInstruction.minerAddress)
+            endorsedBlockHash = Crypto().vBlakeReturnHex(state.miningInstruction.endorsedBlockHeader)
+        } else {
+            popPublicationData = null
+            endorsedBlockHeader = null
+            minerAddress = null
+            endorsedBlockHash = null
         }
-        this.bitcoinTransaction = state.transaction != null ? Utility.bytesToHex(state.transaction) : null;
-        this.bitcoinTransactionId = state.submittedTransactionId;
-        this.bitcoinBlockHeaderOfProof = state.bitcoinBlockHeaderOfProof != null ? Utility.bytesToHex(state.bitcoinBlockHeaderOfProof) : null;
-        this.bitcoinContextBlocks =
-                state.bitcoinContextBlocks != null ? state.bitcoinContextBlocks.stream().map(Utility::bytesToHex).collect(Collectors.toList()) : null;
-        this.bitcoinMerklePath = state.merklePath;
-        this.alternateBlocksOfProof =
-                state.alternateBlocksOfProof != null ? state.alternateBlocksOfProof.stream().map(Utility::bytesToHex).collect(Collectors.toList()) :
-                        null;
-        this.popTransactionId = state.popTransactionId;
+        bitcoinTransaction = if (state.transaction != null) Utility.bytesToHex(state.transaction) else null
+        bitcoinTransactionId = state.submittedTransactionId
+        bitcoinBlockHeaderOfProof = if (state.bitcoinBlockHeaderOfProof != null) Utility.bytesToHex(
+            state.bitcoinBlockHeaderOfProof
+        ) else null
+        bitcoinContextBlocks = if (state.bitcoinContextBlocks != null) state.bitcoinContextBlocks.stream().map { bytes: ByteArray? ->
+            Utility.bytesToHex(
+                bytes
+            )
+        }.collect(Collectors.toList()) else null
+        bitcoinMerklePath = state.merklePath
+        alternateBlocksOfProof = if (state.alternateBlocksOfProof != null) state.alternateBlocksOfProof.stream().map { bytes: ByteArray? ->
+            Utility.bytesToHex(
+                bytes
+            )
+        }.collect(Collectors.toList()) else null
+        popTransactionId = state.popTransactionId
     }
 }

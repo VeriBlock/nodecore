@@ -5,9 +5,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts
+package nodecore.miners.pop.contracts.result
 
-import java.util.*
+import java.util.ArrayList
 
 open class Result {
     private var failed = false
@@ -21,7 +21,7 @@ open class Result {
         return failed
     }
 
-    fun addMessage(code: String?, message: String?, details: String?, error: Boolean) {
+    fun addMessage(code: String, message: String, details: String, error: Boolean) {
         messages.add(DefaultResultMessage(code, message, details, error))
     }
 

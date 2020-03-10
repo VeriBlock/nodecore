@@ -4,18 +4,8 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.events
 
-package nodecore.miners.pop.events;
-
-public class PoPMiningOperationCompletedEvent {
-
-    private final String operationId;
-
-    public String getOperationId() {
-        return operationId;
-    }
-
-    public PoPMiningOperationCompletedEvent(String operationId) {
-        this.operationId = operationId;
-    }
-}
+class PoPMiningOperationCompletedEvent(
+    val operationId: String
+)

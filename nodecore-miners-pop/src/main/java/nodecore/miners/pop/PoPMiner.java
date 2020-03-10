@@ -11,17 +11,15 @@ import com.google.common.eventbus.Subscribe;
 import io.grpc.StatusRuntimeException;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.contracts.ApplicationExceptions;
-import nodecore.miners.pop.contracts.DefaultResultMessage;
-import nodecore.miners.pop.contracts.KeyValueData;
-import nodecore.miners.pop.contracts.KeyValueRepository;
-import nodecore.miners.pop.contracts.MineResult;
 import nodecore.miners.pop.contracts.OperationSummary;
 import nodecore.miners.pop.contracts.PoPMinerDependencies;
 import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
 import nodecore.miners.pop.contracts.PreservedPoPMiningOperationState;
-import nodecore.miners.pop.contracts.Result;
 import nodecore.miners.pop.contracts.TransactionStatus;
+import nodecore.miners.pop.contracts.result.DefaultResultMessage;
+import nodecore.miners.pop.contracts.result.MineResult;
+import nodecore.miners.pop.contracts.result.Result;
 import nodecore.miners.pop.events.BitcoinServiceNotReadyEvent;
 import nodecore.miners.pop.events.BitcoinServiceReadyEvent;
 import nodecore.miners.pop.events.BlockchainDownloadedEvent;
@@ -40,6 +38,8 @@ import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import nodecore.miners.pop.services.PoPStateService;
+import nodecore.miners.pop.storage.KeyValueData;
+import nodecore.miners.pop.storage.KeyValueRepository;
 import nodecore.miners.pop.tasks.ProcessManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -175,7 +175,8 @@ public class PoPMiner implements Runnable {
     }
 
     public MineResult mine(Integer blockNumber) {
-        MineResult result = new MineResult();
+        String operationId = Utility.generateOperationId();
+        MineResult result = new MineResult(operationId);
         if (!readyToMine()) {
             result.fail();
             List<String> reasons = listPendingReadyConditions();
@@ -201,13 +202,11 @@ public class PoPMiner implements Runnable {
             return result;
         }
 
-        String operationId = Utility.generateOperationId();
         PoPMiningOperationState state = new PoPMiningOperationState(operationId, blockNumber);
         operations.putIfAbsent(operationId, state);
 
         processManager.submit(state);
 
-        result.setOperationId(operationId);
         result.addMessage("V201", "Mining operation started", String.format("To view details, run command: getoperation %s", operationId), false);
 
         return result;

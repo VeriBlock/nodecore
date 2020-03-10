@@ -11,14 +11,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.MineResult
+import nodecore.miners.pop.contracts.result.MineResult
 import org.junit.Test
 
 class MineActionTests {
     @Test
     fun executeWhenHeightSupplied() {
         val miner: PoPMiner = mockk {
-            every { mine(100) } returns MineResult()
+            every { mine(100) } returns MineResult("")
         }
         val sut = MineAction(miner)
         sut.execute(100)
@@ -30,7 +30,7 @@ class MineActionTests {
     @Test
     fun executeWhenHeightNull() {
         val miner: PoPMiner = mockk {
-            every { mine(null) } returns MineResult()
+            every { mine(null) } returns MineResult("")
         }
         val sut = MineAction(miner)
         sut.execute(null)

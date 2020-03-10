@@ -4,58 +4,61 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.contracts
 
-package nodecore.miners.pop.contracts;
+import com.google.gson.annotations.SerializedName
+import nodecore.api.grpc.VeriBlockMessages
+import nodecore.miners.pop.common.Utility
 
-import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.miners.pop.common.Utility;
-
-public class PoPEndorsementInfo {
-    public PoPEndorsementInfo(final VeriBlockMessages.PoPEndorsementInfo popEndorsementInfo) {
-        minerAddress = Utility.bytesToBase58(popEndorsementInfo.getMinerAddress().toByteArray());
-        endorsedVeriBlockBlockHash = Utility.bytesToHex(popEndorsementInfo.getEndorsedVeriblockBlockHash().toByteArray());
-        containedInVeriBlockBlockHash = Utility.bytesToHex(popEndorsementInfo.getContainedInVeriblockBlockHash().toByteArray());
-        veriBlockTransactionId = Utility.bytesToHex(popEndorsementInfo.getVeriblockTxId().toByteArray());
-        bitcoinTransaction = Utility.bytesToHex(popEndorsementInfo.getBitcoinTransaction().toByteArray());
-        bitcoinTransactionId = Utility.bytesToHex(popEndorsementInfo.getBitcoinTxId().toByteArray());
-        bitcoinBlockHeader = Utility.bytesToHex(popEndorsementInfo.getBitcoinBlockHeader().toByteArray());
-        bitcoinBlockHeaderHash = Utility.bytesToHex(popEndorsementInfo.getBitcoinBlockHeaderHash().toByteArray());
-        reward = Utility.formatAtomicLongWithDecimal(popEndorsementInfo.getReward());
-        finalized = popEndorsementInfo.getFinalized();
-        endorsedBlockNumber = popEndorsementInfo.getEndorsedBlockNumber();
-    }
-
+class PoPEndorsementInfo(
+    popEndorsementInfo: VeriBlockMessages.PoPEndorsementInfo
+) {
     @SerializedName("miner_address")
-    public String minerAddress;
+    val minerAddress: String
 
     @SerializedName("endorsed_veriblock_block_hash")
-    public String endorsedVeriBlockBlockHash;
+    val endorsedVeriBlockBlockHash: String
 
     @SerializedName("contained_in_veriblock_block_hash")
-    public String containedInVeriBlockBlockHash;
+    val containedInVeriBlockBlockHash: String
 
     @SerializedName("veriblock_transaction_id")
-    public String veriBlockTransactionId;
+    val veriBlockTransactionId: String
 
     @SerializedName("bitcoin_transaction")
-    public String bitcoinTransaction;
+    val bitcoinTransaction: String
 
     @SerializedName("bitcoin_transaction_id")
-    public String bitcoinTransactionId;
+    val bitcoinTransactionId: String
 
     @SerializedName("bitcoin_block_header")
-    public String bitcoinBlockHeader;
+    val bitcoinBlockHeader: String
 
     @SerializedName("bitcoin_block_header_hash")
-    public String bitcoinBlockHeaderHash;
+    val bitcoinBlockHeaderHash: String
 
     @SerializedName("reward")
-    public String reward;
+    val reward: String
 
     @SerializedName("finalized")
-    public boolean finalized;
+    val finalized: Boolean
 
     @SerializedName("endorsed_block_number")
-    public int endorsedBlockNumber;
+    val endorsedBlockNumber: Int
+
+    init {
+        minerAddress = Utility.bytesToBase58(popEndorsementInfo.minerAddress.toByteArray())
+        endorsedVeriBlockBlockHash = Utility.bytesToHex(popEndorsementInfo.endorsedVeriblockBlockHash.toByteArray())
+        containedInVeriBlockBlockHash = Utility.bytesToHex(
+            popEndorsementInfo.containedInVeriblockBlockHash.toByteArray()
+        )
+        veriBlockTransactionId = Utility.bytesToHex(popEndorsementInfo.veriblockTxId.toByteArray())
+        bitcoinTransaction = Utility.bytesToHex(popEndorsementInfo.bitcoinTransaction.toByteArray())
+        bitcoinTransactionId = Utility.bytesToHex(popEndorsementInfo.bitcoinTxId.toByteArray())
+        bitcoinBlockHeader = Utility.bytesToHex(popEndorsementInfo.bitcoinBlockHeader.toByteArray())
+        bitcoinBlockHeaderHash = Utility.bytesToHex(popEndorsementInfo.bitcoinBlockHeaderHash.toByteArray())
+        reward = Utility.formatAtomicLongWithDecimal(popEndorsementInfo.reward)
+        finalized = popEndorsementInfo.finalized
+        endorsedBlockNumber = popEndorsementInfo.endorsedBlockNumber
+    }
 }

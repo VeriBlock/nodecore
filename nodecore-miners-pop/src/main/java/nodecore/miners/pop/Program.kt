@@ -15,7 +15,7 @@ import nodecore.miners.pop.events.ProgramQuitEvent
 import nodecore.miners.pop.events.ShellCompletedEvent
 import nodecore.miners.pop.rules.rulesModule
 import nodecore.miners.pop.shell.PopShell
-import nodecore.miners.pop.storage.repositoryModule
+import nodecore.miners.pop.storage.repositoriesModule
 import org.bitcoinj.core.Context
 import org.bitcoinj.utils.Threading
 import org.koin.core.context.startKoin
@@ -42,7 +42,7 @@ class Program {
         val startupInjector = startKoin {
             modules(listOf(
                 bootstrapModule,
-                repositoryModule,
+                repositoriesModule,
                 rulesModule,
                 webApiModule
             ))

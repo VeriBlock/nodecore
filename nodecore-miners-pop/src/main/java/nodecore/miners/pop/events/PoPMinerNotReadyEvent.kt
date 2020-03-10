@@ -4,19 +4,10 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.events
 
-package nodecore.miners.pop.events;
+import nodecore.miners.pop.contracts.PoPMinerDependencies
 
-import nodecore.miners.pop.contracts.PoPMinerDependencies;
-
-public class PoPMinerNotReadyEvent {
-    private final PoPMinerDependencies failedDependency;
-
-    public PoPMinerDependencies getFailedDependency() {
-        return failedDependency;
-    }
-
-    public PoPMinerNotReadyEvent(PoPMinerDependencies failedDependency) {
-        this.failedDependency = failedDependency;
-    }
-}
+class PoPMinerNotReadyEvent(
+    val failedDependency: PoPMinerDependencies
+)
