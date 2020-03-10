@@ -58,6 +58,9 @@ class PluginService(
         }.associate {
             it.first to it.second
         }
+        if (loadedPlugins.isEmpty()) {
+            logger.warn { "No plugins were loaded from the config!" }
+        }
     }
 
     fun getPlugins(): Map<String, SecurityInheritingChain> =
