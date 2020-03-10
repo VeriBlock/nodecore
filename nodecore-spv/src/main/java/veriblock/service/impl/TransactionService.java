@@ -13,6 +13,7 @@ import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 import org.veriblock.sdk.models.Sha256Hash;
+import veriblock.conf.NetworkParameters;
 import veriblock.model.Output;
 import veriblock.model.SigningResult;
 import veriblock.model.StandardTransaction;
@@ -23,7 +24,7 @@ import java.util.List;
 
 public class TransactionService {
 
-    private AddressManager addressManager;
+    private final AddressManager addressManager;
 
     public TransactionService(AddressManager addressManager) {
         this.addressManager = addressManager;
@@ -39,17 +40,15 @@ public class TransactionService {
      * @return A StandardTransaction object
      */
     public Transaction createStandardTransaction(
-            String inputAddress,
-            Long inputAmount,
-            List<Output> outputs,
-            Long signatureIndex) {
+        String inputAddress, Long inputAmount, List<Output> outputs, Long signatureIndex, NetworkParameters networkParameters
+    ) {
         if (inputAddress == null) {
             throw new IllegalArgumentException("createStandardTransaction cannot be called with a null inputAddress!");
         }
 
         if (!AddressUtility.isValidStandardAddress(inputAddress)) {
-            throw new IllegalArgumentException("createStandardTransaction cannot be called with an invalid " +
-                    "inputAddress (" + inputAddress + ")!");
+            throw new IllegalArgumentException(
+                "createStandardTransaction cannot be called with an invalid " + "inputAddress (" + inputAddress + ")!");
         }
 
         if (!Utility.isPositive(inputAmount)) {
@@ -81,11 +80,7 @@ public class TransactionService {
                     inputAmount + ")!");
         }
 
-        Transaction transaction = new StandardTransaction(
-                inputAddress,
-                inputAmount,
-                outputs,
-                signatureIndex);
+        Transaction transaction = new StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex, networkParameters);
 
         SigningResult signingResult = signTransaction(transaction.getTxId(), inputAddress);
 
@@ -132,9 +127,8 @@ public class TransactionService {
         return totalSize;
     }
 
-
-    public static Sha256Hash calculateTxID(Transaction transaction) {
-        return Sha256Hash.wrap(calculateTxIDBytes(transaction.toByteArray()));
+    public static Sha256Hash calculateTxID(Transaction transaction, NetworkParameters networkParameters) {
+        return Sha256Hash.wrap(calculateTxIDBytes(transaction.toByteArray(networkParameters)));
     }
 
     public static byte[] calculateTxIDBytes(byte[] rawTx) {

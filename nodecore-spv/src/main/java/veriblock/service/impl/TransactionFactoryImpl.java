@@ -2,6 +2,7 @@ package veriblock.service.impl;
 
 import com.google.inject.Singleton;
 import nodecore.api.grpc.VeriBlockMessages;
+import veriblock.conf.NetworkParameters;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.service.TransactionFactory;
@@ -9,6 +10,12 @@ import veriblock.wallet.WalletProtobufSerializer;
 
 @Singleton
 public class TransactionFactoryImpl implements TransactionFactory {
+
+    private final NetworkParameters networkParameters;
+
+    public TransactionFactoryImpl(NetworkParameters networkParameters) {
+        this.networkParameters = networkParameters;
+    }
 
     @Override
     public Transaction create(VeriBlockMessages.TransactionUnion message) {
@@ -30,11 +37,10 @@ public class TransactionFactoryImpl implements TransactionFactory {
     public Transaction create(VeriBlockMessages.SignedTransaction message) {
         WalletProtobufSerializer serializer = new WalletProtobufSerializer();
 
-        Transaction transaction = new StandardTransaction(
-                message.getTransaction().getSourceAddress().toString(),
-                message.getTransaction().getSourceAmount(),
-                serializer.deserializeOutputes(message.getTransaction().getOutputsList()),
-                message.getSignatureIndex());
+        Transaction transaction =
+            new StandardTransaction(message.getTransaction().getSourceAddress().toString(), message.getTransaction().getSourceAmount(),
+                serializer.deserializeOutputes(message.getTransaction().getOutputsList()), message.getSignatureIndex(), networkParameters
+            );
 
         transaction.addSignature(message.getSignature().toByteArray(), message.getPublicKey().toByteArray());
 

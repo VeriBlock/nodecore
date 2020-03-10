@@ -23,7 +23,7 @@ import org.veriblock.core.utilities.Utility;
 import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
 import org.veriblock.sdk.models.Coin;
-import veriblock.Context;
+import veriblock.SpvContext;
 import veriblock.model.LedgerContext;
 import veriblock.model.Output;
 import veriblock.model.StandardAddress;
@@ -45,18 +45,26 @@ import java.util.Map;
 public class AdminApiServiceImpl implements AdminApiService {
     private static final Logger logger = LoggerFactory.getLogger(AdminApiServiceImpl.class);
 
-    private PeerTable peerTable;
-    private TransactionService transactionService;
-    private AddressManager addressManager;
-    private TransactionFactory transactionFactory;
-    private PendingTransactionContainer pendingTransactionContainer;
-    private Blockchain blockchain;
+    private final SpvContext spvContext;
+    private final PeerTable peerTable;
+    private final TransactionService transactionService;
+    private final AddressManager addressManager;
+    private final TransactionFactory transactionFactory;
+    private final PendingTransactionContainer pendingTransactionContainer;
+    private final Blockchain blockchain;
 
     public static final int DEFAULT_TRANSACTION_FEE = 1000;
 
-    public AdminApiServiceImpl(PeerTable peerTable, TransactionService transactionService, AddressManager addressManager,
-                               TransactionFactory transactionFactory, PendingTransactionContainer pendingTransactionContainer,
-                               Blockchain blockchain) {
+    public AdminApiServiceImpl(
+        SpvContext spvContext,
+        PeerTable peerTable,
+        TransactionService transactionService,
+        AddressManager addressManager,
+        TransactionFactory transactionFactory,
+        PendingTransactionContainer pendingTransactionContainer,
+        Blockchain blockchain
+    ) {
+        this.spvContext = spvContext;
         this.peerTable = peerTable;
         this.transactionService = transactionService;
         this.addressManager = addressManager;
@@ -72,21 +80,18 @@ public class AdminApiServiceImpl implements AdminApiService {
         int networkStateValue = VeriBlockMessages.NetworkStateInfo.State.CONNECTED_VALUE;
 
         VeriBlockMessages.GetStateInfoReply.Builder replyBuilder = VeriBlockMessages.GetStateInfoReply.newBuilder();
-        replyBuilder.setBlockchainState(VeriBlockMessages.BlockchainStateInfo.newBuilder()
-                .setStateValue(blockchainStateValue));
-        replyBuilder.setOperatingState(VeriBlockMessages.OperatingStateInfo.newBuilder()
-                .setStateValue(operatingStateValue));
-        replyBuilder.setNetworkState(VeriBlockMessages.NetworkStateInfo.newBuilder()
-                .setStateValue(networkStateValue));
+        replyBuilder.setBlockchainState(VeriBlockMessages.BlockchainStateInfo.newBuilder().setStateValue(blockchainStateValue));
+        replyBuilder.setOperatingState(VeriBlockMessages.OperatingStateInfo.newBuilder().setStateValue(operatingStateValue));
+        replyBuilder.setNetworkState(VeriBlockMessages.NetworkStateInfo.newBuilder().setStateValue(networkStateValue));
 
         replyBuilder.setConnectedPeerCount(peerTable.getAvailablePeers());
         replyBuilder.setNetworkHeight(peerTable.getBestBlockHeight());
         replyBuilder.setLocalBlockchainHeight(blockchain.getChainHead().getHeight());
 
-        replyBuilder.setNetworkVersion(Context.getNetworkParameters().getNetworkName());
-        replyBuilder.setDataDirectory(Context.getDirectory().getPath());
+        replyBuilder.setNetworkVersion(spvContext.getNetworkParameters().getNetworkName());
+        replyBuilder.setDataDirectory(spvContext.getDirectory().getPath());
         replyBuilder.setProgramVersion(Constants.PROGRAM_VERSION == null ? "UNKNOWN" : Constants.PROGRAM_VERSION);
-        replyBuilder.setNodecoreStarttime(Context.getStartTime().getEpochSecond());
+        replyBuilder.setNodecoreStarttime(spvContext.getStartTime().getEpochSecond());
         //TODO does it need for spv?
         replyBuilder.setWalletCacheSyncHeight(blockchain.getChainHead().getHeight());
         if (!addressManager.isEncrypted()) {
@@ -136,8 +141,8 @@ public class AdminApiServiceImpl implements AdminApiService {
 
         long totalInputAmount = fee + totalOutputAmount;
 
-        Transaction transaction = transactionService.createStandardTransaction(requestedSourceAddress,
-                totalInputAmount, outputList, signatureIndex + 1);
+        Transaction transaction = transactionService
+            .createStandardTransaction(requestedSourceAddress, totalInputAmount, outputList, signatureIndex + 1, spvContext.getNetworkParameters());
 
         pendingTransactionContainer.addTransaction(transaction);
         peerTable.advertise(transaction);

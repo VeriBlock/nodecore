@@ -7,10 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net.impl;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;
@@ -23,7 +21,7 @@ import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.util.Base58;
 import spark.utils.CollectionUtils;
-import veriblock.Context;
+import veriblock.SpvContext;
 import veriblock.listeners.PendingTransactionDownloadedListener;
 import veriblock.model.DownloadStatus;
 import veriblock.model.DownloadStatusResponse;
@@ -57,11 +55,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedTransferQueue;
@@ -87,9 +83,10 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private static final ConcurrentHashMap<String, Peer> pendingPeers = new ConcurrentHashMap<>();
     private static final BlockingQueue<NetworkMessage> incomingQueue = new LinkedTransferQueue<>();
     private static final CopyOnWriteArrayList<ListenerRegistration<PendingTransactionDownloadedListener>> pendingTransactionDownloadedEventListeners =
-            new CopyOnWriteArrayList<>();
+        new CopyOnWriteArrayList<>();
 
-    private PeerDiscovery discovery;
+    private final SpvContext spvContext;
+    private final PeerDiscovery discovery;
     private final Blockchain blockchain;
     private final NodeMetadata self = new NodeMetadata();
     private final ListeningScheduledExecutorService executor;
@@ -97,22 +94,21 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
     private int maximumPeers = DEFAULT_CONNECTIONS;
     private Peer downloadPeer;
-    private BloomFilter bloomFilter;
-    private P2PService p2PService;
-    private Map<String, LedgerContext> addressState = new ConcurrentHashMap<>();
+    private final BloomFilter bloomFilter;
+    private final P2PService p2PService;
+    private final Map<String, LedgerContext> addressState = new ConcurrentHashMap<>();
 
-
-    public PeerTableImpl(P2PService p2PService, PeerDiscovery peerDiscovery) {
+    public PeerTableImpl(SpvContext spvContext, P2PService p2PService, PeerDiscovery peerDiscovery) {
+        this.spvContext = spvContext;
         this.p2PService = p2PService;
         this.bloomFilter = createBloomFilter();
 
-        this.blockchain = Context.getBlockchain();
-        this.executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat("PeerTable Thread").build()));
-        this.messageExecutor = Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build());
+        this.blockchain = spvContext.getBlockchain();
+        this.executor = MoreExecutors
+            .listeningDecorator(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("PeerTable Thread").build()));
+        this.messageExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build());
         this.discovery = peerDiscovery;
-        addPendingTransactionDownloadedEventListeners(executor, Context.getPendingTransactionDownloadedListener());
+        addPendingTransactionDownloadedEventListeners(executor, spvContext.getPendingTransactionDownloadedListener());
 
     }
 
@@ -167,7 +163,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     }
 
     public Peer createPeer(PeerAddress address) {
-        return new Peer(blockchain, self, address.getAddress(), address.getPort());
+        return new Peer(spvContext, blockchain, self, address.getAddress(), address.getPort());
     }
 
     public void openConnection(Peer peer) throws IOException {
@@ -190,7 +186,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     }
 
     private void requestAddressState() {
-        List<Address> addresses = Context.getAddressManager().getAll();
+        List<Address> addresses = spvContext.getAddressManager().getAll();
         if (CollectionUtils.isEmpty(addresses)) {
             return;
         }
@@ -306,8 +302,9 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     }
 
     private BloomFilter createBloomFilter() {
-        List<Address> addresses = Context.getAddressManager().getAll();
-        BloomFilter filter = new BloomFilter((Context.getAddressManager().getNumAddresses() + 10), BLOOM_FILTER_FALSE_POSITIVE_RATE, BLOOM_FILTER_TWEAK);
+        List<Address> addresses = spvContext.getAddressManager().getAll();
+        BloomFilter filter =
+            new BloomFilter((spvContext.getAddressManager().getNumAddresses() + 10), BLOOM_FILTER_FALSE_POSITIVE_RATE, BLOOM_FILTER_TWEAK);
 
         for (Address address : addresses) {
             filter.insert(address.getHash());

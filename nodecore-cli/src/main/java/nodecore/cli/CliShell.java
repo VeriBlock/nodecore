@@ -7,8 +7,8 @@
 
 package nodecore.cli;
 
-import nodecore.cli.annotations.ModeType;
 import nodecore.cli.annotations.CommandServiceType;
+import nodecore.cli.annotations.ModeType;
 import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.EndpointTransportType;
@@ -27,7 +27,7 @@ import org.veriblock.shell.CommandFactory;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
-import veriblock.Context;
+import veriblock.SpvContext;
 import veriblock.conf.NetworkParameters;
 import veriblock.model.DownloadStatusResponse;
 import veriblock.net.BootstrapPeerDiscovery;
@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CliShell extends Shell {
     private static final Logger _logger = LoggerFactory.getLogger(CliShell.class);
 
+    private final SpvContext spvContext = new SpvContext();
     private final ProtocolEndpointContainer _endpointContainer = new ProtocolEndpointContainer();
     private final AtomicBoolean connected = new AtomicBoolean(false);
 
@@ -262,7 +263,7 @@ public class CliShell extends Shell {
                 endpoint = startSPV(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
                 host = programOptions.getSpvNetworkParameters().getAdminHost() + ":" + programOptions.getSpvNetworkParameters().getAdminPort();
 
-                disconnectCallBack = Context::shutdown;
+                disconnectCallBack = spvContext::shutdown;
             } catch (Exception e) {
                 _logger.error(e.getMessage(), e);
             }
@@ -338,16 +339,16 @@ public class CliShell extends Shell {
     }
 
     public ProtocolEndpoint startSPV(NetworkParameters net, PeerDiscovery peerDiscovery) throws ExecutionException, InterruptedException {
-        Context.init(net, peerDiscovery, true);
-        Context.getPeerTable().start();
+        spvContext.init(net, peerDiscovery, true);
+        spvContext.getPeerTable().start();
 
-        while (true){
-            DownloadStatusResponse status = Context.getPeerTable().getDownloadStatus();
-            if(status.getDownloadStatus().isDiscovering()){
+        while (true) {
+            DownloadStatusResponse status = spvContext.getPeerTable().getDownloadStatus();
+            if (status.getDownloadStatus().isDiscovering()) {
                 printInfo("Waiting for peers response.");
-            } else if(status.getDownloadStatus().isDownloading()){
+            } else if (status.getDownloadStatus().isDownloading()) {
                 printInfo("Blockchain is downloading. " + status.getCurrentHeight() + " / " + status.getBestHeight());
-            } else{
+            } else {
                 printInfo("Blockchain is ready. Current height " + status.getCurrentHeight());
                 break;
             }
@@ -520,5 +521,9 @@ public class CliShell extends Shell {
 
     public boolean isConnected() {
         return _adminServiceClient != null;
+    }
+
+    public SpvContext getSpvContext() {
+        return spvContext;
     }
 }

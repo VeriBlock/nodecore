@@ -9,6 +9,7 @@ package veriblock.model;
 
 import nodecore.api.grpc.VeriBlockMessages;
 import org.veriblock.sdk.models.Sha256Hash;
+import veriblock.conf.NetworkParameters;
 
 import java.util.List;
 
@@ -40,9 +41,9 @@ public abstract class Transaction {
 
     public abstract TransactionTypeIdentifier getTransactionTypeIdentifier();
 
-    public abstract byte[] toByteArray();
+    public abstract byte[] toByteArray(NetworkParameters networkParameters);
 
-    public abstract VeriBlockMessages.SignedTransaction.Builder getSignedMessageBuilder();
+    public abstract VeriBlockMessages.SignedTransaction.Builder getSignedMessageBuilder(NetworkParameters networkParameters);
 
     public final Sha256Hash getTxId() {
         return txId;

@@ -5,6 +5,7 @@ import nodecore.api.grpc.VeriBlockMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.sdk.models.Sha256Hash;
+import veriblock.conf.NetworkParameters;
 import veriblock.model.Transaction;
 import veriblock.net.P2PService;
 import veriblock.net.Peer;
@@ -16,10 +17,12 @@ import java.util.List;
 public class P2PServiceImpl implements P2PService {
     private static final Logger logger = LoggerFactory.getLogger(P2PServiceImpl.class);
 
-    private PendingTransactionContainer pendingTransactionContainer;
+    private final PendingTransactionContainer pendingTransactionContainer;
+    private final NetworkParameters networkParameters;
 
-    public P2PServiceImpl(PendingTransactionContainer pendingTransactionContainer) {
+    public P2PServiceImpl(PendingTransactionContainer pendingTransactionContainer, NetworkParameters networkParameters) {
         this.pendingTransactionContainer = pendingTransactionContainer;
+        this.networkParameters = networkParameters;
     }
 
     @Override
@@ -35,18 +38,16 @@ public class P2PServiceImpl implements P2PService {
 
                 switch (transaction.getTransactionTypeIdentifier()) {
                     case STANDARD:
-                        builder.setTransaction(VeriBlockMessages.TransactionUnion
-                                .newBuilder()
-                                .setSigned(transaction.getSignedMessageBuilder()));
+                        builder.setTransaction(
+                            VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters)));
                         break;
                     case MULTISIG:
                         //TODO SPV-47
                         throw new UnsupportedOperationException();
 
                     case PROOF_OF_PROOF:
-                        builder.setTransaction(VeriBlockMessages.TransactionUnion
-                                .newBuilder()
-                                .setSigned(transaction.getSignedMessageBuilder()));
+                        builder.setTransaction(
+                            VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters)));
                         break;
                 }
 

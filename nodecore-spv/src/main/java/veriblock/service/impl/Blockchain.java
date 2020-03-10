@@ -14,7 +14,7 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.sdk.blockchain.store.VeriBlockStore;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import spark.utils.CollectionUtils;
-import veriblock.Context;
+import veriblock.conf.NetworkParameters;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -31,9 +31,11 @@ import java.util.stream.Collectors;
 public class Blockchain {
     private static final Logger logger = LoggerFactory.getLogger(Blockchain.class);
 
+    private final NetworkParameters networkParameters;
     private final VeriBlockStore blockStore;
 
-    public Blockchain(VeriBlockStore blockStore) {
+    public Blockchain(NetworkParameters networkParameters, VeriBlockStore blockStore) {
+        this.networkParameters = networkParameters;
         this.blockStore = blockStore;
     }
 
@@ -168,7 +170,7 @@ public class Blockchain {
             logger.error("Unable to build peer query", e);
         }
 
-        blocks.add(Context.getNetworkParameters().getGenesisBlock());
+        blocks.add(networkParameters.getGenesisBlock());
 
         return blocks;
     }
