@@ -87,7 +87,7 @@ class NxtFamilyChain(
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
-        logger.info { "Retrieving publication data at height $actualBlockHeight from $key daemon at ${config.host}..." }
+        logger.info { "Retrieving mining instruction at height $actualBlockHeight from $key daemon at ${config.host}..." }
         val response: NxtPublicationData = "${config.host}/nxt".httpGet(
             listOf(
                 "requestType" to "getPopData",

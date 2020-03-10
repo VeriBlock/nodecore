@@ -201,7 +201,7 @@ class BitcoinFamilyChain(
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
-        logger.info { "Retrieving publication data at height $actualBlockHeight from $key daemon at ${config.host}..." }
+        logger.info { "Retrieving mining instruction at height $actualBlockHeight from $key daemon at ${config.host}..." }
         val jsonBody = JsonRpcRequestBody("getpopdata", listOf(actualBlockHeight)).toJson()
         val response: BtcPublicationData = config.host.httpPost()
             .authenticate()
