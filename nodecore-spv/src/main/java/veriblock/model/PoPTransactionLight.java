@@ -15,6 +15,7 @@ import org.veriblock.sdk.models.MerklePath;
 import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.services.SerializeDeserializeService;
+import veriblock.conf.NetworkParameters;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class PoPTransactionLight extends StandardTransaction {
     private BitcoinTransaction bitcoinTx;
     private MerklePath bitcoinMerklePath;
     private BitcoinBlock blockOfProof;
-    private List<BitcoinBlock> blockOfProofContext = new ArrayList<>();
+    private final List<BitcoinBlock> blockOfProofContext = new ArrayList<>();
 
     public PoPTransactionLight(Sha256Hash txId) {
         super(txId);
@@ -75,12 +76,12 @@ public class PoPTransactionLight extends StandardTransaction {
     }
 
     @Override
-    public byte[] toByteArray() {
+    public byte[] toByteArray(NetworkParameters networkParameters) {
         return calculateHash();
     }
 
     @Override
-    public VeriBlockMessages.SignedTransaction.Builder getSignedMessageBuilder() {
+    public VeriBlockMessages.SignedTransaction.Builder getSignedMessageBuilder(NetworkParameters networkParameters) {
         //TODO SPV-48
         return null;
     }

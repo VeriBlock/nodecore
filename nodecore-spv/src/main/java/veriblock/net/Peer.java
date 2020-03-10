@@ -16,7 +16,7 @@ import org.veriblock.core.crypto.BloomFilter;
 import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import veriblock.Context;
+import veriblock.SpvContext;
 import veriblock.model.ListenerRegistration;
 import veriblock.model.NodeMetadata;
 import veriblock.service.impl.Blockchain;
@@ -38,6 +38,7 @@ public class Peer implements PeerSocketClosedEventListener {
     private final CopyOnWriteArrayList<ListenerRegistration<MessageReceivedEventListener>> messageReceivedEventListeners =
             new CopyOnWriteArrayList<>();
 
+    private final SpvContext spvContext;
     private final Blockchain blockchain;
     private final NodeMetadata self;
     private final String address;
@@ -47,7 +48,8 @@ public class Peer implements PeerSocketClosedEventListener {
     private int bestBlockHeight;
     private String bestBlockHash;
 
-    public Peer(Blockchain blockchain, NodeMetadata self, String address, int port) {
+    public Peer(SpvContext spvContext, Blockchain blockchain, NodeMetadata self, String address, int port) {
+        this.spvContext = spvContext;
         this.blockchain = blockchain;
         this.self = self;
         this.address = address;
@@ -81,9 +83,8 @@ public class Peer implements PeerSocketClosedEventListener {
                 .setAcknowledge(false)
                 .setAnnounce(VeriBlockMessages.Announce.newBuilder()
                         .setReply(false)
-                        .setNodeInfo(VeriBlockMessages.NodeInfo.newBuilder()
-                                .setApplication(self.getApplication())
-                                .setProtocolVersion(Context.getNetworkParameters().getProtocolVersion())
+                        .setNodeInfo(VeriBlockMessages.NodeInfo.newBuilder().setApplication(self.getApplication())
+                            .setProtocolVersion(spvContext.getNetworkParameters().getProtocolVersion())
                                 .setPlatform(self.getPlatform())
                                 .setStartTimestamp(self.getStartTimestamp())
                                 .setShare(false)
@@ -130,7 +131,7 @@ public class Peer implements PeerSocketClosedEventListener {
                 List<VeriBlockMessages.TransactionAnnounce> transactions = message.getAdvertiseTx().getTransactionsList();
                 for (VeriBlockMessages.TransactionAnnounce tx : transactions) {
                     Sha256Hash txId = Sha256Hash.wrap(tx.getTxId().toByteArray());
-                    int broadcastCount = Context.getTransactionPool().record(txId, getAddress());
+                    int broadcastCount = spvContext.getTransactionPool().record(txId, getAddress());
                     if (broadcastCount == 1) {
                         txRequestBuilder.addTransactions(tx);
                     }

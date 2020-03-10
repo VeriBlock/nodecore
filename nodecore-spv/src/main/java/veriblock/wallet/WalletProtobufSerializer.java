@@ -26,10 +26,8 @@ import java.util.stream.Collectors;
 public class WalletProtobufSerializer {
     private static final Logger logger = LoggerFactory.getLogger(WalletProtobufSerializer.class);
 
-    public List<Output> deserializeOutputes(List<VeriBlockMessages.Output> output) {
-        List<Output> outputs = output.stream()
-                .map(out -> deserialize(out))
-                .collect(Collectors.toList());
+    public List<Output> deserializeOutputs(List<VeriBlockMessages.Output> output) {
+        List<Output> outputs = output.stream().map(out -> deserialize(out)).collect(Collectors.toList());
 
         return outputs;
     }

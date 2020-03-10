@@ -4,13 +4,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
-import veriblock.Context;
+import veriblock.SpvContext;
+import veriblock.conf.TestNetParameters;
 import veriblock.model.Output;
 import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.net.LocalhostDiscovery;
 import veriblock.net.Peer;
-import veriblock.conf.TestNetParameters;
 import veriblock.service.PendingTransactionContainer;
 
 import java.util.ArrayList;
@@ -25,17 +25,19 @@ import static org.mockito.Mockito.when;
 
 public class P2PServiceImplTest {
 
+    private final SpvContext spvContext = new SpvContext();
+
     private PendingTransactionContainer pendingTransactionContainer;
     private Peer peer;
     private P2PServiceImpl p2PService;
 
     @Before
     public void setUp() {
-        Context.init(TestNetParameters.get(), new LocalhostDiscovery(), false);
+        spvContext.init(TestNetParameters.get(), new LocalhostDiscovery(TestNetParameters.get()), false);
 
         this.pendingTransactionContainer = mock(PendingTransactionContainer.class);
         this.peer = mock(Peer.class);
-        this.p2PService = new P2PServiceImpl(pendingTransactionContainer);
+        this.p2PService = new P2PServiceImpl(pendingTransactionContainer, spvContext.getNetworkParameters());
     }
 
     @Test
@@ -59,8 +61,9 @@ public class P2PServiceImplTest {
 
         ArrayList<Output> outputs = new ArrayList<>();
         outputs.add(new Output(new StandardAddress("V7GghFKRA6BKqtHD7LTdT2ao93DRNA"), Coin.valueOf(3499999999L)));
-        StandardTransaction standardTransaction = new StandardTransaction("V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L,outputs, 5904L);
-        byte[] pub = new byte[]{1,2,3};
+        StandardTransaction standardTransaction =
+            new StandardTransaction("V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.getNetworkParameters());
+        byte[] pub = new byte[]{1, 2, 3};
         byte[] sign = new byte[]{3,2,1};
         standardTransaction.addSignature(sign,pub);
 

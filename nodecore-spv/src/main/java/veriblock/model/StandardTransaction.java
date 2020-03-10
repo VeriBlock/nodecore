@@ -16,8 +16,8 @@ import org.veriblock.core.utilities.Utility;
 import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import veriblock.Context;
 import veriblock.conf.MainNetParameters;
+import veriblock.conf.NetworkParameters;
 import veriblock.service.impl.TransactionService;
 
 import java.io.ByteArrayOutputStream;
@@ -49,7 +49,13 @@ public class StandardTransaction extends Transaction {
         super(txId);
     }
 
-    public StandardTransaction(String inputAddress, long inputAmount, List<Output> outputs, long signatureIndex) {
+    public StandardTransaction(
+        String inputAddress,
+        long inputAmount,
+        List<Output> outputs,
+        long signatureIndex,
+        NetworkParameters networkParameters
+    ) {
 
         long totalOutput = 0L;
         for (Output o : outputs) {
@@ -58,7 +64,6 @@ public class StandardTransaction extends Transaction {
 
         long fee = inputAmount - totalOutput;
 
-
         // Only for Alt Chain Endorsement Transactions
         this.setData(new byte[0]);
         this.setSignatureIndex(signatureIndex);
@@ -66,12 +71,12 @@ public class StandardTransaction extends Transaction {
         this.setInputAmount(Coin.valueOf(inputAmount));
         this.setInputAddress(new StandardAddress(inputAddress));
         this.setTransactionFee(fee);
-        this.setTxId(TransactionService.calculateTxID(this));
+        this.setTxId(TransactionService.calculateTxID(this, networkParameters));
     }
 
-    public byte[] toByteArray() {
+    public byte[] toByteArray(NetworkParameters networkParameters) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serializeToStream(stream);
+            serializeToStream(stream, networkParameters);
 
             return stream.toByteArray();
         } catch (IOException e) {
@@ -82,8 +87,8 @@ public class StandardTransaction extends Transaction {
         return null;
     }
 
-    public VeriBlockMessages.SignedTransaction.Builder getSignedMessageBuilder() {
-        VeriBlockMessages.Transaction transaction = getTransactionMessageBuilder().build();
+    public VeriBlockMessages.SignedTransaction.Builder getSignedMessageBuilder(NetworkParameters networkParameters) {
+        VeriBlockMessages.Transaction transaction = getTransactionMessageBuilder(networkParameters).build();
         VeriBlockMessages.SignedTransaction.Builder builder = VeriBlockMessages.SignedTransaction.newBuilder();
         builder.setTransaction(transaction);
         builder.setSignatureIndex(getSignatureIndex());
@@ -92,7 +97,7 @@ public class StandardTransaction extends Transaction {
         return builder;
     }
 
-    private VeriBlockMessages.Transaction.Builder getTransactionMessageBuilder() {
+    private VeriBlockMessages.Transaction.Builder getTransactionMessageBuilder(NetworkParameters networkParameters) {
         VeriBlockMessages.Transaction.Builder builder = VeriBlockMessages.Transaction.newBuilder();
         builder.setTimestamp(Utility.getCurrentTimeSeconds());
         builder.setTransactionFee(getTransactionFee());
@@ -111,7 +116,7 @@ public class StandardTransaction extends Transaction {
 
         builder.setData(ByteString.copyFrom(getData()));
 
-        builder.setSize(toByteArray().length);
+        builder.setSize(toByteArray(networkParameters).length);
 
         for (Output output : getOutputs()) {
             VeriBlockMessages.Output.Builder outputBuilder = builder.addOutputsBuilder();
@@ -123,9 +128,8 @@ public class StandardTransaction extends Transaction {
         return builder;
     }
 
-    private void serializeToStream(OutputStream stream) throws IOException {
-        Byte magicByte = !Context.getNetworkParameters().getNetworkName().equals(MainNetParameters.NETWORK) ?
-                NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND : null;
+    private void serializeToStream(OutputStream stream, NetworkParameters networkParameters) throws IOException {
+        Byte magicByte = !networkParameters.getNetworkName().equals(MainNetParameters.NETWORK) ? NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND : null;
 
         if (magicByte != null) {
             stream.write(magicByte);

@@ -1,7 +1,7 @@
 package veriblock.wallet;
 
 import org.veriblock.sdk.models.Sha256Hash;
-import veriblock.Context;
+import veriblock.SpvContext;
 import veriblock.listeners.PendingTransactionDownloadedListener;
 import veriblock.model.StandardTransaction;
 import veriblock.model.TransactionMeta;
@@ -12,13 +12,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class PendingTransactionDownloadedListenerImpl  implements PendingTransactionDownloadedListener {
+public class PendingTransactionDownloadedListenerImpl implements PendingTransactionDownloadedListener {
+
+    private final SpvContext spvContext;
 
     private Map<Sha256Hash, StandardTransaction> transactions;
     private final Ledger ledger = new Ledger();
 
     private final KeyRing keyRing = new KeyRing();
     private final ReentrantLock lock = new ReentrantLock(true);
+
+    public PendingTransactionDownloadedListenerImpl(SpvContext spvContext) {
+        this.spvContext = spvContext;
+    }
 
     @Override
     public void onPendingTransactionDownloaded(StandardTransaction transaction) {
@@ -28,7 +34,7 @@ public class PendingTransactionDownloadedListenerImpl  implements PendingTransac
     void loadTransactions(List<StandardTransaction> toLoad) {
         for (StandardTransaction tx : toLoad) {
             transactions.put(tx.getTxId(), tx);
-            Context.getTransactionPool().insert(tx.getTransactionMeta());
+            spvContext.getTransactionPool().insert(tx.getTransactionMeta());
         }
     }
 

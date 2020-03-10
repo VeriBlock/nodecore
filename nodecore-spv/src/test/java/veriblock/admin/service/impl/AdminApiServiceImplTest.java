@@ -14,12 +14,12 @@ import org.veriblock.core.wallet.WalletLockedException;
 import org.veriblock.core.wallet.WalletUnreadableException;
 import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.util.Base58;
-import veriblock.Context;
+import veriblock.SpvContext;
+import veriblock.conf.TestNetParameters;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.net.LocalhostDiscovery;
 import veriblock.net.PeerTable;
-import veriblock.conf.TestNetParameters;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
 import veriblock.service.TransactionFactory;
@@ -41,6 +41,7 @@ import static org.mockito.Mockito.when;
 
 public class AdminApiServiceImplTest {
 
+    private final SpvContext spvContext = new SpvContext();
     private TransactionService transactionService;
     private AddressManager addressManager;
     private PeerTable peerTable;
@@ -51,7 +52,7 @@ public class AdminApiServiceImplTest {
 
     @Before
     public void setUp() throws IOException {
-        Context.init(TestNetParameters.get(), new LocalhostDiscovery(), false);
+        spvContext.init(TestNetParameters.get(), new LocalhostDiscovery(TestNetParameters.get()), false);
 
         this.peerTable = mock(PeerTable.class);
         this.transactionService = mock(TransactionService.class);
@@ -59,8 +60,8 @@ public class AdminApiServiceImplTest {
         this.transactionFactory = mock(TransactionFactory.class);
         this.transactionContainer = mock(PendingTransactionContainer.class);
         this.blockchain = mock(Blockchain.class);
-        this.adminApiService = new AdminApiServiceImpl(peerTable, transactionService, addressManager, transactionFactory,
-                transactionContainer, blockchain);
+        this.adminApiService =
+            new AdminApiServiceImpl(spvContext, peerTable, transactionService, addressManager, transactionFactory, transactionContainer, blockchain);
     }
 
     @Test
@@ -77,16 +78,28 @@ public class AdminApiServiceImplTest {
                 .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
                 .build();
 
-        when(transactionService.predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyInt() )).thenReturn(500);
-        when(transactionService.createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong())).thenReturn(transaction);
+        when(transactionService
+            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.anyInt()
+            )).thenReturn(500);
+        when(transactionService
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.any()
+            )).thenReturn(transaction);
         when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
         doNothing().when(peerTable).advertise(ArgumentMatchers.any());
 
         VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
 
-        verify(transactionService,  times(1)).predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(), ArgumentMatchers.anyInt());
-        verify(transactionService,  times(1)).createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong());
-        verify(transactionContainer,  times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
+        verify(transactionService, times(1))
+            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.anyInt()
+            );
+        verify(transactionService, times(1))
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.any()
+            );
+        verify(transactionContainer, times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
         verify(peerTable,  times(1)).advertise(ArgumentMatchers.any());
 
         Assert.assertNotNull(reply.getTxIds(0));

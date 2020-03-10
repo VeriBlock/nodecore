@@ -7,9 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net;
 
-import veriblock.Context;
-import veriblock.model.PeerAddress;
 import veriblock.conf.NetworkParameters;
+import veriblock.model.PeerAddress;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -18,9 +17,14 @@ import java.util.Collections;
  * Discovery peer locally.
  */
 public class LocalhostDiscovery implements PeerDiscovery {
+    private final NetworkParameters networkParameters;
+
+    public LocalhostDiscovery(NetworkParameters networkParameters) {
+        this.networkParameters = networkParameters;
+    }
 
     @Override
     public Collection<PeerAddress> getPeers(int count) {
-        return Collections.singletonList(new PeerAddress(NetworkParameters.LOCALHOST, Context.getNetworkParameters().getP2pPort()));
+        return Collections.singletonList(new PeerAddress(NetworkParameters.LOCALHOST, networkParameters.getP2pPort()));
     }
 }

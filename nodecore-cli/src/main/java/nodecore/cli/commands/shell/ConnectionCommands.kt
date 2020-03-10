@@ -4,7 +4,6 @@ import nodecore.cli.annotations.ModeType
 import nodecore.cli.cliCommand
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
-import nodecore.cli.contracts.EndpointTransportType
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
 import nodecore.cli.contracts.ProtocolEndpointType
@@ -12,9 +11,7 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
-import veriblock.Context
 import veriblock.conf.NetworkParameters
-import veriblock.model.DownloadStatusResponse
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
 import veriblock.net.PeerDiscovery
@@ -70,13 +67,13 @@ fun CommandFactory.connectionCommands() {
         val peer: String? = getOptionalParameter("peer")
 
         // Work with bootstraps peers by default.
-        var peerDiscovery: PeerDiscovery = if (peer != null && peer == "local") LocalhostDiscovery() else BootstrapPeerDiscovery(net)
+        val peerDiscovery: PeerDiscovery = if (peer == "local") LocalhostDiscovery(net) else BootstrapPeerDiscovery(net)
 
         val endpoint = shell.startSPV(net, peerDiscovery)
 
         this.extraData["connect"] = endpoint
         this.extraData["disconnectCallBack"] = Runnable {
-            Context.shutdown()
+            shell.spvContext.shutdown()
         }
 
         success()

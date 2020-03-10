@@ -24,6 +24,7 @@ import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.sqlite.ConnectionSelector;
 import org.veriblock.sdk.sqlite.FileManager;
+import veriblock.conf.NetworkParameters;
 import veriblock.listeners.PendingTransactionDownloadedListener;
 import veriblock.model.TransactionPool;
 import veriblock.net.P2PService;
@@ -31,7 +32,6 @@ import veriblock.net.PeerDiscovery;
 import veriblock.net.PeerTable;
 import veriblock.net.impl.P2PServiceImpl;
 import veriblock.net.impl.PeerTableImpl;
-import veriblock.conf.NetworkParameters;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
 import veriblock.service.impl.AdminApiServiceImpl;
@@ -54,45 +54,45 @@ import java.time.Instant;
  * Initialize and hold beans/classes.
  * Required initialization. Context.init(....)
  */
-public class Context {
-    private static final Logger log = LoggerFactory.getLogger(Context.class);
+public class SpvContext {
+    private static final Logger log = LoggerFactory.getLogger(SpvContext.class);
 
-    private static NetworkParameters networkParameters;
-    private static File directory;
-    private static String filePrefix;
-    private static TransactionPool transactionPool;
+    private NetworkParameters networkParameters;
+    private File directory;
+    private String filePrefix;
+    private TransactionPool transactionPool;
 
-    private static VeriBlockStore veriBlockStore;
-    private static BitcoinStore bitcoinStore;
+    private VeriBlockStore veriBlockStore;
+    private BitcoinStore bitcoinStore;
 
-    private static AuditorChangesStore auditStore;
-    private static Blockchain blockchain;
-    private static Instant startTime = Instant.now();
-    private static AdminApiService adminApiService;
-    private static AdminServiceFacade adminService;
-    private static AdminServerInterceptor adminServerInterceptor;
-    private static PeerTable peerTable;
-    private static P2PService p2PService;
-    private static Server server;
-    private static AddressManager addressManager;
-    private static TransactionService transactionService;
-    private static PendingTransactionContainer pendingTransactionContainer;
-    private static PendingTransactionDownloadedListener pendingTransactionDownloadedListener;
+    private AuditorChangesStore auditStore;
+    private Blockchain blockchain;
+    private Instant startTime = Instant.now();
+    private AdminApiService adminApiService;
+    private AdminServiceFacade adminService;
+    private AdminServerInterceptor adminServerInterceptor;
+    private PeerTable peerTable;
+    private P2PService p2PService;
+    private Server server;
+    private AddressManager addressManager;
+    private TransactionService transactionService;
+    private PendingTransactionContainer pendingTransactionContainer;
+    private PendingTransactionDownloadedListener pendingTransactionDownloadedListener;
 
     public static final String FILE_EXTENSION = ".vbkwallet";
 
     /**
      * Initialise context. This method should be call on the start app.
      *
-     * @param networkParam Config for particular network.
-     * @param baseDir will use as a start point for inner directories. (db, wallet so on.)
-     * @param filePr prefix for wallet name. (for example: vbk-MainNet, vbk-TestNet)
-     * @param peerDiscovery discovery peers.
+     * @param networkParam   Config for particular network.
+     * @param baseDir        will use as a start point for inner directories. (db, wallet so on.)
+     * @param filePr         prefix for wallet name. (for example: vbk-MainNet, vbk-TestNet)
+     * @param peerDiscovery  discovery peers.
      * @param runAdminServer Start Admin RPC service. (It can be not necessary for tests.)
      */
-    public static synchronized void init(NetworkParameters networkParam, File baseDir, String filePr, PeerDiscovery peerDiscovery, boolean runAdminServer) {
+    public synchronized void init(NetworkParameters networkParam, File baseDir, String filePr, PeerDiscovery peerDiscovery, boolean runAdminServer) {
         try {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> Context.shutdown(), "ShutdownHook nodecore-spv"));
+            Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownHook nodecore-spv"));
 
             networkParameters = networkParam;
             directory = baseDir;
@@ -107,70 +107,66 @@ public class Context {
 
             auditStore = new AuditorChangesStore(ConnectionSelector.setConnectionDefault());
             transactionPool = new TransactionPool();
-            blockchain = new Blockchain(veriBlockStore);
-
-
+            blockchain = new Blockchain(networkParameters.getGenesisBlock(), veriBlockStore);
 
             pendingTransactionContainer = new PendingTransactionContainerImpl();
-            p2PService = new P2PServiceImpl(pendingTransactionContainer);
+            p2PService = new P2PServiceImpl(pendingTransactionContainer, networkParameters);
 
             addressManager = new DefaultAddressManager();
-            File walletFile = new File(Context.getDirectory(), Context.getFilePrefix() + FILE_EXTENSION);
+            File walletFile = new File(getDirectory(), getFilePrefix() + FILE_EXTENSION);
             addressManager.load(walletFile);
 
-            peerTable = new PeerTableImpl(p2PService, peerDiscovery);
+            peerTable = new PeerTableImpl(this, p2PService, peerDiscovery);
             transactionService = new TransactionService(addressManager);
-            adminApiService = new AdminApiServiceImpl(peerTable, transactionService, addressManager, new TransactionFactoryImpl(),
-                    pendingTransactionContainer, blockchain);
+            adminApiService =
+                new AdminApiServiceImpl(this, peerTable, transactionService, addressManager, new TransactionFactoryImpl(networkParameters),
+                    pendingTransactionContainer, blockchain
+                );
 
             adminService = new AdminServiceFacade(adminApiService);
             adminServerInterceptor = new AdminServerInterceptor();
 
-            if(runAdminServer) {
+            if (runAdminServer) {
                 peerTable.start();
                 server = createAdminServer();
             }
 
-            pendingTransactionDownloadedListener = new PendingTransactionDownloadedListenerImpl();
+            pendingTransactionDownloadedListener = new PendingTransactionDownloadedListenerImpl(this);
         } catch (Exception e) {
             log.error("Could not initialize VeriBlock security", e);
             throw new RuntimeException(e);
         }
-
     }
 
     /**
      * Initialise context. This method should be call on the start app.
      *
      * @param networkParameters Config for particular network.
-     * @param peerDiscovery discovery peers.
-     * @param runAdminServer Start Admin RPC service. (It can be not necessary for tests.)
+     * @param peerDiscovery     discovery peers.
+     * @param runAdminServer    Start Admin RPC service. (It can be not necessary for tests.)
      */
-    public static synchronized void init(NetworkParameters networkParameters, PeerDiscovery peerDiscovery, boolean runAdminServer) {
+    public synchronized void init(NetworkParameters networkParameters, PeerDiscovery peerDiscovery, boolean runAdminServer) {
         init(networkParameters, new File("."), String.format("vbk-%s", networkParameters.getNetworkName()), peerDiscovery, runAdminServer);
     }
 
-    public static void shutdown(){
+    public void shutdown() {
         peerTable.shutdown();
-        if(server!= null) {
+        if (server != null) {
             server.shutdown();
         }
     }
 
-    private static Server createAdminServer() throws IOException, NumberFormatException {
-        InetSocketAddress rpcBindAddress = new InetSocketAddress(Context.getNetworkParameters().getAdminHost(), Context.getNetworkParameters().getAdminPort());
-        log.info("Starting Admin RPC service on {} with password {}", rpcBindAddress, Context.getNetworkParameters().getAdminPassword());
+    private Server createAdminServer() throws IOException, NumberFormatException {
+        InetSocketAddress rpcBindAddress = new InetSocketAddress(getNetworkParameters().getAdminHost(), getNetworkParameters().getAdminPort());
+        log.info("Starting Admin RPC service on {} with password {}", rpcBindAddress, getNetworkParameters().getAdminPassword());
 
-        return NettyServerBuilder
-                .forAddress(rpcBindAddress)
-                .addService(ServerInterceptors.intercept(adminService, adminServerInterceptor))
-                .build()
-                .start();
+        return NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor)).build()
+            .start();
     }
 
-    private static void init(VeriBlockStore veriBlockStore, NetworkParameters params){
+    private void init(VeriBlockStore veriBlockStore, NetworkParameters params) {
         try {
-            if(veriBlockStore.getChainHead() == null){
+            if (veriBlockStore.getChainHead() == null) {
                 VeriBlockBlock genesis = params.getGenesisBlock();
                 StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(genesis, BitcoinUtilities.decodeCompactBits(genesis.getDifficulty()));
 
@@ -182,10 +178,9 @@ public class Context {
         }
     }
 
-
-    private static void init(BitcoinStore bitcoinStore, NetworkParameters params){
+    private void init(BitcoinStore bitcoinStore, NetworkParameters params) {
         try {
-            if(bitcoinStore.getChainHead() == null) {
+            if (bitcoinStore.getChainHead() == null) {
                 BitcoinBlock origin = params.getBitcoinOriginBlock();
                 StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.getBits()), 0);
 
@@ -197,79 +192,79 @@ public class Context {
         }
     }
 
-    public static   NetworkParameters getNetworkParameters() {
+    public NetworkParameters getNetworkParameters() {
         return networkParameters;
     }
 
-    public static File getDirectory() {
+    public File getDirectory() {
         return directory;
     }
 
-    public static String getFilePrefix() {
+    public String getFilePrefix() {
         return filePrefix;
     }
 
-    public static TransactionPool getTransactionPool() {
+    public TransactionPool getTransactionPool() {
         return transactionPool;
     }
 
-    public static VeriBlockStore getVeriBlockStore() {
+    public VeriBlockStore getVeriBlockStore() {
         return veriBlockStore;
     }
 
-    public static BitcoinStore getBitcoinStore() {
+    public BitcoinStore getBitcoinStore() {
         return bitcoinStore;
     }
 
-    public static AuditorChangesStore getAuditStore() {
+    public AuditorChangesStore getAuditStore() {
         return auditStore;
     }
 
-    public static Blockchain getBlockchain() {
+    public Blockchain getBlockchain() {
         return blockchain;
     }
 
-    public static Instant getStartTime() {
+    public Instant getStartTime() {
         return startTime;
     }
 
-    public static AdminApiService getAdminApiService() {
+    public AdminApiService getAdminApiService() {
         return adminApiService;
     }
 
-    public static AdminServiceFacade getAdminService() {
+    public AdminServiceFacade getAdminService() {
         return adminService;
     }
 
-    public static AdminServerInterceptor getAdminServerInterceptor() {
+    public AdminServerInterceptor getAdminServerInterceptor() {
         return adminServerInterceptor;
     }
 
-    public static PeerTable getPeerTable() {
+    public PeerTable getPeerTable() {
         return peerTable;
     }
 
-    public static P2PService getP2PService() {
+    public P2PService getP2PService() {
         return p2PService;
     }
 
-    public static Server getServer() {
+    public Server getServer() {
         return server;
     }
 
-    public static PendingTransactionDownloadedListener getPendingTransactionDownloadedListener() {
+    public PendingTransactionDownloadedListener getPendingTransactionDownloadedListener() {
         return pendingTransactionDownloadedListener;
     }
 
-    public static AddressManager getAddressManager() {
+    public AddressManager getAddressManager() {
         return addressManager;
     }
 
-    public static TransactionService getTransactionService() {
+    public TransactionService getTransactionService() {
         return transactionService;
     }
 
-    public static PendingTransactionContainer getPendingTransactionContainer() {
+    public PendingTransactionContainer getPendingTransactionContainer() {
         return pendingTransactionContainer;
     }
 }
