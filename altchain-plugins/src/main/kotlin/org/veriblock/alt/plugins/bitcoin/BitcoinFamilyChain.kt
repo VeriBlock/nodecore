@@ -267,9 +267,9 @@ class BitcoinFamilyChain(
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
         val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).reversed().toByteArray()
-        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
-        val previousKeystone = contextBuffer.getBytes(32)
-        val secondPreviousKeystone = contextBuffer.getBytes(32)
+        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).reversed().toByteArray()
+        val previousKeystone = contextBuffer.getBytes(32).reversed().toByteArray()
+        val secondPreviousKeystone = contextBuffer.getBytes(32).reversed().toByteArray()
 
         return BlockEndorsement(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
