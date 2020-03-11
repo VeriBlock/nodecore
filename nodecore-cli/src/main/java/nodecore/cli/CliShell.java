@@ -295,7 +295,7 @@ public class CliShell extends Shell {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (!connected.get()) {
+                while (!connected.get() && !getModeType().isSPV()) {
                     for (int i = 10500 ; i <= 10502; i++) {
                         if (bound(i)) {
                             String msg = new AttributedStringBuilder()
@@ -339,6 +339,7 @@ public class CliShell extends Shell {
     }
 
     public ProtocolEndpoint startSPV(NetworkParameters net, PeerDiscovery peerDiscovery) throws ExecutionException, InterruptedException {
+        setModeType(ModeType.SPV);
         spvContext.init(net, peerDiscovery, true);
         spvContext.getPeerTable().start();
 
@@ -356,9 +357,7 @@ public class CliShell extends Shell {
             Thread.sleep(5000L);
         }
 
-        setModeType(ModeType.SPV);
-        ProtocolEndpoint endpoint = new ProtocolEndpoint(net.getAdminHost(), (short) net.getAdminPort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP);
-        return endpoint;
+        return new ProtocolEndpoint(net.getAdminHost(), (short) net.getAdminPort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP);
     }
 
     private void printIntro() {
