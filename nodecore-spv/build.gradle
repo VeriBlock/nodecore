@@ -19,9 +19,6 @@ dependencies {
 
     implementation "com.github.veriblock.alt-integration:core:0.0.6"
 
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.28'
-    compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.28'
-
     testImplementation 'junit:junit:4.12'
     runtime "org.codehaus.groovy:groovy:2.4.12"
     compile 'ch.qos.logback:logback-classic:1.2.3'
