@@ -23,10 +23,10 @@ data class BlockEndorsement(
         secondKeystone: String
     ) : this(
         height,
-        BlockEndorsementHash(hash),
-        BlockEndorsementHash(previousHash),
-        BlockEndorsementHash(previousKeystone),
-        BlockEndorsementHash(secondKeystone)
+        BlockEndorsementHash(hash.toUpperCase()),
+        BlockEndorsementHash(previousHash.toUpperCase()),
+        BlockEndorsementHash(previousKeystone.toUpperCase()),
+        BlockEndorsementHash(secondKeystone.toUpperCase())
     )
 
     constructor(

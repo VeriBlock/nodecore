@@ -266,7 +266,7 @@ class BitcoinFamilyChain(
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
-        val hash = crypto.SHA256D(altchainPopEndorsement.getHeader())
+        val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).reversed().toByteArray()
         val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
         val previousKeystone = contextBuffer.getBytes(32)
         val secondPreviousKeystone = contextBuffer.getBytes(32)

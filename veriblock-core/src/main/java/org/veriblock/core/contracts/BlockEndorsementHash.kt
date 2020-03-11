@@ -8,24 +8,26 @@
 
 package org.veriblock.core.contracts
 
-import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.toHex
 import java.util.Objects
 
 class BlockEndorsementHash(
+    hash: String
+) {
     /**
      * The block hash, or a fraction of it
      */
-    val hash: String
-) {
+    val hash: String = hash.toUpperCase()
+
     /**
      * The least common denominator (the last 9 bytes) of [.hash]
      */
-    val significantHash: String = extractSignificantHash(hash)
+    val significantHash: String = extractSignificantHash(hash.toUpperCase())
 
     /**
      * Ability to create from a byte array
      */
-    constructor(hash: ByteArray) : this(Utility.bytesToHex(hash))
+    constructor(hash: ByteArray) : this(hash.toHex())
 
     /**
      * Returns true if this hash is a version of the other with more information
