@@ -7,11 +7,11 @@
 
 package nodecore.miners.pop.services;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
+import kotlin.Unit;
 import nodecore.api.grpc.AdminGrpc;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.VeriBlockMessages.BitcoinBlockHeader;
@@ -30,7 +30,6 @@ import nodecore.api.grpc.VeriBlockMessages.ProtocolReply;
 import nodecore.api.grpc.VeriBlockMessages.SubmitPopRequest;
 import nodecore.api.grpc.VeriBlockMessages.UnlockWalletRequest;
 import nodecore.miners.pop.Configuration;
-import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.contracts.ApplicationExceptions;
 import nodecore.miners.pop.contracts.BlockStore;
@@ -40,12 +39,8 @@ import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningTransaction;
 import nodecore.miners.pop.contracts.VeriBlockHeader;
 import nodecore.miners.pop.contracts.result.Result;
-import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
-import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
-import nodecore.miners.pop.events.NodeCoreDesynchronizedEvent;
-import nodecore.miners.pop.events.NodeCoreHealthyEvent;
-import nodecore.miners.pop.events.NodeCoreSynchronizedEvent;
-import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
+import nodecore.miners.pop.events.EventBus;
+import nodecore.miners.pop.events.NewVeriBlockFoundEventDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +85,7 @@ public class NodeCoreService {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("nc-poll").build());
         scheduledExecutorService.scheduleWithFixedDelay(this::poll, 5, 1, TimeUnit.SECONDS);
 
-        InternalEventBus.getInstance().register(this);
+        EventBus.INSTANCE.getConfigurationChangedEvent().register(this, this::onNodeCoreConfigurationChanged);
     }
 
     private void initializeClient() {
@@ -284,13 +279,13 @@ public class NodeCoreService {
         return result;
     }
 
-    @Subscribe
-    public void onNodeCoreConfigurationChanged(NodeCoreConfigurationChangedEvent event) {
+    public Unit onNodeCoreConfigurationChanged() {
         try {
             initializeClient();
         } catch (Exception e) {
             _logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
     private void poll() {
@@ -299,7 +294,7 @@ public class NodeCoreService {
                 if (!isNodeCoreSynchronized()) {
                     _synchronized.set(false);
                     _logger.info("The connected node is not synchronized");
-                    InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                    EventBus.INSTANCE.getNodeCoreDesynchronizedEvent().trigger();
                     return;
                 }
 
@@ -309,43 +304,43 @@ public class NodeCoreService {
                 } catch (Exception e) {
                     _logger.error("Unable to get the last block from NodeCore");
                     healthy.set(false);
-                    InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
+                    EventBus.INSTANCE.getNodeCoreUnhealthyEvent().trigger();
                     return;
                 }
 
                 VeriBlockHeader chainHead = blockStore.getChainHead();
                 if (!latestBlock.equals(chainHead)) {
                     blockStore.setChainHead(latestBlock);
-                    InternalEventBus.getInstance().post(new NewVeriBlockFoundEvent(latestBlock, chainHead));
+                    EventBus.INSTANCE.getNewVeriBlockFoundEvent().trigger(new NewVeriBlockFoundEventDto(latestBlock, chainHead));
                 }
             } else {
                 if (ping()) {
                     if (!isHealthy()) {
                         _logger.info("Connected to NodeCore");
-                        InternalEventBus.getInstance().post(new NodeCoreHealthyEvent());
+                        EventBus.INSTANCE.getNodeCoreHealthyEvent().trigger();
                     }
                     healthy.set(true);
 
                     if (isNodeCoreSynchronized()) {
                         if (!isSynchronized()) {
                             _logger.info("The connected node is synchronized");
-                            InternalEventBus.getInstance().post(new NodeCoreSynchronizedEvent());
+                            EventBus.INSTANCE.getNodeCoreSynchronizedEvent().trigger();
                         }
                         _synchronized.set(true);
                     } else {
                         if (isSynchronized()) {
                             _logger.info("The connected node is not synchronized");
-                            InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                            EventBus.INSTANCE.getNodeCoreDesynchronizedEvent().trigger();
                         }
                         _synchronized.set(false);
                     }
                 } else {
                     if (isHealthy()) {
-                        InternalEventBus.getInstance().post(new NodeCoreUnhealthyEvent());
+                        EventBus.INSTANCE.getNodeCoreUnhealthyEvent().trigger();
                     }
                     if (isSynchronized()) {
                         _logger.info("The connected node is not synchronized");
-                        InternalEventBus.getInstance().post(new NodeCoreDesynchronizedEvent());
+                        EventBus.INSTANCE.getNodeCoreDesynchronizedEvent().trigger();
                     }
                     healthy.set(false);
                     _synchronized.set(false);

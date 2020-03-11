@@ -7,8 +7,8 @@
 
 package nodecore.miners.pop;
 
-import com.google.common.eventbus.Subscribe;
 import io.grpc.StatusRuntimeException;
+import kotlin.Unit;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.contracts.ApplicationExceptions;
 import nodecore.miners.pop.contracts.OperationSummary;
@@ -20,21 +20,9 @@ import nodecore.miners.pop.contracts.TransactionStatus;
 import nodecore.miners.pop.contracts.result.DefaultResultMessage;
 import nodecore.miners.pop.contracts.result.MineResult;
 import nodecore.miners.pop.contracts.result.Result;
-import nodecore.miners.pop.events.BitcoinServiceNotReadyEvent;
-import nodecore.miners.pop.events.BitcoinServiceReadyEvent;
-import nodecore.miners.pop.events.BlockchainDownloadedEvent;
-import nodecore.miners.pop.events.CoinsReceivedEvent;
-import nodecore.miners.pop.events.ConfigurationChangedEvent;
-import nodecore.miners.pop.events.FundsAddedEvent;
-import nodecore.miners.pop.events.InsufficientFundsEvent;
-import nodecore.miners.pop.events.NewVeriBlockFoundEvent;
-import nodecore.miners.pop.events.NodeCoreDesynchronizedEvent;
-import nodecore.miners.pop.events.NodeCoreHealthyEvent;
-import nodecore.miners.pop.events.NodeCoreSynchronizedEvent;
-import nodecore.miners.pop.events.NodeCoreUnhealthyEvent;
-import nodecore.miners.pop.events.PoPMinerNotReadyEvent;
-import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
-import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent;
+import nodecore.miners.pop.events.CoinsReceivedEventDto;
+import nodecore.miners.pop.events.EventBus;
+import nodecore.miners.pop.events.NewVeriBlockFoundEventDto;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import nodecore.miners.pop.services.PoPStateService;
@@ -110,19 +98,41 @@ public class PoPMiner implements Runnable {
 
     @Override
     public void run() {
-        InternalEventBus.getInstance().register(this);
+        EventBus.INSTANCE.getPopMiningOperationCompletedEvent().register(this, this::onPoPMiningOperationCompleted);
+        EventBus.INSTANCE.getCoinsReceivedEvent().register(this, this::onCoinsReceived);
+        EventBus.INSTANCE.getInsufficientFundsEvent().register(this, this::onInsufficientFunds);
+        EventBus.INSTANCE.getBitcoinServiceReadyEvent().register(this, this::onBitcoinServiceReady);
+        EventBus.INSTANCE.getBitcoinServiceNotReadyEvent().register(this, this::onBitcoinServiceNotReady);
+        EventBus.INSTANCE.getBlockchainDownloadedEvent().register(this, this::onBlockchainDownloaded);
+        EventBus.INSTANCE.getNodeCoreHealthyEvent().register(this, this::onNodeCoreHealthy);
+        EventBus.INSTANCE.getNodeCoreUnhealthyEvent().register(this, this::onNodeCoreUnhealthy);
+        EventBus.INSTANCE.getNodeCoreSynchronizedEvent().register(this, this::onNodeCoreSynchronized);
+        EventBus.INSTANCE.getNodeCoreDesynchronizedEvent().register(this, this::onNodeCoreDesynchronized);
+        EventBus.INSTANCE.getConfigurationChangedEvent().register(this, this::onConfigurationChanged);
+        EventBus.INSTANCE.getNewVeriBlockFoundEvent().register(this, this::onNewVeriBlockFound);
 
         bitcoinService.initialize();
         if (!configuration.getBoolean(Constants.BYPASS_ACKNOWLEDGEMENT_KEY)) {
             KeyValueData data = keyValueRepository.get(Constants.WALLET_SEED_VIEWED_KEY);
             if (data == null || !data.value.equals("1")) {
-                InternalEventBus.getInstance().post(new WalletSeedAgreementMissingEvent());
+                EventBus.INSTANCE.getWalletSeedAgreementMissingEvent().trigger();
             }
         }
     }
 
     public void shutdown() throws InterruptedException {
-        InternalEventBus.getInstance().unregister(this);
+        EventBus.INSTANCE.getPopMiningOperationCompletedEvent().unregister(this);
+        EventBus.INSTANCE.getCoinsReceivedEvent().unregister(this);
+        EventBus.INSTANCE.getInsufficientFundsEvent().remove(this);
+        EventBus.INSTANCE.getBitcoinServiceReadyEvent().remove(this);
+        EventBus.INSTANCE.getBitcoinServiceNotReadyEvent().remove(this);
+        EventBus.INSTANCE.getBlockchainDownloadedEvent().remove(this);
+        EventBus.INSTANCE.getNodeCoreHealthyEvent().remove(this);
+        EventBus.INSTANCE.getNodeCoreUnhealthyEvent().remove(this);
+        EventBus.INSTANCE.getNodeCoreSynchronizedEvent().remove(this);
+        EventBus.INSTANCE.getNodeCoreDesynchronizedEvent().remove(this);
+        EventBus.INSTANCE.getConfigurationChangedEvent().remove(this);
+        EventBus.INSTANCE.getNewVeriBlockFoundEvent().unregister(this);
 
         processManager.shutdown();
         bitcoinService.shutdown();
@@ -376,7 +386,7 @@ public class PoPMiner implements Runnable {
         if (bitcoinService.getBalance().isGreaterThan(maximumTransactionFee)) {
             if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
                 logger.info("PoP wallet is sufficiently funded");
-                InternalEventBus.getInstance().post(new FundsAddedEvent());
+                EventBus.INSTANCE.getFundsAddedEvent().trigger();
             }
             addReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS);
         } else {
@@ -400,7 +410,7 @@ public class PoPMiner implements Runnable {
         boolean removed = readyConditions.remove(flag);
         if (removed) {
             logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag));
-            InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(flag));
+            EventBus.INSTANCE.getPopMinerNotReadyEvent().trigger(flag);
         }
     }
 
@@ -457,17 +467,16 @@ public class PoPMiner implements Runnable {
         isShuttingDown = b;
     }
 
-    @Subscribe
-    public void onPoPMiningOperationCompleted(PoPMiningOperationCompletedEvent event) {
+    private Unit onPoPMiningOperationCompleted(String operationId) {
         try {
-            operations.remove(event.getOperationId());
+            operations.remove(operationId);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onCoinsReceived(CoinsReceivedEvent event) {
+    public Unit onCoinsReceived(CoinsReceivedEventDto event) {
         try {
             logger.info("Received pending tx '{}', pending balance: '{}'", event.getTx().getHashAsString(),
                 Utility.formatBTCFriendlyString(event.getNewBalance())
@@ -475,46 +484,45 @@ public class PoPMiner implements Runnable {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onInsufficientFunds(InsufficientFundsEvent event) {
+    public Unit onInsufficientFunds() {
         try {
             removeReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onBitcoinServiceReady(BitcoinServiceReadyEvent event) {
+    public Unit onBitcoinServiceReady() {
         try {
-
             addReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY);
 
             if (!readyToMine()) {
                 EnumSet<PoPMinerDependencies> failed = EnumSet.complementOf(readyConditions);
                 for (PoPMinerDependencies flag : failed) {
                     logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag));
-                    InternalEventBus.getInstance().post(new PoPMinerNotReadyEvent(flag));
+                    EventBus.INSTANCE.getPopMinerNotReadyEvent().trigger(flag);
                 }
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onBitcoinServiceNotReady(BitcoinServiceNotReadyEvent event) {
+    public Unit onBitcoinServiceNotReady() {
         try {
             removeReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onBlockchainDownloaded(BlockchainDownloadedEvent event) {
+    public Unit onBlockchainDownloaded() {
         try {
             addReadyCondition(PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED);
 
@@ -525,62 +533,62 @@ public class PoPMiner implements Runnable {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onNodeCoreHealthy(NodeCoreHealthyEvent event) {
+    public Unit onNodeCoreHealthy() {
         try {
             addReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onNodeCoreUnhealthy(NodeCoreUnhealthyEvent event) {
+    public Unit onNodeCoreUnhealthy() {
         try {
             removeReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-
-    @Subscribe
-    public void onNodeCoreSynchronized(NodeCoreSynchronizedEvent event) {
+    public Unit onNodeCoreSynchronized() {
         try {
             addReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onNodeCoreDesynchronized(NodeCoreDesynchronizedEvent event) {
+    public Unit onNodeCoreDesynchronized() {
         try {
             removeReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onConfigurationChanged(ConfigurationChangedEvent event) {
+    public Unit onConfigurationChanged() {
         try {
             ensureSufficientFunds();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
-    @Subscribe
-    public void onNewVeriBlockFound(NewVeriBlockFoundEvent event) {
+    public Unit onNewVeriBlockFound(NewVeriBlockFoundEventDto event) {
         for (String key : new HashSet<>(operations.keySet())) {
             PoPMiningOperationState operationState = operations.get(key);
-            if (operationState != null && operationState.getTransactionStatus() == TransactionStatus.UNCONFIRMED &&
-                    operationState.getBlockNumber() < (event.getBlock().getHeight() - Constants.POP_SETTLEMENT_INTERVAL)) {
+            if (operationState != null && operationState.getTransactionStatus() == TransactionStatus.UNCONFIRMED
+                && operationState.getBlockNumber() < (event.getBlock().getHeight() - Constants.POP_SETTLEMENT_INTERVAL)) {
                 operationState.fail(String.format("Endorsement of block %d is no longer relevant", operationState.getBlockNumber()));
             }
         }
+        return Unit.INSTANCE;
     }
 }

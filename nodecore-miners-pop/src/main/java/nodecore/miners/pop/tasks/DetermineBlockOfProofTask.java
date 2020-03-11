@@ -7,11 +7,9 @@
 
 package nodecore.miners.pop.tasks;
 
-import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.contracts.BaseTask;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
 import nodecore.miners.pop.contracts.TaskResult;
-import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
+import nodecore.miners.pop.events.EventBus;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import org.bitcoinj.core.Block;
@@ -50,7 +48,7 @@ public class DetermineBlockOfProofTask extends BaseTask {
                     // State still hasn't progressed past the PROOF action, meaning a FilteredBlockAvailableEvent
                     // Probably never occurred.
                     logger.info("Forcibly posting false filtered block available event...");
-                    InternalEventBus.getInstance().post(new FilteredBlockAvailableEvent(state));
+                    EventBus.INSTANCE.getFilteredBlockAvailableEvent().trigger(state);
                 } else {
                     logger.info("Not forcibly posting filtered block available event; state action is not PROOF.");
                 }

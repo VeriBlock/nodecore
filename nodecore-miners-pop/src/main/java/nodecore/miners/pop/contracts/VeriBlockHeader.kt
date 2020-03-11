@@ -8,9 +8,11 @@ package nodecore.miners.pop.contracts
 
 import nodecore.miners.pop.common.Utility
 import org.veriblock.core.utilities.BlockUtility
-import java.util.*
+import java.util.Arrays
 
-class VeriBlockHeader(private val bytes: ByteArray) {
+class VeriBlockHeader(
+    private val bytes: ByteArray
+) {
     val hash: String = BlockUtility.hashBlock(bytes)
 
     fun getHeight(): Int =

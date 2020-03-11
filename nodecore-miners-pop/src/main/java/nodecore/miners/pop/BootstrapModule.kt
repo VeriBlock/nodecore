@@ -42,7 +42,7 @@ val bootstrapModule = module {
     }
 
     single { BlockStore() }
-    single { PoPEventEngine(get(), get()) }
+    single { PoPEventEngine(get()) }
     single { ProcessManager(get(), get()) }
     single { BitcoinBlockCache() }
     single { ChannelBuilder(get()) }

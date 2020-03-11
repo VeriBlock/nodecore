@@ -8,7 +8,6 @@
 package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
-import nodecore.miners.pop.contracts.BaseTask;
 import nodecore.miners.pop.contracts.NodeCoreReply;
 import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;

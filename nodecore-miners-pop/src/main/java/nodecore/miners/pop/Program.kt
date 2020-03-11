@@ -7,12 +7,10 @@
 
 package nodecore.miners.pop
 
-import com.google.common.eventbus.Subscribe
 import mu.KotlinLogging
 import nodecore.miners.pop.api.ApiServer
 import nodecore.miners.pop.api.webApiModule
-import nodecore.miners.pop.events.ProgramQuitEvent
-import nodecore.miners.pop.events.ShellCompletedEvent
+import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.rules.rulesModule
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.storage.repositoriesModule
@@ -33,7 +31,8 @@ class Program {
     var externalQuit = false
 
     init {
-        InternalEventBus.getInstance().register(this)
+        EventBus.shellCompletedEvent.register(this, ::onShellCompleted)
+        EventBus.programQuitEvent.register(this, ::onProgramQuit)
     }
 
     fun run(args: Array<String>): Int {
@@ -99,8 +98,7 @@ class Program {
         return 0
     }
 
-    @Subscribe
-    fun onShellCompleted(event: ShellCompletedEvent?) {
+    private fun onShellCompleted() {
         try {
             shutdownSignal.countDown()
         } catch (e: Exception) {
@@ -108,10 +106,9 @@ class Program {
         }
     }
 
-    @Subscribe
-    fun onProgramQuit(event: ProgramQuitEvent) {
+    private fun onProgramQuit(quitReason: Int) {
         ///HACK: imitate an "exit" command in the console
-        if (event.reason == 1) {
+        if (quitReason == 1) {
             externalQuit = true
             popMiner.setIsShuttingDown(true)
         }

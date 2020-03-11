@@ -4,74 +4,64 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.miners.pop.tasks
 
-package nodecore.miners.pop.tasks;
+import nodecore.miners.pop.Threading
+import nodecore.miners.pop.contracts.PoPMiningOperationState
+import nodecore.miners.pop.events.EventBus
+import nodecore.miners.pop.services.BitcoinService
+import nodecore.miners.pop.services.NodeCoreService
 
-import com.google.common.eventbus.Subscribe;
-import nodecore.miners.pop.InternalEventBus;
-import nodecore.miners.pop.Threading;
-import nodecore.miners.pop.contracts.BaseTask;
-import nodecore.miners.pop.contracts.PoPMiningOperationState;
-import nodecore.miners.pop.contracts.TaskResult;
-import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
-import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
-import nodecore.miners.pop.events.TransactionConfirmedEvent;
-import nodecore.miners.pop.services.BitcoinService;
-import nodecore.miners.pop.services.NodeCoreService;
-
-public class ProcessManager {
-    private final NodeCoreService nodeCoreService;
-    private final BitcoinService bitcoinService;
-
-    public ProcessManager(NodeCoreService nodeCoreService, BitcoinService bitcoinService) {
-        this.nodeCoreService = nodeCoreService;
-        this.bitcoinService = bitcoinService;
-
-        InternalEventBus.getInstance().register(this);
+class ProcessManager(
+    private val nodeCoreService: NodeCoreService,
+    private val bitcoinService: BitcoinService
+) {
+    init {
+        EventBus.transactionConfirmedEvent.register(this, ::onTransactionConfirmed)
+        EventBus.filteredBlockAvailableEvent.register(this, ::onFilteredBlockAvailable)
     }
 
-    public void shutdown() {
-        InternalEventBus.getInstance().unregister(this);
+    fun shutdown() {
+        EventBus.transactionConfirmedEvent.unregister(this)
+        EventBus.filteredBlockAvailableEvent.unregister(this)
     }
 
-    public void submit(PoPMiningOperationState state) {
-        BaseTask task = new GetPoPInstructionsTask(nodeCoreService, bitcoinService);
-        Threading.TASK_POOL.submit(() -> executeTask(task, state));
+    fun submit(state: PoPMiningOperationState) {
+        val task: BaseTask = GetPoPInstructionsTask(nodeCoreService, bitcoinService)
+        Threading.TASK_POOL.submit { task.executeTask(state) }
     }
 
-    public void restore(PoPMiningOperationState state) {
-        BaseTask task = new RestoreTask(nodeCoreService, bitcoinService);
-        Threading.TASK_POOL.submit(() -> executeTask(task, state));
+    fun restore(state: PoPMiningOperationState) {
+        val task: BaseTask = RestoreTask(nodeCoreService, bitcoinService)
+        Threading.TASK_POOL.submit { task.executeTask(state) }
     }
 
-    private void executeTask(BaseTask task, PoPMiningOperationState state) {
-        TaskResult result = task.execute(state);
-        if (result.isSuccess()) {
-            doNext(result.getNext(), result.getState());
+    private fun BaseTask.executeTask(state: PoPMiningOperationState) {
+        val result = execute(state)
+        if (result.isSuccess) {
+            doNext(result.next, result.state)
         } else {
-            handleFail(result.getState());
+            handleFail(result.state)
         }
     }
 
-    private void handleFail(PoPMiningOperationState state) {
-        InternalEventBus.getInstance().post(new PoPMiningOperationCompletedEvent(state.getOperationId()));
+    private fun handleFail(state: PoPMiningOperationState) {
+        EventBus.popMiningOperationCompletedEvent.trigger(state.operationId)
     }
 
-    private void doNext(BaseTask next, PoPMiningOperationState state) {
-        if (next != null) {
-            executeTask(next, state);
-        }
+    private fun doNext(next: BaseTask?, state: PoPMiningOperationState) {
+        next?.executeTask(state)
     }
 
-    @Subscribe
-    public void onTransactionConfirmed(TransactionConfirmedEvent event) {
-        BaseTask task = new DetermineBlockOfProofTask(nodeCoreService, bitcoinService);
-        Threading.TASK_POOL.submit(() -> executeTask(task, event.getState()));
+    private fun onTransactionConfirmed(state: PoPMiningOperationState) {
+        val task: BaseTask = DetermineBlockOfProofTask(nodeCoreService, bitcoinService)
+        Threading.TASK_POOL.submit { task.executeTask(state) }
+        return
     }
 
-    @Subscribe
-    public void onFilteredBlockAvailable(FilteredBlockAvailableEvent event) {
-        BaseTask task = new ProveTransactionTask(nodeCoreService, bitcoinService);
-        Threading.TASK_POOL.submit(() -> executeTask(task, event.getState()));
+    private fun onFilteredBlockAvailable(state: PoPMiningOperationState) {
+        val task: BaseTask = ProveTransactionTask(nodeCoreService, bitcoinService)
+        Threading.TASK_POOL.submit { task.executeTask(state) }
+        return
     }
 }

@@ -7,12 +7,12 @@
 
 package nodecore.miners.pop.services;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.ByteString;
-import nodecore.miners.pop.InternalEventBus;
+import kotlin.Unit;
 import nodecore.miners.pop.contracts.PoPMiningInstruction;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
-import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
+import nodecore.miners.pop.events.EventBus;
+import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto;
 import nodecore.miners.pop.storage.OperationStateData;
 import nodecore.miners.pop.storage.PopRepository;
 import nodecore.miners.pop.storage.ProofOfProof;
@@ -34,7 +34,7 @@ public class PoPStateService {
 
     public PoPStateService(PopRepository repository) {
         this.repository = repository;
-        InternalEventBus.getInstance().register(this);
+        EventBus.INSTANCE.getPopMiningOperationStateChangedEvent().register(this, this::onPoPMiningOperationStateChanged);
     }
 
     public List<PoPMiningOperationState> getActiveOperations() {
@@ -71,8 +71,7 @@ public class PoPStateService {
         return null;
     }
 
-    @Subscribe
-    public void onPoPMiningOperationStateChanged(PoPMiningOperationStateChangedEvent event) {
+    public Unit onPoPMiningOperationStateChanged(PoPMiningOperationStateChangedEventDto event) {
         try {
             PoPMiningOperationState operationState = event.getState();
             byte[] serializedState = serialize(event.getState());
@@ -96,6 +95,7 @@ public class PoPStateService {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+        return Unit.INSTANCE;
     }
 
     private byte[] serialize(PoPMiningOperationState operationState) {

@@ -15,7 +15,7 @@ import nodecore.miners.pop.contracts.result.ConfigurationResult;
 import nodecore.miners.pop.contracts.result.IllegalConfigurationValueResultMessage;
 import nodecore.miners.pop.contracts.result.MissingConfigurationValueResultMessage;
 import nodecore.miners.pop.contracts.result.SuccessResultMessage;
-import nodecore.miners.pop.events.NodeCoreConfigurationChangedEvent;
+import nodecore.miners.pop.events.EventBus;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.VersionMessage;
@@ -251,7 +251,7 @@ public class Configuration {
         if (InetAddresses.isInetAddress(value)) {
             options.removeProperty(Keys.NODECORE_HOST_KEY);
             properties.setProperty(Keys.NODECORE_HOST_KEY, value);
-            InternalEventBus.getInstance().post(new NodeCoreConfigurationChangedEvent());
+            EventBus.INSTANCE.getConfigurationChangedEvent().trigger();
 
             result.addMessage(new SuccessResultMessage());
             return result;
@@ -298,7 +298,7 @@ public class Configuration {
 
             options.removeProperty(Keys.NODECORE_PORT_KEY);
             properties.setProperty(Keys.NODECORE_PORT_KEY, value);
-            InternalEventBus.getInstance().post(new NodeCoreConfigurationChangedEvent());
+            EventBus.INSTANCE.getConfigurationChangedEvent().trigger();
             result.addMessage(new SuccessResultMessage());
             return result;
         }
@@ -316,7 +316,7 @@ public class Configuration {
         options.removeProperty(Keys.NODECORE_USE_SSL_KEY);
         properties.setProperty(Keys.NODECORE_USE_SSL_KEY, parsed.toString());
 
-        InternalEventBus.getInstance().post(new NodeCoreConfigurationChangedEvent());
+        EventBus.INSTANCE.getConfigurationChangedEvent().trigger();
         result.addMessage(new SuccessResultMessage());
         return result;
     }
@@ -331,7 +331,7 @@ public class Configuration {
         options.removeProperty(Keys.NODECORE_PASSWORD_KEY);
         properties.setProperty(Keys.NODECORE_PASSWORD_KEY, value);
 
-        InternalEventBus.getInstance().post(new NodeCoreConfigurationChangedEvent());
+        EventBus.INSTANCE.getConfigurationChangedEvent().trigger();
         result.addMessage(new SuccessResultMessage());
         return result;
     }
@@ -348,7 +348,7 @@ public class Configuration {
             options.removeProperty(Keys.NODECORE_CERT_CHAIN_PATH_KEY);
             properties.setProperty(Keys.NODECORE_CERT_CHAIN_PATH_KEY, value);
 
-            InternalEventBus.getInstance().post(new NodeCoreConfigurationChangedEvent());
+            EventBus.INSTANCE.getConfigurationChangedEvent().trigger();
             result.addMessage(new SuccessResultMessage());
             return result;
         }

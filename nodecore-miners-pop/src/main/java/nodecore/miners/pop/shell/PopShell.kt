@@ -7,16 +7,13 @@
 
 package nodecore.miners.pop.shell
 
-import com.google.common.eventbus.Subscribe
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
-import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.contracts.result.Result
 import nodecore.miners.pop.contracts.result.ResultMessage
-import nodecore.miners.pop.events.PoPMinerReadyEvent
-import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent
-import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent
+import nodecore.miners.pop.events.EventBus
+import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto
 import org.jline.utils.AttributedStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -32,7 +29,9 @@ class PopShell(
     private var mustAcceptWalletSeed = false
 
     init {
-        InternalEventBus.getInstance().register(this)
+        EventBus.popMinerReadyEvent.register(this, ::onPopMinerReady)
+        EventBus.popMiningOperationStateChangedEvent.register(this, ::onPopMiningOperationStateChanged)
+        EventBus.walletSeedAgreementMissingEvent.register(this, ::onWalletSeedAgreementMissing)
     }
 
     override fun initialize() {
@@ -83,8 +82,7 @@ class PopShell(
         }
     }
 
-    @Subscribe
-    fun onPoPMinerReady(event: PoPMinerReadyEvent) {
+    private fun onPopMinerReady() {
         try {
             printInfo("**********************************************************************************************")
             printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
@@ -94,8 +92,7 @@ class PopShell(
         }
     }
 
-    @Subscribe
-    fun onPoPMiningOperationStateChanged(event: PoPMiningOperationStateChangedEvent) {
+    private fun onPopMiningOperationStateChanged(event: PoPMiningOperationStateChangedEventDto) {
         try {
             val operationId: String? = event.state.operationId
             for (s in event.messages) {
@@ -106,8 +103,7 @@ class PopShell(
         }
     }
 
-    @Subscribe
-    fun onWalletSeedAgreementMissing(event: WalletSeedAgreementMissingEvent) {
+    private fun onWalletSeedAgreementMissing() {
         this.mustAcceptWalletSeed = true
     }
 

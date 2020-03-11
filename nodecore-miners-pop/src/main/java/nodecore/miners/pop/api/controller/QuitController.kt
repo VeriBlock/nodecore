@@ -16,9 +16,8 @@ import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import mu.KotlinLogging
-import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.api.model.EmptyRequest
-import nodecore.miners.pop.events.ProgramQuitEvent
+import nodecore.miners.pop.events.EventBus
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
 
@@ -38,7 +37,7 @@ class QuitController : ApiController {
             val quitExecutor = Executors.newSingleThreadExecutor()
             quitExecutor.submit {
                 sleep(100)
-                InternalEventBus.getInstance().post(ProgramQuitEvent(quitReason))
+                EventBus.programQuitEvent.trigger(quitReason)
             }
 
             call.respond(HttpStatusCode.OK)

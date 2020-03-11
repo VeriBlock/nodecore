@@ -10,7 +10,6 @@ package nodecore.miners.pop.tasks;
 import nodecore.miners.pop.common.BitcoinMerklePath;
 import nodecore.miners.pop.common.BitcoinMerkleTree;
 import nodecore.miners.pop.common.MerkleProof;
-import nodecore.miners.pop.contracts.BaseTask;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
 import nodecore.miners.pop.contracts.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;

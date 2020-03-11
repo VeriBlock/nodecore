@@ -9,7 +9,6 @@ package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
 import nodecore.miners.pop.contracts.ApplicationExceptions;
-import nodecore.miners.pop.contracts.BaseTask;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
 import nodecore.miners.pop.contracts.PoPMiningTransaction;
 import nodecore.miners.pop.contracts.TaskResult;

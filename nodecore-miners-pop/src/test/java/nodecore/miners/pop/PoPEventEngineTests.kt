@@ -8,12 +8,11 @@
 package nodecore.miners.pop
 
 import io.kotlintest.matchers.types.shouldBeSameInstanceAs
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import nodecore.miners.pop.contracts.VeriBlockHeader
-import nodecore.miners.pop.events.NewVeriBlockFoundEvent
+import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.rules.Rule
 import nodecore.miners.pop.rules.RuleContext
 import org.junit.Test
@@ -24,14 +23,11 @@ class PoPEventEngineTests {
         // Given
         val latest: VeriBlockHeader = mockk()
         val previous: VeriBlockHeader = mockk()
-        val event: NewVeriBlockFoundEvent = mockk {
-            every { block } returns latest
-            every { previousHead } returns previous
-        }
+        val event = NewVeriBlockFoundEventDto(latest, previous)
         val rule: Rule = mockk()
         val rules: Set<Rule> = setOf(rule)
         val ruleContextSlot = slot<RuleContext>()
-        val engine = PoPEventEngine(mockk(), rules)
+        val engine = PoPEventEngine(rules)
 
         // When
         engine.onNewVeriBlockFound(event)

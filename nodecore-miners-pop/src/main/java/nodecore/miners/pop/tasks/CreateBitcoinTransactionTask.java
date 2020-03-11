@@ -10,13 +10,11 @@ package nodecore.miners.pop.tasks;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.contracts.ApplicationExceptions;
-import nodecore.miners.pop.contracts.BaseTask;
 import nodecore.miners.pop.contracts.PoPMiningOperationState;
 import nodecore.miners.pop.contracts.TaskResult;
-import nodecore.miners.pop.events.InsufficientFundsEvent;
+import nodecore.miners.pop.events.EventBus;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -83,7 +81,7 @@ public class CreateBitcoinTransactionTask extends BaseTask {
             } else if (e instanceof InsufficientMoneyException) {
                 logger.info(e.getMessage());
                 failProcess(state, "PoP wallet does not contain sufficient funds to create PoP transaction");
-                InternalEventBus.getInstance().post(new InsufficientFundsEvent());
+                EventBus.INSTANCE.getInsufficientFundsEvent().trigger();
             } else if (e instanceof ApplicationExceptions.ExceededMaxTransactionFee) {
                 failProcess(state, "Calculated fee exceeded configured maximum transaction fee");
             } else if (e instanceof ApplicationExceptions.DuplicateTransactionException) {

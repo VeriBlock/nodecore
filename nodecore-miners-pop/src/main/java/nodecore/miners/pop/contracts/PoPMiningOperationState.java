@@ -10,13 +10,10 @@ package nodecore.miners.pop.contracts;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import nodecore.miners.pop.InternalEventBus;
 import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.events.FilteredBlockAvailableEvent;
-import nodecore.miners.pop.events.PoPMiningOperationCompletedEvent;
-import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent;
-import nodecore.miners.pop.events.TransactionConfirmedEvent;
+import nodecore.miners.pop.events.EventBus;
+import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.FilteredBlock;
 import org.bitcoinj.core.NetworkParameters;
@@ -139,7 +136,7 @@ public class PoPMiningOperationState {
         Futures.addCallback(filteredBlockFuture, new FutureCallback<FilteredBlock>() {
             @Override
             public void onSuccess(@Nullable FilteredBlock result) {
-                InternalEventBus.getInstance().post(new FilteredBlockAvailableEvent(self));
+                EventBus.INSTANCE.getFilteredBlockAvailableEvent().trigger(self);
             }
 
             @Override
@@ -207,7 +204,7 @@ public class PoPMiningOperationState {
         messages.add(setStatus(PoPMiningOperationStatus.COMPLETE));
 
         broadcast(messages);
-        InternalEventBus.getInstance().post(new PoPMiningOperationCompletedEvent(getOperationId()));
+        EventBus.INSTANCE.getPopMiningOperationCompletedEvent().trigger(getOperationId());
     }
 
     public void fail(String reason) {
@@ -228,8 +225,8 @@ public class PoPMiningOperationState {
     }
 
     private void broadcast(List<String> messages) {
-        PoPMiningOperationStateChangedEvent event = new PoPMiningOperationStateChangedEvent(this, messages);
-        InternalEventBus.getInstance().post(event);
+        PoPMiningOperationStateChangedEventDto event = new PoPMiningOperationStateChangedEventDto(this, messages);
+        EventBus.INSTANCE.getPopMiningOperationStateChangedEvent().trigger(event);
     }
 
     public void registerListeners(Transaction transaction) {
@@ -265,8 +262,6 @@ public class PoPMiningOperationState {
         }
     }
 
-    // Setters and Getters for data
-
     private TransactionConfidence.Listener txConfidenceListener = (confidence, reason) -> {
         logger.debug("[{}] TransactionConfidence listener called: {} - {}",
                 getOperationId(),
@@ -279,9 +274,10 @@ public class PoPMiningOperationState {
         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
             onBitcoinReorganize();
         } else if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-            InternalEventBus.getInstance().post(new TransactionConfirmedEvent(PoPMiningOperationState.this));
+            EventBus.INSTANCE.getTransactionConfirmedEvent().trigger(PoPMiningOperationState.this);
         }
     };
+
     private ListenableFuture<TransactionConfidence> futureDepthListener;
 
     private String operationId;

@@ -6,6 +6,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.contracts
 
+import nodecore.miners.pop.tasks.BaseTask
+
 class TaskResult private constructor(
     val state: PoPMiningOperationState,
     val isSuccess: Boolean,

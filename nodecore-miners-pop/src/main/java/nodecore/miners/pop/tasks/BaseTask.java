@@ -5,8 +5,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts;
+package nodecore.miners.pop.tasks;
 
+import nodecore.miners.pop.contracts.PoPMiningOperationState;
+import nodecore.miners.pop.contracts.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import org.slf4j.Logger;

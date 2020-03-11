@@ -11,7 +11,6 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
-import nodecore.miners.pop.InternalEventBus
 import nodecore.miners.pop.Threading
 import nodecore.miners.pop.common.BitcoinNetwork
 import nodecore.miners.pop.contracts.ApplicationExceptions.CorruptSPVChain
@@ -19,10 +18,8 @@ import nodecore.miners.pop.contracts.ApplicationExceptions.DuplicateTransactionE
 import nodecore.miners.pop.contracts.ApplicationExceptions.ExceededMaxTransactionFee
 import nodecore.miners.pop.contracts.ApplicationExceptions.SendTransactionException
 import nodecore.miners.pop.contracts.ApplicationExceptions.UnableToAcquireTransactionLock
-import nodecore.miners.pop.events.BitcoinServiceNotReadyEvent
-import nodecore.miners.pop.events.BitcoinServiceReadyEvent
-import nodecore.miners.pop.events.BlockchainDownloadedEvent
-import nodecore.miners.pop.events.CoinsReceivedEvent
+import nodecore.miners.pop.events.CoinsReceivedEventDto
+import nodecore.miners.pop.events.EventBus
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.BitcoinSerializer
@@ -106,10 +103,10 @@ class BitcoinService(
         isServiceReady = value
         if (isServiceReady) {
             logger.info("Bitcoin service is ready")
-            InternalEventBus.getInstance().post(BitcoinServiceReadyEvent())
+            EventBus.bitcoinServiceReadyEvent.trigger()
         } else {
             logger.warn("Bitcoin service is not ready")
-            InternalEventBus.getInstance().post(BitcoinServiceNotReadyEvent())
+            EventBus.bitcoinServiceNotReadyEvent.trigger()
         }
     }
 
@@ -145,8 +142,7 @@ class BitcoinService(
                 this@BitcoinService.peerGroup = peerGroup
 
                 wallet.addCoinsReceivedEventListener { _, tx: Transaction?, prevBalance: Coin?, newBalance: Coin? ->
-                    InternalEventBus.getInstance()
-                        .post(CoinsReceivedEvent(tx, prevBalance, newBalance))
+                    EventBus.coinsReceivedEvent.trigger(CoinsReceivedEventDto(tx, prevBalance, newBalance))
                 }
 
                 peerGroup.addBlocksDownloadedEventListener(this@BitcoinService)
@@ -160,7 +156,7 @@ class BitcoinService(
                 if (!isBlockchainDownloaded) {
                     isBlockchainDownloaded = true
                     logger.info("Bitcoin blockchain finished downloading")
-                    InternalEventBus.getInstance().post(BlockchainDownloadedEvent())
+                    EventBus.blockchainDownloadedEvent.trigger()
                 }
             }
 
