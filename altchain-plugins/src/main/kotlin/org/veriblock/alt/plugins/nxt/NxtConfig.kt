@@ -10,6 +10,7 @@ class NxtConfig(
     override val payoutAddress: String? = null,
     override val keystonePeriod: Int = 10,
     override val neededConfirmations: Int = 10,
+    override val spFinalityDelay: Int = 100,
     override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
     override val autoMineRounds: List<Int> = emptyList()
 ) : ChainConfig() {
@@ -20,6 +21,7 @@ class NxtConfig(
         configuration.payoutAddress,
         configuration.keystonePeriod ?: 10,
         configuration.neededConfirmations ?: 20,
+        configuration.spFinalityDelay ?: 100,
         configuration.blockRoundIndices ?: intArrayOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
         configuration.autoMineRounds
     )

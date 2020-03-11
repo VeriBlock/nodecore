@@ -10,6 +10,7 @@ data class PluginConfig(
     val payoutAddress: String? = null,
     val keystonePeriod: Int? = null,
     val neededConfirmations: Int? = null,
+    val spFinalityDelay: Int? = null,
     val blockRoundIndices: IntArray? = null,
     val autoMineRounds: List<Int> = emptyList(),
     val extraConfig: Map<String, String> = emptyMap()
