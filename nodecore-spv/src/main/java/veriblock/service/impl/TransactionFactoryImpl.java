@@ -1,6 +1,5 @@
 package veriblock.service.impl;
 
-import com.google.inject.Singleton;
 import nodecore.api.grpc.VeriBlockMessages;
 import veriblock.conf.NetworkParameters;
 import veriblock.model.StandardTransaction;
@@ -8,7 +7,6 @@ import veriblock.model.Transaction;
 import veriblock.service.TransactionFactory;
 import veriblock.wallet.WalletProtobufSerializer;
 
-@Singleton
 public class TransactionFactoryImpl implements TransactionFactory {
 
     private final NetworkParameters networkParameters;
