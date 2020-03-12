@@ -8,6 +8,25 @@
 
 package org.veriblock.core.utilities
 
+import mu.KLogger
 import mu.KotlinLogging
 
 fun createLogger(context: () -> Unit) = KotlinLogging.logger(context)
+
+fun KLogger.debugInfo(t: Throwable, msg: () -> String) = if (isDebugEnabled) {
+    info(t, msg)
+} else {
+    info { "${msg()}: ${t.message}" }
+}
+
+fun KLogger.debugWarn(t: Throwable, msg: () -> String) = if (isDebugEnabled) {
+    warn(t, msg)
+} else {
+    warn { "${msg()}: ${t.message}" }
+}
+
+fun KLogger.debugError(t: Throwable, msg: () -> String) = if (isDebugEnabled) {
+    error(t, msg)
+} else {
+    error { "${msg()}: ${t.message}" }
+}
