@@ -257,6 +257,12 @@ public class CliShell extends Shell {
         String host = null;
 
         if(programOptions.getSpvNetworkParameters() != null){
+            printIntroSpv();
+        } else {
+            printIntroStandard();
+        }
+
+        if(programOptions.getSpvNetworkParameters() != null){
             try {
                 endpoint = startSPV(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
                 host = programOptions.getSpvNetworkParameters().getAdminHost() + ":" + programOptions.getSpvNetworkParameters().getAdminPort();
@@ -268,12 +274,6 @@ public class CliShell extends Shell {
         } else if(programOptions.getConnect() != null) {
             host = programOptions.getConnect();
             endpoint = new ProtocolEndpoint(host, ProtocolEndpointType.RPC, null);
-        }
-
-        if(modeType.isSPV()){
-            printIntroSpv();
-        } else {
-            printIntroStandard();
         }
 
         if(endpoint != null && host != null){
@@ -485,7 +485,7 @@ public class CliShell extends Shell {
 
     private void printIntroSpv(){
         printStyled(
-            "===[ VeriBlock " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===",
+            "===[ VeriBlock NodeCore SPV " + " v"+ Constants.APPLICATION_VERSION + " ]===",
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
         );
         printStyled(
