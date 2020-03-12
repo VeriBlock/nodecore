@@ -256,8 +256,6 @@ public class CliShell extends Shell {
         ProtocolEndpoint endpoint = null;
         String host = null;
 
-        printIntro();
-
         if(programOptions.getSpvNetworkParameters() != null){
             try {
                 endpoint = startSPV(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
@@ -270,6 +268,12 @@ public class CliShell extends Shell {
         } else if(programOptions.getConnect() != null) {
             host = programOptions.getConnect();
             endpoint = new ProtocolEndpoint(host, ProtocolEndpointType.RPC, null);
+        }
+
+        if(modeType.isSPV()){
+            printIntroSpv();
+        } else {
+            printIntroStandard();
         }
 
         if(endpoint != null && host != null){
@@ -360,7 +364,7 @@ public class CliShell extends Shell {
         return new ProtocolEndpoint(net.getAdminHost(), (short) net.getAdminPort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP);
     }
 
-    private void printIntro() {
+    private void printIntroStandard() {
         printStyled(
             "===[ VeriBlock " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===",
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
@@ -474,6 +478,34 @@ public class CliShell extends Shell {
             AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
             true
         );
+
+        introFooter();
+    }
+
+
+    private void printIntroSpv(){
+        printStyled(
+            "===[ VeriBlock " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+        );
+        printStyled(
+            "\t\thttps://www.veriblock.org/\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+        );
+        printStyled(
+            "To see available commands, type: ",
+            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
+            false
+        );
+        printStyled(
+            "help\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
+        );
+
+        introFooter();
+    }
+
+    private void introFooter(){
         printStyled(
             "To stay up to date on the status of the VeriBlock Network and \n" +
                 "ensure you are running the latest software, frequently check:",

@@ -277,6 +277,7 @@ open class Shell(
     //TODO Implement it with adding available mods for commands.
     fun getCommandsSpv() = mutableListOf(
                 "getbalance [address]",
+                "getstateinfo",
                 "send <amount> <destinationAddress> [sourceAddress]",
                 "lockWallet",
                 "unlockWallet",
