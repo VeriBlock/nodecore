@@ -71,15 +71,16 @@ public class ProveTransactionTask extends BaseTask {
             }
 
             // Retrieving the Merkle path from the PartialMerkleTree failed, try creating manually from the whole block
-            logger.info("Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getHashAsString() + " in block " +
-                    state.getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock, trying a fully downloaded block!");
+            logger.info(
+                "Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getTxId().toString() + " in block " + state
+                    .getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock, trying a fully downloaded block!");
 
             Block fullBlock = bitcoinService.downloadBlock(state.getBitcoinBlockHeaderOfProof().getHash());
             List<Transaction> allTransactions = fullBlock.getTransactions();
 
             List<String> txids = new ArrayList<>();
             for (int i = 0; i < allTransactions.size(); i++) {
-                txids.add(allTransactions.get(i).getHashAsString());
+                txids.add(allTransactions.get(i).getTxId().toString());
             }
 
             BitcoinMerkleTree bmt = new BitcoinMerkleTree(true, txids);
@@ -90,8 +91,8 @@ public class ProveTransactionTask extends BaseTask {
                 return TaskResult.succeed(state, getNext());
             } else {
                 logger.error(
-                        "Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getHashAsString() + " in block " +
-                                state.getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock or a fully downloaded block!");
+                    "Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getTxId().toString() + " in block "
+                        + state.getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock or a fully downloaded block!");
                 return failProcess(state, failureReason);
             }
         } catch (Exception e) {

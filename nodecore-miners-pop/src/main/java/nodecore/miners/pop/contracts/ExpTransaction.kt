@@ -1,25 +1,21 @@
-package nodecore.miners.pop.contracts;
+package nodecore.miners.pop.contracts
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.UnsafeByteArrayOutputStream;
+import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.UnsafeByteArrayOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-public class ExpTransaction extends Transaction {
-    public ExpTransaction(NetworkParameters params, byte[] payloadBytes) {
-        super(params, payloadBytes);
-    }
-
-    public byte[] getFilteredTransaction() {
-        ByteArrayOutputStream stream = new UnsafeByteArrayOutputStream(length < 32 ? 32 : length + 32);
+class ExpTransaction(params: NetworkParameters?, payloadBytes: ByteArray?) : Transaction(
+    params, payloadBytes
+) {
+    fun getFilteredTransaction(): ByteArray {
+        val stream: ByteArrayOutputStream = UnsafeByteArrayOutputStream(if (length < 32) 32 else length + 32)
         try {
-            bitcoinSerializeToStream(stream, false);
-        } catch (IOException e) {
-            throw new RuntimeException(e); // cannot happen
+            bitcoinSerializeToStream(stream, false)
+        } catch (e: IOException) {
+            throw RuntimeException(e) // cannot happen
         }
-
-        return stream.toByteArray();
+        return stream.toByteArray()
     }
 }

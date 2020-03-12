@@ -10,7 +10,7 @@ import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.miners.pop.common.Utility
 
-class PoPEndorsementInfo(
+class PopEndorsementInfo(
     popEndorsementInfo: VeriBlockMessages.PoPEndorsementInfo
 ) {
     @SerializedName("miner_address")

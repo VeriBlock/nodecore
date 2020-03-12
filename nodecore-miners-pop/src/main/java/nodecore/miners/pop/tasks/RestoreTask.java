@@ -113,7 +113,7 @@ public class RestoreTask extends BaseTask {
             Transaction transaction = bitcoinService.makeTransaction(state.getTransactionBytes());
             state.setTransaction(transaction);
             state.registerListeners(transaction);
-            logger.info("[{}] Rebuilt transaction {}", state.getOperationId(), transaction.getHashAsString());
+            logger.info("[{}] Rebuilt transaction {}", state.getOperationId(), transaction.getTxId().toString());
         }
 
         if (state.getBitcoinBlockHeaderOfProofBytes() != null) {

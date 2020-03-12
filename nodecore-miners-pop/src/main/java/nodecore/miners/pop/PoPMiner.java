@@ -295,7 +295,7 @@ public class PoPMiner implements Runnable {
 
         try {
             Transaction tx = bitcoinService.sendCoins(address, coinAmount);
-            result.addMessage("V201", "Created", String.format("Transaction: %s", tx.getHashAsString()), false);
+            result.addMessage("V201", "Created", String.format("Transaction: %s", tx.getTxId().toString()), false);
         } catch (ApplicationExceptions.SendTransactionException e) {
             for (Throwable t : e.getSuppressed()) {
                 if (t instanceof ApplicationExceptions.UnableToAcquireTransactionLock) {
@@ -478,7 +478,7 @@ public class PoPMiner implements Runnable {
 
     public Unit onCoinsReceived(CoinsReceivedEventDto event) {
         try {
-            logger.info("Received pending tx '{}', pending balance: '{}'", event.getTx().getHashAsString(),
+            logger.info("Received pending tx '{}', pending balance: '{}'", event.getTx().getTxId().toString(),
                 Utility.formatBTCFriendlyString(event.getNewBalance())
             );
         } catch (Exception e) {

@@ -6,9 +6,9 @@ import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Transaction
 
 class CoinsReceivedEventDto(
-    val tx: Transaction?,
-    val previousBalance: Coin?,
-    val newBalance: Coin?
+    val tx: Transaction,
+    val previousBalance: Coin,
+    val newBalance: Coin
 )
 
 class NewVeriBlockFoundEventDto(

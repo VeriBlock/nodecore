@@ -36,7 +36,6 @@ import org.bitcoinj.core.StoredBlock
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener
 import org.bitcoinj.core.listeners.DownloadProgressTracker
-import org.bitcoinj.crypto.DeterministicKey
 import org.bitcoinj.kits.WalletAppKit
 import org.bitcoinj.script.Script
 import org.bitcoinj.script.ScriptBuilder
@@ -58,7 +57,6 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.function.Supplier
-import java.util.stream.Collectors
 
 private val logger = createLogger {}
 
@@ -69,11 +67,14 @@ class BitcoinService(
     val context: Context,
     private val blockCache: BitcoinBlockCache
 ) : BlocksDownloadedEventListener {
+
     private var kit: WalletAppKit
-    private var blockChain: BlockChain? = null
-    private var blockStore: BlockStore? = null
-    private var wallet: Wallet? = null
-    private var peerGroup: PeerGroup? = null
+
+    private lateinit var blockChain: BlockChain
+    private lateinit var blockStore: BlockStore
+    private lateinit var wallet: Wallet
+    private lateinit var peerGroup: PeerGroup
+
     private val serializer: BitcoinSerializer
     private val txGate = Semaphore(1, true)
     private val txBroadcastAudit = object : LinkedHashMap<String, Any>() {
@@ -82,14 +83,14 @@ class BitcoinService(
         }
     }
 
-    private val bitcoinNetwork: BitcoinNetwork
+    private val bitcoinNetwork = configuration.bitcoinNetwork
+
     private var isBlockchainDownloaded = false
     private var isServiceReady = false
     private var receiveAddress: String? = null
     private var changeAddress: Address? = null
 
     init {
-        bitcoinNetwork = configuration.bitcoinNetwork
         logger.info("Using Bitcoin {} network", bitcoinNetwork.toString())
         serializer = BitcoinSerializer(context.params, true)
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
@@ -123,31 +124,29 @@ class BitcoinService(
                 super.onSetupCompleted()
                 blockStore = store()
 
-                val wallet = wallet()
-                wallet.isAcceptRiskyTransactions = true
-                this@BitcoinService.wallet = wallet
+                wallet = wallet().apply {
+                    isAcceptRiskyTransactions = true
+                    addCoinsReceivedEventListener { _, tx: Transaction, prevBalance: Coin, newBalance: Coin ->
+                        EventBus.coinsReceivedEvent.trigger(CoinsReceivedEventDto(tx, prevBalance, newBalance))
+                    }
+                }
 
                 blockChain = chain()
 
-                val peerGroup = peerGroup()
-                peerGroup.useLocalhostPeerWhenPossible = configuration.isBitcoinUseLocalhostPeer
-                peerGroup.minRequiredProtocolVersion = configuration.bitcoinProtocolVersion.bitcoinProtocolVersion
-                peerGroup.maxConnections = configuration.bitcoinMaxPeerConnections
-                peerGroup.setPeerDiscoveryTimeoutMillis(configuration.bitcoinPeerDiscoveryTimeoutMillis.toLong())
-                peerGroup.setDownloadTxDependencies(configuration.bitcoinDownloadTxDependencies)
-                peerGroup.setRequiredServices(configuration.bitcoinRequiredServices)
-                peerGroup.minBroadcastConnections = configuration.bitcoinMinPeerBroadcastConnections
-                peerGroup.maxPeersToDiscoverCount = configuration.bitcoinMaxPeersToDiscoverCount
-                peerGroup.pingIntervalMsec = configuration.bitcoinPeerPingIntervalMsec.toLong()
-                this@BitcoinService.peerGroup = peerGroup
-
-                wallet.addCoinsReceivedEventListener { _, tx: Transaction?, prevBalance: Coin?, newBalance: Coin? ->
-                    EventBus.coinsReceivedEvent.trigger(CoinsReceivedEventDto(tx, prevBalance, newBalance))
+                peerGroup = peerGroup().apply {
+                    useLocalhostPeerWhenPossible = configuration.isBitcoinUseLocalhostPeer
+                    minRequiredProtocolVersion = configuration.bitcoinProtocolVersion.bitcoinProtocolVersion
+                    maxConnections = configuration.bitcoinMaxPeerConnections
+                    setPeerDiscoveryTimeoutMillis(configuration.bitcoinPeerDiscoveryTimeoutMillis.toLong())
+                    setDownloadTxDependencies(configuration.bitcoinDownloadTxDependencies)
+                    setRequiredServices(configuration.bitcoinRequiredServices)
+                    minBroadcastConnections = configuration.bitcoinMinPeerBroadcastConnections
+                    maxPeersToDiscoverCount = configuration.bitcoinMaxPeersToDiscoverCount
+                    pingIntervalMsec = configuration.bitcoinPeerPingIntervalMsec.toLong()
+                    addBlocksDownloadedEventListener(this@BitcoinService)
                 }
 
-                peerGroup.addBlocksDownloadedEventListener(this@BitcoinService)
                 setServiceReady(true)
-
             }
         }
         kit.setBlockingStartup(false)
@@ -217,26 +216,28 @@ class BitcoinService(
     }
 
     fun currentReceiveAddress(): String {
-        if (receiveAddress == null) {
-            receiveAddress = wallet!!.currentReceiveAddress().toString()
+        return receiveAddress ?: run {
+            val receiveAddress = wallet.currentReceiveAddress().toString()
+            this.receiveAddress = receiveAddress
+            receiveAddress
         }
-        return receiveAddress!!
     }
 
-    private fun currentChangeAddress(): Address? {
-        if (changeAddress == null) {
-            changeAddress = wallet!!.currentChangeAddress()
+    private fun currentChangeAddress(): Address {
+        return changeAddress ?: run {
+            val changeAddress = wallet.currentChangeAddress()
+            this.changeAddress = changeAddress
+            changeAddress
         }
-        return changeAddress
     }
 
-    val balance: Coin
-        get() = wallet!!.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+    fun getBalance(): Coin =
+        wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
 
     fun resetWallet() {
         receiveAddress = null
         setServiceReady(false)
-        wallet!!.reset()
+        wallet.reset()
         shutdown()
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
         initialize()
@@ -246,18 +247,18 @@ class BitcoinService(
         return isBlockchainDownloaded
     }
 
-    fun generatePoPScript(opReturnData: ByteArray?): Script {
+    fun generatePoPScript(opReturnData: ByteArray): Script {
         return ScriptBuilder().op(ScriptOpCodes.OP_RETURN).data(opReturnData).build()
     }
 
     @Throws(SendTransactionException::class)
-    fun createPoPTransaction(opReturnScript: Script?): ListenableFuture<Transaction> {
+    fun createPoPTransaction(opReturnScript: Script): ListenableFuture<Transaction> {
         return sendTxRequest(Supplier {
             val tx = Transaction(kit.params())
             tx.addOutput(Coin.ZERO, opReturnScript)
             val request = SendRequest.forTx(tx)
             request.ensureMinRequiredFee = configuration.isMinimumRelayFeeEnforced
-            request.changeAddress = wallet!!.currentChangeAddress()
+            request.changeAddress = wallet.currentChangeAddress()
             request.feePerKb = getTransactionFeePerKB()
             request.changeAddress = currentChangeAddress()
             request
@@ -266,7 +267,7 @@ class BitcoinService(
 
     fun getBlock(hash: Sha256Hash): Block? {
         return try {
-            val block = blockStore!![hash]
+            val block = blockStore[hash]
             if (block == null) {
                 logger.warn("Unable to retrieve block {}", hash.toString())
                 return null
@@ -279,20 +280,20 @@ class BitcoinService(
     }
 
     val lastBlock: StoredBlock
-        get() = blockChain!!.chainHead
+        get() = blockChain.chainHead
 
     fun getBestBlock(hashes: Collection<Sha256Hash>): Block? {
         val storedBlocks = HashMap<Sha256Hash, StoredBlock>()
         for (hash in hashes) {
             try {
-                storedBlocks[hash] = blockStore!![hash]
+                storedBlocks[hash] = blockStore[hash]
             } catch (e: BlockStoreException) {
                 logger.error("Unable to get block from store", e)
             }
         }
-        var cursor = blockChain!!.chainHead
+        var cursor = blockChain.chainHead
         do {
-            if (storedBlocks.containsKey(cursor!!.header.hash)) {
+            if (storedBlocks.containsKey(cursor.header.hash)) {
                 return cursor.header
             }
             cursor = try {
@@ -306,7 +307,8 @@ class BitcoinService(
     }
 
     private val downloadLock = Any()
-    private val blockDownloader = ConcurrentHashMap<String, ListenableFuture<Block>?>()
+    private val blockDownloader = ConcurrentHashMap<String, ListenableFuture<Block>>()
+
     fun getFilteredBlockFuture(hash: Sha256Hash): ListenableFuture<FilteredBlock> {
         return blockCache.getAsync(hash.toString())
     }
@@ -334,37 +336,28 @@ class BitcoinService(
         while (block == null && attempts < 5) {
             logger.info("Attempting to download block with hash {}", hash.toString())
             attempts++
-            var blockFuture: ListenableFuture<Block>?
             // Lock for read to see if we've got a download already started
-            synchronized(downloadLock) {
-                blockFuture = blockDownloader[hash.toString()]
-                if (blockFuture == null) {
-                    logger.info(
-                        "Starting download of block {} from peer group", hash.toString()
-                    )
-                    blockFuture = peerGroup!!.downloadPeer.getBlock(hash)
-                    blockDownloader.putIfAbsent(hash.toString(), blockFuture)
-                } else {
+            val blockFuture: ListenableFuture<Block> = synchronized(downloadLock) {
+                blockDownloader[hash.toString()]?.also {
                     logger.info("Found existing download of block {}", hash.toString())
+                } ?: run {
+                    logger.info("Starting download of block {} from peer group", hash.toString())
+                    val blockFuture = peerGroup.downloadPeer.getBlock(hash)
+                    blockDownloader.putIfAbsent(hash.toString(), blockFuture)
+                    blockFuture
                 }
             }
             try {
                 logger.info("Waiting for block {} to finish downloading", hash.toString())
-                block = blockFuture!![configuration.actionTimeout.toLong(), TimeUnit.SECONDS]
+                block = blockFuture[configuration.actionTimeout.toLong(), TimeUnit.SECONDS]
             } catch (e: TimeoutException) {
-                logger.error(
-                    "Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message
-                )
+                logger.error("Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message)
                 blockDownloader.remove(hash.toString())
             } catch (e: InterruptedException) {
-                logger.error(
-                    "Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message
-                )
+                logger.error("Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message)
                 blockDownloader.remove(hash.toString())
             } catch (e: ExecutionException) {
-                logger.error(
-                    "Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message
-                )
+                logger.error("Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message)
                 blockDownloader.remove(hash.toString())
             }
         }
@@ -376,43 +369,39 @@ class BitcoinService(
         return block
     }
 
-    fun makeBlock(raw: ByteArray?): Block? {
-        return if (raw == null) {
-            null
-        } else serializer.makeBlock(raw)
+    fun makeBlock(raw: ByteArray): Block {
+        return serializer.makeBlock(raw)
     }
 
-    fun makeBlocks(raw: Collection<ByteArray?>?): Collection<Block>? {
-        return raw?.stream()?.map { payloadBytes: ByteArray? -> serializer.makeBlock(payloadBytes) }?.collect(Collectors.toSet())
+    fun makeBlocks(raw: Collection<ByteArray>): Collection<Block> {
+        return raw.asSequence().map {
+            serializer.makeBlock(it)
+        }.toSet()
     }
 
-    fun makeTransaction(raw: ByteArray?): Transaction? {
-        if (raw == null) {
-            return null
-        }
+    fun makeTransaction(raw: ByteArray): Transaction {
         val rawTx = serializer.makeTransaction(raw)
 
         // Try to get the transaction from the wallet first
-        var reconstitutedTx = wallet!!.getTransaction(rawTx.txId)
-        if (reconstitutedTx == null) {
+        val reconstitutedTx = wallet.getTransaction(rawTx.txId) ?: run {
             logger.debug("Could not find transaction {} in wallet", rawTx.txId.toString())
             try {
-                reconstitutedTx = peerGroup!!.downloadPeer.getPeerMempoolTransaction(rawTx.txId).get()
+                peerGroup.downloadPeer.getPeerMempoolTransaction(rawTx.txId).get()
             } catch (e: Exception) {
-                logger.error("Unable to download mempool transaction", e)
+                throw RuntimeException("Unable to download mempool transaction", e)
             }
         }
         return reconstitutedTx
     }
 
     @Throws(SendTransactionException::class)
-    fun sendCoins(address: String?, amount: Coin?): Transaction {
+    fun sendCoins(address: String, amount: Coin): Transaction {
         return try {
             sendTxRequest(Supplier {
                 val sendRequest = SendRequest.to(
                     Address.fromString(kit.params(), address), amount
                 )
-                sendRequest.changeAddress = wallet!!.currentChangeAddress()
+                sendRequest.changeAddress = wallet.currentChangeAddress()
                 sendRequest.feePerKb = getTransactionFeePerKB()
                 sendRequest
             }).get()
@@ -425,12 +414,15 @@ class BitcoinService(
 
     fun calculateFeesFromLatestBlock(): Pair<Int, Long>? {
         try {
-            val chainHead = blockChain!!.chainHead
+            val chainHead = blockChain.chainHead
             val block = downloadBlock(chainHead.header.hash)
-            if (block != null && block.transactions != null && block.transactions!!.size > 0) {
-                val fees = block.transactions!![0].outputSum.minus(block.getBlockInflation(chainHead.height))
-                val averageFees = fees.longValue() / block.optimalEncodingMessageSize
-                return Pair.of(chainHead.height, averageFees)
+            if (block != null) {
+                val transactions = block.transactions
+                if (!transactions.isNullOrEmpty()) {
+                    val fees = transactions[0].outputSum.minus(block.getBlockInflation(chainHead.height))
+                    val averageFees = fees.longValue() / block.optimalEncodingMessageSize
+                    return Pair.of(chainHead.height, averageFees)
+                }
             }
         } catch (e: Exception) {
             logger.error("Unable to calculate fees from latest block", e)
@@ -439,7 +431,7 @@ class BitcoinService(
     }
 
     fun getMnemonicSeed(): List<String> {
-        val seed = wallet!!.keyChainSeed
+        val seed = wallet.keyChainSeed
         if (seed != null) {
             val mnemonicCode = seed.mnemonicCode
             if (mnemonicCode != null) {
@@ -467,8 +459,10 @@ class BitcoinService(
     }
 
     fun exportPrivateKeys(): List<String> {
-        val keys = wallet!!.activeKeyChain.leafKeys
-        return keys.stream().map { key: DeterministicKey -> key.getPrivateKeyAsWiF(wallet!!.networkParameters) }.collect(Collectors.toList())
+        val keys = wallet.activeKeyChain.leafKeys
+        return keys.map {
+            it.getPrivateKeyAsWiF(wallet.networkParameters)
+        }
     }
 
     fun shutdown() {
@@ -501,7 +495,7 @@ class BitcoinService(
         try {
             // WalletShim is a temporary solution until improvements present in bitcoinj's master branch
             // are packaged into a published release
-            wallet!!.completeTx(request)
+            wallet.completeTx(request)
             if (request.tx.fee.isGreaterThan(getMaximumTransactionFee())) {
                 throw ExceededMaxTransactionFee()
             }
