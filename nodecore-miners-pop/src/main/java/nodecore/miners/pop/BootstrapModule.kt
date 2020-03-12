@@ -3,6 +3,7 @@ package nodecore.miners.pop
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.common.BitcoinNetwork
 import nodecore.miners.pop.contracts.BlockStore
+import nodecore.miners.pop.schedule.PoPMiningScheduler
 import nodecore.miners.pop.services.BitcoinBlockCache
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.ChannelBuilder

@@ -12,6 +12,7 @@ import nodecore.miners.pop.api.ApiServer
 import nodecore.miners.pop.api.webApiModule
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.rules.rulesModule
+import nodecore.miners.pop.schedule.PoPMiningScheduler
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.storage.repositoriesModule
 import org.bitcoinj.core.Context
