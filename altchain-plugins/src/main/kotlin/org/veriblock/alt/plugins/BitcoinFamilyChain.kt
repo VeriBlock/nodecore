@@ -27,6 +27,7 @@ import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
+import kotlin.math.abs
 
 private val logger = createLogger {}
 
@@ -78,10 +79,8 @@ private data class BtcScriptPubKey(
 )
 
 private data class BtcSyncStatus(
-    val networkHeight: Int,
-    val localBlockchainHeight: Int,
-    val blockDifference: Int,
-    val isSynchronized: Boolean
+    val blocks: Int,
+    val headers: Int
 )
 
 @FamilyPluginSpec(name = "BitcoinFamily", key = "btc")
@@ -312,11 +311,17 @@ class BitcoinFamilyChain(
     }
 
     override fun isSynchronized(): Boolean {
-        val jsonBody = JsonRpcRequestBody("getstateinfo").toJson()
-        val response: BtcSyncStatus = config.host.httpPost()
-            .authenticate()
-            .body(jsonBody)
-            .rpcResponse()
-        return response.isSynchronized
+        val jsonBody = JsonRpcRequestBody("getblockchaininfo").toJson()
+        val response: BtcSyncStatus = try {
+            config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+        } catch (e: Exception) {
+            logger.info { "Unable to perform the 'getblockchaininfo' rpc call: ${e.message}" }
+            return false
+        }
+        val blockDifference = abs(response.headers - response.blocks)
+        return blockDifference < 4
     }
 }
