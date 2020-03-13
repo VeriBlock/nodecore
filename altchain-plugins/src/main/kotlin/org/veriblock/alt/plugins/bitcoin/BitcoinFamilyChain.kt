@@ -35,6 +35,7 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
+import kotlin.math.abs
 
 private val logger = createLogger {}
 
@@ -273,6 +274,34 @@ class BitcoinFamilyChain(
 
         return BlockEndorsement(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
+
+    override fun isConnected(): Boolean {
+        val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
+        return try{
+            val response: String = config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override fun isSynchronized(): Boolean {
+        val jsonBody = JsonRpcRequestBody("getblockchaininfo").toJson()
+        val response: BtcSyncStatus = try {
+            config.host.httpPost()
+                .authenticate()
+                .body(jsonBody)
+                .rpcResponse()
+        } catch (e: Exception) {
+            logger.info { "Unable to perform the 'getblockchaininfo' rpc call: ${e.message}" }
+            return false
+        }
+        val blockDifference = abs(response.headers - response.blocks)
+        return blockDifference < 4
+    }
 }
 
 fun ByteBuffer.getBytes(count: Int): ByteArray {
@@ -317,4 +346,9 @@ private data class BtcScriptPubKey(
     val hex: String,
     val reqSigs: Int,
     val type: String
+)
+
+private data class BtcSyncStatus(
+    val blocks: Int,
+    val headers: Int
 )

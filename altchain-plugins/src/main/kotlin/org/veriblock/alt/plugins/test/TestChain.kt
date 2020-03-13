@@ -244,6 +244,10 @@ class TestChain(
         transactions[transaction.txId] = transaction
         return transaction
     }
+
+    override fun isConnected(): Boolean = true
+
+    override fun isSynchronized(): Boolean = true
 }
 
 private class TestBlock(
