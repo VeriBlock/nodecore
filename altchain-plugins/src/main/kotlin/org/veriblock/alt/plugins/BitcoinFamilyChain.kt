@@ -298,7 +298,7 @@ class BitcoinFamilyChain(
     }
 
     override fun isConnected(): Boolean {
-        val jsonBody = JsonRpcRequestBody("ping").toJson()
+        val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
         return try{
             val response: String = config.host.httpPost()
                 .authenticate()
