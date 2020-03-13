@@ -11,8 +11,8 @@ import io.kotlintest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import nodecore.miners.pop.contracts.VeriBlockHeader
 import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
+import nodecore.miners.pop.model.VeriBlockHeader
 import nodecore.miners.pop.rules.Rule
 import nodecore.miners.pop.rules.RuleContext
 import org.junit.Test

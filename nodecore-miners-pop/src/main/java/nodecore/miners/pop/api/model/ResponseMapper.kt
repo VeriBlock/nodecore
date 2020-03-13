@@ -8,12 +8,12 @@
 package nodecore.miners.pop.api.model
 
 import nodecore.miners.pop.common.Utility
-import nodecore.miners.pop.contracts.OperationSummary
-import nodecore.miners.pop.contracts.PoPMiningInstruction
-import nodecore.miners.pop.contracts.PreservedPoPMiningOperationState
-import nodecore.miners.pop.contracts.result.MineResult
-import nodecore.miners.pop.contracts.result.Result
-import nodecore.miners.pop.contracts.result.ResultMessage
+import nodecore.miners.pop.core.PreservedPoPMiningOperationState
+import nodecore.miners.pop.model.OperationSummary
+import nodecore.miners.pop.model.PoPMiningInstruction
+import nodecore.miners.pop.model.result.MineResult
+import nodecore.miners.pop.model.result.Result
+import nodecore.miners.pop.model.result.ResultMessage
 
 fun PreservedPoPMiningOperationState.toResponse() = OperationDetailResponse(
     operationId = operationId,

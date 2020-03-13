@@ -36,7 +36,7 @@ class LastBitcoinBlockController(
                     ok<ShowLastBitcoinBlockResponse>()
                 )
         ) {
-            val lastBlock = miner.lastBitcoinBlock
+            val lastBlock = miner.getLastBitcoinBlock()
             val lastBlockHeader = lastBlock.header
 
             val headerOutputSteram = ByteArrayOutputStream()

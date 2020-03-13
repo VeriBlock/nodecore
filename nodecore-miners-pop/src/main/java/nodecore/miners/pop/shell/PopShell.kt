@@ -10,10 +10,10 @@ package nodecore.miners.pop.shell
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.result.Result
-import nodecore.miners.pop.contracts.result.ResultMessage
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto
+import nodecore.miners.pop.model.result.Result
+import nodecore.miners.pop.model.result.ResultMessage
 import org.jline.utils.AttributedStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -50,7 +50,7 @@ class PopShell(
 
     private fun runOnce() {
         if (mustAcceptWalletSeed) {
-            val walletSeed: List<String?>? = miner.walletSeed
+            val walletSeed: List<String?>? = miner.getWalletSeed()
             if (walletSeed != null) {
                 printInfo(
                     "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue..."

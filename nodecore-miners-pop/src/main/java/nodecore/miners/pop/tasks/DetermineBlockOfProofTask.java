@@ -7,9 +7,9 @@
 
 package nodecore.miners.pop.tasks;
 
-import nodecore.miners.pop.contracts.PoPMiningOperationState;
-import nodecore.miners.pop.contracts.TaskResult;
+import nodecore.miners.pop.core.PoPMiningOperationState;
 import nodecore.miners.pop.events.EventBus;
+import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import org.bitcoinj.core.Block;

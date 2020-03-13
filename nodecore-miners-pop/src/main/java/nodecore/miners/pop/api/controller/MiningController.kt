@@ -85,10 +85,10 @@ class MiningController(
                 )
         ) {
             val responseModel = MinerInfoResponse(
-                bitcoinBalance = miner.bitcoinBalance.longValue(),
-                bitcoinAddress = miner.bitcoinReceiveAddress,
-                minerAddress = miner.minerAddress,
-                walletSeed = miner.walletSeed
+                bitcoinBalance = miner.getBitcoinBalance().longValue(),
+                bitcoinAddress = miner.getBitcoinReceiveAddress(),
+                minerAddress = miner.getMinerAddress(),
+                walletSeed = miner.getWalletSeed()
             )
             call.respond(responseModel)
         }

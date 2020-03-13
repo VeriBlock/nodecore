@@ -6,7 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules
 
-import nodecore.miners.pop.contracts.VeriBlockHeader
+import nodecore.miners.pop.model.VeriBlockHeader
 
 class RuleContext(
     var previousHead: VeriBlockHeader?,

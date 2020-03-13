@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts;
+package nodecore.miners.pop.core;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -14,6 +14,9 @@ import nodecore.miners.pop.Threading;
 import nodecore.miners.pop.common.Utility;
 import nodecore.miners.pop.events.EventBus;
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto;
+import nodecore.miners.pop.model.ExpTransaction;
+import nodecore.miners.pop.model.PoPMiningInstruction;
+import nodecore.miners.pop.model.TransactionStatus;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.FilteredBlock;
 import org.bitcoinj.core.NetworkParameters;

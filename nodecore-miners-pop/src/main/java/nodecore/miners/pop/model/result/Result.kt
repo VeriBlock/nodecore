@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts.result
+package nodecore.miners.pop.model.result
 
 import java.util.ArrayList
 

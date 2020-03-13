@@ -26,7 +26,7 @@ fun CommandFactory.diagnosticCommands(miner: PoPMiner) {
     ) {
         printInfo("Configuration Properties:")
 
-        val lastBlock = miner.lastBitcoinBlock
+        val lastBlock = miner.getLastBitcoinBlock()
         val lastBlockHeader = lastBlock.header
 
         val headerOutputSteram = ByteArrayOutputStream()

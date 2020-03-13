@@ -94,7 +94,7 @@ class PoPMiningScheduler(
 
     private fun executeSchedule() {
         Context.propagate(context)
-        if (popMiner.isReady) {
+        if (popMiner.isReady()) {
             logger.info("Starting mining operation as scheduled")
             popMiner.mine(null)
         } else {

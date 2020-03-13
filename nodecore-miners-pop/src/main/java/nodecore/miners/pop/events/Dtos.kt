@@ -1,7 +1,7 @@
 package nodecore.miners.pop.events
 
-import nodecore.miners.pop.contracts.PoPMiningOperationState
-import nodecore.miners.pop.contracts.VeriBlockHeader
+import nodecore.miners.pop.core.PoPMiningOperationState
+import nodecore.miners.pop.model.VeriBlockHeader
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Transaction
 

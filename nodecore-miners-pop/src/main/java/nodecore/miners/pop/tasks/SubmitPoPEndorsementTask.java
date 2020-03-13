@@ -8,10 +8,10 @@
 package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
-import nodecore.miners.pop.contracts.ApplicationExceptions;
-import nodecore.miners.pop.contracts.PoPMiningOperationState;
-import nodecore.miners.pop.contracts.PoPMiningTransaction;
-import nodecore.miners.pop.contracts.TaskResult;
+import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.model.ApplicationExceptions;
+import nodecore.miners.pop.model.PoPMiningTransaction;
+import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 

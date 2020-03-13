@@ -11,7 +11,7 @@ package nodecore.miners.pop.shell.commands
 import com.google.gson.Gson
 import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.PoPOperationInfo
+import nodecore.miners.pop.model.PoPOperationInfo
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -95,7 +95,7 @@ fun CommandFactory.miningCommands(
         description = "Returns the NodeCore miner address"
     ) {
         try {
-            val minerAddress = miner.minerAddress
+            val minerAddress = miner.getMinerAddress()
             if (minerAddress != null) {
                 printInfo("Miner Address: $minerAddress")
                 success {

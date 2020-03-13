@@ -5,7 +5,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts;
+package nodecore.miners.pop.core;
+
+import nodecore.miners.pop.model.PoPMiningInstruction;
 
 import java.io.Serializable;
 import java.util.List;

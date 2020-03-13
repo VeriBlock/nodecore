@@ -10,7 +10,7 @@ import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.support.ConnectionSource
 import com.j256.ormlite.table.TableUtils
-import nodecore.miners.pop.contracts.TransactionStatus
+import nodecore.miners.pop.model.TransactionStatus
 import org.veriblock.core.utilities.createLogger
 import java.sql.SQLException
 

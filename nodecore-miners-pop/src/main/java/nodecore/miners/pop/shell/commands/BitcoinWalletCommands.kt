@@ -27,7 +27,7 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "showbitcoinbalance",
         description = "Displays the current balance for the Bitcoin wallet"
     ) {
-        val bitcoinBalance = miner.bitcoinBalance
+        val bitcoinBalance = miner.getBitcoinBalance()
         val formattedBalance = Utility.formatBTCFriendlyString(bitcoinBalance)
         printInfo("Bitcoin Balance: $formattedBalance")
         success {
@@ -40,7 +40,7 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "showbitcoinaddress",
         description = "Displays the current address for receiving Bitcoin"
     ) {
-        val address = miner.bitcoinReceiveAddress
+        val address = miner.getBitcoinReceiveAddress()
         printInfo("Bitcoin Receive Address: $address")
         success {
             addMessage("V200", "Success", address)

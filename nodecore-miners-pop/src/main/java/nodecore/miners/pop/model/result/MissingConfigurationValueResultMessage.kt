@@ -4,17 +4,19 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package nodecore.miners.pop.contracts.result
+package nodecore.miners.pop.model.result
 
-class IllegalConfigurationValueResultMessage(details: String) : ResultMessage {
+class MissingConfigurationValueResultMessage(private val propertyName: String) : ResultMessage {
     override val code: String
-        get() = "V051"
+        get() = "V050"
 
     override val message: String
-        get() = "Illegal configuration value"
+        get() = "Missing configuration value"
+
+    override val details: List<String>
+        get() = listOf("A value is required for property '$propertyName'")
 
     override val isError: Boolean
         get() = true
 
-    override val details: List<String> = listOf(details)
 }

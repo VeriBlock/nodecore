@@ -5,9 +5,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.contracts;
+package nodecore.miners.pop.model;
 
 import nodecore.miners.pop.common.Utility;
+import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.core.PoPMiningOperationStatus;
+import nodecore.miners.pop.core.PreservedPoPMiningOperationState;
 import org.bitcoinj.core.BitcoinSerializer;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.params.RegTestParams;

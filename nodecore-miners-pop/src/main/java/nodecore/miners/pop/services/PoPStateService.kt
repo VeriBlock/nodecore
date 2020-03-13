@@ -7,10 +7,10 @@
 package nodecore.miners.pop.services
 
 import com.google.protobuf.ByteString
-import nodecore.miners.pop.contracts.PoPMiningInstruction
-import nodecore.miners.pop.contracts.PoPMiningOperationState
+import nodecore.miners.pop.core.PoPMiningOperationState
 import nodecore.miners.pop.events.EventBus.popMiningOperationStateChangedEvent
 import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto
+import nodecore.miners.pop.model.PoPMiningInstruction
 import nodecore.miners.pop.storage.OperationStateData
 import nodecore.miners.pop.storage.PopRepository
 import nodecore.miners.pop.storage.ProofOfProof

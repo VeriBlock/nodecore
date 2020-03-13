@@ -11,7 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.result.MineResult
+import nodecore.miners.pop.model.result.MineResult
 import org.junit.Test
 
 class MineActionTests {

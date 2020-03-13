@@ -11,7 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import nodecore.miners.pop.Configuration
-import nodecore.miners.pop.contracts.VeriBlockHeader
+import nodecore.miners.pop.model.VeriBlockHeader
 import nodecore.miners.pop.rules.actions.RuleAction
 import org.junit.Test
 

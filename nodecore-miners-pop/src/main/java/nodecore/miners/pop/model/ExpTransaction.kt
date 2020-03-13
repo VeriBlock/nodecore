@@ -1,4 +1,4 @@
-package nodecore.miners.pop.contracts
+package nodecore.miners.pop.model
 
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Transaction

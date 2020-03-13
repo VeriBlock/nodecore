@@ -4,10 +4,11 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package nodecore.miners.pop.contracts
+package nodecore.miners.pop.model
 
 import com.google.gson.annotations.SerializedName
 import nodecore.miners.pop.common.Utility
+import nodecore.miners.pop.core.PreservedPoPMiningOperationState
 import org.bitcoinj.core.Base58
 import org.veriblock.core.crypto.Crypto
 import java.util.stream.Collectors

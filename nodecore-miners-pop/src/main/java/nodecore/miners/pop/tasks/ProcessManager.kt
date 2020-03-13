@@ -7,7 +7,7 @@
 package nodecore.miners.pop.tasks
 
 import nodecore.miners.pop.Threading
-import nodecore.miners.pop.contracts.PoPMiningOperationState
+import nodecore.miners.pop.core.PoPMiningOperationState
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService

@@ -1,7 +1,7 @@
 package nodecore.miners.pop.events
 
-import nodecore.miners.pop.contracts.PoPMinerDependencies
-import nodecore.miners.pop.contracts.PoPMiningOperationState
+import nodecore.miners.pop.core.PoPMiningOperationState
+import nodecore.miners.pop.model.PoPMinerDependencies
 
 object EventBus {
     val bitcoinServiceReadyEvent = EmptyEvent("Bitcoin Service Ready")
