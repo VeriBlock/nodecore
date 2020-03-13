@@ -166,7 +166,7 @@ class NodeCoreGateway(
             }
         } else {
             for (error in reply.resultsList) {
-                logger.warn { "${error.message} | ${error.details}" }
+                logger.error { "${error.message} | ${error.details}" }
             }
             error("Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash")
         }
@@ -191,7 +191,7 @@ class NodeCoreGateway(
             return publications
         } else {
             for (error in reply.resultsList) {
-                logger.warn { "${error.message} | ${error.details}" }
+                logger.error { "${error.message} | ${error.details}" }
             }
         }
 
