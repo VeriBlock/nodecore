@@ -339,7 +339,7 @@ public class Peer {
             initialize(ownsConnection);
             return true;
         } catch (Exception e) {
-            logger.warn("Unable to open connection to " + address + ":" + port + "!", e);
+            logger.debug("Unable to open connection to " + address + ":" + port + "!", e);
             return false;
         }
     }
@@ -449,7 +449,7 @@ public class Peer {
             selectionKey.attach(peer);
             return peer;
         } catch (IOException e) {
-            logger.warn("Unable to open connection to " + address + ":" + port + "!");
+            logger.debug("Unable to open connection to " + address + ":" + port + "!");
         }
 
         return null;

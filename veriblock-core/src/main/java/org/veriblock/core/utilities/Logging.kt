@@ -13,20 +13,20 @@ import mu.KotlinLogging
 
 fun createLogger(context: () -> Unit) = KotlinLogging.logger(context)
 
-fun KLogger.debugInfo(t: Throwable, msg: () -> String) = if (isDebugEnabled) {
-    info(t, msg)
+inline fun KLogger.debugInfo(t: Throwable, crossinline msg: () -> String) = if (isDebugEnabled) {
+    info(t) { msg() }
 } else {
     info { "${msg()}: ${t.message}" }
 }
 
-fun KLogger.debugWarn(t: Throwable, msg: () -> String) = if (isDebugEnabled) {
-    warn(t, msg)
+inline fun KLogger.debugWarn(t: Throwable, crossinline msg: () -> String) = if (isDebugEnabled) {
+    warn(t) { msg() }
 } else {
     warn { "${msg()}: ${t.message}" }
 }
 
-fun KLogger.debugError(t: Throwable, msg: () -> String) = if (isDebugEnabled) {
-    error(t, msg)
+inline fun KLogger.debugError(t: Throwable, crossinline msg: () -> String) = if (isDebugEnabled) {
+    error(t) { msg() }
 } else {
     error { "${msg()}: ${t.message}" }
 }

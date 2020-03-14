@@ -37,7 +37,8 @@ public class AdminServiceClient implements AdminService {
 
         Channel interceptorChannel = channelBuilder.attachPasswordInterceptor(channel);
 
-        blockingStub = AdminGrpc.newBlockingStub(interceptorChannel);
+        blockingStub =
+            AdminGrpc.newBlockingStub(interceptorChannel).withMaxInboundMessageSize(20 * 1024 * 1024).withMaxOutboundMessageSize(20 * 1024 * 1024);
     }
 
     public void shutdown() throws InterruptedException {

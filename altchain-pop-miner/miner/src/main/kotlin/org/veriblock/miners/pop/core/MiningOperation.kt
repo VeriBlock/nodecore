@@ -12,7 +12,6 @@ import mu.KLogger
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.AsyncEvent
-import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.alt.MiningInstruction
@@ -70,7 +69,6 @@ class MiningOperation(
     fun setTransaction(transaction: WalletTransaction) {
         val currentState = state as? OperationState.Instruction
             ?: error("Trying to set transaction without having the mining instruction")
-        attachTransactionListeners(transaction)
         setState(OperationState.EndorsementTransaction(currentState, transaction))
     }
 
@@ -125,7 +123,6 @@ class MiningOperation(
     fun fail(reason: String) {
         logger.warn { "Operation $id failed for reason: $reason" }
         status = OperationStatus.FAILED
-        detachTransactionListeners(state.transaction)
         setState(OperationState.Failed(state, reason))
     }
 
@@ -137,27 +134,7 @@ class MiningOperation(
         }
         logger.info { "Operation $id has completed!" }
         status = OperationStatus.COMPLETED
-        detachTransactionListeners(state.transaction)
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
-    }
-
-    private fun attachTransactionListeners(transaction: WalletTransaction) {
-        transaction.transactionMeta.stateChangedEvent.register(this) { metaState ->
-            if (metaState === TransactionMeta.MetaState.PENDING) {
-                fail("VeriBlock chain has been reorganized!")
-            } else if (metaState === TransactionMeta.MetaState.CONFIRMED) {
-                setConfirmed()
-            }
-        }
-    }
-
-    private fun detachTransactionListeners(transaction: WalletTransaction?) {
-        if (transaction == null) {
-            return
-        }
-
-        transaction.transactionMeta.depthChangedEvent.remove(this)
-        transaction.transactionMeta.stateChangedEvent.remove(this)
     }
 
     private fun informStateChangedListeners(reason: OperationState) {

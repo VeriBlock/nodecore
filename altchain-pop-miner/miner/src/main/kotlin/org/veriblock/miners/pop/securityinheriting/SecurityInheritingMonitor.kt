@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.securityinheriting
 
 import com.google.common.util.concurrent.SettableFuture
+import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -43,11 +44,11 @@ class SecurityInheritingMonitor(
     private val healthy = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
 
-    private var bestBlockHeight: Int = -1
+    var bestBlockHeight: Int = -1
 
     private var pollSchedule: ScheduledFuture<*>? = null
 
-    //private val newBlockHeightBroadcastChannel = BroadcastChannel<Int>(CONFLATED)
+    val newBlockHeightBroadcastChannel = BroadcastChannel<Int>(CONFLATED)
 
     private val blockHeightListeners = HashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = HashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
@@ -97,10 +98,10 @@ class SecurityInheritingMonitor(
                     }
 
                     this.bestBlockHeight = bestBlockHeight
+                    newBlockHeightBroadcastChannel.offer(bestBlockHeight)
 
                     handleBlockHeightListeners()
                     handleTransactionListeners()
-
                 }
             } else {
                 val pinged = checkSuccess { chain.getBestBlockHeight() }

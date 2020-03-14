@@ -10,7 +10,6 @@ package org.veriblock.lite.core
 
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
-import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import java.util.ArrayList
@@ -19,8 +18,6 @@ class TransactionMeta(
     val txId: Sha256Hash
 ) {
     val stateChangedBroadcastChannel = BroadcastChannel<MetaState>(CONFLATED)
-    val stateChangedEvent = AsyncEvent<MetaState>(Threading.MINER_THREAD)
-    val depthChangedEvent = AsyncEvent<Int>(Threading.MINER_THREAD)
 
     var state = MetaState.UNKNOWN
         private set
@@ -73,12 +70,10 @@ class TransactionMeta(
             appearsAtChainHeight = -1
         }
         stateChangedBroadcastChannel.offer(state)
-        stateChangedEvent.trigger(state)
     }
 
     fun incrementDepth() {
         depth++
-        depthChangedEvent.trigger(depth)
     }
 
     override fun equals(other: Any?): Boolean {

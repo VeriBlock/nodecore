@@ -21,6 +21,7 @@ import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStateType
+import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
@@ -31,10 +32,12 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Utils
 
 private val logger = createLogger {}
+
+private const val MAX_CONTEXT_AGE = 500
 
 suspend fun runTasks(
     miner: Miner,
@@ -53,18 +56,30 @@ suspend fun runTasks(
     try {
         operation.runTask("Retrieve Mining Instruction from ${securityInheritingChain.name}", OperationStateType.INSTRUCTION) {
             logger.info(operation) { "Getting the mining instruction..." }
-            try {
-                val publicationData = securityInheritingChain.getMiningInstruction(operation.blockHeight)
-                operation.setMiningInstruction(publicationData)
+            val publicationData = try {
+                securityInheritingChain.getMiningInstruction(operation.blockHeight)
             } catch (e: Exception) {
                 error("Error while trying to get PoP Mining Instruction from ${securityInheritingChain.name}: ${e.message}")
             }
-            logger.info(operation) { "Successfully added the mining instruction!" }
+            operation.setMiningInstruction(publicationData)
+            logger.info(operation) { "Successfully retrieved the mining instruction!" }
+            val vbkContextBlockHash = publicationData.context[0]
+            val vbkContextBlock = nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
+                ?: error("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
+            val vbkChainHead = nodeCoreLiteKit.blockChain.getChainHead()
+                ?: error("Unable to get VBK's chain head!")
+            val contextAge = vbkChainHead.height - vbkContextBlock.height
+            if (contextAge > MAX_CONTEXT_AGE) {
+                error(
+                    "$chainSymbol's VBK context is outdated ($contextAge VBK blocks behind)!" +
+                        " Please run 'updatecontext ${securityInheritingChain.key}' in order to mine it."
+                )
+            }
         }
-        operation.runTask("Create Proof Transaction", OperationStateType.ENDORSEMEMT_TRANSACTION) {
+        operation.runTask("Create Endorsement Transaction", OperationStateType.ENDORSEMEMT_TRANSACTION) {
             val state = operation.state
             if (state !is OperationState.Instruction) {
-                failTask("CreateProofTransactionTask called without mining instruction!")
+                failTask("CreateEndorsementTransactionTask called without mining instruction!")
             }
 
             // Something to fill in all the gaps
@@ -158,12 +173,18 @@ suspend fun runTasks(
             val blockOfProof = state.blockOfProof
 
             logger.info(operation) { "Waiting for the next VBK Keystone..." }
-            val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first {
-                if (it.height > blockOfProof.height + 20) {
-                    error("The next VBK Keystone was not received!")
+            val keystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
+            val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
+                logger.debug(operation) { "Checking block ${block.hash} @ ${block.height}..." }
+                if (block.height > keystoneOfProofHeight) {
+                    error(
+                        "The next VBK Keystone has been skipped!" +
+                            " Expected keystone height: $keystoneOfProofHeight; received block height: ${block.height}"
+                    )
                 }
-                it.height == blockOfProof.height / 20 * 20 + 20
+                block.height == keystoneOfProofHeight
             }
+            logger.info(operation) { "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}" }
             operation.setKeystoneOfProof(keystoneOfProof)
         }
         operation.runTask("Wait for VeriBlock Publication Data", OperationStateType.VERIBLOCK_PUBLICATIONS) {
@@ -173,9 +194,10 @@ suspend fun runTasks(
             }
             // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
             val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
-                operation.id, state.keystoneOfProof.hash.toString(),
-                Utils.encodeHex(state.miningInstruction.context[0]),
-                Utils.encodeHex(state.miningInstruction.btcContext[0])
+                operation.id,
+                state.keystoneOfProof.hash.toString(),
+                state.miningInstruction.context[0].toHex(),
+                state.miningInstruction.btcContext[0].toHex()
             )
             operation.setVeriBlockPublications(publications)
         }

@@ -57,7 +57,7 @@ val minerModule = module {
         CommandFactory().apply {
             configure(get(), get(), get())
             if (!minerConfig.mock) {
-                altchainCommands(get(), get())
+                altchainCommands(get(), get(), get())
             }
         }
     }

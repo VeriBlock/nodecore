@@ -191,12 +191,12 @@ class NodeCoreNetwork(
         addVeriBlockPublicationSubscription(operationId, subscription)
 
         logger.info {
-            """Successfully added publication subscription!
+            """[$operationId] Successfully subscribed to VTB retrieval event!
                 |   - Keystone Hash: ${subscription.keystoneHash}
                 |   - VBK Context Hash: ${subscription.contextHash}
                 |   - BTC Context Hash: ${subscription.btcContextHash}""".trimMargin()
         }
-        logger.info { "Waiting for this operation's veriblock publication..." }
+        logger.info { "[$operationId] Waiting for this operation's VTBs..." }
 
         try {
             while (publications == null) {
