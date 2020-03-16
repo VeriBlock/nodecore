@@ -1,6 +1,5 @@
 package nodecore.cli.commands.shell
 
-import nodecore.cli.annotations.ModeType
 import nodecore.cli.cliCommand
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -11,6 +10,7 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
+import org.veriblock.shell.models.ModeType
 import veriblock.conf.NetworkParameters
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery

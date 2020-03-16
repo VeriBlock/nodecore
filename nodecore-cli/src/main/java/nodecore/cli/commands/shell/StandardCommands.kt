@@ -12,6 +12,7 @@ import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
+import org.veriblock.shell.models.ModeType
 import java.util.*
 
 fun CommandFactory.standardCommands() {
@@ -45,7 +46,7 @@ fun CommandFactory.standardCommands() {
         val shell = cliShell
         val command: String? = getOptionalParameter("command")
         if (command == null) {
-            if(shell.modeType.isStandard) {
+            if(ModeType.STANDARD == shell.modeType) {
                 val categories = HashMap<CommandServiceType, MutableList<Command>>()
 
                 for (def in shell.getCommands()) {
@@ -81,7 +82,7 @@ fun CommandFactory.standardCommands() {
                 shell.printNormal("    All RPC Commands support following selectors:")
                 shell.printNormal("        -o <filename>       Saves command output into a file")
                 shell.printNormal("        Example: getinfo -o abcde.json")
-            } else if(shell.modeType.isSPV){
+            } else if(ModeType.SPV == shell.modeType){
                 shell.printNormal("Commands:")
                 shell.printNormal("")
                 for (command in shell.getCommandsSpv()){
