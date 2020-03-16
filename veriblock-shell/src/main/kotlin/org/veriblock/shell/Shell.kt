@@ -10,7 +10,11 @@ package org.veriblock.shell
 
 import com.google.common.base.Stopwatch
 import com.google.gson.GsonBuilder
-import org.jline.reader.*
+import org.jline.reader.Completer
+import org.jline.reader.EndOfFileException
+import org.jline.reader.LineReader
+import org.jline.reader.LineReaderBuilder
+import org.jline.reader.UserInterruptException
 import org.jline.reader.impl.LineReaderImpl
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.terminal.Terminal
@@ -23,9 +27,9 @@ import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.core.ActivityLevel
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
-import org.veriblock.shell.models.ModeType
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.ArrayList
+import java.util.Date
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 private val printLogger = LoggerFactory.getLogger("shell-printing")
@@ -38,8 +42,6 @@ open class Shell(
     private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     private var running = false
-
-    var modeType: ModeType = ModeType.STANDARD
 
     private val terminal: Terminal = TerminalBuilder.builder().apply {
         if (testData != null) {
@@ -272,31 +274,10 @@ open class Shell(
 
     fun getCommands() = commandFactory.getCommands().values.distinct()
 
-    //TODO Implement it with adding available mods for commands.
-    fun getCommandsSpv() = mutableListOf(
-                "getbalance [address]",
-                "getstateinfo",
-                "send <amount> <destinationAddress> [sourceAddress]",
-                "lockWallet",
-                "unlockWallet",
-                "decryptWallet",
-                "encryptWallet",
-                "importwallet <sourceLocation>",
-                "importprivatekey <privateKey>",
-                "backupwallet <targetLocation>",
-                "getnewaddress [count]",
-                "disconnect",
-                "exit"
-                )
-
     fun getCommand(alias: String) = commandFactory.getCommands()[alias]
         ?: error("Command $alias not found!")
 
     private fun getCompleter(): Completer {
-        if(ModeType.SPV == modeType){
-            return StringsCompleter(getCommandsSpv());
-        }
-
         val commands = getCommands().asSequence().filter {
             it.shouldAutoComplete()
         }.map {
