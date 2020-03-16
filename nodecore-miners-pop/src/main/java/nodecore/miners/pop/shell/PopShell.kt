@@ -10,8 +10,8 @@ package nodecore.miners.pop.shell
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.events.EventBus
-import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto
 import nodecore.miners.pop.model.result.Result
 import nodecore.miners.pop.model.result.ResultMessage
 import org.jline.utils.AttributedStyle
@@ -92,12 +92,10 @@ class PopShell(
         }
     }
 
-    private fun onPopMiningOperationStateChanged(event: PoPMiningOperationStateChangedEventDto) {
+    private fun onPopMiningOperationStateChanged(operation: MiningOperation) {
         try {
-            val operationId: String? = event.state.operationId
-            for (s in event.messages) {
-                printStyled("[$operationId] $s", AttributedStyle.BOLD.foreground(AttributedStyle.CYAN))
-            }
+            val operationId: String? = operation.id
+            printStyled("[$operationId] ${operation.state}", AttributedStyle.BOLD.foreground(AttributedStyle.CYAN))
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

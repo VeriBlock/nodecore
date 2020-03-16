@@ -19,15 +19,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 public class PoPMiningInstructionTests {
-    private PoPMiningInstruction data;
+    private PopMiningInstruction data;
 
     @Before
     public void before() {
-        data = new PoPMiningInstruction();
+        data = new PopMiningInstruction();
         data.publicationData = Utility.hexToBytes(
-                "000000010000000000000000000000000000000000000000000000002d12960b6cc8a7021286ad682f0cbefa4babc4adc613b6925aaaa1d304017d78001d415c007bccf350d249a488c6fe8621b41723");
+            "000000010000000000000000000000000000000000000000000000002d12960b6cc8a7021286ad682f0cbefa4babc4adc613b6925aaaa1d304017d78001d415c007bccf350d249a488c6fe8621b41723");
         data.endorsedBlockHeader = Utility.hexToBytes(
-                "000000010000000000000000000000000000000000000000000000002d12960b6cc8a7021286ad682f0cbefa4babc4adc613b6925aaaa1d304017d78001d415c");
+            "000000010000000000000000000000000000000000000000000000002d12960b6cc8a7021286ad682f0cbefa4babc4adc613b6925aaaa1d304017d78001d415c");
         data.lastBitcoinBlock = Utility.hexToBytes(
                 "0000002018a0b6b0013ac826c28ca5e5f8f1ee2d30c1302c1c2aac2ee004d44f5bd4fb428fb04efbf3927784bed987b3a1f319434ec44f331302c11db158a2f9416dc7838b61ce5affff7f2001000000");
         data.minerAddress = Utility.hexToBytes("672a9d1281cc9d25bfb4539145702bfb2d8ae61dbbc0");
@@ -35,7 +35,7 @@ public class PoPMiningInstructionTests {
 
     @Test
     public void serializationWhenAllPropertiesSet() {
-        PoPMiningInstruction returned = serializeThenDeserialize(data);
+        PopMiningInstruction returned = serializeThenDeserialize(data);
 
         Assert.assertArrayEquals(data.endorsedBlockHeader, returned.endorsedBlockHeader);
         Assert.assertArrayEquals(data.lastBitcoinBlock, returned.lastBitcoinBlock);
@@ -46,7 +46,7 @@ public class PoPMiningInstructionTests {
     @Test
     public void serializationWhenNullEndorsedBlockHeader() {
         data.endorsedBlockHeader = null;
-        PoPMiningInstruction returned = serializeThenDeserialize(data);
+        PopMiningInstruction returned = serializeThenDeserialize(data);
 
         Assert.assertNull(returned.endorsedBlockHeader);
         Assert.assertArrayEquals(data.lastBitcoinBlock, returned.lastBitcoinBlock);
@@ -57,7 +57,7 @@ public class PoPMiningInstructionTests {
     @Test
     public void serializationWhenNullLastBitcoinBlock() {
         data.lastBitcoinBlock = null;
-        PoPMiningInstruction returned = serializeThenDeserialize(data);
+        PopMiningInstruction returned = serializeThenDeserialize(data);
 
         Assert.assertArrayEquals(data.endorsedBlockHeader, returned.endorsedBlockHeader);
         Assert.assertNull(returned.lastBitcoinBlock);
@@ -68,7 +68,7 @@ public class PoPMiningInstructionTests {
     @Test
     public void serializationWhenNullMinerAddress() {
         data.minerAddress = null;
-        PoPMiningInstruction returned = serializeThenDeserialize(data);
+        PopMiningInstruction returned = serializeThenDeserialize(data);
 
         Assert.assertArrayEquals(data.endorsedBlockHeader, returned.endorsedBlockHeader);
         Assert.assertArrayEquals(data.lastBitcoinBlock, returned.lastBitcoinBlock);
@@ -79,7 +79,7 @@ public class PoPMiningInstructionTests {
     @Test
     public void serializationWhenNullPublicationData() {
         data.publicationData = null;
-        PoPMiningInstruction returned = serializeThenDeserialize(data);
+        PopMiningInstruction returned = serializeThenDeserialize(data);
 
         Assert.assertArrayEquals(data.endorsedBlockHeader, returned.endorsedBlockHeader);
         Assert.assertArrayEquals(data.lastBitcoinBlock, returned.lastBitcoinBlock);
@@ -87,7 +87,7 @@ public class PoPMiningInstructionTests {
         Assert.assertNull(returned.publicationData);
     }
 
-    private PoPMiningInstruction serializeThenDeserialize(PoPMiningInstruction input) {
+    private PopMiningInstruction serializeThenDeserialize(PopMiningInstruction input) {
         byte[] serialized = new byte[0];
         try (ByteArrayOutputStream dataOut = new ByteArrayOutputStream()) {
             try (ObjectOutputStream out = new ObjectOutputStream(dataOut)) {
@@ -101,7 +101,7 @@ public class PoPMiningInstructionTests {
 
         try (ByteArrayInputStream dataIn = new ByteArrayInputStream(serialized)) {
             try (ObjectInputStream in = new ObjectInputStream(dataIn)) {
-                return (PoPMiningInstruction) in.readObject();
+                return (PopMiningInstruction) in.readObject();
             }
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();

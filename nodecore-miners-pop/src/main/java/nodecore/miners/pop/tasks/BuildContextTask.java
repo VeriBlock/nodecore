@@ -8,7 +8,8 @@
 package nodecore.miners.pop.tasks;
 
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.core.MiningOperation;
+import nodecore.miners.pop.core.OperationState;
 import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
@@ -33,15 +34,16 @@ public class BuildContextTask extends BaseTask {
     }
 
     @Override
-    protected TaskResult executeImpl(PoPMiningOperationState state) {
+    protected TaskResult executeImpl(MiningOperation operation) {
         try {
-            boolean contextChainProvided = state.getMiningInstruction().endorsedBlockContextHeaders != null &&
-                    state.getMiningInstruction().endorsedBlockContextHeaders.size() > 0;
+            OperationState.Proven state = (OperationState.Proven) operation.getState();
+            boolean contextChainProvided = state.getMiningInstruction().endorsedBlockContextHeaders != null
+                && state.getMiningInstruction().endorsedBlockContextHeaders.size() > 0;
 
             List<Block> context = new ArrayList<>();
 
             boolean found;
-            Block current = state.getBitcoinBlockHeaderOfProof();
+            Block current = state.getBlockOfProof();
             do {
                 Block previous = bitcoinService.getBlock(current.getPrevBlockHash());
                 if (previous == null) {
@@ -65,11 +67,11 @@ public class BuildContextTask extends BaseTask {
                 current = previous;
             } while (!found);
 
-            state.onBitcoinContextDetermined(context);
-            return TaskResult.succeed(state, getNext());
+            operation.setContext(context);
+            return TaskResult.succeed(operation, getNext());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return failTask(state, "Error building Bitcoin context, see log for more detail. Operation can be resubmitted.");
+            return failTask(operation, "Error building Bitcoin context, see log for more detail. Operation can be resubmitted.");
         }
     }
 }

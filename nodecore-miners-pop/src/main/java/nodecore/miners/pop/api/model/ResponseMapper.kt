@@ -8,14 +8,14 @@
 package nodecore.miners.pop.api.model
 
 import nodecore.miners.pop.common.Utility
-import nodecore.miners.pop.core.PreservedPoPMiningOperationState
 import nodecore.miners.pop.model.OperationSummary
-import nodecore.miners.pop.model.PoPMiningInstruction
+import nodecore.miners.pop.model.PopMiningInstruction
+import nodecore.miners.pop.model.dto.PopMiningOperationStateDto
 import nodecore.miners.pop.model.result.MineResult
 import nodecore.miners.pop.model.result.Result
 import nodecore.miners.pop.model.result.ResultMessage
 
-fun PreservedPoPMiningOperationState.toResponse() = OperationDetailResponse(
+fun PopMiningOperationStateDto.toResponse() = OperationDetailResponse(
     operationId = operationId,
     status = status.name,
     currentAction = currentAction.name,
@@ -30,7 +30,7 @@ fun PreservedPoPMiningOperationState.toResponse() = OperationDetailResponse(
     popTransactionId = popTransactionId
 )
 
-private fun PoPMiningInstruction.toResponse() = PoPDataResponse(
+private fun PopMiningInstruction.toResponse() = PoPDataResponse(
     publicationData = publicationData.mapHex(),
     endorsedBlockHeader = endorsedBlockHeader.mapHex(),
     minerAddress = minerAddress.mapBase58()

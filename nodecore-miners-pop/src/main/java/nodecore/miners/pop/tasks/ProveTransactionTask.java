@@ -10,13 +10,13 @@ package nodecore.miners.pop.tasks;
 import nodecore.miners.pop.common.BitcoinMerklePath;
 import nodecore.miners.pop.common.BitcoinMerkleTree;
 import nodecore.miners.pop.common.MerkleProof;
-import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.core.MiningOperation;
+import nodecore.miners.pop.core.OperationState;
 import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.PartialMerkleTree;
-import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import java.util.ArrayList;
@@ -36,9 +36,10 @@ public class ProveTransactionTask extends BaseTask {
     }
 
     @Override
-    protected TaskResult executeImpl(PoPMiningOperationState state) {
+    protected TaskResult executeImpl(MiningOperation operation) {
         try {
-            Block block = state.getBitcoinBlockHeaderOfProof();
+            OperationState.BlockOfProof state = (OperationState.BlockOfProof) operation.getState();
+            Block block = state.getBlockOfProof();
             PartialMerkleTree partialMerkleTree = bitcoinService.getPartialMerkleTree(block.getHash());
 
             String failureReason = "";
@@ -46,7 +47,7 @@ public class ProveTransactionTask extends BaseTask {
             if (partialMerkleTree != null) {
                 MerkleProof proof = MerkleProof.parse(partialMerkleTree);
                 if (proof != null) {
-                    String path = proof.getCompactPath(Sha256Hash.wrap(state.getSubmittedTransactionId()));
+                    String path = proof.getCompactPath(state.getEndorsementTransaction().getTxId());
                     logger.info("Merkle Proof Compact Path: {}", path);
                     logger.info("Merkle Root: {}", block.getMerkleRoot().toString());
 
@@ -54,14 +55,15 @@ public class ProveTransactionTask extends BaseTask {
                         BitcoinMerklePath merklePath = new BitcoinMerklePath(path);
                         logger.info("Computed Merkle Root: {}", merklePath.getMerkleRoot());
                         if (merklePath.getMerkleRoot().equalsIgnoreCase(block.getMerkleRoot().toString())) {
-                            state.onTransactionProven(merklePath.getCompactFormat());
-                            return TaskResult.succeed(state, getNext());
+                            operation.setMerklePath(merklePath.getCompactFormat());
+                            return TaskResult.succeed(operation, getNext());
                         } else {
                             failureReason = "Block Merkle root does not match computed Merkle root";
                         }
                     } catch (Exception e) {
                         logger.error("Unable to validate Merkle path for transaction", e);
-                        failureReason = "Unable to prove transaction " + state.getSubmittedTransactionId() + " in block " + block.getHashAsString();
+                        failureReason =
+                            "Unable to prove transaction " + state.getEndorsementTransaction().getTxId() + " in block " + block.getHashAsString();
                     }
                 } else {
                     failureReason = "Unable to construct Merkle proof for block " + block.getHashAsString();
@@ -72,10 +74,10 @@ public class ProveTransactionTask extends BaseTask {
 
             // Retrieving the Merkle path from the PartialMerkleTree failed, try creating manually from the whole block
             logger.info(
-                "Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getTxId().toString() + " in block " + state
-                    .getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock, trying a fully downloaded block!");
+                "Unable to calculate the correct Merkle path for transaction " + state.getEndorsementTransaction().getTxId().toString() + " in block "
+                    + state.getBlockOfProof().getHashAsString() + " from a FilteredBlock, trying a fully downloaded block!");
 
-            Block fullBlock = bitcoinService.downloadBlock(state.getBitcoinBlockHeaderOfProof().getHash());
+            Block fullBlock = bitcoinService.downloadBlock(state.getBlockOfProof().getHash());
             List<Transaction> allTransactions = fullBlock.getTransactions();
 
             List<String> txids = new ArrayList<>();
@@ -84,20 +86,19 @@ public class ProveTransactionTask extends BaseTask {
             }
 
             BitcoinMerkleTree bmt = new BitcoinMerkleTree(true, txids);
-            BitcoinMerklePath merklePath = bmt.getPathFromTxID(state.getSubmittedTransactionId());
+            BitcoinMerklePath merklePath = bmt.getPathFromTxID(state.getEndorsementTransaction().getTxId().toString());
 
-            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBitcoinBlockHeaderOfProof().getMerkleRoot().toString())) {
-                state.onTransactionProven(merklePath.getCompactFormat());
-                return TaskResult.succeed(state, getNext());
+            if (merklePath.getMerkleRoot().equalsIgnoreCase(state.getBlockOfProof().getMerkleRoot().toString())) {
+                operation.setMerklePath(merklePath.getCompactFormat());
+                return TaskResult.succeed(operation, getNext());
             } else {
-                logger.error(
-                    "Unable to calculate the correct Merkle path for transaction " + state.getTransaction().getTxId().toString() + " in block "
-                        + state.getBitcoinBlockHeaderOfProof().getHashAsString() + " from a FilteredBlock or a fully downloaded block!");
-                return failProcess(state, failureReason);
+                logger.error("Unable to calculate the correct Merkle path for transaction " + state.getEndorsementTransaction().getTxId().toString()
+                    + " in block " + state.getBlockOfProof().getHashAsString() + " from a FilteredBlock or a fully downloaded block!");
+                return failProcess(operation, failureReason);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            return failProcess(state, "Error proving transaction, see log for more detail.");
+            return failProcess(operation, "Error proving transaction, see log for more detail.");
         }
     }
 }

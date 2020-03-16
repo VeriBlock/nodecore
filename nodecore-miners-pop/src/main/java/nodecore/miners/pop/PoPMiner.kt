@@ -7,8 +7,9 @@
 package nodecore.miners.pop
 
 import nodecore.miners.pop.common.Utility
-import nodecore.miners.pop.core.PoPMiningOperationState
-import nodecore.miners.pop.core.PreservedPoPMiningOperationState
+import nodecore.miners.pop.core.MiningOperation
+import nodecore.miners.pop.core.OperationState
+import nodecore.miners.pop.core.OperationStateType
 import nodecore.miners.pop.events.CoinsReceivedEventDto
 import nodecore.miners.pop.events.EventBus.bitcoinServiceNotReadyEvent
 import nodecore.miners.pop.events.EventBus.bitcoinServiceReadyEvent
@@ -32,7 +33,7 @@ import nodecore.miners.pop.model.ApplicationExceptions.SendTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
 import nodecore.miners.pop.model.OperationSummary
 import nodecore.miners.pop.model.PoPMinerDependencies
-import nodecore.miners.pop.model.TransactionStatus
+import nodecore.miners.pop.model.dto.PopMiningOperationStateDto
 import nodecore.miners.pop.model.result.DefaultResultMessage
 import nodecore.miners.pop.model.result.MineResult
 import nodecore.miners.pop.model.result.Result
@@ -69,7 +70,7 @@ class PoPMiner(
     private val keyValueRepository: KeyValueRepository,
     private val processManager: ProcessManager
 ) : Runnable {
-    private val operations = ConcurrentHashMap<String, PoPMiningOperationState>()
+    private val operations = ConcurrentHashMap<String, MiningOperation>()
     private var isShuttingDown = false
     private var stateRestored: Boolean = false
     private val readyConditions: EnumSet<PoPMinerDependencies> = EnumSet.noneOf(PoPMinerDependencies::class.java)
@@ -130,35 +131,39 @@ class PoPMiner(
         PoPMinerDependencies.SATISFIED == readyConditions
 
     fun listOperations(): List<OperationSummary> {
-        return operations.values.asSequence().map { state ->
-            val miningInstruction = state.miningInstruction
+        return operations.values.asSequence().map { operation ->
+            val state = operation.state
+            val miningInstruction = (state as? OperationState.Instruction)?.miningInstruction
             var blockNumber = -1
             if (miningInstruction != null) {
                 blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader)
             }
-            val status = if (state.status != null) state.status.toString() else ""
-            OperationSummary(state.operationId, blockNumber, status, state.currentActionAsString, state.message)
+            val status = operation.status.toString()
+            OperationSummary(operation.id, blockNumber, status, state.type.name, state.toString())
         }.sortedBy {
             it.endorsedBlockNumber
         }.toList()
     }
 
-    fun getOperationState(id: String?): PreservedPoPMiningOperationState? {
-        val state = stateService.getOperation(id!!) ?: return null
+    fun getOperationState(id: String): PopMiningOperationStateDto? {
+        val operation = stateService.getOperation(id)
+            ?: return null
+
+        val state = operation.state
 
         // TODO: Implement
-        val result = PreservedPoPMiningOperationState()
-        result.operationId = state.operationId
-        result.status = state.status
-        result.currentAction = state.currentAction
-        result.miningInstruction = state.miningInstruction
-        result.transaction = state.transactionBytes
-        result.submittedTransactionId = state.submittedTransactionId
-        result.bitcoinBlockHeaderOfProof = state.bitcoinBlockHeaderOfProofBytes
-        result.bitcoinContextBlocks = state.bitcoinContextBlocksBytes
-        result.merklePath = state.merklePath
-        result.detail = state.message
-        result.popTransactionId = state.popTransactionId
+        val result = PopMiningOperationStateDto()
+        result.operationId = operation.id
+        result.status = operation.status
+        result.currentAction = operation.state.type
+        result.miningInstruction = (state as? OperationState.Instruction)?.miningInstruction
+        result.transaction = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction?.bitcoinSerialize()
+        result.submittedTransactionId = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction?.txId?.toString()
+        result.bitcoinBlockHeaderOfProof = (state as? OperationState.BlockOfProof)?.blockOfProof?.bitcoinSerialize()
+        result.merklePath = (state as? OperationState.Proven)?.merklePath
+        result.bitcoinContextBlocks = (state as? OperationState.Context)?.bitcoinContextBlocks?.map { it.bitcoinSerialize() }
+        result.popTransactionId = (state as? OperationState.SubmittedPopData)?.proofOfProofId
+        result.detail = state.toString()
         return result
     }
 
@@ -178,7 +183,7 @@ class PoPMiner(
 
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
         // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be sufficient.
-        val count = operations.values.count { it.currentAction == PoPMiningOperationState.Action.WAIT }
+        val count = operations.values.count { it.state.type == OperationStateType.ENDORSEMEMT_TRANSACTION }
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
             result.fail()
             result.addMessage(
@@ -191,7 +196,7 @@ class PoPMiner(
             )
             return result
         }
-        val state = PoPMiningOperationState(operationId, blockNumber)
+        val state = MiningOperation(operationId, blockHeight = blockNumber)
         operations.putIfAbsent(operationId, state)
         processManager.submit(state)
         result.addMessage(
@@ -215,7 +220,7 @@ class PoPMiner(
             return result
         }
         processManager.submit(operation)
-        result.addMessage("V200", "Success", String.format("To view details, run command: getoperation %s", operation.operationId), false)
+        result.addMessage("V200", "Success", String.format("To view details, run command: getoperation %s", operation.id), false)
         return result
     }
 
@@ -412,15 +417,12 @@ class PoPMiner(
     private fun restoreOperations() {
         val preservedOperations = stateService.getActiveOperations()
         logger.info("Found {} operations to restore", preservedOperations.size)
-        for (state in preservedOperations) {
+        for (miningOperation in preservedOperations) {
             try {
-                if (state != null) {
-                    operations[state.operationId] = state
-                    processManager.restore(state)
-                    logger.info("Successfully restored operation {}", state.operationId)
-                }
+                operations[miningOperation.id] = miningOperation
+                logger.info("Successfully restored operation {}", miningOperation.id)
             } catch (e: Exception) {
-                logger.error("Unable to restore previous operation {}", state.operationId)
+                logger.error("Unable to restore previous operation {}", miningOperation.id)
             }
         }
         stateRestored = true
@@ -536,10 +538,14 @@ class PoPMiner(
 
     private fun onNewVeriBlockFound(event: NewVeriBlockFoundEventDto) {
         for (key in HashSet(operations.keys)) {
-            val operationState = operations[key]
-            if (operationState != null && operationState.transactionStatus === TransactionStatus.UNCONFIRMED && operationState.blockNumber < event.block.getHeight() - Constants.POP_SETTLEMENT_INTERVAL
+            val operation = operations[key]
+            val operationState = operation?.state
+            val blockHeight = operation?.blockHeight ?: -1
+            if (
+                operationState != null && operationState !is OperationState.Confirmed &&
+                blockHeight < event.block.getHeight() - Constants.POP_SETTLEMENT_INTERVAL
             ) {
-                operationState.fail(String.format("Endorsement of block %d is no longer relevant", operationState.blockNumber))
+                operation.fail("Endorsement of block $blockHeight is no longer relevant")
             }
         }
     }

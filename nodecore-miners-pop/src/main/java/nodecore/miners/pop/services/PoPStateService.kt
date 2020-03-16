@@ -7,32 +7,36 @@
 package nodecore.miners.pop.services
 
 import com.google.protobuf.ByteString
-import nodecore.miners.pop.core.PoPMiningOperationState
-import nodecore.miners.pop.events.EventBus.popMiningOperationStateChangedEvent
-import nodecore.miners.pop.events.PoPMiningOperationStateChangedEventDto
-import nodecore.miners.pop.model.PoPMiningInstruction
+import nodecore.miners.pop.core.MiningOperation
+import nodecore.miners.pop.core.OperationState
+import nodecore.miners.pop.core.OperationStateType
+import nodecore.miners.pop.core.OperationStatus
+import nodecore.miners.pop.core.info
+import nodecore.miners.pop.events.EventBus
+import nodecore.miners.pop.model.PopMiningInstruction
 import nodecore.miners.pop.storage.OperationStateData
 import nodecore.miners.pop.storage.PopRepository
 import nodecore.miners.pop.storage.ProofOfProof
+import org.bitcoinj.core.Transaction
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.util.ArrayList
 import java.util.stream.Collectors
 
 private val logger = createLogger {}
 
 class PoPStateService(
-    private val repository: PopRepository
+    private val repository: PopRepository,
+    private val bitcoinService: BitcoinService
 ) {
 
     init {
-        popMiningOperationStateChangedEvent.register(this) { event ->
-            onPoPMiningOperationStateChanged(event)
-        }
+        EventBus.popMiningOperationStateChangedEvent.register(this, ::onMiningOperationStateChanged)
     }
 
-    fun getActiveOperations(): List<PoPMiningOperationState> {
+    fun getActiveOperations(): List<MiningOperation> {
         return repository.getActiveOperations()?.asSequence()?.mapNotNull {
             try {
                 reconstitute(ProofOfProof.OperationState.parseFrom(it.state))
@@ -43,7 +47,7 @@ class PoPStateService(
         }?.toList() ?: emptyList()
     }
 
-    fun getOperation(id: String): PoPMiningOperationState? {
+    fun getOperation(id: String): MiningOperation? {
         val stateData = repository.getOperation(id)
             ?: return null
         try {
@@ -54,24 +58,23 @@ class PoPStateService(
         return null
     }
 
-    fun onPoPMiningOperationStateChanged(event: PoPMiningOperationStateChangedEventDto) {
+    private fun onMiningOperationStateChanged(operation: MiningOperation) {
         try {
-            val operationState = event.state
-            val serializedState = serialize(event.state)
+            val operationState = operation.state
+            val serializedState = serialize(operation)
             val stateData = OperationStateData()
-            stateData.id = operationState.operationId
-            stateData.status = operationState.status.name
-            stateData.action = operationState.currentActionAsString
-            stateData.transactionStatus = if (operationState.transactionStatus != null) operationState.transactionStatus.name else ""
-            stateData.message = operationState.message
+            stateData.id = operation.id
+            stateData.status = operation.status.name
+            stateData.action = operationState.type.name
+            stateData.message = operationState.toString()
             stateData.state = serializedState
-            stateData.isDone = PoPMiningOperationState.Action.DONE == operationState.currentAction
+            stateData.isDone = operationState.type == OperationStateType.COMPLETE
             stateData.lastUpdated = Utility.getCurrentTimeSeconds()
-            if (operationState.miningInstruction != null) {
-                stateData.endorsedBlockHash = operationState.miningInstruction.blockHashAsString
-                stateData.endorsedBlockNumber = operationState.blockNumber
+            if (operationState is OperationState.Instruction) {
+                stateData.endorsedBlockHash = operationState.miningInstruction.endorsedBlockHash
+                stateData.endorsedBlockNumber = operationState.miningInstruction.endorsedBlockHeight
             }
-            logger.info("Operation [" + operationState.operationId + "] new status: " + stateData.status)
+            logger.info("Operation [${operation.id}] new status: ${stateData.status}")
             repository.saveOperationState(stateData)
         } catch (e: Exception) {
             logger.error(e.message, e)
@@ -79,55 +82,49 @@ class PoPStateService(
         return
     }
 
-    private fun serialize(operationState: PoPMiningOperationState): ByteArray? {
+    private fun serialize(operation: MiningOperation): ByteArray? {
         val builder = ProofOfProof.OperationState.newBuilder()
-        builder.id = operationState.operationId
-        builder.status = operationState.status.name
-        builder.action = operationState.currentAction.name
-        if (operationState.blockNumber != null) {
-            builder.endorsedBlockNumber = operationState.blockNumber
-        } else {
-            builder.endorsedBlockNumber = -1
-        }
-        if (operationState.miningInstruction != null) {
+        builder.id = operation.id
+        builder.status = operation.status.name
+        builder.action = operation.state.toString()
+        builder.endorsedBlockNumber = operation.blockHeight ?: -1
+        val state = operation.state
+        if (state is OperationState.Instruction) {
             builder.miningInstructions = ProofOfProof.MiningInstruction.newBuilder()
-                .setPublicationData(ByteString.copyFrom(operationState.miningInstruction.publicationData))
-                .setEndorsedBlockHeader(ByteString.copyFrom(operationState.miningInstruction.endorsedBlockHeader))
-                .setLastBitcoinBlock(ByteString.copyFrom(operationState.miningInstruction.lastBitcoinBlock))
-                .setMinerAddress(ByteString.copyFrom(operationState.miningInstruction.minerAddress))
+                .setPublicationData(ByteString.copyFrom(state.miningInstruction.publicationData))
+                .setEndorsedBlockHeader(ByteString.copyFrom(state.miningInstruction.endorsedBlockHeader))
+                .setLastBitcoinBlock(ByteString.copyFrom(state.miningInstruction.lastBitcoinBlock))
+                .setMinerAddress(ByteString.copyFrom(state.miningInstruction.minerAddress))
                 .addAllBitcoinContextAtEndorsed(
-                    operationState.miningInstruction.endorsedBlockContextHeaders.stream()
+                    state.miningInstruction.endorsedBlockContextHeaders.stream()
                         .map { bytes: ByteArray? -> ByteString.copyFrom(bytes) }
                         .collect(Collectors.toList())
                 )
                 .build()
         }
-        if (operationState.transactionBytes != null) {
-            builder.transaction = ByteString.copyFrom(operationState.transactionBytes)
-            builder.bitcoinTxId = operationState.submittedTransactionId
+        if (state is OperationState.EndorsementTransaction) {
+            builder.transaction = ByteString.copyFrom(state.endorsementTransaction.bitcoinSerialize())
+            builder.bitcoinTxId = state.endorsementTransaction.txId.toString()
         }
-        if (operationState.bitcoinBlockHeaderOfProofBytes != null) {
-            builder.blockOfProof = ByteString.copyFrom(operationState.bitcoinBlockHeaderOfProofBytes)
+        if (state is OperationState.BlockOfProof) {
+            builder.blockOfProof = ByteString.copyFrom(state.blockOfProof.bitcoinSerialize())
         }
-        if (operationState.bitcoinContextBlocksBytes != null) {
+        if (state is OperationState.Proven) {
+            builder.merklePath = state.merklePath
+        }
+        if (state is OperationState.Context) {
             builder.addAllBitcoinContext(
-                operationState.bitcoinContextBlocksBytes
-                    .stream()
-                    .map { bytes: ByteArray? -> ByteString.copyFrom(bytes) }
-                    .collect(Collectors.toList())
+                state.bitcoinContextBlocks.map { ByteString.copyFrom(it.bitcoinSerialize()) }
             )
         }
-        if (operationState.merklePath != null) {
-            builder.merklePath = operationState.merklePath
+        if (state is OperationState.SubmittedPopData) {
+            builder.popTxId = state.proofOfProofId
         }
-        if (operationState.popTransactionId != null) {
-            builder.popTxId = operationState.popTransactionId
+        if (state is OperationState.VbkEndorsementTransactionConfirmed) {
+            TODO()
         }
-        if (operationState.message != null) {
-            builder.message = operationState.message
-        }
-        if (operationState.transactionStatus != null) {
-            builder.transactionStatus = operationState.transactionStatus.name
+        if (state is OperationState.Completed) {
+            TODO()
         }
         return serialize(builder.build())
     }
@@ -143,17 +140,17 @@ class PoPStateService(
         return null
     }
 
-    private fun reconstitute(state: ProofOfProof.OperationState): PoPMiningOperationState {
+    private fun reconstitute(state: ProofOfProof.OperationState): MiningOperation {
         logger.info("Reconstituting operation {}", state.id)
-        val builder = PoPMiningOperationState.newBuilder()
-            .setOperationId(state.id)
-            .parseStatus(state.status)
-            .parseCurrentAction(state.action)
+        val miningOperation = MiningOperation(
+            id = state.id,
+            status = OperationStatus.valueOf(state.status)
+        )
         if (state.endorsedBlockNumber >= 0) {
-            builder.setBlockNumber(state.endorsedBlockNumber)
+            miningOperation.blockHeight = state.endorsedBlockNumber
         }
         if (state.miningInstructions != null) {
-            val miningInstruction = PoPMiningInstruction()
+            val miningInstruction = PopMiningInstruction()
             miningInstruction.publicationData = state.miningInstructions.publicationData.toByteArray()
             miningInstruction.endorsedBlockHeader = state.miningInstructions.endorsedBlockHeader.toByteArray()
             miningInstruction.lastBitcoinBlock = state.miningInstructions.lastBitcoinBlock.toByteArray()
@@ -163,32 +160,34 @@ class PoPStateService(
                 .stream()
                 .map { obj: ByteString -> obj.toByteArray() }
                 .collect(Collectors.toList())
-            builder.setMiningInstruction(miningInstruction)
+            miningOperation.setMiningInstruction(miningInstruction)
         }
         if (state.transaction != null && state.transaction.size() > 0) {
-            builder.setTransaction(state.transaction.toByteArray())
-            builder.setSubmittedTransactionId(state.bitcoinTxId)
+            logger.info(miningOperation) { "Rebuilding transaction" }
+            val transaction: Transaction = bitcoinService.makeTransaction(state.transaction.toByteArray())
+            miningOperation.setTransaction(transaction)
+            logger.info(miningOperation) { "Rebuilt transaction ${transaction.txId}" }
         }
         if (state.blockOfProof != null && state.blockOfProof.size() > 0) {
-            builder.setBitcoinBlockHeaderOfProof(state.blockOfProof.toByteArray())
-        }
-        if (state.bitcoinContextList != null && state.bitcoinContextCount > 0) {
-            builder.setBitcoinContextBlocks(
-                state.bitcoinContextList.stream().map { obj: ByteString -> obj.toByteArray() }.collect(Collectors.toList())
-            )
+            miningOperation.setConfirmed()
+            logger.info(miningOperation) { "Rebuilding block of proof" }
+            val block = bitcoinService.makeBlock(state.blockOfProof.toByteArray())
+            miningOperation.setBlockOfProof(block)
+            logger.info(miningOperation) { "Reattached block of proof ${block.hashAsString}" }
         }
         if (state.merklePath != null) {
-            builder.setMerklePath(state.merklePath)
+            miningOperation.setMerklePath(state.merklePath)
+        }
+        if (state.bitcoinContextList != null && state.bitcoinContextCount > 0) {
+            logger.info(miningOperation) { "Rebuilding context blocks" }
+            val contextBytes = state.bitcoinContextList.map { it.toByteArray() }
+            val blocks = bitcoinService.makeBlocks(contextBytes)
+            miningOperation.setContext(ArrayList(blocks))
         }
         if (state.popTxId != null) {
-            builder.setPopTransactionId(state.popTxId)
+            miningOperation.setProofOfProofId(state.popTxId)
         }
-        if (state.message != null) {
-            builder.setMessage(state.message)
-        }
-        if (state.transactionStatus != null) {
-            builder.parseTransactionStatus(state.transactionStatus)
-        }
-        return builder.build()
+        TODO("Serialize vbk endorsement confirmation and payout")
+        return miningOperation
     }
 }

@@ -24,9 +24,9 @@ import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.model.ApplicationExceptions.PoPSubmitRejected
 import nodecore.miners.pop.model.BlockStore
 import nodecore.miners.pop.model.NodeCoreReply
-import nodecore.miners.pop.model.PoPMiningInstruction
-import nodecore.miners.pop.model.PoPMiningTransaction
 import nodecore.miners.pop.model.PopEndorsementInfo
+import nodecore.miners.pop.model.PopMiningInstruction
+import nodecore.miners.pop.model.PopMiningTransaction
 import nodecore.miners.pop.model.VeriBlockHeader
 import nodecore.miners.pop.model.result.Result
 import org.veriblock.core.utilities.createLogger
@@ -120,17 +120,17 @@ class NodeCoreService(
         }
     }
 
-    fun getPop(blockNumber: Int?): NodeCoreReply<PoPMiningInstruction> {
+    fun getPop(blockNumber: Int?): NodeCoreReply<PopMiningInstruction> {
         val requestBuilder = VeriBlockMessages.GetPopRequest.newBuilder()
         if (blockNumber != null && blockNumber > 0) {
             requestBuilder.blockNum = blockNumber
         }
         val request = requestBuilder.build()
         val reply = blockingStub.withDeadlineAfter(15, TimeUnit.SECONDS).getPop(request)
-        val result = NodeCoreReply<PoPMiningInstruction>()
+        val result = NodeCoreReply<PopMiningInstruction>()
         if (reply.success) {
             result.success = true
-            val instruction = PoPMiningInstruction()
+            val instruction = PopMiningInstruction()
             instruction.publicationData = reply.fullPop.toByteArray()
             instruction.minerAddress = reply.popMinerAddress.toByteArray()
             instruction.lastBitcoinBlock = reply.lastKnownBlock.header.toByteArray()
@@ -157,7 +157,7 @@ class NodeCoreService(
         return result
     }
 
-    fun submitPop(popMiningTransaction: PoPMiningTransaction): String {
+    fun submitPop(popMiningTransaction: PopMiningTransaction): String {
         val blockOfProofBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
         blockOfProofBuilder.header = ByteString.copyFrom(popMiningTransaction.bitcoinBlockHeaderOfProof)
         val request = VeriBlockMessages.SubmitPopRequest.newBuilder()

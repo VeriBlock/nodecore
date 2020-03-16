@@ -7,7 +7,7 @@
 
 package nodecore.miners.pop.tasks;
 
-import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.core.MiningOperation;
 import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
@@ -21,14 +21,14 @@ public abstract class BaseTask {
 
     public abstract BaseTask getNext();
 
-    protected abstract TaskResult executeImpl(PoPMiningOperationState state);
+    protected abstract TaskResult executeImpl(MiningOperation state);
 
     protected BaseTask(NodeCoreService nodeCoreService, BitcoinService bitcoinService) {
         this.nodeCoreService = nodeCoreService;
         this.bitcoinService = bitcoinService;
     }
 
-    public TaskResult execute(PoPMiningOperationState state) {
+    public TaskResult execute(MiningOperation state) {
         try {
             return executeImpl(state);
         } catch (Throwable t) {
@@ -37,15 +37,15 @@ public abstract class BaseTask {
         }
     }
 
-    protected TaskResult failProcess(PoPMiningOperationState state, String reason) {
-        logger.warn("Operation {} failed for reason: {}", state.getOperationId(), reason);
+    protected TaskResult failProcess(MiningOperation state, String reason) {
+        logger.warn("Operation {} failed for reason: {}", state.getId(), reason);
         state.fail(reason);
 
         return TaskResult.fail(state);
     }
 
-    protected TaskResult failTask(PoPMiningOperationState state, String reason) {
-        String output = String.format("[%s] %s", state.getOperationId(), reason);
+    protected TaskResult failTask(MiningOperation state, String reason) {
+        String output = String.format("[%s] %s", state.getId(), reason);
 
         logger.error(output);
 

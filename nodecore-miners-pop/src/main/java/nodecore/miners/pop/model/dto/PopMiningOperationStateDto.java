@@ -5,22 +5,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.core;
+package nodecore.miners.pop.model.dto;
 
-import nodecore.miners.pop.model.PoPMiningInstruction;
+import nodecore.miners.pop.core.OperationStateType;
+import nodecore.miners.pop.core.OperationStatus;
+import nodecore.miners.pop.model.PopMiningInstruction;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-public class PreservedPoPMiningOperationState implements Serializable {
+public class PopMiningOperationStateDto implements Serializable {
     public String operationId;
 
-    public PoPMiningOperationStatus status;
+    public OperationStatus status;
 
-    public PoPMiningOperationState.Action currentAction;
+    public OperationStateType currentAction;
 
-    public PoPMiningInstruction miningInstruction;
+    public PopMiningInstruction miningInstruction;
 
     public byte[] transaction;
 

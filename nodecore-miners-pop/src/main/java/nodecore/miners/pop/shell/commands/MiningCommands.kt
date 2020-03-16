@@ -11,7 +11,7 @@ package nodecore.miners.pop.shell.commands
 import com.google.gson.Gson
 import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.model.PoPOperationInfo
+import nodecore.miners.pop.model.dto.PopOperationInfoDto
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -68,7 +68,7 @@ fun CommandFactory.miningCommands(
         val id: String = getParameter("id")
         val state = miner.getOperationState(id)
         if (state != null) {
-            printInfo(prettyPrintGson.toJson(PoPOperationInfo(state)))
+            printInfo(prettyPrintGson.toJson(PopOperationInfoDto(state)))
             success()
         } else {
             failure {

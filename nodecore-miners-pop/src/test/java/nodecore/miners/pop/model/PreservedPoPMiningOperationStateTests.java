@@ -8,9 +8,9 @@
 package nodecore.miners.pop.model;
 
 import nodecore.miners.pop.common.Utility;
-import nodecore.miners.pop.core.PoPMiningOperationState;
-import nodecore.miners.pop.core.PoPMiningOperationStatus;
-import nodecore.miners.pop.core.PreservedPoPMiningOperationState;
+import nodecore.miners.pop.core.OperationStateType;
+import nodecore.miners.pop.core.OperationStatus;
+import nodecore.miners.pop.model.dto.PopMiningOperationStateDto;
 import org.bitcoinj.core.BitcoinSerializer;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.params.RegTestParams;
@@ -30,7 +30,7 @@ import java.util.LinkedHashSet;
 
 public class PreservedPoPMiningOperationStateTests {
     private static Context context;
-    private PreservedPoPMiningOperationState data;
+    private PopMiningOperationStateDto data;
 
     @BeforeClass
     public static void beforeClass() {
@@ -46,20 +46,20 @@ public class PreservedPoPMiningOperationStateTests {
     public void before() {
         BitcoinSerializer serializer = new BitcoinSerializer(RegTestParams.get(), true);
 
-        data = new PreservedPoPMiningOperationState();
+        data = new PopMiningOperationStateDto();
         data.operationId = "6d2abb8d";
-        data.status = PoPMiningOperationStatus.RUNNING;
-        data.currentAction = PoPMiningOperationState.Action.CONFIRM;
-        data.miningInstruction = new PoPMiningInstruction();
+        data.status = OperationStatus.RUNNING;
+        data.currentAction = OperationStateType.CONFIRMED;
+        data.miningInstruction = new PopMiningInstruction();
         data.miningInstruction.publicationData = Utility.hexToBytes(
-                "000000010000000000000000000000000000000000000000000000002D12960B6CC8A7021286AD682F0CBEFA4BABC4ADC613B6925AAAA1D304017D78001D415C007BCCF350D249A488C6FE8621B41723");
+            "000000010000000000000000000000000000000000000000000000002D12960B6CC8A7021286AD682F0CBEFA4BABC4ADC613B6925AAAA1D304017D78001D415C007BCCF350D249A488C6FE8621B41723");
         data.miningInstruction.endorsedBlockHeader = Utility.hexToBytes(
-                "000000010000000000000000000000000000000000000000000000002D12960B6CC8A7021286AD682F0CBEFA4BABC4ADC613B6925AAAA1D304017D78001D415C");
+            "000000010000000000000000000000000000000000000000000000002D12960B6CC8A7021286AD682F0CBEFA4BABC4ADC613B6925AAAA1D304017D78001D415C");
         data.miningInstruction.lastBitcoinBlock = Utility.hexToBytes(
-                "0000002018A0B6B0013AC826C28CA5E5F8F1EE2D30C1302C1C2AAC2EE004D44F5BD4FB428FB04EFBF3927784BED987B3A1F319434EC44F331302C11DB158A2F9416DC7838B61CE5AFFFF7F2001000000");
+            "0000002018A0B6B0013AC826C28CA5E5F8F1EE2D30C1302C1C2AAC2EE004D44F5BD4FB428FB04EFBF3927784BED987B3A1F319434EC44F331302C11DB158A2F9416DC7838B61CE5AFFFF7F2001000000");
         data.miningInstruction.minerAddress = Utility.hexToBytes("672A9D1281CC9D25BFB4539145702BFB2D8AE61DBBC0");
         data.transaction = Utility.hexToBytes(
-                "01000000014A41098C745A95C95152EBF0D21CC727264EEB0D3E397DEE7A81E1594DAC64DC000000006B483045022100A778D80D03E0CB9C8102B4F72A5D09FB041E26AA6FFCD76BC6ED5A4BBE3244DD02203B375BB052E4FB87BB3F982916D7F6928A7FE6DFE63EEEA7754954D33874DDDE012103B3CD160BE576FFAC4007474E85D7F4E9039F9C6A38F8DC7CB8F3BAE1C72DCF4BFFFFFFFF020C4BE905000000001976A914A6157B95A9870689D81B6E5AA9EF0D8828284E0188AC0000000000000000536A4C50000000010000000000000000000000000000000000000000000000002D12960B6CC8A7021286AD682F0CBEFA4BABC4ADC613B6925AAAA1D304017D78001D415C007BCCF350D249A488C6FE8621B4172300000000");
+            "01000000014A41098C745A95C95152EBF0D21CC727264EEB0D3E397DEE7A81E1594DAC64DC000000006B483045022100A778D80D03E0CB9C8102B4F72A5D09FB041E26AA6FFCD76BC6ED5A4BBE3244DD02203B375BB052E4FB87BB3F982916D7F6928A7FE6DFE63EEEA7754954D33874DDDE012103B3CD160BE576FFAC4007474E85D7F4E9039F9C6A38F8DC7CB8F3BAE1C72DCF4BFFFFFFFF020C4BE905000000001976A914A6157B95A9870689D81B6E5AA9EF0D8828284E0188AC0000000000000000536A4C50000000010000000000000000000000000000000000000000000000002D12960B6CC8A7021286AD682F0CBEFA4BABC4ADC613B6925AAAA1D304017D78001D415C007BCCF350D249A488C6FE8621B4172300000000");
         data.submittedTransactionId = "43c9b4c05a2f64d08a9ca0be7cdae61d4179cb2c77a00941145081a9aad1a8d4";
         data.bitcoinBlockHeaderOfProof = Utility.hexToBytes(
                 "03000030199FC1A896F9819A40CDE5E70E7F6E9FDB8E607D1CEC5B0ACF4FB5F10C84EA07238B75965AE74AFF18C332C811BB2D08CF87FC3F2D85A9F6D62157BD4657E6F101BDCF5AFFFF7F2000000000");
@@ -79,7 +79,7 @@ public class PreservedPoPMiningOperationStateTests {
 
     @Test
     public void serializationWhenAllPropertiesSet() {
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -101,7 +101,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenOperationIdNull() {
         data.operationId = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertNull(returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -123,7 +123,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenStatusNull() {
         data.status = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertNull(returned.status);
@@ -145,7 +145,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenCurrentActionNull() {
         data.currentAction = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -167,7 +167,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenMiningInstructionNull() {
         data.miningInstruction = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -186,7 +186,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenTransactionNull() {
         data.transaction = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -208,7 +208,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenSubmittedTransactionIdNull() {
         data.submittedTransactionId = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -230,7 +230,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenBitcoinBlockHeaderOfProofNull() {
         data.bitcoinBlockHeaderOfProof = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -252,7 +252,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenBitcoinContextBlocksNull() {
         data.bitcoinContextBlocks = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -272,7 +272,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenMerklePathNull() {
         data.merklePath = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -294,7 +294,7 @@ public class PreservedPoPMiningOperationStateTests {
     @Test
     public void serializationWhenAlternateBlocksOfProofNull() {
         data.alternateBlocksOfProof = null;
-        PreservedPoPMiningOperationState returned = serializeThenDeserialize(data);
+        PopMiningOperationStateDto returned = serializeThenDeserialize(data);
 
         Assert.assertEquals(data.operationId, returned.operationId);
         Assert.assertEquals(data.status, returned.status);
@@ -313,7 +313,7 @@ public class PreservedPoPMiningOperationStateTests {
         Assert.assertNull(returned.alternateBlocksOfProof);
     }
 
-    private PreservedPoPMiningOperationState serializeThenDeserialize(PreservedPoPMiningOperationState input) {
+    private PopMiningOperationStateDto serializeThenDeserialize(PopMiningOperationStateDto input) {
         byte[] serialized = new byte[0];
         try (ByteArrayOutputStream dataOut = new ByteArrayOutputStream()) {
             try (ObjectOutputStream out = new ObjectOutputStream(dataOut)) {
@@ -327,7 +327,7 @@ public class PreservedPoPMiningOperationStateTests {
 
         try (ByteArrayInputStream dataIn = new ByteArrayInputStream(serialized)) {
             try (ObjectInputStream in = new ObjectInputStream(dataIn)) {
-                return (PreservedPoPMiningOperationState) in.readObject();
+                return (PopMiningOperationStateDto) in.readObject();
             }
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();

@@ -7,23 +7,10 @@
 
 package nodecore.miners.pop.tasks;
 
-import nodecore.miners.pop.core.PoPMiningOperationState;
-import nodecore.miners.pop.model.TaskResult;
-import nodecore.miners.pop.services.BitcoinService;
-import nodecore.miners.pop.services.NodeCoreService;
-import org.bitcoinj.core.Block;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-
 /**
  * Task that attempts to restore a mining operation that was left in progress
  */
-public class RestoreTask extends BaseTask {
+/*public class RestoreTask extends BaseTask {
     private BaseTask next = null;
 
     @Override
@@ -36,43 +23,43 @@ public class RestoreTask extends BaseTask {
     }
 
     @Override
-    protected TaskResult executeImpl(PoPMiningOperationState state) {
+    protected TaskResult executeImpl(MiningOperation operation) {
         try {
-            reconstitute(state);
+            reconstitute(operation);
 
-            if (state.getTransaction() == null) {
-                return failProcess(state, "No Bitcoin transaction was found when restoring operation");
+            if (operation.getTransaction() == null) {
+                return failProcess(operation, "No Bitcoin transaction was found when restoring operation");
             }
 
-            logger.info("[{}] Attempting to catch up with changes", state.getOperationId());
-            Map<Sha256Hash, Integer> blockHashes = state.getTransaction().getAppearsInHashes();
+            logger.info("[{}] Attempting to catch up with changes", operation.getOperationId());
+            Map<Sha256Hash, Integer> blockHashes = operation.getTransaction().getAppearsInHashes();
             if (blockHashes == null || blockHashes.size() == 0) {
                 // Still hasn't been seen, let the listeners wait
-                return TaskResult.succeed(state, null);
+                return TaskResult.succeed(operation, null);
             }
 
-            TransactionConfidence.ConfidenceType confidence = state.getTransaction().getConfidence().getConfidenceType();
-            logger.info("[{}] Transaction Confidence: {}", state.getOperationId(), confidence.toString());
+            TransactionConfidence.ConfidenceType confidence = operation.getTransaction().getConfidence().getConfidenceType();
+            logger.info("[{}] Transaction Confidence: {}", operation.getOperationId(), confidence.toString());
             // Transaction exists in a block in the best chain
             if (TransactionConfidence.ConfidenceType.BUILDING.equals(confidence)) {
                 Block bestBlock = bitcoinService.getBestBlock(blockHashes.keySet());
                 if (bestBlock == null) {
-                    return failProcess(state, "Unable to get block from store. Check log for details");
+                    return failProcess(operation, "Unable to get block from store. Check log for details");
                 }
 
-                logger.info("[{}] Found block {}", state.getOperationId(), bestBlock.getHashAsString());
+                logger.info("[{}] Found block {}", operation.getOperationId(), bestBlock.getHashAsString());
                 // New block of proof
-                if (!bestBlock.equals(state.getBitcoinBlockHeaderOfProof())) {
-                    if (state.getBitcoinBlockHeaderOfProof() != null) {
-                        logger.info("[{}] Reorganize in Bitcoin blockchain", state.getOperationId());
-                        state.onBitcoinReorganize();
+                if (!bestBlock.equals(operation.getBitcoinBlockHeaderOfProof())) {
+                    if (operation.getBitcoinBlockHeaderOfProof() != null) {
+                        logger.info("[{}] Reorganize in Bitcoin blockchain", operation.getOperationId());
+                        operation.onBitcoinReorganize();
                     }
-                    logger.info("[{}] Setting as block header of proof", state.getOperationId());
-                    state.onTransactionAppearedInBestChainBlock(bestBlock);
+                    logger.info("[{}] Setting as block header of proof", operation.getOperationId());
+                    operation.onTransactionAppearedInBestChainBlock(bestBlock);
                 }
 
-                logger.info("[{}] Queuing up next task {}", state.getOperationId(), state.getCurrentActionAsString());
-                switch (state.getCurrentAction()) {
+                logger.info("[{}] Queuing up next task {}", operation.getOperationId(), operation.getCurrentActionAsString());
+                switch (operation.getCurrentAction()) {
                     case PROOF:
                         next = new ProveTransactionTask(nodeCoreService, bitcoinService);
                         break;
@@ -87,24 +74,24 @@ public class RestoreTask extends BaseTask {
                         break;
                 }
 
-                return TaskResult.succeed(state, getNext());
+                return TaskResult.succeed(operation, getNext());
             } // Transaction exists in blocks not in best chain
             else if (TransactionConfidence.ConfidenceType.IN_CONFLICT.equals(confidence)) {
-                if (state.getBitcoinBlockHeaderOfProof() != null) {
-                    logger.info("[{}] Reorganize in Bitcoin blockchain", state.getOperationId());
-                    state.onBitcoinReorganize();
+                if (operation.getBitcoinBlockHeaderOfProof() != null) {
+                    logger.info("[{}] Reorganize in Bitcoin blockchain", operation.getOperationId());
+                    operation.onBitcoinReorganize();
                 }
                 next = null;
-                return TaskResult.succeed(state, getNext());
+                return TaskResult.succeed(operation, getNext());
             } // Transaction will not be confirmed without significant reorganization
             else if (TransactionConfidence.ConfidenceType.DEAD.equals(confidence)) {
-                return failProcess(state, "Transaction has been double spent and is no longer valid");
+                return failProcess(operation, "Transaction has been double spent and is no longer valid");
             }
         } catch (Exception e) {
-            logger.error("Unable to restore operation {}", state.getOperationId(), e);
+            logger.error("Unable to restore operation {}", operation.getOperationId(), e);
         }
 
-        return failProcess(state, "Unable to restore operation");
+        return failProcess(operation, "Unable to restore operation");
     }
 
     private void reconstitute(PoPMiningOperationState state) {
@@ -129,4 +116,4 @@ public class RestoreTask extends BaseTask {
             state.setBitcoinContextBlocks(new ArrayList<>(blocks));
         }
     }
-}
+}*/

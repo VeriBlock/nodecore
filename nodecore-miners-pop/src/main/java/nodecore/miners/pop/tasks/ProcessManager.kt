@@ -7,7 +7,7 @@
 package nodecore.miners.pop.tasks
 
 import nodecore.miners.pop.Threading
-import nodecore.miners.pop.core.PoPMiningOperationState
+import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService
@@ -26,17 +26,12 @@ class ProcessManager(
         EventBus.filteredBlockAvailableEvent.unregister(this)
     }
 
-    fun submit(state: PoPMiningOperationState) {
+    fun submit(state: MiningOperation) {
         val task: BaseTask = GetPoPInstructionsTask(nodeCoreService, bitcoinService)
         Threading.TASK_POOL.submit { task.executeTask(state) }
     }
 
-    fun restore(state: PoPMiningOperationState) {
-        val task: BaseTask = RestoreTask(nodeCoreService, bitcoinService)
-        Threading.TASK_POOL.submit { task.executeTask(state) }
-    }
-
-    private fun BaseTask.executeTask(state: PoPMiningOperationState) {
+    private fun BaseTask.executeTask(state: MiningOperation) {
         val result = execute(state)
         if (result.isSuccess) {
             doNext(result.next, result.state)
@@ -45,21 +40,21 @@ class ProcessManager(
         }
     }
 
-    private fun handleFail(state: PoPMiningOperationState) {
-        EventBus.popMiningOperationCompletedEvent.trigger(state.operationId)
+    private fun handleFail(state: MiningOperation) {
+        EventBus.popMiningOperationCompletedEvent.trigger(state.id)
     }
 
-    private fun doNext(next: BaseTask?, state: PoPMiningOperationState) {
+    private fun doNext(next: BaseTask?, state: MiningOperation) {
         next?.executeTask(state)
     }
 
-    private fun onTransactionConfirmed(state: PoPMiningOperationState) {
+    private fun onTransactionConfirmed(state: MiningOperation) {
         val task: BaseTask = DetermineBlockOfProofTask(nodeCoreService, bitcoinService)
         Threading.TASK_POOL.submit { task.executeTask(state) }
         return
     }
 
-    private fun onFilteredBlockAvailable(state: PoPMiningOperationState) {
+    private fun onFilteredBlockAvailable(state: MiningOperation) {
         val task: BaseTask = ProveTransactionTask(nodeCoreService, bitcoinService)
         Threading.TASK_POOL.submit { task.executeTask(state) }
         return

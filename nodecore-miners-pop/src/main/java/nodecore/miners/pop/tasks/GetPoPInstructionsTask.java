@@ -8,9 +8,10 @@
 package nodecore.miners.pop.tasks;
 
 import io.grpc.StatusRuntimeException;
-import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.core.MiningOperation;
+import nodecore.miners.pop.core.OperationState;
 import nodecore.miners.pop.model.NodeCoreReply;
-import nodecore.miners.pop.model.PoPMiningInstruction;
+import nodecore.miners.pop.model.PopMiningInstruction;
 import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
@@ -30,27 +31,27 @@ public class GetPoPInstructionsTask extends BaseTask {
     }
 
     @Override
-    protected TaskResult executeImpl(PoPMiningOperationState state) {
-        if (state.getMiningInstruction() != null) {
-            return TaskResult.succeed(state, getNext());
+    protected TaskResult executeImpl(MiningOperation operation) {
+        if (operation.getState() instanceof OperationState.Instruction) {
+            return TaskResult.succeed(operation, getNext());
         }
 
-        state.begin();
+        operation.begin();
 
         /* Get the PoPMiningInstruction, consisting of the 80 bytes of data that VeriBlock will pay the PoP miner
          * to publish to Bitcoin (includes 64-byte VB header and 16-byte miner ID) as well as the
          * PoP miner's address
          */
         try {
-            NodeCoreReply<PoPMiningInstruction> popReply = nodeCoreService.getPop(state.getBlockNumber());
+            NodeCoreReply<PopMiningInstruction> popReply = nodeCoreService.getPop(operation.getBlockHeight());
             if (popReply.getSuccess()) {
-                state.onReceivedMiningInstructions(popReply.getResult());
-                return TaskResult.succeed(state, getNext());
+                operation.setMiningInstruction(popReply.getResult());
+                return TaskResult.succeed(operation, getNext());
             } else {
-                return failProcess(state, popReply.getResultMessage());
+                return failProcess(operation, popReply.getResultMessage());
             }
         } catch (StatusRuntimeException e) {
-            return failProcess(state, "Failed to get PoP publication data from NodeCore: " + e.getStatus());
+            return failProcess(operation, "Failed to get PoP publication data from NodeCore: " + e.getStatus());
         }
     }
 }

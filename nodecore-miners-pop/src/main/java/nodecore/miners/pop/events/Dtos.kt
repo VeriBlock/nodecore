@@ -1,6 +1,5 @@
 package nodecore.miners.pop.events
 
-import nodecore.miners.pop.core.PoPMiningOperationState
 import nodecore.miners.pop.model.VeriBlockHeader
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Transaction
@@ -14,11 +13,6 @@ class CoinsReceivedEventDto(
 class NewVeriBlockFoundEventDto(
     val block: VeriBlockHeader,
     val previousHead: VeriBlockHeader?
-)
-
-class PoPMiningOperationStateChangedEventDto(
-    val state: PoPMiningOperationState,
-    val messages: List<String>
 )
 
 class ProgramQuitEvent(

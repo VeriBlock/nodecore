@@ -11,9 +11,11 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import nodecore.miners.pop.Threading;
-import nodecore.miners.pop.core.PoPMiningOperationState;
+import nodecore.miners.pop.core.MiningOperation;
+import nodecore.miners.pop.core.OperationState;
 import nodecore.miners.pop.events.EventBus;
 import nodecore.miners.pop.model.ApplicationExceptions;
+import nodecore.miners.pop.model.PopMiningInstruction;
 import nodecore.miners.pop.model.TaskResult;
 import nodecore.miners.pop.services.BitcoinService;
 import nodecore.miners.pop.services.NodeCoreService;
@@ -38,12 +40,14 @@ public class CreateBitcoinTransactionTask extends BaseTask {
     }
 
     @Override
-    protected TaskResult executeImpl(PoPMiningOperationState state) {
-        if (state.getTransaction() != null) {
-            return TaskResult.succeed(state, getNext());
+    protected TaskResult executeImpl(MiningOperation operation) {
+        if (operation.getState() instanceof OperationState.EndorsementTransaction) {
+            return TaskResult.succeed(operation, getNext());
         }
 
-        Script opReturnScript = bitcoinService.generatePoPScript(state.getMiningInstruction().publicationData);
+        PopMiningInstruction miningInstruction = ((OperationState.Instruction) operation.getState()).getMiningInstruction();
+
+        Script opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData);
 
         try {
             ListenableFuture<Transaction> txFuture = bitcoinService.createPoPTransaction(opReturnScript);
@@ -52,32 +56,35 @@ public class CreateBitcoinTransactionTask extends BaseTask {
                 public void onSuccess(@Nullable Transaction result) {
                     if (result != null) {
                         logger.info("Successfully broadcast transaction {}", result.getTxId());
-                        state.onTransactionCreated(result, bitcoinService.getContext().getParams());
+                        operation.setTransaction(result);
                     } else {
                         logger.error("Create Bitcoin transaction returned no transaction");
-                        failProcess(state, "Create Bitcoin transaction returned no transaction");
+                        failProcess(operation, "Create Bitcoin transaction returned no transaction");
                     }
                 }
 
                 @Override
                 public void onFailure(Throwable t) {
                     logger.error("A problem occurred broadcasting the transaction to the peer group", t);
-                    failProcess(state, "A problem occurred broadcasting the transaction to the peer group");
+                    failProcess(operation, "A problem occurred broadcasting the transaction to the peer group");
                 }
             }, Threading.TASK_POOL);
         } catch (ApplicationExceptions.SendTransactionException e) {
-            handleSendTransactionExceptions(e, state);
+            handleSendTransactionExceptions(e, operation);
         }
 
-        return TaskResult.succeed(state, getNext());
+        return TaskResult.succeed(operation, getNext());
     }
 
-    private void handleSendTransactionExceptions(ApplicationExceptions.SendTransactionException container, PoPMiningOperationState state) {
+    private void handleSendTransactionExceptions(ApplicationExceptions.SendTransactionException container, MiningOperation state) {
         for (Throwable e : container.getSuppressed()) {
             if (e instanceof ApplicationExceptions.UnableToAcquireTransactionLock) {
-                logger.info("A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending");
-                failProcess(state,
-                        "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.");
+                logger
+                    .info("A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending");
+                failProcess(
+                    state,
+                    "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again."
+                );
             } else if (e instanceof InsufficientMoneyException) {
                 logger.info(e.getMessage());
                 failProcess(state, "PoP wallet does not contain sufficient funds to create PoP transaction");

@@ -1,6 +1,6 @@
 package nodecore.miners.pop.events
 
-import nodecore.miners.pop.core.PoPMiningOperationState
+import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.model.PoPMinerDependencies
 
 object EventBus {
@@ -12,7 +12,7 @@ object EventBus {
     val fundsAddedEvent = EmptyEvent("Funds Added")
     val insufficientFundsEvent = EmptyEvent("Insufficient Funds")
     val newVeriBlockFoundEvent = Event<NewVeriBlockFoundEventDto>("New VeriBlock Found")
-    val filteredBlockAvailableEvent = Event<PoPMiningOperationState>("Filtered Block Available")
+    val filteredBlockAvailableEvent = Event<MiningOperation>("Filtered Block Available")
     val nodeCoreHealthyEvent = EmptyEvent("NodeCore Healthy")
     val nodeCoreUnhealthyEvent = EmptyEvent("NodeCore Unhealthy")
     val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore Synchronized")
@@ -20,9 +20,9 @@ object EventBus {
     val popMinerReadyEvent = EmptyEvent("PoP Miner Ready")
     val popMinerNotReadyEvent = Event<PoPMinerDependencies>("PoP Miner Not Ready")
     val popMiningOperationCompletedEvent = Event<String>("PoP Mining Operation Completed")
-    val popMiningOperationStateChangedEvent = Event<PoPMiningOperationStateChangedEventDto>("PoP Mining Operation State Changed")
+    val popMiningOperationStateChangedEvent = Event<MiningOperation>("PoP Mining Operation State Changed")
     val programQuitEvent = Event<Int>("Program Quit")
     val shellCompletedEvent = EmptyEvent("Shell Completed")
-    val transactionConfirmedEvent = Event<PoPMiningOperationState>("Trannsaction Confirmed")
+    val transactionConfirmedEvent = Event<MiningOperation>("Trannsaction Confirmed")
     val walletSeedAgreementMissingEvent = EmptyEvent("Wallet Seed Agreement Missing")
 }

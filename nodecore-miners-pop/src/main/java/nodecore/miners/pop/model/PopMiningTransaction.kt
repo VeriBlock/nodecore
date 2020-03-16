@@ -9,8 +9,8 @@ package nodecore.miners.pop.model
 import nodecore.miners.pop.common.Utility
 import org.bitcoinj.core.Block
 
-class PoPMiningTransaction(
-    popMiningInstruction: PoPMiningInstruction,
+class PopMiningTransaction(
+    popMiningInstruction: PopMiningInstruction,
     val bitcoinTransaction: ByteArray,
     bitcoinMerklePathToRoot: String,
     bitcoinBlockHeaderOfProof: Block,

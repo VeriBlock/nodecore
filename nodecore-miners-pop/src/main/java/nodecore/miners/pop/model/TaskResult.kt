@@ -6,22 +6,22 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.model
 
-import nodecore.miners.pop.core.PoPMiningOperationState
+import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.tasks.BaseTask
 
 class TaskResult private constructor(
-    val state: PoPMiningOperationState,
+    val state: MiningOperation,
     val isSuccess: Boolean,
     val next: BaseTask?
 ) {
     companion object {
         @JvmStatic
-        fun fail(state: PoPMiningOperationState): TaskResult {
+        fun fail(state: MiningOperation): TaskResult {
             return TaskResult(state, false, null)
         }
 
         @JvmStatic
-        fun succeed(state: PoPMiningOperationState, next: BaseTask?): TaskResult {
+        fun succeed(state: MiningOperation, next: BaseTask?): TaskResult {
             return TaskResult(state, true, next)
         }
     }
