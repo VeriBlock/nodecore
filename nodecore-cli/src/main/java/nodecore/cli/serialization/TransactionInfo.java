@@ -32,39 +32,54 @@ public class TransactionInfo {
                 break;
         }
 
-        txid = ByteStringUtility.byteStringToHex(transaction.getTxId());
-        merklePath = transaction.getMerklePath();
-        size = transaction.getSize();
-        timestamp = transaction.getTimestamp();
-        sourceAmount = Utility.formatAtomicLongWithDecimal(transaction.getSourceAmount());
-        sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.getSourceAddress());
-        data = ByteStringUtility.byteStringToHex(transaction.getData());
-        fee = Utility.formatAtomicLongWithDecimal(transaction.getTransactionFee());
-        if (transaction.getType() == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
-            byte[] bitcoinBlockHeaderBytes = transaction.getBitcoinBlockHeaderOfProof() != null ?
+        if (transaction != VeriBlockMessages.Transaction.getDefaultInstance()) {
+            txid = ByteStringUtility.byteStringToHex(transaction.getTxId());
+            merklePath = transaction.getMerklePath();
+            size = transaction.getSize();
+            timestamp = transaction.getTimestamp();
+            sourceAmount = Utility.formatAtomicLongWithDecimal(transaction.getSourceAmount());
+            sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.getSourceAddress());
+            data = ByteStringUtility.byteStringToHex(transaction.getData());
+            fee = Utility.formatAtomicLongWithDecimal(transaction.getTransactionFee());
+            if (transaction.getType() == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
+                byte[] bitcoinBlockHeaderBytes = transaction.getBitcoinBlockHeaderOfProof() != null ?
                     transaction.getBitcoinBlockHeaderOfProof().toByteArray() :
                     new byte[]{};
 
-            if(bitcoinBlockHeaderBytes.length > 0 && bitcoinBlockHeaderBytes[0] == 10 && bitcoinBlockHeaderBytes[1] == 80) {
-                //TODO: remove first two bytes if they are 0A50 (10,80)
-                byte[] newBytes = new byte[bitcoinBlockHeaderBytes.length - 2];
-                System.arraycopy(bitcoinBlockHeaderBytes, 2, newBytes, 0, newBytes.length);
-                bitcoinBlockHeaderBytes = newBytes;
-            }
-            bitcoinBlockHeader = Utility.bytesToHex(bitcoinBlockHeaderBytes);
-            bitcoinTransaction = ByteStringUtility.byteStringToHex(transaction.getBitcoinTransaction());
-            endorsedBlockHeader = ByteStringUtility.byteStringToHex(transaction.getEndorsedBlockHeader());
-        } else {
-            bitcoinBlockHeader = "N/A";
-            bitcoinTransaction = "N/A";
-            endorsedBlockHeader = "N/A";
-            List<String> contextBlockHeaders = new ArrayList<String>();
+                if(bitcoinBlockHeaderBytes.length > 0 && bitcoinBlockHeaderBytes[0] == 10 && bitcoinBlockHeaderBytes[1] == 80) {
+                    //TODO: remove first two bytes if they are 0A50 (10,80)
+                    byte[] newBytes = new byte[bitcoinBlockHeaderBytes.length - 2];
+                    System.arraycopy(bitcoinBlockHeaderBytes, 2, newBytes, 0, newBytes.length);
+                    bitcoinBlockHeaderBytes = newBytes;
+                }
+                bitcoinBlockHeader = Utility.bytesToHex(bitcoinBlockHeaderBytes);
+                bitcoinTransaction = ByteStringUtility.byteStringToHex(transaction.getBitcoinTransaction());
+                endorsedBlockHeader = ByteStringUtility.byteStringToHex(transaction.getEndorsedBlockHeader());
+            } else {
+                bitcoinBlockHeader = "N/A";
+                bitcoinTransaction = "N/A";
+                endorsedBlockHeader = "N/A";
+                List<String> contextBlockHeaders = new ArrayList<String>();
 
-            contextBlockHeaders.add("N/A");
-            // contextBitcoinBlockHeaders = contextBlockHeaders;
+                contextBlockHeaders.add("N/A");
+                // contextBitcoinBlockHeaders = contextBlockHeaders;
+            }
+            for (final VeriBlockMessages.Output output : transaction.getOutputsList())
+                outputs.add(new OutputInfo(output));
+        } else {
+            size = 0;
+            txid = "N/A";
+            data = "N/A";
+            type = "N/A";
+            fee = "N/A";
+            timestamp = 0;
+            sourceAmount = "N/A";
+            merklePath = "N/A";
+            sourceAddress = "N/A";
+            bitcoinTransaction = "N/A";
+            bitcoinBlockHeader = "N/A";
+            endorsedBlockHeader = "N/A";
         }
-        for (final VeriBlockMessages.Output output : transaction.getOutputsList())
-            outputs.add(new OutputInfo(output));
     }
 
     public int size;
