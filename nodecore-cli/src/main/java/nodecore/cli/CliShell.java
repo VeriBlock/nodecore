@@ -7,8 +7,8 @@
 
 package nodecore.cli;
 
+import com.google.common.collect.Sets;
 import nodecore.cli.annotations.CommandServiceType;
-import nodecore.cli.annotations.ModeType;
 import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.EndpointTransportType;
@@ -27,6 +27,7 @@ import org.veriblock.shell.CommandFactory;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
+import org.veriblock.shell.models.ModeType;
 import veriblock.SpvContext;
 import veriblock.conf.NetworkParameters;
 import veriblock.model.DownloadStatusResponse;
@@ -34,6 +35,7 @@ import veriblock.net.BootstrapPeerDiscovery;
 import veriblock.net.PeerDiscovery;
 
 import javax.net.ssl.SSLException;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -47,6 +49,7 @@ public class CliShell extends Shell {
     private AdminServiceClient _adminServiceClient;
     private Configuration _configuration;
     private Runnable disconnectCallBack;
+
     private ModeType modeType = ModeType.STANDARD;
 
     public void onStart() {
@@ -248,15 +251,26 @@ public class CliShell extends Shell {
     @Override
     protected boolean shouldAutoComplete(@NotNull Command command) {
         String extraData = command.getExtraData();
-        return (_endpointContainer != null && _endpointContainer.getProtocolEndpoint() != null) ||
-            (extraData != null && extraData.equals(CommandServiceType.SHELL.name()));
+        if (getModeType() == ModeType.SPV) {
+            return getCommandsSpv().contains(command.getForm().split("\\|")[0]);
+        }
+        return (_endpointContainer != null && _endpointContainer.getProtocolEndpoint() != null) || (
+            extraData != null && extraData.equals(CommandServiceType.SHELL.name())
+        );
+    }
+
+    //TODO Implement it with adding available mods for commands.
+    public Set<String> getCommandsSpv() {
+        return Sets.newHashSet("getbalance", "getstateinfo", "send", "lockWallet", "unlockWallet", "decryptWallet", "encryptWallet", "importwallet",
+            "importprivatekey", "backupwallet", "getnewaddress", "disconnect", "exit"
+        );
     }
 
     public void initialize(ProgramOptions programOptions) {
         ProtocolEndpoint endpoint = null;
         String host = null;
 
-        if(programOptions.getSpvNetworkParameters() != null){
+        if (programOptions.getSpvNetworkParameters() != null) {
             printIntroSpv();
         } else {
             printIntroStandard();
@@ -299,7 +313,7 @@ public class CliShell extends Shell {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (!connected.get() && !getModeType().isSPV()) {
+                while (!connected.get() && ModeType.SPV != getModeType()) {
                     for (int i = 10500 ; i <= 10502; i++) {
                         if (bound(i)) {
                             String msg = new AttributedStringBuilder()
@@ -343,7 +357,8 @@ public class CliShell extends Shell {
     }
 
     public ProtocolEndpoint startSPV(NetworkParameters net, PeerDiscovery peerDiscovery) throws ExecutionException, InterruptedException {
-        setModeType(ModeType.SPV);
+        this.setModeType(ModeType.SPV);
+
         spvContext.init(net, peerDiscovery, true);
         spvContext.getPeerTable().start();
 
@@ -542,19 +557,19 @@ public class CliShell extends Shell {
         return _adminServiceClient;
     }
 
-    public ModeType getModeType() {
-        return modeType;
-    }
-
-    public void setModeType(ModeType modeType) {
-        this.modeType = modeType;
-    }
-
     public boolean isConnected() {
         return _adminServiceClient != null;
     }
 
     public SpvContext getSpvContext() {
         return spvContext;
+    }
+
+    public ModeType getModeType() {
+        return modeType;
+    }
+
+    public void setModeType(ModeType modeType) {
+        this.modeType = modeType;
     }
 }

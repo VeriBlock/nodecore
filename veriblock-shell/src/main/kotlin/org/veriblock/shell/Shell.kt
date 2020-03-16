@@ -27,9 +27,9 @@ import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.core.ActivityLevel
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
-import java.lang.StringBuilder
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.ArrayList
+import java.util.Date
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 private val printLogger = LoggerFactory.getLogger("shell-printing")
@@ -273,21 +273,6 @@ open class Shell(
     fun getCommandsByAlias() = commandFactory.getCommands()
 
     fun getCommands() = commandFactory.getCommands().values.distinct()
-
-    //TODO Implement it with adding available mods for commands.
-    fun getCommandsSpv() = mutableListOf(
-                "getbalance [address]",
-                "getstateinfo",
-                "send <amount> <destinationAddress> [sourceAddress]",
-                "lockWallet",
-                "unlockWallet",
-                "decryptWallet",
-                "encryptWallet",
-                "importwallet <sourceLocation>",
-                "importprivatekey <privateKey>",
-                "backupwallet <targetLocation>",
-                "getnewaddress [count]"
-                )
 
     fun getCommand(alias: String) = commandFactory.getCommands()[alias]
         ?: error("Command $alias not found!")
