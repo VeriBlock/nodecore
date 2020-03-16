@@ -76,9 +76,22 @@ message SignedTransaction {
     Transaction transaction = 4;
 }
 
+message SignedTransactionInfo {
+    bytes signature = 1 [(hex_encoded)=true];
+    bytes public_key = 2 [(hex_encoded)=true];
+    int64 signature_index = 3;
+    TransactionInfo transaction = 4;
+}
+
 message SignedMultisigTransaction {
     MultisigBundle signature_bundle = 1;
     Transaction transaction = 2;
+    int64 signature_index = 3;
+}
+
+message SignedMultisigTransactionInfo {
+    MultisigBundle signature_bundle = 1;
+    TransactionInfo transaction = 2;
     int64 signature_index = 3;
 }
 
@@ -265,6 +278,14 @@ message Transaction {
 message UnsignedMultisigTransactionWithIndex {
     Transaction unsigned_multisig_tansaction = 1;
     int64 signature_index = 2;
+}
+
+message TransactionInfoUnion {
+    oneof transaction {
+        TransactionInfo unsigned = 1;
+        SignedTransactionInfo signed = 2;
+        SignedMultisigTransactionInfo signed_multisig = 3;
+    }
 }
 
 message TransactionUnion {
@@ -862,8 +883,8 @@ message AddressHistory {
     bytes address = 1 [(address_encoded)=true];
     int64 balance = 2;
     int32 blocks_mined = 3;
-    repeated TransactionUnion confirmed_transactions = 4;
-    repeated TransactionUnion pending_transactions = 5;
+    repeated TransactionInfoUnion confirmed_transactions = 4;
+    repeated TransactionInfoUnion pending_transactions = 5;
 }
 
 message GetHistoryReply {

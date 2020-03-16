@@ -9,12 +9,28 @@ package nodecore.cli.serialization;
 
 import nodecore.api.grpc.VeriBlockMessages;
 
-public class TransactionUnionInfo {
-    public TransactionUnionInfo(final VeriBlockMessages.TransactionUnion union) {
+public class TransactionInfoUnion {
+    public TransactionInfoUnion(final VeriBlockMessages.TransactionUnion union) {
         switch (union.getTransactionCase()) {
             case UNSIGNED:
                 type = "unsigned";
                 unsigned = new TransactionInfo(union.getUnsigned());
+                break;
+            case SIGNED:
+                type = "signed";
+                signed = new SignedTransactionInfo(union.getSigned());
+                break;
+            case TRANSACTION_NOT_SET:
+                type = "unknown";
+                break;
+        }
+    }
+
+    public TransactionInfoUnion(final VeriBlockMessages.TransactionInfoUnion union) {
+        switch (union.getTransactionCase()) {
+            case UNSIGNED:
+                type = "unsigned";
+                unsigned = new TransactionInfo(union.getUnsigned().getTransaction());
                 break;
             case SIGNED:
                 type = "signed";

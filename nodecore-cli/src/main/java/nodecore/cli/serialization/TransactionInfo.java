@@ -32,7 +32,6 @@ public class TransactionInfo {
                 break;
         }
 
-
         txid = ByteStringUtility.byteStringToHex(transaction.getTxId());
         merklePath = transaction.getMerklePath();
         size = transaction.getSize();

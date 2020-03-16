@@ -18,11 +18,11 @@ public class AddressHistoryInfo {
     public AddressHistoryInfo(final VeriBlockMessages.AddressHistory history) {
         balance = Utility.formatAtomicLongWithDecimal(history.getBalance());
         blocksMined = history.getBlocksMined();
-        for (final VeriBlockMessages.TransactionUnion union : history.getConfirmedTransactionsList()) {
-            confirmedTransactions.add(new TransactionUnionInfo(union));
+        for (final VeriBlockMessages.TransactionInfoUnion union : history.getConfirmedTransactionsList()) {
+            confirmedTransactions.add(new TransactionInfoUnion(union));
         }
-        for (final VeriBlockMessages.TransactionUnion union : history.getPendingTransactionsList()) {
-            pendingTransactions.add(new TransactionUnionInfo(union));
+        for (final VeriBlockMessages.TransactionInfoUnion union : history.getPendingTransactionsList()) {
+            pendingTransactions.add(new TransactionInfoUnion(union));
         }
     }
 
@@ -32,8 +32,8 @@ public class AddressHistoryInfo {
     public int blocksMined;
 
     @SerializedName("confirmed_transactions")
-    public List<TransactionUnionInfo> confirmedTransactions = new ArrayList<>();
+    public List<TransactionInfoUnion> confirmedTransactions = new ArrayList<>();
 
     @SerializedName("pending_transactions")
-    public List<TransactionUnionInfo> pendingTransactions = new ArrayList<>();
+    public List<TransactionInfoUnion> pendingTransactions = new ArrayList<>();
 }
