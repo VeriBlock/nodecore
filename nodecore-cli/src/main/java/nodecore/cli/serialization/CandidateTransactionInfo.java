@@ -20,7 +20,7 @@ public class CandidateTransactionInfo {
         weight = candidate.getWeight();
         depends = candidate.getDependsList();
         required = candidate.getRequired();
-        transaction = new TransactionUnionInfo(candidate.getTransaction());
+        transaction = new TransactionInfoUnion(candidate.getTransaction());
         transactionId = ByteStringUtility.byteStringToHex(candidate.getTxId());
     }
 
@@ -33,7 +33,7 @@ public class CandidateTransactionInfo {
     @SerializedName("transaction_id")
     public String transactionId;
 
-    public TransactionUnionInfo transaction;
+    public TransactionInfoUnion transaction;
 
     public List<Integer> depends = new ArrayList<>();
 }
