@@ -148,9 +148,9 @@ class NxtFamilyChain(
 
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
 
-    override fun isConnected(): Boolean = true
+    override fun isConnected(): Boolean = TODO()
 
-    override fun isSynchronized(): Boolean = true
+    override fun isSynchronized(): Boolean = TODO()
     
     private fun Any.toJson() = Gson().toJson(this)
 }

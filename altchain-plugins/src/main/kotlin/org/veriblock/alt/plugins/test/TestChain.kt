@@ -30,6 +30,7 @@ import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.lang.Exception
 import java.util.TreeMap
 import kotlin.random.Random
 
@@ -245,7 +246,14 @@ class TestChain(
         return transaction
     }
 
-    override fun isConnected(): Boolean = true
+    override fun isConnected(): Boolean {
+        return try {
+            getLastBitcoinBlockHash()
+            true
+        } catch(e: Exception) {
+            false
+        }
+    }
 
     override fun isSynchronized(): Boolean = true
 }

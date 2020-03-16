@@ -35,7 +35,6 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
-import kotlin.math.abs
 
 private val logger = createLogger {}
 
@@ -299,7 +298,7 @@ class BitcoinFamilyChain(
             logger.info { "Unable to perform the 'getblockchaininfo' rpc call: ${e.message}" }
             return false
         }
-        val blockDifference = abs(response.headers - response.blocks)
+        val blockDifference = response.headers - response.blocks
         return blockDifference < 4
     }
 }
