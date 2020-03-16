@@ -6,11 +6,11 @@ import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
 import nodecore.cli.contracts.ProtocolEndpointType
+import nodecore.cli.models.ModeType
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
-import org.veriblock.shell.models.ModeType
 import veriblock.conf.NetworkParameters
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery

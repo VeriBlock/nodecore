@@ -1,4 +1,4 @@
-package org.veriblock.shell.models;
+package nodecore.cli.models;
 
 enum class ModeType {
     STANDARD, SPV;

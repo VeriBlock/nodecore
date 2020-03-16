@@ -5,6 +5,7 @@ import nodecore.cli.annotations.CommandServiceType
 import nodecore.cli.cliCommand
 import nodecore.cli.cliShell
 import nodecore.cli.contracts.ProtocolEndpointType
+import nodecore.cli.models.ModeType
 import org.jline.utils.AttributedStyle
 import org.veriblock.shell.Command
 import org.veriblock.shell.CommandFactory
@@ -12,7 +13,6 @@ import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
-import org.veriblock.shell.models.ModeType
 import java.util.*
 
 fun CommandFactory.standardCommands() {
