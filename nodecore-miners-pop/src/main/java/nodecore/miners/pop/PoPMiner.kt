@@ -196,9 +196,10 @@ class PoPMiner(
             )
             return result
         }
-        val state = MiningOperation(operationId, blockHeight = blockNumber)
-        operations.putIfAbsent(operationId, state)
-        processManager.submit(state)
+        val operation = MiningOperation(operationId, blockHeight = blockNumber)
+        operations.putIfAbsent(operationId, operation)
+        operation.begin()
+        processManager.submit(operation)
         result.addMessage(
             "V201", "Mining operation started", String.format("To view details, run command: getoperation %s", operationId), false
         )
@@ -411,7 +412,6 @@ class PoPMiner(
             PoPMinerDependencies.SYNCHRONIZED_NODECORE -> "Waiting for NodeCore to synchronize"
             PoPMinerDependencies.BITCOIN_SERVICE_READY -> "Bitcoin service is not ready"
         }
-        return ""
     }
 
     private fun restoreOperations() {
