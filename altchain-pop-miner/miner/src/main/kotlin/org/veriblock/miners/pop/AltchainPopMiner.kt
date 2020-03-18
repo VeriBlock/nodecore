@@ -17,6 +17,7 @@ import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.miners.pop.util.formatCoinAmount
+import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.shell.core.Result
@@ -33,7 +34,8 @@ class AltchainPopMiner(
     private val context: Context,
     private val workflowAuthority: WorkflowAuthority,
     private val nodeCoreLiteKit: NodeCoreLiteKit,
-    private val operationService: OperationService
+    private val operationService: OperationService,
+    private val pluginService: PluginService
 ) : Miner {
     private val operations = ConcurrentHashMap<String, MiningOperation>()
     private var isShuttingDown: Boolean = false
@@ -159,6 +161,12 @@ class AltchainPopMiner(
     }
 
     override fun mine(chainId: String, block: Int?): Result {
+        val chain = pluginService[chainId]
+        if (chain == null) {
+            logger.warn { "Unable to load plugin $chainId" }
+            return failure()
+        }
+
         if (!isReady()) {
             return failure {
                 addMessage(
@@ -177,6 +185,16 @@ class AltchainPopMiner(
         if (isShuttingDown) {
             return failure {
                 addMessage("V412", "Miner is not ready", "The miner is currently shutting down", true)
+            }
+        }
+        if (!chain.isConnected()) {
+            return failure {
+                addMessage("V412", "Miner is not ready", "The miner is not connected to the ${chain.name} chain", true)
+            }
+        }
+        if (!chain.isSynchronized()) {
+            return failure {
+                addMessage("V412", "Miner is not ready", "The chain ${chain.name} is not synchronized", true)
             }
         }
 
