@@ -8,6 +8,7 @@
 
 package nodecore.miners.pop.shell.commands
 
+import kotlinx.coroutines.runBlocking
 import nodecore.miners.pop.PoPMiner
 import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.shell.toShellResult
@@ -85,7 +86,9 @@ fun CommandFactory.bitcoinWalletCommands(
     ) {
         val address: String = getParameter("address")
         val amount: BigDecimal = getParameter("amount")
-        miner.sendBitcoinToAddress(address, amount).toShellResult()
+        runBlocking {
+            miner.sendBitcoinToAddress(address, amount).toShellResult()
+        }
     }
 
     command(

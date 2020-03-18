@@ -11,21 +11,7 @@ import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.core.OperationState
 import nodecore.miners.pop.core.OperationStateType
 import nodecore.miners.pop.events.CoinsReceivedEventDto
-import nodecore.miners.pop.events.EventBus.bitcoinServiceNotReadyEvent
-import nodecore.miners.pop.events.EventBus.bitcoinServiceReadyEvent
-import nodecore.miners.pop.events.EventBus.blockchainDownloadedEvent
-import nodecore.miners.pop.events.EventBus.coinsReceivedEvent
-import nodecore.miners.pop.events.EventBus.configurationChangedEvent
-import nodecore.miners.pop.events.EventBus.fundsAddedEvent
-import nodecore.miners.pop.events.EventBus.insufficientFundsEvent
-import nodecore.miners.pop.events.EventBus.newVeriBlockFoundEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreDesynchronizedEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreHealthyEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreSynchronizedEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreUnhealthyEvent
-import nodecore.miners.pop.events.EventBus.popMinerNotReadyEvent
-import nodecore.miners.pop.events.EventBus.popMiningOperationCompletedEvent
-import nodecore.miners.pop.events.EventBus.walletSeedAgreementMissingEvent
+import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
@@ -83,45 +69,42 @@ class PoPMiner(
     }
 
     override fun run() {
-        popMiningOperationCompletedEvent.register(
-            this
-        ) { operationId: String -> onPoPMiningOperationCompleted(operationId) }
-        coinsReceivedEvent.register(this) { event: CoinsReceivedEventDto -> onCoinsReceived(event) }
-        insufficientFundsEvent.register(this) { onInsufficientFunds() }
-        bitcoinServiceReadyEvent.register(this) { onBitcoinServiceReady() }
-        bitcoinServiceNotReadyEvent.register(this) { onBitcoinServiceNotReady() }
-        blockchainDownloadedEvent.register(this) { onBlockchainDownloaded() }
-        nodeCoreHealthyEvent.register(this) { onNodeCoreHealthy() }
-        nodeCoreUnhealthyEvent.register(this) { onNodeCoreUnhealthy() }
-        nodeCoreSynchronizedEvent.register(this) { onNodeCoreSynchronized() }
-        nodeCoreDesynchronizedEvent.register(this) { onNodeCoreDesynchronized() }
-        configurationChangedEvent.register(this) { onConfigurationChanged() }
-        newVeriBlockFoundEvent.register(
-            this
-        ) { event: NewVeriBlockFoundEventDto -> onNewVeriBlockFound(event) }
+        EventBus.popMiningOperationCompletedEvent.register(this, ::onPoPMiningOperationCompleted)
+        EventBus.coinsReceivedEvent.register(this, ::onCoinsReceived)
+        EventBus.insufficientFundsEvent.register(this, ::onInsufficientFunds)
+        EventBus.bitcoinServiceReadyEvent.register(this, ::onBitcoinServiceReady)
+        EventBus.bitcoinServiceNotReadyEvent.register(this, ::onBitcoinServiceNotReady)
+        EventBus.blockchainDownloadedEvent.register(this, ::onBlockchainDownloaded)
+        EventBus.nodeCoreHealthyEvent.register(this, ::onNodeCoreHealthy)
+        EventBus.nodeCoreUnhealthyEvent.register(this, ::onNodeCoreUnhealthy)
+        EventBus.nodeCoreSynchronizedEvent.register(this, ::onNodeCoreSynchronized)
+        EventBus.nodeCoreDesynchronizedEvent.register(this, ::onNodeCoreDesynchronized)
+        EventBus.configurationChangedEvent.register(this, ::onConfigurationChanged)
+        EventBus.newVeriBlockFoundEvent.register(this, ::onNewVeriBlockFound)
         bitcoinService.initialize()
         if (!configuration.getBoolean(Constants.BYPASS_ACKNOWLEDGEMENT_KEY)) {
             val data = keyValueRepository[Constants.WALLET_SEED_VIEWED_KEY]
             if (data == null || data.value != "1") {
-                walletSeedAgreementMissingEvent.trigger()
+                EventBus.walletSeedAgreementMissingEvent.trigger()
             }
         }
     }
 
     @Throws(InterruptedException::class)
     fun shutdown() {
-        popMiningOperationCompletedEvent.unregister(this)
-        coinsReceivedEvent.unregister(this)
-        insufficientFundsEvent.remove(this)
-        bitcoinServiceReadyEvent.remove(this)
-        bitcoinServiceNotReadyEvent.remove(this)
-        blockchainDownloadedEvent.remove(this)
-        nodeCoreHealthyEvent.remove(this)
-        nodeCoreUnhealthyEvent.remove(this)
-        nodeCoreSynchronizedEvent.remove(this)
-        nodeCoreDesynchronizedEvent.remove(this)
-        configurationChangedEvent.remove(this)
-        newVeriBlockFoundEvent.unregister(this)
+        EventBus.popMiningOperationCompletedEvent.unregister(this)
+        EventBus.coinsReceivedEvent.unregister(this)
+        EventBus.insufficientFundsEvent.remove(this)
+        EventBus.bitcoinServiceReadyEvent.remove(this)
+        EventBus.bitcoinServiceNotReadyEvent.remove(this)
+        EventBus.blockchainDownloadedEvent.remove(this)
+        EventBus.nodeCoreHealthyEvent.remove(this)
+        EventBus.nodeCoreUnhealthyEvent.remove(this)
+        EventBus.nodeCoreSynchronizedEvent.remove(this)
+        EventBus.nodeCoreDesynchronizedEvent.remove(this)
+        EventBus.configurationChangedEvent.remove(this)
+        EventBus.newVeriBlockFoundEvent.unregister(this)
+
         processManager.shutdown()
         bitcoinService.shutdown()
         nodeCoreService.shutdown()
@@ -157,7 +140,7 @@ class PoPMiner(
         result.status = operation.status
         result.currentAction = operation.state.type
         result.miningInstruction = (state as? OperationState.Instruction)?.miningInstruction
-        result.transaction = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction?.bitcoinSerialize()
+        result.transaction = (state as? OperationState.EndorsementTransaction)?.endorsementTransactionBytes
         result.submittedTransactionId = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction?.txId?.toString()
         result.bitcoinBlockHeaderOfProof = (state as? OperationState.BlockOfProof)?.blockOfProof?.bitcoinSerialize()
         result.merklePath = (state as? OperationState.Proven)?.merklePath
@@ -262,39 +245,45 @@ class PoPMiner(
         return bitcoinService.importWallet(StringUtils.join(seedWords, " "), creationDate)
     }
 
-    fun sendBitcoinToAddress(address: String?, amount: BigDecimal?): Result {
+    suspend fun sendBitcoinToAddress(address: String, amount: BigDecimal): Result {
         val result = Result()
         val coinAmount = Utility.amountToCoin(amount)
         try {
-            val tx = bitcoinService.sendCoins(address!!, coinAmount)
+            val tx = bitcoinService.sendCoins(address, coinAmount)!!
             result.addMessage("V201", "Created", String.format("Transaction: %s", tx.txId.toString()), false)
         } catch (e: SendTransactionException) {
             for (t in e.suppressed) {
-                if (t is UnableToAcquireTransactionLock) {
-                    result.addMessage(
-                        "V409",
-                        "Temporarily Unable to Create Tx",
-                        "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.",
-                        true
-                    )
-                } else if (t is InsufficientMoneyException) {
-                    result.addMessage("V400", "Insufficient Funds", "Wallet does not contain sufficient funds to create transaction", true)
-                } else if (t is ExceededMaxTransactionFee) {
-                    result.addMessage(
-                        "V400",
-                        "Exceeded Max Fee",
-                        "Transaction fee was calculated to be more than the configured maximum transaction fee",
-                        true
-                    )
-                } else if (t is DuplicateTransactionException) {
-                    result.addMessage(
-                        "V409",
-                        "Duplicate Transaction",
-                        "Transaction created is a duplicate of a previously broadcast transaction",
-                        true
-                    )
-                } else {
-                    result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true)
+                when (t) {
+                    is UnableToAcquireTransactionLock -> {
+                        result.addMessage(
+                            "V409",
+                            "Temporarily Unable to Create Tx",
+                            "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.",
+                            true
+                        )
+                    }
+                    is InsufficientMoneyException -> {
+                        result.addMessage("V400", "Insufficient Funds", "Wallet does not contain sufficient funds to create transaction", true)
+                    }
+                    is ExceededMaxTransactionFee -> {
+                        result.addMessage(
+                            "V400",
+                            "Exceeded Max Fee",
+                            "Transaction fee was calculated to be more than the configured maximum transaction fee",
+                            true
+                        )
+                    }
+                    is DuplicateTransactionException -> {
+                        result.addMessage(
+                            "V409",
+                            "Duplicate Transaction",
+                            "Transaction created is a duplicate of a previously broadcast transaction",
+                            true
+                        )
+                    }
+                    else -> {
+                        result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true)
+                    }
                 }
             }
             result.fail()
@@ -358,7 +347,7 @@ class PoPMiner(
         if (bitcoinService.getBalance().isGreaterThan(maximumTransactionFee)) {
             if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
                 logger.info("PoP wallet is sufficiently funded")
-                fundsAddedEvent.trigger()
+                EventBus.fundsAddedEvent.trigger()
             }
             addReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS)
         } else {
@@ -381,7 +370,7 @@ class PoPMiner(
         val removed = readyConditions.remove(flag)
         if (removed) {
             logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag))
-            popMinerNotReadyEvent.trigger(flag)
+            EventBus.popMinerNotReadyEvent.trigger(flag)
         }
     }
 
@@ -466,7 +455,7 @@ class PoPMiner(
                 val failed = EnumSet.complementOf(readyConditions)
                 for (flag in failed) {
                     logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag))
-                    popMinerNotReadyEvent.trigger(flag)
+                    EventBus.popMinerNotReadyEvent.trigger(flag)
                 }
             }
         } catch (e: Exception) {

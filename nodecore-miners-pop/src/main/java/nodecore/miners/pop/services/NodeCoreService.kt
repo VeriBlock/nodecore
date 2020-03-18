@@ -160,19 +160,20 @@ class NodeCoreService(
     fun submitPop(popMiningTransaction: PopMiningTransaction): String {
         val blockOfProofBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
         blockOfProofBuilder.header = ByteString.copyFrom(popMiningTransaction.bitcoinBlockHeaderOfProof)
-        val request = VeriBlockMessages.SubmitPopRequest.newBuilder()
-            .setEndorsedBlockHeader(ByteString.copyFrom(popMiningTransaction.endorsedBlockHeader))
-            .setBitcoinTransaction(ByteString.copyFrom(popMiningTransaction.bitcoinTransaction))
-            .setBitcoinMerklePathToRoot(ByteString.copyFrom(popMiningTransaction.bitcoinMerklePathToRoot))
-            .setBitcoinBlockHeaderOfProof(blockOfProofBuilder)
-            .setAddress(ByteString.copyFrom(popMiningTransaction.popMinerAddress))
-        for (contextBlockHeader in popMiningTransaction.bitcoinContextBlocks) {
-            val contextBlockBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
-            contextBlockBuilder.header = ByteString.copyFrom(contextBlockHeader)
-            val header = contextBlockBuilder.build()
-            request.addContextBitcoinBlockHeaders(header)
-        }
-        val reply = blockingStub.submitPop(request.build())
+        val request = VeriBlockMessages.SubmitPopRequest.newBuilder().apply {
+            setEndorsedBlockHeader(ByteString.copyFrom(popMiningTransaction.endorsedBlockHeader))
+            setBitcoinTransaction(ByteString.copyFrom(popMiningTransaction.bitcoinTransaction))
+            setBitcoinMerklePathToRoot(ByteString.copyFrom(popMiningTransaction.bitcoinMerklePathToRoot))
+            setBitcoinBlockHeaderOfProof(blockOfProofBuilder)
+            setAddress(ByteString.copyFrom(popMiningTransaction.popMinerAddress))
+            for (contextBlockHeader in popMiningTransaction.bitcoinContextBlocks) {
+                val contextBlockBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
+                contextBlockBuilder.header = ByteString.copyFrom(contextBlockHeader)
+                val header = contextBlockBuilder.build()
+                addContextBitcoinBlockHeaders(header)
+            }
+        }.build()
+        val reply = blockingStub.submitPop(request)
         if (reply.success) {
             return reply.getResults(0).details
         }

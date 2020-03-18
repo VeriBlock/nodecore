@@ -4,7 +4,6 @@ import com.google.gson.GsonBuilder
 import nodecore.miners.pop.common.BitcoinNetwork
 import nodecore.miners.pop.model.BlockStore
 import nodecore.miners.pop.schedule.PoPMiningScheduler
-import nodecore.miners.pop.services.BitcoinBlockCache
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.ChannelBuilder
 import nodecore.miners.pop.services.NodeCoreService
@@ -45,12 +44,11 @@ val bootstrapModule = module {
     single { BlockStore() }
     single { PoPEventEngine(get()) }
     single { ProcessManager(get(), get()) }
-    single { BitcoinBlockCache() }
     single { ChannelBuilder(get()) }
     single { PoPMiner(get(), get(), get(), get(), get(), get()) }
     single { PoPStateService(get(), get()) }
     single { NodeCoreService(get(), get(), get()) }
-    single { BitcoinService(get(), get(), get()) }
+    single { BitcoinService(get(), get()) }
     single { PoPMiningScheduler(get(), get(), get()) }
 
     single {

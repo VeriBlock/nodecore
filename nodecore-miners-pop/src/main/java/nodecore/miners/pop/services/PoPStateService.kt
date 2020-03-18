@@ -74,8 +74,8 @@ class PoPStateService(
                 stateData.endorsedBlockHash = operationState.miningInstruction.endorsedBlockHash
                 stateData.endorsedBlockNumber = operationState.miningInstruction.endorsedBlockHeight
             }
-            logger.info("Operation [${operation.id}] new status: ${stateData.status}")
             repository.saveOperationState(stateData)
+            logger.info("Operation [${operation.id}] new state: ${operationState}")
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -103,7 +103,7 @@ class PoPStateService(
                 .build()
         }
         if (state is OperationState.EndorsementTransaction) {
-            builder.transaction = ByteString.copyFrom(state.endorsementTransaction.bitcoinSerialize())
+            builder.transaction = ByteString.copyFrom(state.endorsementTransactionBytes)
             builder.bitcoinTxId = state.endorsementTransaction.txId.toString()
         }
         if (state is OperationState.BlockOfProof) {
@@ -155,17 +155,13 @@ class PoPStateService(
             miningInstruction.endorsedBlockHeader = state.miningInstructions.endorsedBlockHeader.toByteArray()
             miningInstruction.lastBitcoinBlock = state.miningInstructions.lastBitcoinBlock.toByteArray()
             miningInstruction.minerAddress = state.miningInstructions.minerAddress.toByteArray()
-            miningInstruction.endorsedBlockContextHeaders = state.miningInstructions
-                .bitcoinContextAtEndorsedList
-                .stream()
-                .map { obj: ByteString -> obj.toByteArray() }
-                .collect(Collectors.toList())
+            miningInstruction.endorsedBlockContextHeaders = state.miningInstructions.bitcoinContextAtEndorsedList.map { it.toByteArray() }
             miningOperation.setMiningInstruction(miningInstruction)
         }
         if (state.transaction != null && state.transaction.size() > 0) {
             logger.info(miningOperation) { "Rebuilding transaction" }
             val transaction: Transaction = bitcoinService.makeTransaction(state.transaction.toByteArray())
-            miningOperation.setTransaction(transaction)
+            miningOperation.setTransaction(transaction, state.transaction.toByteArray())
             logger.info(miningOperation) { "Rebuilt transaction ${transaction.txId}" }
         }
         if (state.blockOfProof != null && state.blockOfProof.size() > 0) {

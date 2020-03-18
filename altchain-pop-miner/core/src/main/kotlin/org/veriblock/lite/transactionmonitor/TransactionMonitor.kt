@@ -15,7 +15,6 @@ import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
@@ -143,27 +142,6 @@ class TransactionMonitor(
             }
         }
         return relevantTransactions
-    }
-
-    fun onBlockChainDownloaded(blocks: Map<VBlakeHash, FullBlock>) {
-        lock.withLock {
-            for (tx in transactions.values) {
-                // TODO: Fix this
-                if (
-                    tx.transactionMeta.state === TransactionMeta.MetaState.CONFIRMED &&
-                    !blocks.containsKey(tx.transactionMeta.appearsInBestChainBlock)
-                ) {
-                    logger.warn { "The VBK transaction ${tx.id} appears in a block that's not known: ${tx.transactionMeta.appearsInBestChainBlock}" }
-                    tx.transactionMeta.setState(TransactionMeta.MetaState.UNKNOWN)
-                }
-            }
-
-            for (block in blocks.values) {
-                handleNewBlock(block)
-            }
-        }
-
-        save()
     }
 
     fun onBlockChainReorganized(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {

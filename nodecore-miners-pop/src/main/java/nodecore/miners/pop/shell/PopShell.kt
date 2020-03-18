@@ -10,11 +10,9 @@ package nodecore.miners.pop.shell
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.result.Result
 import nodecore.miners.pop.model.result.ResultMessage
-import org.jline.utils.AttributedStyle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.DiagnosticUtility
@@ -30,7 +28,6 @@ class PopShell(
 
     init {
         EventBus.popMinerReadyEvent.register(this, ::onPopMinerReady)
-        EventBus.popMiningOperationStateChangedEvent.register(this, ::onPopMiningOperationStateChanged)
         EventBus.walletSeedAgreementMissingEvent.register(this, ::onWalletSeedAgreementMissing)
     }
 
@@ -87,15 +84,6 @@ class PopShell(
             printInfo("**********************************************************************************************")
             printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
             printInfo("**********************************************************************************************")
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onPopMiningOperationStateChanged(operation: MiningOperation) {
-        try {
-            val operationId: String? = operation.id
-            printStyled("[$operationId] ${operation.state}", AttributedStyle.BOLD.foreground(AttributedStyle.CYAN))
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

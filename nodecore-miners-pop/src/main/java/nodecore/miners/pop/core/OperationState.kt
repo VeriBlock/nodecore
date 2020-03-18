@@ -65,7 +65,8 @@ sealed class OperationState {
 
     open class EndorsementTransaction(
         previous: Instruction,
-        override val endorsementTransaction: Transaction
+        override val endorsementTransaction: Transaction,
+        val endorsementTransactionBytes: ByteArray
     ) : Instruction(previous.miningInstruction) {
         override val type = OperationStateType.ENDORSEMEMT_TRANSACTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -74,7 +75,7 @@ sealed class OperationState {
 
     open class Confirmed(
         previous: EndorsementTransaction
-    ) : EndorsementTransaction(previous, previous.endorsementTransaction) {
+    ) : EndorsementTransaction(previous, previous.endorsementTransaction, previous.endorsementTransactionBytes) {
         override val type = OperationStateType.CONFIRMED
     }
 

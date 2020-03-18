@@ -8,11 +8,16 @@
 
 package nodecore.miners.pop.core
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import mu.KLogger
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.PopMiningInstruction
 import org.bitcoinj.core.Block
 import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import java.util.ArrayList
@@ -37,6 +42,21 @@ class MiningOperation(
 
     val timestamp = System.currentTimeMillis()
 
+    var job: Job? = null
+
+    val transactionConfidenceEventChannel = Channel<TransactionConfidence.ConfidenceType>(Channel.RENDEZVOUS)
+
+    private val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
+        if (
+            reason == TransactionConfidence.Listener.ChangeReason.TYPE && (
+                confidence.confidenceType == TransactionConfidence.ConfidenceType.PENDING ||
+                    confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING
+                )
+        ) {
+            transactionConfidenceEventChannel.offer(confidence.confidenceType)
+        }
+    }
+
     init {
         this.changeHistory = ArrayList(changeHistory)
     }
@@ -60,10 +80,23 @@ class MiningOperation(
         setState(OperationState.Instruction(miningInstruction))
     }
 
-    fun setTransaction(transaction: Transaction) {
+    fun setTransaction(transaction: Transaction, transactionBytes: ByteArray) {
         val currentState = state as? OperationState.Instruction
             ?: error("Trying to set transaction without having the mining instruction")
-        setState(OperationState.EndorsementTransaction(currentState, transaction))
+
+        val transactionState = OperationState.EndorsementTransaction(currentState, transaction, transactionBytes)
+        setState(transactionState)
+
+        transaction.confidence.addEventListener(transactionListener)
+        GlobalScope.launch {
+            for (confidenceType in transactionConfidenceEventChannel) {
+                if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
+                    EventBus.transactionSufferedReorgEvent.trigger(this@MiningOperation)
+                    // Reset the state to the endorsement transaction pending for confirmation
+                    setState(transactionState)
+                }
+            }
+        }
     }
 
     fun setConfirmed() {
@@ -111,12 +144,18 @@ class MiningOperation(
         logger.info { "Operation $id has completed!" }
         status = OperationStatus.COMPLETED
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
+
+        job = null
+        currentState.endorsementTransaction.confidence.removeEventListener(transactionListener)
     }
 
     fun fail(reason: String) {
         logger.warn { "Operation $id failed for reason: $reason" }
         status = OperationStatus.FAILED
         setState(OperationState.Failed(state, reason))
+
+        job = null
+        state.endorsementTransaction?.confidence?.removeEventListener(transactionListener)
     }
 
     private fun informStateChangedListeners(reason: OperationState) {

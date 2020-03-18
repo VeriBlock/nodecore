@@ -12,7 +12,6 @@ object EventBus {
     val fundsAddedEvent = EmptyEvent("Funds Added")
     val insufficientFundsEvent = EmptyEvent("Insufficient Funds")
     val newVeriBlockFoundEvent = Event<NewVeriBlockFoundEventDto>("New VeriBlock Found")
-    val filteredBlockAvailableEvent = Event<MiningOperation>("Filtered Block Available")
     val nodeCoreHealthyEvent = EmptyEvent("NodeCore Healthy")
     val nodeCoreUnhealthyEvent = EmptyEvent("NodeCore Unhealthy")
     val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore Synchronized")
@@ -23,6 +22,6 @@ object EventBus {
     val popMiningOperationStateChangedEvent = Event<MiningOperation>("PoP Mining Operation State Changed")
     val programQuitEvent = Event<Int>("Program Quit")
     val shellCompletedEvent = EmptyEvent("Shell Completed")
-    val transactionConfirmedEvent = Event<MiningOperation>("Trannsaction Confirmed")
     val walletSeedAgreementMissingEvent = EmptyEvent("Wallet Seed Agreement Missing")
+    val transactionSufferedReorgEvent = Event<MiningOperation>("Bitcoin transaction suffered a reorg")
 }

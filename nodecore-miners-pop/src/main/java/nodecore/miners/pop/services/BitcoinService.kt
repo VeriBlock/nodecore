@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.services
 
-import com.google.common.util.concurrent.FutureCallback
-import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.guava.asDeferred
+import kotlinx.coroutines.time.withTimeout
 import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
-import nodecore.miners.pop.Threading
 import nodecore.miners.pop.common.BitcoinNetwork
 import nodecore.miners.pop.events.CoinsReceivedEventDto
 import nodecore.miners.pop.events.EventBus
@@ -47,16 +47,15 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.veriblock.core.utilities.createLogger
 import java.io.File
+import java.time.Duration
 import java.util.ArrayList
 import java.util.Date
-import java.util.HashMap
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import java.util.function.Supplier
 
 private val logger = createLogger {}
 
@@ -64,9 +63,10 @@ private val EMPTY_OBJECT = Any()
 
 class BitcoinService(
     private val configuration: Configuration,
-    val context: Context,
-    private val blockCache: BitcoinBlockCache
+    val context: Context
 ) : BlocksDownloadedEventListener {
+
+    private val blockCache = AwaitableCache<String, FilteredBlock>(maxSize = 70)
 
     private var kit: WalletAppKit
 
@@ -204,8 +204,8 @@ class BitcoinService(
                     "Unable to delete corrupt SPV chain, please delete " + spvchain.absolutePath + "!"
                 )
                 throw CorruptSPVChain(
-                    "A corrupt SPV chain has been detected but could not be " + "deleted. Please delete " + spvchain.absolutePath +
-                        ", restart the PoP miner, and run 'resetwallet'!"
+                    "A corrupt SPV chain has been detected but could not be deleted. Please delete ${spvchain.absolutePath}," +
+                        " restart the PoP miner, and run 'resetwallet'!"
                 )
             }
         }
@@ -252,17 +252,18 @@ class BitcoinService(
     }
 
     @Throws(SendTransactionException::class)
-    fun createPoPTransaction(opReturnScript: Script): ListenableFuture<Transaction> {
-        return sendTxRequest(Supplier {
-            val tx = Transaction(kit.params())
-            tx.addOutput(Coin.ZERO, opReturnScript)
-            val request = SendRequest.forTx(tx)
-            request.ensureMinRequiredFee = configuration.isMinimumRelayFeeEnforced
-            request.changeAddress = wallet.currentChangeAddress()
-            request.feePerKb = getTransactionFeePerKB()
-            request.changeAddress = currentChangeAddress()
-            request
-        })
+    suspend fun createPoPTransaction(opReturnScript: Script): Transaction? {
+        return sendTxRequest {
+            val tx = Transaction(kit.params()).apply {
+                addOutput(Coin.ZERO, opReturnScript)
+            }
+            SendRequest.forTx(tx).apply {
+                ensureMinRequiredFee = configuration.isMinimumRelayFeeEnforced
+                changeAddress = wallet.currentChangeAddress()
+                feePerKb = getTransactionFeePerKB()
+                changeAddress = currentChangeAddress()
+            }
+        }
     }
 
     fun getBlock(hash: Sha256Hash): Block? {
@@ -282,44 +283,34 @@ class BitcoinService(
     val lastBlock: StoredBlock
         get() = blockChain.chainHead
 
-    fun getBestBlock(hashes: Collection<Sha256Hash>): Block? {
-        val storedBlocks = HashMap<Sha256Hash, StoredBlock>()
-        for (hash in hashes) {
-            try {
-                storedBlocks[hash] = blockStore[hash]
-            } catch (e: BlockStoreException) {
-                logger.error("Unable to get block from store", e)
+    fun getBestBlock(hashes: Set<Sha256Hash>): Block? {
+        // Check all given hashes exist
+        hashes.forEach { hash ->
+            if (blockStore.get(hash) == null) {
+                error("Unable to find bitcoin block $hash")
             }
         }
         var cursor = blockChain.chainHead
-        do {
-            if (storedBlocks.containsKey(cursor.header.hash)) {
-                return cursor.header
-            }
-            cursor = try {
-                cursor.getPrev(blockStore)
-            } catch (e: BlockStoreException) {
-                logger.error("Unable to get block from store", e)
-                break
-            }
-        } while (cursor != null)
-        return null
+        while (cursor.header.hash !in hashes) {
+            cursor = cursor.getPrev(blockStore)
+        }
+        return cursor.header
     }
 
     private val downloadLock = Any()
     private val blockDownloader = ConcurrentHashMap<String, ListenableFuture<Block>>()
 
-    fun getFilteredBlockFuture(hash: Sha256Hash): ListenableFuture<FilteredBlock> {
-        return blockCache.getAsync(hash.toString())
+    suspend fun getFilteredBlock(hash: Sha256Hash): FilteredBlock {
+        return blockCache.get(hash.toString())
     }
 
-    fun getPartialMerkleTree(hash: Sha256Hash): PartialMerkleTree? {
+    suspend fun getPartialMerkleTree(hash: Sha256Hash): PartialMerkleTree? {
         try {
             logger.info("Awaiting block {}...", hash.toString())
-            val block = blockCache.getAsync(hash.toString())[configuration.actionTimeout.toLong(), TimeUnit.SECONDS]
-            if (block != null) {
-                return block.partialMerkleTree
+            val block = withTimeout(Duration.ofSeconds(configuration.actionTimeout.toLong())) {
+                blockCache.get(hash.toString())
             }
+            return block.partialMerkleTree
         } catch (e: TimeoutException) {
             logger.debug("Unable to download Bitcoin block", e)
         } catch (e: InterruptedException) {
@@ -394,20 +385,17 @@ class BitcoinService(
         return reconstitutedTx
     }
 
-    @Throws(SendTransactionException::class)
-    fun sendCoins(address: String, amount: Coin): Transaction {
+    suspend fun sendCoins(address: String, amount: Coin): Transaction? {
         return try {
-            sendTxRequest(Supplier {
-                val sendRequest = SendRequest.to(
+            sendTxRequest {
+                SendRequest.to(
                     Address.fromString(kit.params(), address), amount
-                )
-                sendRequest.changeAddress = wallet.currentChangeAddress()
-                sendRequest.feePerKb = getTransactionFeePerKB()
-                sendRequest
-            }).get()
-        } catch (e: InterruptedException) {
-            throw SendTransactionException(e)
-        } catch (e: ExecutionException) {
+                ).apply {
+                    changeAddress = wallet.currentChangeAddress()
+                    feePerKb = getTransactionFeePerKB()
+                }
+            }
+        } catch (e: CancellationException) {
             throw SendTransactionException(e)
         }
     }
@@ -485,13 +473,13 @@ class BitcoinService(
     }
 
     @Throws(SendTransactionException::class)
-    private fun sendTxRequest(requestBuilder: Supplier<SendRequest>): ListenableFuture<Transaction> {
+    private suspend fun sendTxRequest(requestBuilder: () -> SendRequest): Transaction? {
         try {
             acquireTxLock()
         } catch (e: UnableToAcquireTransactionLock) {
             throw SendTransactionException(e)
         }
-        val request = requestBuilder.get()
+        val request = requestBuilder()
         try {
             // WalletShim is a temporary solution until improvements present in bitcoinj's master branch
             // are packaged into a published release
@@ -502,9 +490,7 @@ class BitcoinService(
             if (txBroadcastAudit.containsKey(request.tx.txId.toString())) {
                 throw DuplicateTransactionException()
             }
-            logger.info(
-                "Created transaction spending " + request.tx.inputs.size + " inputs:"
-            )
+            logger.info("Created transaction spending ${request.tx.inputs.size} inputs:")
             for (i in request.tx.inputs.indices) {
                 logger.info(
                     "\t" + request.tx.inputs[i].outpoint.hash.toString() + ":" +
@@ -523,22 +509,15 @@ class BitcoinService(
         val broadcast = kit.peerGroup().broadcastTransaction(request.tx)
         txBroadcastAudit[request.tx.txId.toString()] = EMPTY_OBJECT
 
-        // Add a callback that releases the semaphore permit
-        Futures.addCallback(
-            broadcast.future(), object : FutureCallback<Transaction?> {
-            override fun onSuccess(result: Transaction?) {
-                releaseTxLock()
-            }
+        val deferredTransaction = broadcast.future().asDeferred()
 
-            override fun onFailure(t: Throwable) {
-                releaseTxLock()
-            }
-        }, Threading.TASK_POOL
-        )
-        logger.info(
-            "Awaiting confirmation of broadcast of Tx {}", request.tx.txId.toString()
-        )
-        return broadcast.future()
+        // Add a callback that releases the semaphore permit
+        deferredTransaction.invokeOnCompletion {
+            releaseTxLock()
+        }
+
+        logger.info { "Awaiting confirmation of broadcast of Tx ${request.tx.txId}" }
+        return deferredTransaction.await()
     }
 
     @Throws(UnableToAcquireTransactionLock::class)

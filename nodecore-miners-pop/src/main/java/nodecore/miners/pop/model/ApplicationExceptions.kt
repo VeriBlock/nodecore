@@ -9,10 +9,10 @@ package nodecore.miners.pop.model
 class ApplicationExceptions {
     class ExceededMaxTransactionFee : RuntimeException()
     class PoPSubmitRejected : RuntimeException()
-    class CorruptSPVChain(message: String?) : RuntimeException(message)
+    class CorruptSPVChain(message: String) : RuntimeException(message)
     class UnableToAcquireTransactionLock : RuntimeException()
     class DuplicateTransactionException : RuntimeException()
-    class SendTransactionException(inner: Exception?) : RuntimeException() {
+    class SendTransactionException(inner: Exception) : RuntimeException(inner) {
         init {
             this.addSuppressed(inner)
         }
