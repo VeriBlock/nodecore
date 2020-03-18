@@ -117,7 +117,7 @@ public class SpvContext {
             addressManager.load(walletFile);
 
             peerTable = new PeerTableImpl(this, p2PService, peerDiscovery);
-            transactionService = new TransactionService(addressManager);
+            transactionService = new TransactionService(addressManager, networkParameters);
             adminApiService =
                 new AdminApiServiceImpl(this, peerTable, transactionService, addressManager, new TransactionFactoryImpl(networkParameters),
                     pendingTransactionContainer, blockchain

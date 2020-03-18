@@ -43,4 +43,5 @@ public interface AdminApiService {
 
     VeriBlockMessages.GetBalanceReply getBalance(VeriBlockMessages.GetBalanceRequest request);
 
+    VeriBlockMessages.CreateAltChainEndorsementReply createAltChainEndorsement(VeriBlockMessages.CreateAltChainEndorsementRequest request);
 }

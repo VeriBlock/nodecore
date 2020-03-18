@@ -83,9 +83,8 @@ public class AdminApiServiceImplTest {
                 ArgumentMatchers.anyInt()
             )).thenReturn(500);
         when(transactionService
-            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
-                ArgumentMatchers.any()
-            )).thenReturn(transaction);
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
+            .thenReturn(transaction);
         when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
         doNothing().when(peerTable).advertise(ArgumentMatchers.any());
 
@@ -96,9 +95,7 @@ public class AdminApiServiceImplTest {
                 ArgumentMatchers.anyInt()
             );
         verify(transactionService, times(1))
-            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
-                ArgumentMatchers.any()
-            );
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong());
         verify(transactionContainer, times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
         verify(peerTable,  times(1)).advertise(ArgumentMatchers.any());
 
