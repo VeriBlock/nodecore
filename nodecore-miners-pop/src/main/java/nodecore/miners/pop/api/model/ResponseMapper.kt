@@ -33,7 +33,7 @@ fun PopMiningOperationStateDto.toResponse() = OperationDetailResponse(
 private fun PopMiningInstruction.toResponse() = PoPDataResponse(
     publicationData = publicationData.mapHex(),
     endorsedBlockHeader = endorsedBlockHeader.mapHex(),
-    minerAddress = minerAddress.mapBase58()
+    minerAddress = minerAddress
 )
 
 fun OperationSummary.toResponse() = OperationSummaryResponse(

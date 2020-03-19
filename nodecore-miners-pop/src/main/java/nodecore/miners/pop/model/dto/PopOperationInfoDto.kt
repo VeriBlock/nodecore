@@ -7,10 +7,8 @@
 package nodecore.miners.pop.model.dto
 
 import com.google.gson.annotations.SerializedName
-import nodecore.miners.pop.common.Utility
-import org.bitcoinj.core.Base58
 import org.veriblock.core.crypto.Crypto
-import java.util.stream.Collectors
+import org.veriblock.core.utilities.extensions.toHex
 
 class PopOperationInfoDto(state: PopMiningOperationStateDto) {
     @SerializedName("operation_id")
@@ -64,9 +62,9 @@ class PopOperationInfoDto(state: PopMiningOperationStateDto) {
         detail = state.detail
         currentAction = if (state.currentAction != null) state.currentAction.toString() else null
         if (state.miningInstruction != null) {
-            popPublicationData = Utility.bytesToHex(state.miningInstruction.publicationData)
-            endorsedBlockHeader = Utility.bytesToHex(state.miningInstruction.endorsedBlockHeader)
-            minerAddress = Base58.encode(state.miningInstruction.minerAddress)
+            popPublicationData = state.miningInstruction.publicationData.toHex()
+            endorsedBlockHeader = state.miningInstruction.endorsedBlockHeader.toHex()
+            minerAddress = state.miningInstruction.minerAddress
             endorsedBlockHash = Crypto().vBlakeReturnHex(state.miningInstruction.endorsedBlockHeader)
         } else {
             popPublicationData = null
@@ -74,22 +72,12 @@ class PopOperationInfoDto(state: PopMiningOperationStateDto) {
             minerAddress = null
             endorsedBlockHash = null
         }
-        bitcoinTransaction = if (state.transaction != null) Utility.bytesToHex(state.transaction) else null
+        bitcoinTransaction = state.transaction?.toHex()
         bitcoinTransactionId = state.submittedTransactionId
-        bitcoinBlockHeaderOfProof = if (state.bitcoinBlockHeaderOfProof != null) Utility.bytesToHex(
-            state.bitcoinBlockHeaderOfProof
-        ) else null
-        bitcoinContextBlocks = if (state.bitcoinContextBlocks != null) state.bitcoinContextBlocks.stream().map { bytes: ByteArray? ->
-            Utility.bytesToHex(
-                bytes
-            )
-        }.collect(Collectors.toList()) else null
+        bitcoinBlockHeaderOfProof = state.bitcoinBlockHeaderOfProof?.toHex()
+        bitcoinContextBlocks = state.bitcoinContextBlocks?.map { it.toHex() }
         bitcoinMerklePath = state.merklePath
-        alternateBlocksOfProof = if (state.alternateBlocksOfProof != null) state.alternateBlocksOfProof.stream().map { bytes: ByteArray? ->
-            Utility.bytesToHex(
-                bytes
-            )
-        }.collect(Collectors.toList()) else null
+        alternateBlocksOfProof = state.alternateBlocksOfProof?.map { it.toHex() }
         popTransactionId = state.popTransactionId
     }
 }

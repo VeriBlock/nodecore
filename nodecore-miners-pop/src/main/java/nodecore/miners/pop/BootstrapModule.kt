@@ -26,8 +26,18 @@ import org.veriblock.shell.CommandFactory
 
 @JvmField
 val bootstrapModule = module {
-    single { ProgramOptions() }
-    single { Configuration(get()) }
+    single {
+        val args = getProperty<String>("args").split(" ").toTypedArray()
+        ProgramOptions().apply {
+            parse(args)
+        }
+    }
+    single {
+        Configuration(get()).apply {
+            load()
+            save()
+        }
+    }
 
     single {
         val configuration: Configuration = get()

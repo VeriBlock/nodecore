@@ -2,7 +2,14 @@ package nodecore.miners.pop.tasks
 
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.time.withTimeout
 import nodecore.miners.pop.common.BitcoinMerklePath
 import nodecore.miners.pop.common.BitcoinMerkleTree
 import nodecore.miners.pop.common.MerkleProof
@@ -18,13 +25,12 @@ import nodecore.miners.pop.model.ExpTransaction
 import nodecore.miners.pop.model.PopMiningTransaction
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService
-import org.bitcoinj.core.Block
 import org.bitcoinj.core.InsufficientMoneyException
 import org.bitcoinj.core.TransactionConfidence
 import org.bitcoinj.wallet.Wallet
 import org.veriblock.core.utilities.createLogger
+import java.time.Duration
 import java.util.ArrayList
-import java.util.Arrays
 
 private val logger = createLogger {}
 
@@ -39,13 +45,16 @@ suspend fun runTasks(
     }
 
     try {
-        operation.runTask("Retrieve Mining Instruction from NodeCore", OperationStateType.INSTRUCTION) {
-            /* Get the PoPMiningInstruction, consisting of the 80 bytes of data that VeriBlock will pay the PoP miner
-             * to publish to Bitcoin (includes 64-byte VB header and 16-byte miner ID) as well as the
-             * PoP miner's address
-             */
+        operation.runTask(
+            taskName = "Retrieve Mining Instruction from NodeCore",
+            targetState = OperationStateType.INSTRUCTION,
+            timeout = 10.sec
+        ) {
+            // Get the PoPMiningInstruction, consisting of the 80 bytes of data that VeriBlock will pay the PoP miner
+            // to publish to Bitcoin (includes 64-byte VB header and 16-byte miner ID) as well as the
+            // PoP miner's address
             try {
-                val popReply = nodeCoreService.getPop(operation.blockHeight)
+                val popReply = nodeCoreService.getPop(operation.endorsedBlockHeight)
                 if (popReply.success) {
                     operation.setMiningInstruction(popReply.result!!)
                 } else {
@@ -55,7 +64,11 @@ suspend fun runTasks(
                 error("Failed to get PoP publication data from NodeCore: ${e.status}")
             }
         }
-        operation.runTask("Create Bitcoin Endorsement Transaction", OperationStateType.ENDORSEMEMT_TRANSACTION) {
+        operation.runTask(
+            taskName = "Create Bitcoin Endorsement Transaction",
+            targetState = OperationStateType.ENDORSEMEMT_TRANSACTION,
+            timeout = 5.min
+        ) {
             val miningInstruction = (operation.state as OperationState.Instruction).miningInstruction
             val opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData)
             try {
@@ -74,7 +87,7 @@ suspend fun runTasks(
                         error("Create Bitcoin transaction returned no transaction")
                     }
                 } catch (t: Throwable) {
-                    error("A problem occurred broadcasting the transaction to the peer group")
+                    error("A problem occurred broadcasting the transaction to the peer group: ${t.message ?: "Unknown"}")
                 }
             } catch (e: ApplicationExceptions.SendTransactionException) {
                 for (t in e.suppressed) {
@@ -109,20 +122,26 @@ suspend fun runTasks(
                 }
             }
         }
-        operation.runTask("Confirm Transaction", OperationStateType.CONFIRMED) {
+        operation.runTask(
+            taskName = "Confirm Transaction",
+            targetState = OperationStateType.CONFIRMED,
+            timeout = 1.hr
+        ) {
             val state = operation.state as? OperationState.EndorsementTransaction
                 ?: failTask("The operation has no transaction set!")
 
             if (state.endorsementTransaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
                 // Wait for the transaction to be ready
-                do {
-                    val transactionConfidence = operation.transactionConfidenceEventChannel.receive()
-                } while (transactionConfidence != TransactionConfidence.ConfidenceType.BUILDING)
+                operation.transactionConfidenceEventChannel.asFlow().first { it == TransactionConfidence.ConfidenceType.BUILDING }
             }
 
             operation.setConfirmed()
         }
-        operation.runTask("Determine Block of Proof", OperationStateType.BLOCK_OF_PROOF) {
+        operation.runTask(
+            taskName = "Determine Block of Proof",
+            targetState = OperationStateType.BLOCK_OF_PROOF,
+            timeout = 20.sec
+        ) {
             val state = operation.state as? OperationState.Confirmed
                 ?: failTask("The operation has no transaction set!")
 
@@ -134,10 +153,14 @@ suspend fun runTasks(
 
             operation.setBlockOfProof(bestBlock)
 
-            // Wait for the actual block appearing in the blockchain
+            // Wait for the actual block appearing in the blockchain (it should already be there given the transaction is confirmed)
             bitcoinService.getFilteredBlock(bestBlock.hash)
         }
-        operation.runTask("Prove Transaction", OperationStateType.PROVEN) {
+        operation.runTask(
+            taskName = "Prove Transaction",
+            targetState = OperationStateType.PROVEN,
+            timeout = 20.sec
+        ) {
             val state = operation.state as? OperationState.BlockOfProof
                 ?: failTask("Trying to prove transaction without block of proof!")
 
@@ -192,46 +215,46 @@ suspend fun runTasks(
                 error(failureReason)
             }
         }
-        operation.runTask("Build Publication Context", OperationStateType.CONTEXT) {
+        operation.runTask(
+            taskName = "Build Publication Context",
+            targetState = OperationStateType.CONTEXT,
+            timeout = 2.min
+        ) {
             val state = operation.state as? OperationState.Proven
                 ?: error("Trying to build context without having proven the transaction!")
 
-            val contextChainProvided = state.miningInstruction.endorsedBlockContextHeaders != null &&
-                state.miningInstruction.endorsedBlockContextHeaders.size > 0
-            val context = ArrayList<Block>()
-            var found: Boolean
-            var current = state.blockOfProof
-            do {
-                val previous = bitcoinService.getBlock(current.prevBlockHash)
-                    ?: error("Could not retrieve block '${current.prevBlockHash}'")
-                if (contextChainProvided) {
-                    found = state.miningInstruction.endorsedBlockContextHeaders.stream()
-                        .anyMatch { header: ByteArray? ->
-                            Arrays.equals(
-                                header, Utility.serializeBlock(previous)
-                            )
-                        }
-                    logger.info(
-                        "{} block {} in endorsed block context headers", if (found) "Found" else "Did not find", previous.hashAsString
-                    )
+            val contextChainProvided = state.miningInstruction.endorsedBlockContextHeaders.isNotEmpty()
+            // Get all the previous blocks until we find
+            val context = generateSequence(state.blockOfProof) { block ->
+                bitcoinService.getBlock(block.prevBlockHash)
+                    ?: error("Could not retrieve block '${block.prevBlockHash}'")
+            }.drop(1).takeWhile { block ->
+                val found = if (contextChainProvided) {
+                    state.miningInstruction.endorsedBlockContextHeaders.any {
+                        it.contentEquals(block.bitcoinSerialize())
+                    }
                 } else {
-                    val blockIndex = nodeCoreService.getBitcoinBlockIndex(Utility.serializeBlock(previous))
-                    found = blockIndex != null
-                    logger.info(
-                        "{} block {} in search of current NodeCore view", if (found) "Found" else "Did not find", previous.hashAsString
-                    )
+                    val blockIndex = nodeCoreService.getBitcoinBlockIndex(Utility.serializeBlock(block))
+                    blockIndex != null
                 }
-                if (!found) {
-                    context.add(0, previous)
+                logger.debug {
+                    val prefix = if (found) "Found" else "Did not find"
+                    val where = if (contextChainProvided) "endorsed block context headers" else "search of current NodeCore view"
+                    "$prefix block ${block.hashAsString} in $where"
                 }
-                current = previous
-            } while (!found)
+                !found
+            }.toList().reversed()
             operation.setContext(context)
         }
-        operation.runTask("Submit PoP Endorsement", OperationStateType.SUBMITTED_POP_DATA) {
+        operation.runTask(
+            taskName = "Submit PoP Endorsement",
+            targetState = OperationStateType.SUBMITTED_POP_DATA,
+            timeout = 30.sec
+        ) {
+            val state = operation.state as? OperationState.Context
+                ?: error("Trying to submit PoP endorsement without a publication context")
+
             try {
-                val state = operation.state as? OperationState.Context
-                    ?: error("Trying to submit PoP endorsement without a publication context")
                 val popMiningTransaction = PopMiningTransaction(
                     state.miningInstruction, state.endorsementTransactionBytes, state.merklePath,
                     state.blockOfProof, state.bitcoinContextBlocks
@@ -246,8 +269,49 @@ suspend fun runTasks(
                 failTask("Unable to submit PoP transaction to NodeCore. Check that NodeCore RPC is available and resubmit operation.")
             }
         }
+        operation.runTask(
+            taskName = "Confirm VBK Endorsement Transaction",
+            targetState = OperationStateType.VBK_ENDORSEMENT_TRANSACTION_CONFIRMED,
+            timeout = 1.hr
+        ) {
+            val state = operation.state as? OperationState.SubmittedPopData
+                ?: error("Trying to confirm VBK Endorsement Transaction without having submitted it")
 
-        // TODO: more tasks
+            // Wait for the endorsement transaction to have enough confirmations
+            do {
+                delay(5000)
+                val confirmations = nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
+            } while (confirmations == null || confirmations < 10)
+
+            operation.setVbkEndorsementTransactionConfirmed()
+        }
+        operation.runTask(
+            taskName = "Confirm Payout Block",
+            targetState = OperationStateType.COMPLETE,
+            timeout = 10.hr
+        ) {
+            val state = operation.state as? OperationState.SubmittedPopData
+                ?: error("Trying to confirm Payout without having submitted PoP Data")
+
+            val endorsedBlockHeight = operation.endorsedBlockHeight
+                ?: error("Trying to wait for the payout block without having the endorsed block height set")
+
+            val payoutBlockIndex = endorsedBlockHeight + 500
+            val payoutAddress = state.miningInstruction.minerAddress
+
+            // Wait for the payout block
+            val payoutBlockHash = flow {
+                emit(nodeCoreService.getBlockHash(payoutBlockIndex))
+            }.onEach {
+                delay(5000)
+            }.filterNotNull().first()
+
+            val endorsementInfo = nodeCoreService.getPopEndorsementInfo().find {
+                it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
+            } ?: error("Could not find block endorsement info after waiting for the payout block!")
+
+            operation.complete(payoutBlockHash, endorsementInfo.reward)
+        }
 
         EventBus.popMiningOperationCompletedEvent.trigger(operation.id)
     } catch (e: CancellationException) {
@@ -261,11 +325,12 @@ private const val MAX_TASK_RETRIES = 10
 
 private suspend inline fun MiningOperation.runTask(
     taskName: String,
-    targetStateType: OperationStateType,
-    block: () -> Unit
+    targetState: OperationStateType,
+    timeout: Duration,
+    crossinline block: suspend () -> Unit
 ) {
     // Check if this operation needs to run this task first
-    if (state hasType targetStateType) {
+    if (state hasType targetState) {
         return
     }
 
@@ -273,7 +338,9 @@ private suspend inline fun MiningOperation.runTask(
     var attempts = 1
     do {
         try {
-            block()
+            withTimeout(timeout) {
+                block()
+            }
             success = true
         } catch (e: TaskException) {
             logger.warn(this) { "Task '$taskName' has failed: ${e.message}" }
@@ -287,6 +354,8 @@ private suspend inline fun MiningOperation.runTask(
                 logger.warn(this) { "Maximum reattempt amount exceeded for task '$taskName'" }
                 throw e
             }
+        } catch (e: TimeoutCancellationException) {
+            error("Operation has been cancelled for taking too long during task '$taskName'.")
         }
     } while (!success)
 }
@@ -299,3 +368,7 @@ class TaskException(message: String) : RuntimeException(message)
 private inline fun failTask(reason: String): Nothing {
     throw TaskException(reason)
 }
+
+private inline val Int.sec get() = Duration.ofSeconds(this.toLong())
+private inline val Int.min get() = Duration.ofMinutes(this.toLong())
+private inline val Int.hr get() = Duration.ofHours(this.toLong())

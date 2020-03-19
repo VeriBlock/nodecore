@@ -60,7 +60,7 @@ sealed class OperationState {
     ) : OperationState() {
         override val type = OperationStateType.INSTRUCTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            miningInstruction.getDetailedInfo()
+            miningInstruction.detailedInfo
     }
 
     open class EndorsementTransaction(
@@ -125,7 +125,7 @@ sealed class OperationState {
     class Completed(
         previous: VbkEndorsementTransactionConfirmed,
         val payoutBlockHash: String,
-        val payoutAmount: Double
+        val payoutAmount: String
     ) : VbkEndorsementTransactionConfirmed(previous) {
         override val type = OperationStateType.COMPLETE
         override fun getDetailedInfo() = super.getDetailedInfo() + listOf(

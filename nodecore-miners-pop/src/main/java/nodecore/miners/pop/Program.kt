@@ -40,18 +40,17 @@ class Program {
         print(SharedConstants.LICENSE)
         Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdownSignal.countDown() }))
         val startupInjector = startKoin {
-            modules(listOf(
-                bootstrapModule,
-                repositoriesModule,
-                rulesModule,
-                webApiModule
-            ))
+            properties(mapOf("args" to args.joinToString(separator = " ")))
+            modules(
+                listOf(
+                    bootstrapModule,
+                    repositoriesModule,
+                    rulesModule,
+                    webApiModule
+                )
+            )
         }.koin
-        val options: ProgramOptions = startupInjector.get()
-        options.parse(args)
         val configuration: Configuration = startupInjector.get()
-        configuration.load()
-        configuration.save()
         val context: Context = startupInjector.get()
         Threading.ignoreLockCycles()
         Threading.USER_THREAD = Executor { command: Runnable ->

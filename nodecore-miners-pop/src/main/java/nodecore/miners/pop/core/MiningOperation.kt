@@ -10,6 +10,7 @@ package nodecore.miners.pop.core
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import mu.KLogger
@@ -30,7 +31,8 @@ class MiningOperation(
     val id: String = UUID.randomUUID().toString().substring(0, 8),
     changeHistory: List<StateChangeEvent> = emptyList(),
     status: OperationStatus = OperationStatus.UNKNOWN,
-    var blockHeight: Int? = null
+    var endorsedBlockHeight: Int? = null,
+    var reconstituting: Boolean = false
 ) {
     private val changeHistory: MutableList<StateChangeEvent>
 
@@ -44,7 +46,7 @@ class MiningOperation(
 
     var job: Job? = null
 
-    val transactionConfidenceEventChannel = Channel<TransactionConfidence.ConfidenceType>(Channel.RENDEZVOUS)
+    val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 
     private val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
         if (
@@ -71,12 +73,14 @@ class MiningOperation(
 
     private fun setState(state: OperationState) {
         this.state = state
-        logger.debug(this) { "New state: $state" }
-        informStateChangedListeners(state)
+        if (!reconstituting) {
+            logger.debug(this) { "New state: $state" }
+            informStateChangedListeners(state)
+        }
     }
 
     fun setMiningInstruction(miningInstruction: PopMiningInstruction) {
-        blockHeight = miningInstruction.endorsedBlockHeight
+        endorsedBlockHeight = miningInstruction.endorsedBlockHeight
         setState(OperationState.Instruction(miningInstruction))
     }
 
@@ -89,7 +93,7 @@ class MiningOperation(
 
         transaction.confidence.addEventListener(transactionListener)
         GlobalScope.launch {
-            for (confidenceType in transactionConfidenceEventChannel) {
+            for (confidenceType in transactionConfidenceEventChannel.openSubscription()) {
                 if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
                     EventBus.transactionSufferedReorgEvent.trigger(this@MiningOperation)
                     // Reset the state to the endorsement transaction pending for confirmation
@@ -113,19 +117,19 @@ class MiningOperation(
 
     fun setMerklePath(merklePath: String) {
         val currentState = state as? OperationState.BlockOfProof
-            ?: error("Trying to set merkle path without the block of proof without")
+            ?: error("Trying to set merkle path without the block of proof")
         setState(OperationState.Proven(currentState, merklePath))
     }
 
     fun setContext(context: List<Block>) {
         val currentState = state as? OperationState.Proven
-            ?: error("Trying to set Bitcoin context without the block of proof")
+            ?: error("Trying to set Bitcoin context without the merkle path")
         setState(OperationState.Context(currentState, context))
     }
 
     fun setProofOfProofId(proofOfProofId: String) {
         val currentState = state as? OperationState.Context
-            ?: error("Trying to set Proof of Proof id without having the publication data")
+            ?: error("Trying to set Proof of Proof id without having the context")
         setState(OperationState.SubmittedPopData(currentState, proofOfProofId))
     }
 
@@ -135,7 +139,7 @@ class MiningOperation(
         setState(OperationState.VbkEndorsementTransactionConfirmed(currentState))
     }
 
-    fun complete(payoutBlockHash: String, payoutAmount: Double) {
+    fun complete(payoutBlockHash: String, payoutAmount: String) {
         val currentState = state
         if (currentState !is OperationState.VbkEndorsementTransactionConfirmed) {
             fail("Trying to mark the process as complete without having submitted the PoP data")
@@ -145,8 +149,7 @@ class MiningOperation(
         status = OperationStatus.COMPLETED
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
 
-        job = null
-        currentState.endorsementTransaction.confidence.removeEventListener(transactionListener)
+        stopJob()
     }
 
     fun fail(reason: String) {
@@ -154,6 +157,13 @@ class MiningOperation(
         status = OperationStatus.FAILED
         setState(OperationState.Failed(state, reason))
 
+        stopJob()
+    }
+
+    fun isFailed() = status == OperationStatus.FAILED || state is OperationState.Failed
+
+    fun stopJob() {
+        job?.cancel()
         job = null
         state.endorsementTransaction?.confidence?.removeEventListener(transactionListener)
     }

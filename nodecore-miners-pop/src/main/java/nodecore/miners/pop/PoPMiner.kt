@@ -179,7 +179,7 @@ class PoPMiner(
             )
             return result
         }
-        val operation = MiningOperation(operationId, blockHeight = blockNumber)
+        val operation = MiningOperation(operationId, endorsedBlockHeight = blockNumber)
         operations.putIfAbsent(operationId, operation)
         operation.begin()
         processManager.submit(operation)
@@ -408,10 +408,13 @@ class PoPMiner(
         logger.info("Found {} operations to restore", preservedOperations.size)
         for (miningOperation in preservedOperations) {
             try {
+                if (!miningOperation.isFailed()) {
+                    processManager.submit(miningOperation)
+                }
                 operations[miningOperation.id] = miningOperation
-                logger.info("Successfully restored operation {}", miningOperation.id)
+                logger.debug("Successfully restored operation {}", miningOperation.id)
             } catch (e: Exception) {
-                logger.error("Unable to restore previous operation {}", miningOperation.id)
+                logger.warn("Unable to restore previous operation {}", miningOperation.id)
             }
         }
         stateRestored = true
@@ -529,9 +532,9 @@ class PoPMiner(
         for (key in HashSet(operations.keys)) {
             val operation = operations[key]
             val operationState = operation?.state
-            val blockHeight = operation?.blockHeight ?: -1
+            val blockHeight = operation?.endorsedBlockHeight ?: -1
             if (
-                operationState != null && operationState !is OperationState.Confirmed &&
+                operationState != null && operationState !is OperationState.Failed && operationState !is OperationState.Confirmed &&
                 blockHeight < event.block.getHeight() - Constants.POP_SETTLEMENT_INTERVAL
             ) {
                 operation.fail("Endorsement of block $blockHeight is no longer relevant")

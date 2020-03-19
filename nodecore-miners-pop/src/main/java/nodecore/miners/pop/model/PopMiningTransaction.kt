@@ -25,5 +25,5 @@ class PopMiningTransaction(
         Utility.serializeBlock(it)
     }.toTypedArray()
 
-    val popMinerAddress: ByteArray = popMiningInstruction.minerAddress
+    val popMinerAddress: ByteArray = popMiningInstruction.minerAddressBytes
 }

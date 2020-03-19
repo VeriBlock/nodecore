@@ -30,7 +30,8 @@ import nodecore.miners.pop.model.PopMiningTransaction
 import nodecore.miners.pop.model.VeriBlockHeader
 import nodecore.miners.pop.model.result.Result
 import org.veriblock.core.utilities.createLogger
-import java.util.ArrayList
+import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.toHex
 import java.util.Arrays
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -130,16 +131,14 @@ class NodeCoreService(
         val result = NodeCoreReply<PopMiningInstruction>()
         if (reply.success) {
             result.success = true
-            val instruction = PopMiningInstruction()
-            instruction.publicationData = reply.fullPop.toByteArray()
-            instruction.minerAddress = reply.popMinerAddress.toByteArray()
-            instruction.lastBitcoinBlock = reply.lastKnownBlock.header.toByteArray()
-            instruction.endorsedBlockHeader = Arrays.copyOfRange(instruction.publicationData, 0, 64)
-            if (reply.lastKnownBlockContextCount > 0) {
-                instruction.endorsedBlockContextHeaders = reply.lastKnownBlockContextList.map { it.header.toByteArray() }
-            } else {
-                instruction.endorsedBlockContextHeaders = ArrayList()
-            }
+            val publicationData = reply.fullPop.toByteArray()
+            val instruction = PopMiningInstruction(
+                publicationData = publicationData,
+                minerAddressBytes = reply.popMinerAddress.toByteArray(),
+                lastBitcoinBlock = reply.lastKnownBlock.header.toByteArray(),
+                endorsedBlockHeader = Arrays.copyOfRange(publicationData, 0, 64),
+                endorsedBlockContextHeaders = reply.lastKnownBlockContextList.map { it.header.toByteArray() }
+            )
             result.result = instruction
         } else {
             result.success = false
@@ -161,15 +160,15 @@ class NodeCoreService(
         val blockOfProofBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
         blockOfProofBuilder.header = ByteString.copyFrom(popMiningTransaction.bitcoinBlockHeaderOfProof)
         val request = VeriBlockMessages.SubmitPopRequest.newBuilder().apply {
-            setEndorsedBlockHeader(ByteString.copyFrom(popMiningTransaction.endorsedBlockHeader))
-            setBitcoinTransaction(ByteString.copyFrom(popMiningTransaction.bitcoinTransaction))
-            setBitcoinMerklePathToRoot(ByteString.copyFrom(popMiningTransaction.bitcoinMerklePathToRoot))
+            endorsedBlockHeader = ByteString.copyFrom(popMiningTransaction.endorsedBlockHeader)
+            bitcoinTransaction = ByteString.copyFrom(popMiningTransaction.bitcoinTransaction)
+            bitcoinMerklePathToRoot = ByteString.copyFrom(popMiningTransaction.bitcoinMerklePathToRoot)
             setBitcoinBlockHeaderOfProof(blockOfProofBuilder)
-            setAddress(ByteString.copyFrom(popMiningTransaction.popMinerAddress))
+            address = ByteString.copyFrom(popMiningTransaction.popMinerAddress)
             for (contextBlockHeader in popMiningTransaction.bitcoinContextBlocks) {
-                val contextBlockBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
-                contextBlockBuilder.header = ByteString.copyFrom(contextBlockHeader)
-                val header = contextBlockBuilder.build()
+                val header = VeriBlockMessages.BitcoinBlockHeader.newBuilder().apply {
+                    header = ByteString.copyFrom(contextBlockHeader)
+                }.build()
                 addContextBitcoinBlockHeaders(header)
             }
         }.build()
@@ -180,10 +179,21 @@ class NodeCoreService(
         throw PoPSubmitRejected()
     }
 
+    fun getTransactionConfirmationsById(txId: String): Int? {
+        val request = VeriBlockMessages.GetTransactionsRequest.newBuilder().apply {
+            addIds(ByteString.copyFrom(txId.asHexBytes()))
+        }.build()
+        val reply = blockingStub
+            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .getTransactions(request)
+
+        return reply.transactionsList.firstOrNull()?.confirmations
+    }
+
     fun getPopEndorsementInfo(): List<PopEndorsementInfo> {
-        val request = VeriBlockMessages.GetPoPEndorsementsInfoRequest.newBuilder().setSearchLength(
-            750
-        ).build()
+        val request = VeriBlockMessages.GetPoPEndorsementsInfoRequest.newBuilder().apply {
+            searchLength = 750
+        }.build()
         val reply = blockingStub.getPoPEndorsementsInfo(request)
         return reply.popEndorsementsList.map {
             PopEndorsementInfo(it)
@@ -191,9 +201,10 @@ class NodeCoreService(
     }
 
     fun getBitcoinBlockIndex(blockHeader: ByteArray?): Int? {
-        val request = VeriBlockMessages.GetBitcoinBlockIndexRequest.newBuilder().setBlockHeader(
-            ByteString.copyFrom(blockHeader)
-        ).setSearchLength(20).build()
+        val request = VeriBlockMessages.GetBitcoinBlockIndexRequest.newBuilder().apply {
+            setBlockHeader(ByteString.copyFrom(blockHeader))
+            searchLength = 20
+        }.build()
         val reply = blockingStub.getBitcoinBlockIndex(request)
         return if (reply.success && reply.resultsCount > 0) {
             reply.getResults(0).details.toInt()
@@ -211,6 +222,29 @@ class NodeCoreService(
             .withDeadlineAfter(10, TimeUnit.SECONDS)
             .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
         return VeriBlockHeader(reply.header.header.toByteArray())
+    }
+
+    private fun getBlockAtIndex(): VeriBlockHeader {
+        val reply = blockingStub
+            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
+        return VeriBlockHeader(reply.header.header.toByteArray())
+    }
+
+    fun getBlockHash(height: Int): String? {
+        val request = VeriBlockMessages.GetBlocksRequest.newBuilder().addFilters(
+            VeriBlockMessages.BlockFilter.newBuilder().setIndex(height)
+        ).build()
+
+        val reply = blockingStub
+            .withDeadlineAfter(5, TimeUnit.SECONDS)
+            .getBlocks(request)
+        if (reply.success && reply.blocksCount > 0) {
+            val deserialized = reply.getBlocks(0)
+            return deserialized.hash.toByteArray().toHex()
+        }
+
+        return null
     }
 
     fun unlockWallet(passphrase: String?): Result {
