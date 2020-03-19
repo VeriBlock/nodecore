@@ -231,7 +231,7 @@ suspend fun runTasks(
             }.drop(1).takeWhile { block ->
                 val found = if (contextChainProvided) {
                     state.miningInstruction.endorsedBlockContextHeaders.any {
-                        it.contentEquals(block.bitcoinSerialize())
+                        it.contentEquals(Utility.serializeBlock(block))
                     }
                 } else {
                     val blockIndex = nodeCoreService.getBitcoinBlockIndex(Utility.serializeBlock(block))
@@ -317,6 +317,7 @@ suspend fun runTasks(
     } catch (e: CancellationException) {
         logger.info(operation) { "Reorg detected! Tasks cancelled. A new job will be started." }
     } catch (t: Throwable) {
+        logger.debug(t) { t.message }
         operation.fail(t.message ?: "Unknown reason")
     }
 }
