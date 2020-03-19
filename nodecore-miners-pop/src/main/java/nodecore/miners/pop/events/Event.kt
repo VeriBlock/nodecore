@@ -23,7 +23,7 @@ class EmptyEvent(
     private val listeners = CopyOnWriteArrayList<EmptyEventListenerPair>()
 
     fun register(listener: Any, handler: EmptyEventHandler) {
-        logger.debug { "$listener registered to event event $name" }
+        logger.trace { "$listener registered to event event $name" }
         listeners += listener to handler
     }
 
@@ -35,7 +35,7 @@ class EmptyEvent(
     fun clear() = listeners.clear()
 
     fun trigger() {
-        logger.debug { "Triggered event: $name" }
+        logger.trace { "Triggered event: $name" }
         for (listener in listeners) {
             listener.second()
         }
@@ -51,7 +51,7 @@ class Event<T>(
     private val listeners = CopyOnWriteArrayList<EventListenerPair<T>>()
 
     fun register(listener: Any, handler: EventHandler<T>) {
-        logger.debug { "$listener registered to event event $name" }
+        logger.trace { "$listener registered to event event $name" }
         listeners += listener to handler
     }
 
@@ -63,7 +63,7 @@ class Event<T>(
     fun clear() = listeners.clear()
 
     fun trigger(data: T) {
-        logger.debug { "Triggered event: $name" }
+        logger.trace { "Triggered event: $name" }
         for (listener in listeners) {
             listener.second(data)
         }

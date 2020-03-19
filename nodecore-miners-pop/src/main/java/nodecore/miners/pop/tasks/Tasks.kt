@@ -234,7 +234,7 @@ suspend fun runTasks(
                     val blockIndex = nodeCoreService.getBitcoinBlockIndex(Utility.serializeBlock(block))
                     blockIndex != null
                 }
-                logger.debug {
+                logger.trace {
                     val prefix = if (found) "Found" else "Did not find"
                     val where = if (contextChainProvided) "endorsed block context headers" else "search of current NodeCore view"
                     "$prefix block ${block.hashAsString} in $where"
