@@ -72,7 +72,6 @@ class PoPStateService(
                 stateData.endorsedBlockNumber = operationState.miningInstruction.endorsedBlockHeight
             }
             repository.saveOperationState(stateData)
-            logger.info("Operation [${operation.id}] new state: ${operationState}")
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

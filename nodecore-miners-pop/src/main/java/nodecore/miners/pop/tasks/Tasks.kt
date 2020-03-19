@@ -5,10 +5,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.time.withTimeout
 import nodecore.miners.pop.common.BitcoinMerklePath
 import nodecore.miners.pop.common.BitcoinMerkleTree
@@ -279,7 +276,7 @@ suspend fun runTasks(
 
             // Wait for the endorsement transaction to have enough confirmations
             do {
-                delay(5000)
+                delay(60000)
                 val confirmations = nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
             } while (confirmations == null || confirmations < 10)
 
@@ -300,11 +297,11 @@ suspend fun runTasks(
             val payoutAddress = state.miningInstruction.minerAddress
 
             // Wait for the payout block
-            val payoutBlockHash = flow {
-                emit(nodeCoreService.getBlockHash(payoutBlockIndex))
-            }.onEach {
-                delay(5000)
-            }.filterNotNull().first()
+            var payoutBlockHash: String?
+            do {
+                delay(60000)
+                payoutBlockHash = nodeCoreService.getBlockHash(payoutBlockIndex)
+            } while (payoutBlockHash == null)
 
             val endorsementInfo = nodeCoreService.getPopEndorsementInfo().find {
                 it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
