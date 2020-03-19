@@ -9,7 +9,6 @@ package nodecore.miners.pop.services
 import com.google.protobuf.ByteString
 import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.core.OperationState
-import nodecore.miners.pop.core.OperationStateType
 import nodecore.miners.pop.core.OperationStatus
 import nodecore.miners.pop.core.debug
 import nodecore.miners.pop.events.EventBus
@@ -66,7 +65,7 @@ class PoPStateService(
             stateData.action = operationState.type.name
             stateData.message = operationState.toString()
             stateData.state = serializedState
-            stateData.isDone = operationState.type == OperationStateType.COMPLETE
+            stateData.isDone = operation.status == OperationStatus.COMPLETED || operation.status == OperationStatus.FAILED
             stateData.lastUpdated = Utility.getCurrentTimeSeconds()
             if (operationState is OperationState.Instruction) {
                 stateData.endorsedBlockHash = operationState.miningInstruction.endorsedBlockHash

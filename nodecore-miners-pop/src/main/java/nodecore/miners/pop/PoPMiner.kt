@@ -405,7 +405,7 @@ class PoPMiner(
 
     private fun restoreOperations() {
         val preservedOperations = stateService.getActiveOperations()
-        logger.info("Found {} operations to restore", preservedOperations.size)
+        logger.info { "Found ${preservedOperations.size} operations to restore" }
         for (miningOperation in preservedOperations) {
             try {
                 if (!miningOperation.isFailed()) {
@@ -534,7 +534,7 @@ class PoPMiner(
             val operationState = operation?.state
             val blockHeight = operation?.endorsedBlockHeight ?: -1
             if (
-                operationState != null && operationState !is OperationState.Failed && operationState !is OperationState.Confirmed &&
+                operationState != null && !operation.isFailed() && operationState !is OperationState.Confirmed &&
                 blockHeight < event.block.getHeight() - Constants.POP_SETTLEMENT_INTERVAL
             ) {
                 operation.fail("Endorsement of block $blockHeight is no longer relevant")
