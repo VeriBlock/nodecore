@@ -594,7 +594,7 @@ public class AdminApiServiceImpl implements AdminApiService {
             Transaction tx = transactionService.createUnsignedAltChainEndorsementTransaction(sourceAddress, fee, publicationData, signatureIndex);
 
             replyBuilder.setSuccess(true);
-            replyBuilder.setTransaction(transactionService.getRegularTransactionMessageBuilder((StandardTransaction) tx));
+            replyBuilder.setTransaction(TransactionService.getRegularTransactionMessageBuilder((StandardTransaction) tx));
             replyBuilder.setSignatureIndex(signatureIndex);
         } catch (Exception e) {
             logger.error("Unable to create alt chain endorsement", e);

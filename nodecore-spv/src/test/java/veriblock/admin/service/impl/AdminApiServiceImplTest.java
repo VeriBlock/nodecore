@@ -12,10 +12,12 @@ import org.veriblock.core.types.Pair;
 import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
 import org.veriblock.core.wallet.WalletUnreadableException;
+import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.util.Base58;
 import veriblock.SpvContext;
 import veriblock.conf.TestNetParameters;
+import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.net.LocalhostDiscovery;
@@ -684,9 +686,79 @@ public class AdminApiServiceImplTest {
 
         VeriBlockMessages.GetSignatureIndexReply reply = adminApiService.getSignatureIndex(request);
 
-        verify(peerTable,  times(1)).getSignatureIndex(ArgumentMatchers.any());
-        verify(transactionContainer,  times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
+        verify(peerTable, times(1)).getSignatureIndex(ArgumentMatchers.any());
+        verify(transactionContainer, times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
         Assert.assertEquals(true, reply.getSuccess());
     }
 
+    @Test
+    public void createAltChainEndorsementWhenMaxFeeLess() {
+        StandardTransaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        transaction.setInputAddress(new StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS"));
+        transaction.setInputAmount(Coin.ONE);
+        transaction.setData(new byte[12]);
+
+        VeriBlockMessages.CreateAltChainEndorsementRequest request =
+            VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(ByteString.copyFrom(new byte[12]))
+                .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+                .setFeePerByte(10_000L).setMaxFee(1_000L).build();
+
+        when(transactionService
+            .createUnsignedAltChainEndorsementTransaction(ArgumentMatchers.anyString(), ArgumentMatchers.anyLong(), ArgumentMatchers.any(),
+                ArgumentMatchers.anyLong()
+            )).thenReturn(transaction);
+
+        VeriBlockMessages.CreateAltChainEndorsementReply reply = adminApiService.createAltChainEndorsement(request);
+
+        Assert.assertNotNull(reply);
+        Assert.assertFalse(reply.getSuccess());
+        Assert.assertFalse(reply.getResults(0).getMessage().contains("Calcualated fee"));
+    }
+
+    @Test
+    public void createAltChainEndorsementWhenThrowException() {
+        StandardTransaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        transaction.setInputAddress(new StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS"));
+        transaction.setInputAmount(Coin.ONE);
+        transaction.setData(new byte[12]);
+
+        VeriBlockMessages.CreateAltChainEndorsementRequest request =
+            VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(ByteString.copyFrom(new byte[12]))
+                .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+                .setFeePerByte(10_000L).setMaxFee(100_000_000L).build();
+
+        when(transactionService
+            .createUnsignedAltChainEndorsementTransaction(ArgumentMatchers.anyString(), ArgumentMatchers.anyLong(), ArgumentMatchers.any(),
+                ArgumentMatchers.anyLong()
+            )).thenThrow(new RuntimeException());
+
+        VeriBlockMessages.CreateAltChainEndorsementReply reply = adminApiService.createAltChainEndorsement(request);
+
+        Assert.assertNotNull(reply);
+        Assert.assertFalse(reply.getSuccess());
+        Assert.assertFalse(reply.getResults(0).getMessage().contains("An error occurred processing"));
+    }
+
+    @Test
+    public void createAltChainEndorsement() {
+        StandardTransaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        transaction.setInputAddress(new StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS"));
+        transaction.setInputAmount(Coin.ONE);
+        transaction.setData(new byte[12]);
+
+        VeriBlockMessages.CreateAltChainEndorsementRequest request =
+            VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(ByteString.copyFrom(new byte[12]))
+                .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+                .setFeePerByte(10_000L).setMaxFee(100_000_000L).build();
+
+        when(transactionService
+            .createUnsignedAltChainEndorsementTransaction(ArgumentMatchers.anyString(), ArgumentMatchers.anyLong(), ArgumentMatchers.any(),
+                ArgumentMatchers.anyLong()
+            )).thenReturn(transaction);
+
+        VeriBlockMessages.CreateAltChainEndorsementReply reply = adminApiService.createAltChainEndorsement(request);
+
+        Assert.assertNotNull(reply);
+        Assert.assertTrue(reply.getSuccess());
+    }
 }

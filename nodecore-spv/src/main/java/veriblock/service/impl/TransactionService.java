@@ -150,7 +150,7 @@ public class TransactionService {
         return totalSize;
     }
 
-    public int predictAltChainEndorsementTransactionSize(int dataLength, long sigIndex) {
+    public static int predictAltChainEndorsementTransactionSize(int dataLength, long sigIndex) {
         int totalSize = 0;
 
         // Using an estimated total fee of 1 VBK
@@ -182,7 +182,7 @@ public class TransactionService {
         return totalSize;
     }
 
-    public VeriBlockMessages.Transaction.Builder getRegularTransactionMessageBuilder(StandardTransaction tx) {
+    public static VeriBlockMessages.Transaction.Builder getRegularTransactionMessageBuilder(StandardTransaction tx) {
         VeriBlockMessages.Transaction.Builder builder = VeriBlockMessages.Transaction.newBuilder();
         builder.setTransactionFee(tx.getTransactionFee());
         builder.setTxId(ByteString.copyFrom(tx.getTxId().getBytes()));
