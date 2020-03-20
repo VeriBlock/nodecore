@@ -468,7 +468,7 @@ class BitcoinService(
         blocksLeft: Int
     ) {
         if (filteredBlock != null) {
-            logger.debug("FilteredBlock {} downloaded", block.hashAsString)
+            logger.trace("FilteredBlock {} downloaded", block.hashAsString)
             blockCache.put(block.hashAsString, filteredBlock)
         }
     }
