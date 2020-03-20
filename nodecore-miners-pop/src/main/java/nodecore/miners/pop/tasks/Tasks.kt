@@ -278,6 +278,8 @@ suspend fun runTasks(
                 }
             } while (payoutBlockHash == null)
 
+            logger.debug(operation) { "Payout block hash: $payoutBlockHash" }
+
             val endorsementInfo = nodeCoreService.getPopEndorsementInfo().find {
                 it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
             } ?: failTask("Could not find block endorsement info after waiting for the payout block!")

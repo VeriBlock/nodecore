@@ -52,9 +52,9 @@ import java.util.Date
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import java.util.concurrent.locks.ReentrantLock
 
 private val logger = createLogger {}
 
@@ -75,7 +75,7 @@ class BitcoinService(
     private lateinit var peerGroup: PeerGroup
 
     private val serializer: BitcoinSerializer
-    private val txLock = ReentrantLock(true)
+    private val txLock = Semaphore(1, true)
     private val txBroadcastAudit = object : LinkedHashMap<String, Any>() {
         override fun removeEldestEntry(eldest: Map.Entry<String, Any>): Boolean {
             return size > 50
@@ -521,7 +521,7 @@ class BitcoinService(
     private fun acquireTxLock() {
         logger.trace("Waiting to acquire lock to create transaction")
         try {
-            val permitted = txLock.tryLock(5, TimeUnit.MINUTES)
+            val permitted = txLock.tryAcquire(5, TimeUnit.MINUTES)
             if (!permitted) {
                 throw UnableToAcquireTransactionLock()
             }
@@ -533,7 +533,7 @@ class BitcoinService(
 
     private fun releaseTxLock() {
         logger.trace("Releasing create transaction lock")
-        txLock.unlock()
+        txLock.release()
     }
 
     private fun getMaximumTransactionFee() =
