@@ -1,5 +1,5 @@
 // VeriBlock NodeCore
-// Copyright 2017-2019 Xenios SEZC
+// Copyright 2017-2020 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
@@ -26,7 +26,7 @@ public final class SharedConstants {
 
     public static final int VBLAKE_HASH_OUTPUT_SIZE_BYTES     = 24;
 
-    public static final String LICENSE = "Copyright 2017-2019 Xenios SEZC" + System.lineSeparator() +
+    public static final String LICENSE = "Copyright 2017-2020 Xenios SEZC" + System.lineSeparator() +
             "All rights reserved." + System.lineSeparator() +
             "Distributed under the MIT software license, see the accompanying" + System.lineSeparator() +
             "file LICENSE or http://www.opensource.org/licenses/mit-license.php." + System.lineSeparator() + System.lineSeparator();
