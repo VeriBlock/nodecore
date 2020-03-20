@@ -64,7 +64,7 @@ suspend fun runTasks(
         operation.runTask(
             taskName = "Create Bitcoin Endorsement Transaction",
             targetState = OperationStateType.ENDORSEMENT_TRANSACTION,
-            timeout = 5.min
+            timeout = 10.min
         ) {
             val miningInstruction = (operation.state as OperationState.Instruction).miningInstruction
             val opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData)

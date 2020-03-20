@@ -85,7 +85,6 @@ class Program {
             eventEngine.shutdown()
             scheduler.shutdown()
             popMiner.shutdown()
-            nodecore.miners.pop.Threading.shutdown()
             configuration.save()
             logger.info("Application exit")
         } catch (e: InterruptedException) {
