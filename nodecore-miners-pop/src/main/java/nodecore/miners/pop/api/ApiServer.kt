@@ -93,7 +93,7 @@ class ApiServer(
                 }
             }.start()
         } catch (e: Exception) {
-            logger.warn { "Could not start the API: ${e.message}" }
+            logger.warn(e) { "Could not start the API" }
             return
         }
 

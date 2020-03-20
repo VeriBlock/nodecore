@@ -15,11 +15,9 @@ import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
-import nodecore.miners.pop.model.ApplicationExceptions.SendTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
 import nodecore.miners.pop.model.OperationSummary
 import nodecore.miners.pop.model.PoPMinerDependencies
-import nodecore.miners.pop.model.dto.PopMiningOperationStateDto
 import nodecore.miners.pop.model.result.DefaultResultMessage
 import nodecore.miners.pop.model.result.MineResult
 import nodecore.miners.pop.model.result.Result
@@ -70,7 +68,6 @@ class PoPMiner(
 
     override fun run() {
         EventBus.popMiningOperationCompletedEvent.register(this, ::onPoPMiningOperationCompleted)
-        EventBus.coinsReceivedEvent.register(this, ::onCoinsReceived)
         EventBus.insufficientFundsEvent.register(this, ::onInsufficientFunds)
         EventBus.bitcoinServiceReadyEvent.register(this, ::onBitcoinServiceReady)
         EventBus.bitcoinServiceNotReadyEvent.register(this, ::onBitcoinServiceNotReady)
@@ -93,7 +90,6 @@ class PoPMiner(
     @Throws(InterruptedException::class)
     fun shutdown() {
         EventBus.popMiningOperationCompletedEvent.unregister(this)
-        EventBus.coinsReceivedEvent.unregister(this)
         EventBus.insufficientFundsEvent.remove(this)
         EventBus.bitcoinServiceReadyEvent.remove(this)
         EventBus.bitcoinServiceNotReadyEvent.remove(this)
@@ -128,27 +124,8 @@ class PoPMiner(
         }.toList()
     }
 
-    fun getOperationState(id: String): PopMiningOperationStateDto? {
-        val operation = stateService.getOperation(id)
-            ?: return null
-
-        val state = operation.state
-
-        // TODO: Implement
-        val result = PopMiningOperationStateDto()
-        result.operationId = operation.id
-        result.status = operation.status
-        result.currentAction = operation.state.type
-        result.miningInstruction = (state as? OperationState.Instruction)?.miningInstruction
-        result.transaction = (state as? OperationState.EndorsementTransaction)?.endorsementTransactionBytes
-        result.submittedTransactionId = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction?.txId?.toString()
-        result.bitcoinBlockHeaderOfProof = (state as? OperationState.BlockOfProof)?.blockOfProof?.bitcoinSerialize()
-        result.merklePath = (state as? OperationState.Proven)?.merklePath
-        result.bitcoinContextBlocks = (state as? OperationState.Context)?.bitcoinContextBlocks?.map { it.bitcoinSerialize() }
-        result.popTransactionId = (state as? OperationState.SubmittedPopData)?.proofOfProofId
-        result.detail = state.toString()
-        return result
-    }
+    fun getOperation(id: String) =
+        stateService.getOperation(id)
 
     fun mine(blockNumber: Int?): MineResult {
         val operationId = Utility.generateOperationId()
@@ -166,7 +143,7 @@ class PoPMiner(
 
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
         // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be sufficient.
-        val count = operations.values.count { it.state.type == OperationStateType.ENDORSEMEMT_TRANSACTION }
+        val count = operations.values.count { it.state.type == OperationStateType.ENDORSEMENT_TRANSACTION }
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
             result.fail()
             result.addMessage(
@@ -183,6 +160,9 @@ class PoPMiner(
         operations.putIfAbsent(operationId, operation)
         operation.begin()
         processManager.submit(operation)
+        logger.info {
+            "Mining operation ${operation.id} started" + if (blockNumber != null) " at block $blockNumber" else ""
+        }
         result.addMessage(
             "V201", "Mining operation started", String.format("To view details, run command: getoperation %s", operationId), false
         )
@@ -251,41 +231,35 @@ class PoPMiner(
         try {
             val tx = bitcoinService.sendCoins(address, coinAmount)!!
             result.addMessage("V201", "Created", String.format("Transaction: %s", tx.txId.toString()), false)
-        } catch (e: SendTransactionException) {
-            for (t in e.suppressed) {
-                when (t) {
-                    is UnableToAcquireTransactionLock -> {
-                        result.addMessage(
-                            "V409",
-                            "Temporarily Unable to Create Tx",
-                            "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.",
-                            true
-                        )
-                    }
-                    is InsufficientMoneyException -> {
-                        result.addMessage("V400", "Insufficient Funds", "Wallet does not contain sufficient funds to create transaction", true)
-                    }
-                    is ExceededMaxTransactionFee -> {
-                        result.addMessage(
-                            "V400",
-                            "Exceeded Max Fee",
-                            "Transaction fee was calculated to be more than the configured maximum transaction fee",
-                            true
-                        )
-                    }
-                    is DuplicateTransactionException -> {
-                        result.addMessage(
-                            "V409",
-                            "Duplicate Transaction",
-                            "Transaction created is a duplicate of a previously broadcast transaction",
-                            true
-                        )
-                    }
-                    else -> {
-                        result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true)
-                    }
-                }
-            }
+        } catch (e: UnableToAcquireTransactionLock) {
+            result.addMessage(
+                "V409",
+                "Temporarily Unable to Create Tx",
+                "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again.",
+                true
+            )
+            result.fail()
+        } catch (e: InsufficientMoneyException) {
+            result.addMessage("V400", "Insufficient Funds", "Wallet does not contain sufficient funds to create transaction", true)
+            result.fail()
+        } catch (e: ExceededMaxTransactionFee) {
+            result.addMessage(
+                "V400",
+                "Exceeded Max Fee",
+                "Transaction fee was calculated to be more than the configured maximum transaction fee",
+                true
+            )
+            result.fail()
+        } catch (e: DuplicateTransactionException) {
+            result.addMessage(
+                "V409",
+                "Duplicate Transaction",
+                "Transaction created is a duplicate of a previously broadcast transaction",
+                true
+            )
+            result.fail()
+        } catch (e: Exception) {
+            result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true)
             result.fail()
         }
         return result

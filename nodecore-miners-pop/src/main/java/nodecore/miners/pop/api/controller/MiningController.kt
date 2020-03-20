@@ -44,7 +44,6 @@ class MiningController(
                 )
         ) {
             val operationSummaries = miner.listOperations()
-                ?: throw NotFoundException("No operations found")
 
             val responseModel = operationSummaries.map { it.toResponse() }
             call.respond(OperationSummaryListResponse(responseModel))
@@ -59,7 +58,7 @@ class MiningController(
         ) { location ->
             val id = location.id
 
-            val operationState = miner.getOperationState(id)
+            val operationState = miner.getOperation(id)
                 ?: throw NotFoundException("Operation $id not found")
 
             val responseModel = operationState.toResponse()

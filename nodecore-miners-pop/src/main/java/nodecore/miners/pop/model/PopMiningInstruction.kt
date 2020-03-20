@@ -9,6 +9,7 @@ package nodecore.miners.pop.model
 import nodecore.miners.pop.common.Utility
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.BlockUtility
+import org.veriblock.core.utilities.extensions.toHex
 import java.io.Serializable
 
 class PopMiningInstruction(
@@ -25,7 +26,12 @@ class PopMiningInstruction(
 
     val minerAddress: String = Utility.bytesToBase58(minerAddressBytes)
 
-    // TODO
-    val detailedInfo: Array<String>
-        get() = arrayOf() // TODO
+    val detailedInfo: Map<String, String>
+        get() = mapOf(
+            "publicationData" to publicationData.toHex(),
+            "endorsedBlockHeader" to endorsedBlockHeader.toHex(),
+            "lastBitcoinBlock" to lastBitcoinBlock.toHex(),
+            "minerAddressBytes" to minerAddressBytes.toHex(),
+            "endorsedBlockContextHeaders" to endorsedBlockContextHeaders.joinToString { it.toHex() }
+        )
 }

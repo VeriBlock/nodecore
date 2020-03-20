@@ -153,7 +153,7 @@ class MiningOperation(
     }
 
     fun fail(reason: String) {
-        logger.warn { "Operation $id failed for reason: $reason" }
+        logger.warn { "Operation $id failed: $reason" }
         status = OperationStatus.FAILED
         setState(OperationState.Failed(state, reason))
 
@@ -185,6 +185,7 @@ class StateChangeEvent(
 )
 
 // Utility functions for logging on an operation
+inline fun KLogger.trace(operation: MiningOperation, crossinline msg: () -> Any?) = trace { "[${operation.id}] ${msg()}" }
 inline fun KLogger.debug(operation: MiningOperation, crossinline msg: () -> Any?) = debug { "[${operation.id}] ${msg()}" }
 inline fun KLogger.info(operation: MiningOperation, crossinline msg: () -> Any?) = info { "[${operation.id}] ${msg()}" }
 inline fun KLogger.warn(operation: MiningOperation, crossinline msg: () -> Any?) = warn { "[${operation.id}] ${msg()}" }

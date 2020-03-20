@@ -7,14 +7,14 @@
 package nodecore.miners.pop.model
 
 class ApplicationExceptions {
-    class ExceededMaxTransactionFee : RuntimeException("Max transaction fee exceeded")
+    class ExceededMaxTransactionFee : RuntimeException("Calculated fee exceeded configured maximum transaction fee")
     class PoPSubmitRejected : RuntimeException("PoP submission rejected")
     class CorruptSPVChain(message: String) : RuntimeException(message)
-    class UnableToAcquireTransactionLock : RuntimeException("Unable to acquire transaction lock")
-    class DuplicateTransactionException : RuntimeException("Duplicate transaction detected")
-    class SendTransactionException(inner: Exception) : RuntimeException(inner.message, inner) {
-        init {
-            this.addSuppressed(inner)
-        }
+    class UnableToAcquireTransactionLock : RuntimeException() {
+        override val message: String = "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again."
+    }
+
+    class DuplicateTransactionException : RuntimeException() {
+        override val message: String = "Transaction appears identical to a previously broadcast transaction. Often this occurs when there is a 'too-long-mempool-chain'."
     }
 }

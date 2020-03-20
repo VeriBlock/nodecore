@@ -9,7 +9,7 @@ package nodecore.miners.pop.model
 class OperationSummary(
     val operationId: String,
     val endorsedBlockNumber: Int,
-    val state: String,
+    val status: String,
     val action: String,
     val message: String
 ) 

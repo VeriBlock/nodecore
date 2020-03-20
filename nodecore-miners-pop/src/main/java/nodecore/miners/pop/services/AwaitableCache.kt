@@ -37,10 +37,9 @@ class AwaitableCache<K, V>(
     fun put(key: K, value: V) {
         lock.withLock {
             // Check for any subscriptors to this value
-            val deferred = deferredCache[key]
-            if (deferred != null) {
+            deferredCache[key]?.let {
                 // Offer the value to all subscriptors of the broadcast channel
-                deferred.offer(value)
+                it.offer(value)
                 // Remove the broadcast channel
                 deferredCache.remove(key)
             }

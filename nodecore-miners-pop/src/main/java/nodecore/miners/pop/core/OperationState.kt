@@ -18,14 +18,14 @@ enum class OperationStateType(
 ) {
     INITIAL(0, "Initial state, to be started"),
     INSTRUCTION(1, "Mining Instruction retrieved, Endorsement BTC Transaction to be submitted"),
-    ENDORSEMEMT_TRANSACTION(2, "Endorsement BTC Transaction submitted and to be confirmed"),
+    ENDORSEMENT_TRANSACTION(2, "Endorsement BTC Transaction submitted and to be confirmed"),
     CONFIRMED(3, "Endorsement BTC Transaction confirmed, waiting for Block of Proof"),
     BLOCK_OF_PROOF(4, "Block of Proof received, waiting for Endorsement Transaction to be proven"),
     PROVEN(5, "Endorsement BTC Transaction proven, building BTC Context"),
     CONTEXT(6, "BTC Context determined, waiting for submission response"),
     SUBMITTED_POP_DATA(7, "Publications submitted, waiting for VBK Endorsement Transaction to be confirmed"),
     VBK_ENDORSEMENT_TRANSACTION_CONFIRMED(8, "VBK Endorsement Transaction confirmed, waiting for payout block"),
-    COMPLETE(9, "Completed"),
+    COMPLETED(9, "Completed"),
     FAILED(-1, "Failed");
 
     infix fun hasType(type: OperationStateType): Boolean = if (type != FAILED) {
@@ -45,7 +45,7 @@ sealed class OperationState {
 
     open val endorsementTransaction: Transaction? get() = null
 
-    open fun getDetailedInfo(): List<String> = emptyList()
+    open fun getDetailedInfo(): Map<String, String> = emptyMap()
 
     override fun toString(): String = type.description
 
@@ -68,9 +68,11 @@ sealed class OperationState {
         override val endorsementTransaction: Transaction,
         val endorsementTransactionBytes: ByteArray
     ) : Instruction(previous.miningInstruction) {
-        override val type = OperationStateType.ENDORSEMEMT_TRANSACTION
-        override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Endorsement Transaction: ${endorsementTransaction.txId}"
+        override val type = OperationStateType.ENDORSEMENT_TRANSACTION
+        override fun getDetailedInfo() = super.getDetailedInfo() + mapOf(
+            "endorsementTransactionId" to endorsementTransaction.txId.toString(),
+            "endorsementTransactionFee" to endorsementTransaction.fee.toFriendlyString()
+        )
     }
 
     open class Confirmed(
@@ -85,7 +87,7 @@ sealed class OperationState {
     ) : Confirmed(previous) {
         override val type = OperationStateType.BLOCK_OF_PROOF
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Block of Proof: ${blockOfProof.hashAsString}"
+            ("blockOfProof" to blockOfProof.hashAsString)
     }
 
     open class Proven(
@@ -94,7 +96,7 @@ sealed class OperationState {
     ) : BlockOfProof(previous, previous.blockOfProof) {
         override val type = OperationStateType.PROVEN
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Merkle Path: $merklePath"
+            ("merklePath" to merklePath)
     }
 
     open class Context(
@@ -102,9 +104,8 @@ sealed class OperationState {
         val bitcoinContextBlocks: List<Block>
     ) : Proven(previous, previous.merklePath) {
         override val type = OperationStateType.CONTEXT
-        override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
-            "BTC Context Blocks: ${bitcoinContextBlocks.joinToString { it.hashAsString }}"
-        )
+        override fun getDetailedInfo() = super.getDetailedInfo() +
+            ("btcContextBlocks" to bitcoinContextBlocks.joinToString { it.hashAsString })
     }
 
     open class SubmittedPopData(
@@ -113,7 +114,7 @@ sealed class OperationState {
     ) : Context(previous, previous.bitcoinContextBlocks) {
         override val type = OperationStateType.SUBMITTED_POP_DATA
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Proof of Proof Id: $proofOfProofId"
+            ("proofOfProofId" to proofOfProofId)
     }
 
     open class VbkEndorsementTransactionConfirmed(
@@ -127,10 +128,10 @@ sealed class OperationState {
         val payoutBlockHash: String,
         val payoutAmount: String
     ) : VbkEndorsementTransactionConfirmed(previous) {
-        override val type = OperationStateType.COMPLETE
-        override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
-            "Payout Block Hash: $payoutBlockHash",
-            "Payout Amount: $payoutAmount"
+        override val type = OperationStateType.COMPLETED
+        override fun getDetailedInfo() = super.getDetailedInfo() + mapOf(
+            "Payout Block Hash" to payoutBlockHash,
+            "Payout Amount" to payoutAmount
         )
     }
 

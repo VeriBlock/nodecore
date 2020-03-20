@@ -11,7 +11,7 @@ package nodecore.miners.pop.shell.commands
 import com.google.gson.Gson
 import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.model.dto.PopOperationInfoDto
+import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -41,14 +41,14 @@ fun CommandFactory.miningCommands(
         form = "listoperations",
         description = "Lists the current running operations"
     ) {
-        val operations = miner.listOperations()
+        val operations = miner.listOperations().map {
+            "${it.operationId} (${it.endorsedBlockNumber}): ${it.message}"
+        }
+
         if (operations.isNotEmpty()) {
             printInfo("Running operations:")
-            for (summary in operations) {
-                printInfo("    '${summary.operationId}': { state: '${summary.state}', action: '${summary.action}', endorsed_block: ${summary.endorsedBlockNumber} }")
-                if (!summary.message.isNullOrEmpty()) {
-                    printInfo("                ${summary.message}")
-                }
+            for (operation in operations) {
+                printInfo("\t$operation")
             }
         } else {
             printInfo("No running operations")
@@ -66,9 +66,9 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val id: String = getParameter("id")
-        val state = miner.getOperationState(id)
+        val state = miner.getOperation(id)
         if (state != null) {
-            printInfo(prettyPrintGson.toJson(PopOperationInfoDto(state)))
+            printInfo(prettyPrintGson.toJson(OperationInfo(state)))
             success()
         } else {
             failure {
@@ -112,4 +112,20 @@ fun CommandFactory.miningCommands(
             }
         }
     }
+}
+
+class OperationInfo(
+    val operationId: String,
+    val status: String,
+    val endorsedBlockHeight: Int?,
+    val state: String,
+    val stateDetail: Map<String, String>
+) {
+    constructor(operation: MiningOperation) : this(
+        operation.id,
+        operation.status.name,
+        operation.endorsedBlockHeight,
+        operation.state.toString(),
+        operation.state.getDetailedInfo()
+    )
 }

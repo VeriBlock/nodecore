@@ -7,39 +7,23 @@
 
 package nodecore.miners.pop.api.model
 
-import nodecore.miners.pop.common.Utility
+import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.model.OperationSummary
-import nodecore.miners.pop.model.PopMiningInstruction
-import nodecore.miners.pop.model.dto.PopMiningOperationStateDto
 import nodecore.miners.pop.model.result.MineResult
 import nodecore.miners.pop.model.result.Result
 import nodecore.miners.pop.model.result.ResultMessage
 
-fun PopMiningOperationStateDto.toResponse() = OperationDetailResponse(
-    operationId = operationId,
+fun MiningOperation.toResponse() = OperationDetailResponse(
+    operationId = id,
     status = status.name,
-    currentAction = currentAction.name,
-    popData = miningInstruction.toResponse(),
-    transaction = transaction.mapHex(),
-    submittedTransactionId = submittedTransactionId,
-    bitcoinBlockHeaderOfProof = bitcoinBlockHeaderOfProof.mapHex(),
-    bitcoinContextBlocks = bitcoinContextBlocks.mapHex(),
-    merklePath = merklePath,
-    alternateBlocksOfProof = alternateBlocksOfProof.mapHex(),
-    detail = detail,
-    popTransactionId = popTransactionId
-)
-
-private fun PopMiningInstruction.toResponse() = PoPDataResponse(
-    publicationData = publicationData.mapHex(),
-    endorsedBlockHeader = endorsedBlockHeader.mapHex(),
-    minerAddress = minerAddress
+    currentAction = state.toString(),
+    detail = state.getDetailedInfo()
 )
 
 fun OperationSummary.toResponse() = OperationSummaryResponse(
     operationId = operationId,
     endorsedBlockNumber = endorsedBlockNumber,
-    state = state,
+    state = status,
     action = action,
     message = message
 )
@@ -61,9 +45,3 @@ fun ResultMessage.toResponse() = ResultMessageResponse(
     details = details,
     error = isError
 )
-
-private fun ByteArray?.mapHex() = this?.let { Utility.bytesToHex(it) }
-
-private fun Collection<ByteArray?>?.mapHex() = this?.map { it.mapHex() }
-
-private fun ByteArray?.mapBase58() = this?.let { Utility.bytesToBase58(it) }

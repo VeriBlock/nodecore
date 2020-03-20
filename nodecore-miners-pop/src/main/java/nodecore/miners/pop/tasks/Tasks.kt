@@ -14,6 +14,7 @@ import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.core.OperationState
 import nodecore.miners.pop.core.OperationStateType
+import nodecore.miners.pop.core.debug
 import nodecore.miners.pop.core.info
 import nodecore.miners.pop.core.warn
 import nodecore.miners.pop.events.EventBus
@@ -22,9 +23,8 @@ import nodecore.miners.pop.model.ExpTransaction
 import nodecore.miners.pop.model.PopMiningTransaction
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService
-import org.bitcoinj.core.InsufficientMoneyException
+import nodecore.miners.pop.services.TimeoutError
 import org.bitcoinj.core.TransactionConfidence
-import org.bitcoinj.wallet.Wallet
 import org.veriblock.core.utilities.createLogger
 import java.time.Duration
 import java.util.ArrayList
@@ -63,60 +63,27 @@ suspend fun runTasks(
         }
         operation.runTask(
             taskName = "Create Bitcoin Endorsement Transaction",
-            targetState = OperationStateType.ENDORSEMEMT_TRANSACTION,
+            targetState = OperationStateType.ENDORSEMENT_TRANSACTION,
             timeout = 5.min
         ) {
             val miningInstruction = (operation.state as OperationState.Instruction).miningInstruction
             val opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData)
             try {
-                try {
-                    val transaction = bitcoinService.createPoPTransaction(opReturnScript)
-                    if (transaction != null) {
-                        logger.info { "Successfully broadcast transaction ${transaction.txId}" }
+                val transaction = bitcoinService.createPoPTransaction(opReturnScript)
+                if (transaction != null) {
+                    logger.debug { "Successfully broadcast transaction ${transaction.txId}" }
 
-                        val exposedTransaction = ExpTransaction(
-                            bitcoinService.context.params,
-                            transaction.unsafeBitcoinSerialize()
-                        )
+                    val exposedTransaction = ExpTransaction(
+                        bitcoinService.context.params,
+                        transaction.unsafeBitcoinSerialize()
+                    )
 
-                        operation.setTransaction(transaction, exposedTransaction.getFilteredTransaction())
-                    } else {
-                        error("Create Bitcoin transaction returned no transaction")
-                    }
-                } catch (t: Throwable) {
-                    error("A problem occurred broadcasting the transaction to the peer group: ${t.message ?: "Unknown"}")
+                    operation.setTransaction(transaction, exposedTransaction.getFilteredTransaction())
+                } else {
+                    error("Create Bitcoin transaction returned no transaction")
                 }
-            } catch (e: ApplicationExceptions.SendTransactionException) {
-                for (t in e.suppressed) {
-                    when (t) {
-                        is ApplicationExceptions.UnableToAcquireTransactionLock -> {
-                            error(
-                                "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again."
-                            )
-                        }
-                        is InsufficientMoneyException -> {
-                            logger.info(t.message)
-                            EventBus.insufficientFundsEvent.trigger()
-                            error("PoP wallet does not contain sufficient funds to create PoP transaction")
-                        }
-                        is ApplicationExceptions.ExceededMaxTransactionFee -> {
-                            error("Calculated fee exceeded configured maximum transaction fee")
-                        }
-                        is ApplicationExceptions.DuplicateTransactionException -> {
-                            error(
-                                "Transaction appears identical to a previously broadcast transaction. Often this occurs when there is a 'too-long-mempool-chain'."
-                            )
-                        }
-                        is Wallet.CompletionException -> {
-                            logger.error(t.javaClass.simpleName, t)
-                            error("Unable to complete transaction: ${t.javaClass.simpleName}")
-                        }
-                        else -> {
-                            logger.error(t.message, t)
-                            error("Unable to send transaction: ${t.message}")
-                        }
-                    }
-                }
+            } catch (e: ApplicationExceptions.UnableToAcquireTransactionLock) {
+                failTask(e.message)
             }
         }
         operation.runTask(
@@ -167,11 +134,11 @@ suspend fun runTasks(
                 val proof = MerkleProof.parse(partialMerkleTree)
                 if (proof != null) {
                     val path = proof.getCompactPath(state.endorsementTransaction.txId)
-                    logger.info(operation) { "Merkle Proof Compact Path: $path" }
-                    logger.info(operation) { "Merkle Root: ${block.merkleRoot}" }
+                    logger.debug(operation) { "Merkle Proof Compact Path: $path" }
+                    logger.debug(operation) { "Merkle Root: ${block.merkleRoot}" }
                     try {
                         val merklePath = BitcoinMerklePath(path)
-                        logger.info(operation) { "Computed Merkle Root: ${merklePath.getMerkleRoot()}" }
+                        logger.debug(operation) { "Computed Merkle Root: ${merklePath.getMerkleRoot()}" }
                         if (merklePath.getMerkleRoot().equals(block.merkleRoot.toString(), ignoreCase = true)) {
                             operation.setMerklePath(merklePath.getCompactFormat())
                             return@runTask
@@ -276,15 +243,19 @@ suspend fun runTasks(
 
             // Wait for the endorsement transaction to have enough confirmations
             do {
-                delay(60000)
-                val confirmations = nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
+                delay(30000)
+                val confirmations = try {
+                    nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
+                } catch (e: TimeoutError) {
+                    failTask("Transaction retrieval by id has timed out")
+                }
             } while (confirmations == null || confirmations < 10)
 
             operation.setVbkEndorsementTransactionConfirmed()
         }
         operation.runTask(
             taskName = "Confirm Payout Block",
-            targetState = OperationStateType.COMPLETE,
+            targetState = OperationStateType.COMPLETED,
             timeout = 10.hr
         ) {
             val state = operation.state as? OperationState.SubmittedPopData
@@ -299,8 +270,12 @@ suspend fun runTasks(
             // Wait for the payout block
             var payoutBlockHash: String?
             do {
-                delay(60000)
-                payoutBlockHash = nodeCoreService.getBlockHash(payoutBlockIndex)
+                delay(30000)
+                payoutBlockHash = try {
+                    nodeCoreService.getBlockHash(payoutBlockIndex)
+                } catch (e: TimeoutError) {
+                    failTask("Block retrieval by height has timed out")
+                }
             } while (payoutBlockHash == null)
 
             val endorsementInfo = nodeCoreService.getPopEndorsementInfo().find {

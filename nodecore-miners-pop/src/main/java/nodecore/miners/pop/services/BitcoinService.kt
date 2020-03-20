@@ -7,18 +7,15 @@
 package nodecore.miners.pop.services
 
 import com.google.common.util.concurrent.ListenableFuture
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.guava.asDeferred
 import kotlinx.coroutines.time.withTimeout
 import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.common.BitcoinNetwork
-import nodecore.miners.pop.events.CoinsReceivedEventDto
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
-import nodecore.miners.pop.model.ApplicationExceptions.SendTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Address
@@ -28,6 +25,7 @@ import org.bitcoinj.core.BlockChain
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Context
 import org.bitcoinj.core.FilteredBlock
+import org.bitcoinj.core.InsufficientMoneyException
 import org.bitcoinj.core.PartialMerkleTree
 import org.bitcoinj.core.Peer
 import org.bitcoinj.core.PeerGroup
@@ -126,8 +124,16 @@ class BitcoinService(
 
                 wallet = wallet().apply {
                     isAcceptRiskyTransactions = true
-                    addCoinsReceivedEventListener { _, tx: Transaction, prevBalance: Coin, newBalance: Coin ->
-                        EventBus.coinsReceivedEvent.trigger(CoinsReceivedEventDto(tx, prevBalance, newBalance))
+                    addCoinsReceivedEventListener { _, _: Transaction, prevBalance: Coin, newBalance: Coin ->
+                        logger.info {
+                            val delta = newBalance.minus(prevBalance)
+                            val action = if (delta.isNegative) {
+                                "Spent ${delta.negate().toFriendlyString()}"
+                            } else {
+                                "Received ${delta.toFriendlyString()}"
+                            }
+                            "$action. New balance: ${newBalance.toFriendlyString()}"
+                        }
                     }
                 }
 
@@ -251,7 +257,6 @@ class BitcoinService(
         return ScriptBuilder().op(ScriptOpCodes.OP_RETURN).data(opReturnData).build()
     }
 
-    @Throws(SendTransactionException::class)
     suspend fun createPoPTransaction(opReturnScript: Script): Transaction? {
         return sendTxRequest {
             val tx = Transaction(kit.params()).apply {
@@ -306,7 +311,7 @@ class BitcoinService(
 
     suspend fun getPartialMerkleTree(hash: Sha256Hash): PartialMerkleTree? {
         try {
-            logger.info("Awaiting block {}...", hash.toString())
+            logger.trace("Awaiting block {}...", hash.toString())
             val block = withTimeout(Duration.ofSeconds(configuration.actionTimeout.toLong())) {
                 blockCache.get(hash.toString())
             }
@@ -325,21 +330,21 @@ class BitcoinService(
         var attempts = 0
         var block: Block? = null
         while (block == null && attempts < 5) {
-            logger.info("Attempting to download block with hash {}", hash.toString())
+            logger.trace("Attempting to download block with hash {}", hash.toString())
             attempts++
             // Lock for read to see if we've got a download already started
             val blockFuture: ListenableFuture<Block> = synchronized(downloadLock) {
                 blockDownloader[hash.toString()]?.also {
-                    logger.info("Found existing download of block {}", hash.toString())
+                    logger.trace("Found existing download of block {}", hash.toString())
                 } ?: run {
-                    logger.info("Starting download of block {} from peer group", hash.toString())
+                    logger.trace("Starting download of block {} from peer group", hash.toString())
                     val blockFuture = peerGroup.downloadPeer.getBlock(hash)
                     blockDownloader.putIfAbsent(hash.toString(), blockFuture)
                     blockFuture
                 }
             }
             try {
-                logger.info("Waiting for block {} to finish downloading", hash.toString())
+                logger.trace("Waiting for block {} to finish downloading", hash.toString())
                 block = blockFuture[configuration.actionTimeout.toLong(), TimeUnit.SECONDS]
             } catch (e: TimeoutException) {
                 logger.error("Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message)
@@ -353,7 +358,7 @@ class BitcoinService(
             }
         }
         if (block != null) {
-            logger.info(
+            logger.trace(
                 "Finished downloading block with hash {} at the #{} attempt", hash.toString(), attempts
             )
         }
@@ -386,17 +391,13 @@ class BitcoinService(
     }
 
     suspend fun sendCoins(address: String, amount: Coin): Transaction? {
-        return try {
-            sendTxRequest {
-                SendRequest.to(
-                    Address.fromString(kit.params(), address), amount
-                ).apply {
-                    changeAddress = wallet.currentChangeAddress()
-                    feePerKb = getTransactionFeePerKB()
-                }
+        return sendTxRequest {
+            SendRequest.to(
+                Address.fromString(kit.params(), address), amount
+            ).apply {
+                changeAddress = wallet.currentChangeAddress()
+                feePerKb = getTransactionFeePerKB()
             }
-        } catch (e: CancellationException) {
-            throw SendTransactionException(e)
         }
     }
 
@@ -472,13 +473,8 @@ class BitcoinService(
         }
     }
 
-    @Throws(SendTransactionException::class)
     private suspend fun sendTxRequest(requestBuilder: () -> SendRequest): Transaction? {
-        try {
-            acquireTxLock()
-        } catch (e: UnableToAcquireTransactionLock) {
-            throw SendTransactionException(e)
-        }
+        acquireTxLock()
         val request = requestBuilder()
         try {
             // WalletShim is a temporary solution until improvements present in bitcoinj's master branch
@@ -490,22 +486,26 @@ class BitcoinService(
             if (txBroadcastAudit.containsKey(request.tx.txId.toString())) {
                 throw DuplicateTransactionException()
             }
-            logger.info("Created transaction spending ${request.tx.inputs.size} inputs:")
+            logger.debug("Created transaction spending ${request.tx.inputs.size} inputs:")
             for (i in request.tx.inputs.indices) {
-                logger.info(
+                logger.debug(
                     "\t" + request.tx.inputs[i].outpoint.hash.toString() + ":" +
                         request.tx.inputs[i].outpoint.index
                 )
             }
-        } catch (e: Exception) {
+        } catch (e: InsufficientMoneyException) {
+            EventBus.insufficientFundsEvent.trigger()
+            error("PoP wallet does not contain sufficient funds to create PoP transaction")
+        } catch (e: Wallet.CompletionException) {
+            error("Unable to complete transaction: ${e.javaClass.simpleName}")
+        } finally {
             releaseTxLock()
-            throw SendTransactionException(e)
         }
 
         // Broadcast the transaction to the network peer group
         // BitcoinJ adds a listener that will commit the transaction to the wallet when a
         // sufficient number of peers have announced receipt
-        logger.info("Broadcasting tx {} to peer group", request.tx.txId)
+        logger.debug("Broadcasting tx {} to peer group", request.tx.txId)
         val broadcast = kit.peerGroup().broadcastTransaction(request.tx)
         txBroadcastAudit[request.tx.txId.toString()] = EMPTY_OBJECT
 
@@ -516,26 +516,26 @@ class BitcoinService(
             releaseTxLock()
         }
 
-        logger.info { "Awaiting confirmation of broadcast of Tx ${request.tx.txId}" }
+        logger.debug { "Awaiting confirmation of broadcast of Tx ${request.tx.txId}" }
         return deferredTransaction.await()
     }
 
     @Throws(UnableToAcquireTransactionLock::class)
     private fun acquireTxLock() {
-        logger.info("Waiting to acquire lock to create transaction")
+        logger.trace("Waiting to acquire lock to create transaction")
         try {
-            val permitted = txGate.tryAcquire(10, TimeUnit.SECONDS)
+            val permitted = txGate.tryAcquire(30, TimeUnit.SECONDS)
             if (!permitted) {
                 throw UnableToAcquireTransactionLock()
             }
         } catch (e: InterruptedException) {
             throw UnableToAcquireTransactionLock()
         }
-        logger.info("Acquired lock to create transaction")
+        logger.trace("Acquired lock to create transaction")
     }
 
     private fun releaseTxLock() {
-        logger.info("Releasing create transaction lock")
+        logger.trace("Releasing create transaction lock")
         txGate.release()
     }
 

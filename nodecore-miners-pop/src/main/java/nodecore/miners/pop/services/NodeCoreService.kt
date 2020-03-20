@@ -9,6 +9,7 @@ package nodecore.miners.pop.services
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
+import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
@@ -110,9 +111,11 @@ class NodeCoreService(
         return if (!::blockingStub.isInitialized) {
             false
         } else try {
-            val request = blockingStub
-                .withDeadlineAfter(5L, TimeUnit.SECONDS)
-                .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
+            val request = checkTimeoutError {
+                blockingStub
+                    .withDeadlineAfter(5L, TimeUnit.SECONDS)
+                    .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
+            }
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
             request.networkHeight > 0 && blockDifference < 4
         } catch (e: StatusRuntimeException) {
@@ -127,7 +130,11 @@ class NodeCoreService(
             requestBuilder.blockNum = blockNumber
         }
         val request = requestBuilder.build()
-        val reply = blockingStub.withDeadlineAfter(15, TimeUnit.SECONDS).getPop(request)
+        val reply = checkTimeoutError {
+            blockingStub
+                .withDeadlineAfter(15, TimeUnit.SECONDS)
+                .getPop(request)
+        }
         val result = NodeCoreReply<PopMiningInstruction>()
         if (reply.success) {
             result.success = true
@@ -183,9 +190,11 @@ class NodeCoreService(
         val request = VeriBlockMessages.GetTransactionsRequest.newBuilder().apply {
             addIds(ByteString.copyFrom(txId.asHexBytes()))
         }.build()
-        val reply = blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
-            .getTransactions(request)
+        val reply = checkTimeoutError {
+            blockingStub
+                .withDeadlineAfter(20, TimeUnit.SECONDS)
+                .getTransactions(request)
+        }
 
         return reply.transactionsList.firstOrNull()?.confirmations
     }
@@ -218,16 +227,11 @@ class NodeCoreService(
     }
 
     private fun getLastBlock(): VeriBlockHeader {
-        val reply = blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
-            .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
-        return VeriBlockHeader(reply.header.header.toByteArray())
-    }
-
-    private fun getBlockAtIndex(): VeriBlockHeader {
-        val reply = blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
-            .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
+        val reply = checkTimeoutError {
+            blockingStub
+                .withDeadlineAfter(10, TimeUnit.SECONDS)
+                .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
+        }
         return VeriBlockHeader(reply.header.header.toByteArray())
     }
 
@@ -236,9 +240,11 @@ class NodeCoreService(
             VeriBlockMessages.BlockFilter.newBuilder().setIndex(height)
         ).build()
 
-        val reply = blockingStub
-            .withDeadlineAfter(5, TimeUnit.SECONDS)
-            .getBlocks(request)
+        val reply = checkTimeoutError {
+            blockingStub
+                .withDeadlineAfter(10, TimeUnit.SECONDS)
+                .getBlocks(request)
+        }
         if (reply.success && reply.blocksCount > 0) {
             val deserialized = reply.getBlocks(0)
             return deserialized.hash.toByteArray().toHex()
@@ -341,4 +347,18 @@ class NodeCoreService(
             logger.error("Error while polling NodeCore", e)
         }
     }
+
+    private inline fun <T> checkTimeoutError(block: () -> T): T = try {
+        block()
+    } catch (e: StatusRuntimeException) {
+        if (e.status.code == Status.Code.DEADLINE_EXCEEDED) {
+            throw TimeoutError(e.message ?: "")
+        } else {
+            throw e
+        }
+    }
 }
+
+class TimeoutError(
+    override val message: String
+) : RuntimeException()

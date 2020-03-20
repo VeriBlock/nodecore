@@ -7,7 +7,6 @@ object EventBus {
     val bitcoinServiceReadyEvent = EmptyEvent("Bitcoin Service Ready")
     val bitcoinServiceNotReadyEvent = EmptyEvent("Bitcoin Service Not Ready")
     val blockchainDownloadedEvent = EmptyEvent("Blockchain Downloaded")
-    val coinsReceivedEvent = Event<CoinsReceivedEventDto>("Coins Received")
     val configurationChangedEvent = EmptyEvent("Configuration Changed")
     val fundsAddedEvent = EmptyEvent("Funds Added")
     val insufficientFundsEvent = EmptyEvent("Insufficient Funds")
