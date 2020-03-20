@@ -192,7 +192,7 @@ class NodeCoreService(
         }.build()
         val reply = checkTimeoutError {
             blockingStub
-                .withDeadlineAfter(20, TimeUnit.SECONDS)
+                .withDeadlineAfter(90, TimeUnit.SECONDS)
                 .getTransactions(request)
         }
 

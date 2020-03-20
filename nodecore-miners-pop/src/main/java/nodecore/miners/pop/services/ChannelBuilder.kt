@@ -17,12 +17,10 @@ import io.grpc.stub.MetadataUtils
 import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
 import java.io.File
-import javax.net.ssl.SSLException
 
 class ChannelBuilder(
     private val configuration: Configuration
 ) {
-    @Throws(SSLException::class)
     fun buildManagedChannel(): ManagedChannel {
         return if (configuration.nodeCoreUseSSL) {
             buildTlsManagedChannel()

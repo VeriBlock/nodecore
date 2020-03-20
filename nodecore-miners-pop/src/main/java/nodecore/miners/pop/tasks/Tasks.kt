@@ -115,10 +115,10 @@ suspend fun runTasks(
             val bestBlock = bitcoinService.getBestBlock(blockAppearances.keys)
                 ?: failTask("Unable to retrieve block of proof from transaction!")
 
-            operation.setBlockOfProof(bestBlock)
-
             // Wait for the actual block appearing in the blockchain (it should already be there given the transaction is confirmed)
             bitcoinService.getFilteredBlock(bestBlock.hash)
+
+            operation.setBlockOfProof(bestBlock)
         }
         operation.runTask(
             taskName = "Prove Transaction",
@@ -280,7 +280,7 @@ suspend fun runTasks(
 
             val endorsementInfo = nodeCoreService.getPopEndorsementInfo().find {
                 it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
-            } ?: error("Could not find block endorsement info after waiting for the payout block!")
+            } ?: failTask("Could not find block endorsement info after waiting for the payout block!")
 
             operation.complete(payoutBlockHash, endorsementInfo.reward)
         }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.time.withTimeout
 import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.common.BitcoinNetwork
+import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
@@ -51,9 +52,9 @@ import java.util.Date
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
 
 private val logger = createLogger {}
 
@@ -74,7 +75,7 @@ class BitcoinService(
     private lateinit var peerGroup: PeerGroup
 
     private val serializer: BitcoinSerializer
-    private val txGate = Semaphore(1, true)
+    private val txLock = ReentrantLock(true)
     private val txBroadcastAudit = object : LinkedHashMap<String, Any>() {
         override fun removeEldestEntry(eldest: Map.Entry<String, Any>): Boolean {
             return size > 50
@@ -128,11 +129,11 @@ class BitcoinService(
                         logger.info {
                             val delta = newBalance.minus(prevBalance)
                             val action = if (delta.isNegative) {
-                                "Spent ${delta.negate().toFriendlyString()}"
+                                "Spent ${Utility.formatBTCFriendlyString(delta.negate())}"
                             } else {
-                                "Received ${delta.toFriendlyString()}"
+                                "Received ${Utility.formatBTCFriendlyString(delta)}"
                             }
-                            "$action. New balance: ${newBalance.toFriendlyString()}"
+                            "$action. New pending balance: ${Utility.formatBTCFriendlyString(newBalance)}"
                         }
                     }
                 }
@@ -186,7 +187,6 @@ class BitcoinService(
         return kit
     }
 
-    @Throws(CorruptSPVChain::class)
     fun initialize() {
         if (bitcoinNetwork === BitcoinNetwork.RegTest) {
             kit.connectToLocalHost()
@@ -475,56 +475,53 @@ class BitcoinService(
 
     private suspend fun sendTxRequest(requestBuilder: () -> SendRequest): Transaction? {
         acquireTxLock()
-        val request = requestBuilder()
         try {
-            // WalletShim is a temporary solution until improvements present in bitcoinj's master branch
-            // are packaged into a published release
-            wallet.completeTx(request)
-            if (request.tx.fee.isGreaterThan(getMaximumTransactionFee())) {
-                throw ExceededMaxTransactionFee()
+            val request = requestBuilder()
+            try {
+                // WalletShim is a temporary solution until improvements present in bitcoinj's master branch
+                // are packaged into a published release
+                wallet.completeTx(request)
+                if (request.tx.fee.isGreaterThan(getMaximumTransactionFee())) {
+                    throw ExceededMaxTransactionFee()
+                }
+                if (txBroadcastAudit.containsKey(request.tx.txId.toString())) {
+                    throw DuplicateTransactionException()
+                }
+                logger.debug("Created transaction spending ${request.tx.inputs.size} inputs:")
+                for (i in request.tx.inputs.indices) {
+                    logger.debug(
+                        "\t" + request.tx.inputs[i].outpoint.hash.toString() + ":" +
+                            request.tx.inputs[i].outpoint.index
+                    )
+                }
+            } catch (e: InsufficientMoneyException) {
+                EventBus.insufficientFundsEvent.trigger()
+                error("PoP wallet does not contain sufficient funds to create PoP transaction")
+            } catch (e: Wallet.CompletionException) {
+                error("Unable to complete transaction: ${e.javaClass.simpleName}")
             }
-            if (txBroadcastAudit.containsKey(request.tx.txId.toString())) {
-                throw DuplicateTransactionException()
-            }
-            logger.debug("Created transaction spending ${request.tx.inputs.size} inputs:")
-            for (i in request.tx.inputs.indices) {
-                logger.debug(
-                    "\t" + request.tx.inputs[i].outpoint.hash.toString() + ":" +
-                        request.tx.inputs[i].outpoint.index
-                )
-            }
-        } catch (e: InsufficientMoneyException) {
-            EventBus.insufficientFundsEvent.trigger()
-            error("PoP wallet does not contain sufficient funds to create PoP transaction")
-        } catch (e: Wallet.CompletionException) {
-            error("Unable to complete transaction: ${e.javaClass.simpleName}")
+
+            // Broadcast the transaction to the network peer group
+            // BitcoinJ adds a listener that will commit the transaction to the wallet when a
+            // sufficient number of peers have announced receipt
+            logger.debug("Broadcasting tx {} to peer group", request.tx.txId)
+            val broadcast = kit.peerGroup().broadcastTransaction(request.tx)
+            txBroadcastAudit[request.tx.txId.toString()] = EMPTY_OBJECT
+
+            val deferredTransaction = broadcast.future().asDeferred()
+
+            logger.debug { "Awaiting confirmation of broadcast of Tx ${request.tx.txId}" }
+            return deferredTransaction.await()
         } finally {
+            // Release the lock
             releaseTxLock()
         }
-
-        // Broadcast the transaction to the network peer group
-        // BitcoinJ adds a listener that will commit the transaction to the wallet when a
-        // sufficient number of peers have announced receipt
-        logger.debug("Broadcasting tx {} to peer group", request.tx.txId)
-        val broadcast = kit.peerGroup().broadcastTransaction(request.tx)
-        txBroadcastAudit[request.tx.txId.toString()] = EMPTY_OBJECT
-
-        val deferredTransaction = broadcast.future().asDeferred()
-
-        // Add a callback that releases the semaphore permit
-        deferredTransaction.invokeOnCompletion {
-            releaseTxLock()
-        }
-
-        logger.debug { "Awaiting confirmation of broadcast of Tx ${request.tx.txId}" }
-        return deferredTransaction.await()
     }
 
-    @Throws(UnableToAcquireTransactionLock::class)
     private fun acquireTxLock() {
         logger.trace("Waiting to acquire lock to create transaction")
         try {
-            val permitted = txGate.tryAcquire(30, TimeUnit.SECONDS)
+            val permitted = txLock.tryLock(5, TimeUnit.MINUTES)
             if (!permitted) {
                 throw UnableToAcquireTransactionLock()
             }
@@ -536,7 +533,7 @@ class BitcoinService(
 
     private fun releaseTxLock() {
         logger.trace("Releasing create transaction lock")
-        txGate.release()
+        txLock.unlock()
     }
 
     private fun getMaximumTransactionFee() =

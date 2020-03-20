@@ -87,7 +87,6 @@ class PoPMiner(
         }
     }
 
-    @Throws(InterruptedException::class)
     fun shutdown() {
         EventBus.popMiningOperationCompletedEvent.unregister(this)
         EventBus.insufficientFundsEvent.remove(this)
@@ -318,7 +317,7 @@ class PoPMiner(
 
     private fun ensureSufficientFunds() {
         val maximumTransactionFee = Coin.valueOf(configuration.maxTransactionFee)
-        if (bitcoinService.getBalance().isGreaterThan(maximumTransactionFee)) {
+        if (!bitcoinService.getBalance().isLessThan(maximumTransactionFee)) {
             if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
                 logger.info("PoP wallet is sufficiently funded")
                 EventBus.fundsAddedEvent.trigger()

@@ -8,6 +8,7 @@
 
 package nodecore.miners.pop.core
 
+import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.model.PopMiningInstruction
 import org.bitcoinj.core.Block
 import org.bitcoinj.core.Transaction
@@ -71,7 +72,7 @@ sealed class OperationState {
         override val type = OperationStateType.ENDORSEMENT_TRANSACTION
         override fun getDetailedInfo() = super.getDetailedInfo() + mapOf(
             "endorsementTransactionId" to endorsementTransaction.txId.toString(),
-            "endorsementTransactionFee" to endorsementTransaction.fee.toFriendlyString()
+            "endorsementTransactionFee" to Utility.formatBTCFriendlyString(endorsementTransaction.fee)
         )
     }
 
