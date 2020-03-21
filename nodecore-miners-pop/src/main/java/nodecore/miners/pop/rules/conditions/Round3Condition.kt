@@ -6,7 +6,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules.conditions
 
-import nodecore.miners.pop.OldConfiguration
 import nodecore.miners.pop.VpmConfig
 
 class Round3Condition : Condition<Int> {
