@@ -8,7 +8,6 @@
 package nodecore.miners.pop.rules.conditions
 
 import io.kotlintest.shouldBe
-import nodecore.miners.pop.OldConfiguration
 import org.junit.Test
 
 class Round3ConditionTests {

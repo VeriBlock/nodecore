@@ -23,11 +23,12 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import mu.KotlinLogging
-import nodecore.miners.pop.OldConfiguration
 import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.api.controller.ApiController
 import nodecore.miners.pop.api.controller.statusPages
 import java.util.concurrent.TimeUnit
+
+private val logger = KotlinLogging.logger {}
 
 const val API_VERSION = "0.3"
 
@@ -104,5 +105,3 @@ class ApiServer(
         running = false
     }
 }
-
-private val logger = KotlinLogging.logger {}
