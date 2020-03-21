@@ -10,32 +10,32 @@ package nodecore.miners.pop.rules.actions
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.model.result.MineResult
 import org.junit.Test
 
 class MineActionTests {
     @Test
     fun executeWhenHeightSupplied() {
-        val miner: PoPMiner = mockk {
+        val minerService: MinerService = mockk {
             every { mine(100) } returns MineResult("")
         }
-        val sut = MineAction(miner)
+        val sut = MineAction(minerService)
         sut.execute(100)
         verify {
-            miner.mine(100)
+            minerService.mine(100)
         }
     }
 
     @Test
     fun executeWhenHeightNull() {
-        val miner: PoPMiner = mockk {
+        val minerService: MinerService = mockk {
             every { mine(null) } returns MineResult("")
         }
-        val sut = MineAction(miner)
+        val sut = MineAction(minerService)
         sut.execute(null)
         verify {
-            miner.mine(null)
+            minerService.mine(null)
         }
     }
 }

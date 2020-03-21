@@ -10,7 +10,7 @@ package nodecore.miners.pop.shell.commands
 
 import com.google.gson.Gson
 import io.grpc.StatusRuntimeException
-import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
@@ -21,7 +21,7 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.miningCommands(
-    miner: PoPMiner,
+    minerService: MinerService,
     prettyPrintGson: Gson
 ) {
     command(
@@ -33,7 +33,7 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val blockNumber: Int? = getOptionalParameter("blockNumber")
-        miner.mine(blockNumber).toShellResult()
+        minerService.mine(blockNumber).toShellResult()
     }
 
     command(
@@ -41,7 +41,7 @@ fun CommandFactory.miningCommands(
         form = "listoperations",
         description = "Lists the current running operations"
     ) {
-        val operations = miner.listOperations().map {
+        val operations = minerService.listOperations().map {
             "${it.operationId} (${it.endorsedBlockNumber}): ${it.message}"
         }
 
@@ -66,7 +66,7 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val id: String = getParameter("id")
-        val state = miner.getOperation(id)
+        val state = minerService.getOperation(id)
         if (state != null) {
             printInfo(prettyPrintGson.toJson(OperationInfo(state)))
             success()
@@ -86,7 +86,7 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val id: String = getParameter("id")
-        miner.resubmit(id).toShellResult()
+        minerService.resubmit(id).toShellResult()
     }
 
     command(
@@ -95,7 +95,7 @@ fun CommandFactory.miningCommands(
         description = "Returns the NodeCore miner address"
     ) {
         try {
-            val minerAddress = miner.getMinerAddress()
+            val minerAddress = minerService.getMinerAddress()
             if (minerAddress != null) {
                 printInfo("Miner Address: $minerAddress")
                 success {

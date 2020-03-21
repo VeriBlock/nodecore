@@ -1,13 +1,17 @@
-package nodecore.miners.pop.events
+package nodecore.miners.pop
 
 import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.model.PoPMinerDependencies
+import nodecore.miners.pop.model.VeriBlockHeader
+import org.bitcoinj.core.Coin
+import org.bitcoinj.core.Transaction
+import org.veriblock.core.utilities.EmptyEvent
+import org.veriblock.core.utilities.Event
 
 object EventBus {
     val bitcoinServiceReadyEvent = EmptyEvent("Bitcoin Service Ready")
     val bitcoinServiceNotReadyEvent = EmptyEvent("Bitcoin Service Not Ready")
     val blockchainDownloadedEvent = EmptyEvent("Blockchain Downloaded")
-    val configurationChangedEvent = EmptyEvent("Configuration Changed")
     val fundsAddedEvent = EmptyEvent("Funds Added")
     val insufficientFundsEvent = EmptyEvent("Insufficient Funds")
     val newVeriBlockFoundEvent = Event<NewVeriBlockFoundEventDto>("New VeriBlock Found")
@@ -24,3 +28,14 @@ object EventBus {
     val walletSeedAgreementMissingEvent = EmptyEvent("Wallet Seed Agreement Missing")
     val transactionSufferedReorgEvent = Event<MiningOperation>("Bitcoin transaction suffered a reorg")
 }
+
+class CoinsReceivedEventDto(
+    val tx: Transaction,
+    val previousBalance: Coin,
+    val newBalance: Coin
+)
+
+class NewVeriBlockFoundEventDto(
+    val block: VeriBlockHeader,
+    val previousHead: VeriBlockHeader?
+)

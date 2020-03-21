@@ -8,7 +8,9 @@
 
 package nodecore.miners.pop.shell.commands
 
-import nodecore.miners.pop.PoPMiner
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.common.Utility
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Utils
@@ -18,7 +20,7 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream
 
-fun CommandFactory.diagnosticCommands(miner: PoPMiner) {
+fun CommandFactory.diagnosticCommands(minerService: MinerService) {
     command(
         name = "Show Last Bitcoin Block",
         form = "showlastbitcoinblock",
@@ -26,7 +28,7 @@ fun CommandFactory.diagnosticCommands(miner: PoPMiner) {
     ) {
         printInfo("Configuration Properties:")
 
-        val lastBlock = miner.getLastBitcoinBlock()
+        val lastBlock = minerService.getLastBitcoinBlock()
         val lastBlockHeader = lastBlock.header
 
         val headerOutputSteram = ByteArrayOutputStream()
@@ -53,7 +55,11 @@ fun CommandFactory.diagnosticCommands(miner: PoPMiner) {
         description = "Returns the average fee per byte in a recent Bitcoin block"
     ) {
         try {
-            val blockFees: Pair<Int, Long>? = miner.showRecentBitcoinFees()
+            val blockFees: Pair<Int, Long>? = runBlocking {
+                withTimeout(2_000L) {
+                    minerService.showRecentBitcoinFees()
+                }
+            }
             if (blockFees != null) {
                 printInfo("Bitcoin Block #${blockFees.left} -> Average Fee per Byte: ${blockFees.right}")
                 success()

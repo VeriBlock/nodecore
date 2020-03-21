@@ -8,7 +8,7 @@
 
 package nodecore.miners.pop.shell.commands
 
-import nodecore.miners.pop.Configuration
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -40,10 +40,11 @@ fun CommandFactory.configCommands(configuration: Configuration) {
             CommandParameter(name = "value", mapper = CommandParameterMappers.STRING)
         )
     ) {
-        val key: String = getParameter("key");
-        val value: String = getParameter("value");
+        val key: String = getParameter("key")
+        val value: String = getParameter("value")
 
-        configuration.setProperty(key, value);
+        configuration.setProperty(key, value)
+        printInfo("NOTE: In order for the changes to apply, please restart the miner.")
 
         success()
     }

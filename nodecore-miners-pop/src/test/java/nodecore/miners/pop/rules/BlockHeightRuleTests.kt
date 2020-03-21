@@ -10,7 +10,9 @@ package nodecore.miners.pop.rules
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.AutoMineConfig
+import nodecore.miners.pop.OldConfiguration
+import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.model.VeriBlockHeader
 import nodecore.miners.pop.rules.actions.RuleAction
 import org.junit.Test
@@ -20,9 +22,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenNoConditionsActive() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns false
-        }
+        val config = VpmConfig()
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12343
         }
@@ -48,10 +48,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenOnlyKeystoneConditionActive() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns false
-            every { getBoolean("auto.mine.round4") } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(round4 = true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12343
         }
@@ -77,9 +74,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenAllConditionsActive() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(true, true, true, true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12343
         }
@@ -108,9 +103,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenSingleKeystone() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(true, true, true, true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12340
         }
@@ -136,9 +129,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenSingleRound1() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(true, true, true, true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12341
         }
@@ -164,9 +155,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenSingleRound2() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(true, true, true, true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12342
         }
@@ -192,9 +181,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenSingleRound3() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(true, true, true, true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12343
         }
@@ -220,9 +207,7 @@ class BlockHeightRuleTests {
     fun evaluateWhenPreviousNotSet() {
         // Given
         val action: RuleAction<Int> = mockk(relaxed = true)
-        val config: Configuration = mockk {
-            every { getBoolean(any()) } returns true
-        }
+        val config = VpmConfig(autoMine = AutoMineConfig(true, true, true, true))
         val latest: VeriBlockHeader = mockk {
             every { getHeight() } returns 12343
         }

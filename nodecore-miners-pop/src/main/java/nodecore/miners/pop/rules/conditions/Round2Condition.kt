@@ -6,11 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules.conditions
 
-import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.OldConfiguration
+import nodecore.miners.pop.VpmConfig
 
 class Round2Condition : Condition<Int> {
-    override fun isActive(configuration: Configuration): Boolean {
-        return configuration.getBoolean("auto.mine.round2")
+    override fun isActive(configuration: VpmConfig): Boolean {
+        return configuration.autoMine.round2
     }
 
     override fun evaluate(subject: Int?): Boolean {

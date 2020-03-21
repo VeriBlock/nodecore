@@ -7,6 +7,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.yield
+import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.common.BitcoinMerklePath
 import nodecore.miners.pop.common.BitcoinMerkleTree
 import nodecore.miners.pop.common.MerkleProof
@@ -17,13 +19,11 @@ import nodecore.miners.pop.core.OperationStateType
 import nodecore.miners.pop.core.debug
 import nodecore.miners.pop.core.info
 import nodecore.miners.pop.core.warn
-import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.ApplicationExceptions
 import nodecore.miners.pop.model.ExpTransaction
 import nodecore.miners.pop.model.PopMiningTransaction
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService
-import nodecore.miners.pop.services.TimeoutError
 import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.createLogger
 import java.time.Duration
@@ -104,7 +104,7 @@ suspend fun runTasks(
         operation.runTask(
             taskName = "Determine Block of Proof",
             targetState = OperationStateType.BLOCK_OF_PROOF,
-            timeout = 20.sec
+            timeout = 90.sec
         ) {
             val state = operation.state as? OperationState.Confirmed
                 ?: failTask("The operation has no transaction set!")
@@ -123,7 +123,7 @@ suspend fun runTasks(
         operation.runTask(
             taskName = "Prove Transaction",
             targetState = OperationStateType.PROVEN,
-            timeout = 20.sec
+            timeout = 90.sec
         ) {
             val state = operation.state as? OperationState.BlockOfProof
                 ?: failTask("Trying to prove transaction without block of proof!")
@@ -246,8 +246,8 @@ suspend fun runTasks(
                 delay(30000)
                 val confirmations = try {
                     nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
-                } catch (e: TimeoutError) {
-                    failTask("Transaction retrieval by id has timed out")
+                } catch (e: Exception) {
+                    failTask("Transaction retrieval by id has failed: ${e.message}")
                 }
             } while (confirmations == null || confirmations < 10)
 
@@ -264,7 +264,7 @@ suspend fun runTasks(
             val endorsedBlockHeight = operation.endorsedBlockHeight
                 ?: error("Trying to wait for the payout block without having the endorsed block height set")
 
-            val payoutBlockIndex = endorsedBlockHeight + 500
+            val payoutBlockHeight = endorsedBlockHeight + 500
             val payoutAddress = state.miningInstruction.minerAddress
 
             // Wait for the payout block
@@ -272,24 +272,25 @@ suspend fun runTasks(
             do {
                 delay(30000)
                 payoutBlockHash = try {
-                    nodeCoreService.getBlockHash(payoutBlockIndex)
-                } catch (e: TimeoutError) {
-                    failTask("Block retrieval by height has timed out")
+                    nodeCoreService.getBlockHash(payoutBlockHeight)
+                } catch (e: Exception) {
+                    failTask("Block retrieval by height has failed: ${e.message}")
                 }
             } while (payoutBlockHash == null)
 
             logger.debug(operation) { "Payout block hash: $payoutBlockHash" }
 
+            // FIXME: Retrieve the reward from the payout block itself
             val endorsementInfo = nodeCoreService.getPopEndorsementInfo().find {
                 it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
-            } ?: failTask("Could not find block endorsement info after waiting for the payout block!")
+            } ?: error("Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!")
 
             operation.complete(payoutBlockHash, endorsementInfo.reward)
         }
 
         EventBus.popMiningOperationCompletedEvent.trigger(operation.id)
     } catch (e: CancellationException) {
-        logger.info(operation) { "Reorg detected! Tasks cancelled. A new job will be started." }
+        logger.info(operation) { "Job was cancelled" }
     } catch (t: Throwable) {
         logger.debug(t) { t.message }
         operation.fail(t.message ?: "Unknown reason")
@@ -321,6 +322,9 @@ private suspend inline fun MiningOperation.runTask(
             logger.warn(this) { "Task '$taskName' has failed: ${e.message}" }
             if (attempts < MAX_TASK_RETRIES) {
                 attempts++
+                // Check if the task was cancelled before performing any reattempts
+                yield()
+                // Wait a growing amount of time before every reattempt
                 val secondsToWait = attempts * attempts * 10
                 logger.info(this) { "Will try again in $secondsToWait seconds..." }
                 delay(secondsToWait * 1000L)

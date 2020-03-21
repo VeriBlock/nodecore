@@ -14,15 +14,15 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.grpc.netty.NegotiationType
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.grpc.stub.MetadataUtils
-import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
+import nodecore.miners.pop.VpmConfig
 import java.io.File
 
 class ChannelBuilder(
-    private val configuration: Configuration
+    private val config: VpmConfig
 ) {
     fun buildManagedChannel(): ManagedChannel {
-        return if (configuration.nodeCoreUseSSL) {
+        return if (config.nodeCoreRpc.ssl) {
             buildTlsManagedChannel()
         } else {
             buildPlainTextManagedChannel()
@@ -31,7 +31,7 @@ class ChannelBuilder(
 
     fun attachPasswordInterceptor(inner: Channel?): Channel {
         val headers = Metadata()
-        val password = configuration.nodeCorePassword
+        val password = config.nodeCoreRpc.password
         if (password != null) {
             headers.put(Constants.RPC_PASSWORD_HEADER_NAME, password)
         }
@@ -40,9 +40,12 @@ class ChannelBuilder(
     }
 
     private fun buildTlsManagedChannel(): ManagedChannel {
-        val certChainFile = File(configuration.certificateChainPath)
+        if (config.nodeCoreRpc.certificateChainPath == null) {
+            error("'nodecore.rpc.certificateChainPath' is not configured")
+        }
+        val certChainFile = File(config.nodeCoreRpc.certificateChainPath)
         return NettyChannelBuilder
-            .forAddress(configuration.nodeCoreHost, configuration.nodeCorePort)
+            .forAddress(config.nodeCoreRpc.host, config.nodeCoreRpc.port)
             .sslContext(GrpcSslContexts.forClient().trustManager(certChainFile).build())
             .negotiationType(NegotiationType.TLS)
             .build()
@@ -50,7 +53,7 @@ class ChannelBuilder(
 
     private fun buildPlainTextManagedChannel(): ManagedChannel {
         return NettyChannelBuilder
-            .forAddress(configuration.nodeCoreHost, configuration.nodeCorePort)
+            .forAddress(config.nodeCoreRpc.host, config.nodeCoreRpc.port)
             .usePlaintext()
             .build()
     }

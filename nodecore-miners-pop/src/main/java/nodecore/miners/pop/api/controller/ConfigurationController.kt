@@ -12,12 +12,11 @@ import de.nielsfalk.ktor.swagger.get
 import de.nielsfalk.ktor.swagger.put
 import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
 import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.api.model.SetConfigRequest
+import org.veriblock.core.utilities.Configuration
 
 @Group("Configuration") @Location("/api/config") class config
 
@@ -31,22 +30,19 @@ class ConfigurationController(
                 .description("Get all configuration values")
         ) {
             val configValues = configuration.list()
-            val map = configValues.associate { configValue ->
-                configValue.split("=").let {
-                    it[0] to it[1]
-                }
-            }
-            call.respond(map)
+            call.respond(configValues)
         }
         put<config, SetConfigRequest>(
             "config"
                 .description("Set one configuration value")
         ) { _, request ->
-            val result = configuration.setProperty(request.key, request.value)
-            call.respond(
-                if (result.didFail()) HttpStatusCode.InternalServerError else HttpStatusCode.OK,
-                result
-            )
+            if (request.key == null) {
+                throw BadRequestException("'key' must be set")
+            }
+            if (request.value == null) {
+                throw BadRequestException("'value' must be set")
+            }
+            configuration.setProperty(request.key, request.value)
         }
     }
 }

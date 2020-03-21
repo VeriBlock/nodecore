@@ -10,9 +10,6 @@ import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.core.OperationState
 import nodecore.miners.pop.core.OperationStateType
-import nodecore.miners.pop.events.CoinsReceivedEventDto
-import nodecore.miners.pop.events.EventBus
-import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import nodecore.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
@@ -46,8 +43,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
 
-class PoPMiner(
-    private val configuration: Configuration,
+class MinerService(
+    private val config: VpmConfig,
     private val bitcoinService: BitcoinService,
     private val nodeCoreService: NodeCoreService,
     private val stateService: PoPStateService,
@@ -76,10 +73,9 @@ class PoPMiner(
         EventBus.nodeCoreUnhealthyEvent.register(this, ::onNodeCoreUnhealthy)
         EventBus.nodeCoreSynchronizedEvent.register(this, ::onNodeCoreSynchronized)
         EventBus.nodeCoreDesynchronizedEvent.register(this, ::onNodeCoreDesynchronized)
-        EventBus.configurationChangedEvent.register(this, ::onConfigurationChanged)
         EventBus.newVeriBlockFoundEvent.register(this, ::onNewVeriBlockFound)
         bitcoinService.initialize()
-        if (!configuration.getBoolean(Constants.BYPASS_ACKNOWLEDGEMENT_KEY)) {
+        if (!config.skipAck) {
             val data = keyValueRepository[Constants.WALLET_SEED_VIEWED_KEY]
             if (data == null || data.value != "1") {
                 EventBus.walletSeedAgreementMissingEvent.trigger()
@@ -89,15 +85,14 @@ class PoPMiner(
 
     fun shutdown() {
         EventBus.popMiningOperationCompletedEvent.unregister(this)
-        EventBus.insufficientFundsEvent.remove(this)
-        EventBus.bitcoinServiceReadyEvent.remove(this)
-        EventBus.bitcoinServiceNotReadyEvent.remove(this)
-        EventBus.blockchainDownloadedEvent.remove(this)
-        EventBus.nodeCoreHealthyEvent.remove(this)
-        EventBus.nodeCoreUnhealthyEvent.remove(this)
-        EventBus.nodeCoreSynchronizedEvent.remove(this)
-        EventBus.nodeCoreDesynchronizedEvent.remove(this)
-        EventBus.configurationChangedEvent.remove(this)
+        EventBus.insufficientFundsEvent.unregister(this)
+        EventBus.bitcoinServiceReadyEvent.unregister(this)
+        EventBus.bitcoinServiceNotReadyEvent.unregister(this)
+        EventBus.blockchainDownloadedEvent.unregister(this)
+        EventBus.nodeCoreHealthyEvent.unregister(this)
+        EventBus.nodeCoreUnhealthyEvent.unregister(this)
+        EventBus.nodeCoreSynchronizedEvent.unregister(this)
+        EventBus.nodeCoreDesynchronizedEvent.unregister(this)
         EventBus.newVeriBlockFoundEvent.unregister(this)
 
         processManager.shutdown()
@@ -264,7 +259,7 @@ class PoPMiner(
         return result
     }
 
-    fun showRecentBitcoinFees(): Pair<Int, Long>? {
+    suspend fun showRecentBitcoinFees(): Pair<Int, Long>? {
         return bitcoinService.calculateFeesFromLatestBlock()
     }
 
@@ -316,7 +311,7 @@ class PoPMiner(
     }
 
     private fun ensureSufficientFunds() {
-        val maximumTransactionFee = Coin.valueOf(configuration.maxTransactionFee)
+        val maximumTransactionFee = Coin.valueOf(config.bitcoin.maxFee)
         if (!bitcoinService.getBalance().isLessThan(maximumTransactionFee)) {
             if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
                 logger.info("PoP wallet is sufficiently funded")
@@ -360,7 +355,7 @@ class PoPMiner(
         return when (flag) {
             PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED -> "Bitcoin blockchain is not downloaded"
             PoPMinerDependencies.SUFFICIENT_FUNDS -> {
-                val maximumTransactionFee = Coin.valueOf(configuration.maxTransactionFee)
+                val maximumTransactionFee = Coin.valueOf(config.bitcoin.maxFee)
                 val balance = bitcoinService.getBalance()
                 "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
                     Utility.formatBTCFriendlyString(balance) + System.lineSeparator() + String.format(
@@ -488,14 +483,6 @@ class PoPMiner(
     private fun onNodeCoreDesynchronized() {
         try {
             removeReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onConfigurationChanged() {
-        try {
-            ensureSufficientFunds()
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

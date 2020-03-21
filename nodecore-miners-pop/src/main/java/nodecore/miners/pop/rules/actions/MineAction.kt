@@ -6,18 +6,18 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules.actions
 
-import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.MinerService
 import org.apache.commons.lang3.StringUtils
 import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
 
 class MineAction(
-    private val miner: PoPMiner
+    private val minerService: MinerService
 ) : RuleAction<Int> {
     override fun execute(value: Int?) {
         // The given value is the block index to mine (or null)
-        val result = miner.mine(value)
+        val result = minerService.mine(value)
         if (result.didFail()) {
             val errorMessage = StringBuilder()
             for (message in result.messages) {

@@ -6,9 +6,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.schedule
 
-import nodecore.miners.pop.Configuration
-import nodecore.miners.pop.PoPMiner
-import org.apache.commons.lang3.StringUtils
+import nodecore.miners.pop.MinerService
+import nodecore.miners.pop.VpmConfig
 import org.bitcoinj.core.Context
 import org.quartz.CronScheduleBuilder
 import org.quartz.CronTrigger
@@ -27,9 +26,8 @@ import java.text.SimpleDateFormat
 private val logger = createLogger {}
 
 class PoPMiningScheduler(
-    private val configuration: Configuration,
-    private val popMiner: PoPMiner,
-    private val context: Context
+    private val config: VpmConfig,
+    private val popMinerService: MinerService
 ) {
     private val scheduler: Scheduler?
     private var runnable = true
@@ -37,9 +35,8 @@ class PoPMiningScheduler(
 
     init {
         try {
-            val schedule = configuration.cronSchedule
-            if (StringUtils.isNotBlank(schedule)) {
-                scheduleBuilder = CronScheduleBuilder.cronSchedule(schedule)
+            if (!config.cronSchedule.isBlank()) {
+                scheduleBuilder = CronScheduleBuilder.cronSchedule(config.cronSchedule)
             } else {
                 runnable = false
             }
@@ -82,7 +79,7 @@ class PoPMiningScheduler(
                 scheduler.scheduleJob(job, trigger)
                 val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                 val info = String.format(
-                    "Found cron schedule '" + configuration.cronSchedule + "', first trigger at %s",
+                    "Found cron schedule '${config.cronSchedule}', first trigger at %s",
                     dateFormatter.format(trigger.nextFireTime)
                 )
                 logger.info(info)
@@ -93,10 +90,10 @@ class PoPMiningScheduler(
     }
 
     private fun executeSchedule() {
-        Context.propagate(context)
-        if (popMiner.isReady()) {
+        Context.propagate(config.bitcoin.context)
+        if (popMinerService.isReady()) {
             logger.info("Starting mining operation as scheduled")
-            popMiner.mine(null)
+            popMinerService.mine(null)
         } else {
             logger.info("PoP miner is not in ready state, skipping scheduled mining operation")
         }

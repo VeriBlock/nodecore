@@ -9,7 +9,7 @@
 package nodecore.miners.pop.shell.commands
 
 import kotlinx.coroutines.runBlocking
-import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
@@ -21,14 +21,14 @@ import org.veriblock.shell.core.success
 import java.math.BigDecimal
 
 fun CommandFactory.bitcoinWalletCommands(
-    miner: PoPMiner
+    minerService: MinerService
 ) {
     command(
         name = "Show Bitcoin Balance",
         form = "showbitcoinbalance",
         description = "Displays the current balance for the Bitcoin wallet"
     ) {
-        val bitcoinBalance = miner.getBitcoinBalance()
+        val bitcoinBalance = minerService.getBitcoinBalance()
         val formattedBalance = Utility.formatBTCFriendlyString(bitcoinBalance)
         printInfo("Bitcoin Balance: $formattedBalance")
         success {
@@ -41,7 +41,7 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "showbitcoinaddress",
         description = "Displays the current address for receiving Bitcoin"
     ) {
-        val address = miner.getBitcoinReceiveAddress()
+        val address = minerService.getBitcoinReceiveAddress()
         printInfo("Bitcoin Receive Address: $address")
         success {
             addMessage("V200", "Success", address)
@@ -66,7 +66,7 @@ fun CommandFactory.bitcoinWalletCommands(
         }
 
         val creationTime: Long? = getOptionalParameter("creationTime")
-        if (!miner.importWallet(words, creationTime)) {
+        if (!minerService.importWallet(words, creationTime)) {
             return@command failure {
                 addMessage("V500", "Unable to Import", "Unable to import the wallet from the seed supplied. Check the logs for more detail.", true)
             }
@@ -87,7 +87,7 @@ fun CommandFactory.bitcoinWalletCommands(
         val address: String = getParameter("address")
         val amount: BigDecimal = getParameter("amount")
         runBlocking {
-            miner.sendBitcoinToAddress(address, amount).toShellResult()
+            minerService.sendBitcoinToAddress(address, amount).toShellResult()
         }
     }
 
@@ -96,7 +96,7 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "exportbitcoinkeys",
         description = "Exports the private keys in the Bitcoin wallet to a specified file in WIF format"
     ) {
-        miner.exportBitcoinPrivateKeys().toShellResult()
+        minerService.exportBitcoinPrivateKeys().toShellResult()
     }
 
     command(
@@ -104,6 +104,6 @@ fun CommandFactory.bitcoinWalletCommands(
         form = "resetwallet",
         description = "Resets the Bitcoin wallet, marking it for resync"
     ) {
-        miner.resetBitcoinWallet().toShellResult()
+        minerService.resetBitcoinWallet().toShellResult()
     }
 }

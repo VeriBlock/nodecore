@@ -11,7 +11,6 @@ import io.kotlintest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.model.VeriBlockHeader
 import nodecore.miners.pop.rules.Rule
 import nodecore.miners.pop.rules.RuleContext
@@ -27,7 +26,7 @@ class PoPEventEngineTests {
         val rule: Rule = mockk()
         val rules: Set<Rule> = setOf(rule)
         val ruleContextSlot = slot<RuleContext>()
-        val engine = PoPEventEngine(rules)
+        val engine = EventEngine(rules)
 
         // When
         engine.onNewVeriBlockFound(event)

@@ -7,32 +7,10 @@
 
 package nodecore.miners.pop.rules.conditions;
 
-import nodecore.miners.pop.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class Round1ConditionTests {
-
-    @Test
-    public void isActiveWhenConfigurationFalse() {
-        Configuration config = mock(Configuration.class);
-        when(config.getBoolean("auto.mine.round1")).thenReturn(false);
-
-        Round1Condition condition = new Round1Condition();
-        Assert.assertFalse(condition.isActive(config));
-    }
-
-    @Test
-    public void isActiveWhenConfigurationTrue() {
-        Configuration config = mock(Configuration.class);
-        when(config.getBoolean("auto.mine.round1")).thenReturn(true);
-
-        Round1Condition condition = new Round1Condition();
-        Assert.assertTrue(condition.isActive(config));
-    }
 
     @Test
     public void evaluateWhenHeightNull() {

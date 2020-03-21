@@ -23,6 +23,8 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import mu.KotlinLogging
+import nodecore.miners.pop.OldConfiguration
+import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.api.controller.ApiController
 import nodecore.miners.pop.api.controller.statusPages
 import java.util.concurrent.TimeUnit
@@ -30,19 +32,13 @@ import java.util.concurrent.TimeUnit
 const val API_VERSION = "0.3"
 
 class ApiServer(
+    config: VpmConfig,
     private val controllers: List<ApiController>
 ) {
 
     private var running = false
 
-    var port: Int = 8080
-        set(value) {
-            if (running) {
-                error("Port cannot be set after the server has started")
-            }
-
-            field = value
-        }
+    val port = config.httpApiPort
 
     var server: ApplicationEngine? = null
 
@@ -63,7 +59,6 @@ class ApiServer(
                 install(ContentNegotiation) {
                     gson()
                 }
-
 
                 // Documentation
                 install(SwaggerSupport) {

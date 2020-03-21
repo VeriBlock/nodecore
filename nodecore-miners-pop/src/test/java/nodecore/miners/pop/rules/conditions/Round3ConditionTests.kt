@@ -8,30 +8,10 @@
 package nodecore.miners.pop.rules.conditions
 
 import io.kotlintest.shouldBe
-import io.mockk.every
-import io.mockk.mockk
-import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.OldConfiguration
 import org.junit.Test
 
 class Round3ConditionTests {
-    @Test
-    fun isActiveWhenConfigurationFalse() {
-        val config: Configuration = mockk {
-            every { getBoolean("auto.mine.round3") } returns false
-        }
-        val condition = Round3Condition()
-        condition.isActive(config) shouldBe false
-    }
-
-    @Test
-    fun getIsActiveWhenConfigurationTrue() {
-        val config: Configuration = mockk {
-            every { getBoolean("auto.mine.round3") } returns true
-        }
-        val condition = Round3Condition()
-        condition.isActive(config) shouldBe true
-    }
-
     @Test
     fun evaluateWhenHeightNull() {
         val condition = Round3Condition()

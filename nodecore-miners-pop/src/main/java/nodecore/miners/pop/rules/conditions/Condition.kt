@@ -6,9 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules.conditions
 
-import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.OldConfiguration
+import nodecore.miners.pop.VpmConfig
 
 interface Condition<T> {
-    fun isActive(configuration: Configuration): Boolean
+    fun isActive(configuration: VpmConfig): Boolean
     fun evaluate(subject: T?): Boolean
 }

@@ -1,0 +1,124 @@
+// VeriBlock PoP Miner
+// Copyright 2017-2019 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
+@file:JvmName("VeriBlockPoPMiner")
+package nodecore.miners.pop
+
+import mu.KotlinLogging
+import nodecore.miners.pop.api.ApiServer
+import nodecore.miners.pop.api.webApiModule
+import nodecore.miners.pop.rules.rulesModule
+import nodecore.miners.pop.schedule.PoPMiningScheduler
+import nodecore.miners.pop.shell.PopShell
+import nodecore.miners.pop.storage.repositoriesModule
+import org.bitcoinj.core.Context
+import org.bitcoinj.utils.Threading
+import org.koin.core.context.startKoin
+import org.veriblock.core.SharedConstants
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import kotlin.system.exitProcess
+
+private val logger = KotlinLogging.logger {}
+
+private val eventRegistrar = Any()
+
+private val shutdownSignal: CountDownLatch = CountDownLatch(1)
+private lateinit var shell: PopShell
+private lateinit var popMinerService: MinerService
+var externalQuit = false
+
+fun run(args: Array<String>): Int {
+    EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
+    EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
+
+    print(SharedConstants.LICENSE)
+    Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdownSignal.countDown() }))
+    val startupInjector = startKoin {
+        properties(mapOf("args" to args.joinToString(" ")))
+        this.modules(
+            listOf(
+                configModule(args),
+                bootstrapModule,
+                repositoriesModule,
+                rulesModule,
+                webApiModule
+            )
+        )
+    }.koin
+    val config: VpmConfig = startupInjector.get()
+    Threading.ignoreLockCycles()
+    Threading.USER_THREAD = Executor { command: Runnable ->
+        Context.propagate(config.bitcoin.context)
+        try {
+            command.run()
+        } catch (e: Exception) {
+            logger.error("Exception running listener", e)
+        }
+    }
+    popMinerService = startupInjector.get()
+    val scheduler: PoPMiningScheduler = startupInjector.get()
+    val eventEngine: EventEngine = startupInjector.get()
+    val apiServer: ApiServer = startupInjector.get()
+    shell = startupInjector.get()
+    shell.initialize()
+    try {
+        popMinerService.run()
+        scheduler.run()
+        eventEngine.run()
+        apiServer.start()
+        shell.run()
+    } catch (e: Exception) {
+        shell.renderFromThrowable(e)
+    } finally {
+        shutdownSignal.countDown()
+    }
+    try {
+        shutdownSignal.await()
+
+        EventBus.shellCompletedEvent.unregister(eventRegistrar)
+        EventBus.programQuitEvent.unregister(eventRegistrar)
+
+        apiServer.shutdown()
+        eventEngine.shutdown()
+        scheduler.shutdown()
+        popMinerService.shutdown()
+        logger.info("Application exit")
+    } catch (e: InterruptedException) {
+        logger.error("Shutdown signal was interrupted", e)
+        return 1
+    } catch (e: Exception) {
+        logger.error("Could not shut down services cleanly", e)
+        return 1
+    }
+    return 0
+}
+
+private fun onShellCompleted() {
+    try {
+        shutdownSignal.countDown()
+    } catch (e: Exception) {
+        logger.error(e.message, e)
+    }
+}
+
+private fun onProgramQuit(quitReason: Int) {
+    if (quitReason == 1) {
+        externalQuit = true
+        popMinerService.setIsShuttingDown(true)
+    }
+    shell.interrupt()
+}
+
+fun main(args: Array<String>) {
+    val programExitResult = run(args)
+    if (externalQuit) {
+        exitProcess(2)
+    } else {
+        exitProcess(programExitResult)
+    }
+}

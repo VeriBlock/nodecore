@@ -1,7 +1,6 @@
 package nodecore.miners.pop
 
 import com.google.gson.GsonBuilder
-import nodecore.miners.pop.common.BitcoinNetwork
 import nodecore.miners.pop.model.BlockStore
 import nodecore.miners.pop.schedule.PoPMiningScheduler
 import nodecore.miners.pop.services.BitcoinService
@@ -16,63 +15,34 @@ import nodecore.miners.pop.shell.commands.miningCommands
 import nodecore.miners.pop.shell.commands.standardCommands
 import nodecore.miners.pop.shell.commands.veriBlockWalletCommands
 import nodecore.miners.pop.tasks.ProcessManager
-import org.bitcoinj.core.Context
-import org.bitcoinj.core.NetworkParameters
-import org.bitcoinj.params.MainNetParams
-import org.bitcoinj.params.RegTestParams
-import org.bitcoinj.params.TestNet3Params
 import org.koin.dsl.module
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.shell.CommandFactory
 
 @JvmField
 val bootstrapModule = module {
-    single {
-        val args = getProperty<String>("args").split(" ").toTypedArray()
-        ProgramOptions().apply {
-            parse(args)
-        }
-    }
-    single {
-        Configuration(get()).apply {
-            load()
-            save()
-        }
-    }
-
-    single {
-        val configuration: Configuration = get()
-        val params: NetworkParameters
-        params = when (configuration.bitcoinNetwork) {
-            BitcoinNetwork.MainNet -> MainNetParams.get()
-            BitcoinNetwork.TestNet -> TestNet3Params.get()
-            BitcoinNetwork.RegTest -> RegTestParams.get()
-            else -> RegTestParams.get()
-        }
-        Context(params)
-    }
-
     single { BlockStore() }
-    single { PoPEventEngine(get()) }
+    single { EventEngine(get()) }
     single { ProcessManager(get(), get()) }
     single { ChannelBuilder(get()) }
-    single { PoPMiner(get(), get(), get(), get(), get(), get()) }
+    single { MinerService(get(), get(), get(), get(), get(), get()) }
     single { PoPStateService(get(), get()) }
     single { NodeCoreService(get(), get(), get()) }
-    single { BitcoinService(get(), get()) }
-    single { PoPMiningScheduler(get(), get(), get()) }
+    single { BitcoinService(get()) }
+    single { PoPMiningScheduler(get(), get()) }
 
     single {
         CommandFactory().apply {
             val configuration: Configuration = get()
-            val miner: PoPMiner = get()
+            val minerService: MinerService = get()
             val nodeCoreService: NodeCoreService = get()
             val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
             standardCommands()
             configCommands(configuration)
-            miningCommands(miner, prettyPrintGson)
-            bitcoinWalletCommands(miner)
+            miningCommands(minerService, prettyPrintGson)
+            bitcoinWalletCommands(minerService)
             veriBlockWalletCommands(nodeCoreService, prettyPrintGson)
-            diagnosticCommands(miner)
+            diagnosticCommands(minerService)
         }
     }
     single { PopShell(get(), get()) }

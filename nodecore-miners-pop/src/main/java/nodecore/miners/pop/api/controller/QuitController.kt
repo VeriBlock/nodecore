@@ -16,8 +16,8 @@ import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import mu.KotlinLogging
+import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.api.model.EmptyRequest
-import nodecore.miners.pop.events.EventBus
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
 

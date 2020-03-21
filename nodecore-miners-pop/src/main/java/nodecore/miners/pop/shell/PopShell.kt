@@ -9,8 +9,8 @@ package nodecore.miners.pop.shell
 
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
-import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.events.EventBus
+import nodecore.miners.pop.EventBus
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.model.result.Result
 import nodecore.miners.pop.model.result.ResultMessage
 import org.slf4j.Logger
@@ -21,7 +21,7 @@ import org.veriblock.shell.Shell
 import kotlin.system.exitProcess
 
 class PopShell(
-    private val miner: PoPMiner,
+    private val minerService: MinerService,
     commandFactory: CommandFactory
 ) : Shell(commandFactory) {
     private var mustAcceptWalletSeed = false
@@ -47,7 +47,7 @@ class PopShell(
 
     private fun runOnce() {
         if (mustAcceptWalletSeed) {
-            val walletSeed: List<String?>? = miner.getWalletSeed()
+            val walletSeed: List<String?>? = minerService.getWalletSeed()
             if (walletSeed != null) {
                 printInfo(
                     "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue..."

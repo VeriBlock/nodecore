@@ -7,9 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 
-package nodecore.miners.pop.events
+package org.veriblock.core.utilities
 
-import org.veriblock.core.utilities.createLogger
 import java.util.concurrent.CopyOnWriteArrayList
 
 private val logger = createLogger {}
@@ -27,7 +26,7 @@ class EmptyEvent(
         listeners += listener to handler
     }
 
-    fun remove(listener: Any) {
+    fun unregister(listener: Any) {
         logger.debug { "$listener unregistered from event event $name" }
         listeners.removeIf { it.first == listener }
     }

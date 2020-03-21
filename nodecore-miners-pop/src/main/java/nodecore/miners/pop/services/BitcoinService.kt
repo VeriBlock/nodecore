@@ -8,12 +8,11 @@ package nodecore.miners.pop.services
 
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.guava.asDeferred
-import kotlinx.coroutines.time.withTimeout
-import nodecore.miners.pop.Configuration
 import nodecore.miners.pop.Constants
+import nodecore.miners.pop.EventBus
+import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.common.BitcoinNetwork
 import nodecore.miners.pop.common.Utility
-import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
@@ -46,7 +45,6 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.veriblock.core.utilities.createLogger
 import java.io.File
-import java.time.Duration
 import java.util.ArrayList
 import java.util.Date
 import java.util.LinkedHashMap
@@ -60,12 +58,15 @@ private val logger = createLogger {}
 
 private val EMPTY_OBJECT = Any()
 
+@Suppress("UnstableApiUsage")
 class BitcoinService(
-    private val configuration: Configuration,
-    val context: Context
+    config: VpmConfig
 ) : BlocksDownloadedEventListener {
 
-    private val blockCache = AwaitableCache<String, FilteredBlock>(maxSize = 70)
+    private val configuration = config.bitcoin
+    val context = configuration.context
+
+    private val blockCache = AwaitableCache<String, FilteredBlock>(maxSize = 150)
 
     private var kit: WalletAppKit
 
@@ -82,7 +83,7 @@ class BitcoinService(
         }
     }
 
-    private val bitcoinNetwork = configuration.bitcoinNetwork
+    private val bitcoinNetwork = this.configuration.network
 
     private var isBlockchainDownloaded = false
     private var isServiceReady = false
@@ -141,15 +142,15 @@ class BitcoinService(
                 blockChain = chain()
 
                 peerGroup = peerGroup().apply {
-                    useLocalhostPeerWhenPossible = configuration.isBitcoinUseLocalhostPeer
-                    minRequiredProtocolVersion = configuration.bitcoinProtocolVersion.bitcoinProtocolVersion
-                    maxConnections = configuration.bitcoinMaxPeerConnections
-                    setPeerDiscoveryTimeoutMillis(configuration.bitcoinPeerDiscoveryTimeoutMillis.toLong())
-                    setDownloadTxDependencies(configuration.bitcoinDownloadTxDependencies)
-                    setRequiredServices(configuration.bitcoinRequiredServices)
-                    minBroadcastConnections = configuration.bitcoinMinPeerBroadcastConnections
-                    maxPeersToDiscoverCount = configuration.bitcoinMaxPeersToDiscoverCount
-                    pingIntervalMsec = configuration.bitcoinPeerPingIntervalMsec.toLong()
+                    useLocalhostPeerWhenPossible = configuration.useLocalhostPeer
+                    minRequiredProtocolVersion = configuration.minimalPeerProtocolVersion.bitcoinProtocolVersion
+                    maxConnections = configuration.maxPeerConnections
+                    setPeerDiscoveryTimeoutMillis(configuration.peerDiscoveryTimeoutMillis.toLong())
+                    setDownloadTxDependencies(configuration.peerDownloadTxDependencyDepth)
+                    setRequiredServices(configuration.requiredPeerServices)
+                    minBroadcastConnections = configuration.minPeerBroadcastConnections
+                    maxPeersToDiscoverCount = configuration.maxPeersToDiscoverCount
+                    pingIntervalMsec = configuration.peerPingIntervalMillis
                     addBlocksDownloadedEventListener(this@BitcoinService)
                 }
 
@@ -174,10 +175,10 @@ class BitcoinService(
                     return
                 }
                 if (pct.toInt() % 5 == 0) {
-                    logger.info("Blockchain downloading: {}%", pct.toInt())
+                    logger.debug("Blockchain downloading: {}%", pct.toInt())
                 }
                 if (pct > 95.0 && blocksSoFar % 10 == 0) {
-                    logger.info("Blockchain downloading: {} blocks to go", blocksSoFar)
+                    logger.debug("Blockchain downloading: {} blocks to go", blocksSoFar)
                 }
             }
         })
@@ -263,7 +264,7 @@ class BitcoinService(
                 addOutput(Coin.ZERO, opReturnScript)
             }
             SendRequest.forTx(tx).apply {
-                ensureMinRequiredFee = configuration.isMinimumRelayFeeEnforced
+                ensureMinRequiredFee = configuration.enableMinRelayFee
                 changeAddress = wallet.currentChangeAddress()
                 feePerKb = getTransactionFeePerKB()
                 changeAddress = currentChangeAddress()
@@ -312,9 +313,7 @@ class BitcoinService(
     suspend fun getPartialMerkleTree(hash: Sha256Hash): PartialMerkleTree? {
         try {
             logger.trace("Awaiting block {}...", hash.toString())
-            val block = withTimeout(Duration.ofSeconds(configuration.actionTimeout.toLong())) {
-                blockCache.get(hash.toString())
-            }
+            val block = blockCache.get(hash.toString())
             return block.partialMerkleTree
         } catch (e: TimeoutException) {
             logger.debug("Unable to download Bitcoin block", e)
@@ -326,7 +325,7 @@ class BitcoinService(
         return null
     }
 
-    fun downloadBlock(hash: Sha256Hash): Block? {
+    suspend fun downloadBlock(hash: Sha256Hash): Block? {
         var attempts = 0
         var block: Block? = null
         while (block == null && attempts < 5) {
@@ -345,7 +344,7 @@ class BitcoinService(
             }
             try {
                 logger.trace("Waiting for block {} to finish downloading", hash.toString())
-                block = blockFuture[configuration.actionTimeout.toLong(), TimeUnit.SECONDS]
+                block = blockFuture.asDeferred().await()
             } catch (e: TimeoutException) {
                 logger.error("Unable to download Bitcoin block at the #{} attempt: {}", attempts, e.message)
                 blockDownloader.remove(hash.toString())
@@ -379,15 +378,17 @@ class BitcoinService(
         val rawTx = serializer.makeTransaction(raw)
 
         // Try to get the transaction from the wallet first
-        val reconstitutedTx = wallet.getTransaction(rawTx.txId) ?: run {
-            logger.debug("Could not find transaction {} in wallet", rawTx.txId.toString())
-            try {
-                peerGroup.downloadPeer.getPeerMempoolTransaction(rawTx.txId).get()
-            } catch (e: Exception) {
-                throw RuntimeException("Unable to download mempool transaction", e)
-            }
+        val reconstitutedTx = wallet.getTransaction(rawTx.txId)
+        if (reconstitutedTx != null) {
+            return reconstitutedTx
         }
-        return reconstitutedTx
+
+        logger.debug("Could not find transaction {} in wallet", rawTx.txId.toString())
+        return try {
+            peerGroup.downloadPeer.getPeerMempoolTransaction(rawTx.txId).get()
+        } catch (e: Exception) {
+            throw RuntimeException("Unable to download mempool transaction", e)
+        }
     }
 
     suspend fun sendCoins(address: String, amount: Coin): Transaction? {
@@ -401,7 +402,7 @@ class BitcoinService(
         }
     }
 
-    fun calculateFeesFromLatestBlock(): Pair<Int, Long>? {
+    suspend fun calculateFeesFromLatestBlock(): Pair<Int, Long>? {
         try {
             val chainHead = blockChain.chainHead
             val block = downloadBlock(chainHead.header.hash)
@@ -424,7 +425,7 @@ class BitcoinService(
         if (seed != null) {
             val mnemonicCode = seed.mnemonicCode
             if (mnemonicCode != null) {
-                val result = ArrayList(seed.mnemonicCode)
+                val result = ArrayList(mnemonicCode)
                 result.add(0, seed.creationTimeSeconds.toString())
                 return result
             }
@@ -521,7 +522,7 @@ class BitcoinService(
     private fun acquireTxLock() {
         logger.trace("Waiting to acquire lock to create transaction")
         try {
-            val permitted = txLock.tryAcquire(5, TimeUnit.MINUTES)
+            val permitted = txLock.tryAcquire(30, TimeUnit.SECONDS)
             if (!permitted) {
                 throw UnableToAcquireTransactionLock()
             }
@@ -537,10 +538,10 @@ class BitcoinService(
     }
 
     private fun getMaximumTransactionFee() =
-        Coin.valueOf(configuration.maxTransactionFee)
+        Coin.valueOf(configuration.maxFee)
 
     private fun getTransactionFeePerKB() =
-        Coin.valueOf(configuration.transactionFeePerKB)
+        Coin.valueOf(configuration.feePerKb)
 }
 
 private fun BitcoinNetwork.getFilePrefix(): String {

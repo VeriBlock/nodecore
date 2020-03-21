@@ -16,12 +16,15 @@ val webApiModule = module {
     single { QuitController() }
 
     single {
-        ApiServer(listOf(
-            get<ConfigurationController>(),
-            get<MiningController>(),
-            get<WalletController>(),
-            get<LastBitcoinBlockController>(),
-            get<QuitController>()
-        ))
+        ApiServer(
+            get(),
+            listOf(
+                get<ConfigurationController>(),
+                get<MiningController>(),
+                get<WalletController>(),
+                get<LastBitcoinBlockController>(),
+                get<QuitController>()
+            )
+        )
     }
 }

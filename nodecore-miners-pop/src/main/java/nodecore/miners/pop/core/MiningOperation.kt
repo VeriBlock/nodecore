@@ -14,7 +14,7 @@ import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import mu.KLogger
-import nodecore.miners.pop.events.EventBus
+import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.model.PopMiningInstruction
 import org.bitcoinj.core.Block
 import org.bitcoinj.core.Transaction
@@ -145,7 +145,7 @@ class MiningOperation(
             fail("Trying to mark the process as complete without having submitted the PoP data")
             return
         }
-        logger.info { "Operation $id has completed!" }
+        logger.info { "Operation $id has completed! Payout: $payoutAmount VBK" }
         status = OperationStatus.COMPLETED
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
 

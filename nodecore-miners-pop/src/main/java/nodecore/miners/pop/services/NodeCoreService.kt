@@ -13,15 +13,10 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.EventBus
+import nodecore.miners.pop.NewVeriBlockFoundEventDto
+import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.common.Utility
-import nodecore.miners.pop.events.EventBus.configurationChangedEvent
-import nodecore.miners.pop.events.EventBus.newVeriBlockFoundEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreDesynchronizedEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreHealthyEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreSynchronizedEvent
-import nodecore.miners.pop.events.EventBus.nodeCoreUnhealthyEvent
-import nodecore.miners.pop.events.NewVeriBlockFoundEventDto
 import nodecore.miners.pop.model.ApplicationExceptions.PoPSubmitRejected
 import nodecore.miners.pop.model.BlockStore
 import nodecore.miners.pop.model.NodeCoreReply
@@ -44,7 +39,7 @@ import kotlin.math.abs
 private val logger = createLogger {}
 
 class NodeCoreService(
-    private val configuration: Configuration,
+    private val config: VpmConfig,
     private val channelBuilder: ChannelBuilder,
     private val blockStore: BlockStore
 ) {
@@ -61,13 +56,12 @@ class NodeCoreService(
             ThreadFactoryBuilder().setNameFormat("nc-poll").build()
         )
         scheduledExecutorService.scheduleWithFixedDelay({ poll() }, 5, 1, TimeUnit.SECONDS)
-        configurationChangedEvent.register(this) { onNodeCoreConfigurationChanged() }
     }
 
     private fun initializeClient() {
         logger.info(
-            "Connecting to NodeCore at {}:{} {}", configuration.nodeCoreHost, configuration.nodeCorePort,
-            if (configuration.nodeCoreUseSSL) "over SSL" else ""
+            "Connecting to NodeCore at {}:{} {}", config.nodeCoreRpc.host, config.nodeCoreRpc.port,
+            if (config.nodeCoreRpc.ssl) "over SSL" else ""
         )
         try {
             channel = channelBuilder.buildManagedChannel()
@@ -281,21 +275,13 @@ class NodeCoreService(
         return result
     }
 
-    private fun onNodeCoreConfigurationChanged() {
-        try {
-            initializeClient()
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
     private fun poll() {
         try {
             if (isHealthy() && isSynchronized()) {
                 if (!isNodeCoreSynchronized()) {
                     synchronized.set(false)
                     logger.info("The connected node is not synchronized")
-                    nodeCoreDesynchronizedEvent.trigger()
+                    EventBus.nodeCoreDesynchronizedEvent.trigger()
                     return
                 }
                 val latestBlock = try {
@@ -303,41 +289,41 @@ class NodeCoreService(
                 } catch (e: Exception) {
                     logger.error("Unable to get the last block from NodeCore")
                     healthy.set(false)
-                    nodeCoreUnhealthyEvent.trigger()
+                    EventBus.nodeCoreUnhealthyEvent.trigger()
                     return
                 }
                 val chainHead = blockStore.getChainHead()
                 if (latestBlock != chainHead) {
                     blockStore.setChainHead(latestBlock)
-                    newVeriBlockFoundEvent.trigger(NewVeriBlockFoundEventDto(latestBlock, chainHead))
+                    EventBus.newVeriBlockFoundEvent.trigger(NewVeriBlockFoundEventDto(latestBlock, chainHead))
                 }
             } else {
                 if (ping()) {
                     if (!isHealthy()) {
                         logger.info("Connected to NodeCore")
-                        nodeCoreHealthyEvent.trigger()
+                        EventBus.nodeCoreHealthyEvent.trigger()
                     }
                     healthy.set(true)
                     if (isNodeCoreSynchronized()) {
                         if (!isSynchronized()) {
                             logger.info("The connected node is synchronized")
-                            nodeCoreSynchronizedEvent.trigger()
+                            EventBus.nodeCoreSynchronizedEvent.trigger()
                         }
                         synchronized.set(true)
                     } else {
                         if (isSynchronized()) {
                             logger.info("The connected node is not synchronized")
-                            nodeCoreDesynchronizedEvent.trigger()
+                            EventBus.nodeCoreDesynchronizedEvent.trigger()
                         }
                         synchronized.set(false)
                     }
                 } else {
                     if (isHealthy()) {
-                        nodeCoreUnhealthyEvent.trigger()
+                        EventBus.nodeCoreUnhealthyEvent.trigger()
                     }
                     if (isSynchronized()) {
                         logger.info("The connected node is not synchronized")
-                        nodeCoreDesynchronizedEvent.trigger()
+                        EventBus.nodeCoreDesynchronizedEvent.trigger()
                     }
                     healthy.set(false)
                     synchronized.set(false)

@@ -7,11 +7,11 @@
 package nodecore.miners.pop.services
 
 import com.google.protobuf.ByteString
+import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.core.MiningOperation
 import nodecore.miners.pop.core.OperationState
 import nodecore.miners.pop.core.OperationStatus
 import nodecore.miners.pop.core.debug
-import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.model.PopMiningInstruction
 import nodecore.miners.pop.storage.OperationStateData
 import nodecore.miners.pop.storage.PopRepository

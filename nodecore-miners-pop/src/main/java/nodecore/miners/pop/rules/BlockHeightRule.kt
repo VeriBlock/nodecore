@@ -6,7 +6,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.miners.pop.rules
 
-import nodecore.miners.pop.Configuration
+import nodecore.miners.pop.OldConfiguration
+import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.rules.actions.RuleAction
 import nodecore.miners.pop.rules.conditions.KeystoneBlockCondition
 import nodecore.miners.pop.rules.conditions.Round1Condition
@@ -15,7 +16,7 @@ import nodecore.miners.pop.rules.conditions.Round3Condition
 
 class BlockHeightRule(
     var action: RuleAction<Int>,
-    private val configuration: Configuration
+    private val configuration: VpmConfig
 ) : Rule {
 
     val conditions = listOf(

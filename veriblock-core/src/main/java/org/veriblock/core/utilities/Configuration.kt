@@ -15,14 +15,15 @@ import java.lang.ClassLoader.getSystemResourceAsStream
 import java.nio.file.Paths
 
 private const val CONFIG_FILE_ENV_VAR = "CONFIG_FILE"
-private const val CONFIG_RESOURCE_FILE = "application.conf"
-private const val DEFAULT_CONFIG_FILE = "./application.conf"
-private const val DEFAULT_CONFIG_RESOURCE_FILE = "application-default.conf"
+private const val DEFAULT_CONFIG_FILE = "application.conf"
 
 class Configuration(
-    configFilePath: String = DEFAULT_CONFIG_FILE
+    configFilePath: String = "./$DEFAULT_CONFIG_FILE",
+    bootOptions: BootOptions? = null
 ) {
-    private var config: Config = loadConfig(configFilePath)
+    val path = computeConfigPath(configFilePath, bootOptions)
+
+    private var config: Config = loadConfig(path, bootOptions)
 
     fun <T> getOrNull(path: String, extractor: Config.(String) -> T): T? {
         return if (config.hasPath(path)) {
@@ -41,10 +42,6 @@ class Configuration(
         }
     }
 
-    fun setProperty(key: String, value: String) {
-        config = ConfigFactory.parseMap(mapOf(key to value)).withFallback(config)
-    }
-
     fun getBoolean(path: String) = getOrNull(path) { getBoolean(it) }
 
     fun getInt(path: String) = getOrNull(path) { getInt(it) }
@@ -56,14 +53,53 @@ class Configuration(
     fun getString(path: String) = getOrNull(path) { getString(it) }
 
     inline fun <reified T> extract(path: String): T? = getOrNull(path) { extract<T>(it) }
+
+    fun getDataDirectory() = getString(DATA_DIR_OPTION_KEY) ?: ""
+
+    private val customizedProperties = HashMap<String, String>()
+
+    fun setProperty(key: String, value: String) {
+        customizedProperties[key] = value
+        config = ConfigFactory.parseMap(mapOf(key to value)).withFallback(config)
+        save()
+    }
+
+    private fun save() {
+        val outputLines = customizedProperties.map {
+            "${it.key} = ${it.value}"
+        }
+        val configFile = Paths.get(path).toFile()
+        if (configFile.exists()) {
+            val contents = configFile.readText()
+            val addedContents = outputLines.filter {
+                it !in contents
+            }.joinToString("\n")
+            if (addedContents.isNotEmpty()) {
+                configFile.writeText(contents + "\n" + addedContents + "\n")
+            }
+        } else {
+            val addedContents = outputLines.joinToString("\n")
+            if (addedContents.isNotEmpty()) {
+                configFile.writeText(addedContents + "\n")
+            }
+        }
+    }
 }
 
 private val logger = createLogger {}
 
-private fun loadConfig(configFilePath: String): Config {
+private fun computeConfigPath(configFilePath: String, bootOptions: BootOptions?): String {
+    return if (bootOptions != null && bootOptions.config.hasPath(CONFIG_FILE_OPTION_KEY)) {
+        bootOptions.config.getString(CONFIG_FILE_OPTION_KEY)
+    } else {
+        System.getenv(CONFIG_FILE_ENV_VAR) ?: configFilePath
+    }
+}
+
+private fun loadConfig(configFilePath: String, bootOptions: BootOptions?): Config {
     val isDocker = System.getenv("DOCKER")?.toBoolean() ?: false
     // Attempt to load config file
-    val configFile = Paths.get(System.getenv(CONFIG_FILE_ENV_VAR) ?: configFilePath).toFile()
+    val configFile = Paths.get(configFilePath).toFile()
     val appConfig = if (configFile.exists()) {
         // Parse it if it exists
         logger.debug { "Loading config file $configFile" }
@@ -73,7 +109,7 @@ private fun loadConfig(configFilePath: String): Config {
         if (!isDocker) {
             logger.debug { "Writing to config file with default contents..." }
             // Otherwise, write the default config resource file (in non-docker envs)
-            getSystemResourceAsStream(DEFAULT_CONFIG_RESOURCE_FILE)?.let {
+            getSystemResourceAsStream(configFilePath.defaultConfigResourceFile)?.let {
                 // Write its contents as the config file
                 configFile.writeBytes(it.readBytes())
             }
@@ -81,6 +117,21 @@ private fun loadConfig(configFilePath: String): Config {
         // And return the default config
         ConfigFactory.load()
     }
-    val resourceConfig = ConfigFactory.load(CONFIG_RESOURCE_FILE)
-    return appConfig.withFallback(resourceConfig).resolve()
+    val resourceConfig = ConfigFactory.load(DEFAULT_CONFIG_FILE)
+    return if (bootOptions != null) {
+        bootOptions.config.withFallback(appConfig).withFallback(resourceConfig).resolve()
+    } else {
+        appConfig.withFallback(resourceConfig).resolve()
+    }
 }
+
+private val String.defaultConfigResourceFile: String
+    get() {
+        val file = substringAfterLast('/')
+        if (!contains('.')) {
+            return "$file-default"
+        }
+        val name = file.substringBeforeLast('.')
+        val extension = file.substringAfterLast('.')
+        return "$name-default.$extension"
+    }

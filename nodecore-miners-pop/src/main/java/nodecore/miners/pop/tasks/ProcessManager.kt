@@ -10,8 +10,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.core.MiningOperation
-import nodecore.miners.pop.events.EventBus
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService
 import org.bitcoinj.utils.ContextPropagatingThreadFactory
@@ -51,7 +51,10 @@ class ProcessManager(
     }
 
     fun submit(operation: MiningOperation) {
-        coroutineScope.launch {
+        if (operation.job != null) {
+            error("Trying to submit operation [${operation.id}] while it already had a running job!")
+        }
+        operation.job = coroutineScope.launch {
             runTasks(nodeCoreService, bitcoinService, operation)
         }
     }

@@ -7,32 +7,10 @@
 
 package nodecore.miners.pop.rules.conditions;
 
-import nodecore.miners.pop.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class KeystoneBlockConditionTests {
-
-    @Test
-    public void isActiveWhenConfigurationFalse() {
-        Configuration config = mock(Configuration.class);
-        when(config.getBoolean("auto.mine.round4")).thenReturn(false);
-
-        KeystoneBlockCondition condition = new KeystoneBlockCondition();
-        Assert.assertFalse(condition.isActive(config));
-    }
-
-    @Test
-    public void isActiveWhenConfigurationTrue() {
-        Configuration config = mock(Configuration.class);
-        when(config.getBoolean("auto.mine.round4")).thenReturn(true);
-
-        KeystoneBlockCondition condition = new KeystoneBlockCondition();
-        Assert.assertTrue(condition.isActive(config));
-    }
 
     @Test
     public void evaluateWhenHeightNull() {
