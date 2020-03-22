@@ -58,10 +58,18 @@ class VpmConfig(
     val cronSchedule: String = ""
 )
 
+class NodeCoreRpcConfig(
+    val host: String = "127.0.0.1",
+    val port: Int = 10500,
+    val password: String? = null,
+    val ssl: Boolean = false,
+    val certificateChainPath: String? = null
+)
+
 class BitcoinConfig(
     network: String = "mainnet",
     val maxFee: Long = 8000,
-    val feePerKb: Long = 20000,
+    val feePerKB: Long = 20000,
     val enableMinRelayFee: Boolean = true,
     val useLocalhostPeer: Boolean = false,
     // Experimental settings:
@@ -114,14 +122,6 @@ class BitcoinConfig(
         mask.toLong()
     }
 }
-
-class NodeCoreRpcConfig(
-    val host: String = "127.0.0.1",
-    val port: Int = 10500,
-    val password: String? = null,
-    val ssl: Boolean = false,
-    val certificateChainPath: String? = null
-)
 
 class AutoMineConfig(
     val round1: Boolean = false,

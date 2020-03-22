@@ -541,7 +541,7 @@ class BitcoinService(
         Coin.valueOf(configuration.maxFee)
 
     private fun getTransactionFeePerKB() =
-        Coin.valueOf(configuration.feePerKb)
+        Coin.valueOf(configuration.feePerKB)
 }
 
 private fun BitcoinNetwork.getFilePrefix(): String {
