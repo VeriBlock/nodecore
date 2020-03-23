@@ -33,6 +33,8 @@ interface Miner {
 
     fun mine(chainId: String, block: Int?): Result
 
+    fun resubmit(operation: MiningOperation)
+
     fun shutdown()
 
     fun setIsShuttingDown(b: Boolean)

@@ -193,20 +193,28 @@ class MockMiner(
         val block = veriBlockBlockchain.mine(blockData)
         // create an ATV
         val context = createVeriBlockContext(lastKnownVBKBlock)
-        return AltPublication(endorsementTx,
+        return AltPublication(
+            endorsementTx,
             blockData.getRegularMerklePath(0),
             block,
             context
         )
     }
 
-    override fun getOperations(): List<MiningOperation> = operations.values.sortedBy { it.timestamp }
+    override fun resubmit(operation: MiningOperation) =
+        error("Operation not supported in the Mock Miner")
 
-    override fun getOperation(id: String): MiningOperation? = operations[id]
+    override fun getOperations(): List<MiningOperation> =
+        operations.values.sortedBy { it.timestamp }
 
-    override fun getAddress(): String = "NO ADDRESS"
+    override fun getOperation(id: String): MiningOperation? =
+        operations[id]
 
-    override fun getBalance(): Balance? = null
+    override fun getAddress(): String =
+        "NO ADDRESS"
+
+    override fun getBalance(): Balance? =
+        null
 
     override val feePerByte: Long
         get() = config.feePerByte

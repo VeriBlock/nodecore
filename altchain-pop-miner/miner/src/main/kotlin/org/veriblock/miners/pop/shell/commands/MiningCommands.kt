@@ -16,6 +16,7 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
+import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.miningCommands(miner: Miner) {
@@ -35,6 +36,25 @@ fun CommandFactory.miningCommands(miner: Miner) {
         val block: Int? = getOptionalParameter("block")
 
         miner.mine(chain, block)
+    }
+
+    command(
+        name = "Resubmit",
+        form = "resubmit",
+        description = "Submits the PoP data of a copy of an already complete proof of proof mining operation",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING)
+        )
+    ) {
+        val id: String = getParameter("id")
+        val operation = miner.getOperation(id)
+        if (operation == null) {
+            printInfo("Operation $id not found")
+            failure()
+        } else {
+            miner.resubmit(operation)
+            success()
+        }
     }
 
     command(
@@ -62,14 +82,14 @@ fun CommandFactory.miningCommands(miner: Miner) {
         )
     ) {
         val id: String = getParameter("id")
-        val state = miner.getOperation(id)
-        if (state == null) {
+        val operation = miner.getOperation(id)
+        if (operation == null) {
             printInfo("Operation $id not found")
+            failure()
         } else {
-            printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(state)))
+            printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
+            success()
         }
-
-        success()
     }
 
     command(

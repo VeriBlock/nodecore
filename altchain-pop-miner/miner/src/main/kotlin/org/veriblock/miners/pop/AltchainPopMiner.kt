@@ -13,6 +13,7 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
@@ -198,27 +199,57 @@ class AltchainPopMiner(
             }
         }
 
-        val state = MiningOperation(
+        val operation = MiningOperation(
             chainId = chainId,
             blockHeight = block
         )
 
-        registerToStateChangedEvent(state)
+        registerToStateChangedEvent(operation)
 
-        workflowAuthority.submit(state)
-        operations[state.id] = state
+        workflowAuthority.submit(operation)
+        operations[operation.id] = operation
 
-        if (state.status != OperationStatus.UNKNOWN) {
-            logger.info { "Created operation [${state.id}] on chain ${state.chainId}" }
+        if (operation.status != OperationStatus.UNKNOWN) {
+            logger.info { "Created operation [${operation.id}] on chain ${operation.chainId}" }
 
             return success {
-                addMessage("v000", state.id, "")
+                addMessage("v000", operation.id, "")
             }
         } else {
             return failure {
                 addMessage("v500", "Unable to mine", "Operation initialization error")
             }
         }
+    }
+
+    override fun resubmit(operation: MiningOperation) {
+        val operationState = operation.state
+        if (operationState !is OperationState.Completed) {
+            error("The operation [${operation.id}] is not completed, so it can't be resubmitted!")
+        }
+
+        // Copy the operation
+        val newOperation = MiningOperation(
+            chainId = operation.chainId,
+            blockHeight = operation.blockHeight
+        )
+
+        // Replicate its state up until prior to the PoP data submission
+        newOperation.setMiningInstruction(operationState.miningInstruction)
+        newOperation.setTransaction(operationState.transaction)
+        newOperation.setConfirmed()
+        newOperation.setBlockOfProof(operationState.blockOfProof)
+        newOperation.setMerklePath(operationState.merklePath)
+        newOperation.setKeystoneOfProof(operationState.keystoneOfProof)
+        newOperation.setVeriBlockPublications(operationState.veriBlockPublications)
+
+        registerToStateChangedEvent(newOperation)
+
+        // Submit new operation
+        workflowAuthority.submit(newOperation)
+        operations[newOperation.id] = newOperation
+
+        logger.info { "Resubmitted operation [${operation.id}] as new operation [${newOperation.id}]" }
     }
 
     override fun shutdown() {
