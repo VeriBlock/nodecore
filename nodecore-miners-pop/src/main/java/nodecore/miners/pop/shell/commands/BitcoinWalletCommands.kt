@@ -31,6 +31,9 @@ fun CommandFactory.bitcoinWalletCommands(
         val bitcoinBalance = minerService.getBitcoinBalance()
         val formattedBalance = Utility.formatBTCFriendlyString(bitcoinBalance)
         printInfo("Bitcoin Balance: $formattedBalance")
+        val bitcoinPendingBalance = minerService.getBitcoinPendingBalance()
+        val formattedPendingBalance = Utility.formatBTCFriendlyString(bitcoinPendingBalance)
+        printInfo("Bitcoin Pending Balance: $formattedPendingBalance")
         success {
             addMessage("V200", "Success", formattedBalance)
         }

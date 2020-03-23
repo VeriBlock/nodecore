@@ -193,6 +193,9 @@ class MinerService(
     fun getBitcoinBalance(): Coin =
         bitcoinService.getBalance()
 
+    fun getBitcoinPendingBalance(): Coin =
+        bitcoinService.getPendingBalance()
+
     fun getLastBitcoinBlock(): StoredBlock =
         bitcoinService.lastBlock
 

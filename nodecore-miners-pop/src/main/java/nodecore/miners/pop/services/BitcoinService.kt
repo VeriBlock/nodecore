@@ -134,7 +134,7 @@ class BitcoinService(
                             } else {
                                 "Received ${Utility.formatBTCFriendlyString(delta)}"
                             }
-                            "$action. New pending balance: ${Utility.formatBTCFriendlyString(newBalance)}"
+                            "New pending BTC transaction: $action. New pending balance: ${Utility.formatBTCFriendlyString(newBalance)}"
                         }
                     }
                 }
@@ -241,6 +241,9 @@ class BitcoinService(
     fun getBalance(): Coin =
         wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
 
+    fun getPendingBalance(): Coin =
+        wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE)
+
     fun resetWallet() {
         receiveAddress = null
         setServiceReady(false)
@@ -266,7 +269,7 @@ class BitcoinService(
             SendRequest.forTx(tx).apply {
                 ensureMinRequiredFee = configuration.enableMinRelayFee
                 changeAddress = wallet.currentChangeAddress()
-                feePerKb = getTransactionFeePerKB()
+                feePerKb = getTransactionFeePerKb()
                 changeAddress = currentChangeAddress()
             }
         }
@@ -397,7 +400,7 @@ class BitcoinService(
                 Address.fromString(kit.params(), address), amount
             ).apply {
                 changeAddress = wallet.currentChangeAddress()
-                feePerKb = getTransactionFeePerKB()
+                feePerKb = getTransactionFeePerKb()
             }
         }
     }
@@ -540,7 +543,7 @@ class BitcoinService(
     private fun getMaximumTransactionFee() =
         Coin.valueOf(configuration.maxFee)
 
-    private fun getTransactionFeePerKB() =
+    private fun getTransactionFeePerKb() =
         Coin.valueOf(configuration.feePerKB)
 }
 

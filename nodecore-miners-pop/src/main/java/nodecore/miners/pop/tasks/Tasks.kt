@@ -71,6 +71,11 @@ suspend fun runTasks(
             try {
                 val transaction = bitcoinService.createPoPTransaction(opReturnScript)
                 if (transaction != null) {
+                    logger.info {
+                        val txSize = transaction.unsafeBitcoinSerialize().size
+                        val feePerKb = transaction.fee / (txSize / 1024)
+                        "Created BTC transaction ${transaction.txId}. Fee: ${transaction.fee}. FeePerKb: $feePerKb"
+                    }
                     logger.debug { "Successfully broadcast transaction ${transaction.txId}" }
 
                     val exposedTransaction = ExpTransaction(
@@ -87,7 +92,7 @@ suspend fun runTasks(
             }
         }
         operation.runTask(
-            taskName = "Confirm Transaction",
+            taskName = "Confirm Bitcoin Endorsement Transaction",
             targetState = OperationStateType.CONFIRMED,
             timeout = 1.hr
         ) {
@@ -99,6 +104,7 @@ suspend fun runTasks(
                 operation.transactionConfidenceEventChannel.asFlow().first { it == TransactionConfidence.ConfidenceType.BUILDING }
             }
 
+            logger.info(operation) { "BTC endorsement transaction has been confirmed!" }
             operation.setConfirmed()
         }
         operation.runTask(
