@@ -57,13 +57,12 @@ public class LedgerContext implements Comparable<LedgerContext> {
             return -1;
         }
 
-        if(this.getLedgerValue().getSignatureIndex() < ledger.getLedgerValue().getSignatureIndex()){
+        if (this.getLedgerValue().getSignatureIndex() < ledger.getLedgerValue().getSignatureIndex()) {
             return 1;
-        } else
-            if(this.getLedgerValue().getSignatureIndex().equals(ledger.getLedgerValue().getSignatureIndex()) &&
-            this.getLedgerValue().getAvailableAtomicUnits() < ledger.getLedgerValue().getAvailableAtomicUnits()){
-                return 1;
-            }
+        } else if (this.getLedgerValue().getSignatureIndex() == ledger.getLedgerValue().getSignatureIndex()
+            && this.getLedgerValue().getAvailableAtomicUnits() < ledger.getLedgerValue().getAvailableAtomicUnits()) {
+            return 1;
+        }
 
         return -1;
     }

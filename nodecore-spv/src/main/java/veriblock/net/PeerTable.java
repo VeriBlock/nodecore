@@ -33,8 +33,9 @@ public interface PeerTable {
 
     Integer getBestBlockHeight();
 
-    Map<String, LedgerContext> getAddressState();
+    Map<String, LedgerContext> getAddressesState();
+
+    LedgerContext getAddressState(String address);
 
     DownloadStatusResponse getDownloadStatus() throws ExecutionException, InterruptedException;
-
 }
