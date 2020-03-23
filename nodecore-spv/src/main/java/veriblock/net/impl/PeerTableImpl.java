@@ -96,7 +96,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private Peer downloadPeer;
     private final BloomFilter bloomFilter;
     private final P2PService p2PService;
-    private final Map<String, LedgerContext> addressState = new ConcurrentHashMap<>();
+    private final Map<String, LedgerContext> addressesState = new ConcurrentHashMap<>();
 
     public PeerTableImpl(SpvContext spvContext, P2PService p2PService, PeerDiscovery peerDiscovery) {
         this.spvContext = spvContext;
@@ -193,8 +193,8 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
         VeriBlockMessages.LedgerProofRequest.Builder ledgerProof = VeriBlockMessages.LedgerProofRequest.newBuilder();
         for (Address address : addresses) {
-            if(!addressState.containsKey(address)){
-                addressState.put(address.getHash(), new LedgerContext());
+            if (!addressesState.containsKey(address.getHash())) {
+                addressesState.put(address.getHash(), new LedgerContext());
             }
 
             ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.getHash())));
@@ -274,16 +274,17 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
                         case TX_REQUEST:
                             List<Sha256Hash> txIds = message.getMessage().getTxRequest().getTransactionsList().stream()
-                                    .map(tx -> ByteStringUtility.byteStringToHex(tx.getTxId()))
-                                    .map(Sha256Hash::wrap)
-                                    .collect(Collectors.toList());
+                                .map(tx -> ByteStringUtility.byteStringToHex(tx.getTxId()))
+                                .map(Sha256Hash::wrap)
+                                .collect(Collectors.toList());
                             p2PService.onTransactionRequest(txIds, message.getSender());
                             break;
 
                         case LEDGER_PROOF_REPLY:
-                            List<VeriBlockMessages.LedgerProofReply.LedgerProofResult> proofReply = message.getMessage().getLedgerProofReply().getProofsList();
-                            List<LedgerContext> ledgerContexts = proofReply.stream()
-                                    .filter(lpr -> addressState.containsKey(Base58.encode(lpr.getAddress().toByteArray())))
+                            List<VeriBlockMessages.LedgerProofReply.LedgerProofResult> proofReply =
+                                message.getMessage().getLedgerProofReply().getProofsList();
+                            List<LedgerContext> ledgerContexts =
+                                proofReply.stream().filter(lpr -> addressesState.containsKey(Base58.encode(lpr.getAddress().toByteArray())))
                                     .filter(LedgerProofReplyValidator::validate)
                                     .map(LedgerProofReplyMapper::map)
                                     .collect(Collectors.toList());
@@ -315,8 +316,8 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
     private void updateAddressState(List<LedgerContext> ledgerContexts){
         for (LedgerContext ledgerContext : ledgerContexts) {
-            if(addressState.get(ledgerContext.getAddress().getAddress()).compareTo(ledgerContext) > 0) {
-                addressState.replace(ledgerContext.getAddress().getAddress(), ledgerContext);
+            if (addressesState.get(ledgerContext.getAddress().getAddress()).compareTo(ledgerContext) > 0) {
+                addressesState.replace(ledgerContext.getAddress().getAddress(), ledgerContext);
             }
         }
     }
@@ -402,7 +403,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
     @Override
     public Long getSignatureIndex(String address) {
-        return addressState.get(address).getLedgerValue() != null ? addressState.get(address).getLedgerValue().getSignatureIndex() : null;
+        return addressesState.get(address).getLedgerValue() != null ? addressesState.get(address).getLedgerValue().getSignatureIndex() : null;
     }
 
     @Override
@@ -424,15 +425,25 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         DownloadStatus status;
         Integer currentHeight = blockchain.getChainHead().getHeight();
         Integer bestBlockHeight = downloadPeer==null ? 0 : downloadPeer.getBestBlockHeight();
-        if(downloadPeer==null){
+        if (downloadPeer == null) {
             status = DownloadStatus.DISCOVERING;
-        } else if(bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING){
+        } else if (bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING) {
             status = DownloadStatus.READY;
         } else {
             status = DownloadStatus.DOWNLOADING;
         }
 
         return new DownloadStatusResponse(status, currentHeight, bestBlockHeight);
+    }
+
+    @Override
+    public Map<String, LedgerContext> getAddressesState() {
+        return addressesState;
+    }
+
+    @Override
+    public LedgerContext getAddressState(String address) {
+        return addressesState.get(address);
     }
 
     public PeerDiscovery getDiscovery() {
@@ -471,7 +482,4 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         return pendingPeers.size();
     }
 
-    public Map<String, LedgerContext> getAddressState() {
-        return addressState;
-    }
 }

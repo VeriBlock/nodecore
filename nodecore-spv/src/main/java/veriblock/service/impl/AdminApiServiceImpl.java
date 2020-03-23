@@ -130,13 +130,34 @@ public class AdminApiServiceImpl implements AdminApiService {
             totalOutputAmount += output.getAmount();
         }
 
+        LedgerContext ledgerContext = peerTable.getAddressState(requestedSourceAddress);
+        if (ledgerContext == null) {
+            replyBuilder.setSuccess(false);
+            replyBuilder.addResults(makeResult("V008", "Information about this address does not exist.",
+                "Perhaps your node is waiting for this information. Try to do it later.", true
+            ));
+            return replyBuilder.build();
+        } else if (!ledgerContext.getLedgerProofStatus().isExists()) {
+            replyBuilder.setSuccess(false);
+            replyBuilder
+                .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));
+            return replyBuilder.build();
+        }
+
+        if (totalOutputAmount > ledgerContext.getLedgerValue().getAvailableAtomicUnits()) {
+            replyBuilder.setSuccess(false);
+            replyBuilder
+                .addResults(makeResult("V008", "Available balance is not enough.", "Check your address that you use for this operation.", true));
+            return replyBuilder.build();
+        }
+
         // This is for over-estimating the size of the transaction by one byte in the edge case where totalOutputAmount
         // is right below a power-of-two barrier
         long feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L;
         long signatureIndex = getSignatureIndex(requestedSourceAddress);
 
-        int predictedTransactionSize = transactionService.predictStandardTransactionToAllStandardOutputSize(
-                totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
+        int predictedTransactionSize = transactionService
+            .predictStandardTransactionToAllStandardOutputSize(totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
 
         long fee = predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
 
@@ -550,7 +571,7 @@ public class AdminApiServiceImpl implements AdminApiService {
     public VeriBlockMessages.GetBalanceReply getBalance(VeriBlockMessages.GetBalanceRequest request) {
         VeriBlockMessages.GetBalanceReply.Builder replyBuilder = VeriBlockMessages.GetBalanceReply.newBuilder();
         // All of the addresses from the normal address manager will be standard
-        Map<String, LedgerContext> addressLedgerContext =  peerTable.getAddressState();
+        Map<String, LedgerContext> addressLedgerContext = peerTable.getAddressesState();
 
         if (request.getAddressesCount() == 0) {
             for (String address : addressLedgerContext.keySet()) {

@@ -54,13 +54,9 @@ public class LedgerProofReplyMapper {
     }
 
     private static LedgerValue map(VeriBlockMessages.LedgerValue ledgerProofReply){
-        LedgerValue ledgerValue = new LedgerValue();
-
-        ledgerValue.setAvailableAtomicUnits(ledgerProofReply.getAvailableAtomicUnits());
-        ledgerValue.setFrozenAtomicUnits(ledgerProofReply.getFrozenAtomicUnits());
-        ledgerValue.setSignatureIndex(ledgerProofReply.getSignatureIndex());
-
-        return ledgerValue;
+        return new LedgerValue(ledgerProofReply.getAvailableAtomicUnits(), ledgerProofReply.getFrozenAtomicUnits(),
+            ledgerProofReply.getSignatureIndex()
+        );
     }
 
 
