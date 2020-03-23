@@ -28,6 +28,7 @@ import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.createLogger
 import java.time.Duration
 import java.util.ArrayList
+import kotlin.math.roundToInt
 
 private val logger = createLogger {}
 
@@ -72,9 +73,10 @@ suspend fun runTasks(
                 val transaction = bitcoinService.createPoPTransaction(opReturnScript)
                 if (transaction != null) {
                     logger.info {
-                        val txSize = transaction.unsafeBitcoinSerialize().size
-                        val feePerKb = transaction.fee / (txSize / 1024)
-                        "Created BTC transaction ${transaction.txId}. Fee: ${transaction.fee}. FeePerKb: $feePerKb"
+                        val txSizeKb = transaction.unsafeBitcoinSerialize().size / 1024.0
+                        val feeSats = transaction.fee.value
+                        val feePerKb = (feeSats / txSizeKb).roundToInt()
+                        "Created BTC transaction ${transaction.txId}. Fee: ${transaction.fee} Sat ($feePerKb Sat/KB)."
                     }
                     logger.debug { "Successfully broadcast transaction ${transaction.txId}" }
 
