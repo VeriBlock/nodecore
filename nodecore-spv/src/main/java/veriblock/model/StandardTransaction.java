@@ -50,11 +50,13 @@ public class StandardTransaction extends Transaction {
     }
 
     public StandardTransaction(
-        String inputAddress,
-        long inputAmount,
-        List<Output> outputs,
-        long signatureIndex,
-        NetworkParameters networkParameters
+        String inputAddress, long inputAmount, List<Output> outputs, long signatureIndex, NetworkParameters networkParameters
+    ) {
+        this(inputAddress, inputAmount, outputs, signatureIndex, new byte[0], networkParameters);
+    }
+
+    public StandardTransaction(
+        String inputAddress, long inputAmount, List<Output> outputs, long signatureIndex, byte[] data, NetworkParameters networkParameters
     ) {
 
         long totalOutput = 0L;
@@ -65,7 +67,7 @@ public class StandardTransaction extends Transaction {
         long fee = inputAmount - totalOutput;
 
         // Only for Alt Chain Endorsement Transactions
-        this.setData(new byte[0]);
+        this.setData(data);
         this.setSignatureIndex(signatureIndex);
         this.addAllOutput(outputs);
         this.setInputAmount(Coin.valueOf(inputAmount));

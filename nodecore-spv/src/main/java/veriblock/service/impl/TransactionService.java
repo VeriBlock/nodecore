@@ -8,6 +8,8 @@
 
 package veriblock.service.impl;
 
+import com.google.protobuf.ByteString;
+import nodecore.api.grpc.VeriBlockMessages;
 import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.AddressUtility;
@@ -20,14 +22,17 @@ import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 
 import java.security.PublicKey;
+import java.util.Collections;
 import java.util.List;
 
 public class TransactionService {
 
     private final AddressManager addressManager;
+    private final NetworkParameters networkParameters;
 
-    public TransactionService(AddressManager addressManager) {
+    public TransactionService(AddressManager addressManager, NetworkParameters networkParameters) {
         this.addressManager = addressManager;
+        this.networkParameters = networkParameters;
     }
 
     /**
@@ -39,9 +44,7 @@ public class TransactionService {
      * @param signatureIndex The index of signature for inputAddress
      * @return A StandardTransaction object
      */
-    public Transaction createStandardTransaction(
-        String inputAddress, Long inputAmount, List<Output> outputs, Long signatureIndex, NetworkParameters networkParameters
-    ) {
+    public Transaction createStandardTransaction(String inputAddress, Long inputAmount, List<Output> outputs, Long signatureIndex) {
         if (inputAddress == null) {
             throw new IllegalArgumentException("createStandardTransaction cannot be called with a null inputAddress!");
         }
@@ -91,6 +94,26 @@ public class TransactionService {
         return transaction;
     }
 
+    public Transaction createUnsignedAltChainEndorsementTransaction(
+        String inputAddress, long fee, byte[] publicationData, long signatureIndex
+    ) {
+        if (inputAddress == null) {
+            throw new IllegalArgumentException("createAltChainEndorsementTransaction cannot be called with a null inputAddress!");
+        }
+
+        if (!AddressUtility.isValidStandardAddress(inputAddress)) {
+            throw new IllegalArgumentException(
+                "createAltChainEndorsementTransaction cannot be called with an invalid " + "inputAddress (" + inputAddress + ")!");
+        }
+
+        if (!Utility.isPositive(fee)) {
+            throw new IllegalArgumentException(
+                "createAltChainEndorsementTransaction cannot be called with a non-positive" + "inputAmount (" + fee + ")!");
+        }
+
+        return new StandardTransaction(inputAddress, fee, Collections.emptyList(), signatureIndex, publicationData, networkParameters);
+    }
+
     public int predictStandardTransactionToAllStandardOutputSize(long inputAmount, List<Output> outputs, long sigIndex, int extraDataLength) {
         int totalSize = 0;
         totalSize += 1; // Transaction Version
@@ -125,6 +148,56 @@ public class TransactionService {
         totalSize += extraDataLength; // Extra data section
 
         return totalSize;
+    }
+
+    public static int predictAltChainEndorsementTransactionSize(int dataLength, long sigIndex) {
+        int totalSize = 0;
+
+        // Using an estimated total fee of 1 VBK
+        long inputAmount = 100000000L;
+        long inputAmountLength = 0L;
+
+        totalSize += 1; // Transaction Version
+        totalSize += 1; // Type of Input Address
+        totalSize += 1; // Standard Input Address Length Byte
+        totalSize += 22; // Standard Input Address Length
+
+        byte[] inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount);
+        inputAmountLength = inputAmountBytes.length;
+
+        totalSize += 1; // Input Amount Length Byte
+        totalSize += inputAmountLength; // Input Amount Length
+
+        totalSize += 1; // Number of Outputs, will be 0
+
+        byte[] sigIndexBytes = Utility.trimmedByteArrayFromLong(sigIndex);
+        totalSize += 1; // Sig Index Length Bytes
+        totalSize += sigIndexBytes.length; // Sig Index Bytes
+
+        byte[] dataSizeBytes = Utility.trimmedByteArrayFromInteger(dataLength);
+        totalSize += 1; // Data Length Bytes Length
+        totalSize += dataSizeBytes.length; // Data Length Bytes (value will be 0)
+        totalSize += dataLength;
+
+        return totalSize;
+    }
+
+    public static VeriBlockMessages.Transaction.Builder getRegularTransactionMessageBuilder(StandardTransaction tx) {
+        VeriBlockMessages.Transaction.Builder builder = VeriBlockMessages.Transaction.newBuilder();
+        builder.setTransactionFee(tx.getTransactionFee());
+        builder.setTxId(ByteString.copyFrom(tx.getTxId().getBytes()));
+        builder.setType(VeriBlockMessages.Transaction.Type.STANDARD);
+        builder.setSourceAmount(tx.getInputAmount().getAtomicUnits());
+        builder.setSourceAddress(ByteString.copyFrom(tx.getInputAddress().toByteArray()));
+        builder.setData(ByteString.copyFrom(tx.getData()));
+        //        builder.setTimestamp(getTimeStamp());
+        //        builder.setSize(tx.getSize());
+        for (Output output : tx.getOutputs()) {
+            VeriBlockMessages.Output.Builder outputBuilder = builder.addOutputsBuilder();
+            outputBuilder.setAddress(ByteString.copyFrom(output.getAddress().toByteArray()));
+            outputBuilder.setAmount(output.getAmount().getAtomicUnits());
+        }
+        return builder;
     }
 
     public static Sha256Hash calculateTxID(Transaction transaction, NetworkParameters networkParameters) {

@@ -118,4 +118,12 @@ public class AdminServiceFacade extends AdminGrpc.AdminImplBase {
         responseObserver.onNext(adminApiService.getBalance(request));
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void createAltChainEndorsement(
+        VeriBlockMessages.CreateAltChainEndorsementRequest request, StreamObserver<VeriBlockMessages.CreateAltChainEndorsementReply> responseObserver
+    ) {
+        responseObserver.onNext(adminApiService.createAltChainEndorsement(request));
+        responseObserver.onCompleted();
+    }
 }

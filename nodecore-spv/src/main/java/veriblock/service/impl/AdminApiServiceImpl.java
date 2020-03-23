@@ -27,6 +27,7 @@ import veriblock.SpvContext;
 import veriblock.model.LedgerContext;
 import veriblock.model.Output;
 import veriblock.model.StandardAddress;
+import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.net.PeerTable;
 import veriblock.service.AdminApiService;
@@ -141,8 +142,8 @@ public class AdminApiServiceImpl implements AdminApiService {
 
         long totalInputAmount = fee + totalOutputAmount;
 
-        Transaction transaction = transactionService
-            .createStandardTransaction(requestedSourceAddress, totalInputAmount, outputList, signatureIndex + 1, spvContext.getNetworkParameters());
+        Transaction transaction =
+            transactionService.createStandardTransaction(requestedSourceAddress, totalInputAmount, outputList, signatureIndex + 1);
 
         pendingTransactionContainer.addTransaction(transaction);
         peerTable.advertise(transaction);
@@ -560,7 +561,7 @@ public class AdminApiServiceImpl implements AdminApiService {
             for (ByteString address : request.getAddressesList()) {
                 String addressString = ByteStringAddressUtility.parseProperAddressTypeAutomatically(address);
                 LedgerContext ledgerContext = addressLedgerContext.get(addressString);
-                if(addressLedgerContext != null){
+                if (addressLedgerContext != null) {
                     formGetBalanceReply(addressString, ledgerContext, replyBuilder);
                 } else {
                     //TODO process this case.
@@ -573,11 +574,41 @@ public class AdminApiServiceImpl implements AdminApiService {
         return replyBuilder.build();
     }
 
-    private void formGetBalanceReply(String address, LedgerContext ledgerContext, VeriBlockMessages.GetBalanceReply.Builder replyBuilder){
+    @Override
+    public VeriBlockMessages.CreateAltChainEndorsementReply createAltChainEndorsement(VeriBlockMessages.CreateAltChainEndorsementRequest request) {
+        VeriBlockMessages.CreateAltChainEndorsementReply.Builder replyBuilder = VeriBlockMessages.CreateAltChainEndorsementReply.newBuilder();
+        try {
+            byte[] publicationData = request.getPublicationData().toByteArray();
+            String sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
+            long signatureIndex = getSignatureIndex(sourceAddress) + 1;
+            long fee = request.getFeePerByte() * transactionService.predictAltChainEndorsementTransactionSize(publicationData.length, signatureIndex);
+
+            if (fee > request.getMaxFee()) {
+                replyBuilder.setSuccess(false);
+                replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error",
+                    "Calcualated fee (" + fee + ") was above the maximum configured amount (" + request.getMaxFee() + ").", true
+                ));
+                return replyBuilder.build();
+            }
+
+            Transaction tx = transactionService.createUnsignedAltChainEndorsementTransaction(sourceAddress, fee, publicationData, signatureIndex);
+
+            replyBuilder.setSuccess(true);
+            replyBuilder.setTransaction(TransactionService.getRegularTransactionMessageBuilder((StandardTransaction) tx));
+            replyBuilder.setSignatureIndex(signatureIndex);
+        } catch (Exception e) {
+            logger.error("Unable to create alt chain endorsement", e);
+            replyBuilder.setSuccess(false);
+            replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error", "An error occurred processing request", true));
+        }
+        return replyBuilder.build();
+    }
+
+    private void formGetBalanceReply(String address, LedgerContext ledgerContext, VeriBlockMessages.GetBalanceReply.Builder replyBuilder) {
         long balance = 0L;
         long lockedCoins = 0L;
 
-        if(ledgerContext != null && ledgerContext.getLedgerValue()!= null){
+        if (ledgerContext != null && ledgerContext.getLedgerValue() != null) {
             balance = ledgerContext.getLedgerValue().getAvailableAtomicUnits();
             lockedCoins = ledgerContext.getLedgerValue().getFrozenAtomicUnits();
         }
