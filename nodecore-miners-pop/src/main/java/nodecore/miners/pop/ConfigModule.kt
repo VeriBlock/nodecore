@@ -49,7 +49,7 @@ fun Configuration.getDatabasePath(): String {
     return dataDir + Constants.DEFAULT_DATA_FILE
 }
 
-class VpmConfig(
+data class VpmConfig(
     val bitcoin: BitcoinConfig = BitcoinConfig(),
     val nodeCoreRpc: NodeCoreRpcConfig = NodeCoreRpcConfig(),
     val autoMine: AutoMineConfig = AutoMineConfig(),
@@ -58,7 +58,7 @@ class VpmConfig(
     val cronSchedule: String = ""
 )
 
-class NodeCoreRpcConfig(
+data class NodeCoreRpcConfig(
     val host: String = "127.0.0.1",
     val port: Int = 10500,
     val password: String? = null,
@@ -123,7 +123,7 @@ class BitcoinConfig(
     }
 }
 
-class AutoMineConfig(
+data class AutoMineConfig(
     val round1: Boolean = false,
     val round2: Boolean = false,
     val round3: Boolean = false,

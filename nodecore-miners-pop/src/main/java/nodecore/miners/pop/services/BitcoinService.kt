@@ -66,6 +66,9 @@ class BitcoinService(
     private val configuration = config.bitcoin
     val context = configuration.context
 
+    var maxFee = configuration.maxFee
+    var feePerKb = configuration.feePerKB
+
     private val blockCache = AwaitableCache<String, FilteredBlock>(maxSize = 150)
 
     private var kit: WalletAppKit
@@ -175,10 +178,10 @@ class BitcoinService(
                     return
                 }
                 if (pct.toInt() % 5 == 0) {
-                    logger.debug("Blockchain downloading: {}%", pct.toInt())
+                    logger.info("Blockchain downloading: {}%", pct.toInt())
                 }
                 if (pct > 95.0 && blocksSoFar % 10 == 0) {
-                    logger.debug("Blockchain downloading: {} blocks to go", blocksSoFar)
+                    logger.info("Blockchain downloading: {} blocks to go", blocksSoFar)
                 }
             }
         })
@@ -540,11 +543,11 @@ class BitcoinService(
         txLock.release()
     }
 
-    private fun getMaximumTransactionFee() =
-        Coin.valueOf(configuration.maxFee)
+    fun getMaximumTransactionFee() =
+        Coin.valueOf(maxFee)
 
     private fun getTransactionFeePerKb() =
-        Coin.valueOf(configuration.feePerKB)
+        Coin.valueOf(feePerKb)
 }
 
 private fun BitcoinNetwork.getFilePrefix(): String {

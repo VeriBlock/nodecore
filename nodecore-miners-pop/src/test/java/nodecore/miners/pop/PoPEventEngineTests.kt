@@ -7,13 +7,12 @@
 
 package nodecore.miners.pop
 
-import io.kotlintest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import nodecore.miners.pop.automine.Rule
+import nodecore.miners.pop.automine.RuleContext
 import nodecore.miners.pop.model.VeriBlockHeader
-import nodecore.miners.pop.rules.Rule
-import nodecore.miners.pop.rules.RuleContext
 import org.junit.Test
 
 class PoPEventEngineTests {

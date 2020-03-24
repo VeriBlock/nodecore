@@ -8,7 +8,7 @@
 
 package nodecore.miners.pop.shell.commands
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.core.MiningOperation
@@ -21,9 +21,9 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.miningCommands(
-    minerService: MinerService,
-    prettyPrintGson: Gson
+    minerService: MinerService
 ) {
+    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
     command(
         name = "Mine",
         form = "mine",

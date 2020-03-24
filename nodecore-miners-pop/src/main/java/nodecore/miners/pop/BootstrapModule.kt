@@ -1,6 +1,6 @@
 package nodecore.miners.pop
 
-import com.google.gson.GsonBuilder
+import nodecore.miners.pop.automine.AutoMineEngine
 import nodecore.miners.pop.model.BlockStore
 import nodecore.miners.pop.schedule.PoPMiningScheduler
 import nodecore.miners.pop.services.BitcoinService
@@ -16,13 +16,12 @@ import nodecore.miners.pop.shell.commands.standardCommands
 import nodecore.miners.pop.shell.commands.veriBlockWalletCommands
 import nodecore.miners.pop.tasks.ProcessManager
 import org.koin.dsl.module
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.shell.CommandFactory
 
 @JvmField
 val bootstrapModule = module {
     single { BlockStore() }
-    single { EventEngine(get()) }
+    single { AutoMineEngine(get(), get()) }
     single { ProcessManager(get(), get()) }
     single { ChannelBuilder(get()) }
     single { MinerService(get(), get(), get(), get(), get(), get()) }
@@ -33,16 +32,12 @@ val bootstrapModule = module {
 
     single {
         CommandFactory().apply {
-            val configuration: Configuration = get()
-            val minerService: MinerService = get()
-            val nodeCoreService: NodeCoreService = get()
-            val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
             standardCommands()
-            configCommands(configuration)
-            miningCommands(minerService, prettyPrintGson)
-            bitcoinWalletCommands(minerService)
-            veriBlockWalletCommands(nodeCoreService, prettyPrintGson)
-            diagnosticCommands(minerService)
+            configCommands(get(), get(), get())
+            miningCommands(get())
+            bitcoinWalletCommands(get())
+            veriBlockWalletCommands(get())
+            diagnosticCommands(get())
         }
     }
     single { PopShell(get(), get()) }

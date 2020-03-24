@@ -314,7 +314,7 @@ class MinerService(
     }
 
     private fun ensureSufficientFunds() {
-        val maximumTransactionFee = Coin.valueOf(config.bitcoin.maxFee)
+        val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
         if (!bitcoinService.getBalance().isLessThan(maximumTransactionFee)) {
             if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
                 logger.info("PoP wallet is sufficiently funded")
@@ -358,7 +358,7 @@ class MinerService(
         return when (flag) {
             PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED -> "Bitcoin blockchain is not downloaded"
             PoPMinerDependencies.SUFFICIENT_FUNDS -> {
-                val maximumTransactionFee = Coin.valueOf(config.bitcoin.maxFee)
+                val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
                 val balance = bitcoinService.getBalance()
                 "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
                     Utility.formatBTCFriendlyString(balance) + System.lineSeparator() + String.format(

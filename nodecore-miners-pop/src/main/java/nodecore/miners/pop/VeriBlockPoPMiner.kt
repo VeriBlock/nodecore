@@ -11,7 +11,7 @@ package nodecore.miners.pop
 import mu.KotlinLogging
 import nodecore.miners.pop.api.ApiServer
 import nodecore.miners.pop.api.webApiModule
-import nodecore.miners.pop.rules.rulesModule
+import nodecore.miners.pop.automine.AutoMineEngine
 import nodecore.miners.pop.schedule.PoPMiningScheduler
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.storage.repositoriesModule
@@ -45,7 +45,6 @@ fun run(args: Array<String>): Int {
                 configModule(args),
                 bootstrapModule,
                 repositoriesModule,
-                rulesModule,
                 webApiModule
             )
         )
@@ -62,14 +61,14 @@ fun run(args: Array<String>): Int {
     }
     popMinerService = startupInjector.get()
     val scheduler: PoPMiningScheduler = startupInjector.get()
-    val eventEngine: EventEngine = startupInjector.get()
+    val autoMineEngine: AutoMineEngine = startupInjector.get()
     val apiServer: ApiServer = startupInjector.get()
     shell = startupInjector.get()
     shell.initialize()
     try {
         popMinerService.run()
         scheduler.run()
-        eventEngine.run()
+        autoMineEngine.run()
         apiServer.start()
         shell.run()
     } catch (e: Exception) {
@@ -84,7 +83,7 @@ fun run(args: Array<String>): Int {
         EventBus.programQuitEvent.unregister(eventRegistrar)
 
         apiServer.shutdown()
-        eventEngine.shutdown()
+        autoMineEngine.shutdown()
         scheduler.shutdown()
         popMinerService.shutdown()
         logger.info("Application exit")

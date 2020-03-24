@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.rules
+package nodecore.miners.pop.automine
 
 import io.mockk.every
 import io.mockk.mockk
@@ -13,8 +13,8 @@ import io.mockk.verify
 import nodecore.miners.pop.AutoMineConfig
 import nodecore.miners.pop.OldConfiguration
 import nodecore.miners.pop.VpmConfig
+import nodecore.miners.pop.automine.actions.RuleAction
 import nodecore.miners.pop.model.VeriBlockHeader
-import nodecore.miners.pop.rules.actions.RuleAction
 import org.junit.Test
 
 class BlockHeightRuleTests {

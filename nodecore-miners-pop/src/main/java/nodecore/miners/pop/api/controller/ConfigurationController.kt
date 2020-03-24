@@ -12,16 +12,30 @@ import de.nielsfalk.ktor.swagger.get
 import de.nielsfalk.ktor.swagger.put
 import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
 import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import nodecore.miners.pop.AutoMineConfig
 import nodecore.miners.pop.api.model.SetConfigRequest
+import nodecore.miners.pop.automine.AutoMineEngine
+import nodecore.miners.pop.services.BitcoinService
 import org.veriblock.core.utilities.Configuration
 
-@Group("Configuration") @Location("/api/config") class config
+@Group("Configuration")
+@Location("/api/config")
+class config
+@Group("Configuration")
+@Location("/api/config/automine")
+class automine
+@Group("Configuration")
+@Location("/api/config/btc-fee")
+class btcfee
 
 class ConfigurationController(
-    private val configuration: Configuration
+    private val configuration: Configuration,
+    private val autoMineEngine: AutoMineEngine,
+    private val bitcoinService: BitcoinService
 ) : ApiController {
 
     override fun Route.registerApi() {
@@ -42,7 +56,54 @@ class ConfigurationController(
             if (request.value == null) {
                 throw BadRequestException("'value' must be set")
             }
+            val configValues = configuration.list()
+            if (!configValues.containsKey(request.key)) {
+                throw BadRequestException("'${request.key}' is not part of the configurable properties")
+            }
             configuration.setProperty(request.key, request.value)
+            configuration.saveOverriddenProperties()
+            call.respond(HttpStatusCode.OK)
+        }
+        get<automine>(
+            "automine"
+                .description("Get the automine config")
+        ) {
+            val configValues = autoMineEngine.config
+            call.respond(configValues)
+        }
+        put<automine, AutoMineConfig>(
+            "automine"
+                .description("Set the automine config")
+        ) { _, request ->
+            autoMineEngine.config = request
+            call.respond(HttpStatusCode.OK)
+        }
+        get<btcfee>(
+            "btcfee"
+                .description("Get the btcfee config")
+        ) {
+            val configValues = BtcFeeConfig(
+                bitcoinService.maxFee,
+                bitcoinService.feePerKb
+            )
+            call.respond(configValues)
+        }
+        put<btcfee, BtcFeeConfig>(
+            "btcfee"
+                .description("Set the btcfee config")
+        ) { _, request ->
+            if (request.maxFee != null) {
+                bitcoinService.maxFee = request.maxFee
+            }
+            if (request.feePerKB != null) {
+                bitcoinService.feePerKb = request.feePerKB
+            }
+            call.respond(HttpStatusCode.OK)
         }
     }
 }
+
+class BtcFeeConfig(
+    val maxFee: Long? = null,
+    val feePerKB: Long? = null
+)

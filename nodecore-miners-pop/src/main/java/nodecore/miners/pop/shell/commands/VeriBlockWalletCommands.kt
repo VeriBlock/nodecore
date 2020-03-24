@@ -8,7 +8,7 @@
 
 package nodecore.miners.pop.shell.commands
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import nodecore.miners.pop.model.PopEndorsementInfo
 import nodecore.miners.pop.services.NodeCoreService
@@ -21,9 +21,9 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.veriBlockWalletCommands(
-    nodeCoreService: NodeCoreService,
-    prettyPrintGson: Gson
+    nodeCoreService: NodeCoreService
 ) {
+    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
     command(
         name = "Lock VeriBlock Wallet",
         form = "lockwallet",

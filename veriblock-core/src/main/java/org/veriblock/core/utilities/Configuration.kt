@@ -56,16 +56,15 @@ class Configuration(
 
     fun getDataDirectory() = getString(DATA_DIR_OPTION_KEY) ?: ""
 
-    private val customizedProperties = HashMap<String, String>()
+    private val overriddenProperties = HashMap<String, String>()
 
     fun setProperty(key: String, value: String) {
-        customizedProperties[key] = value
+        overriddenProperties[key] = value
         config = ConfigFactory.parseMap(mapOf(key to value)).withFallback(config)
-        save()
     }
 
-    private fun save() {
-        val outputLines = customizedProperties.map {
+    fun saveOverriddenProperties() {
+        val outputLines = listOf("# Overridden properties:") + overriddenProperties.map {
             "${it.key} = ${it.value}"
         }
         val configFile = Paths.get(path).toFile()

@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.miners.pop.rules.actions
+package nodecore.miners.pop.automine.actions
 
 import io.mockk.every
 import io.mockk.mockk
