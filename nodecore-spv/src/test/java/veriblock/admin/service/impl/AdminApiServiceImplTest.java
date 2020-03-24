@@ -18,6 +18,9 @@ import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.util.Base58;
 import veriblock.SpvContext;
 import veriblock.conf.TestNetParameters;
+import veriblock.model.LedgerContext;
+import veriblock.model.LedgerProofStatus;
+import veriblock.model.LedgerValue;
 import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
@@ -36,6 +39,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -67,12 +71,14 @@ public class AdminApiServiceImplTest {
             new AdminApiServiceImpl(spvContext, peerTable, transactionService, addressManager, transactionFactory, transactionContainer, blockchain);
     }
 
-    @Ignore
     @Test
     public void sendCoins() {
         Transaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        LedgerContext ledgerContext = new LedgerContext();
+        ledgerContext.setLedgerValue(new LedgerValue(100L, 0l, 0L));
+        ledgerContext.setLedgerProofStatus(LedgerProofStatus.ADDRESS_EXISTS);
 
-        VeriBlockMessages.Output output =  VeriBlockMessages.Output.newBuilder()
+        VeriBlockMessages.Output output = VeriBlockMessages.Output.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
             .setAmount(100)
             .build();
@@ -90,6 +96,7 @@ public class AdminApiServiceImplTest {
             .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
             .thenReturn(transaction);
         when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
+        when(peerTable.getAddressState(anyString())).thenReturn(ledgerContext);
         doNothing().when(peerTable).advertise(ArgumentMatchers.any());
 
         VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
@@ -101,18 +108,151 @@ public class AdminApiServiceImplTest {
         verify(transactionService, times(1))
             .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong());
         verify(transactionContainer, times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
-        verify(peerTable,  times(1)).advertise(ArgumentMatchers.any());
+        verify(peerTable, times(1)).advertise(ArgumentMatchers.any());
 
+        Assert.assertTrue(reply.getSuccess());
         Assert.assertNotNull(reply.getTxIds(0));
         Assert.assertTrue(Sha256Hash.wrap(reply.getTxIds(0).toByteArray()).equals(transaction.getTxId()));
     }
 
+    @Test
+    public void sendCoinsWhenAddressDoesntExist() {
+        Transaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        LedgerContext ledgerContext = new LedgerContext();
+        ledgerContext.setLedgerValue(new LedgerValue(100L, 0l, 0L));
+        ledgerContext.setLedgerProofStatus(LedgerProofStatus.ADDRESS_DOES_NOT_EXIST);
+
+        VeriBlockMessages.Output output = VeriBlockMessages.Output.newBuilder()
+            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
+            .setAmount(100)
+            .build();
+
+        VeriBlockMessages.SendCoinsRequest request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+            .addAmounts(output)
+            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+            .build();
+
+        when(transactionService
+            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.anyInt()
+            )).thenReturn(500);
+        when(transactionService
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
+            .thenReturn(transaction);
+        when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
+        when(peerTable.getAddressState(anyString())).thenReturn(ledgerContext);
+        doNothing().when(peerTable).advertise(ArgumentMatchers.any());
+
+        VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
+
+        Assert.assertFalse(reply.getSuccess());
+        Assert.assertTrue(reply.getResults(0).getMessage().contains("Address doesn't exist or invalid"));
+    }
+
+    @Test
+    public void sendCoinsWhenAddressDoesntIsInvalid() {
+        Transaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        LedgerContext ledgerContext = new LedgerContext();
+        ledgerContext.setLedgerValue(new LedgerValue(100L, 0l, 0L));
+        ledgerContext.setLedgerProofStatus(LedgerProofStatus.ADDRESS_IS_INVALID);
+
+        VeriBlockMessages.Output output = VeriBlockMessages.Output.newBuilder()
+            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
+            .setAmount(100)
+            .build();
+
+        VeriBlockMessages.SendCoinsRequest request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+            .addAmounts(output)
+            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+            .build();
+
+        when(transactionService
+            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.anyInt()
+            )).thenReturn(500);
+        when(transactionService
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
+            .thenReturn(transaction);
+        when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
+        when(peerTable.getAddressState(anyString())).thenReturn(ledgerContext);
+        doNothing().when(peerTable).advertise(ArgumentMatchers.any());
+
+        VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
+
+        Assert.assertFalse(reply.getSuccess());
+        Assert.assertTrue(reply.getResults(0).getMessage().contains("Address doesn't exist or invalid"));
+    }
+
+    @Test
+    public void sendCoinsWhenBalanceIsNotEnough() {
+        Transaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        LedgerContext ledgerContext = new LedgerContext();
+        ledgerContext.setLedgerValue(new LedgerValue(50L, 0l, 0L));
+        ledgerContext.setLedgerProofStatus(LedgerProofStatus.ADDRESS_EXISTS);
+
+        VeriBlockMessages.Output output = VeriBlockMessages.Output.newBuilder()
+            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
+            .setAmount(100)
+            .build();
+
+        VeriBlockMessages.SendCoinsRequest request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+            .addAmounts(output)
+            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+            .build();
+
+        when(transactionService
+            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.anyInt()
+            )).thenReturn(500);
+        when(transactionService
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
+            .thenReturn(transaction);
+        when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
+        when(peerTable.getAddressState(anyString())).thenReturn(ledgerContext);
+        doNothing().when(peerTable).advertise(ArgumentMatchers.any());
+
+        VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
+
+        Assert.assertFalse(reply.getSuccess());
+        Assert.assertTrue(reply.getResults(0).getMessage().contains("Available balance is not enough"));
+    }
+
+    @Test
+    public void sendCoinsWhenAddressInfoDoentExist() {
+        Transaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+
+        VeriBlockMessages.Output output = VeriBlockMessages.Output.newBuilder()
+            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
+            .setAmount(100)
+            .build();
+
+        VeriBlockMessages.SendCoinsRequest request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+            .addAmounts(output)
+            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
+            .build();
+
+        when(transactionService
+            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
+                ArgumentMatchers.anyInt()
+            )).thenReturn(500);
+        when(transactionService
+            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
+            .thenReturn(transaction);
+        when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
+        when(peerTable.getAddressState(anyString())).thenReturn(null);
+        doNothing().when(peerTable).advertise(ArgumentMatchers.any());
+
+        VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
+
+        Assert.assertFalse(reply.getSuccess());
+        Assert.assertTrue(reply.getResults(0).getMessage().contains("Information about this address does not exist"));
+    }
 
     @Test
     public void unlockWalletWhenWalletIsLockThenTrue() {
         VeriBlockMessages.UnlockWalletRequest unlockWalletRequest = VeriBlockMessages.UnlockWalletRequest.newBuilder()
-                .setPassphrase("123")
-                .build();
+            .setPassphrase("123")
+            .build();
 
         when(addressManager.unlock(ArgumentMatchers.any())).thenReturn(true);
 
