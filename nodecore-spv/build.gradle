@@ -17,7 +17,7 @@ dependencies {
     implementation project(':nodecore-grpc')
     implementation project(':nodecore-p2p')
 
-    implementation "com.github.veriblock.alt-integration:core:0.0.6"
+    implementation "com.github.veriblock.alt-integration:core:0.0.7"
 
     testImplementation 'junit:junit:4.12'
     runtime "org.codehaus.groovy:groovy:2.4.12"
