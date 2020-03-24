@@ -9,32 +9,27 @@ package nodecore.miners.pop.automine.conditions
 
 import io.kotlintest.shouldBe
 import nodecore.miners.pop.AutoMineConfig
-import nodecore.miners.pop.automine.round3Condition
+import nodecore.miners.pop.automine.round1Condition
 import org.junit.Test
 
-class Round3ConditionTests {
-    private val config = AutoMineConfig(round3 = true)
+class Round1ConditionTests {
+    private val config = AutoMineConfig(round1 = true)
 
     @Test
-    fun evaluateWhenHeightIsNotRound3() {
+    fun evaluateWhenHeightIsNotRound2() {
         for (i in 1..19) {
-            if (i % 3 != 0) {
-                round3Condition(config, 10000 + i) shouldBe false
+            if (i % 3 != 1) {
+                round1Condition(config, 10000 + i) shouldBe false
             }
         }
     }
 
     @Test
-    fun evaluateWhenHeightIsRound3() {
+    fun evaluateWhenHeightIsRound1() {
         for (i in 1..19) {
-            if (i % 3 == 0) {
-                round3Condition(config, 13240 + i) shouldBe true
+            if (i % 3 == 1) {
+                round1Condition(config, 13240 + i) shouldBe true
             }
         }
-    }
-
-    @Test
-    fun evaluateWhenHeightIsKeystone() {
-        round3Condition(config, 13240) shouldBe false
     }
 }

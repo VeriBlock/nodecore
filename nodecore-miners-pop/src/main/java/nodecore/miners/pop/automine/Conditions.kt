@@ -9,13 +9,13 @@ val keystoneBlockCondition: Condition = { config, height ->
 }
 
 val round1Condition: Condition = { config, height ->
-    config.round4 && height % 20 != 0 && height % 20 % 3 == 1
+    config.round1 && height % 20 != 0 && height % 20 % 3 == 1
 }
 
 val round2Condition: Condition = { config, height ->
-    config.round4 && height % 20 != 0 && height % 20 % 3 == 2
+    config.round2 && height % 20 != 0 && height % 20 % 3 == 2
 }
 
 val round3Condition: Condition = { config, height ->
-    config.round4 && height % 20 != 0 && height % 20 % 3 == 0
+    config.round3 && height % 20 != 0 && height % 20 % 3 == 0
 }
