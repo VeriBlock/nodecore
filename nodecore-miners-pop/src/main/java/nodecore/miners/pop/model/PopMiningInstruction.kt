@@ -31,7 +31,7 @@ class PopMiningInstruction(
             "publicationData" to publicationData.toHex(),
             "endorsedBlockHeader" to endorsedBlockHeader.toHex(),
             "lastBitcoinBlock" to lastBitcoinBlock.toHex(),
-            "minerAddressBytes" to minerAddressBytes.toHex(),
-            "endorsedBlockContextHeaders" to endorsedBlockContextHeaders.joinToString { it.toHex() }
+            "minerAddressBytes" to minerAddressBytes.toHex()
+            //"endorsedBlockContextHeaders" to endorsedBlockContextHeaders.joinToString { it.toHex() }
         )
 }

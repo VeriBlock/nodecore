@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.yield
-import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.common.BitcoinMerklePath
 import nodecore.miners.pop.common.BitcoinMerkleTree
 import nodecore.miners.pop.common.MerkleProof
@@ -243,7 +242,7 @@ suspend fun runTasks(
         operation.runTask(
             taskName = "Confirm VBK Endorsement Transaction",
             targetState = OperationStateType.VBK_ENDORSEMENT_TRANSACTION_CONFIRMED,
-            timeout = 1.hr
+            timeout = 3.hr
         ) {
             val state = operation.state as? OperationState.SubmittedPopData
                 ?: error("Trying to confirm VBK Endorsement Transaction without having submitted it")
@@ -256,14 +255,14 @@ suspend fun runTasks(
                 } catch (e: Exception) {
                     failTask("Transaction retrieval by id has failed: ${e.message}")
                 }
-            } while (confirmations == null || confirmations < 10)
+            } while (confirmations == null || confirmations < 50)
 
             operation.setVbkEndorsementTransactionConfirmed()
         }
         operation.runTask(
             taskName = "Confirm Payout Block",
             targetState = OperationStateType.COMPLETED,
-            timeout = 10.hr
+            timeout = 20.hr
         ) {
             val state = operation.state as? OperationState.SubmittedPopData
                 ?: error("Trying to confirm Payout without having submitted PoP Data")
@@ -294,8 +293,6 @@ suspend fun runTasks(
 
             operation.complete(payoutBlockHash, endorsementInfo.reward)
         }
-
-        EventBus.popMiningOperationCompletedEvent.trigger(operation.id)
     } catch (e: CancellationException) {
         logger.info(operation) { "Job was cancelled" }
     } catch (t: Throwable) {

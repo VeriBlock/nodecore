@@ -149,6 +149,7 @@ class MiningOperation(
         status = OperationStatus.COMPLETED
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
 
+        EventBus.popMiningOperationCompletedEvent.trigger(id)
         stopJob()
     }
 
@@ -163,7 +164,9 @@ class MiningOperation(
     fun isFailed() = status == OperationStatus.FAILED || state is OperationState.Failed
 
     fun stopJob() {
-        job?.cancel()
+        if (state !is OperationState.Completed) {
+            job?.cancel()
+        }
         job = null
         state.endorsementTransaction?.confidence?.removeEventListener(transactionListener)
     }
