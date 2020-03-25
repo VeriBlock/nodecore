@@ -15,6 +15,7 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
+import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.configCommands(
@@ -49,11 +50,17 @@ fun CommandFactory.configCommands(
         val key: String = getParameter("key")
         val value: String = getParameter("value")
 
-        configuration.setProperty(key, value)
-        configuration.saveOverriddenProperties()
-        printInfo("NOTE: In order for the changes to apply, please restart the miner.")
-
-        success()
+        val configValues = configuration.list()
+        if (configValues.containsKey(key)) {
+            configuration.setProperty(key, value)
+            configuration.saveOverriddenProperties()
+            printInfo("NOTE: In order for the changes to apply, please restart the miner.")
+            success()
+        } else {
+            failure {
+                addMessage("V400", "Failed to set config", "'${key}' is not part of the configurable properties")
+            }
+        }
     }
 
     command(
