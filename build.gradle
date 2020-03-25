@@ -3,26 +3,26 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.netflix.nebula:nebula-release-plugin:6.0.0'
-        classpath 'org.ajoberstar:grgit:1.1.0'
+        classpath "com.netflix.nebula:nebula-release-plugin:6.0.0"
+        classpath "org.ajoberstar:grgit:1.1.0"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.3"
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.8'
+        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.8"
     }
 }
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.61'
-    id 'nebula.release' version '6.0.0'
-    id 'com.jfrog.artifactory' version '4.7.3'
-    id 'jacoco'
-    id "org.sonarqube" version "2.8"
+    id("org.jetbrains.kotlin.jvm") version "1.3.61"
+    id("nebula.release") version "6.0.0"
+    id("com.jfrog.artifactory") version "4.7.3"
+    id("jacoco")
+    id("org.sonarqube") version "2.8"
 }
 
 allprojects {
     repositories {
         mavenLocal()
         jcenter()
-        maven { url 'https://jitpack.io' }
+        maven { url "https://jitpack.io" }
     }
 
     compileKotlin {
@@ -47,7 +47,7 @@ nebulaRelease {
 
 releaseCheck.doLast {
     // Print version to configure TeamCity
-    println "##teamcity[buildNumber \'${prettyVersion()}\']"
+    println("##teamcity[buildNumber \'${prettyVersion()}\']")
 }
 
 String prettyVersion() {
@@ -63,23 +63,23 @@ String prettyVersion() {
 
 sonarqube {
     properties {
-        property "sonar.projectKey", "vbk:nodecore"
-        property "sonar.projectName", "NodeCore Application Suite"
-        property "sonar.projectVersion", prettyVersion()
-        property "sonar.host.url", "https://sonar.veriblock.org"
-        property "sonar.java.binaries", "${project.projectDir}/build/classes"
-        property "sonar.java.libraries", "${project.projectDir}/build/libs"
-        property "sonar.java.test.binaries", "${project.projectDir}/build/test-results/test/binary"
-        property "sonar.junit.reportsPaths", "${project.projectDir}/build/test-results/**/*.xml"
-        property "sonar.jacoco.reportPaths", "${project.projectDir}/build/jacoco/test.exec"
-        property "sonar.exclusions", "**/generated/*.java"
+        property("sonar.projectKey", "vbk:nodecore")
+        property("sonar.projectName", "NodeCore Application Suite")
+        property("sonar.projectVersion", prettyVersion())
+        property("sonar.host.url", "https://sonar.veriblock.org")
+        property("sonar.java.binaries", "${project.projectDir}/build/classes")
+        property("sonar.java.libraries", "${project.projectDir}/build/libs")
+        property("sonar.java.test.binaries", "${project.projectDir}/build/test-results/test/binary")
+        property("sonar.junit.reportsPaths", "${project.projectDir}/build/test-results/**/*.xml")
+        property("sonar.jacoco.reportPaths", "${project.projectDir}/build/jacoco/test.exec")
+        property("sonar.exclusions", "**/generated/*.java")
     }
 }
 
 jacoco {
-    toolVersion = '0.8.5'
+    toolVersion = "0.8.5"
 }
 
 wrapper {
-    gradleVersion = '5.6.4'
+    gradleVersion = "5.6.4"
 }

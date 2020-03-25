@@ -8,55 +8,54 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 plugins {
-    id "java"
-    id "idea"
-    id "java-library"
-    id 'org.jetbrains.kotlin.jvm'
-    id 'nebula.release'
-    id "com.jfrog.artifactory"
-    id "maven-publish"
+    id("java")
+    id("idea")
+    id("java-library")
+    id("org.jetbrains.kotlin.jvm")
+    id("nebula.release")
+    id("com.jfrog.artifactory")
+    id("maven-publish")
 }
 
 dependencies {
-    implementation project(":veriblock-core")
+    implementation(project(":veriblock-core"))
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     // Json serialization
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation("com.google.code.gson:gson:2.8.2")
 
-    compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile("ch.qos.logback:logback-classic:1.2.3")
+    compile("com.diogonunes:JCDP:2.0.3.1")
 
-    compile group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'
+    compile("org.jline:jline:3.13.1")
+    compile("org.jline:jline-terminal:3.13.1")
+    compile("org.jline:jline-terminal-jansi:3.13.1")
 
-    compile group: 'org.jline', name: 'jline', version: '3.13.1'
-    compile group: 'org.jline', name: 'jline-terminal', version: '3.13.1'
-    compile group: 'org.jline', name: 'jline-terminal-jansi', version: '3.13.1'
+    compile("com.google.guava:guava:20.0")
+    implementation("com.opencsv:opencsv:4.3.2")
 
-    compile 'com.google.guava:guava:20.0'
-    implementation group: 'com.opencsv', name: 'opencsv', version: '4.3.2'
-
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'io.kotlintest:kotlintest-runner-junit5:3.3.0'
+    testImplementation("junit:junit:4.12")
+    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.0")
 }
 
 jar {
     archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
-        attributes 'Name': 'org/veriblock/shell',
-                'Specification-Title': 'VeriBlock Shell',
-                'Specification-Version': prettyVersion(),
-                'Specification-Vendor': 'Xenios SEZC',
-                'Implementation-Title': 'org.veriblock.shell',
-                'Implementation-Version': prettyVersion(),
-                'Implementation-Vendor': 'Xenios SEZC'
+        attributes "Name": "org/veriblock/shell",
+                "Specification-Title": "VeriBlock Shell",
+                "Specification-Version": prettyVersion(),
+                "Specification-Vendor": "Xenios SEZC",
+                "Implementation-Title": "org.veriblock.shell",
+                "Implementation-Version": prettyVersion(),
+                "Implementation-Vendor": "Xenios SEZC"
     }
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    classifier = "sources"
     from sourceSets.main.allSource
 }
 
@@ -71,7 +70,7 @@ artifactory {
         }
 
         defaults {
-            publications('mavenJava')
+            publications("mavenJava")
             publishArtifacts = true
         }
     }
@@ -80,19 +79,19 @@ artifactory {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'veriblock'
-            artifactId = 'shell'
+            groupId = "veriblock"
+            artifactId = "shell"
             version = this.version
 
             from components.java
             artifact (sourcesJar) {
-                classifier = 'sources'
+                classifier = "sources"
             }
         }
     }
 }
 
-apply plugin: 'jacoco'
+apply plugin: "jacoco"
 
 jacocoTestReport {
     getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)

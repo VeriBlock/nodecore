@@ -7,65 +7,65 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 plugins {
-    id "java"
-    id "idea"
-    id "application"
-    id "com.google.protobuf"
-    id 'org.jetbrains.kotlin.jvm'
+    id("java")
+    id("idea")
+    id("application")
+    id("com.google.protobuf")
+    id("org.jetbrains.kotlin.jvm")
 }
 
 configurations.all {
     // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    runtimeOnly "org.codehaus.groovy:groovy:2.4.12"
+    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
 
-    implementation project(':veriblock-core')
-    implementation project(':veriblock-shell')
-    implementation project(":nodecore-grpc")
+    implementation(project(":veriblock-core"))
+    implementation(project(":veriblock-shell"))
+    implementation(project(":nodecore-grpc"))
 
-    implementation project(':altchain-pop-miner:core')
-    implementation project(':altchain-sdk')
+    implementation(project(":altchain-pop-miner:core"))
+    implementation(project(":altchain-sdk"))
 
-    runtimeOnly project(':altchain-plugins')
+    runtimeOnly(project(":altchain-plugins"))
 
-    implementation 'com.github.veriblock.alt-integration:mock-pop-mining:0.0.7'
+    implementation("com.github.veriblock.alt-integration:mock-pop-mining:0.0.7")
 
     // Dependency Injection
-    implementation "org.koin:koin-core:2.0.1"
+    implementation("org.koin:koin-core:2.0.1")
 
     // Coroutines
-    def coroutinesVersion = '1.2.3'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion"
+    def coroutinesVersion = "1.2.3"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
-    // Http API
-    def ktorVersion = '1.2.5'
-    implementation "io.ktor:ktor-server-netty:$ktorVersion"
-    implementation "io.ktor:ktor-locations:$ktorVersion"
-    implementation "io.ktor:ktor-gson:$ktorVersion"
+    // HTTP API
+    def ktorVersion = "1.2.5"
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-locations:$ktorVersion")
+    implementation("io.ktor:ktor-gson:$ktorVersion")
     // Swagger integration, expecting an official integration to be released soon
-    implementation "com.github.nielsfalk:ktor-swagger:0.5.0"
+    implementation("com.github.nielsfalk:ktor-swagger:0.5.0")
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:1.6.26'
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
 
-    implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
-    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
-    implementation group: 'com.google.guava', name: 'guava', version: '26.0-jre'
-    implementation group: 'com.diogonunes', name: 'JCDP', version: '2.0.3.1'
-    implementation group: 'com.j256.ormlite', name: 'ormlite-core', version: '5.1'
-    implementation group: 'com.j256.ormlite', name: 'ormlite-jdbc', version: '5.1'
-    implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
+    implementation("commons-cli:commons-cli:1.4")
+    implementation("com.google.code.gson:gson:2.8.2")
+    implementation("com.google.guava:guava:26.0-jre")
+    implementation("com.diogonunes:JCDP:2.0.3.1")
+    implementation("com.j256.ormlite:ormlite-core:5.1")
+    implementation("com.j256.ormlite:ormlite-jdbc:5.1")
+    implementation("org.xerial:sqlite-jdbc:3.23.1")
 
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'io.kotest:kotest-assertions:4.0.0-BETA1'
+    testImplementation("junit:junit:4.12")
+    testImplementation("io.kotest:kotest-assertions:4.0.0-BETA1")
 }
 
 protobuf {
@@ -88,7 +88,7 @@ sourceSets {
 
 test {
     testLogging {
-        exceptionFormat = 'full'
+        exceptionFormat = "full"
     }
 }
 
@@ -104,13 +104,13 @@ run {
 jar {
     archiveName = "$applicationName-${prettyVersion()}.jar"
     manifest {
-        attributes 'Name': 'veriblock/miners/pop',
-                'Specification-Title': 'VeriBlock Proof-of-Proof (PoP) Miner',
-                'Specification-Version': prettyVersion(),
-                'Specification-Vendor': 'VeriBlock Foundation',
-                'Implementation-Title': 'veriblock.miners.pop',
-                'Implementation-Version': prettyVersion(),
-                'Implementation-Vendor': 'VeriBlock Foundation'
+        attributes "Name": "veriblock/miners/pop",
+                "Specification-Title": "VeriBlock Proof-of-Proof (PoP) Miner",
+                "Specification-Version": prettyVersion(),
+                "Specification-Vendor": "VeriBlock Foundation",
+                "Implementation-Title": "veriblock.miners.pop",
+                "Implementation-Version": prettyVersion(),
+                "Implementation-Vendor": "VeriBlock Foundation"
     }
 }
 
@@ -126,13 +126,13 @@ tasks.withType(CreateStartScripts).each { task ->
     }
 }
 
-applicationName = 'veriblock-alt-pop'
-mainClassName = 'org.veriblock.miners.pop.ProgramKt'
+applicationName = "veriblock-alt-pop"
+mainClassName = "org.veriblock.miners.pop.ProgramKt"
 
 distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
 distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
 
-apply plugin: 'jacoco'
+apply plugin: "jacoco"
 
 jacocoTestReport {
     getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)

@@ -7,41 +7,41 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 plugins {
-    id "java"
-    id "idea"
-    id "java-library"
-    id "com.google.protobuf"
-    id 'org.jetbrains.kotlin.jvm'
+    id("java")
+    id("idea")
+    id("java-library")
+    id("com.google.protobuf")
+    id("org.jetbrains.kotlin.jvm")
 }
 
 configurations.all {
     // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
 }
 
 dependencies {
-    implementation project(":veriblock-core")
-    implementation project(":nodecore-grpc")
+    implementation(project(":veriblock-core"))
+    implementation(project(":nodecore-grpc"))
 
-    implementation project(":altchain-sdk")
+    implementation(project(":altchain-sdk"))
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     // Coroutines
-    def coroutinesVersion = '1.2.2'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion"
-    
-    // Logging
-    implementation 'io.github.microutils:kotlin-logging:1.6.26'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
-    
-    runtime "org.codehaus.groovy:groovy:2.4.12"
+    def coroutinesVersion = "1.2.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
-    testImplementation "org.apache.commons:commons-lang3:3.8.1"
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'io.kotlintest:kotlintest-assertions:3.4.1'
+    // Logging
+    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
+
+    runtime("org.codehaus.groovy:groovy:2.4.12")
+
+    testImplementation("org.apache.commons:commons-lang3:3.8.1")
+    testImplementation("junit:junit:4.12")
+    testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
 }
 
 protobuf {
@@ -64,24 +64,24 @@ sourceSets {
 
 test {
     testLogging {
-        exceptionFormat = 'full'
+        exceptionFormat = "full"
     }
 }
 
 jar {
     archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
-        attributes 'Name': 'veriblock/lite',
-                'Specification-Title': 'VeriBlock Lite Toolkit',
-                'Specification-Version': prettyVersion(),
-                'Specification-Vendor': 'VeriBlock Foundation',
-                'Implementation-Title': 'veriblock.lite',
-                'Implementation-Version': prettyVersion(),
-                'Implementation-Vendor': 'VeriBlock Foundation'
+        attributes "Name": "veriblock/lite",
+                "Specification-Title": "VeriBlock Lite Toolkit",
+                "Specification-Version": prettyVersion(),
+                "Specification-Vendor": "VeriBlock Foundation",
+                "Implementation-Title": "veriblock.lite",
+                "Implementation-Version": prettyVersion(),
+                "Implementation-Vendor": "VeriBlock Foundation"
     }
 }
 
-apply plugin: 'jacoco'
+apply plugin: "jacoco"
 
 jacocoTestReport {
     getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)

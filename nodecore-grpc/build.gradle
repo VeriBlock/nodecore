@@ -1,18 +1,20 @@
 plugins {
-    id "java"
-    id "idea"
-    id "java-library"
-    id "maven-publish"
-    id "com.google.protobuf"
-    id "com.jfrog.artifactory"
+    id("java")
+    id("idea")
+    id("java-library")
+    id("maven-publish")
+    id("com.google.protobuf")
+    id("com.jfrog.artifactory")
 }
 
 dependencies {
-    compile project(':veriblock-core')
-    compile group: 'io.grpc', name: 'grpc-netty-shaded', version: '1.25.0'
-    compile group: 'io.grpc', name: 'grpc-protobuf', version: '1.25.0'
-    compile group: 'io.grpc', name: 'grpc-stub', version: '1.25.0'
-    compileOnly 'javax.annotation:javax.annotation-api:1.2'
+    compile(project(":veriblock-core"))
+
+    compile("io.grpc:grpc-netty-shaded:1.25.0")
+    compile("io.grpc:grpc-protobuf:1.25.0")
+    compile("io.grpc:grpc-stub:1.25.0")
+
+    runtimeOnly("javax.annotation:javax.annotation-api:1.2")
 }
 
 protobuf {
@@ -24,7 +26,7 @@ protobuf {
 
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.19.0'
+            artifact = "io.grpc:protoc-gen-grpc-java:1.19.0"
         }
     }
 
@@ -32,7 +34,7 @@ protobuf {
         all().each { task ->
             task.plugins {
                 grpc {
-                    outputSubDir = 'java'
+                    outputSubDir = "java"
                 }
             }
         }
@@ -52,18 +54,18 @@ sourceSets {
 jar {
     archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
-        attributes 'Name': 'nodecore/api/grpc',
-                'Specification-Title': 'VeriBlock NodeCore gRPC API',
-                'Specification-Version': prettyVersion(),
-                'Specification-Vendor': 'VeriBlock Foundation',
-                'Implementation-Title': 'nodecore.api.grpc',
-                'Implementation-Version': prettyVersion(),
-                'Implementation-Vendor': 'VeriBlock Foundation'
+        attributes "Name": "nodecore/api/grpc",
+                "Specification-Title": "VeriBlock NodeCore gRPC API",
+                "Specification-Version": prettyVersion(),
+                "Specification-Vendor": "VeriBlock Foundation",
+                "Implementation-Title": "nodecore.api.grpc",
+                "Implementation-Version": prettyVersion(),
+                "Implementation-Vendor": "VeriBlock Foundation"
     }
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    classifier = "sources"
     from sourceSets.main.allSource
 }
 
@@ -78,41 +80,41 @@ artifactory {
         }
 
         defaults {
-            publications('mavenJava')
+            publications("mavenJava")
             publishArtifacts = true
         }
     }
 
     resolve {
-        repoKey = 'jcenter'
+        repoKey = "jcenter"
     }
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId 'veriblock'
-            artifactId 'nodecore-grpc'
+            groupId "veriblock"
+            artifactId "nodecore-grpc"
             version prettyVersion()
             from components.java
             artifact (sourcesJar) {
-                classifier = 'sources'
+                classifier = "sources"
             }
         }
     }
 }
 
 clean {
-    delete 'src/generated'
+    delete "src/generated"
 }
 
 publishToMavenLocal {
     doFirst {
-        println "Publishing package to local maven repo..."
+        println("Publishing package to local maven repo...")
     }
 }
 
-apply plugin: 'jacoco'
+apply plugin: "jacoco"
 
 jacocoTestReport {
     getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)

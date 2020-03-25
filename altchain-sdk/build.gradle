@@ -8,50 +8,51 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 plugins {
-    id "java"
-    id "idea"
-    id "java-library"
-    id "org.jetbrains.kotlin.jvm"
-    id "com.jfrog.artifactory"
-    id "maven-publish"
+    id("java")
+    id("idea")
+    id("java-library")
+    id("org.jetbrains.kotlin.jvm")
+    id("com.jfrog.artifactory")
+    id("maven-publish")
 }
 
 dependencies {
-    api "com.github.veriblock.alt-integration:core:0.0.7"
+    api("com.github.veriblock.alt-integration:core:0.0.7")
 
-    implementation project(":veriblock-core")
+    implementation(project(":veriblock-core"))
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     // Configuration
-    implementation "io.github.config4k:config4k:0.4.0"
+    implementation("io.github.config4k:config4k:0.4.0")
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:1.6.26'
+    implementation("io.github.microutils:kotlin-logging:1.6.26")
 
     // Reflection
-    implementation "org.reflections:reflections:0.9.12"
+    implementation("org.reflections:reflections:0.9.12")
 
-    testImplementation 'junit:junit:4.12'
+    // Testing
+    testImplementation("junit:junit:4.12")
 }
 
 jar {
     archiveName = "${project.name}-${prettyVersion()}.jar"
     manifest {
-        attributes 'Name': 'org/veriblock/alt/sdk',
-                'Specification-Title': 'VeriBlock Altchain SDK',
-                'Specification-Version': prettyVersion(),
-                'Specification-Vendor': 'Xenios SEZC',
-                'Implementation-Title': 'org.veriblock.alt.sdk',
-                'Implementation-Version': prettyVersion(),
-                'Implementation-Vendor': 'Xenios SEZC'
+        attributes "Name": "org/veriblock/alt/sdk",
+                "Specification-Title": "VeriBlock Altchain SDK",
+                "Specification-Version": prettyVersion(),
+                "Specification-Vendor": "Xenios SEZC",
+                "Implementation-Title": "org.veriblock.alt.sdk",
+                "Implementation-Version": prettyVersion(),
+                "Implementation-Vendor": "Xenios SEZC"
     }
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    classifier = "sources"
     from sourceSets.main.allSource
 }
 
@@ -66,7 +67,7 @@ artifactory {
         }
 
         defaults {
-            publications('mavenJava')
+            publications("mavenJava")
             publishArtifacts = true
         }
     }
@@ -75,19 +76,19 @@ artifactory {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'veriblock'
-            artifactId = 'altchain-sdk'
+            groupId = "veriblock"
+            artifactId = "altchain-sdk"
             version = prettyVersion()
 
             from components.java
             artifact (sourcesJar) {
-                classifier = 'sources'
+                classifier = "sources"
             }
         }
     }
 }
 
-apply plugin: 'jacoco'
+apply plugin: "jacoco"
 
 jacocoTestReport {
     getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)
