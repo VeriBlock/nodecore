@@ -27,12 +27,24 @@ import java.util.List;
 
 public class TransactionService {
 
+    private static final long DEFAULT_TRANSACTION_FEE = 1000L;
     private final AddressManager addressManager;
     private final NetworkParameters networkParameters;
 
     public TransactionService(AddressManager addressManager, NetworkParameters networkParameters) {
         this.addressManager = addressManager;
         this.networkParameters = networkParameters;
+    }
+
+    public long calculateFee(String requestedSourceAddress, long totalOutputAmount, List<Output> outputList, long signatureIndex) {
+        // This is for over-estimating the size of the transaction by one byte in the edge case where totalOutputAmount
+        // is right below a power-of-two barrier
+        long feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L;
+
+        int predictedTransactionSize =
+            predictStandardTransactionToAllStandardOutputSize(totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
+
+        return predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
     }
 
     /**

@@ -40,9 +40,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AdminApiServiceImpl implements AdminApiService {
     private static final Logger logger = LoggerFactory.getLogger(AdminApiServiceImpl.class);
@@ -54,8 +54,6 @@ public class AdminApiServiceImpl implements AdminApiService {
     private final TransactionFactory transactionFactory;
     private final PendingTransactionContainer pendingTransactionContainer;
     private final Blockchain blockchain;
-
-    public static final int DEFAULT_TRANSACTION_FEE = 1000;
 
     public AdminApiServiceImpl(
         SpvContext spvContext,
@@ -114,7 +112,8 @@ public class AdminApiServiceImpl implements AdminApiService {
     public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
         VeriBlockMessages.SendCoinsReply.Builder replyBuilder = VeriBlockMessages.SendCoinsReply.newBuilder();
         ByteString sourceAddress = request.getSourceAddress();
-        String requestedSourceAddress;
+        List<Pair<String, Long>> requestedSourceAddresses = new ArrayList<>();
+        List<Transaction> transactions = new ArrayList<>();
 
         long totalOutputAmount = 0;
         ArrayList<Output> outputList = new ArrayList<>();
@@ -126,77 +125,128 @@ public class AdminApiServiceImpl implements AdminApiService {
         }
 
         if (sourceAddress.isEmpty()) {
-            requestedSourceAddress = findAppropriateAddress(totalOutputAmount);
+            requestedSourceAddresses.addAll(getAvailableAddresses(totalOutputAmount));
         } else {
-            requestedSourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
+            String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
+            LedgerContext ledgerContext = peerTable.getAddressState(address);
+
+            if (ledgerContext == null) {
+                replyBuilder.setSuccess(false);
+                replyBuilder.addResults(makeResult("V008", "Information about this address does not exist.",
+                    "Perhaps your node is waiting for this information. Try to do it later.", true
+                ));
+                return replyBuilder.build();
+            } else if (!ledgerContext.getLedgerProofStatus().isExists()) {
+                replyBuilder.setSuccess(false);
+                replyBuilder
+                    .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));
+                return replyBuilder.build();
+            }
+
+            requestedSourceAddresses.add(new Pair<>(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
         }
 
-        LedgerContext ledgerContext = peerTable.getAddressState(requestedSourceAddress);
-        if (ledgerContext == null) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "Information about this address does not exist.",
-                "Perhaps your node is waiting for this information. Try to do it later.", true
-            ));
-            return replyBuilder.build();
-        } else if (!ledgerContext.getLedgerProofStatus().isExists()) {
-            replyBuilder.setSuccess(false);
-            replyBuilder
-                .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));
-            return replyBuilder.build();
-        }
+        long totalAvailableBalance = requestedSourceAddresses.stream()
+            .map(Pair::getSecond)
+            .reduce(0L, Long::sum);
 
-        if (totalOutputAmount > ledgerContext.getLedgerValue().getAvailableAtomicUnits()) {
+        if (totalOutputAmount > totalAvailableBalance) {
             replyBuilder.setSuccess(false);
             replyBuilder
                 .addResults(makeResult("V008", "Available balance is not enough.", "Check your address that you use for this operation.", true));
             return replyBuilder.build();
         }
 
-        // This is for over-estimating the size of the transaction by one byte in the edge case where totalOutputAmount
-        // is right below a power-of-two barrier
-        long feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L;
-        long signatureIndex = getSignatureIndex(requestedSourceAddress);
+        long toFulfill = totalOutputAmount;
+        List<Output> outputsToFulfill = outputList.stream()
+            .sorted((o1, o2) -> Long.compare(o2.getAmount().getAtomicUnits(), o1.getAmount().getAtomicUnits()))
+            .collect(Collectors.toList());
 
-        int predictedTransactionSize = transactionService
-            .predictStandardTransactionToAllStandardOutputSize(totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
+        for (Pair<String, Long> addressCoins : requestedSourceAddresses) {
+            long signatureIndex = getSignatureIndex(addressCoins.getFirst());
+            long fee = transactionService.calculateFee(addressCoins.getFirst(), toFulfill, outputsToFulfill, signatureIndex);
 
-        long fee = predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
+            Pair<List<Output>, List<Output>> fulfillAndForPay = splitOutPutsAccordingBalance(outputsToFulfill, addressCoins.getSecond() - fee);
+            outputsToFulfill = fulfillAndForPay.getFirst();
+            List<Output> outputsForPay = fulfillAndForPay.getSecond();
 
-        long totalInputAmount = fee + totalOutputAmount;
+            long transactionInputAmount = outputsForPay.stream()
+                .map(o -> o.getAmount().getAtomicUnits())
+                .reduce(0L, Long::sum) + fee;
 
-        Transaction transaction =
-            transactionService.createStandardTransaction(requestedSourceAddress, totalInputAmount, outputList, signatureIndex + 1);
+            Transaction transaction =
+                transactionService.createStandardTransaction(addressCoins.getFirst(), transactionInputAmount, outputsForPay, signatureIndex + 1);
+            transactions.add(transaction);
+            if (outputsToFulfill.size() == 0) {
+                break;
+            }
+        }
 
-        pendingTransactionContainer.addTransaction(transaction);
-        peerTable.advertise(transaction);
+        for (Transaction transaction : transactions) {
+            pendingTransactionContainer.addTransaction(transaction);
+            peerTable.advertise(transaction);
+            replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.getTxId().toString()));
+        }
 
-        replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.getTxId().toString()));
         replyBuilder.setSuccess(true);
         return replyBuilder.build();
     }
 
-    private String findAppropriateAddress(long totalOutputAmount) {
-        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
-        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
-            return ledgerContext.getAddress().getAddress();
+    private Pair<List<Output>, List<Output>> splitOutPutsAccordingBalance(List<Output> outputs, long balance) {
+        List<Output> outputsLeft = new ArrayList<>();
+        List<Output> outputsForPay = new ArrayList<>();
+        long balanceLeft = balance;
+
+        for (int i = 0; i < outputs.size(); i++) {
+            Output output = outputs.get(i);
+
+            if (balanceLeft > output.getAmount().getAtomicUnits()) {
+                outputsForPay.add(output);
+                balanceLeft = balance - output.getAmount().getAtomicUnits();
+            } else {
+                Output partForPay = new Output(output.getAddress(), Coin.valueOf(balanceLeft));
+                outputsForPay.add(partForPay);
+
+                Coin leftToPay = output.getAmount().subtract(Coin.valueOf(balanceLeft));
+                outputs.add(new Output(output.getAddress(), leftToPay));
+                outputs.remove(output);
+
+                for (int j = i; j < outputs.size(); j++) {
+                    outputsLeft.add(outputs.get(j));
+                }
+
+                return new Pair<>(outputsLeft, outputsForPay);
+            }
         }
 
-        Map<String, Long> addressBalance = new HashMap<>();
+        return new Pair<>(outputsLeft, outputsForPay);
+    }
+
+    private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {
+        List<Pair<String, Long>> addressesForPayment = new ArrayList<>();
+
+        //Use default address if there balance is enough.
+        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
+        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
+            addressesForPayment.add(new Pair<>(ledgerContext.getAddress().getAddress(), ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
+
+            return addressesForPayment;
+        }
+
+        List<Pair<String, Long>> addressBalanceList = new ArrayList<>();
         Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
 
         for (Address address : addressManager.getAll()) {
             if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
-                addressBalance.put(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits());
+                addressBalanceList
+                    .add(new Pair<>(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits()));
             }
         }
 
-        for (String address : addressBalance.keySet()) {
-            if (addressBalance.get(address) > totalOutputAmount) {
-                return address;
-            }
-        }
-
-        return null;
+        return addressBalanceList.stream()
+            .filter(b -> b.getSecond() > 0)
+            .sorted((b1, b2) -> Long.compare(b2.getSecond(), b1.getSecond()))
+            .collect(Collectors.toList());
     }
 
     @Override
