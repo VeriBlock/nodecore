@@ -33,15 +33,6 @@ class Configuration(
         }
     }
 
-    fun list(): Map<String, String> {
-        val sysProperties = System.getProperties()
-        return config.entrySet().filter { entry ->
-            !sysProperties.containsKey(entry.key)
-        }.associate {
-            it.key to it.value.render()
-        }
-    }
-
     fun getBoolean(path: String) = getOrNull(path) { getBoolean(it) }
 
     fun getInt(path: String) = getOrNull(path) { getInt(it) }
@@ -56,6 +47,15 @@ class Configuration(
 
     fun getDataDirectory() = getString(DATA_DIR_OPTION_KEY) ?: ""
 
+    fun list(): Map<String, String> {
+        val sysProperties = System.getProperties()
+        return config.entrySet().filter { entry ->
+            !sysProperties.containsKey(entry.key)
+        }.associate {
+            it.key to it.value.render()
+        }.toSortedMap()
+    }
+
     private val overriddenProperties = HashMap<String, String>()
 
     fun setProperty(key: String, value: String) {
@@ -69,17 +69,31 @@ class Configuration(
         }
         val configFile = Paths.get(path).toFile()
         if (configFile.exists()) {
-            val contents = configFile.readText()
+            val content = configFile.readText().trim()
+            val contentLines = content.split("\n")
+            val propertyRegex = "[a-zA-Z0-9.]+ *= *.+".toRegex()
+            val parsableProperties = contentLines.filter {
+                it.matches(propertyRegex)
+            }.map {
+                it.split("=")[0].trim()
+            }.toSet()
+            val changedProperties = parsableProperties.filter { it in overriddenProperties.keys }
+            val finalContent = contentLines.filter { line ->
+                changedProperties.none { it in line }
+            }.joinToString("\n")
+
             val addedContents = outputLines.filter {
-                it !in contents
+                it !in finalContent
             }.joinToString("\n")
             if (addedContents.isNotEmpty()) {
-                configFile.writeText(contents + "\n" + addedContents + "\n")
+                configFile.writeText("\n" + finalContent + "\n" + addedContents + "\n")
             }
         } else {
-            val addedContents = outputLines.joinToString("\n")
+            val addedContents = overriddenProperties.map {
+                "${it.key} = ${it.value}"
+            }.joinToString("\n")
             if (addedContents.isNotEmpty()) {
-                configFile.writeText(addedContents + "\n")
+                configFile.writeText("# Overridden properties:\n$addedContents\n")
             }
         }
     }

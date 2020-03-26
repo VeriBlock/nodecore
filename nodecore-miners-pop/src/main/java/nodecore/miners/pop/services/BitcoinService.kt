@@ -8,6 +8,7 @@ package nodecore.miners.pop.services
 
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.guava.asDeferred
+import kotlinx.coroutines.sync.Mutex
 import nodecore.miners.pop.Constants
 import nodecore.miners.pop.EventBus
 import nodecore.miners.pop.VpmConfig
@@ -16,7 +17,6 @@ import nodecore.miners.pop.common.Utility
 import nodecore.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import nodecore.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import nodecore.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
-import nodecore.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.BitcoinSerializer
@@ -50,8 +50,6 @@ import java.util.Date
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 private val logger = createLogger {}
@@ -79,7 +77,7 @@ class BitcoinService(
     private lateinit var peerGroup: PeerGroup
 
     private val serializer: BitcoinSerializer
-    private val txLock = Semaphore(1, true)
+    private val txLock = Mutex()
     private val txBroadcastAudit = object : LinkedHashMap<String, Any>() {
         override fun removeEldestEntry(eldest: Map.Entry<String, Any>): Boolean {
             return size > 50
@@ -481,7 +479,9 @@ class BitcoinService(
     }
 
     private suspend fun sendTxRequest(requestBuilder: () -> SendRequest): Transaction? {
-        acquireTxLock()
+        logger.trace("Waiting to acquire lock to create transaction")
+        txLock.lock()
+        logger.trace("Acquired lock to create transaction")
         try {
             val request = requestBuilder()
             try {
@@ -521,32 +521,15 @@ class BitcoinService(
             return deferredTransaction.await()
         } finally {
             // Release the lock
-            releaseTxLock()
+            logger.trace("Releasing create transaction lock")
+            txLock.unlock()
         }
     }
 
-    private fun acquireTxLock() {
-        logger.trace("Waiting to acquire lock to create transaction")
-        try {
-            val permitted = txLock.tryAcquire(30, TimeUnit.SECONDS)
-            if (!permitted) {
-                throw UnableToAcquireTransactionLock()
-            }
-        } catch (e: InterruptedException) {
-            throw UnableToAcquireTransactionLock()
-        }
-        logger.trace("Acquired lock to create transaction")
-    }
-
-    private fun releaseTxLock() {
-        logger.trace("Releasing create transaction lock")
-        txLock.release()
-    }
-
-    fun getMaximumTransactionFee() =
+    fun getMaximumTransactionFee(): Coin =
         Coin.valueOf(maxFee)
 
-    private fun getTransactionFeePerKb() =
+    private fun getTransactionFeePerKb(): Coin =
         Coin.valueOf(feePerKb)
 }
 

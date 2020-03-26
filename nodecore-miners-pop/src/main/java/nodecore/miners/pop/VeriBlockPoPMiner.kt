@@ -108,8 +108,8 @@ private fun onShellCompleted() {
 private fun onProgramQuit(quitReason: Int) {
     if (quitReason == 1) {
         externalQuit = true
-        popMinerService.setIsShuttingDown(true)
     }
+    popMinerService.setIsShuttingDown(true)
     shell.interrupt()
 }
 

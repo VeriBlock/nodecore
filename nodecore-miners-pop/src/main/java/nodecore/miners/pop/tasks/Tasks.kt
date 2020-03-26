@@ -121,6 +121,8 @@ suspend fun runTasks(
             val bestBlock = bitcoinService.getBestBlock(blockAppearances.keys)
                 ?: failTask("Unable to retrieve block of proof from transaction!")
 
+            logger.info(operation) { "Block of proof: ${bestBlock.hash}" }
+
             // Wait for the actual block appearing in the blockchain (it should already be there given the transaction is confirmed)
             bitcoinService.getFilteredBlock(bestBlock.hash)
 

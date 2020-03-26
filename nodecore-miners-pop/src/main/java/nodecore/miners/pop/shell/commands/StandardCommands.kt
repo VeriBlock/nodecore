@@ -8,6 +8,7 @@
 
 package nodecore.miners.pop.shell.commands
 
+import nodecore.miners.pop.EventBus
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -31,6 +32,16 @@ fun CommandFactory.standardCommands() {
         form = "quit|exit",
         description = "Quit the application"
     ) {
+        quit()
+        success()
+    }
+
+    command(
+        name = "Restart",
+        form = "restart",
+        description = "Restart the application"
+    ) {
+        EventBus.programQuitEvent.trigger(1)
         quit()
         success()
     }
