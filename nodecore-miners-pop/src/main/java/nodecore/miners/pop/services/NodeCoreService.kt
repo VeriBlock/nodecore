@@ -11,6 +11,7 @@ import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import kotlinx.coroutines.CancellationException
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.miners.pop.EventBus
@@ -105,7 +106,7 @@ class NodeCoreService(
         return if (!::blockingStub.isInitialized) {
             false
         } else try {
-            val request = checkTimeoutError {
+            val request = checkGrpcError {
                 blockingStub
                     .withDeadlineAfter(5L, TimeUnit.SECONDS)
                     .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
@@ -124,7 +125,7 @@ class NodeCoreService(
             requestBuilder.blockNum = blockNumber
         }
         val request = requestBuilder.build()
-        val reply = checkTimeoutError {
+        val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(15, TimeUnit.SECONDS)
                 .getPop(request)
@@ -184,7 +185,7 @@ class NodeCoreService(
         val request = VeriBlockMessages.GetTransactionsRequest.newBuilder().apply {
             addIds(ByteString.copyFrom(txId.asHexBytes()))
         }.build()
-        val reply = checkTimeoutError {
+        val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(90, TimeUnit.SECONDS)
                 .getTransactions(request)
@@ -221,7 +222,7 @@ class NodeCoreService(
     }
 
     private fun getLastBlock(): VeriBlockHeader {
-        val reply = checkTimeoutError {
+        val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(10, TimeUnit.SECONDS)
                 .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
@@ -234,7 +235,7 @@ class NodeCoreService(
             VeriBlockMessages.BlockFilter.newBuilder().setIndex(height)
         ).build()
 
-        val reply = checkTimeoutError {
+        val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(10, TimeUnit.SECONDS)
                 .getBlocks(request)
@@ -334,13 +335,16 @@ class NodeCoreService(
         }
     }
 
-    private inline fun <T> checkTimeoutError(block: () -> T): T = try {
+    private inline fun <T> checkGrpcError(block: () -> T): T = try {
         block()
     } catch (e: StatusRuntimeException) {
-        if (e.status.code == Status.Code.DEADLINE_EXCEEDED) {
-            throw TimeoutError(e.message ?: "")
-        } else {
-            throw e
+        when (e.status.code) {
+            Status.Code.DEADLINE_EXCEEDED ->
+                throw TimeoutError(e.message ?: "")
+            Status.Code.CANCELLED ->
+                throw CancellationException(e.message ?: "")
+            else ->
+                throw e
         }
     }
 }
