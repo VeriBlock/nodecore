@@ -5,23 +5,29 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+import com.google.protobuf.gradle.proto
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
+import groovy.util.Eval
+import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
 plugins {
-    id("java")
-    id("idea")
-    id("application")
+    java
+    kotlin("jvm")
+    idea
+    application
     id("com.google.protobuf")
-    id("org.jetbrains.kotlin.jvm")
 }
 
 configurations.all {
     // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
 
@@ -37,15 +43,13 @@ dependencies {
     implementation("com.github.veriblock.alt-integration:mock-pop-mining:0.0.7")
 
     // Dependency Injection
-    implementation("org.koin:koin-core:2.0.1")
+    implementation("org.koin:koin-core:$koinVersion")
 
     // Coroutines
-    def coroutinesVersion = "1.2.3"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
     // HTTP API
-    def ktorVersion = "1.2.5"
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-locations:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")
@@ -80,68 +84,52 @@ sourceSets {
     main {
         proto {}
         java {
-            srcDir "$projectDir/src/main/kotlin"
-            srcDir "$projectDir/src/generated/main/java"
+            srcDir("$projectDir/src/generated/main/java")
         }
     }
 }
 
-test {
+tasks.test {
     testLogging {
-        exceptionFormat = "full"
+        exceptionFormat = FULL
     }
 }
 
-run {
-    standardInput = System.in
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
     standardOutput = System.out
 
     if (project.hasProperty("appArgs")) {
-        args Eval.me(appArgs)
+        args = Eval.me(properties["appArgs"] as String) as List<String>
     }
 }
 
-jar {
-    archiveName = "$applicationName-${prettyVersion()}.jar"
-    manifest {
-        attributes "Name": "veriblock/miners/pop",
-                "Specification-Title": "VeriBlock Proof-of-Proof (PoP) Miner",
-                "Specification-Version": prettyVersion(),
-                "Specification-Vendor": "VeriBlock Foundation",
-                "Implementation-Title": "veriblock.miners.pop",
-                "Implementation-Version": prettyVersion(),
-                "Implementation-Vendor": "VeriBlock Foundation"
-    }
+application.applicationName = "veriblock-alt-pop"
+application.mainClassName = "org.veriblock.miners.pop.ProgramKt"
+
+setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
+
+tasks.distZip {
+    archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
+}
+tasks.distTar {
+    archiveFileName.set("${application.applicationName}-${prettyVersion()}.tar")
 }
 
-startScripts {
-    windowsStartScriptGenerator.template = resources.text.fromFile("windowsStartScript.txt")
+tasks.startScripts {
+    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template = resources.text.fromFile("windowsStartScript.txt")
 }
 
-tasks.withType(CreateStartScripts).each { task ->
+tasks.withType(CreateStartScripts::class.java).forEach { task ->
     task.doLast {
         // This will replace the long classpath string (which contains a reference to every single lib on the project)
         // for a simple lib\* (which will load all the libs on the project without reference them directly)
-        task.windowsScript.write task.windowsScript.text.replaceFirst(/(set CLASSPATH=%APP_HOME%\\lib\\).*/, { "${it[1]}*" })
+        task.windowsScript.writeText(
+            task.windowsScript.readText().replace("(set CLASSPATH=%APP_HOME%\\\\lib\\\\).*".toRegex()) {
+                "${it.groupValues[0]}*"
+            }
+        )
     }
 }
 
-applicationName = "veriblock-alt-pop"
-mainClassName = "org.veriblock.miners.pop.ProgramKt"
-
-distZip.archiveName = "$applicationName-${prettyVersion()}.zip"
-distTar.archiveName = "$applicationName-${prettyVersion()}.tar"
-
-apply plugin: "jacoco"
-
-jacocoTestReport {
-    getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)
-    getSourceDirectories() from files(project.sourceSets.main.allSource.srcDirs)
-    getClassDirectories() from files(project.sourceSets.main.output)
-
-    reports {
-        xml.enabled true
-        html.enabled false
-        csv.enabled false
-    }
-}
+setupJacoco()

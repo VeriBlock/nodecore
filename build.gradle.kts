@@ -1,20 +1,29 @@
+// VeriBlock Blockchain Project
+// Copyright 2017-2018 VeriBlock, Inc
+// Copyright 2018-2020 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
-        classpath "com.netflix.nebula:nebula-release-plugin:6.0.0"
-        classpath "org.ajoberstar:grgit:1.1.0"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.3"
-        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.8"
+        classpath("com.netflix.nebula:nebula-release-plugin:6.0.0")
+        classpath("org.ajoberstar:grgit:1.1.0")
+        classpath("org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1")
+        classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.8")
     }
 }
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.61"
+    kotlin("jvm") version kotlinVersion
     id("nebula.release") version "6.0.0"
-    id("com.jfrog.artifactory") version "4.7.3"
-    id("jacoco")
+    id("com.jfrog.artifactory") version "4.15.1"
+    jacoco
     id("org.sonarqube") version "2.8"
 }
 
@@ -22,15 +31,10 @@ allprojects {
     repositories {
         mavenLocal()
         jcenter()
-        maven { url "https://jitpack.io" }
+        maven("https://jitpack.io")
     }
 
-    compileKotlin {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-    }
-    compileTestKotlin {
+    tasks.withType<KotlinCompile> {
         kotlinOptions {
             jvmTarget = "1.8"
         }
@@ -42,23 +46,14 @@ subprojects {
 }
 
 nebulaRelease {
-    addReleaseBranchPattern(/(release(-|\/))?\d+(.\d+)?(.\d+)?/)
+    addReleaseBranchPattern("""(release(-|\/))?\d+(.\d+)?(.\d+)?""")
 }
 
-releaseCheck.doLast {
-    // Print version to configure TeamCity
-    println("##teamcity[buildNumber \'${prettyVersion()}\']")
-}
-
-String prettyVersion() {
-    String version = rootProject.version.toString()
-    if (version.contains("+")) {
-        version = version.substring(0, version.length() - 8).replace("+", ".")
-        if (version.endsWith("develop")) {
-            version = version.substring(0, version.length() - 8)
-        }
+tasks.named("releaseCheck").configure {
+    doLast {
+        // Print version to configure TeamCity
+        println("##teamcity[buildNumber \'${prettyVersion()}\']")
     }
-    return version
 }
 
 sonarqube {
@@ -80,6 +75,6 @@ jacoco {
     toolVersion = "0.8.5"
 }
 
-wrapper {
-    gradleVersion = "5.6.4"
+tasks.wrapper {
+    gradleVersion = "6.3"
 }

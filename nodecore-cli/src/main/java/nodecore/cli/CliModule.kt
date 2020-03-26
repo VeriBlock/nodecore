@@ -7,7 +7,7 @@
 
 package nodecore.cli
 
-import org.koin.dsl.module.module
+import org.koin.dsl.module
 import org.veriblock.shell.CommandFactory
 
 val defaultModule = module {

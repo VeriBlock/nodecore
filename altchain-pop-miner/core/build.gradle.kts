@@ -5,18 +5,22 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+import com.google.protobuf.gradle.proto
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
 plugins {
-    id("java")
-    id("idea")
-    id("java-library")
+    java
+    kotlin("jvm")
+    idea
+    `java-library`
     id("com.google.protobuf")
-    id("org.jetbrains.kotlin.jvm")
 }
 
 configurations.all {
     // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 dependencies {
@@ -25,11 +29,10 @@ dependencies {
 
     implementation(project(":altchain-sdk"))
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     // Coroutines
-    def coroutinesVersion = "1.2.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
@@ -56,41 +59,17 @@ sourceSets {
     main {
         proto {}
         java {
-            srcDir "$projectDir/src/main/kotlin"
-            srcDir "$projectDir/src/generated/main/java"
+            srcDir("$projectDir/src/generated/main/java")
         }
     }
 }
 
-test {
+tasks.test {
     testLogging {
-        exceptionFormat = "full"
+        exceptionFormat = FULL
     }
 }
 
-jar {
-    archiveName = "${project.name}-${prettyVersion()}.jar"
-    manifest {
-        attributes "Name": "veriblock/lite",
-                "Specification-Title": "VeriBlock Lite Toolkit",
-                "Specification-Version": prettyVersion(),
-                "Specification-Vendor": "VeriBlock Foundation",
-                "Implementation-Title": "veriblock.lite",
-                "Implementation-Version": prettyVersion(),
-                "Implementation-Vendor": "VeriBlock Foundation"
-    }
-}
+setupJar("VeriBlock Lite Toolkit", "veriblock.lite")
 
-apply plugin: "jacoco"
-
-jacocoTestReport {
-    getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)
-    getSourceDirectories() from files(project.sourceSets.main.allSource.srcDirs)
-    getClassDirectories() from files(project.sourceSets.main.output)
-
-    reports {
-        xml.enabled true
-        html.enabled false
-        csv.enabled false
-    }
-}
+setupJacoco()

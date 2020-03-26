@@ -1,14 +1,25 @@
+// VeriBlock Blockchain Project
+// Copyright 2017-2018 VeriBlock, Inc
+// Copyright 2018-2020 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
-    id("java")
-    id("idea")
+    java
+    kotlin("jvm")
+    idea
     id("java-library")
     id("com.google.protobuf")
 }
 
-
 configurations.all {
     // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 dependencies {
@@ -31,7 +42,7 @@ dependencies {
     compile("org.freemarker:freemarker:2.3.14")
 
     //veriblock-core and nodecore-grpc plus their dependencies
-    compile fileTree(dir: "$projectDir/../lib/", include: "*.jar")
+    implementation(fileTree(mapOf("dir" to "$projectDir/../lib/", "include" to listOf("*.jar"))))
 
     testImplementation("junit:junit:4.12")
     // required if you want to use Mockito for unit tests
@@ -40,8 +51,8 @@ dependencies {
 
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"
+
     protoc {
-        // Download from repositories
         artifact = "com.google.protobuf:protoc:3.5.1"
     }
 }
@@ -50,40 +61,17 @@ sourceSets {
     main {
         proto {}
         java {
-            srcDir "$projectDir/src/main"
-            srcDir "$projectDir/src/generated/main/java"
+            srcDir("$projectDir/src/generated/main/java")
         }
     }
 }
 
-test {
+tasks.test {
     testLogging {
-        exceptionFormat = "full"
+        exceptionFormat = TestExceptionFormat.FULL
     }
 }
 
-jar {
-    manifest {
-        attributes "Name": "veriblock/lite",
-                "Specification-Title": "VeriBlock Lite Toolkit",
-                "Specification-Version": version.toString().split(/-/)[0],
-                "Specification-Vendor": "VeriBlock Foundation",
-                "Implementation-Title": "veriblock.lite",
-                "Implementation-Version": version,
-                "Implementation-Vendor": "VeriBlock Foundation"
-    }
-}
+setupJar("VeriBlock Lite Toolkit", "veriblock.lite")
 
-apply plugin: "jacoco"
-
-jacocoTestReport {
-    getAdditionalSourceDirs() from files(project.sourceSets.main.allJava.srcDirs)
-    getSourceDirectories() from files(project.sourceSets.main.allSource.srcDirs)
-    getClassDirectories() from files(project.sourceSets.main.output)
-
-    reports {
-        xml.enabled true
-        html.enabled false
-        csv.enabled false
-    }
-}
+setupJacoco()
