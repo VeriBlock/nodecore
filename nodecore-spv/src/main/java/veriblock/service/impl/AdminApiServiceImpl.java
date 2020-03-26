@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,12 +116,6 @@ public class AdminApiServiceImpl implements AdminApiService {
         ByteString sourceAddress = request.getSourceAddress();
         String requestedSourceAddress;
 
-        if(sourceAddress.isEmpty()){
-            requestedSourceAddress = addressManager.getDefaultAddress().getHash();
-        } else {
-            requestedSourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
-        }
-
         long totalOutputAmount = 0;
         ArrayList<Output> outputList = new ArrayList<>();
 
@@ -128,6 +123,12 @@ public class AdminApiServiceImpl implements AdminApiService {
             String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.getAddress());
             outputList.add(new Output(new StandardAddress(address), Coin.valueOf(output.getAmount())));
             totalOutputAmount += output.getAmount();
+        }
+
+        if (sourceAddress.isEmpty()) {
+            requestedSourceAddress = findAppropriateAddress(totalOutputAmount);
+        } else {
+            requestedSourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
         }
 
         LedgerContext ledgerContext = peerTable.getAddressState(requestedSourceAddress);
@@ -172,6 +173,30 @@ public class AdminApiServiceImpl implements AdminApiService {
         replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.getTxId().toString()));
         replyBuilder.setSuccess(true);
         return replyBuilder.build();
+    }
+
+    private String findAppropriateAddress(long totalOutputAmount) {
+        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
+        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
+            return ledgerContext.getAddress().getAddress();
+        }
+
+        Map<String, Long> addressBalance = new HashMap<>();
+        Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
+
+        for (Address address : addressManager.getAll()) {
+            if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
+                addressBalance.put(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits());
+            }
+        }
+
+        for (String address : addressBalance.keySet()) {
+            if (addressBalance.get(address) > totalOutputAmount) {
+                return address;
+            }
+        }
+
+        return null;
     }
 
     @Override
