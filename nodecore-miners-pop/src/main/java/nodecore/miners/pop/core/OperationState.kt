@@ -24,8 +24,7 @@ enum class OperationStateType(
     BLOCK_OF_PROOF(4, "Block of Proof received, waiting for Endorsement Transaction to be proven"),
     PROVEN(5, "Endorsement BTC Transaction proven, building BTC Context"),
     CONTEXT(6, "BTC Context determined, waiting for submission response"),
-    SUBMITTED_POP_DATA(7, "Publications submitted, waiting for VBK Endorsement Transaction to be confirmed"),
-    VBK_ENDORSEMENT_TRANSACTION_CONFIRMED(8, "VBK Endorsement Transaction confirmed, waiting for payout block"),
+    SUBMITTED_POP_DATA(7, "Publications submitted, waiting for payout block"),
     COMPLETED(9, "Completed"),
     FAILED(-1, "Failed");
 
@@ -118,17 +117,11 @@ sealed class OperationState {
             ("proofOfProofId" to proofOfProofId)
     }
 
-    open class VbkEndorsementTransactionConfirmed(
-        previous: SubmittedPopData
-    ) : SubmittedPopData(previous, previous.proofOfProofId) {
-        override val type = OperationStateType.VBK_ENDORSEMENT_TRANSACTION_CONFIRMED
-    }
-
     class Completed(
-        previous: VbkEndorsementTransactionConfirmed,
+        previous: SubmittedPopData,
         val payoutBlockHash: String,
         val payoutAmount: String
-    ) : VbkEndorsementTransactionConfirmed(previous) {
+    ) : SubmittedPopData(previous, previous.proofOfProofId) {
         override val type = OperationStateType.COMPLETED
         override fun getDetailedInfo() = super.getDetailedInfo() + mapOf(
             "Payout Block Hash" to payoutBlockHash,

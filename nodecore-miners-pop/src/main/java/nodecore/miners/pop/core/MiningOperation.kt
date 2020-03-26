@@ -133,18 +133,9 @@ class MiningOperation(
         setState(OperationState.SubmittedPopData(currentState, proofOfProofId))
     }
 
-    fun setVbkEndorsementTransactionConfirmed() {
-        val currentState = state as? OperationState.SubmittedPopData
-            ?: error("Trying to confirm VBK Endorsement Transaction without having its id")
-        setState(OperationState.VbkEndorsementTransactionConfirmed(currentState))
-    }
-
     fun complete(payoutBlockHash: String, payoutAmount: String) {
-        val currentState = state
-        if (currentState !is OperationState.VbkEndorsementTransactionConfirmed) {
-            fail("Trying to mark the process as complete without having submitted the PoP data")
-            return
-        }
+        val currentState = state as? OperationState.SubmittedPopData
+            ?: error("Trying to mark the process as complete without having submitted the PoP data")
         logger.info { "Operation $id has completed! Payout: $payoutAmount VBK" }
         status = OperationStatus.COMPLETED
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))

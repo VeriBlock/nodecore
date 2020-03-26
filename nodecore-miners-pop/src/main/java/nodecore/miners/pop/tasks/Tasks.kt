@@ -242,12 +242,15 @@ suspend fun runTasks(
             }
         }
         operation.runTask(
-            taskName = "Confirm VBK Endorsement Transaction",
-            targetState = OperationStateType.VBK_ENDORSEMENT_TRANSACTION_CONFIRMED,
-            timeout = 3.hr
+            taskName = "Confirm Payout Block",
+            targetState = OperationStateType.COMPLETED,
+            timeout = 20.hr
         ) {
             val state = operation.state as? OperationState.SubmittedPopData
-                ?: error("Trying to confirm VBK Endorsement Transaction without having submitted it")
+                ?: error("Trying to confirm Payout without having submitted PoP Data")
+
+            val endorsedBlockHeight = operation.endorsedBlockHeight
+                ?: error("Trying to wait for the payout block without having the endorsed block height set")
 
             // Wait for the endorsement transaction to have enough confirmations
             do {
@@ -258,19 +261,6 @@ suspend fun runTasks(
                     failTask("Transaction retrieval by id has failed: ${e.message}")
                 }
             } while (confirmations == null || confirmations < 50)
-
-            operation.setVbkEndorsementTransactionConfirmed()
-        }
-        operation.runTask(
-            taskName = "Confirm Payout Block",
-            targetState = OperationStateType.COMPLETED,
-            timeout = 20.hr
-        ) {
-            val state = operation.state as? OperationState.SubmittedPopData
-                ?: error("Trying to confirm Payout without having submitted PoP Data")
-
-            val endorsedBlockHeight = operation.endorsedBlockHeight
-                ?: error("Trying to wait for the payout block without having the endorsed block height set")
 
             val payoutBlockHeight = endorsedBlockHeight + 500
             val payoutAddress = state.miningInstruction.minerAddress

@@ -71,24 +71,29 @@ class ConfigurationController(
             val configValues = autoMineEngine.config
             call.respond(configValues)
         }
-        put<automine, AutoMineConfig>(
+        put<automine, AutoMineConfigRequest>(
             "automine"
                 .description("Set the automine config")
         ) { _, request ->
-            autoMineEngine.config = request
+            autoMineEngine.config = AutoMineConfig(
+                request.round1 ?: autoMineEngine.config.round1,
+                request.round2 ?: autoMineEngine.config.round2,
+                request.round3 ?: autoMineEngine.config.round3,
+                request.round4 ?: autoMineEngine.config.round4
+            )
             call.respond(HttpStatusCode.OK)
         }
         get<btcfee>(
             "btcfee"
                 .description("Get the btcfee config")
         ) {
-            val configValues = BtcFeeConfig(
+            val configValues = BtcFeeConfigRequest(
                 bitcoinService.maxFee,
                 bitcoinService.feePerKb
             )
             call.respond(configValues)
         }
-        put<btcfee, BtcFeeConfig>(
+        put<btcfee, BtcFeeConfigRequest>(
             "btcfee"
                 .description("Set the btcfee config")
         ) { _, request ->
@@ -103,7 +108,14 @@ class ConfigurationController(
     }
 }
 
-class BtcFeeConfig(
+data class AutoMineConfigRequest(
+    val round1: Boolean? = null,
+    val round2: Boolean? = null,
+    val round3: Boolean? = null,
+    val round4: Boolean? = null
+)
+
+class BtcFeeConfigRequest(
     val maxFee: Long? = null,
     val feePerKB: Long? = null
 )

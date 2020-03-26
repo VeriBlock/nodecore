@@ -182,7 +182,6 @@ class PoPStateService(
             miningOperation.setProofOfProofId(state.popTxId)
         }
         if (!state.payoutBlockHash.isNullOrEmpty()) {
-            miningOperation.setVbkEndorsementTransactionConfirmed()
             miningOperation.complete(state.payoutBlockHash, state.payoutAmount)
         }
         miningOperation.reconstituting = false
