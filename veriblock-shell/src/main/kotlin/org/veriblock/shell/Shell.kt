@@ -219,7 +219,7 @@ open class Shell(
         }
     }
 
-    private fun printResultWithFormat(result: Result) {
+    protected fun printResultWithFormat(result: Result) {
         val formatted = ArrayList<ShellMessage>()
         for (msg in result.getMessages()) {
             formatted.add(
