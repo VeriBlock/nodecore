@@ -136,15 +136,15 @@ class MinerService(
         }
 
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
-        // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be sufficient.
-        val count = operations.values.count { it.state.type == OperationStateType.ENDORSEMENT_TRANSACTION }
+        // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be necessary.
+        val count = operations.values.count { OperationStateType.ENDORSEMENT_TRANSACTION.hasType(it.state.type) }
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
             result.fail()
             result.addMessage(
                 DefaultResultMessage(
                     "V412",
-                    "Too Many Pending Transactions",
-                    "Creating additional transactions at this time would result in rejection on the Bitcoin network",
+                    "Too Many Pending Transaction operations",
+                    "Creating additional operations at this time would result in rejection on the Bitcoin network",
                     true
                 )
             )

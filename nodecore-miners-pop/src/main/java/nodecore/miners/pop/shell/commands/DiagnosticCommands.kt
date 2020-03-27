@@ -9,7 +9,7 @@
 package nodecore.miners.pop.shell.commands
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.common.Utility
 import org.apache.commons.lang3.tuple.Pair
@@ -56,7 +56,7 @@ fun CommandFactory.diagnosticCommands(minerService: MinerService) {
     ) {
         try {
             val blockFees: Pair<Int, Long>? = runBlocking {
-                withTimeout(2_000L) {
+                withTimeoutOrNull(5_000L) {
                     minerService.showRecentBitcoinFees()
                 }
             }
