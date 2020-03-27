@@ -115,11 +115,6 @@ class PoPStateService(
                 payoutAmount = state.payoutAmount
             }
         }.build()
-        try {
-            reconstitute(protoState)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         return serialize(protoState)
     }
 

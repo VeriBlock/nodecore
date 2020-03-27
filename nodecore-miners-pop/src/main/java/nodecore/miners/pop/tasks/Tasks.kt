@@ -284,6 +284,7 @@ suspend fun runTasks(
             } ?: error("Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!")
 
             operation.complete(payoutBlockHash, endorsementInfo.reward)
+            logger.info(operation) { "Operation has completed! Payout: ${endorsementInfo.reward} VBK" }
         }
     } catch (e: CancellationException) {
         logger.info(operation) { "Job was cancelled" }

@@ -136,7 +136,7 @@ class MiningOperation(
     fun complete(payoutBlockHash: String, payoutAmount: String) {
         val currentState = state as? OperationState.SubmittedPopData
             ?: error("Trying to mark the process as complete without having submitted the PoP data")
-        logger.info { "Operation $id has completed! Payout: $payoutAmount VBK" }
+
         status = OperationStatus.COMPLETED
         setState(OperationState.Completed(currentState, payoutBlockHash, payoutAmount))
 
