@@ -71,7 +71,7 @@ suspend fun runTasks(
             try {
                 val transaction = bitcoinService.createPoPTransaction(opReturnScript)
                 if (transaction != null) {
-                    logger.info {
+                    logger.info(operation) {
                         val txSizeKb = transaction.unsafeBitcoinSerialize().size / 1000.0
                         val feeSats = transaction.fee.value
                         val feePerKb = (feeSats / txSizeKb).roundToInt()
