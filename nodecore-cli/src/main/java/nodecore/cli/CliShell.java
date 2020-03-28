@@ -283,7 +283,7 @@ public class CliShell extends Shell {
 
                 disconnectCallBack = spvContext::shutdown;
             } catch (Exception e) {
-                _logger.error(e.getMessage(), e);
+                printResultWithFormat(handleException(e));
             }
         } else if(programOptions.getConnect() != null) {
             host = programOptions.getConnect();
