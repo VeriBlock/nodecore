@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.types.Pair;
+import org.veriblock.core.types.Triple;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 import org.veriblock.core.wallet.Address;
@@ -112,20 +113,23 @@ public class AdminApiServiceImpl implements AdminApiService {
     public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
         VeriBlockMessages.SendCoinsReply.Builder replyBuilder = VeriBlockMessages.SendCoinsReply.newBuilder();
         ByteString sourceAddress = request.getSourceAddress();
-        List<Pair<String, Long>> requestedSourceAddresses = new ArrayList<>();
-        List<Transaction> transactions = new ArrayList<>();
+        List<Triple<String, Long, Long>> addressCoinsIndexList = new ArrayList<>();
 
-        long totalOutputAmount = 0;
         ArrayList<Output> outputList = new ArrayList<>();
-
         for (VeriBlockMessages.Output output : request.getAmountsList()) {
             String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.getAddress());
             outputList.add(new Output(new StandardAddress(address), Coin.valueOf(output.getAmount())));
-            totalOutputAmount += output.getAmount();
         }
+        long totalOutputAmount = outputList.stream()
+            .map(o -> o.getAmount().getAtomicUnits())
+            .reduce(0L, Long::sum);
 
         if (sourceAddress.isEmpty()) {
-            requestedSourceAddresses.addAll(getAvailableAddresses(totalOutputAmount));
+            for (Pair<String, Long> availableAddress : getAvailableAddresses(totalOutputAmount)) {
+                addressCoinsIndexList.add(new Triple(availableAddress.getFirst(), availableAddress.getSecond(),
+                    getSignatureIndex(availableAddress.getFirst())
+                ));
+            }
         } else {
             String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
             LedgerContext ledgerContext = peerTable.getAddressState(address);
@@ -143,11 +147,13 @@ public class AdminApiServiceImpl implements AdminApiService {
                 return replyBuilder.build();
             }
 
-            requestedSourceAddresses.add(new Pair<>(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
+            addressCoinsIndexList.add(new Triple<>(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits(),
+                getSignatureIndex(address)
+            ));
         }
 
-        long totalAvailableBalance = requestedSourceAddresses.stream()
-            .map(Pair::getSecond)
+        long totalAvailableBalance = addressCoinsIndexList.stream()
+            .map(Triple::getSecond)
             .reduce(0L, Long::sum);
 
         if (totalOutputAmount > totalAvailableBalance) {
@@ -157,29 +163,14 @@ public class AdminApiServiceImpl implements AdminApiService {
             return replyBuilder.build();
         }
 
-        long toFulfill = totalOutputAmount;
-        List<Output> outputsToFulfill = outputList.stream()
-            .sorted((o1, o2) -> Long.compare(o2.getAmount().getAtomicUnits(), o1.getAmount().getAtomicUnits()))
-            .collect(Collectors.toList());
+        List<Transaction> transactions = transactionService.createTransactionsByOutputList(addressCoinsIndexList, outputList);
 
-        for (Pair<String, Long> addressCoins : requestedSourceAddresses) {
-            long signatureIndex = getSignatureIndex(addressCoins.getFirst());
-            long fee = transactionService.calculateFee(addressCoins.getFirst(), toFulfill, outputsToFulfill, signatureIndex);
-
-            Pair<List<Output>, List<Output>> fulfillAndForPay = splitOutPutsAccordingBalance(outputsToFulfill, addressCoins.getSecond() - fee);
-            outputsToFulfill = fulfillAndForPay.getFirst();
-            List<Output> outputsForPay = fulfillAndForPay.getSecond();
-
-            long transactionInputAmount = outputsForPay.stream()
-                .map(o -> o.getAmount().getAtomicUnits())
-                .reduce(0L, Long::sum) + fee;
-
-            Transaction transaction =
-                transactionService.createStandardTransaction(addressCoins.getFirst(), transactionInputAmount, outputsForPay, signatureIndex + 1);
-            transactions.add(transaction);
-            if (outputsToFulfill.size() == 0) {
-                break;
-            }
+        if (transactions.size() == 0) {
+            replyBuilder.setSuccess(false);
+            replyBuilder
+                .addResults(
+                    makeResult("V008", "Transaction wasn't create, there is an exception.", "Check your address balance and try later.", true));
+            return replyBuilder.build();
         }
 
         for (Transaction transaction : transactions) {
@@ -192,62 +183,7 @@ public class AdminApiServiceImpl implements AdminApiService {
         return replyBuilder.build();
     }
 
-    private Pair<List<Output>, List<Output>> splitOutPutsAccordingBalance(List<Output> outputs, long balance) {
-        List<Output> outputsLeft = new ArrayList<>();
-        List<Output> outputsForPay = new ArrayList<>();
-        long balanceLeft = balance;
 
-        for (int i = 0; i < outputs.size(); i++) {
-            Output output = outputs.get(i);
-
-            if (balanceLeft > output.getAmount().getAtomicUnits()) {
-                outputsForPay.add(output);
-                balanceLeft = balance - output.getAmount().getAtomicUnits();
-            } else {
-                Output partForPay = new Output(output.getAddress(), Coin.valueOf(balanceLeft));
-                outputsForPay.add(partForPay);
-
-                Coin leftToPay = output.getAmount().subtract(Coin.valueOf(balanceLeft));
-                outputs.add(new Output(output.getAddress(), leftToPay));
-                outputs.remove(output);
-
-                for (int j = i; j < outputs.size(); j++) {
-                    outputsLeft.add(outputs.get(j));
-                }
-
-                return new Pair<>(outputsLeft, outputsForPay);
-            }
-        }
-
-        return new Pair<>(outputsLeft, outputsForPay);
-    }
-
-    private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {
-        List<Pair<String, Long>> addressesForPayment = new ArrayList<>();
-
-        //Use default address if there balance is enough.
-        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
-        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
-            addressesForPayment.add(new Pair<>(ledgerContext.getAddress().getAddress(), ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
-
-            return addressesForPayment;
-        }
-
-        List<Pair<String, Long>> addressBalanceList = new ArrayList<>();
-        Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
-
-        for (Address address : addressManager.getAll()) {
-            if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
-                addressBalanceList
-                    .add(new Pair<>(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits()));
-            }
-        }
-
-        return addressBalanceList.stream()
-            .filter(b -> b.getSecond() > 0)
-            .sorted((b1, b2) -> Long.compare(b2.getSecond(), b1.getSecond()))
-            .collect(Collectors.toList());
-    }
 
     @Override
     public VeriBlockMessages.GetSignatureIndexReply getSignatureIndex(VeriBlockMessages.GetSignatureIndexRequest request) {
@@ -700,6 +636,33 @@ public class AdminApiServiceImpl implements AdminApiService {
         return replyBuilder.build();
     }
 
+    private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {
+        List<Pair<String, Long>> addressCoinsForPayment = new ArrayList<>();
+
+        //Use default address if there balance is enough.
+        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
+        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
+            addressCoinsForPayment.add(new Pair<>(ledgerContext.getAddress().getAddress(), ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
+
+            return addressCoinsForPayment;
+        }
+
+        List<Pair<String, Long>> addressBalanceList = new ArrayList<>();
+        Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
+
+        for (Address address : addressManager.getAll()) {
+            if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
+                addressBalanceList
+                    .add(new Pair<>(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits()));
+            }
+        }
+
+        return addressBalanceList.stream()
+            .filter(b -> b.getSecond() > 0)
+            .sorted((b1, b2) -> Long.compare(b2.getSecond(), b1.getSecond()))
+            .collect(Collectors.toList());
+    }
+
     private void formGetBalanceReply(String address, LedgerContext ledgerContext, VeriBlockMessages.GetBalanceReply.Builder replyBuilder) {
         long balance = 0L;
         long lockedCoins = 0L;
@@ -715,10 +678,6 @@ public class AdminApiServiceImpl implements AdminApiService {
                 .setLockedAmount(lockedCoins)
                 .setUnlockedAmount(balance - lockedCoins)
                 .setTotalAmount(balance));
-//                replyBuilder.addUnconfirmed(VeriBlockMessages.Output
-//                        .newBuilder()
-//                        .setAddress(ByteStringUtility.base58ToByteString(ledgerContext.getAddress().getAddress()))
-//                        .setAmount(pendingTransactionContainer.getPendingNetBalanceChangeForAddress(address.getHash())));
     }
 
     private Long getSignatureIndex(String address){
