@@ -38,7 +38,10 @@ import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -73,7 +76,9 @@ public class AdminApiServiceImplTest {
 
     @Test
     public void sendCoins() {
+        List<Transaction> transactions = new ArrayList<>();
         Transaction transaction = new StandardTransaction(Sha256Hash.ZERO_HASH);
+        transactions.add(transaction);
         LedgerContext ledgerContext = new LedgerContext();
         ledgerContext.setLedgerValue(new LedgerValue(100L, 0l, 0L));
         ledgerContext.setLedgerProofStatus(LedgerProofStatus.ADDRESS_EXISTS);
@@ -88,25 +93,21 @@ public class AdminApiServiceImplTest {
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .build();
 
+        when(peerTable.getAddressState(any())).thenReturn(ledgerContext);
         when(transactionService
             .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
                 ArgumentMatchers.anyInt()
             )).thenReturn(500);
         when(transactionService
-            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong()))
-            .thenReturn(transaction);
+            .createTransactionsByOutputList(ArgumentMatchers.anyList(), ArgumentMatchers.anyList()))
+            .thenReturn(transactions);
         when(transactionContainer.getPendingSignatureIndexForAddress(ArgumentMatchers.any())).thenReturn(1L);
-        when(peerTable.getAddressState(anyString())).thenReturn(ledgerContext);
         doNothing().when(peerTable).advertise(ArgumentMatchers.any());
 
         VeriBlockMessages.SendCoinsReply reply = adminApiService.sendCoins(request);
 
         verify(transactionService, times(1))
-            .predictStandardTransactionToAllStandardOutputSize(ArgumentMatchers.anyLong(), ArgumentMatchers.any(), ArgumentMatchers.anyLong(),
-                ArgumentMatchers.anyInt()
-            );
-        verify(transactionService, times(1))
-            .createStandardTransaction(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyLong());
+            .createTransactionsByOutputList(ArgumentMatchers.anyList(), ArgumentMatchers.anyList());
         verify(transactionContainer, times(1)).getPendingSignatureIndexForAddress(ArgumentMatchers.any());
         verify(peerTable, times(1)).advertise(ArgumentMatchers.any());
 
