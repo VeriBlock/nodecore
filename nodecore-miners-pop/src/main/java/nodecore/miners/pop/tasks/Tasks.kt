@@ -94,14 +94,17 @@ suspend fun runTasks(
         operation.runTask(
             taskName = "Confirm Bitcoin Endorsement Transaction",
             targetState = OperationStateType.CONFIRMED,
-            timeout = 1.hr
+            //timeout = 2.hr
+            timeout = 100_000.hr // Very long timeout to make sure we never leave a dangling transaction
         ) {
             val state = operation.state as? OperationState.EndorsementTransaction
                 ?: failTask("The operation has no transaction set!")
 
             if (state.endorsementTransaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
                 // Wait for the transaction to be ready
-                operation.transactionConfidenceEventChannel.asFlow().first { it == TransactionConfidence.ConfidenceType.BUILDING }
+                operation.transactionConfidenceEventChannel.asFlow().first {
+                    it == TransactionConfidence.ConfidenceType.BUILDING
+                }
             }
 
             logger.info(operation) { "BTC endorsement transaction has been confirmed!" }
@@ -253,14 +256,15 @@ suspend fun runTasks(
                 ?: error("Trying to wait for the payout block without having the endorsed block height set")
 
             // Wait for the endorsement transaction to have enough confirmations
-            do {
-                delay(30000)
-                val confirmations = try {
-                    nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
-                } catch (e: Exception) {
-                    failTask("Transaction retrieval by id has failed: ${e.message}")
-                }
-            } while (confirmations == null || confirmations < 50)
+            // DISABLED: it took too much NodeCore power
+            //do {
+            //    delay(30000)
+            //    val confirmations = try {
+            //        nodeCoreService.getTransactionConfirmationsById(state.proofOfProofId)
+            //    } catch (e: Exception) {
+            //        failTask("Transaction retrieval by id has failed: ${e.message}")
+            //    }
+            //} while (confirmations == null || confirmations < 50)
 
             val payoutBlockHeight = endorsedBlockHeight + 500
             val payoutAddress = state.miningInstruction.minerAddress

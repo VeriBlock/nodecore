@@ -58,7 +58,7 @@ class AutoMineEngine(
                 }
             }
         } catch (e: Exception) {
-            logger.error("Error handling new block", e)
+            logger.warn("Error handling new block", e)
         }
     }
 
@@ -73,7 +73,7 @@ class AutoMineEngine(
                     .append(StringUtils.join(message.details, "; "))
             }
 
-            logger.error { "Mine Action Failed: $errorMessage" }
+            logger.warn { "Mine Action Failed: $errorMessage" }
         }
     }
 }
