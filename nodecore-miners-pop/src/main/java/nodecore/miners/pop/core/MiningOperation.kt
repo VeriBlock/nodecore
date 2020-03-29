@@ -49,12 +49,7 @@ class MiningOperation(
     val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 
     private val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
-        if (
-            reason == TransactionConfidence.Listener.ChangeReason.TYPE && (
-                confidence.confidenceType == TransactionConfidence.ConfidenceType.PENDING ||
-                    confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING
-                )
-        ) {
+        if (reason == TransactionConfidence.Listener.ChangeReason.TYPE) {
             transactionConfidenceEventChannel.offer(confidence.confidenceType)
         }
     }

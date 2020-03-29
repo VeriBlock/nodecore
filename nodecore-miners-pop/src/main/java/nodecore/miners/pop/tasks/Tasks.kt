@@ -6,6 +6,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.yield
 import nodecore.miners.pop.common.BitcoinMerklePath
@@ -100,9 +101,17 @@ suspend fun runTasks(
             val state = operation.state as? OperationState.EndorsementTransaction
                 ?: failTask("The operation has no transaction set!")
 
+            if (state.endorsementTransaction.confidence.confidenceType == TransactionConfidence.ConfidenceType.DEAD) {
+                error("The transaction couldn't be confirmed")
+            }
+
             if (state.endorsementTransaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
                 // Wait for the transaction to be ready
-                operation.transactionConfidenceEventChannel.asFlow().first {
+                operation.transactionConfidenceEventChannel.asFlow().onEach {
+                    if (it == TransactionConfidence.ConfidenceType.DEAD) {
+                        error("The transaction couldn't be confirmed")
+                    }
+                }.first {
                     it == TransactionConfidence.ConfidenceType.BUILDING
                 }
             }
