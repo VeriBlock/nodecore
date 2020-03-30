@@ -33,13 +33,12 @@ private val logger = KotlinLogging.logger {}
 const val API_VERSION = "0.3"
 
 class ApiServer(
-    config: VpmConfig,
+    vpmConfig: VpmConfig,
     private val controllers: List<ApiController>
 ) {
+    private val config = vpmConfig.api
 
     private var running = false
-
-    val port = config.httpApiPort
 
     var server: ApplicationEngine? = null
 
@@ -48,10 +47,10 @@ class ApiServer(
             return
         }
 
-        logger.info { "Starting HTTP API on port $port" }
+        logger.info { "Starting HTTP API on ${config.host}:${config.port}" }
 
         server = try {
-            embeddedServer(Netty, port = port) {
+            embeddedServer(Netty, host = config.host, port = config.port) {
                 install(DefaultHeaders)
                 install(CallLogging)
 

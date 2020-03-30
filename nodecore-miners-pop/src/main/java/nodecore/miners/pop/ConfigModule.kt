@@ -52,8 +52,8 @@ fun Configuration.getDatabasePath(): String {
 data class VpmConfig(
     val bitcoin: BitcoinConfig = BitcoinConfig(),
     val nodeCoreRpc: NodeCoreRpcConfig = NodeCoreRpcConfig(),
+    val api: ApiConfig = ApiConfig(),
     val autoMine: AutoMineConfig = AutoMineConfig(),
-    val httpApiPort: Int = 8080,
     val skipAck: Boolean = false,
     val cronSchedule: String = ""
 )
@@ -64,6 +64,11 @@ data class NodeCoreRpcConfig(
     val password: String? = null,
     val ssl: Boolean = false,
     val certificateChainPath: String? = null
+)
+
+data class ApiConfig(
+    val host: String = "127.0.0.1",
+    val port: Int = 10500
 )
 
 class BitcoinConfig(
