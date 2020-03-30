@@ -169,7 +169,7 @@ public class AdminApiServiceImpl implements AdminApiService {
             replyBuilder.setSuccess(false);
             replyBuilder
                 .addResults(
-                    makeResult("V008", "Transaction wasn't create, there is an exception.", "Check your address balance and try later.", true));
+                    makeResult("V008", "Transaction has not been created, there is an exception.", "Check your address balance and try later.", true));
             return replyBuilder.build();
         }
 
