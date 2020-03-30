@@ -184,6 +184,7 @@ public class AdminApiServiceImpl implements AdminApiService {
     }
 
 
+
     @Override
     public VeriBlockMessages.GetSignatureIndexReply getSignatureIndex(VeriBlockMessages.GetSignatureIndexRequest request) {
         VeriBlockMessages.GetSignatureIndexReply.Builder replyBuilder = VeriBlockMessages.GetSignatureIndexReply.newBuilder();
