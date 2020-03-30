@@ -156,12 +156,19 @@ public class SpvContext {
         }
     }
 
-    private Server createAdminServer() throws IOException, NumberFormatException {
-        InetSocketAddress rpcBindAddress = new InetSocketAddress(getNetworkParameters().getAdminHost(), getNetworkParameters().getAdminPort());
-        log.info("Starting Admin RPC service on {} with password {}", rpcBindAddress, getNetworkParameters().getAdminPassword());
+    private Server createAdminServer() throws NumberFormatException {
+        try {
+            InetSocketAddress rpcBindAddress = new InetSocketAddress(getNetworkParameters().getAdminHost(), getNetworkParameters().getAdminPort());
+            log.info("Starting Admin RPC service on {} with password {}", rpcBindAddress, getNetworkParameters().getAdminPassword());
 
-        return NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor)).build()
-            .start();
+            return NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor))
+                .build()
+                .start();
+        } catch (IOException ex) {
+            throw new RuntimeException(
+                "Can't run admin RPC service. Address already in use " + getNetworkParameters().getAdminHost() + ":" + getNetworkParameters()
+                    .getAdminPort());
+        }
     }
 
     private void init(VeriBlockStore veriBlockStore, NetworkParameters params) {
