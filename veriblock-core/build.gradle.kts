@@ -13,13 +13,14 @@ plugins {
 dependencies {
     // Kotlin
     api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    runtimeOnly("org.jetbrains.kotlin:kotlin-reflect")
+    api("org.jetbrains.kotlin:kotlin-reflect")
 
     // Json serialization
     api("com.google.code.gson:gson:2.8.5")
 
     // Configuration
     api("io.github.config4k:config4k:0.4.0")
+    api("commons-cli:commons-cli:1.4")
 
     // Logging
     api("ch.qos.logback:logback-classic:1.2.3")
