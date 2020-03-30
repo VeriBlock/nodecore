@@ -84,7 +84,9 @@ class PopStateService(
             status = operation.status.name
             action = operation.state.toString()
             endorsedBlockNumber = operation.endorsedBlockHeight ?: -1
-            val state = operation.state
+            val state = operation.state.let {
+                if (it !is OperationState.Failed) it else it.previous
+            }
             if (state is OperationState.Instruction) {
                 miningInstructions = ProofOfProof.MiningInstruction.newBuilder().apply {
                     publicationData = ByteString.copyFrom(state.miningInstruction.publicationData)
@@ -131,9 +133,10 @@ class PopStateService(
 
     private fun reconstitute(state: ProofOfProof.OperationState): MiningOperation {
         logger.debug("Reconstituting operation {}", state.id)
+        val status = OperationStatus.valueOf(state.status)
         val miningOperation = MiningOperation(
             id = state.id,
-            status = OperationStatus.valueOf(state.status),
+            status = status,
             reconstituting = true
         )
         if (state.endorsedBlockNumber >= 0) {
@@ -178,6 +181,9 @@ class PopStateService(
         }
         if (!state.payoutBlockHash.isNullOrEmpty()) {
             miningOperation.complete(state.payoutBlockHash, state.payoutAmount)
+        }
+        if (status == OperationStatus.FAILED) {
+            miningOperation.fail("Loaded as failed")
         }
         miningOperation.reconstituting = false
         return miningOperation

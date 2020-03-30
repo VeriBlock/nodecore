@@ -43,7 +43,15 @@ sealed class OperationState {
 
     abstract val type: OperationStateType
 
-    open val endorsementTransaction: Transaction? get() = null
+    open val miningInstruction: PopMiningInstruction? = null
+    open val endorsementTransaction: Transaction? = null
+    open val endorsementTransactionBytes: ByteArray? = null
+    open val blockOfProof: Block? = null
+    open val merklePath: String? = null
+    open val bitcoinContextBlocks: List<Block>? = null
+    open val proofOfProofId: String? = null
+    open val payoutBlockHash: String? = null
+    open val payoutAmount: String? = null
 
     open fun getDetailedInfo(): Map<String, String> = emptyMap()
 
@@ -56,7 +64,7 @@ sealed class OperationState {
     }
 
     open class Instruction(
-        val miningInstruction: PopMiningInstruction
+        override val miningInstruction: PopMiningInstruction
     ) : OperationState() {
         override val type = OperationStateType.INSTRUCTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -66,7 +74,7 @@ sealed class OperationState {
     open class EndorsementTransaction(
         previous: Instruction,
         override val endorsementTransaction: Transaction,
-        val endorsementTransactionBytes: ByteArray
+        override val endorsementTransactionBytes: ByteArray
     ) : Instruction(previous.miningInstruction) {
         override val type = OperationStateType.ENDORSEMENT_TRANSACTION
         override fun getDetailedInfo() = super.getDetailedInfo() + mapOf(
@@ -83,7 +91,7 @@ sealed class OperationState {
 
     open class BlockOfProof(
         previous: Confirmed,
-        val blockOfProof: Block
+        override val blockOfProof: Block
     ) : Confirmed(previous) {
         override val type = OperationStateType.BLOCK_OF_PROOF
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -92,7 +100,7 @@ sealed class OperationState {
 
     open class Proven(
         previous: BlockOfProof,
-        val merklePath: String
+        override val merklePath: String
     ) : BlockOfProof(previous, previous.blockOfProof) {
         override val type = OperationStateType.PROVEN
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -101,7 +109,7 @@ sealed class OperationState {
 
     open class Context(
         previous: Proven,
-        val bitcoinContextBlocks: List<Block>
+        override val bitcoinContextBlocks: List<Block>
     ) : Proven(previous, previous.merklePath) {
         override val type = OperationStateType.CONTEXT
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -110,7 +118,7 @@ sealed class OperationState {
 
     open class SubmittedPopData(
         previous: Context,
-        val proofOfProofId: String
+        override val proofOfProofId: String
     ) : Context(previous, previous.bitcoinContextBlocks) {
         override val type = OperationStateType.SUBMITTED_POP_DATA
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -119,8 +127,8 @@ sealed class OperationState {
 
     class Completed(
         previous: SubmittedPopData,
-        val payoutBlockHash: String,
-        val payoutAmount: String
+        override val payoutBlockHash: String,
+        override val payoutAmount: String
     ) : SubmittedPopData(previous, previous.proofOfProofId) {
         override val type = OperationStateType.COMPLETED
         override fun getDetailedInfo() = super.getDetailedInfo() + mapOf(
@@ -134,6 +142,15 @@ sealed class OperationState {
         private val reason: String
     ) : OperationState() {
         override val type = OperationStateType.FAILED
+
+        override val miningInstruction = previous.miningInstruction
+        override val endorsementTransaction = previous.endorsementTransaction
+        override val endorsementTransactionBytes = previous.endorsementTransactionBytes
+        override val blockOfProof = previous.blockOfProof
+        override val merklePath = previous.merklePath
+        override val bitcoinContextBlocks = previous.bitcoinContextBlocks
+        override val proofOfProofId = previous.proofOfProofId
+
         override fun toString() = "Failed: $reason"
         override fun getDetailedInfo() = previous.getDetailedInfo()
     }

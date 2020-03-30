@@ -51,7 +51,7 @@ object StateSerializer {
         }
 
         if (state is OperationState.EndorsementTransaction) {
-            builder.txId = state.transaction.id.toString()
+            builder.txId = state.endorsementTransaction.id.toString()
         }
 
         if (state is OperationState.BlockOfProof) {

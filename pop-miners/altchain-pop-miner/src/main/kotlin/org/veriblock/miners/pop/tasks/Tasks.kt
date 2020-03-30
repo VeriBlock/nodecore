@@ -107,7 +107,7 @@ suspend fun runTasks(
 
             logger.info(operation) { "Waiting for the transaction to be included in VeriBlock block..." }
             // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
-            val txMetaChannel = state.transaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
+            val txMetaChannel = state.endorsementTransaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
             txMetaChannel.receive() // Skip first state change (PENDING)
             do {
                 val metaState = txMetaChannel.receive()
@@ -122,7 +122,7 @@ suspend fun runTasks(
         }
         operation.runTask("Determine Block of Proof", OperationStateType.BLOCK_OF_PROOF) {
             val state = operation.state
-            val transaction = (state as? OperationState.EndorsementTransaction)?.transaction
+            val transaction = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction
                 ?: failTask("The operation has no transaction set!")
 
             val blockHash = transaction.transactionMeta.appearsInBestChainBlock
@@ -141,7 +141,7 @@ suspend fun runTasks(
             val state = operation.state as? OperationState.BlockOfProof
                 ?: failTask("ProveTransactionTask called without VBK block of proof!")
 
-            val walletTransaction = state.transaction
+            val walletTransaction = state.endorsementTransaction
 
             logger.info(operation) { "Getting the merkle path for the transaction: ${walletTransaction.id}..." }
             val merklePath = walletTransaction.merklePath
@@ -200,7 +200,7 @@ suspend fun runTasks(
 
             try {
                 val proofOfProof = AltPublication(
-                    state.transaction,
+                    state.endorsementTransaction,
                     state.merklePath,
                     state.blockOfProof,
                     emptyList()

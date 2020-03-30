@@ -236,7 +236,7 @@ class AltchainPopMiner(
 
         // Replicate its state up until prior to the PoP data submission
         newOperation.setMiningInstruction(operationState.miningInstruction)
-        newOperation.setTransaction(operationState.transaction)
+        newOperation.setTransaction(operationState.endorsementTransaction)
         newOperation.setConfirmed()
         newOperation.setBlockOfProof(operationState.blockOfProof)
         newOperation.setMerklePath(operationState.merklePath)

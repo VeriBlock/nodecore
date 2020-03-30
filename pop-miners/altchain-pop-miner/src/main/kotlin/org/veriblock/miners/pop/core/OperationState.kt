@@ -48,7 +48,16 @@ sealed class OperationState {
 
     abstract val type: OperationStateType
 
-    open val transaction: WalletTransaction? get() = null
+    open val miningInstruction: MiningInstruction? = null
+    open val endorsementTransaction: WalletTransaction? = null
+    open val blockOfProof: VeriBlockBlock? = null
+    open val merklePath: VeriBlockMerklePath? = null
+    open val keystoneOfProof: VeriBlockBlock? = null
+    open val veriBlockPublications: List<VeriBlockPublication>? = null
+    open val proofOfProofId: String? = null
+    open val altEndorsementBlockHash: String? = null
+    open val payoutBlockHash: String? = null
+    open val payoutAmount: Double? = null
 
     open fun getDetailedInfo(): List<String> = emptyList()
 
@@ -61,7 +70,7 @@ sealed class OperationState {
     }
 
     open class Instruction(
-        val miningInstruction: MiningInstruction
+        override val miningInstruction: MiningInstruction
     ) : OperationState() {
         override val type = OperationStateType.INSTRUCTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -70,22 +79,22 @@ sealed class OperationState {
 
     open class EndorsementTransaction(
         previous: Instruction,
-        override val transaction: WalletTransaction
+        override val endorsementTransaction: WalletTransaction
     ) : Instruction(previous.miningInstruction) {
         override val type = OperationStateType.ENDORSEMEMT_TRANSACTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Endorsement Transaction: ${transaction.id.bytes.toHex()}"
+            "Endorsement Transaction: ${endorsementTransaction.id.bytes.toHex()}"
     }
 
     open class Confirmed(
         previous: EndorsementTransaction
-    ) : EndorsementTransaction(previous, previous.transaction) {
+    ) : EndorsementTransaction(previous, previous.endorsementTransaction) {
         override val type = OperationStateType.CONFIRMED
     }
 
     open class BlockOfProof(
         previous: Confirmed,
-        val blockOfProof: VeriBlockBlock
+        override val blockOfProof: VeriBlockBlock
     ) : Confirmed(previous) {
         override val type = OperationStateType.BLOCK_OF_PROOF
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -94,7 +103,7 @@ sealed class OperationState {
 
     open class TransactionProved(
         previous: BlockOfProof,
-        val merklePath: VeriBlockMerklePath
+        override val merklePath: VeriBlockMerklePath
     ) : BlockOfProof(previous, previous.blockOfProof) {
         override val type = OperationStateType.TRANSACTION_PROVED
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -103,7 +112,7 @@ sealed class OperationState {
 
     open class KeystoneOfProof(
         previous: TransactionProved,
-        val keystoneOfProof: VeriBlockBlock
+        override val keystoneOfProof: VeriBlockBlock
     ) : TransactionProved(previous, previous.merklePath) {
         override val type = OperationStateType.KEYSTONE_OF_PROOF
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -112,7 +121,7 @@ sealed class OperationState {
 
     open class VeriBlockPublications(
         previous: KeystoneOfProof,
-        val veriBlockPublications: List<VeriBlockPublication>
+        override val veriBlockPublications: List<VeriBlockPublication>
     ) : KeystoneOfProof(previous, previous.keystoneOfProof) {
         override val type = OperationStateType.VERIBLOCK_PUBLICATIONS
         override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
@@ -123,7 +132,7 @@ sealed class OperationState {
 
     open class SubmittedPopData(
         previous: VeriBlockPublications,
-        val proofOfProofId: String
+        override val proofOfProofId: String
     ) : VeriBlockPublications(previous, previous.veriBlockPublications) {
         override val type = OperationStateType.SUBMITTED_POP_DATA
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -138,7 +147,7 @@ sealed class OperationState {
 
     open class AltEndorsedBlockConfirmed(
         previous: AltEndorsementTransactionConfirmed,
-        val altEndorsementBlockHash: String
+        override val altEndorsementBlockHash: String
     ) : AltEndorsementTransactionConfirmed(previous) {
         override val type = OperationStateType.ALT_ENDORSED_BLOCK_CONFIRMED
         override fun getDetailedInfo() = super.getDetailedInfo() +
@@ -147,8 +156,8 @@ sealed class OperationState {
 
     class Completed(
         previous: AltEndorsedBlockConfirmed,
-        val payoutBlockHash: String,
-        val payoutAmount: Double
+        override val payoutBlockHash: String,
+        override val payoutAmount: Double
     ) : AltEndorsedBlockConfirmed(previous, previous.altEndorsementBlockHash) {
         override val type = OperationStateType.COMPLETE
         override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
@@ -162,6 +171,16 @@ sealed class OperationState {
         private val reason: String
     ) : OperationState() {
         override val type = OperationStateType.FAILED
+
+        override val miningInstruction = previous.miningInstruction
+        override val endorsementTransaction = previous.endorsementTransaction
+        override val blockOfProof = previous.blockOfProof
+        override val merklePath = previous.merklePath
+        override val keystoneOfProof = previous.keystoneOfProof
+        override val veriBlockPublications = previous.veriBlockPublications
+        override val proofOfProofId = previous.proofOfProofId
+        override val altEndorsementBlockHash = previous.altEndorsementBlockHash
+
         override fun toString() = "Failed: $reason"
         override fun getDetailedInfo() = previous.getDetailedInfo()
     }
