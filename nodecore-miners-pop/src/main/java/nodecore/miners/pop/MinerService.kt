@@ -20,7 +20,7 @@ import nodecore.miners.pop.model.result.MineResult
 import nodecore.miners.pop.model.result.Result
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.NodeCoreService
-import nodecore.miners.pop.services.PoPStateService
+import nodecore.miners.pop.services.PopStateService
 import nodecore.miners.pop.storage.KeyValueData
 import nodecore.miners.pop.storage.KeyValueRepository
 import nodecore.miners.pop.tasks.ProcessManager
@@ -47,7 +47,7 @@ class MinerService(
     private val config: VpmConfig,
     private val bitcoinService: BitcoinService,
     private val nodeCoreService: NodeCoreService,
-    private val stateService: PoPStateService,
+    private val stateService: PopStateService,
     private val keyValueRepository: KeyValueRepository,
     private val processManager: ProcessManager
 ) : Runnable {

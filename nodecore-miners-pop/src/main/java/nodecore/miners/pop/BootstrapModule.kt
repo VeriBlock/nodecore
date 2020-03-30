@@ -6,7 +6,7 @@ import nodecore.miners.pop.schedule.PoPMiningScheduler
 import nodecore.miners.pop.services.BitcoinService
 import nodecore.miners.pop.services.ChannelBuilder
 import nodecore.miners.pop.services.NodeCoreService
-import nodecore.miners.pop.services.PoPStateService
+import nodecore.miners.pop.services.PopStateService
 import nodecore.miners.pop.shell.PopShell
 import nodecore.miners.pop.shell.commands.bitcoinWalletCommands
 import nodecore.miners.pop.shell.commands.configCommands
@@ -25,7 +25,7 @@ val bootstrapModule = module {
     single { ProcessManager(get(), get()) }
     single { ChannelBuilder(get()) }
     single { MinerService(get(), get(), get(), get(), get(), get()) }
-    single { PoPStateService(get(), get()) }
+    single { PopStateService(get(), get()) }
     single { NodeCoreService(get(), get(), get()) }
     single { BitcoinService(get()) }
     single { PoPMiningScheduler(get(), get()) }

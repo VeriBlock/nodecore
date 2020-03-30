@@ -25,7 +25,7 @@ import java.util.ArrayList
 
 private val logger = createLogger {}
 
-class PoPStateService(
+class PopStateService(
     private val repository: PopRepository,
     private val bitcoinService: BitcoinService
 ) {
