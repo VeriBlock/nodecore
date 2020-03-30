@@ -6,9 +6,15 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 package nodecore.miners.pow;
+
 import nodecore.api.ucp.commands.UCPClientCommand;
 import nodecore.api.ucp.commands.UCPIncomingCommandParser;
-import nodecore.api.ucp.commands.client.*;
+import nodecore.api.ucp.commands.client.Capabilities;
+import nodecore.api.ucp.commands.client.MiningAuthFailure;
+import nodecore.api.ucp.commands.client.MiningAuthSuccess;
+import nodecore.api.ucp.commands.client.MiningJob;
+import nodecore.api.ucp.commands.client.MiningSubscribeFailure;
+import nodecore.api.ucp.commands.client.MiningSubscribeSuccess;
 import nodecore.api.ucp.commands.server.MiningAuth;
 import nodecore.api.ucp.commands.server.MiningSubmit;
 import nodecore.api.ucp.commands.server.MiningSubscribe;
@@ -17,7 +23,13 @@ import org.veriblock.core.types.Pair;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;

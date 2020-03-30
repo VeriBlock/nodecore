@@ -15,7 +15,6 @@ import nodecore.api.ucp.commands.client.MiningSubmitFailure;
 import nodecore.api.ucp.commands.client.MiningSubmitSuccess;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 
 public class InputThread extends Thread {
     private final BufferedReader in;

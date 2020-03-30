@@ -6,7 +6,7 @@ include("nodecore-grpc")
 include("nodecore-ucp")
 include("nodecore-p2p")
 include("nodecore-cli")
-include("nodecore-miners-pow")
+include("veriblock-pow-miner")
 include("veriblock-extensions")
 
 include("altchain-sdk")
