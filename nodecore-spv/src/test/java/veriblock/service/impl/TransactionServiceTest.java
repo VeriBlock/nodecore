@@ -2,11 +2,12 @@ package veriblock.service.impl;
 
 import junit.framework.TestCase;
 import org.junit.Assert;
+import org.junit.Test;
 import org.veriblock.core.contracts.AddressManager;
-import org.veriblock.core.types.Triple;
 import org.veriblock.sdk.models.Coin;
 import veriblock.SpvContext;
 import veriblock.conf.TestNetParameters;
+import veriblock.model.AddressCoinsIndex;
 import veriblock.model.Output;
 import veriblock.model.StandardAddress;
 import veriblock.model.Transaction;
@@ -31,13 +32,14 @@ public class TransactionServiceTest extends TestCase {
         this.transactionService = new TransactionService(addressManager, TestNetParameters.get());
     }
 
+    @Test
     public void testCreateTransactionsByOutputList() {
-        List<Triple<String, Long, Long>> addressCoinsIndexList = new ArrayList<>();
+        List<AddressCoinsIndex> addressCoinsIndexList = new ArrayList<>();
         List<Output> outputList = new ArrayList<>();
-        addressCoinsIndexList.add(new Triple<>("V9YtYGe28er1D79qkshWHcxfbH3p2j", 100L * Coin.COIN_VALUE, 1L));
-        addressCoinsIndexList.add(new Triple<>("V66n5xh5Mu8nnR1D3is3eRkp92ktL9", 0L, 1L));
-        addressCoinsIndexList.add(new Triple<>("VBnNjRioQoFxVpvHuCd7eXo2jBZXj2", 300L * Coin.COIN_VALUE, 1L));
-        addressCoinsIndexList.add(new Triple<>("V4LmWfdThV2amLRtdGNBgBeic5ybhi", 100L * Coin.COIN_VALUE, 1L));
+        addressCoinsIndexList.add(new AddressCoinsIndex("V9YtYGe28er1D79qkshWHcxfbH3p2j", 100L * Coin.COIN_VALUE, 1L));
+        addressCoinsIndexList.add(new AddressCoinsIndex("V66n5xh5Mu8nnR1D3is3eRkp92ktL9", 0L, 1L));
+        addressCoinsIndexList.add(new AddressCoinsIndex("VBnNjRioQoFxVpvHuCd7eXo2jBZXj2", 300L * Coin.COIN_VALUE, 1L));
+        addressCoinsIndexList.add(new AddressCoinsIndex("V4LmWfdThV2amLRtdGNBgBeic5ybhi", 100L * Coin.COIN_VALUE, 1L));
 
         outputList.add(new Output(new StandardAddress("V66n5xh5Mu8nnR1D3is3eRkp92ktL9"), Coin.valueOf(450L * Coin.COIN_VALUE)));
 
