@@ -12,4 +12,4 @@ pop.dat
 *.dat-shm
 *.dat-wal
 
-miner/application.conf
+/application.conf

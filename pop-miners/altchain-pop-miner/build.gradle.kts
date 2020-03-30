@@ -66,7 +66,8 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.23.1")
 
     testImplementation("junit:junit:4.12")
-    testImplementation("io.kotest:kotest-assertions:4.0.0-BETA1")
+    testImplementation("org.apache.commons:commons-lang3:3.8.1")
+    testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
 }
 
 protobuf {
