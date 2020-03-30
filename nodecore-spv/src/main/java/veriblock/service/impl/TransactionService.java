@@ -13,12 +13,12 @@ import nodecore.api.grpc.VeriBlockMessages;
 import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.types.Pair;
-import org.veriblock.core.types.Triple;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
 import veriblock.conf.NetworkParameters;
+import veriblock.model.AddressCoinsIndex;
 import veriblock.model.Output;
 import veriblock.model.SigningResult;
 import veriblock.model.StandardTransaction;
@@ -52,26 +52,25 @@ public class TransactionService {
         return predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
     }
 
-    public List<Transaction> createTransactionsByOutputList(List<Triple<String, Long, Long>> addressCoinsIndexList, List<Output> outputList) {
+    public List<Transaction> createTransactionsByOutputList(List<AddressCoinsIndex> addressCoinsIndexList, List<Output> outputList) {
         List<Transaction> transactions = new ArrayList<>();
         List<Output> sortedOutputs = outputList.stream()
             .sorted((o1, o2) -> Long.compare(o2.getAmount().getAtomicUnits(), o1.getAmount().getAtomicUnits()))
             .collect(Collectors.toList());
-        List<Triple<String, Long, Long>> sortedAddressCoinsIndexList = addressCoinsIndexList.stream()
-            .filter(b -> b.getSecond() > 0)
-            .sorted((b1, b2) -> Long.compare(b2.getSecond(), b1.getSecond()))
+        List<AddressCoinsIndex> sortedAddressCoinsIndexList = addressCoinsIndexList.stream()
+            .filter(b -> b.getCoins() > 0)
+            .sorted((b1, b2) -> Long.compare(b2.getCoins(), b1.getCoins()))
             .collect(Collectors.toList());
 
         long totalOutputAmount = sortedOutputs.stream()
             .map(output -> output.getAmount().getAtomicUnits())
             .reduce(0L, Long::sum);
 
-        for (Triple<String, Long, Long> sourceAddressesIndex : sortedAddressCoinsIndexList) {
-            long signatureIndex = sourceAddressesIndex.getThird();
-            long fee = calculateFee(sourceAddressesIndex.getFirst(), totalOutputAmount, sortedOutputs, signatureIndex);
+        for (AddressCoinsIndex sourceAddressesIndex : sortedAddressCoinsIndexList) {
+            long fee = calculateFee(sourceAddressesIndex.getAddress(), totalOutputAmount, sortedOutputs, sourceAddressesIndex.getIndex());
 
             Pair<List<Output>, List<Output>> fulfillAndForPay =
-                splitOutPutsAccordingBalance(sortedOutputs, Coin.valueOf(sourceAddressesIndex.getSecond() - fee));
+                splitOutPutsAccordingBalance(sortedOutputs, Coin.valueOf(sourceAddressesIndex.getCoins() - fee));
             sortedOutputs = fulfillAndForPay.getFirst();
             List<Output> outputsForPay = fulfillAndForPay.getSecond();
 
@@ -80,7 +79,8 @@ public class TransactionService {
                 .reduce(0L, Long::sum) + fee;
 
             Transaction transaction =
-                createStandardTransaction(sourceAddressesIndex.getFirst(), transactionInputAmount, outputsForPay, signatureIndex + 1);
+                createStandardTransaction(
+                    sourceAddressesIndex.getAddress(), transactionInputAmount, outputsForPay, sourceAddressesIndex.getIndex() + 1);
             transactions.add(transaction);
             if (sortedOutputs.size() == 0) {
                 break;

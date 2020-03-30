@@ -18,13 +18,13 @@ import org.slf4j.LoggerFactory;
 import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.types.Pair;
-import org.veriblock.core.types.Triple;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
 import org.veriblock.sdk.models.Coin;
 import veriblock.SpvContext;
+import veriblock.model.AddressCoinsIndex;
 import veriblock.model.LedgerContext;
 import veriblock.model.Output;
 import veriblock.model.StandardAddress;
@@ -113,7 +113,7 @@ public class AdminApiServiceImpl implements AdminApiService {
     public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
         VeriBlockMessages.SendCoinsReply.Builder replyBuilder = VeriBlockMessages.SendCoinsReply.newBuilder();
         ByteString sourceAddress = request.getSourceAddress();
-        List<Triple<String, Long, Long>> addressCoinsIndexList = new ArrayList<>();
+        List<AddressCoinsIndex> addressCoinsIndexList = new ArrayList<>();
 
         ArrayList<Output> outputList = new ArrayList<>();
         for (VeriBlockMessages.Output output : request.getAmountsList()) {
@@ -126,7 +126,7 @@ public class AdminApiServiceImpl implements AdminApiService {
 
         if (sourceAddress.isEmpty()) {
             for (Pair<String, Long> availableAddress : getAvailableAddresses(totalOutputAmount)) {
-                addressCoinsIndexList.add(new Triple(availableAddress.getFirst(), availableAddress.getSecond(),
+                addressCoinsIndexList.add(new AddressCoinsIndex(availableAddress.getFirst(), availableAddress.getSecond(),
                     getSignatureIndex(availableAddress.getFirst())
                 ));
             }
@@ -147,13 +147,13 @@ public class AdminApiServiceImpl implements AdminApiService {
                 return replyBuilder.build();
             }
 
-            addressCoinsIndexList.add(new Triple<>(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits(),
+            addressCoinsIndexList.add(new AddressCoinsIndex(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits(),
                 getSignatureIndex(address)
             ));
         }
 
         long totalAvailableBalance = addressCoinsIndexList.stream()
-            .map(Triple::getSecond)
+            .map(AddressCoinsIndex::getCoins)
             .reduce(0L, Long::sum);
 
         if (totalOutputAmount > totalAvailableBalance) {
