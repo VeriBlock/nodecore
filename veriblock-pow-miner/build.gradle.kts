@@ -33,7 +33,7 @@ tasks.named<JavaExec>("run") {
 setupJar("NodeCore Reference Proof-of-Work Miner", "nodecore.miners.pow")
 val sourcesJar = setupSourcesJar()
 
-application.applicationName = "nodecore-pow"
+application.applicationName = "veriblock-pow-miner"
 application.mainClassName = "nodecore.miners.pow.MainClass"
 
 tasks.distZip {

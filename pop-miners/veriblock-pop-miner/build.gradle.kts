@@ -110,7 +110,7 @@ tasks.named<JavaExec>("run") {
 setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "nodecore.miners.pop")
 val sourcesJar = setupSourcesJar()
 
-application.applicationName = "nodecore-pop"
+application.applicationName = "veriblock-pop-miner"
 application.mainClassName = "nodecore.miners.pop.VeriBlockPoPMiner"
 
 tasks.distZip {

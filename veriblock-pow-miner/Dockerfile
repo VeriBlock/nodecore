@@ -1,7 +1,7 @@
 FROM openjdk:8-jre-alpine
 
-WORKDIR /nodecore-pow/bin
+WORKDIR /veriblock-pow-miner/bin
 
-COPY ./build/install/nodecore-pow /nodecore-pow
+COPY ./build/install/veriblock-pow-miner /veriblock-pow-miner
 
-ENTRYPOINT ["./nodecore-pow"]
+ENTRYPOINT ["./veriblock-pow-miner"]

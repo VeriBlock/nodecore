@@ -1,7 +1,7 @@
 FROM openjdk:8-jre-alpine
 
-WORKDIR /nodecore-pop/bin
+WORKDIR /veriblock-pop-miner/bin
 
-COPY ./build/install/nodecore-pop /nodecore-pop
+COPY ./build/install/veriblock-pop-miner /veriblock-pop-miner
 
-ENTRYPOINT ["./nodecore-pop", "-d", "/data", "-c", "/data/ncpop.properties"]
+ENTRYPOINT ["./veriblock-pop-miner", "-d", "/data", "-c", "/data/application.conf"]
