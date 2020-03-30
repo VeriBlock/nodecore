@@ -117,19 +117,8 @@ tasks.distTar {
 }
 
 tasks.startScripts {
-    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template = resources.text.fromFile("windowsStartScript.txt")
-}
-
-tasks.withType(CreateStartScripts::class.java).forEach { task ->
-    task.doLast {
-        // This will replace the long classpath string (which contains a reference to every single lib on the project)
-        // for a simple lib\* (which will load all the libs on the project without reference them directly)
-        task.windowsScript.writeText(
-            task.windowsScript.readText().replace("(set CLASSPATH=%APP_HOME%\\\\lib\\\\).*".toRegex()) {
-                "${it.groupValues[0]}*"
-            }
-        )
-    }
+    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template =
+        resources.text.fromFile("windowsStartScript.txt")
 }
 
 setupJacoco()

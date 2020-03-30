@@ -64,7 +64,7 @@ dependencies {
     implementation("com.github.nielsfalk:ktor-swagger:0.5.0")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.6.25")
+    implementation("io.github.microutils:kotlin-logging:1.6.26")
 
     // Test
     testImplementation("junit:junit:4.12")
@@ -121,8 +121,6 @@ tasks.distTar {
 }
 
 tasks.startScripts {
-    dependsOn(tasks.jar)
-    classpath = files(tasks.jar.get().archiveFile)
     (windowsStartScriptGenerator as WindowsStartScriptGenerator).template = resources.text.fromFile("windowsStartScript.txt")
 }
 
