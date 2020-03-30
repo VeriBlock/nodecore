@@ -21,6 +21,7 @@ import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.MiningInstruction
@@ -266,10 +267,10 @@ class BitcoinFamilyChain(
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
-        val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).reversed().toByteArray()
-        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).reversed().toByteArray()
-        val previousKeystone = contextBuffer.getBytes(32).reversed().toByteArray()
-        val secondPreviousKeystone = contextBuffer.getBytes(32).reversed().toByteArray()
+        val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).flip()
+        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).flip()
+        val previousKeystone = contextBuffer.getBytes(32).flip()
+        val secondPreviousKeystone = contextBuffer.getBytes(32).flip()
 
         return BlockEndorsement(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }

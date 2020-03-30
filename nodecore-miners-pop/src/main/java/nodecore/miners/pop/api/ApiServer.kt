@@ -23,26 +23,22 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import mu.KotlinLogging
+import nodecore.miners.pop.VpmConfig
 import nodecore.miners.pop.api.controller.ApiController
 import nodecore.miners.pop.api.controller.statusPages
 import java.util.concurrent.TimeUnit
 
+private val logger = KotlinLogging.logger {}
+
 const val API_VERSION = "0.3"
 
 class ApiServer(
+    vpmConfig: VpmConfig,
     private val controllers: List<ApiController>
 ) {
+    private val config = vpmConfig.api
 
     private var running = false
-
-    var port: Int = 8080
-        set(value) {
-            if (running) {
-                error("Port cannot be set after the server has started")
-            }
-
-            field = value
-        }
 
     var server: ApplicationEngine? = null
 
@@ -51,10 +47,10 @@ class ApiServer(
             return
         }
 
-        logger.info { "Starting HTTP API on port $port" }
+        logger.info { "Starting HTTP API on ${config.host}:${config.port}" }
 
         server = try {
-            embeddedServer(Netty, port = port) {
+            embeddedServer(Netty, host = config.host, port = config.port) {
                 install(DefaultHeaders)
                 install(CallLogging)
 
@@ -63,7 +59,6 @@ class ApiServer(
                 install(ContentNegotiation) {
                     gson()
                 }
-
 
                 // Documentation
                 install(SwaggerSupport) {
@@ -93,7 +88,7 @@ class ApiServer(
                 }
             }.start()
         } catch (e: Exception) {
-            logger.warn { "Could not start the API: ${e.message}" }
+            logger.warn(e) { "Could not start the API" }
             return
         }
 
@@ -109,5 +104,3 @@ class ApiServer(
         running = false
     }
 }
-
-private val logger = KotlinLogging.logger {}

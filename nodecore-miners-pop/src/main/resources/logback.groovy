@@ -29,6 +29,16 @@ appender("FILE", RollingFileAppender) {
     }
 }
 
+appender("ERROR-FILE", FileAppender) {
+    file = "${logRootPath}veriblock.nodecore-pop-error.log"
+    filter(ThresholdFilter) {
+        level = ERROR
+    }
+    encoder(PatternLayoutEncoder) {
+        pattern = "%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"
+    }
+}
+
 appender("BITCOINJ-FILE", RollingFileAppender) {
     file = "${logRootPath}bitcoinj.nodecore-pop.log"
     rollingPolicy(SizeAndTimeBasedRollingPolicy) {
@@ -47,4 +57,4 @@ logger("nodecore.miners.pop", toLevel(logLevel, DEBUG))
 logger("org.bitcoinj", INFO, ["BITCOINJ-FILE"], false)
 logger("shell-printing", INFO, ["FILE"], false)
 
-root(ERROR, ["TERMINAL", "FILE"])
+root(ERROR, ["TERMINAL", "FILE", "ERROR-FILE"])

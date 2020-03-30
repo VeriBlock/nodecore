@@ -7,38 +7,28 @@
 
 package nodecore.miners.pop.shell
 
-import com.google.common.eventbus.Subscribe
 import com.google.gson.GsonBuilder
 import nodecore.miners.pop.Constants
-import nodecore.miners.pop.InternalEventBus
-import nodecore.miners.pop.PoPMiner
-import nodecore.miners.pop.contracts.MessageEvent
-import nodecore.miners.pop.contracts.MessageEvent.Level
-import nodecore.miners.pop.contracts.Result
-import nodecore.miners.pop.contracts.ResultMessage
-import nodecore.miners.pop.events.PoPMinerReadyEvent
-import nodecore.miners.pop.events.PoPMiningOperationStateChangedEvent
-import nodecore.miners.pop.events.WalletSeedAgreementMissingEvent
-import nodecore.miners.pop.services.MessageService
-import org.jline.utils.AttributedStyle
+import nodecore.miners.pop.EventBus
+import nodecore.miners.pop.MinerService
+import nodecore.miners.pop.model.result.Result
+import nodecore.miners.pop.model.result.ResultMessage
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
-import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
 
 class PopShell(
-    private val miner: PoPMiner,
-    private val messageService: MessageService,
+    private val minerService: MinerService,
     commandFactory: CommandFactory
 ) : Shell(commandFactory) {
-    private var messageHandler: CompletableFuture<Void?>? = null
     private var mustAcceptWalletSeed = false
 
     init {
-        InternalEventBus.getInstance().register(this)
+        EventBus.popMinerReadyEvent.register(this, ::onPopMinerReady)
+        EventBus.walletSeedAgreementMissingEvent.register(this, ::onWalletSeedAgreementMissing)
     }
 
     override fun initialize() {
@@ -53,38 +43,15 @@ class PopShell(
 
     override fun onStart() {
         runOnce()
-        watchMessages()
     }
 
-    override fun onStop() {
-        messageHandler?.complete(null)
-    }
-
-    private fun watchMessages() {
-        messageHandler = CompletableFuture.supplyAsync {
-            messageService.getMessages()
-        }.thenAccept { messages: List<MessageEvent> ->
-            formatMessages(messages)
-        }.thenRun {
-            watchMessages()
-        }
-    }
-
-    private fun formatMessages(messages: List<MessageEvent>) {
-        for (msg in messages) {
-            when (msg.level) {
-                Level.ERROR -> logger.error(msg.message)
-                Level.WARN -> logger.warn(msg.message)
-                else -> logger.info(msg.message)
-            }
-        }
-    }
-
-    fun runOnce() {
+    private fun runOnce() {
         if (mustAcceptWalletSeed) {
-            val walletSeed: List<String?>? = miner.walletSeed
+            val walletSeed: List<String?>? = minerService.getWalletSeed()
             if (walletSeed != null) {
-                printInfo("This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue...")
+                printInfo(
+                    "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below. Press 'y' to continue..."
+                )
                 var counter = 0
                 while (readLine()!!.toUpperCase() != "Y") {
                     counter++
@@ -112,8 +79,7 @@ class PopShell(
         }
     }
 
-    @Subscribe
-    fun onPoPMinerReady(event: PoPMinerReadyEvent) {
+    private fun onPopMinerReady() {
         try {
             printInfo("**********************************************************************************************")
             printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
@@ -123,20 +89,7 @@ class PopShell(
         }
     }
 
-    @Subscribe
-    fun onPoPMiningOperationStateChanged(event: PoPMiningOperationStateChangedEvent) {
-        try {
-            val operationId: String? = event.state.operationId
-            for (s in event.messages) {
-                printStyled("[$operationId] $s", AttributedStyle.BOLD.foreground(AttributedStyle.CYAN))
-            }
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    @Subscribe
-    fun onWalletSeedAgreementMissing(event: WalletSeedAgreementMissingEvent) {
+    private fun onWalletSeedAgreementMissing() {
         this.mustAcceptWalletSeed = true
     }
 

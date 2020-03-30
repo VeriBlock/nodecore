@@ -95,6 +95,8 @@ testledgerout.txt
 *.crt
 *.tmp
 
+/application.conf
+
 .DS_Store
 scripts/certs/
 

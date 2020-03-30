@@ -1,6 +1,5 @@
 package veriblock.service.impl;
 
-import com.google.inject.Singleton;
 import org.veriblock.sdk.models.Sha256Hash;
 import spark.utils.CollectionUtils;
 import veriblock.model.Transaction;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Singleton
 public class PendingTransactionContainerImpl implements PendingTransactionContainer {
     private Map<String, ArrayList<Transaction>> pendingAddressTransaction = new ConcurrentHashMap<>();
     private Map<Sha256Hash, Transaction> pendingTxIdTransaction = new ConcurrentHashMap<>();

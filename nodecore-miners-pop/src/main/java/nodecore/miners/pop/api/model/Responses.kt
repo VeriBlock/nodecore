@@ -8,24 +8,10 @@
 package nodecore.miners.pop.api.model
 
 class OperationDetailResponse(
-    val operationId: String?,
-    val status: String?,
-    val currentAction: String?,
-    val popData: PoPDataResponse,
-    val transaction: String?,
-    val submittedTransactionId: String?,
-    val bitcoinBlockHeaderOfProof: String?,
-    val bitcoinContextBlocks: List<String?>?,
-    val merklePath: String?,
-    val alternateBlocksOfProof: List<String?>?,
-    val detail: String?,
-    val popTransactionId: String?
-)
-
-class PoPDataResponse(
-    val publicationData: String?,
-    val endorsedBlockHeader: String?,
-    val minerAddress: String?
+    val operationId: String,
+    val status: String,
+    val currentAction: String,
+    val detail: Any // Not defined as a map because doing so breaks the Swagger library
 )
 
 class OperationSummaryListResponse(
@@ -33,11 +19,11 @@ class OperationSummaryListResponse(
 )
 
 class OperationSummaryResponse(
-    val operationId: String?,
+    val operationId: String,
     val endorsedBlockNumber: Int,
-    val state: String?,
-    val action: String?,
-    val message: String?
+    val state: String,
+    val action: String,
+    val message: String
 )
 
 open class ResultResponse(
@@ -46,16 +32,16 @@ open class ResultResponse(
 )
 
 class ResultMessageResponse(
-    val code: String?,
-    val message: String?,
-    val details: List<String>?,
+    val code: String,
+    val message: String,
+    val details: List<String>,
     val error: Boolean
 )
 
 class MineResultResponse(
     failed: Boolean,
     messages: List<ResultMessageResponse>,
-    val operationId: String? = null
+    val operationId: String
 ) : ResultResponse(failed, messages)
 
 class MinerInfoResponse(

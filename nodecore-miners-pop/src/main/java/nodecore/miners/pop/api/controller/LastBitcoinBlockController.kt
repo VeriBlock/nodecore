@@ -16,7 +16,7 @@ import io.ktor.application.call
 import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.api.models.ShowLastBitcoinBlockResponse
 import nodecore.miners.pop.common.Utility
 import org.bitcoinj.core.Utils
@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream
 @Group("Bitcoin") @Location("/api/lastbitcoinblock") class lastBitcoinBlock
 
 class LastBitcoinBlockController(
-    private val miner: PoPMiner
+    private val minerService: MinerService
 ) : ApiController {
 
     override fun Route.registerApi() {
@@ -36,7 +36,7 @@ class LastBitcoinBlockController(
                     ok<ShowLastBitcoinBlockResponse>()
                 )
         ) {
-            val lastBlock = miner.lastBitcoinBlock
+            val lastBlock = minerService.getLastBitcoinBlock()
             val lastBlockHeader = lastBlock.header
 
             val headerOutputSteram = ByteArrayOutputStream()

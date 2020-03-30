@@ -32,4 +32,6 @@ message OperationState {
     string pop_tx_id = 12;
     string message = 13;
     string transaction_status = 14;
+    string payoutBlockHash = 15;
+    string payoutAmount = 16;
 }

@@ -9,7 +9,8 @@ package nodecore.miners.pop.common
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.toHex
-import java.util.*
+import java.util.ArrayList
+import java.util.Arrays
 
 /**
  * The BitcoinMerkleTree class provides a variety of ways to interact with Bitcoin transaction merkle trees.
@@ -71,7 +72,7 @@ class BitcoinMerkleTree {
      * @param evaluateEagerly Whether or not to compute the entire tree now, or when next needed
      * @param txIDs           All of the TxIDs included in the transaction merkle tree from Bitcoin
      */
-    constructor(evaluateEagerly: Boolean, txIDs: Array<String?>)
+    constructor(evaluateEagerly: Boolean, txIDs: Array<String>)
         : this(evaluateEagerly, Arrays.asList<String>(*txIDs))
 
     /**

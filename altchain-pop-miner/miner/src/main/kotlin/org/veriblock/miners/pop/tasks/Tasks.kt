@@ -77,10 +77,8 @@ suspend fun runTasks(
             }
         }
         operation.runTask("Create Endorsement Transaction", OperationStateType.ENDORSEMEMT_TRANSACTION) {
-            val state = operation.state
-            if (state !is OperationState.Instruction) {
-                failTask("CreateEndorsementTransactionTask called without mining instruction!")
-            }
+            val state = operation.state as? OperationState.Instruction
+                ?: failTask("CreateEndorsementTransactionTask called without mining instruction!")
 
             // Something to fill in all the gaps
             logger.info(operation) { "Submitting endorsement VBK transaction..." }
@@ -104,10 +102,9 @@ suspend fun runTasks(
             logger.info(operation) { "Successfully added the VBK transaction: ${walletTransaction.id}!" }
         }
         operation.runTask("Confirm transaction", OperationStateType.CONFIRMED) {
-            val state = operation.state
-            if (state !is OperationState.EndorsementTransaction) {
-                failTask("ConfirmTransactionTask called without wallet transaction!")
-            }
+            val state = operation.state as? OperationState.EndorsementTransaction
+                ?: failTask("ConfirmTransactionTask called without wallet transaction!")
+
             logger.info(operation) { "Waiting for the transaction to be included in VeriBlock block..." }
             // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
             val txMetaChannel = state.transaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
@@ -141,10 +138,9 @@ suspend fun runTasks(
             logger.info(operation) { "Successfully added the VBK block of proof!" }
         }
         operation.runTask("Prove Transaction", OperationStateType.TRANSACTION_PROVED) {
-            val state = operation.state
-            if (state !is OperationState.BlockOfProof) {
-                failTask("ProveTransactionTask called without VBK block of proof!")
-            }
+            val state = operation.state as? OperationState.BlockOfProof
+                ?: failTask("ProveTransactionTask called without VBK block of proof!")
+
             val walletTransaction = state.transaction
 
             logger.info(operation) { "Getting the merkle path for the transaction: ${walletTransaction.id}..." }
@@ -165,10 +161,8 @@ suspend fun runTasks(
             logger.info(operation) { "Successfully added the verified merkle path!" }
         }
         operation.runTask("Wait for next VeriBlock Keystone", OperationStateType.KEYSTONE_OF_PROOF) {
-            val state = operation.state
-            if (state !is OperationState.BlockOfProof) {
-                failTask("RegisterKeystoneListenersTask called without block of proof!")
-            }
+            val state = operation.state as? OperationState.BlockOfProof
+                ?: failTask("RegisterKeystoneListenersTask called without block of proof!")
 
             val blockOfProof = state.blockOfProof
 
@@ -188,10 +182,9 @@ suspend fun runTasks(
             operation.setKeystoneOfProof(keystoneOfProof)
         }
         operation.runTask("Wait for VeriBlock Publication Data", OperationStateType.VERIBLOCK_PUBLICATIONS) {
-            val state = operation.state
-            if (state !is OperationState.KeystoneOfProof) {
-                failTask("RegisterVeriBlockPublicationPollingTask called without keystone of proof!")
-            }
+            val state = operation.state as? OperationState.KeystoneOfProof
+                ?: failTask("RegisterVeriBlockPublicationPollingTask called without keystone of proof!")
+
             // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
             val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
                 operation.id,
@@ -202,10 +195,9 @@ suspend fun runTasks(
             operation.setVeriBlockPublications(publications)
         }
         operation.runTask("Submit Proof of Proof", OperationStateType.SUBMITTED_POP_DATA) {
-            val state = operation.state
-            if (state !is OperationState.VeriBlockPublications) {
-                failTask("SubmitProofOfProofTask called without VeriBlock publications!")
-            }
+            val state = operation.state as? OperationState.VeriBlockPublications
+                ?: failTask("SubmitProofOfProofTask called without VeriBlock publications!")
+
             try {
                 val proofOfProof = AltPublication(
                     state.transaction,
@@ -286,10 +278,8 @@ suspend fun runTasks(
             }
         }
         operation.runTask("Altchain Endorsement Transaction Confirmation", OperationStateType.ALT_ENDORSEMENT_TRANSACTION_CONFIRMED) {
-            val state = operation.state
-            if (state !is OperationState.SubmittedPopData) {
-                failTask("AltEndorsementTransactionConfirmationTask called without proof of proof txId!")
-            }
+            val state = operation.state as? OperationState.SubmittedPopData
+                ?: failTask("AltEndorsementTransactionConfirmationTask called without proof of proof txId!")
 
             val endorsementTransactionId = state.proofOfProofId
             logger.info(operation) { "Waiting for $chainSymbol Endorsement Transaction ($endorsementTransactionId) to be confirmed..." }
@@ -306,10 +296,8 @@ suspend fun runTasks(
             operation.setAltEndorsementTransactionConfirmed()
         }
         operation.runTask("Altchain Endorsed Block Confirmation", OperationStateType.ALT_ENDORSED_BLOCK_CONFIRMED) {
-            val state = operation.state
-            if (state !is OperationState.AltEndorsementTransactionConfirmed) {
-                failTask("AltEndorsedBlockConfirmationTask called without having confirmed the transaction!")
-            }
+            val state = operation.state as? OperationState.AltEndorsementTransactionConfirmed
+                ?: failTask("AltEndorsedBlockConfirmationTask called without having confirmed the transaction!")
 
             val endorsedBlockHeight = state.miningInstruction.endorsedBlockHeight
             logger.info(operation) { "Waiting for $chainSymbol endorsed block ($endorsedBlockHeight) to be confirmed..." }
@@ -330,10 +318,8 @@ suspend fun runTasks(
             operation.setAltEndorsedBlockHash(endorsedBlock.hash)
         }
         operation.runTask("Payout Detection", OperationStateType.COMPLETE) {
-            val state = operation.state
-            if (state !is OperationState.SubmittedPopData) {
-                failTask("PayoutDetectionTask called without having confirmed the endorsed block!")
-            }
+            val state = operation.state as? OperationState.SubmittedPopData
+                ?: failTask("PayoutDetectionTask called without having confirmed the endorsed block!")
 
             val endorsedBlockHeight = state.miningInstruction.endorsedBlockHeight
             val payoutBlockHeight = endorsedBlockHeight + securityInheritingChain.getPayoutInterval()

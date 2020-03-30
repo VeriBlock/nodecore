@@ -8,9 +8,9 @@
 
 package nodecore.miners.pop.shell.commands
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
-import nodecore.miners.pop.contracts.PoPEndorsementInfo
+import nodecore.miners.pop.model.PopEndorsementInfo
 import nodecore.miners.pop.services.NodeCoreService
 import nodecore.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
@@ -21,9 +21,9 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.veriBlockWalletCommands(
-    nodeCoreService: NodeCoreService,
-    prettyPrintGson: Gson
+    nodeCoreService: NodeCoreService
 ) {
+    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
     command(
         name = "Lock VeriBlock Wallet",
         form = "lockwallet",
@@ -70,7 +70,7 @@ fun CommandFactory.veriBlockWalletCommands(
         description = "Returns information regarding PoP endorsements for a given address"
     ) {
         try {
-            val endorsements = nodeCoreService.poPEndorsementInfo
+            val endorsements = nodeCoreService.getPopEndorsementInfo()
             printInfo("${prettyPrintGson.toJson(endorsements)}\n\n")
             success()
         } catch (e: StatusRuntimeException) {
@@ -90,7 +90,7 @@ fun CommandFactory.veriBlockWalletCommands(
         description = "Lists recent and upcoming rewards"
     ) {
         try {
-            val endorsements: List<PoPEndorsementInfo> = nodeCoreService.poPEndorsementInfo.sortedBy {
+            val endorsements: List<PopEndorsementInfo> = nodeCoreService.getPopEndorsementInfo().sortedBy {
                 it.endorsedBlockNumber
             }
             for (e in endorsements) {

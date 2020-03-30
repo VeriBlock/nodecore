@@ -29,7 +29,7 @@ enum class OperationStateType(
     VERIBLOCK_PUBLICATIONS(7, "VBK Publications received, waiting for submission response"),
     SUBMITTED_POP_DATA(8, "Publications submitted, waiting Alt Endorsement Transaction to be confirmed"),
     ALT_ENDORSEMENT_TRANSACTION_CONFIRMED(9, "Alt Endorsement Transaction confirmed, waiting for Endorsing Block to be confirmed"),
-    ALT_ENDORSED_BLOCK_CONFIRMED(10, "Alt Endorsement Block confirmed, waiting for payout block"),
+    ALT_ENDORSED_BLOCK_CONFIRMED(10, "Alt Endorsed Block confirmed, waiting for payout block"),
     COMPLETE(11, "Completed"),
     FAILED(-1, "Failed");
 

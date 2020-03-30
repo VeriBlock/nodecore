@@ -18,7 +18,7 @@ import io.ktor.application.call
 import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import nodecore.miners.pop.PoPMiner
+import nodecore.miners.pop.MinerService
 import nodecore.miners.pop.api.model.MineRequest
 import nodecore.miners.pop.api.model.MineResultResponse
 import nodecore.miners.pop.api.model.MinerInfoResponse
@@ -32,7 +32,7 @@ import nodecore.miners.pop.api.model.toResponse
 @Group("Mining") @Location("/api/miner") class miner
 
 class MiningController(
-    private val miner: PoPMiner
+    private val minerService: MinerService
 ) : ApiController {
 
     override fun Route.registerApi() {
@@ -43,8 +43,7 @@ class MiningController(
                     ok<OperationSummaryListResponse>()
                 )
         ) {
-            val operationSummaries = miner.listOperations()
-                ?: throw NotFoundException("No operations found")
+            val operationSummaries = minerService.listOperations()
 
             val responseModel = operationSummaries.map { it.toResponse() }
             call.respond(OperationSummaryListResponse(responseModel))
@@ -59,7 +58,7 @@ class MiningController(
         ) { location ->
             val id = location.id
 
-            val operationState = miner.getOperationState(id)
+            val operationState = minerService.getOperation(id)
                 ?: throw NotFoundException("Operation $id not found")
 
             val responseModel = operationState.toResponse()
@@ -72,7 +71,7 @@ class MiningController(
                     ok<MineResultResponse>()
                 )
         ) { location, payload ->
-            val result = miner.mine(payload.block)
+            val result = minerService.mine(payload.block)
 
             val responseModel = result.toResponse()
             call.respond(responseModel)
@@ -85,10 +84,10 @@ class MiningController(
                 )
         ) {
             val responseModel = MinerInfoResponse(
-                bitcoinBalance = miner.bitcoinBalance.longValue(),
-                bitcoinAddress = miner.bitcoinReceiveAddress,
-                minerAddress = miner.minerAddress,
-                walletSeed = miner.walletSeed
+                bitcoinBalance = minerService.getBitcoinBalance().longValue(),
+                bitcoinAddress = minerService.getBitcoinReceiveAddress(),
+                minerAddress = minerService.getMinerAddress(),
+                walletSeed = minerService.getWalletSeed()
             )
             call.respond(responseModel)
         }

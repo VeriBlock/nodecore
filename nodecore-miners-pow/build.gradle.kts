@@ -44,5 +44,6 @@ tasks.distTar {
 }
 
 tasks.startScripts {
-    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template = resources.text.fromFile("windowsStartScript.txt")
+    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template =
+        resources.text.fromFile("windowsStartScript.txt")
 }

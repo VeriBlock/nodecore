@@ -8,14 +8,12 @@
 
 package org.veriblock.lite.transactionmonitor
 
-import io.kotlintest.matchers.collections.shouldContain
 import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import org.junit.Test
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.core.randomAddress
 import org.veriblock.lite.core.randomCoin
@@ -65,59 +63,6 @@ class TransactionMonitorTest {
         walletTransaction.publicKey shouldBe transaction.publicKey
         walletTransaction.networkByte shouldBe transaction.networkByte
         walletTransaction.transactionMeta.state shouldBe TransactionMeta.MetaState.PENDING
-    }
-
-
-    @Test
-    fun onBlockChainDownloaded() {
-        // Given
-        val address = randomAddress()
-        val confirmedTransactionsWithWrongBlocks = (1..10).map {
-            randomWalletTransaction(context, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
-        }
-        val confirmedTransactionsWithRightBlocks = (1..10).map {
-            randomWalletTransaction(context, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED))
-        }
-        val unknownTransactionsWithRightBlocks = (1..10).map {
-            randomWalletTransaction(context, sourceAddress = address, transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.UNKNOWN))
-        }
-        val confirmedTransactionBlocks = (1..10).map {
-            confirmedTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock(context)
-        }.toMap()
-
-        val unknownTransactionBlocks = (1..1).map {
-            unknownTransactionsWithRightBlocks[it - 1].transactionMeta.appearsInBestChainBlock!! to randomFullBlock(context, normalTransactions = unknownTransactionsWithRightBlocks)
-        }.toMap()
-
-        val allTransactions = confirmedTransactionsWithWrongBlocks + confirmedTransactionsWithRightBlocks + unknownTransactionsWithRightBlocks
-        val allBlocks =  confirmedTransactionBlocks + unknownTransactionBlocks
-        val transactionMonitor = randomTransactionMonitor(context, address, allTransactions)
-
-        // When
-        transactionMonitor.onBlockChainDownloaded(allBlocks)
-
-        // Then
-        confirmedTransactionsWithWrongBlocks.forEach {
-            it.transactionMeta.state shouldBe TransactionMeta.MetaState.UNKNOWN
-        }
-        confirmedTransactionsWithRightBlocks.forEach {
-            it.transactionMeta.depth shouldBe allBlocks.size
-        }
-        unknownTransactionBlocks.values.forEach { block ->
-            unknownTransactionsWithRightBlocks.forEach { transaction ->
-                transaction.transactionMeta.state shouldBe TransactionMeta.MetaState.CONFIRMED
-                transaction.transactionMeta.depth shouldBe 1
-
-                transaction.transactionMeta.getAppearsInBlock() shouldContain block.hash
-                transaction.transactionMeta.appearsInBestChainBlock shouldBe block.hash
-                transaction.transactionMeta.appearsAtChainHeight shouldBe block.height
-                transaction.merklePath shouldBe MerkleTree.of(block).getMerklePath(
-                    transaction.id,
-                    unknownTransactionsWithRightBlocks.indexOf(transaction),
-                    true
-                )
-            }
-        }
     }
 
     @Test

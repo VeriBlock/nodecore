@@ -9,19 +9,22 @@ import org.koin.dsl.module
 
 @JvmField
 val webApiModule = module {
-    single { ConfigurationController(get()) }
+    single { ConfigurationController(get(), get(), get()) }
     single { MiningController(get()) }
     single { WalletController(get()) }
     single { LastBitcoinBlockController(get()) }
     single { QuitController() }
 
     single {
-        ApiServer(listOf(
-            get<ConfigurationController>(),
-            get<MiningController>(),
-            get<WalletController>(),
-            get<LastBitcoinBlockController>(),
-            get<QuitController>()
-        ))
+        ApiServer(
+            get(),
+            listOf(
+                get<ConfigurationController>(),
+                get<MiningController>(),
+                get<WalletController>(),
+                get<LastBitcoinBlockController>(),
+                get<QuitController>()
+            )
+        )
     }
 }
