@@ -52,7 +52,7 @@ class Configuration(
         return config.entrySet().filter { entry ->
             !sysProperties.containsKey(entry.key)
         }.associate {
-            it.key to it.value.render()
+            it.key to it.value.render().replace("\"", "")
         }.toSortedMap()
     }
 
