@@ -111,7 +111,7 @@ setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "nodecore.miners.pop")
 val sourcesJar = setupSourcesJar()
 
 application.applicationName = "nodecore-pop"
-application.mainClassName = "nodecore.miners.pop.ProgramKt"
+application.mainClassName = "nodecore.miners.pop.VeriBlockPoPMiner"
 
 tasks.distZip {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
