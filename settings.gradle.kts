@@ -13,8 +13,7 @@ include("altchain-sdk")
 
 include("pop-miners:pop-miners-common")
 include("pop-miners:veriblock-pop-miner")
-include("pop-miners:altchain-pop-miner:core")
-include("pop-miners:altchain-pop-miner:miner")
+include("pop-miners:altchain-pop-miner")
 
 include("altchain-plugins")
 include("nodecore-spv")

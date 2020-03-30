@@ -29,10 +29,13 @@ import org.veriblock.miners.pop.core.OperationStatus
 
 @Location("/api/miner")
 class miner
+
 @Location("/api/miner/mine")
 class mineAction
+
 @Location("/api/miner/operations")
 class minerOperations(val status: String?, val limit: Int?, val offset: Int?)
+
 @Location("/api/miner/operations/{id}")
 class minerOperation(val id: String)
 
