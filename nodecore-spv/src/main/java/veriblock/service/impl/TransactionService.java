@@ -12,27 +12,110 @@ import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;
 import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.crypto.Crypto;
+import org.veriblock.core.types.Pair;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
+import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
 import veriblock.conf.NetworkParameters;
+import veriblock.model.AddressCoinsIndex;
 import veriblock.model.Output;
 import veriblock.model.SigningResult;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TransactionService {
 
+    private static final long DEFAULT_TRANSACTION_FEE = 1000L;
     private final AddressManager addressManager;
     private final NetworkParameters networkParameters;
 
     public TransactionService(AddressManager addressManager, NetworkParameters networkParameters) {
         this.addressManager = addressManager;
         this.networkParameters = networkParameters;
+    }
+
+    public long calculateFee(String requestedSourceAddress, long totalOutputAmount, List<Output> outputList, long signatureIndex) {
+        // This is for over-estimating the size of the transaction by one byte in the edge case where totalOutputAmount
+        // is right below a power-of-two barrier
+        long feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L;
+
+        int predictedTransactionSize =
+            predictStandardTransactionToAllStandardOutputSize(totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
+
+        return predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
+    }
+
+    public List<Transaction> createTransactionsByOutputList(List<AddressCoinsIndex> addressCoinsIndexList, List<Output> outputList) {
+        List<Transaction> transactions = new ArrayList<>();
+        List<Output> sortedOutputs = outputList.stream()
+            .sorted((o1, o2) -> Long.compare(o2.getAmount().getAtomicUnits(), o1.getAmount().getAtomicUnits()))
+            .collect(Collectors.toList());
+        List<AddressCoinsIndex> sortedAddressCoinsIndexList = addressCoinsIndexList.stream()
+            .filter(b -> b.getCoins() > 0)
+            .sorted((b1, b2) -> Long.compare(b2.getCoins(), b1.getCoins()))
+            .collect(Collectors.toList());
+
+        long totalOutputAmount = sortedOutputs.stream()
+            .map(output -> output.getAmount().getAtomicUnits())
+            .reduce(0L, Long::sum);
+
+        for (AddressCoinsIndex sourceAddressesIndex : sortedAddressCoinsIndexList) {
+            long fee = calculateFee(sourceAddressesIndex.getAddress(), totalOutputAmount, sortedOutputs, sourceAddressesIndex.getIndex());
+
+            Pair<List<Output>, List<Output>> fulfillAndForPay =
+                splitOutPutsAccordingBalance(sortedOutputs, Coin.valueOf(sourceAddressesIndex.getCoins() - fee));
+            sortedOutputs = fulfillAndForPay.getFirst();
+            List<Output> outputsForPay = fulfillAndForPay.getSecond();
+
+            long transactionInputAmount = outputsForPay.stream()
+                .map(o -> o.getAmount().getAtomicUnits())
+                .reduce(0L, Long::sum) + fee;
+
+            Transaction transaction =
+                createStandardTransaction(
+                    sourceAddressesIndex.getAddress(), transactionInputAmount, outputsForPay, sourceAddressesIndex.getIndex() + 1);
+            transactions.add(transaction);
+            if (sortedOutputs.size() == 0) {
+                break;
+            }
+        }
+        return transactions;
+    }
+
+    public Pair<List<Output>, List<Output>> splitOutPutsAccordingBalance(List<Output> outputs, Coin balance) {
+        List<Output> outputsLeft = new ArrayList<>();
+        List<Output> outputsForPay = new ArrayList<>();
+        Coin balanceLeft = balance;
+
+        for (int i = 0; i < outputs.size(); i++) {
+            Output output = outputs.get(i);
+
+            if (balanceLeft.getAtomicUnits() > output.getAmount().getAtomicUnits()) {
+                outputsForPay.add(output);
+                balanceLeft = balance.subtract(output.getAmount());
+            } else {
+                Output partForPay = new Output(output.getAddress(), balanceLeft);
+                outputsForPay.add(partForPay);
+
+                Coin leftToPay = output.getAmount().subtract(balanceLeft);
+                outputs.add(new Output(output.getAddress(), leftToPay));
+                outputs.remove(output);
+
+                for (int j = i; j < outputs.size(); j++) {
+                    outputsLeft.add(outputs.get(j));
+                }
+
+                return new Pair<>(outputsLeft, outputsForPay);
+            }
+        }
+        return new Pair<>(outputsLeft, outputsForPay);
     }
 
     /**

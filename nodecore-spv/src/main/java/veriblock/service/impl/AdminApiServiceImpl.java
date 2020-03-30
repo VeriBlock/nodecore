@@ -24,6 +24,7 @@ import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
 import org.veriblock.sdk.models.Coin;
 import veriblock.SpvContext;
+import veriblock.model.AddressCoinsIndex;
 import veriblock.model.LedgerContext;
 import veriblock.model.Output;
 import veriblock.model.StandardAddress;
@@ -40,9 +41,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AdminApiServiceImpl implements AdminApiService {
     private static final Logger logger = LoggerFactory.getLogger(AdminApiServiceImpl.class);
@@ -54,8 +55,6 @@ public class AdminApiServiceImpl implements AdminApiService {
     private final TransactionFactory transactionFactory;
     private final PendingTransactionContainer pendingTransactionContainer;
     private final Blockchain blockchain;
-
-    public static final int DEFAULT_TRANSACTION_FEE = 1000;
 
     public AdminApiServiceImpl(
         SpvContext spvContext,
@@ -114,90 +113,77 @@ public class AdminApiServiceImpl implements AdminApiService {
     public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
         VeriBlockMessages.SendCoinsReply.Builder replyBuilder = VeriBlockMessages.SendCoinsReply.newBuilder();
         ByteString sourceAddress = request.getSourceAddress();
-        String requestedSourceAddress;
+        List<AddressCoinsIndex> addressCoinsIndexList = new ArrayList<>();
 
-        long totalOutputAmount = 0;
         ArrayList<Output> outputList = new ArrayList<>();
-
         for (VeriBlockMessages.Output output : request.getAmountsList()) {
             String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.getAddress());
             outputList.add(new Output(new StandardAddress(address), Coin.valueOf(output.getAmount())));
-            totalOutputAmount += output.getAmount();
         }
+        long totalOutputAmount = outputList.stream()
+            .map(o -> o.getAmount().getAtomicUnits())
+            .reduce(0L, Long::sum);
 
         if (sourceAddress.isEmpty()) {
-            requestedSourceAddress = findAppropriateAddress(totalOutputAmount);
+            for (Pair<String, Long> availableAddress : getAvailableAddresses(totalOutputAmount)) {
+                addressCoinsIndexList.add(new AddressCoinsIndex(availableAddress.getFirst(), availableAddress.getSecond(),
+                    getSignatureIndex(availableAddress.getFirst())
+                ));
+            }
         } else {
-            requestedSourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
-        }
+            String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
+            LedgerContext ledgerContext = peerTable.getAddressState(address);
 
-        LedgerContext ledgerContext = peerTable.getAddressState(requestedSourceAddress);
-        if (ledgerContext == null) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "Information about this address does not exist.",
-                "Perhaps your node is waiting for this information. Try to do it later.", true
+            if (ledgerContext == null) {
+                replyBuilder.setSuccess(false);
+                replyBuilder.addResults(makeResult("V008", "Information about this address does not exist.",
+                    "Perhaps your node is waiting for this information. Try to do it later.", true
+                ));
+                return replyBuilder.build();
+            } else if (!ledgerContext.getLedgerProofStatus().isExists()) {
+                replyBuilder.setSuccess(false);
+                replyBuilder
+                    .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));
+                return replyBuilder.build();
+            }
+
+            addressCoinsIndexList.add(new AddressCoinsIndex(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits(),
+                getSignatureIndex(address)
             ));
-            return replyBuilder.build();
-        } else if (!ledgerContext.getLedgerProofStatus().isExists()) {
-            replyBuilder.setSuccess(false);
-            replyBuilder
-                .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));
-            return replyBuilder.build();
         }
 
-        if (totalOutputAmount > ledgerContext.getLedgerValue().getAvailableAtomicUnits()) {
+        long totalAvailableBalance = addressCoinsIndexList.stream()
+            .map(AddressCoinsIndex::getCoins)
+            .reduce(0L, Long::sum);
+
+        if (totalOutputAmount > totalAvailableBalance) {
             replyBuilder.setSuccess(false);
             replyBuilder
                 .addResults(makeResult("V008", "Available balance is not enough.", "Check your address that you use for this operation.", true));
             return replyBuilder.build();
         }
 
-        // This is for over-estimating the size of the transaction by one byte in the edge case where totalOutputAmount
-        // is right below a power-of-two barrier
-        long feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L;
-        long signatureIndex = getSignatureIndex(requestedSourceAddress);
+        List<Transaction> transactions = transactionService.createTransactionsByOutputList(addressCoinsIndexList, outputList);
 
-        int predictedTransactionSize = transactionService
-            .predictStandardTransactionToAllStandardOutputSize(totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
+        if (transactions.size() == 0) {
+            replyBuilder.setSuccess(false);
+            replyBuilder
+                .addResults(
+                    makeResult("V008", "Transaction has not been created, there is an exception.", "Check your address balance and try later.", true));
+            return replyBuilder.build();
+        }
 
-        long fee = predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
+        for (Transaction transaction : transactions) {
+            pendingTransactionContainer.addTransaction(transaction);
+            peerTable.advertise(transaction);
+            replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.getTxId().toString()));
+        }
 
-        long totalInputAmount = fee + totalOutputAmount;
-
-        Transaction transaction =
-            transactionService.createStandardTransaction(requestedSourceAddress, totalInputAmount, outputList, signatureIndex + 1);
-
-        pendingTransactionContainer.addTransaction(transaction);
-        peerTable.advertise(transaction);
-
-        replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.getTxId().toString()));
         replyBuilder.setSuccess(true);
         return replyBuilder.build();
     }
 
-    private String findAppropriateAddress(long totalOutputAmount) {
-        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
-        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
-            return ledgerContext.getAddress().getAddress();
-        }
 
-        Map<String, Long> addressBalance = new HashMap<>();
-        Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
-
-        for (Address address : addressManager.getAll()) {
-            if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
-                addressBalance.put(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits());
-            }
-        }
-
-        for (String address : addressBalance.keySet()) {
-            if (addressBalance.get(address) > totalOutputAmount) {
-                return address;
-            }
-        }
-
-        return null;
-    }
 
     @Override
     public VeriBlockMessages.GetSignatureIndexReply getSignatureIndex(VeriBlockMessages.GetSignatureIndexRequest request) {
@@ -650,6 +636,33 @@ public class AdminApiServiceImpl implements AdminApiService {
         return replyBuilder.build();
     }
 
+    private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {
+        List<Pair<String, Long>> addressCoinsForPayment = new ArrayList<>();
+
+        //Use default address if there balance is enough.
+        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
+        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
+            addressCoinsForPayment.add(new Pair<>(ledgerContext.getAddress().getAddress(), ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
+
+            return addressCoinsForPayment;
+        }
+
+        List<Pair<String, Long>> addressBalanceList = new ArrayList<>();
+        Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
+
+        for (Address address : addressManager.getAll()) {
+            if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
+                addressBalanceList
+                    .add(new Pair<>(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits()));
+            }
+        }
+
+        return addressBalanceList.stream()
+            .filter(b -> b.getSecond() > 0)
+            .sorted((b1, b2) -> Long.compare(b2.getSecond(), b1.getSecond()))
+            .collect(Collectors.toList());
+    }
+
     private void formGetBalanceReply(String address, LedgerContext ledgerContext, VeriBlockMessages.GetBalanceReply.Builder replyBuilder) {
         long balance = 0L;
         long lockedCoins = 0L;
@@ -665,10 +678,6 @@ public class AdminApiServiceImpl implements AdminApiService {
                 .setLockedAmount(lockedCoins)
                 .setUnlockedAmount(balance - lockedCoins)
                 .setTotalAmount(balance));
-//                replyBuilder.addUnconfirmed(VeriBlockMessages.Output
-//                        .newBuilder()
-//                        .setAddress(ByteStringUtility.base58ToByteString(ledgerContext.getAddress().getAddress()))
-//                        .setAmount(pendingTransactionContainer.getPendingNetBalanceChangeForAddress(address.getHash())));
     }
 
     private Long getSignatureIndex(String address){

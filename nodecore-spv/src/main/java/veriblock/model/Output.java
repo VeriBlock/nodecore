@@ -12,6 +12,7 @@ import org.veriblock.sdk.services.SerializeDeserializeService;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
 public class Output {
     private final AddressLight address;
@@ -33,5 +34,23 @@ public class Output {
     public void serializeToStream(OutputStream stream) throws IOException {
         address.serializeToStream(stream);
         SerializeDeserializeService.serialize(amount, stream);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Output)) {
+            return false;
+        }
+        Output output = (Output) o;
+        return Objects.equals(address, output.address) &&
+            Objects.equals(amount, output.amount);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(address, amount);
     }
 }
