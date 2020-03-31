@@ -4,26 +4,24 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.miners.pop.common
 
-package org.veriblock.miners.pop.common;
-
-import org.bitcoinj.core.Base58;
-import org.bitcoinj.core.Block;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.MonetaryFormat;
-import org.quartz.CronScheduleBuilder;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.UUID;
+import org.bitcoinj.core.Base58
+import org.bitcoinj.core.Block
+import org.bitcoinj.core.Coin
+import org.bitcoinj.utils.MonetaryFormat
+import org.quartz.CronScheduleBuilder
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.util.Arrays
+import java.util.UUID
 
 /**
  * A lightweight Utility class comprised entirely of static methods for low-level encoding/manipulation/numerical tasks.
  */
-public class Utility {
-    private static final String hexAlphabet = "0123456789ABCDEF";
-    private static final char[] hexArray = hexAlphabet.toCharArray();
+object Utility {
+    private const val hexAlphabet = "0123456789ABCDEF"
+    private val hexArray = hexAlphabet.toCharArray()
 
     /**
      * Encodes the provided byte array into an upper-case hexadecimal string.
@@ -31,15 +29,16 @@ public class Utility {
      * @param bytes The byte array to encode
      * @return A String of the hexadecimal representation of the provided byte array
      */
-    public static String bytesToHex(byte[] bytes) {
+    @JvmStatic
+    fun bytesToHex(bytes: ByteArray): String {
         /* Two hex characters always represent one byte */
-        char[] hex = new char[bytes.length * 2];
-        for (int i = 0; i < bytes.length; i++) {
-            int v = bytes[i] & 0xFF;
-            hex[i * 2] = hexArray[v >>> 4];
-            hex[i * 2 + 1] = hexArray[v & 0x0F];
+        val hex = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v: Int = bytes[i].toInt() and 0xFF
+            hex[i * 2] = hexArray[v ushr 4]
+            hex[i * 2 + 1] = hexArray[v and 0x0F]
         }
-        return new String(hex);
+        return String(hex)
     }
 
     /**
@@ -48,22 +47,24 @@ public class Utility {
      * @param s The hexadecimal string
      * @return A byte array consisting of the bytes within the hexadecimal String
      */
-    public static byte[] hexToBytes(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
+    fun hexToBytes(s: String): ByteArray {
+        val len = s.length
+        val data = ByteArray(len / 2)
+        var i = 0
+        while (i < len) {
+            data[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
+            i += 2
         }
-        return data;
+        return data
     }
 
-    public static boolean isHex(String toTest) {
-        for (char c : toTest.toLowerCase().toCharArray()) {
-            if (!(('0' <= c && c <= '9') || ('a' <= c && c <= 'f'))) {
-                return false;
+    fun isHex(toTest: String): Boolean {
+        for (c in toTest.toLowerCase().toCharArray()) {
+            if (!('0' <= c && c <= '9' || 'a' <= c && c <= 'f')) {
+                return false
             }
         }
-        return true;
+        return true
     }
 
     /**
@@ -74,18 +75,17 @@ public class Utility {
      * @param toReverse The byte[] to reverse
      * @return A reversed copy of toReverse
      */
-    public static byte[] flip(byte[] toReverse) {
-        byte[] reversed = new byte[toReverse.length];
-
-        for (int i = 0; i < toReverse.length; i++) {
-            reversed[i] = toReverse[toReverse.length - 1 - i];
+    fun flip(toReverse: ByteArray): ByteArray {
+        val reversed = ByteArray(toReverse.size)
+        for (i in toReverse.indices) {
+            reversed[i] = toReverse[toReverse.size - 1 - i]
         }
-        return reversed;
+        return reversed
     }
 
-    public static String flipHex(String hex) {
-        byte[] bytes = hexToBytes(hex);
-        return bytesToHex(flip(bytes));
+    fun flipHex(hex: String): String {
+        val bytes = hexToBytes(hex)
+        return bytesToHex(flip(bytes))
     }
 
     /**
@@ -95,11 +95,11 @@ public class Utility {
      * @param second The second array to concatenate
      * @return A byte[] holding all bytes, in order, from first, followed by all bytes, in order, from second.
      */
-    public static byte[] concat(byte[] first, byte[] second) {
-        byte[] result = new byte[first.length + second.length];
-        System.arraycopy(first, 0, result, 0, first.length);
-        System.arraycopy(second, 0, result, first.length, second.length);
-        return result;
+    fun concat(first: ByteArray, second: ByteArray): ByteArray {
+        val result = ByteArray(first.size + second.size)
+        System.arraycopy(first, 0, result, 0, first.size)
+        System.arraycopy(second, 0, result, first.size, second.size)
+        return result
     }
 
     /**
@@ -108,15 +108,15 @@ public class Utility {
      * @param toTest String to attempt to parse to a positive or zero (>-1) long
      * @return Whether or not the provided String can be successfully parsed to a positive of zero (>-1) long
      */
-    public static boolean isPositiveOrZeroLong(String toTest) {
+    fun isPositiveOrZeroLong(toTest: String): Boolean {
         try {
-            long parsed = Long.parseLong(toTest);
+            val parsed = toTest.toLong()
             if (parsed >= 0) {
-                return true; /* Didn't throw an exception, and is > 0 */
+                return true /* Didn't throw an exception, and is > 0 */
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
         }
-        return false;
+        return false
     }
 
     /**
@@ -125,15 +125,15 @@ public class Utility {
      * @param toTest String to attempt to parse to a positive (>0) long
      * @return Whether or not the provided String can be successfully parsed to a positive (>0) long
      */
-    public static boolean isPositiveLong(String toTest) {
+    fun isPositiveLong(toTest: String): Boolean {
         try {
-            long parsed = Long.parseLong(toTest);
+            val parsed = toTest.toLong()
             if (parsed > 0) {
-                return true; /* Didn't throw an exception, and is > 0 */
+                return true /* Didn't throw an exception, and is > 0 */
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
         }
-        return false;
+        return false
     }
 
     /**
@@ -142,44 +142,44 @@ public class Utility {
      * @param toTest String to attempt to parse to a negative (<0) long
      * @return Whether or not the provided String can be successfully parsed to a negative (<0) long
      */
-    public static boolean isNegativeLong(String toTest) {
+    fun isNegativeLong(toTest: String): Boolean {
         try {
-            long parsed = Long.parseLong(toTest);
+            val parsed = toTest.toLong()
             if (parsed < 0) {
-                return true; /* Didn't throw an exception, and is < 0 */
+                return true /* Didn't throw an exception, and is < 0 */
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
         }
-        return false;
+        return false
     }
 
-    public static boolean isInteger(String toTest) {
+    @JvmStatic
+    fun isInteger(toTest: String): Boolean {
         try {
-            Integer.parseInt(toTest);
-            return true;
-        } catch (Exception e) {
+            toTest.toInt()
+            return true
+        } catch (e: Exception) {
         }
-
-        return false;
+        return false
     }
 
-    public static boolean isPositiveInteger(String toTest) {
+    fun isPositiveInteger(toTest: String): Boolean {
         try {
-            int parsed = Integer.parseInt(toTest);
+            val parsed = toTest.toInt()
             if (parsed > 0) {
-                return true;
+                return true
             }
-        } catch (Exception e) {
+        } catch (e: Exception) {
         }
-        return false;
+        return false
     }
 
-    public static boolean isBigInteger(String toTest) {
-        try {
-            new BigInteger(toTest, 10);
-            return true;
-        } catch (Exception e) {
-            return false;
+    fun isBigInteger(toTest: String?): Boolean {
+        return try {
+            BigInteger(toTest, 10)
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -189,12 +189,12 @@ public class Utility {
      * @param input The integer to convert into a byte[]
      * @return The byte[] representing the provided integer
      */
-    public static byte[] intToByteArray(int input) {
-        byte[] bytes = new byte[]{
-            (byte) ((input & 0xFF000000) >> 24), (byte) ((input & 0x00FF0000) >> 16), (byte) ((input & 0x0000FF00) >> 8),
-            (byte) ((input & 0x000000FF)),
-        };
-        return bytes;
+    fun intToByteArray(input: Int): ByteArray {
+        return byteArrayOf(
+            (input and -0x1000000 shr 24).toByte(), (input and 0x00FF0000 shr 16).toByte(),
+            (input and 0x0000FF00 shr 8).toByte(),
+            (input and 0x000000FF).toByte()
+        )
     }
 
     /**
@@ -203,77 +203,79 @@ public class Utility {
      * @param input The long to convert into a byte[]
      * @return The byte[] representing the provided integer
      */
-    public static byte[] longToByteArray(long input) {
-        byte[] bytes = new byte[]{
-            (byte) ((input & 0xFF000000) >> 24), (byte) ((input & 0x00FF0000) >> 16), (byte) ((input & 0x0000FF00) >> 8),
-            (byte) ((input & 0x000000FF)),
-        };
-        return bytes;
+    fun longToByteArray(input: Long): ByteArray {
+        return byteArrayOf(
+            (input and -0x1000000 shr 24).toByte(), (input and 0x00FF0000 shr 16).toByte(),
+            (input and 0x0000FF00 shr 8).toByte(),
+            (input and 0x000000FF).toByte()
+        )
     }
 
-    public static boolean byteArraysAreEqual(byte[] first, byte[] second) {
-        if (first.length != second.length) {
-            return false;
+    fun byteArraysAreEqual(first: ByteArray, second: ByteArray): Boolean {
+        if (first.size != second.size) {
+            return false
         }
-
-        for (int i = 0; i < first.length; i++) {
+        for (i in first.indices) {
             if (first[i] != second[i]) {
-                return false;
+                return false
             }
         }
-
-        return true;
+        return true
     }
 
-    public static String generateOperationId() {
-        UUID id = UUID.randomUUID();
-        return id.toString().substring(0, 8);
+    fun generateOperationId(): String {
+        val id = UUID.randomUUID()
+        return id.toString().substring(0, 8)
     }
 
-    public static byte[] serializeBlock(Block block) {
-        return Arrays.copyOfRange(block.bitcoinSerialize(), 0, 80);
+    fun serializeBlock(block: Block): ByteArray {
+        return Arrays.copyOfRange(block.bitcoinSerialize(), 0, 80)
     }
 
-    public static Coin amountToCoin(BigDecimal amount) {
-        long satoshis = amount.movePointRight(8).longValue();
-        return Coin.valueOf(satoshis);
+    @JvmStatic
+    fun amountToCoin(amount: BigDecimal): Coin {
+        val satoshis: Long = amount.movePointRight(8).longValueExact()
+        return Coin.valueOf(satoshis)
     }
 
-    public static String bytesToBase58(byte[] bytes) {
-        return Base58.encode(bytes);
+    fun bytesToBase58(bytes: ByteArray?): String {
+        return Base58.encode(bytes)
     }
 
-    public static String formatAtomicLongWithDecimal(long toFormat) {
-        boolean isNegative = toFormat < 0;
-        String result = "" + (isNegative ? -1 * toFormat : toFormat);
-        while (result.length() < 8) {
-            result = "0" + result;
+    fun formatAtomicLongWithDecimal(toFormat: Long): String {
+        val isNegative = toFormat < 0
+        var result = "" + if (isNegative) -1 * toFormat else toFormat
+        while (result.length < 8) {
+            result = "0$result"
         }
-
-        int spotForDecimal = result.length() - 8;
-        result = (isNegative ? "-" : "") + result.substring(0, spotForDecimal) + "." + result.substring(spotForDecimal);
-        if (result.charAt(0) == '.') {
-            result = "0" + result;
+        val spotForDecimal = result.length - 8
+        result = (if (isNegative) "-" else "") + result.substring(0, spotForDecimal) + "." + result.substring(spotForDecimal)
+        if (result[0] == '.') {
+            result = "0$result"
         }
-        return result;
+        return result
     }
 
-    public static boolean isValidCronExpression(String value) {
-        try {
-            CronScheduleBuilder.cronSchedule(value);
-            return true;
-        } catch (RuntimeException e) {
-            return false;
+    @JvmStatic
+    fun isValidCronExpression(value: String?): Boolean {
+        return try {
+            CronScheduleBuilder.cronSchedule(value)
+            true
+        } catch (e: RuntimeException) {
+            false
         }
     }
 
-    private static final MonetaryFormat BTC_FORMAT = MonetaryFormat.BTC.minDecimals(8).repeatOptionalDecimals(8, 0).postfixCode();
+    private val BTC_FORMAT = MonetaryFormat.BTC.minDecimals(8).repeatOptionalDecimals(
+        8, 0
+    ).postfixCode()
 
     /**
      * Returns the value as a 0.12 type string. More digits after the decimal place will be used
      * if necessary, but two will always be present.
      */
-    public static String formatBTCFriendlyString(Coin coin) {
-        return BTC_FORMAT.format(coin).toString();
+    @JvmStatic
+    fun formatBTCFriendlyString(coin: Coin?): String {
+        return BTC_FORMAT.format(coin).toString()
     }
 }

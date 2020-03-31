@@ -4,16 +4,16 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.miners.pop.storage
 
-package org.veriblock.miners.pop.storage;
-
-import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.table.DatabaseTable;
+import com.j256.ormlite.field.DatabaseField
+import com.j256.ormlite.table.DatabaseTable
 
 @DatabaseTable(tableName = "app_values")
-public class KeyValueData {
+class KeyValueData {
     @DatabaseField(id = true, columnName = "key")
-    public String key;
+    var key: String? = null
+
     @DatabaseField(columnName = "value")
-    public String value;
+    var value: String? = null
 }

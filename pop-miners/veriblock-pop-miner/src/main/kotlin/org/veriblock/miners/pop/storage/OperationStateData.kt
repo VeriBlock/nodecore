@@ -4,33 +4,41 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.miners.pop.storage
 
-package org.veriblock.miners.pop.storage;
-
-import com.j256.ormlite.field.DataType;
-import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.table.DatabaseTable;
+import com.j256.ormlite.field.DataType
+import com.j256.ormlite.field.DatabaseField
+import com.j256.ormlite.table.DatabaseTable
 
 @DatabaseTable(tableName = "operation_state")
-public class OperationStateData {
+class OperationStateData {
     @DatabaseField(columnName = "id", id = true)
-    public String id;
+    var id: String? = null
+
     @DatabaseField(columnName = "endorsed_block_number", index = true)
-    public int endorsedBlockNumber;
+    var endorsedBlockNumber = 0
+
     @DatabaseField(columnName = "endorsed_block_hash", index = true)
-    public String endorsedBlockHash;
+    var endorsedBlockHash: String? = null
+
     @DatabaseField(columnName = "status")
-    public String status;
+    var status: String? = null
+
     @DatabaseField(columnName = "action")
-    public String action;
+    var action: String? = null
+
     @DatabaseField(columnName = "transaction_status", index = true)
-    public String transactionStatus;
+    var transactionStatus: String? = null
+
     @DatabaseField(columnName = "message")
-    public String message;
+    var message: String? = null
+
     @DatabaseField(columnName = "state", dataType = DataType.BYTE_ARRAY)
-    public byte[] state;
+    var state: ByteArray? = null
+
     @DatabaseField(columnName = "is_done")
-    public boolean isDone;
+    var isDone = false
+
     @DatabaseField(columnName = "last_updated", index = true)
-    public int lastUpdated;
+    var lastUpdated = 0
 }

@@ -4,177 +4,170 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.miners.pop.common
 
-package org.veriblock.miners.pop.common;
+import org.apache.commons.lang3.reflect.FieldUtils
+import org.bitcoinj.core.PartialMerkleTree
+import org.bitcoinj.core.Sha256Hash
+import org.bitcoinj.core.Utils
+import org.bitcoinj.core.VerificationException
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.toHex
+import java.util.Arrays
+import java.util.HashMap
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.bitcoinj.core.PartialMerkleTree;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.VerificationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+private val logger = createLogger {}
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+class MerkleProof(
+    private val hashes: List<Sha256Hash>,
+    private val matchedChildBits: ByteArray,
+    private val transactionCount: Int
+) {
+    private val tree: Array<Array<Sha256Hash?>>
+    private val positions: MutableMap<Sha256Hash, Int>
 
-import static org.bitcoinj.core.Utils.checkBitLE;
-import static org.bitcoinj.core.Utils.reverseBytes;
+    init {
+        var height = 0
+        while (getTreeWidth(transactionCount, height) > 1) {
+            height++
+        }
 
-public class MerkleProof {
-    private static final Logger logger = LoggerFactory.getLogger(MerkleProof.class);
+        tree = Array(height) {
+            val width = getTreeWidth(transactionCount, height)
+            arrayOfNulls<Sha256Hash?>(width)
+        }
+        positions = HashMap()
+        val used = ValuesUsed()
 
-    private final List<Sha256Hash> hashes;
-    private final byte[] matchedChildBits;
-    private final int transactionCount;
+        recursiveExtractHashes(height, 0, used)
 
-    private Sha256Hash[][] tree;
-    private Map<Sha256Hash, Integer> positions;
-
-    public MerkleProof(List<Sha256Hash> hashes, byte[] bits, int transactionCount) {
-        this.hashes = hashes;
-        this.matchedChildBits = bits;
-        this.transactionCount = transactionCount;
-
-        buildTree();
+        if ((used.bitsUsed + 7) / 8 != matchedChildBits.size ||
+            // verify that all hashes were consumed
+            used.hashesUsed != hashes.size
+        ) {
+            throw VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided")
+        }
     }
 
-    public String getCompactPath(Sha256Hash txId) {
-        if (positions == null || tree == null) {
-            throw new IllegalStateException("Tree has not been initialized");
-        }
+    fun getCompactPath(txId: Sha256Hash): String {
+        val txPosition = positions[txId]
+            ?: error("Transaction $txId not found in merkle proof")
 
-        Integer txPosition = positions.get(txId);
-        if (txPosition == null) {
-            return null;
-        }
+        val path = StringBuilder("$txPosition:${txId.reversedBytes.toHex()}")
 
-        StringBuilder path = new StringBuilder(txPosition + ":" + Utility.bytesToHex(txId.getReversedBytes()));
-
-        int pos = txPosition;
-        /* Fill up the path with the corresponding nodes */
-        for (int i = 0; i < tree.length; i++) {
-            int elementIndex = (pos % 2 == 0) ? pos + 1 : pos - 1;
-            if (elementIndex == tree[i].length) {
-                elementIndex = elementIndex - 1;
+        var pos = txPosition
+        // Fill up the path with the corresponding nodes
+        for (i in tree.indices) {
+            var elementIndex = if (pos % 2 == 0) pos + 1 else pos - 1
+            if (elementIndex == tree[i].size) {
+                elementIndex -= 1
             }
 
-            /* Get the complementary element (left or right) at the next layer */
-            path.append(":").append(Utility.bytesToHex(get(i, elementIndex).getReversedBytes()));
+            // Get the complementary element (left or right) at the next layer
+            val element = get(i, elementIndex).reversedBytes.toHex()
+            path.append(":$element")
 
-            /* Index in above layer will be floor(foundIndex / 2) */
-            pos /= 2;
+            // Index in above layer will be floor(foundIndex / 2)
+            pos /= 2
         }
-
-        return path.toString();
+        return path.toString()
     }
 
-    private void buildTree() {
-        int height = 0;
-        int width;
-        List<Integer> widths = new ArrayList<>();
-        while ((width = getTreeWidth(transactionCount, height)) > 1) {
-            widths.add(height, width);
-            height++;
+    private operator fun get(height: Int, offset: Int): Sha256Hash {
+        val actualOffset = if (tree[height].size == offset) {
+            offset - 1
+        } else {
+            offset
         }
-
-        tree = new Sha256Hash[height][];
-        positions = new HashMap<>();
-        for (int i = 0; i < widths.size(); i++) {
-            tree[i] = new Sha256Hash[widths.get(i)];
-        }
-
-        ValuesUsed used = new ValuesUsed();
-        recursiveExtractHashes(height, 0, used);
-
-        if ((used.bitsUsed + 7) / 8 != matchedChildBits.length ||
-            // verify that all hashes were consumed
-            used.hashesUsed != hashes.size()) {
-            throw new VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided");
-        }
-    }
-
-    private Sha256Hash get(int height, int offset) {
-        if (tree[height].length == offset) {
-            offset -= 1;
-        }
-
-        Sha256Hash element = tree[height][offset];
+        val element = tree[height][actualOffset]
         if (element != null) {
-            return element;
+            return element
         }
 
         // Return a ZERO HASH because we can't descend any further
-        if (height == 0) {
-            return Sha256Hash.ZERO_HASH;
+        return if (height == 0) {
+            Sha256Hash.ZERO_HASH
+        } else {
+            val left = get(height - 1, actualOffset * 2).bytes
+            val right = get(height - 1, actualOffset * 2 + 1).bytes
+            combineLeftRight(left, right)
         }
-
-        return combineLeftRight(get(height - 1, offset * 2).getBytes(), get(height - 1, (offset * 2) + 1).getBytes());
-    }
-
-    // Below code replicated from bitcoinj
-
-    // helper function to efficiently calculate the number of nodes at given height in the merkle tree
-    private static int getTreeWidth(int transactionCount, int height) {
-        return (transactionCount + (1 << height) - 1) >> height;
-    }
-
-    private static class ValuesUsed {
-        public int bitsUsed = 0, hashesUsed = 0;
     }
 
     // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
     // it returns the hash of the respective node.
-    private Sha256Hash recursiveExtractHashes(int height, int pos, ValuesUsed used) throws VerificationException {
-        if (used.bitsUsed >= matchedChildBits.length * 8) {
+    private fun recursiveExtractHashes(
+        height: Int,
+        pos: Int,
+        used: ValuesUsed
+    ): Sha256Hash {
+        if (used.bitsUsed >= matchedChildBits.size * 8) {
             // overflowed the bits array - failure
-            throw new VerificationException("PartialMerkleTree overflowed its bits array");
+            throw VerificationException("PartialMerkleTree overflowed its bits array")
         }
-        boolean parentOfMatch = checkBitLE(matchedChildBits, used.bitsUsed++);
-        if (height == 0 || !parentOfMatch) {
+        val parentOfMatch = Utils.checkBitLE(matchedChildBits, used.bitsUsed++)
+        return if (height == 0 || !parentOfMatch) {
             // if at height 0, or nothing interesting below, use stored hash and do not descend
-            if (used.hashesUsed >= hashes.size()) {
+            if (used.hashesUsed >= hashes.size) {
                 // overflowed the hash array - failure
-                throw new VerificationException("PartialMerkleTree overflowed its hash array");
+                throw VerificationException("PartialMerkleTree overflowed its hash array")
             }
-            Sha256Hash hash = hashes.get(used.hashesUsed++);
-            tree[height][pos] = hash;
+            val hash = hashes[used.hashesUsed++]
+            tree[height][pos] = hash
             if (height == 0 && parentOfMatch) {
-                positions.put(hash, pos);
+                positions[hash] = pos
             }
-            return hash;
+            hash
         } else {
             // otherwise, descend into the subtrees to extract matched txids and hashes
-            byte[] left = recursiveExtractHashes(height - 1, pos * 2, used).getBytes(), right;
+            val left = recursiveExtractHashes(height - 1, pos * 2, used).bytes
             if (pos * 2 + 1 < getTreeWidth(transactionCount, height - 1)) {
-                right = recursiveExtractHashes(height - 1, pos * 2 + 1, used).getBytes();
+                val right = recursiveExtractHashes(height - 1, pos * 2 + 1, used).bytes
                 if (Arrays.equals(right, left)) {
-                    throw new VerificationException("Invalid merkle tree with duplicated left/right branches");
+                    throw VerificationException("Invalid merkle tree with duplicated left/right branches")
                 }
+                // and combine them before returning
+                combineLeftRight(left, right)
             } else {
-                right = left;
+                // combine left with left if there's no right
+                combineLeftRight(left, left)
             }
-            // and combine them before returning
-            return combineLeftRight(left, right);
         }
     }
 
-    private static Sha256Hash combineLeftRight(byte[] left, byte[] right) {
-        return Sha256Hash.wrapReversed(Sha256Hash.hashTwice(reverseBytes(left), 0, 32, reverseBytes(right), 0, 32));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static MerkleProof parse(PartialMerkleTree partialMerkleTree) {
-        try {
-            List<Sha256Hash> hashes = (List<Sha256Hash>) FieldUtils.readField(partialMerkleTree, "hashes", true);
-            byte[] bits = (byte[]) FieldUtils.readField(partialMerkleTree, "matchedChildBits", true);
-
-            return new MerkleProof(hashes, bits, partialMerkleTree.getTransactionCount());
-        } catch (IllegalAccessException e) {
-            logger.error("Unable to parse Partial Merkle Tree", e);
+    companion object {
+        @JvmStatic
+        fun parse(partialMerkleTree: PartialMerkleTree): MerkleProof? {
+            try {
+                val hashes: List<Sha256Hash> = partialMerkleTree.getPrivateField("hashes")
+                val bits: ByteArray = partialMerkleTree.getPrivateField("matchedChildBits")
+                return MerkleProof(hashes, bits, partialMerkleTree.transactionCount)
+            } catch (e: IllegalAccessException) {
+                logger.error("Unable to parse Partial Merkle Tree", e)
+            }
+            return null
         }
-        return null;
     }
 }
+
+// Below code replicated from bitcoinj
+// helper function to efficiently calculate the number of nodes at given height in the merkle tree
+private fun getTreeWidth(transactionCount: Int, height: Int): Int {
+    return transactionCount + (1 shl height) - 1 shr height
+}
+
+private fun combineLeftRight(left: ByteArray, right: ByteArray): Sha256Hash {
+    return Sha256Hash.wrapReversed(
+        Sha256Hash.hashTwice(
+            Utils.reverseBytes(left), 0, 32, Utils.reverseBytes(right), 0, 32
+        )
+    )
+}
+
+private class ValuesUsed {
+    var bitsUsed = 0
+    var hashesUsed = 0
+}
+
+private inline fun <reified T> Any.getPrivateField(name: String): T =
+    FieldUtils.readField(this, name, true) as T

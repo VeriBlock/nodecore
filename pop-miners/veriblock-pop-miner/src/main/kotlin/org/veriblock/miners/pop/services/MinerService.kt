@@ -26,7 +26,7 @@ import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransaction
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import org.veriblock.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
 import org.veriblock.miners.pop.model.OperationSummary
-import org.veriblock.miners.pop.model.PoPMinerDependencies
+import org.veriblock.miners.pop.model.PopMinerDependencies
 import org.veriblock.miners.pop.model.result.DefaultResultMessage
 import org.veriblock.miners.pop.model.result.MineResult
 import org.veriblock.miners.pop.model.result.Result
@@ -56,7 +56,7 @@ class MinerService(
     private val operations = ConcurrentHashMap<String, VpmOperation>()
     private var isShuttingDown = false
     private var stateRestored: Boolean = false
-    private val readyConditions: EnumSet<PoPMinerDependencies> = EnumSet.noneOf(PoPMinerDependencies::class.java)
+    private val readyConditions: EnumSet<PopMinerDependencies> = EnumSet.noneOf(PopMinerDependencies::class.java)
 
     private fun readyToMine(): Boolean {
         ensureBitcoinServiceReady()
@@ -103,7 +103,7 @@ class MinerService(
     }
 
     fun isReady(): Boolean =
-        PoPMinerDependencies.SATISFIED == readyConditions
+        PopMinerDependencies.SATISFIED == readyConditions
 
     fun listOperations(): List<OperationSummary> {
         return operations.values.asSequence().map { operation ->
@@ -185,7 +185,7 @@ class MinerService(
     }
 
     fun getMinerAddress(): String? {
-        return if (readyConditions.contains(PoPMinerDependencies.NODECORE_CONNECTED)) {
+        return if (readyConditions.contains(PopMinerDependencies.NODECORE_CONNECTED)) {
             nodeCoreService.getMinerAddress()
         } else {
             null
@@ -304,31 +304,31 @@ class MinerService(
     }
 
     private fun ensureBlockchainDownloaded() {
-        if (!readyConditions.contains(PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED) && bitcoinService.blockchainDownloaded()) {
-            addReadyCondition(PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED)
+        if (!readyConditions.contains(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED) && bitcoinService.blockchainDownloaded()) {
+            addReadyCondition(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED)
         }
     }
 
     private fun ensureBitcoinServiceReady() {
-        if (!readyConditions.contains(PoPMinerDependencies.BITCOIN_SERVICE_READY) && bitcoinService.serviceReady()) {
-            addReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY)
+        if (!readyConditions.contains(PopMinerDependencies.BITCOIN_SERVICE_READY) && bitcoinService.serviceReady()) {
+            addReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
         }
     }
 
     private fun ensureSufficientFunds() {
         val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
         if (!bitcoinService.getBalance().isLessThan(maximumTransactionFee)) {
-            if (!readyConditions.contains(PoPMinerDependencies.SUFFICIENT_FUNDS)) {
+            if (!readyConditions.contains(PopMinerDependencies.SUFFICIENT_FUNDS)) {
                 logger.info("PoP wallet is sufficiently funded")
                 EventBus.fundsAddedEvent.trigger()
             }
-            addReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS)
+            addReadyCondition(PopMinerDependencies.SUFFICIENT_FUNDS)
         } else {
-            removeReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS)
+            removeReadyCondition(PopMinerDependencies.SUFFICIENT_FUNDS)
         }
     }
 
-    private fun addReadyCondition(flag: PoPMinerDependencies) {
+    private fun addReadyCondition(flag: PopMinerDependencies) {
         val previousReady = isReady()
         readyConditions.add(flag)
         if (!previousReady && isReady()) {
@@ -339,7 +339,7 @@ class MinerService(
         }
     }
 
-    private fun removeReadyCondition(flag: PoPMinerDependencies) {
+    private fun removeReadyCondition(flag: PopMinerDependencies) {
         val removed = readyConditions.remove(flag)
         if (removed) {
             logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag))
@@ -356,10 +356,10 @@ class MinerService(
         return reasons
     }
 
-    private fun getMessageForDependencyCondition(flag: PoPMinerDependencies): String {
+    private fun getMessageForDependencyCondition(flag: PopMinerDependencies): String {
         return when (flag) {
-            PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED -> "Bitcoin blockchain is not downloaded"
-            PoPMinerDependencies.SUFFICIENT_FUNDS -> {
+            PopMinerDependencies.BLOCKCHAIN_DOWNLOADED -> "Bitcoin blockchain is not downloaded"
+            PopMinerDependencies.SUFFICIENT_FUNDS -> {
                 val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
                 val balance = bitcoinService.getBalance()
                 "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
@@ -370,9 +370,9 @@ class MinerService(
                 ) + System.lineSeparator() + "  Send Bitcoin to: " +
                     bitcoinService.currentReceiveAddress()
             }
-            PoPMinerDependencies.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
-            PoPMinerDependencies.SYNCHRONIZED_NODECORE -> "Waiting for NodeCore to synchronize"
-            PoPMinerDependencies.BITCOIN_SERVICE_READY -> "Bitcoin service is not ready"
+            PopMinerDependencies.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
+            PopMinerDependencies.SYNCHRONIZED_NODECORE -> "Waiting for NodeCore to synchronize"
+            PopMinerDependencies.BITCOIN_SERVICE_READY -> "Bitcoin service is not ready"
         }
     }
 
@@ -415,7 +415,7 @@ class MinerService(
 
     private fun onInsufficientFunds() {
         try {
-            removeReadyCondition(PoPMinerDependencies.SUFFICIENT_FUNDS)
+            removeReadyCondition(PopMinerDependencies.SUFFICIENT_FUNDS)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -423,7 +423,7 @@ class MinerService(
 
     private fun onBitcoinServiceReady() {
         try {
-            addReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY)
+            addReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
             if (!readyToMine()) {
                 val failed = EnumSet.complementOf(readyConditions)
                 for (flag in failed) {
@@ -438,7 +438,7 @@ class MinerService(
 
     private fun onBitcoinServiceNotReady() {
         try {
-            removeReadyCondition(PoPMinerDependencies.BITCOIN_SERVICE_READY)
+            removeReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -446,7 +446,7 @@ class MinerService(
 
     private fun onBlockchainDownloaded() {
         try {
-            addReadyCondition(PoPMinerDependencies.BLOCKCHAIN_DOWNLOADED)
+            addReadyCondition(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED)
             ensureSufficientFunds()
             logger.info(
                 "Available Bitcoin balance: " + Utility.formatBTCFriendlyString(bitcoinService.getBalance())
@@ -459,7 +459,7 @@ class MinerService(
 
     fun onNodeCoreHealthy() {
         try {
-            addReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED)
+            addReadyCondition(PopMinerDependencies.NODECORE_CONNECTED)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -468,7 +468,7 @@ class MinerService(
 
     private fun onNodeCoreUnhealthy() {
         try {
-            removeReadyCondition(PoPMinerDependencies.NODECORE_CONNECTED)
+            removeReadyCondition(PopMinerDependencies.NODECORE_CONNECTED)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -476,7 +476,7 @@ class MinerService(
 
     private fun onNodeCoreSynchronized() {
         try {
-            addReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE)
+            addReadyCondition(PopMinerDependencies.SYNCHRONIZED_NODECORE)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -484,7 +484,7 @@ class MinerService(
 
     private fun onNodeCoreDesynchronized() {
         try {
-            removeReadyCondition(PoPMinerDependencies.SYNCHRONIZED_NODECORE)
+            removeReadyCondition(PopMinerDependencies.SYNCHRONIZED_NODECORE)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

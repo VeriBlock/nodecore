@@ -5,7 +5,7 @@ import org.bitcoinj.core.Transaction
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
 import org.veriblock.miners.pop.core.VpmOperation
-import org.veriblock.miners.pop.model.PoPMinerDependencies
+import org.veriblock.miners.pop.model.PopMinerDependencies
 import org.veriblock.miners.pop.model.VeriBlockHeader
 
 object EventBus {
@@ -20,7 +20,7 @@ object EventBus {
     val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore Synchronized")
     val nodeCoreDesynchronizedEvent = EmptyEvent("NodeCore Desynchronized")
     val popMinerReadyEvent = EmptyEvent("PoP Miner Ready")
-    val popMinerNotReadyEvent = Event<PoPMinerDependencies>("PoP Miner Not Ready")
+    val popMinerNotReadyEvent = Event<PopMinerDependencies>("PoP Miner Not Ready")
     val popMiningOperationCompletedEvent = Event<String>("PoP Mining Operation Completed")
     val popMiningOperationStateChangedEvent = Event<VpmOperation>("PoP Mining Operation State Changed")
     val programQuitEvent = Event<Int>("Program Quit")
