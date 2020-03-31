@@ -13,7 +13,12 @@ import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.types.Pair;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
-import org.veriblock.core.wallet.serialization.*;
+import org.veriblock.core.wallet.serialization.EncryptedInfo;
+import org.veriblock.core.wallet.serialization.StoredAddress;
+import org.veriblock.core.wallet.serialization.StoredWallet;
+import org.veriblock.core.wallet.serialization.WalletSerializer;
+import org.veriblock.core.wallet.serialization.WalletV1Serializer;
+import org.veriblock.core.wallet.serialization.WalletV2Serializer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,9 +47,9 @@ public class DefaultAddressManager implements AddressManager {
     private final ReentrantLock lock = new ReentrantLock(true);
     private boolean loaded = false;
 
-    private final StoredWallet wallet;
-    private final HashMap<String, Address> addresses;
-    private final HashMap<String, PrivateKey> privateKeys;
+    private final StoredWallet wallet = new StoredWallet();
+    private final HashMap<String, Address> addresses = new HashMap<>();
+    private final HashMap<String, PrivateKey> privateKeys = new HashMap<>();
 
     private Address defaultAddress;
     private File walletFile;
@@ -63,10 +68,6 @@ public class DefaultAddressManager implements AddressManager {
     }
 
     public DefaultAddressManager() {
-        this.wallet = new StoredWallet();
-        this.addresses = new HashMap<>();
-        this.privateKeys = new HashMap<>();
-
         wallet.version = WALLET_VERSION;
         wallet.keyType = KEY_TYPE;
         wallet.addresses = new ArrayList<>();
@@ -562,6 +563,11 @@ public class DefaultAddressManager implements AddressManager {
         } finally {
             lock.unlock();
         }
+    }
+
+    @Override
+    public void monitor(Address address) {
+        addresses.put(address.getHash(), address);
     }
 
     private Address add(KeyPair pair, StoredAddress storedAddress) throws IOException {
