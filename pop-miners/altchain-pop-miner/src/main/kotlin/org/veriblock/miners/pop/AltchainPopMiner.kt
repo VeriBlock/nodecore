@@ -12,7 +12,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.service.OperationService
@@ -38,7 +38,7 @@ class AltchainPopMiner(
     private val operationService: OperationService,
     private val pluginService: PluginService
 ) : Miner {
-    private val operations = ConcurrentHashMap<String, MiningOperation>()
+    private val operations = ConcurrentHashMap<String, ApmOperation>()
     private var isShuttingDown: Boolean = false
 
     private enum class ReadyCondition {
@@ -149,7 +149,7 @@ class AltchainPopMiner(
 
     override fun getOperations() = operations.values.sortedBy { it.timestamp }
 
-    override fun getOperation(id: String): MiningOperation? {
+    override fun getOperation(id: String): ApmOperation? {
         return operations[id]
     }
 
@@ -199,7 +199,7 @@ class AltchainPopMiner(
             }
         }
 
-        val operation = MiningOperation(
+        val operation = ApmOperation(
             chainId = chainId,
             blockHeight = block
         )
@@ -222,14 +222,14 @@ class AltchainPopMiner(
         }
     }
 
-    override fun resubmit(operation: MiningOperation) {
+    override fun resubmit(operation: ApmOperation) {
         val operationState = operation.state
         if (operationState !is OperationState.Completed) {
             error("The operation [${operation.id}] is not completed, so it can't be resubmitted!")
         }
 
         // Copy the operation
-        val newOperation = MiningOperation(
+        val newOperation = ApmOperation(
             chainId = operation.chainId,
             blockHeight = operation.blockHeight
         )
@@ -240,7 +240,6 @@ class AltchainPopMiner(
         newOperation.setConfirmed()
         newOperation.setBlockOfProof(operationState.blockOfProof)
         newOperation.setMerklePath(operationState.merklePath)
-        newOperation.setKeystoneOfProof(operationState.keystoneOfProof)
         newOperation.setVeriBlockPublications(operationState.veriBlockPublications)
 
         registerToStateChangedEvent(newOperation)
@@ -296,7 +295,7 @@ class AltchainPopMiner(
         operationsSubmitted = true
     }
 
-    private fun registerToStateChangedEvent(operation: MiningOperation) {
+    private fun registerToStateChangedEvent(operation: ApmOperation) {
         operation.stateChangedEvent.register(operationService) {
             operationService.storeOperation(operation)
         }

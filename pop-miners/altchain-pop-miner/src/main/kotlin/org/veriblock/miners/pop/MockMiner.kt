@@ -4,7 +4,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.blockchain.store.BitcoinStore
@@ -51,7 +51,7 @@ class MockMiner(
     private val bitcoinBlockchain = BitcoinBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
 
-    private val operations = HashMap<String, MiningOperation>()
+    private val operations = HashMap<String, ApmOperation>()
 
     override fun initialize() {
         logger.info { "Mock mining enabled!" }
@@ -77,7 +77,7 @@ class MockMiner(
             return failure()
         }
 
-        val operation = MiningOperation(
+        val operation = ApmOperation(
             chainId = chainId,
             status = OperationStatus.RUNNING
         )
@@ -102,7 +102,6 @@ class MockMiner(
         operation.setConfirmed()
         operation.setBlockOfProof(atv.containingBlock)
         operation.setMerklePath(atv.merklePath)
-        operation.setKeystoneOfProof(vbkTip)
 
         val lastKnownBtcBlockHash = miningInstruction.btcContext.last()
         val lastKnownVbkBlockHash = miningInstruction.context.last()
@@ -128,9 +127,7 @@ class MockMiner(
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
-        operation.setAltEndorsementTransactionConfirmed()
-        operation.setAltEndorsedBlockHash("")
-        operation.complete("", 0.0)
+        operation.complete("", "0.0")
         return success()
     }
 
@@ -201,13 +198,13 @@ class MockMiner(
         )
     }
 
-    override fun resubmit(operation: MiningOperation) =
+    override fun resubmit(operation: ApmOperation) =
         error("Operation not supported in the Mock Miner")
 
-    override fun getOperations(): List<MiningOperation> =
+    override fun getOperations(): List<ApmOperation> =
         operations.values.sortedBy { it.timestamp }
 
-    override fun getOperation(id: String): MiningOperation? =
+    override fun getOperation(id: String): ApmOperation? =
         operations[id]
 
     override fun getAddress(): String =

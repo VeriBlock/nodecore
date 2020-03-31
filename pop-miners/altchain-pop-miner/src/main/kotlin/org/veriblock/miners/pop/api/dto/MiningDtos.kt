@@ -7,7 +7,7 @@
 
 package org.veriblock.miners.pop.api.dto
 
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 
 data class MinerInfoResponse(
     val vbkAddress: String,
@@ -30,7 +30,7 @@ data class OperationSummaryResponse(
     val state: String
 )
 
-fun MiningOperation.toSummaryResponse() = OperationSummaryResponse(
+fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
     id,
     chainId,
     blockHeight,
@@ -46,7 +46,7 @@ data class OperationDetailResponse(
     val stateDetail: List<String>
 )
 
-fun MiningOperation.toDetailedResponse() = OperationDetailResponse(
+fun ApmOperation.toDetailedResponse() = OperationDetailResponse(
     id,
     chainId,
     status.name,

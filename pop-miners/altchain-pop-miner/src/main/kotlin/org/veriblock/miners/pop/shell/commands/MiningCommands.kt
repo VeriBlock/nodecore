@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.shell.commands
 
 import com.google.gson.GsonBuilder
 import org.veriblock.miners.pop.Miner
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -125,7 +125,7 @@ class WorkflowProcessInfo(
     val state: String,
     val stateDetail: List<String>
 ) {
-    constructor(operation: MiningOperation) : this(
+    constructor(operation: ApmOperation) : this(
         operation.id,
         operation.chainId,
         operation.status.name,

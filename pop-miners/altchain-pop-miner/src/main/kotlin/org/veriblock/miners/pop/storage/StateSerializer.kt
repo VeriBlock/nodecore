@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.storage
 
 import com.google.protobuf.ByteString
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationStatus
 import org.veriblock.miners.pop.core.StateChangeEvent
@@ -28,7 +28,7 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.ArrayList
 
 object StateSerializer {
-    fun serialize(operation: MiningOperation): Pop.WorkflowState {
+    fun serialize(operation: ApmOperation): Pop.WorkflowState {
         val builder = Pop.WorkflowState.newBuilder()
 
         builder.operationId = operation.id
@@ -58,12 +58,8 @@ object StateSerializer {
             builder.blockOfProof = ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(state.blockOfProof))
         }
 
-        if (state is OperationState.TransactionProved) {
+        if (state is OperationState.Proven) {
             builder.merklePath = state.merklePath.toCompactString()
-        }
-
-        if (state is OperationState.KeystoneOfProof) {
-            builder.keystoneOfProof = ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(state.keystoneOfProof))
         }
 
         if (state is OperationState.VeriBlockPublications) {
@@ -74,10 +70,6 @@ object StateSerializer {
 
         if (state is OperationState.SubmittedPopData) {
             builder.proofOfProofId = state.proofOfProofId
-        }
-
-        if (state is OperationState.AltEndorsedBlockConfirmed) {
-            builder.altEndorsementBlockHash = state.altEndorsementBlockHash
         }
 
         if (state is OperationState.Completed) {
@@ -95,8 +87,8 @@ object StateSerializer {
         return builder.build()
     }
 
-    fun deserialize(serialized: Pop.WorkflowState, txFactory: (String) -> WalletTransaction): MiningOperation {
-        return MiningOperation(
+    fun deserialize(serialized: Pop.WorkflowState, txFactory: (String) -> WalletTransaction): ApmOperation {
+        return ApmOperation(
             id = serialized.operationId,
             chainId = serialized.chainId,
             changeHistory = serialized.changeHistoryList.map {
@@ -131,10 +123,6 @@ object StateSerializer {
                 setMerklePath(VeriBlockMerklePath(serialized.merklePath))
             }
 
-            if (serialized.keystoneOfProof != null && serialized.keystoneOfProof.size() > 0) {
-                setKeystoneOfProof(SerializeDeserializeService.parseVeriBlockBlock(serialized.keystoneOfProof.toByteArray()))
-            }
-
             if (serialized.veriblockPublicationsCount > 0) {
                 setVeriBlockPublications(serialized.veriblockPublicationsList.map {
                     deserialize(it)
@@ -143,11 +131,6 @@ object StateSerializer {
 
             if (serialized.proofOfProofId != null && serialized.proofOfProofId.isNotEmpty()) {
                 setProofOfProofId(serialized.proofOfProofId)
-            }
-
-            if (serialized.altEndorsementBlockHash != null && serialized.altEndorsementBlockHash.isNotEmpty()) {
-                setAltEndorsementTransactionConfirmed()
-                setAltEndorsedBlockHash(serialized.altEndorsementBlockHash)
             }
 
             if (serialized.payoutBlockHash != null && serialized.payoutBlockHash.isNotEmpty()) {

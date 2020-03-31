@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":nodecore-ucp"))
     implementation(project(":nodecore-grpc"))
     implementation(project(":veriblock-shell"))
+    implementation(project(":pop-miners:pop-miners-common"))
 
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("org.apache.commons:commons-lang3:3.0")
@@ -107,11 +108,11 @@ tasks.named<JavaExec>("run") {
     }
 }
 
-setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "nodecore.miners.pop")
+setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "org.veriblock.miners.pop")
 val sourcesJar = setupSourcesJar()
 
 application.applicationName = "veriblock-pop-miner"
-application.mainClassName = "nodecore.miners.pop.VeriBlockPoPMiner"
+application.mainClassName = "org.veriblock.miners.pop.VeriBlockPoPMiner"
 
 tasks.distZip {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")

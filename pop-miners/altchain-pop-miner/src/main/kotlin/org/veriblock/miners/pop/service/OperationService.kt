@@ -11,7 +11,7 @@ package org.veriblock.miners.pop.service
 import com.google.protobuf.InvalidProtocolBufferException
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateData
 import org.veriblock.miners.pop.storage.Pop
@@ -23,8 +23,8 @@ private val logger = createLogger {}
 class OperationService(
     private val repository: OperationRepository
 ) {
-    fun getActiveOperations(txFactory: (String) -> WalletTransaction): List<MiningOperation> {
-        val workflows = ArrayList<MiningOperation>()
+    fun getActiveOperations(txFactory: (String) -> WalletTransaction): List<ApmOperation> {
+        val workflows = ArrayList<ApmOperation>()
 
         val activeOperations = repository.getActiveOperations()
         while (activeOperations.hasNext()) {
@@ -43,7 +43,7 @@ class OperationService(
         return workflows
     }
 
-    fun storeOperation(operation: MiningOperation) {
+    fun storeOperation(operation: ApmOperation) {
         val serialized = StateSerializer.serialize(operation)
 
         val entity = OperationStateData()

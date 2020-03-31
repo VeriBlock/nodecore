@@ -9,7 +9,7 @@
 package org.veriblock.miners.pop
 
 import org.veriblock.lite.core.Balance
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.shell.core.Result
 
 class MinerConfig(
@@ -23,9 +23,9 @@ interface Miner {
 
     fun start()
 
-    fun getOperations(): List<MiningOperation>
+    fun getOperations(): List<ApmOperation>
 
-    fun getOperation(id: String): MiningOperation?
+    fun getOperation(id: String): ApmOperation?
 
     fun getAddress(): String
 
@@ -33,7 +33,7 @@ interface Miner {
 
     fun mine(chainId: String, block: Int?): Result
 
-    fun resubmit(operation: MiningOperation)
+    fun resubmit(operation: ApmOperation)
 
     fun shutdown()
 

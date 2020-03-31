@@ -52,7 +52,7 @@ appender("BITCOINJ-FILE", RollingFileAppender) {
     }
 }
 
-logger("nodecore.miners.pop", toLevel(logLevel, DEBUG))
+logger("org.veriblock.miners.pop", toLevel(logLevel, DEBUG))
 
 logger("org.bitcoinj", INFO, ["BITCOINJ-FILE"], false)
 logger("shell-printing", INFO, ["FILE"], false)

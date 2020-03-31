@@ -48,8 +48,7 @@ message WorkflowState {
     bytes keystone_of_proof = 11;
     repeated VeriBlockPublication veriblock_publications = 12;
     string proof_of_proof_id = 13;
-    string alt_endorsement_block_hash = 14;
-    string payout_block_hash = 15;
-    double payout_amount = 16;
-    repeated Event change_history = 17;
+    string payout_block_hash = 14;
+    string payout_amount = 15;
+    repeated Event change_history = 16;
 }

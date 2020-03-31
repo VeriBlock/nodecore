@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-grpc"))
     implementation(project(":altchain-sdk"))
+    implementation(project(":pop-miners:pop-miners-common"))
     runtimeOnly(project(":altchain-plugins"))
 
     implementation("com.github.veriblock.alt-integration:mock-pop-mining:0.0.7")

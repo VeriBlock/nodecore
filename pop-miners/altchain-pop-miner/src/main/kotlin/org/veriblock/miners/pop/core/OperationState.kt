@@ -15,31 +15,6 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPublication
 
-enum class OperationStateType(
-    val id: Int,
-    val description: String
-) {
-    INITIAL(0, "Initial state, to be started"),
-    INSTRUCTION(1, "Mining Instruction retrieved, Endorsement VBK Transaction to be submitted"),
-    ENDORSEMEMT_TRANSACTION(2, "Endorsement VBK Transaction submitted and to be confirmed"),
-    CONFIRMED(3, "Endorsement VBK Transaction confirmed, waiting for Block of Proof"),
-    BLOCK_OF_PROOF(4, "Block of Proof received, Endorsement VBK Transaction to be proved"),
-    TRANSACTION_PROVED(5, "Endorsement VBK Transaction Proved, waiting for Keystone of Proof"),
-    KEYSTONE_OF_PROOF(6, "VBK Keystone of Proof received, waiting for VBK Publications"),
-    VERIBLOCK_PUBLICATIONS(7, "VBK Publications received, waiting for submission response"),
-    SUBMITTED_POP_DATA(8, "Publications submitted, waiting Alt Endorsement Transaction to be confirmed"),
-    ALT_ENDORSEMENT_TRANSACTION_CONFIRMED(9, "Alt Endorsement Transaction confirmed, waiting for Endorsing Block to be confirmed"),
-    ALT_ENDORSED_BLOCK_CONFIRMED(10, "Alt Endorsed Block confirmed, waiting for payout block"),
-    COMPLETE(11, "Completed"),
-    FAILED(-1, "Failed");
-
-    infix fun hasType(type: OperationStateType): Boolean = if (type != FAILED) {
-        id >= type.id
-    } else {
-        this == FAILED
-    }
-}
-
 /**
  * This class holds the state data of an operation.
  * Each new state is child of the previous one and accumulates the data.
@@ -52,12 +27,10 @@ sealed class OperationState {
     open val endorsementTransaction: WalletTransaction? = null
     open val blockOfProof: VeriBlockBlock? = null
     open val merklePath: VeriBlockMerklePath? = null
-    open val keystoneOfProof: VeriBlockBlock? = null
     open val veriBlockPublications: List<VeriBlockPublication>? = null
     open val proofOfProofId: String? = null
-    open val altEndorsementBlockHash: String? = null
     open val payoutBlockHash: String? = null
-    open val payoutAmount: Double? = null
+    open val payoutAmount: String? = null
 
     open fun getDetailedInfo(): List<String> = emptyList()
 
@@ -81,7 +54,7 @@ sealed class OperationState {
         previous: Instruction,
         override val endorsementTransaction: WalletTransaction
     ) : Instruction(previous.miningInstruction) {
-        override val type = OperationStateType.ENDORSEMEMT_TRANSACTION
+        override val type = OperationStateType.ENDORSEMENT_TRANSACTION
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Endorsement Transaction: ${endorsementTransaction.id.bytes.toHex()}"
     }
@@ -101,29 +74,20 @@ sealed class OperationState {
             "Block of Proof: ${blockOfProof.hash.bytes.toHex()}"
     }
 
-    open class TransactionProved(
+    open class Proven(
         previous: BlockOfProof,
         override val merklePath: VeriBlockMerklePath
     ) : BlockOfProof(previous, previous.blockOfProof) {
-        override val type = OperationStateType.TRANSACTION_PROVED
+        override val type = OperationStateType.PROVEN
         override fun getDetailedInfo() = super.getDetailedInfo() +
             "Endorsement Transaction Merkle Path: ${merklePath.toCompactString()}"
     }
 
-    open class KeystoneOfProof(
-        previous: TransactionProved,
-        override val keystoneOfProof: VeriBlockBlock
-    ) : TransactionProved(previous, previous.merklePath) {
-        override val type = OperationStateType.KEYSTONE_OF_PROOF
-        override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Keystone of Proof: ${keystoneOfProof.hash.bytes.toHex()}"
-    }
-
     open class VeriBlockPublications(
-        previous: KeystoneOfProof,
+        previous: Proven,
         override val veriBlockPublications: List<VeriBlockPublication>
-    ) : KeystoneOfProof(previous, previous.keystoneOfProof) {
-        override val type = OperationStateType.VERIBLOCK_PUBLICATIONS
+    ) : Proven(previous, previous.merklePath) {
+        override val type = OperationStateType.CONTEXT
         override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
             "VTB Transactions: ${veriBlockPublications.joinToString { it.transaction.id.bytes.toHex() }}",
             "VTB BTC Blocks: ${veriBlockPublications.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }}"
@@ -139,27 +103,12 @@ sealed class OperationState {
             "Proof of Proof Id: $proofOfProofId"
     }
 
-    open class AltEndorsementTransactionConfirmed(
-        previous: SubmittedPopData
-    ) : SubmittedPopData(previous, previous.proofOfProofId) {
-        override val type = OperationStateType.ALT_ENDORSEMENT_TRANSACTION_CONFIRMED
-    }
-
-    open class AltEndorsedBlockConfirmed(
-        previous: AltEndorsementTransactionConfirmed,
-        override val altEndorsementBlockHash: String
-    ) : AltEndorsementTransactionConfirmed(previous) {
-        override val type = OperationStateType.ALT_ENDORSED_BLOCK_CONFIRMED
-        override fun getDetailedInfo() = super.getDetailedInfo() +
-            "Alt Endorsement Block Hash: $altEndorsementBlockHash"
-    }
-
     class Completed(
-        previous: AltEndorsedBlockConfirmed,
+        previous: SubmittedPopData,
         override val payoutBlockHash: String,
-        override val payoutAmount: Double
-    ) : AltEndorsedBlockConfirmed(previous, previous.altEndorsementBlockHash) {
-        override val type = OperationStateType.COMPLETE
+        override val payoutAmount: String
+    ) : SubmittedPopData(previous, previous.proofOfProofId) {
+        override val type = OperationStateType.COMPLETED
         override fun getDetailedInfo() = super.getDetailedInfo() + listOf(
             "Payout Block Hash: $payoutBlockHash",
             "Payout Amount: $payoutAmount"
@@ -176,10 +125,8 @@ sealed class OperationState {
         override val endorsementTransaction = previous.endorsementTransaction
         override val blockOfProof = previous.blockOfProof
         override val merklePath = previous.merklePath
-        override val keystoneOfProof = previous.keystoneOfProof
         override val veriBlockPublications = previous.veriBlockPublications
         override val proofOfProofId = previous.proofOfProofId
-        override val altEndorsementBlockHash = previous.altEndorsementBlockHash
 
         override fun toString() = "Failed: $reason"
         override fun getDetailedInfo() = previous.getDetailedInfo()

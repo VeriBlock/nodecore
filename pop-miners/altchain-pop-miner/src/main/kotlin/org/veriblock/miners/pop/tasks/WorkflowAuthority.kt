@@ -17,7 +17,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.Miner
-import org.veriblock.miners.pop.core.MiningOperation
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.sdk.alt.plugin.PluginService
 
@@ -33,7 +33,7 @@ class WorkflowAuthority(
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
-    fun submit(operation: MiningOperation) {
+    fun submit(operation: ApmOperation) {
         val chain = pluginFactory[operation.chainId]
         if (chain == null) {
             logger.warn { "Unable to load plugin ${operation.chainId} for operation $operation" }
@@ -55,7 +55,7 @@ class WorkflowAuthority(
         }
     }
 
-    fun restore(operation: MiningOperation) {
+    fun restore(operation: ApmOperation) {
         val chain = pluginFactory[operation.chainId]
         if (chain == null) {
             logger.warn { "Unable to load plugin ${operation.chainId} for operation $operation" }

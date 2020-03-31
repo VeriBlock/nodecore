@@ -7,7 +7,7 @@
 
 syntax = "proto3";
 
-option java_package = "nodecore.miners.pop.storage";
+option java_package = "org.veriblock.miners.pop.storage";
 
 message MiningInstruction {
     bytes publication_data = 1;
