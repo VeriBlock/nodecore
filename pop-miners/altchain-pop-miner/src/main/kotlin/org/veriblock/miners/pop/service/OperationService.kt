@@ -8,49 +8,33 @@
 
 package org.veriblock.miners.pop.service
 
-import com.google.protobuf.InvalidProtocolBufferException
-import org.veriblock.core.utilities.createLogger
+import kotlinx.serialization.protobuf.ProtoBuf
+import org.veriblock.lite.proto.OperationProto
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.storage.OperationRepository
-import org.veriblock.miners.pop.storage.OperationStateData
-import org.veriblock.miners.pop.storage.Pop
-import org.veriblock.miners.pop.storage.StateSerializer
-import java.util.ArrayList
-
-private val logger = createLogger {}
+import org.veriblock.miners.pop.storage.OperationStateRecord
 
 class OperationService(
-    private val repository: OperationRepository
+    private val repository: OperationRepository,
+    private val operationSerializer: OperationSerializer
 ) {
     fun getActiveOperations(txFactory: (String) -> WalletTransaction): List<ApmOperation> {
-        val workflows = ArrayList<ApmOperation>()
-
         val activeOperations = repository.getActiveOperations()
-        while (activeOperations.hasNext()) {
-            val next = activeOperations.next()
-
-            try {
-                val serialized = Pop.WorkflowState.parseFrom(next.state)
-                workflows.add(StateSerializer.deserialize(serialized, txFactory))
-            } catch (e: InvalidProtocolBufferException) {
-                logger.error("Unable to load saved workflow")
-            } catch (e: Exception) {
-                logger.error("Unable to construct saved workflow", e)
-            }
+        return activeOperations.map {
+            val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)
+            operationSerializer.deserialize(protoData, txFactory)
         }
-
-        return workflows
     }
 
     fun storeOperation(operation: ApmOperation) {
-        val serialized = StateSerializer.serialize(operation)
-
-        val entity = OperationStateData()
-        entity.id = operation.id
-        entity.status = operation.status.value
-        entity.state = serialized.toByteArray()
-
-        repository.saveOperationState(entity)
+        val serialized = operationSerializer.serialize(operation)
+        repository.saveOperationState(
+            OperationStateRecord(
+                operation.id,
+                operation.state.id,
+                ProtoBuf.dump(OperationProto.Operation.serializer(), serialized)
+            )
+        )
     }
 }

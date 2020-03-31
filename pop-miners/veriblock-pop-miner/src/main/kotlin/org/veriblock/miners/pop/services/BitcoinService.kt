@@ -27,8 +27,10 @@ import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.common.BitcoinNetwork
-import org.veriblock.miners.pop.common.Utility
-import org.veriblock.miners.pop.model.ApplicationExceptions.*
+import org.veriblock.miners.pop.common.formatBTCFriendlyString
+import org.veriblock.miners.pop.model.ApplicationExceptions.CorruptSPVChain
+import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
+import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -114,11 +116,11 @@ class BitcoinService(
                         logger.info {
                             val delta = newBalance.minus(prevBalance)
                             val action = if (delta.isNegative) {
-                                "Spent ${Utility.formatBTCFriendlyString(delta.negate())}"
+                                "Spent ${delta.negate().formatBTCFriendlyString()}"
                             } else {
-                                "Received ${Utility.formatBTCFriendlyString(delta)}"
+                                "Received ${delta.formatBTCFriendlyString()}"
                             }
-                            "New pending BTC transaction: $action. New pending balance: ${Utility.formatBTCFriendlyString(newBalance)}"
+                            "New pending BTC transaction: $action. New pending balance: ${newBalance.formatBTCFriendlyString()}"
                         }
                     }
                 }

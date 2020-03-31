@@ -9,9 +9,9 @@
 package org.veriblock.miners.pop.shell.commands
 
 import com.google.gson.GsonBuilder
-import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -19,7 +19,7 @@ import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun CommandFactory.miningCommands(miner: Miner) {
+fun CommandFactory.miningCommands(miner: MinerService) {
 
     val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
 
@@ -63,7 +63,7 @@ fun CommandFactory.miningCommands(miner: Miner) {
         description = "Lists the current running operations"
     ) {
         val operations = miner.getOperations().map {
-            "${it.id}: ${it.chainId} (${it.blockHeight}) | ${it.state}"
+            "${it.id}: ${it.chainId} (${it.endorsedBlockHeight}) | ${it.state}"
         }
 
         for (operation in operations) {
@@ -105,11 +105,10 @@ fun CommandFactory.miningCommands(miner: Miner) {
         if (process == null) {
             printInfo("Operation $id not found")
         } else {
-            val state = process.state
-            if (state !is OperationState.VeriBlockPublications) {
+            if (!(process.state hasType OperationState.CONTEXT)) {
                 printInfo("Operation $id has no VTBs yet")
             } else {
-                printInfo(prettyPrintGson.toJson(state.veriBlockPublications))
+                printInfo(prettyPrintGson.toJson(process.context))
             }
         }
 
@@ -123,14 +122,14 @@ class WorkflowProcessInfo(
     val status: String,
     val blockHeight: Int?,
     val state: String,
-    val stateDetail: List<String>
+    val stateDetail: Map<String, String>
 ) {
     constructor(operation: ApmOperation) : this(
         operation.id,
         operation.chainId,
-        operation.status.name,
-        operation.blockHeight,
-        operation.state.toString(),
-        operation.state.getDetailedInfo()
+        operation.state.name,
+        operation.endorsedBlockHeight,
+        operation.state.description,
+        operation.getDetailedInfo()
     )
 }

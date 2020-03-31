@@ -1,7 +1,9 @@
 package org.veriblock.core.utilities.extensions
 
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 fun Int.isValidPort(): Boolean {
     return this in 1..65535
@@ -53,7 +55,7 @@ fun Date.formatForHttp(): String {
     return formatter.format(this)
 }
 
-fun Long.formatAtomicLongWithDecimal(): String? {
+fun Long.formatAtomicLongWithDecimal(): String {
     val isNegative = this < 0
     var result = "" + if (isNegative) -1 * this else this
     while (result.length < 8) {

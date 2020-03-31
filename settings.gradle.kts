@@ -12,6 +12,7 @@ include("veriblock-extensions")
 include("altchain-sdk")
 
 include("pop-miners:pop-miners-common")
+include("pop-miners:veriblock-pop-miners-common")
 include("pop-miners:veriblock-pop-miner")
 include("pop-miners:altchain-pop-miner")
 

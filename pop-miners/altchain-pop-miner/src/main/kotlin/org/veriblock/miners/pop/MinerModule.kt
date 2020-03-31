@@ -8,8 +8,12 @@
 
 package org.veriblock.miners.pop
 
-import com.j256.ormlite.jdbc.JdbcPooledConnectionSource
-import com.j256.ormlite.support.ConnectionSource
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.koin.dsl.module
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.NodeCoreLiteKit
@@ -17,18 +21,25 @@ import org.veriblock.lite.core.Context
 import org.veriblock.lite.params.NetworkConfig
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
+import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.MockMinerService
+import org.veriblock.miners.pop.service.OperationSerializer
 import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.shell.commands.altchainCommands
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.miners.pop.storage.KeyValueRepository
+import org.veriblock.miners.pop.storage.KeyValueTable
 import org.veriblock.miners.pop.storage.OperationRepository
-import org.veriblock.miners.pop.storage.ormlite.OrmLiteKeyValueRepository
-import org.veriblock.miners.pop.storage.ormlite.OrmLitePoPRepository
+import org.veriblock.miners.pop.storage.OperationStateTable
+import org.veriblock.miners.pop.tasks.ApmTaskService
 import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
-import java.sql.SQLException
+import java.sql.Connection
+import javax.sql.DataSource
 
 val minerModule = module {
     // Config
@@ -48,9 +59,9 @@ val minerModule = module {
     // Miner
     if (!minerConfig.mock) {
         single { NodeCoreLiteKit(get()) }
-        single<Miner> { AltchainPopMiner(get(), get(), get(), get(), get(), get()) }
+        single<MinerService> { AltchainPopMinerService(get(), get(), get(), get(), get(), get(), get()) }
     } else {
-        single<Miner> { MockMiner(get(), get()) }
+        single<MinerService> { MockMinerService(get(), get()) }
     }
     single { SecurityInheritingService(get(), get()) }
     single {
@@ -62,22 +73,36 @@ val minerModule = module {
         }
     }
     single { Shell(get()) }
-    single { WorkflowAuthority(get(), get(), get()) }
-    single { OperationService(get()) }
+    single { ApmTaskService(get(), get()) }
+    single { WorkflowAuthority(get()) }
+    single { OperationSerializer(get(), get()) }
+    single { OperationService(get(), get()) }
     single { PluginService(get()) }
 
     // Storage
-    single<ConnectionSource> {
+    single<DataSource> {
         val context: Context = get()
-        val sqliteDbFile = context.directory.resolve("pop.dat")
+        val sqliteDbFile = context.directory.resolve("apm.dat")
         val url = "jdbc:sqlite:$sqliteDbFile"
-        try {
-            JdbcPooledConnectionSource(url)
-        } catch (e: SQLException) {
-            throw e
+        val hikariConfig = HikariConfig().apply {
+            driverClassName = "org.sqlite.JDBC"
+            jdbcUrl = url
+        }
+        HikariDataSource(hikariConfig)
+    }
+
+    single {
+        Database.connect(get<DataSource>()).apply {
+            transactionManager.defaultIsolationLevel = Connection.TRANSACTION_READ_UNCOMMITTED
+            transaction(this) {
+                SchemaUtils.createMissingTablesAndColumns(
+                    OperationStateTable,
+                    KeyValueTable
+                )
+            }
         }
     }
 
-    single<OperationRepository> { OrmLitePoPRepository(get()) }
-    single<KeyValueRepository> { OrmLiteKeyValueRepository(get()) }
+    single { OperationRepository(get()) }
+    single { KeyValueRepository(get()) }
 }

@@ -4,6 +4,7 @@ import io.kotlintest.shouldBe
 import io.kotlintest.shouldThrow
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath
 
 class BitcoinMerklePathTest {
 
@@ -89,7 +90,9 @@ class BitcoinMerklePathTest {
         val bottomDataIndex = 12
 
         // When
-        val merklePath = BitcoinMerklePath(layers.toTypedArray(), bottomData, bottomDataIndex)
+        val merklePath = BitcoinMerklePath(
+            layers.toTypedArray(), bottomData, bottomDataIndex
+        )
 
         // Then
         merklePath.layers shouldBe layers

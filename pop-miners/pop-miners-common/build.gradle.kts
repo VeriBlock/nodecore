@@ -1,3 +1,6 @@
+import groovy.lang.GroovyObject
+import org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig
+
 // VeriBlock Blockchain Project
 // Copyright 2017-2018 VeriBlock, Inc
 // Copyright 2018-2020 Xenios SEZC
@@ -10,6 +13,9 @@ plugins {
     java
     kotlin("jvm")
     idea
+    `java-library`
+    `maven-publish`
+    id("com.jfrog.artifactory")
 }
 
 configurations.all {
@@ -57,9 +63,36 @@ dependencies {
     implementation("com.j256.ormlite:ormlite-jdbc:5.1")
     implementation("org.xerial:sqlite-jdbc:3.23.1")
 
+    implementation("org.jetbrains.exposed:exposed:0.17.7")
+
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
 }
+
+setupJar("PoP Miners Common Library", "org.veriblock.miners.pop")
+val sourcesJar = setupSourcesJar()
+
+artifactory {
+    setContextUrl(properties["artifactory_url"])
+    publish(closureOf<PublisherConfig> {
+        repository(delegateClosureOf<GroovyObject> {
+            setProperty("repoKey", properties["artifactory_repoKey"] as String)
+            setProperty("username", properties["artifactory_user"])
+            setProperty("password", properties["artifactory_password"])
+            setProperty("maven", true)
+        })
+
+        defaults(delegateClosureOf<GroovyObject> {
+            invokeMethod("publications", "mavenJava")
+            setProperty("publishArtifacts", true)
+        })
+    })
+}
+
+publish(
+    artifactName = "pop-miners-common",
+    sourcesJar = sourcesJar
+)
 
 setupJacoco()

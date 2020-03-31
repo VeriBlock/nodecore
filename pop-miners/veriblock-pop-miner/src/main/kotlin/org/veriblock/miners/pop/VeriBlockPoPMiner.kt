@@ -20,7 +20,6 @@ import org.veriblock.miners.pop.automine.AutoMineEngine
 import org.veriblock.miners.pop.schedule.PoPMiningScheduler
 import org.veriblock.miners.pop.services.MinerService
 import org.veriblock.miners.pop.shell.PopShell
-import org.veriblock.miners.pop.storage.repositoriesModule
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import kotlin.system.exitProcess
@@ -41,12 +40,10 @@ fun run(args: Array<String>): Int {
     print(SharedConstants.LICENSE)
     Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdownSignal.countDown() }))
     val startupInjector = startKoin {
-        properties(mapOf("args" to args.joinToString(" ")))
-        this.modules(
+        modules(
             listOf(
                 configModule(args),
                 bootstrapModule,
-                repositoriesModule,
                 webApiModule
             )
         )

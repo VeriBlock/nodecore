@@ -14,65 +14,34 @@ import kotlinx.coroutines.launch
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.util.Threading
-import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.sdk.alt.plugin.PluginService
+import org.veriblock.miners.pop.service.MinerService
 
 private val logger = createLogger {}
 
 class WorkflowAuthority(
-    private val pluginFactory: PluginService,
-    private val nodeCoreLiteKit: NodeCoreLiteKit,
-    private val securityInheritingService: SecurityInheritingService
+    private val taskService: ApmTaskService
 ) : KoinComponent {
 
-    val miner: Miner by inject()
+    val miner: MinerService by inject()
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
     fun submit(operation: ApmOperation) {
-        val chain = pluginFactory[operation.chainId]
-        if (chain == null) {
-            logger.warn { "Unable to load plugin ${operation.chainId} for operation $operation" }
-            return
+        if (operation.job != null) {
+            error("Trying to submit operation [${operation.id}] while it already had a running job!")
         }
-
-        val monitor = securityInheritingService.getMonitor(operation.chainId)
-        if (monitor == null) {
-            logger.warn { "Unable to find monitor service ${operation.chainId} for operation $operation" }
-            return
-        }
-
-        // Begin running
-        operation.begin()
-
-        coroutineScope.launch {
-            // Initial task
-            runTasks(miner, nodeCoreLiteKit, chain, monitor, operation)
+        operation.job = coroutineScope.launch {
+            taskService.runTasks(operation)
         }
     }
 
     fun restore(operation: ApmOperation) {
-        val chain = pluginFactory[operation.chainId]
-        if (chain == null) {
-            logger.warn { "Unable to load plugin ${operation.chainId} for operation $operation" }
-            return
-        }
-
-        val monitor = securityInheritingService.getMonitor(operation.chainId)
-        if (monitor == null) {
-            logger.warn { "Unable to find monitor service ${operation.chainId} for operation $operation" }
-            return
-        }
-
         val changeHistory = operation.getChangeHistory()
         if (changeHistory.isNotEmpty()) {
             coroutineScope.launch {
-                // Initial task
-                runTasks(miner, nodeCoreLiteKit, chain, monitor, operation)
+                taskService.runTasks(operation)
             }
         }
     }
