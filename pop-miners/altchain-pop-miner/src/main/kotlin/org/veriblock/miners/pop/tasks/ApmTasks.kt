@@ -54,6 +54,7 @@ suspend fun runTasks(
     val chainSymbol = securityInheritingChain.key.toUpperCase()
 
     try {
+
         operation.runTask("Retrieve Mining Instruction from ${securityInheritingChain.name}", OperationStateType.INSTRUCTION) {
             logger.info(operation) { "Getting the mining instruction..." }
             val publicationData = try {
@@ -76,6 +77,8 @@ suspend fun runTasks(
                 )
             }
         }
+
+
         operation.runTask("Create Endorsement Transaction", OperationStateType.ENDORSEMENT_TRANSACTION) {
             val state = operation.state as? OperationState.Instruction
                 ?: failTask("CreateEndorsementTransactionTask called without mining instruction!")
@@ -101,6 +104,8 @@ suspend fun runTasks(
             operation.setTransaction(walletTransaction)
             logger.info(operation) { "Successfully added the VBK transaction: ${walletTransaction.id}!" }
         }
+
+
         operation.runTask("Confirm transaction", OperationStateType.CONFIRMED) {
             val state = operation.state as? OperationState.EndorsementTransaction
                 ?: failTask("ConfirmTransactionTask called without wallet transaction!")
@@ -120,6 +125,8 @@ suspend fun runTasks(
             // Transaction has been confirmed!
             operation.setConfirmed()
         }
+
+
         operation.runTask("Determine Block of Proof", OperationStateType.BLOCK_OF_PROOF) {
             val state = operation.state
             val transaction = (state as? OperationState.EndorsementTransaction)?.endorsementTransaction
@@ -137,6 +144,8 @@ suspend fun runTasks(
             }
             logger.info(operation) { "Successfully added the VBK block of proof!" }
         }
+
+
         operation.runTask("Prove Transaction", OperationStateType.PROVEN) {
             val state = operation.state as? OperationState.BlockOfProof
                 ?: failTask("ProveTransactionTask called without VBK block of proof!")
@@ -160,6 +169,8 @@ suspend fun runTasks(
             operation.setMerklePath(merklePath)
             logger.info(operation) { "Successfully added the verified merkle path!" }
         }
+
+
         operation.runTask("Wait for next VeriBlock Keystone", OperationStateType.CONTEXT) {
             val state = operation.state as? OperationState.Proven
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without merkle path!")
@@ -189,6 +200,8 @@ suspend fun runTasks(
             )
             operation.setVeriBlockPublications(publications)
         }
+
+
         operation.runTask("Submit Proof of Proof", OperationStateType.SUBMITTED_POP_DATA) {
             val state = operation.state as? OperationState.VeriBlockPublications
                 ?: failTask("SubmitProofOfProofTask called without VeriBlock publications!")
@@ -272,6 +285,8 @@ suspend fun runTasks(
                 failTask("Error submitting proof of proof")
             }
         }
+
+
         operation.runTask("Payout Detection", OperationStateType.COMPLETED) {
             val state = operation.state as? OperationState.SubmittedPopData
                 ?: failTask("PayoutDetectionTask called without proof of proof txId!")

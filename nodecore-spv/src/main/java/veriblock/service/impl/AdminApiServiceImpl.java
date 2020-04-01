@@ -593,10 +593,20 @@ public class AdminApiServiceImpl implements AdminApiService {
             for (ByteString address : request.getAddressesList()) {
                 String addressString = ByteStringAddressUtility.parseProperAddressTypeAutomatically(address);
                 LedgerContext ledgerContext = addressLedgerContext.get(addressString);
-                if (addressLedgerContext != null) {
+                if (ledgerContext != null) {
                     formGetBalanceReply(addressString, ledgerContext, replyBuilder);
                 } else {
-                    //TODO process this case.
+                    addressManager.monitor(new Address(addressString, null));
+                    replyBuilder.addConfirmed(VeriBlockMessages.AddressBalance
+                        .newBuilder()
+                        .setAddress(address)
+                        .setLockedAmount(0L)
+                        .setUnlockedAmount(0L)
+                        .setTotalAmount(0L));
+                    replyBuilder.addUnconfirmed(VeriBlockMessages.Output
+                        .newBuilder()
+                        .setAddress(address)
+                        .setAmount(0L));
                 }
             }
         }
@@ -673,11 +683,16 @@ public class AdminApiServiceImpl implements AdminApiService {
         }
 
         replyBuilder.addConfirmed(VeriBlockMessages.AddressBalance
-                .newBuilder()
-                .setAddress(ByteStringUtility.base58ToByteString(address))
-                .setLockedAmount(lockedCoins)
-                .setUnlockedAmount(balance - lockedCoins)
-                .setTotalAmount(balance));
+            .newBuilder()
+            .setAddress(ByteStringUtility.base58ToByteString(address))
+            .setLockedAmount(lockedCoins)
+            .setUnlockedAmount(balance - lockedCoins)
+            .setTotalAmount(balance));
+
+        replyBuilder.addUnconfirmed(VeriBlockMessages.Output
+            .newBuilder()
+            .setAddress(ByteStringUtility.base58ToByteString(address))
+            .setAmount(0L));
     }
 
     private Long getSignatureIndex(String address){

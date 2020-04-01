@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
 
 public interface AddressManager {
@@ -59,6 +58,11 @@ public interface AddressManager {
      * @return The default (primary) address from this wallet.
      */
     Address getDefaultAddress();
+
+    /**
+     * Add address for monitoring.
+     */
+    void monitor(Address address);
 
     Pair<Boolean, String> importEncryptedWallet(File toImport, char[] passphrase) throws WalletUnreadableException;
 
