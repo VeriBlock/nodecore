@@ -8,7 +8,35 @@
 package nodecore.p2p;
 
 import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.p2p.events.*;
+import nodecore.p2p.events.AcknowledgeStreamEvent;
+import nodecore.p2p.events.AddBlockStreamEvent;
+import nodecore.p2p.events.AddFilterStreamEvent;
+import nodecore.p2p.events.AddTransactionStreamEvent;
+import nodecore.p2p.events.AdvertiseBlocksStreamEvent;
+import nodecore.p2p.events.AdvertiseTransactionStreamEvent;
+import nodecore.p2p.events.AnnounceStreamEvent;
+import nodecore.p2p.events.BlockHeadersRequestStreamEvent;
+import nodecore.p2p.events.BlockQueryReplyStreamEvent;
+import nodecore.p2p.events.BlockQueryStreamEvent;
+import nodecore.p2p.events.BlockRequestStreamEvent;
+import nodecore.p2p.events.ClearFilterStreamEvent;
+import nodecore.p2p.events.CreateFilterStreamEvent;
+import nodecore.p2p.events.FilteredBlockRequestStreamEvent;
+import nodecore.p2p.events.GetDebugVTBsReplyEvent;
+import nodecore.p2p.events.GetDebugVTBsRequestEvent;
+import nodecore.p2p.events.GetTransactionsReplyEvent;
+import nodecore.p2p.events.GetTransactionsRequestEvent;
+import nodecore.p2p.events.GetVeriBlockPublicationsReplyEvent;
+import nodecore.p2p.events.GetVeriBlockPublicationsRequestEvent;
+import nodecore.p2p.events.HeartbeatStreamEvent;
+import nodecore.p2p.events.KeystoneQueryStreamEvent;
+import nodecore.p2p.events.LedgerProofReplyStreamEvent;
+import nodecore.p2p.events.LedgerProofRequestStreamEvent;
+import nodecore.p2p.events.NetworkInfoReplyStreamEvent;
+import nodecore.p2p.events.NetworkInfoRequestStreamEvent;
+import nodecore.p2p.events.NotFoundStreamEvent;
+import nodecore.p2p.events.PeerMisbehaviorEvent;
+import nodecore.p2p.events.TransactionRequestStreamEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.Context;
@@ -99,7 +127,24 @@ public class EventRegistrar {
             case BLOCK_HEADERS_REQUEST:
                 InternalEventBus.getInstance().postAsync(new BlockHeadersRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getBlockHeadersRequest()));
                 break;
+            case TRANSACTIONS_REQUEST:
+                InternalEventBus.getInstance().postAsync(new GetTransactionsRequestEvent(remote, value.getId(), value.getAcknowledge(), value.getTransactionsRequest()));
+                break;
+            case TRANSACTIONS_REPLY:
+                InternalEventBus.getInstance().postAsync(new GetTransactionsReplyEvent(remote, value.getId(), value.getAcknowledge(), value.getTransactionsReply()));
+                break;
+            case VERIBLOCK_PUBLICATIONS_REQUEST:
+                InternalEventBus.getInstance().postAsync(new GetVeriBlockPublicationsRequestEvent(remote, value.getId(), value.getAcknowledge(), value.getVeriblockPublicationsRequest()));
+                break;
+            case VERIBLOCK_PUBLICATIONS_REPLY:
+                InternalEventBus.getInstance().postAsync(new GetVeriBlockPublicationsReplyEvent(remote, value.getId(), value.getAcknowledge(), value.getVeriblockPublicationsReply()));
+                break;
+            case DEBUG_VTB_REQUEST:
+                InternalEventBus.getInstance().postAsync(new GetDebugVTBsRequestEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbRequest()));
+                break;
+            case DEBUG_VTB_REPLY:
+                InternalEventBus.getInstance().postAsync(new GetDebugVTBsReplyEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbReply()));
+                break;
         }
     }
-
 }
