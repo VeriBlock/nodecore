@@ -70,7 +70,7 @@ interface SecurityInheritingChain {
     /**
      * Returns this security inheriting chain's payout interval, in blocks.
      */
-    fun getPayoutInterval(): Int = 500
+    fun getPayoutInterval(): Int
 
     /**
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height

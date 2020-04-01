@@ -197,6 +197,10 @@ class BitcoinFamilyChain(
         )
     }
 
+    override fun getPayoutInterval(): Int {
+        return 501
+    }
+
     override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
         val actualBlockHeight = blockHeight
         // Retrieve top block height from API if not supplied

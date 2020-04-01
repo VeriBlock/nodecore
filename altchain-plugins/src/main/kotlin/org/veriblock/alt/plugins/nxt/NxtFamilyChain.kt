@@ -79,6 +79,10 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
+    override fun getPayoutInterval(): Int {
+        TODO("TBD")
+    }
+
     override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
