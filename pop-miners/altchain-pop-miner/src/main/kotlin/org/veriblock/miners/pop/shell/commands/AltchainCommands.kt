@@ -60,10 +60,11 @@ fun CommandFactory.altchainCommands(
                 addMessage("V010", "Unable to run command", "Unable to find monitor service for $chainName", true)
             }
 
+        printInfo("Launching updateContext coroutine...")
         GlobalScope.launch {
             val newBlockHeightChannel = securityInheritingMonitor.newBlockHeightBroadcastChannel.openSubscription()
             try {
-                while (true) {
+                do {
                     // Wait for a new block
                     val chainTip = newBlockHeightChannel.receive()
 
@@ -83,9 +84,6 @@ fun CommandFactory.altchainCommands(
 
                     printInfo("$chainName's current VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}")
                     printInfo("$chainName's VBK context age: $contextAge blocks old")
-                    if (contextAge < 21) {
-                        break
-                    }
 
                     printInfo("Retrieving VTBs...")
                     val debugVeriBlockPublications = nodeCoreLiteKit.network.getDebugVeriBlockPublications(
@@ -103,10 +101,10 @@ fun CommandFactory.altchainCommands(
                         }
                     }
 
-                    printInfo("VTBs retrieved! Updating context...")
+                    printInfo("${debugVeriBlockPublications.size} VTBs retrieved. Updating context...")
                     val siTxId = securityInheritingChain.updateContext(debugVeriBlockPublications)
                     printInfo("$chainName's context updated! Transaction id: $siTxId")
-                }
+                } while (contextAge > 20)
             } catch (t: Throwable) {
                 logger.debugError(t) { t.message ?: "Error" }
             } finally {
