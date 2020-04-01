@@ -269,7 +269,7 @@ class BitcoinFamilyChain(
         }
     }
 
-    fun updateContextInternal(veriBlockPublications: List<VeriBlockPublication>): String {
+    private fun updateContextInternal(veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
         val jsonBody = JsonRpcRequestBody("updatecontext", listOf(
             veriBlockPublications.map {
