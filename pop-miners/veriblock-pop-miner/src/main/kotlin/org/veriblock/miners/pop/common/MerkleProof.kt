@@ -33,7 +33,7 @@ class MerkleProof(
         }
 
         tree = Array(height) {
-            val width = getTreeWidth(transactionCount, height)
+            val width = getTreeWidth(transactionCount, it)
             arrayOfNulls<Sha256Hash?>(width)
         }
         positions = HashMap()
