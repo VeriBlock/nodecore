@@ -85,7 +85,9 @@ class BitcoinConfig(
     requiredPeerServices: String = "",
     val minPeerBroadcastConnections: Int = 0,
     val maxPeersToDiscoverCount: Int = 100,
-    val peerPingIntervalMillis: Long = 2000L
+    val peerPingIntervalMillis: Long = 2000L,
+    val downloadBlockchainPeriodSeconds: Int = 10,
+    val downloadBlockchainBytesPerSecond: Int = 800
 ) {
     val network = when (network.toLowerCase()) {
         "mainnet" -> BitcoinNetwork.MainNet
