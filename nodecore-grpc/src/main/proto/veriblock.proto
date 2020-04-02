@@ -735,8 +735,8 @@ message Event {
         LedgerProofReply ledger_proof_reply = 25;
         BlockHeadersRequest block_headers_request = 26;
         BlockHeadersReply block_headers_reply = 27;
-        GetTransactionsRequest transactions_request = 28;
-        GetTransactionsReply transactions_reply = 29;
+        GetTransactionRequest transaction_request = 28;
+        GetTransactionReply transaction_reply = 29;
         GetVeriBlockPublicationsRequest veriblock_publications_request = 30;
         GetVeriBlockPublicationsReply veriblock_publications_reply = 31;
         GetDebugVTBsRequest debug_vtb_request = 32;
@@ -978,6 +978,16 @@ message SetDefaultAddressReply {
 message GetTransactionsRequest {
     int32 search_length = 1;
     repeated bytes ids = 2 [(hex_encoded)=true];
+}
+
+message GetTransactionRequest {
+    bytes id = 1 [(hex_encoded)=true];
+}
+
+message GetTransactionReply {
+    bool success = 1;
+    repeated Result results = 2;
+    TransactionInfo transaction = 3;
 }
 
 message TransactionInfo {

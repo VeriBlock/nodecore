@@ -10,7 +10,7 @@ package nodecore.p2p.events;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.p2p.Peer;
 
-public class GetVeriBlockPublicationsRequestEvent extends StreamEvent<VeriBlockMessages.GetVeriBlockPublicationsRequest> {
+public class GetVeriBlockPublicationsRequestStreamEvent extends StreamEvent<VeriBlockMessages.GetVeriBlockPublicationsRequest> {
     private final VeriBlockMessages.GetVeriBlockPublicationsRequest veriBlockPublicationsRequest;
 
     @Override
@@ -18,7 +18,7 @@ public class GetVeriBlockPublicationsRequestEvent extends StreamEvent<VeriBlockM
         return veriBlockPublicationsRequest;
     }
 
-    public GetVeriBlockPublicationsRequestEvent(
+    public GetVeriBlockPublicationsRequestStreamEvent(
         Peer producer,
         String messageId,
         boolean acknowledgeRequested,

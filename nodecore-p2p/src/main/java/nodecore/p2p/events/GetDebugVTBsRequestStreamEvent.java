@@ -10,21 +10,21 @@ package nodecore.p2p.events;
 import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.p2p.Peer;
 
-public class GetDebugVTBsReplyEvent extends StreamEvent<VeriBlockMessages.GetDebugVTBsReply> {
-    private final VeriBlockMessages.GetDebugVTBsReply debugVTBsReply;
+public class GetDebugVTBsRequestStreamEvent extends StreamEvent<VeriBlockMessages.GetDebugVTBsRequest> {
+    private final VeriBlockMessages.GetDebugVTBsRequest debugVTBsRequest;
 
     @Override
-    public VeriBlockMessages.GetDebugVTBsReply getContent() {
-        return debugVTBsReply;
+    public VeriBlockMessages.GetDebugVTBsRequest getContent() {
+        return debugVTBsRequest;
     }
 
-    public GetDebugVTBsReplyEvent(
+    public GetDebugVTBsRequestStreamEvent(
         Peer producer,
         String messageId,
         boolean acknowledgeRequested,
-        VeriBlockMessages.GetDebugVTBsReply getDebugVTBsReply
+        VeriBlockMessages.GetDebugVTBsRequest debugVTBsRequest
     ) {
         super(producer, messageId, acknowledgeRequested);
-        this.debugVTBsReply = getDebugVTBsReply;
+        this.debugVTBsRequest = debugVTBsRequest;
     }
 }

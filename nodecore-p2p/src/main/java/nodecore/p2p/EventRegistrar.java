@@ -22,12 +22,12 @@ import nodecore.p2p.events.BlockRequestStreamEvent;
 import nodecore.p2p.events.ClearFilterStreamEvent;
 import nodecore.p2p.events.CreateFilterStreamEvent;
 import nodecore.p2p.events.FilteredBlockRequestStreamEvent;
-import nodecore.p2p.events.GetDebugVTBsReplyEvent;
-import nodecore.p2p.events.GetDebugVTBsRequestEvent;
-import nodecore.p2p.events.GetTransactionsReplyEvent;
-import nodecore.p2p.events.GetTransactionsRequestEvent;
-import nodecore.p2p.events.GetVeriBlockPublicationsReplyEvent;
-import nodecore.p2p.events.GetVeriBlockPublicationsRequestEvent;
+import nodecore.p2p.events.GetDebugVTBsReplyStreamEvent;
+import nodecore.p2p.events.GetDebugVTBsRequestStreamEvent;
+import nodecore.p2p.events.GetTransactionReplyStreamEvent;
+import nodecore.p2p.events.GetTransactionRequestStreamEvent;
+import nodecore.p2p.events.GetVeriBlockPublicationsReplyStreamEvent;
+import nodecore.p2p.events.GetVeriBlockPublicationsRequestStreamEvent;
 import nodecore.p2p.events.HeartbeatStreamEvent;
 import nodecore.p2p.events.KeystoneQueryStreamEvent;
 import nodecore.p2p.events.LedgerProofReplyStreamEvent;
@@ -127,23 +127,23 @@ public class EventRegistrar {
             case BLOCK_HEADERS_REQUEST:
                 InternalEventBus.getInstance().postAsync(new BlockHeadersRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getBlockHeadersRequest()));
                 break;
-            case TRANSACTIONS_REQUEST:
-                InternalEventBus.getInstance().postAsync(new GetTransactionsRequestEvent(remote, value.getId(), value.getAcknowledge(), value.getTransactionsRequest()));
+            case TRANSACTION_REQUEST:
+                InternalEventBus.getInstance().postAsync(new GetTransactionRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getTransactionRequest()));
                 break;
-            case TRANSACTIONS_REPLY:
-                InternalEventBus.getInstance().postAsync(new GetTransactionsReplyEvent(remote, value.getId(), value.getAcknowledge(), value.getTransactionsReply()));
+            case TRANSACTION_REPLY:
+                InternalEventBus.getInstance().postAsync(new GetTransactionReplyStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getTransactionReply()));
                 break;
             case VERIBLOCK_PUBLICATIONS_REQUEST:
-                InternalEventBus.getInstance().postAsync(new GetVeriBlockPublicationsRequestEvent(remote, value.getId(), value.getAcknowledge(), value.getVeriblockPublicationsRequest()));
+                InternalEventBus.getInstance().postAsync(new GetVeriBlockPublicationsRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getVeriblockPublicationsRequest()));
                 break;
             case VERIBLOCK_PUBLICATIONS_REPLY:
-                InternalEventBus.getInstance().postAsync(new GetVeriBlockPublicationsReplyEvent(remote, value.getId(), value.getAcknowledge(), value.getVeriblockPublicationsReply()));
+                InternalEventBus.getInstance().postAsync(new GetVeriBlockPublicationsReplyStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getVeriblockPublicationsReply()));
                 break;
             case DEBUG_VTB_REQUEST:
-                InternalEventBus.getInstance().postAsync(new GetDebugVTBsRequestEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbRequest()));
+                InternalEventBus.getInstance().postAsync(new GetDebugVTBsRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbRequest()));
                 break;
             case DEBUG_VTB_REPLY:
-                InternalEventBus.getInstance().postAsync(new GetDebugVTBsReplyEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbReply()));
+                InternalEventBus.getInstance().postAsync(new GetDebugVTBsReplyStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbReply()));
                 break;
         }
     }
