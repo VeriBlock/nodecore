@@ -8,6 +8,8 @@
 
 package org.veriblock.lite.params
 
+import veriblock.conf.NetworkParameters
+import veriblock.conf.NetworkParametersFactory
 import java.math.BigInteger
 
 class NetworkConfig(
@@ -16,7 +18,8 @@ class NetworkConfig(
     val port: Int? = null,
     val certificateChainPath: String? = null,
     val isSsl: Boolean = false,
-    val adminPassword: String? = null
+    val adminPassword: String? = null,
+    val isSpv: Boolean = false
 )
 
 const val LOCALHOST = "127.0.0.1"
@@ -32,6 +35,8 @@ class NetworkParameters(
 
     var certificateChainPath: String? = config.certificateChainPath
     var isSsl = config.isSsl
+    var isSpv = config.isSpv
+    var spvNetworkParameters: NetworkParameters? = null
     var adminPassword: String? = config.adminPassword
 
     init {
@@ -40,6 +45,9 @@ class NetworkParameters(
             "testnet" -> TestNetParameters
             "alpha" -> AlphaNetParameters
             else -> error("Invalid network")
+        }
+        if (isSpv) {
+            spvNetworkParameters = NetworkParametersFactory.get(config.network)
         }
         network = template.network
         adminHost = config.ip ?: LOCALHOST
