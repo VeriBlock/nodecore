@@ -126,4 +126,13 @@ public class AdminServiceFacade extends AdminGrpc.AdminImplBase {
         responseObserver.onNext(adminApiService.createAltChainEndorsement(request));
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void getLastBitcoinBlock(
+        VeriBlockMessages.GetLastBitcoinBlockRequest request,
+        StreamObserver<VeriBlockMessages.GetLastBitcoinBlockReply> responseObserver
+    ) {
+        responseObserver.onNext(adminApiService.getLastBitcoinBlock(request));
+        responseObserver.onCompleted();
+    }
 }
