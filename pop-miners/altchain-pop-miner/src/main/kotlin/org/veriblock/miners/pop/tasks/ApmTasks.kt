@@ -199,6 +199,74 @@ suspend fun runTasks(
                 state.miningInstruction.btcContext[0].toHex()
             )
             operation.setVeriBlockPublications(publications)
+            try {
+                val context = state.miningInstruction
+                val btcContext = context.btcContext
+                val vbkContext = context.context;
+
+                // Check that the first VTB connects somewhere in the BTC context
+                val firstPublication = publications[0]
+
+                val serializedAltchainBTCContext = btcContext.joinToString("\n") { Utility.bytesToHex(it) }
+
+                val serializedBTCHashesInPoPTransaction = VTBDebugUtility.serializeBitcoinBlockHashList(
+                    VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(
+                        firstPublication.transaction
+                    )
+                )
+
+                if (!VTBDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
+                    logger.error {
+                        """Error: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} does not connect to the altchain context!
+                            Request Keystone hash: ${keystoneOfProof.hash}
+                            Request VBK Context Hash: ${vbkContext[0].toHex()}
+                            Request BTC Context Hash: ${btcContext[0].toHex()}
+                            Altchain Bitcoin Context:
+                            $serializedAltchainBTCContext
+                            PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
+                    }
+                } else {
+                    logger.debug {
+                        """Success: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} connects to the altchain context!
+                            Request Keystone hash: ${keystoneOfProof.hash}
+                            Request VBK Context Hash: ${vbkContext[0].toHex()}
+                            Request BTC Context Hash: ${btcContext[0].toHex()}
+                            Altchain Bitcoin Context:
+                            $serializedAltchainBTCContext
+                            PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
+                    }
+                }
+
+                // Check that every VTB connects to the previous one
+                for (i in 1 until publications.size) {
+                    val anchor = publications[i - 1]
+                    val toConnect = publications[i]
+
+                    val anchorBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(anchor.transaction)
+                    val toConnectBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(toConnect.transaction)
+
+                    val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
+                    val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
+
+                    if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect)) {
+                        logger.error {
+                            """Error: VTB at index $i does not connect to the previous VTB!
+                                Request Keystone hash: ${keystoneOfProof.hash}
+                                Request VBK Context Hash: ${vbkContext[0].toHex()}
+                                Request BTC Context Hash: ${btcContext[0].toHex()}
+                                VTB #${i - 1} BTC blocks:
+                                $serializedAnchorBTCBlocks
+                                VTB #$i BTC blocks:
+                                $serializedToConnectBTCBlocks
+                                """.trimIndent()
+                        }
+                    } else {
+                        logger.debug { "Success, VTB at index $i connects to VTB at index ${i - 1}!" }
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("An error occurred checking VTB connection and continuity!", e)
+            }
         }
 
 
@@ -215,65 +283,6 @@ suspend fun runTasks(
                 )
 
                 val veriBlockPublications = state.veriBlockPublications
-
-                try {
-                    val context = state.miningInstruction
-                    val btcContext = context.btcContext
-                    // List<byte[]> vbkContext = context.getContext();
-
-                    // Check that the first VTB connects somewhere in the BTC context
-                    val firstPublication = veriBlockPublications[0]
-
-                    val serializedAltchainBTCContext = btcContext.joinToString("\n") { Utility.bytesToHex(it) }
-
-                    val serializedBTCHashesInPoPTransaction = VTBDebugUtility.serializeBitcoinBlockHashList(
-                        VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(
-                            firstPublication.transaction
-                        )
-                    )
-
-                    if (!VTBDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
-                        logger.error {
-                            """Error: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} does not connect to the altchain context!
-                           Altchain Bitcoin Context:
-                           $serializedAltchainBTCContext
-                           PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
-                        }
-                    } else {
-                        logger.debug {
-                            """Success: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} connects to the altchain context!
-                           Altchain Bitcoin Context:
-                           $serializedAltchainBTCContext
-                           PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
-                        }
-                    }
-
-                    // Check that every VTB connects to the previous one
-                    for (i in 1 until veriBlockPublications.size) {
-                        val anchor = veriBlockPublications[i - 1]
-                        val toConnect = veriBlockPublications[i]
-
-                        val anchorBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(anchor.transaction)
-                        val toConnectBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(toConnect.transaction)
-
-                        val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
-                        val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
-
-                        if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect)) {
-                            logger.error {
-                                """Error: VTB at index $i does not connect to the previous VTB!
-                               VTB #${i - 1} BTC blocks:
-                               $serializedAnchorBTCBlocks
-                               VTB #$i BTC blocks:
-                               $serializedToConnectBTCBlocks""".trimIndent()
-                            }
-                        } else {
-                            logger.debug { "Success, VTB at index $i connects to VTB at index ${i - 1}!" }
-                        }
-                    }
-                } catch (e: Exception) {
-                    logger.error("An error occurred checking VTB connection and continuity!", e)
-                }
 
                 val siTxId = securityInheritingChain.submit(proofOfProof, veriBlockPublications)
 
