@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Utils
-import org.veriblock.miners.pop.common.Utility
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.services.MinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.command
@@ -40,12 +40,12 @@ fun CommandFactory.diagnosticCommands(minerService: MinerService) {
         Utils.uint32ToByteStreamLE(lastBlockHeader.difficultyTarget, headerOutputSteram)
         Utils.uint32ToByteStreamLE(lastBlockHeader.nonce, headerOutputSteram)
 
-        printInfo("Bitcoin Block Header: ${Utility.bytesToHex(headerOutputSteram.toByteArray())}")
+        printInfo("Bitcoin Block Header: ${headerOutputSteram.toByteArray().toHex()}")
         printInfo("Bitcoin Block Hash: ${lastBlockHeader.hash}")
         printInfo("Bitcoin Block Height: ${lastBlock.height}")
 
         success {
-            addMessage("V200", "Success", Utility.bytesToHex(headerOutputSteram.toByteArray()));
+            addMessage("V200", "Success", headerOutputSteram.toByteArray().toHex());
         }
     }
 

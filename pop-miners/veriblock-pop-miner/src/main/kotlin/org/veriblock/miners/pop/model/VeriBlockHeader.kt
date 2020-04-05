@@ -7,7 +7,7 @@
 package org.veriblock.miners.pop.model
 
 import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.miners.pop.common.Utility
+import org.veriblock.core.utilities.extensions.toHex
 import java.util.Arrays
 
 class VeriBlockHeader(
@@ -22,16 +22,16 @@ class VeriBlockHeader(
         BlockUtility.extractVersionFromBlockHeader(bytes)
 
     fun getPreviousHash(): String =
-        Utility.bytesToHex(BlockUtility.extractPreviousBlockHashFromBlockHeader(bytes))
+        BlockUtility.extractPreviousBlockHashFromBlockHeader(bytes).toHex()
 
     fun getSecondPreviousHash(): String =
-        Utility.bytesToHex(BlockUtility.extractSecondPreviousBlockHashFromBlockHeader(bytes))
+        BlockUtility.extractSecondPreviousBlockHashFromBlockHeader(bytes).toHex()
 
     fun getThirdPreviousHash(): String =
-        Utility.bytesToHex(BlockUtility.extractThirdPreviousBlockHashFromBlockHeader(bytes))
+        BlockUtility.extractThirdPreviousBlockHashFromBlockHeader(bytes).toHex()
 
     fun getMerkleRoot(): String =
-        Utility.bytesToHex(BlockUtility.extractMerkleRootFromBlockHeader(bytes))
+        BlockUtility.extractMerkleRootFromBlockHeader(bytes).toHex()
 
     fun getTimestamp(): Int =
         BlockUtility.extractTimestampFromBlockHeader(bytes)

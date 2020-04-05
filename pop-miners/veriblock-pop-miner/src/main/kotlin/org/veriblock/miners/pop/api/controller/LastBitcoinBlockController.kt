@@ -17,8 +17,8 @@ import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import org.bitcoinj.core.Utils
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.api.models.ShowLastBitcoinBlockResponse
-import org.veriblock.miners.pop.common.Utility
 import org.veriblock.miners.pop.services.MinerService
 import java.io.ByteArrayOutputStream
 
@@ -50,8 +50,8 @@ class LastBitcoinBlockController(
             Utils.uint32ToByteStreamLE(lastBlockHeader.nonce, headerOutputSteram)
 
             val responseModel = ShowLastBitcoinBlockResponse()
-            responseModel.header = Utility.bytesToHex(headerOutputSteram.toByteArray())
-            responseModel.hash = Utility.bytesToHex(lastBlockHeader.hash.bytes)
+            responseModel.header = headerOutputSteram.toByteArray().toHex()
+            responseModel.hash = lastBlockHeader.hash.bytes.toHex()
             responseModel.height = lastBlock.height
 
             call.respond(responseModel)

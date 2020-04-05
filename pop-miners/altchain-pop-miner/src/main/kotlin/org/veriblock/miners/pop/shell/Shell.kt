@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.shell
 
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.core.Context
-import org.veriblock.miners.pop.Miner
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
 import org.veriblock.miners.pop.shell.commands.standardCommands
@@ -20,7 +20,7 @@ import org.veriblock.shell.CommandFactory
 fun CommandFactory.configure(
     configuration: Configuration,
     context: Context,
-    miner: Miner
+    miner: MinerService
 ) {
     standardCommands()
     configCommands(configuration)

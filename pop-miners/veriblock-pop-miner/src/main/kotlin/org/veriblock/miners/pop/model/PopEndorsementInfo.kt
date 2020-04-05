@@ -8,7 +8,9 @@ package org.veriblock.miners.pop.model
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.miners.pop.common.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.core.utilities.extensions.toBase58
+import org.veriblock.core.utilities.extensions.toHex
 
 class PopEndorsementInfo(
     popEndorsementInfo: VeriBlockMessages.PoPEndorsementInfo
@@ -47,17 +49,15 @@ class PopEndorsementInfo(
     val endorsedBlockNumber: Int
 
     init {
-        minerAddress = Utility.bytesToBase58(popEndorsementInfo.minerAddress.toByteArray())
-        endorsedVeriBlockBlockHash = Utility.bytesToHex(popEndorsementInfo.endorsedVeriblockBlockHash.toByteArray())
-        containedInVeriBlockBlockHash = Utility.bytesToHex(
-            popEndorsementInfo.containedInVeriblockBlockHash.toByteArray()
-        )
-        veriBlockTransactionId = Utility.bytesToHex(popEndorsementInfo.veriblockTxId.toByteArray())
-        bitcoinTransaction = Utility.bytesToHex(popEndorsementInfo.bitcoinTransaction.toByteArray())
-        bitcoinTransactionId = Utility.bytesToHex(popEndorsementInfo.bitcoinTxId.toByteArray())
-        bitcoinBlockHeader = Utility.bytesToHex(popEndorsementInfo.bitcoinBlockHeader.toByteArray())
-        bitcoinBlockHeaderHash = Utility.bytesToHex(popEndorsementInfo.bitcoinBlockHeaderHash.toByteArray())
-        reward = Utility.formatAtomicLongWithDecimal(popEndorsementInfo.reward)
+        minerAddress = popEndorsementInfo.minerAddress.toByteArray().toBase58()
+        endorsedVeriBlockBlockHash = popEndorsementInfo.endorsedVeriblockBlockHash.toByteArray().toHex()
+        containedInVeriBlockBlockHash = popEndorsementInfo.containedInVeriblockBlockHash.toByteArray().toHex()
+        veriBlockTransactionId = popEndorsementInfo.veriblockTxId.toByteArray().toHex()
+        bitcoinTransaction = popEndorsementInfo.bitcoinTransaction.toByteArray().toHex()
+        bitcoinTransactionId = popEndorsementInfo.bitcoinTxId.toByteArray().toHex()
+        bitcoinBlockHeader = popEndorsementInfo.bitcoinBlockHeader.toByteArray().toHex()
+        bitcoinBlockHeaderHash = popEndorsementInfo.bitcoinBlockHeaderHash.toByteArray().toHex()
+        reward = popEndorsementInfo.reward.formatAtomicLongWithDecimal()
         finalized = popEndorsementInfo.finalized
         endorsedBlockNumber = popEndorsementInfo.endorsedBlockNumber
     }

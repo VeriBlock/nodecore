@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.first
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.util.Threading
-import org.veriblock.miners.pop.Miner
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -39,7 +39,7 @@ class SecurityInheritingMonitor(
 
     private val lock = ReentrantLock()
 
-    private lateinit var miner: Miner
+    private lateinit var miner: MinerService
 
     private val healthy = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
@@ -56,7 +56,7 @@ class SecurityInheritingMonitor(
     /**
      * Starts monitoring the corresponding chain with a polling schedule
      */
-    fun start(miner: Miner) {
+    fun start(miner: MinerService) {
         this.miner = miner
         pollSchedule = Threading.SI_POLL_THREAD.scheduleWithFixedDelay({
             this.poll()

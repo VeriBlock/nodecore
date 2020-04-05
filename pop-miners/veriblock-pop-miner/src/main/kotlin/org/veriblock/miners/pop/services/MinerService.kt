@@ -18,9 +18,10 @@ import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
-import org.veriblock.miners.pop.common.Utility
+import org.veriblock.miners.pop.common.amountToCoin
+import org.veriblock.miners.pop.common.formatBTCFriendlyString
+import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.core.OperationState
-import org.veriblock.miners.pop.core.OperationStateType
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
@@ -30,7 +31,7 @@ import org.veriblock.miners.pop.model.PopMinerDependencies
 import org.veriblock.miners.pop.model.result.DefaultResultMessage
 import org.veriblock.miners.pop.model.result.MineResult
 import org.veriblock.miners.pop.model.result.Result
-import org.veriblock.miners.pop.storage.KeyValueData
+import org.veriblock.miners.pop.storage.KeyValueRecord
 import org.veriblock.miners.pop.storage.KeyValueRepository
 import org.veriblock.miners.pop.tasks.ProcessManager
 import java.io.File
@@ -48,6 +49,7 @@ private val logger = createLogger {}
 class MinerService(
     private val config: VpmConfig,
     private val bitcoinService: BitcoinService,
+    private val nodeCoreGateway: NodeCoreGateway,
     private val nodeCoreService: NodeCoreService,
     private val stateService: PopStateService,
     private val keyValueRepository: KeyValueRepository,
@@ -108,13 +110,13 @@ class MinerService(
     fun listOperations(): List<OperationSummary> {
         return operations.values.asSequence().map { operation ->
             val state = operation.state
-            val miningInstruction = (state as? OperationState.Instruction)?.miningInstruction
+            val miningInstruction = operation.miningInstruction
             var blockNumber = -1
             if (miningInstruction != null) {
                 blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader)
             }
-            val status = operation.status.toString()
-            OperationSummary(operation.id, blockNumber, status, state.type.name, state.toString())
+            val status = operation.state.name
+            OperationSummary(operation.id, blockNumber, state.name, state.description)
         }.sortedBy {
             it.endorsedBlockNumber
         }.toList()
@@ -124,7 +126,7 @@ class MinerService(
         stateService.getOperation(id)
 
     fun mine(blockNumber: Int?): MineResult {
-        val operationId = Utility.generateOperationId()
+        val operationId = generateOperationId()
         val result = MineResult(operationId)
         if (!readyToMine()) {
             result.fail()
@@ -139,7 +141,7 @@ class MinerService(
 
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
         // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be necessary.
-        val count = operations.values.count { OperationStateType.ENDORSEMENT_TRANSACTION.hasType(it.state.type) }
+        val count = operations.values.count { OperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
             result.fail()
             result.addMessage(
@@ -154,7 +156,6 @@ class MinerService(
         }
         val operation = VpmOperation(operationId, endorsedBlockHeight = blockNumber)
         operations.putIfAbsent(operationId, operation)
-        operation.begin()
         processManager.submit(operation)
         logger.info {
             "Mining operation ${operation.id} started" + if (blockNumber != null) " at block $blockNumber" else ""
@@ -186,7 +187,7 @@ class MinerService(
 
     fun getMinerAddress(): String? {
         return if (readyConditions.contains(PopMinerDependencies.NODECORE_CONNECTED)) {
-            nodeCoreService.getMinerAddress()
+            nodeCoreGateway.getMinerAddress()
         } else {
             null
         }
@@ -214,10 +215,12 @@ class MinerService(
     }
 
     private fun agreeToWalletSeedRequirement() {
-        val data = KeyValueData()
-        data.key = Constants.WALLET_SEED_VIEWED_KEY
-        data.value = "1"
-        keyValueRepository.insert(data)
+        keyValueRepository.insert(
+            KeyValueRecord(
+                key = Constants.WALLET_SEED_VIEWED_KEY,
+                value = "1"
+            )
+        )
     }
 
     fun importWallet(seedWords: List<String?>?, creationDate: Long?): Boolean {
@@ -226,7 +229,7 @@ class MinerService(
 
     suspend fun sendBitcoinToAddress(address: String, amount: BigDecimal): Result {
         val result = Result()
-        val coinAmount = Utility.amountToCoin(amount)
+        val coinAmount = amount.amountToCoin()
         try {
             val tx = bitcoinService.sendCoins(address, coinAmount)!!
             result.addMessage("V201", "Created", String.format("Transaction: %s", tx.txId.toString()), false)
@@ -363,10 +366,10 @@ class MinerService(
                 val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
                 val balance = bitcoinService.getBalance()
                 "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
-                    Utility.formatBTCFriendlyString(balance) + System.lineSeparator() + String.format(
+                    balance.formatBTCFriendlyString() + System.lineSeparator() + String.format(
                     "  Minimum required: %1\$s, need %2\$s more",
-                    Utility.formatBTCFriendlyString(maximumTransactionFee),
-                    Utility.formatBTCFriendlyString(maximumTransactionFee.subtract(balance))
+                    maximumTransactionFee.formatBTCFriendlyString(),
+                    maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
                 ) + System.lineSeparator() + "  Send Bitcoin to: " +
                     bitcoinService.currentReceiveAddress()
             }
@@ -407,7 +410,7 @@ class MinerService(
 
     private fun onCoinsReceived(event: CoinsReceivedEventDto) {
         try {
-            logger.info { "Received pending tx '${event.tx.txId}', pending balance: '${Utility.formatBTCFriendlyString(event.newBalance)}'" }
+            logger.info { "Received pending tx '${event.tx.txId}', pending balance: '${event.newBalance.formatBTCFriendlyString()}'" }
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -449,7 +452,7 @@ class MinerService(
             addReadyCondition(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED)
             ensureSufficientFunds()
             logger.info(
-                "Available Bitcoin balance: " + Utility.formatBTCFriendlyString(bitcoinService.getBalance())
+                "Available Bitcoin balance: " + bitcoinService.getBalance().formatBTCFriendlyString()
             )
             logger.info("Send Bitcoin to: " + bitcoinService.currentReceiveAddress())
         } catch (e: Exception) {
@@ -496,7 +499,7 @@ class MinerService(
             val operationState = operation?.state
             val blockHeight = operation?.endorsedBlockHeight ?: -1
             if (
-                operationState != null && !operation.isFailed() && operationState !is OperationState.Confirmed &&
+                operationState != null && !operation.isFailed() && !(operationState hasType OperationState.CONFIRMED) &&
                 blockHeight < event.block.getHeight() - Constants.POP_SETTLEMENT_INTERVAL
             ) {
                 operation.fail("Endorsement of block $blockHeight is no longer relevant")

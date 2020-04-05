@@ -29,12 +29,15 @@ import org.veriblock.miners.pop.services.MinerService
 @Group("Mining")
 @Location("/api/operations")
 class minerOperations
+
 @Group("Mining")
 @Location("/api/operations/{id}")
 class minerOperation(val id: String)
+
 @Group("Mining")
 @Location("/api/mine")
 class mineAction
+
 @Group("Mining")
 @Location("/api/miner")
 class miner

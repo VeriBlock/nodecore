@@ -24,7 +24,7 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.MiningInstruction
+import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -201,7 +201,7 @@ class BitcoinFamilyChain(
         return 501
     }
 
-    override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
+    override fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         val actualBlockHeight = blockHeight
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
@@ -222,7 +222,7 @@ class BitcoinFamilyChain(
         if (response.last_known_veriblock_blocks.isEmpty()) {
             error("Publication data's context (last known VeriBlock blocks) must not be empty!")
         }
-        return MiningInstruction(
+        return ApmInstruction(
             actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },

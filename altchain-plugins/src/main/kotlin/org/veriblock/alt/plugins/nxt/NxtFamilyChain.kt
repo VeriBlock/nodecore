@@ -19,7 +19,7 @@ import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.MiningInstruction
+import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -83,7 +83,7 @@ class NxtFamilyChain(
         TODO("TBD")
     }
 
-    override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
+    override fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
 
@@ -121,7 +121,7 @@ class NxtFamilyChain(
             payoutAddress.toByteArray(Charsets.US_ASCII),
             response.contextInfoContainer.asHexBytes()
         )
-        return MiningInstruction(
+        return ApmInstruction(
             actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },

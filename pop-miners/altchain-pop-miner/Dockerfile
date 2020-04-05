@@ -9,11 +9,11 @@ ENV DOCKER true
 EXPOSE 4567
 
 # Copy the application from its folder to ours
-COPY ./build/install/veriblock-alt-pop /veriblock-alt-pop
+COPY ./build/install/altchain-pop-miner /altchain-pop-miner
 # Create the data directory
 RUN mkdir /data
 
-WORKDIR /veriblock-alt-pop/bin
+WORKDIR /altchain-pop-miner/bin
 
 # Run the app when the container is executed.
-ENTRYPOINT ["./veriblock-alt-pop"]
+ENTRYPOINT ["./altchain-pop-miner"]

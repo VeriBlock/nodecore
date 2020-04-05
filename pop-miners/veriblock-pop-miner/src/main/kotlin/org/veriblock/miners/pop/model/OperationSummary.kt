@@ -10,6 +10,5 @@ class OperationSummary(
     val operationId: String,
     val endorsedBlockNumber: Int,
     val status: String,
-    val action: String,
-    val message: String
+    val action: String
 ) 

@@ -8,11 +8,11 @@
 
 package org.veriblock.lite.transactionmonitor
 
-import com.google.protobuf.CodedInputStream
-import com.google.protobuf.CodedOutputStream
-import nodecore.api.grpc.utilities.ByteStringUtility
+
+import kotlinx.serialization.protobuf.ProtoBuf
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.lite.proto.TxmonProto
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
@@ -20,135 +20,99 @@ import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
-@Throws(IOException::class)
 fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor) {
-    val codedOutputStream = CodedOutputStream.newInstance(this)
-    transactionMonitor.toProto().writeTo(codedOutputStream)
-    codedOutputStream.flush()
+    val data = ProtoBuf.dump(TxmonProto.TransactionMonitor.serializer(), transactionMonitor.toProto())
+    write(data)
 }
 
-@Throws(IOException::class)
 fun InputStream.readTransactionMonitor(context: Context): TransactionMonitor {
-    val codedInput = CodedInputStream.newInstance(this)
-    return Protos.TransactionMonitor.parseFrom(codedInput).toModel(context)
+    val data = ProtoBuf.load(TxmonProto.TransactionMonitor.serializer(), readBytes())
+    return data.toModel(context)
 }
 
-private fun TransactionMonitor.toProto(): Protos.TransactionMonitor = Protos.TransactionMonitor.newBuilder().also {
-    it.network = context.networkParameters.network
-    it.address = address.toString()
+private fun TransactionMonitor.toProto() = TxmonProto.TransactionMonitor(
+    network = context.networkParameters.network,
+    address = address.toString(),
+    transactions = getTransactions().map { it.toProto() }
+)
 
-    for (transaction in getTransactions()) {
-        it.addTransactions(transaction.toProto())
-    }
-}.build()
+private fun WalletTransaction.toProto() = TxmonProto.WalletTransaction(
+    txId = id.bytes,
+    input = TxmonProto.TransactionInput(sourceAddress.toString(), sourceAmount.atomicUnits),
+    outputs = outputs.map { TxmonProto.TransactionOutput(it.address.toString(), it.amount.atomicUnits) },
+    signatureIndex = signatureIndex,
+    signature = signature,
+    publicKey = publicKey,
+    data = SerializeDeserializeService.serialize(publicationData),
+    merkleBranch = merklePath?.toProto() ?: TxmonProto.MerkleBranch(),
+    meta = transactionMeta.toProto()
+)
 
-private fun WalletTransaction.toProto(): Protos.WalletTransaction = Protos.WalletTransaction.newBuilder().also {
-    it.txId = ByteStringUtility.bytesToByteString(id.bytes)
-    it.input = buildTransactionInput(sourceAddress, sourceAmount)
+private fun VeriBlockMerklePath.toProto() = TxmonProto.MerkleBranch(
+    subject = subject.bytes,
+    index = index,
+    merklePathHashes = layers.map { it.bytes },
+    merkleSubTree = treeIndex
+)
 
-    for (output in outputs) {
-        it.addOutputs(buildTransactionOutput(output.address, output.amount))
-    }
+private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
+    txId = txId.bytes,
+    state = state.value,
+    appearsInBestChainBlock = appearsInBestChainBlock?.bytes ?: ByteArray(0),
+    appearsInBlocks = getAppearsInBlock().map { it.bytes },
+    appearsAtHeight = appearsAtChainHeight,
+    depth = depth
+)
 
-    it.signatureIndex = signatureIndex
-    it.signature = ByteStringUtility.bytesToByteString(signature)
-    it.publicKey = ByteStringUtility.bytesToByteString(publicKey)
-    it.data = ByteStringUtility.bytesToByteString(SerializeDeserializeService.serialize(publicationData))
-    merklePath?.let { merklePath ->
-        it.merkleBranch = merklePath.toProto()
-    }
-    it.meta = transactionMeta.toProto()
-}.build()
-
-private fun VeriBlockMerklePath.toProto(): Protos.MerkleBranch = Protos.MerkleBranch.newBuilder().also {
-    it.subject = ByteStringUtility.bytesToByteString(subject.bytes)
-    it.index = index
-
-    for (hash in layers) {
-        it.addMerklePathHashes(ByteStringUtility.bytesToByteString(hash.bytes))
-    }
-    it.merkleSubTreeValue = treeIndex
-}.build()
-
-private fun TransactionMeta.toProto(): Protos.TransactionMeta = Protos.TransactionMeta.newBuilder().also {
-    it.txId = ByteStringUtility.bytesToByteString(txId.bytes)
-    it.state = Protos.TransactionMeta.MetaState.forNumber(state.value)
-    appearsInBestChainBlock?.let { appearsInBestChainBlock ->
-        it.appearsInBestChainBlock = ByteStringUtility.bytesToByteString(appearsInBestChainBlock.bytes)
-    }
-
-    for (blockHash in getAppearsInBlock()) {
-        it.addAppearsInBlocks(ByteStringUtility.bytesToByteString(blockHash.bytes))
-    }
-
-    it.appearsAtHeight = appearsAtChainHeight
-    it.depth = depth
-}.build()
-
-private fun buildTransactionInput(address: Address, amount: Coin): Protos.TransactionInput {
-    return Protos.TransactionInput.newBuilder()
-        .setAddress(address.toString())
-        .setAmount(amount.atomicUnits)
-        .build()
-}
-
-private fun buildTransactionOutput(address: Address, amount: Coin): Protos.TransactionOutput {
-    return Protos.TransactionOutput.newBuilder()
-        .setAddress(address.toString())
-        .setAmount(amount.atomicUnits)
-        .build()
-}
-
-private fun Protos.TransactionMonitor.toModel(context: Context): TransactionMonitor {
+private fun TxmonProto.TransactionMonitor.toModel(context: Context): TransactionMonitor {
     check(context.networkParameters.network == network) {
         "Network ${context.networkParameters.network} attempting to read VBK wallet for $network"
     }
     return TransactionMonitor(
         context,
         Address(address),
-        transactionsList.map {
+        transactions.map {
             it.toModel(context)
         }
     )
 }
 
-private fun Protos.WalletTransaction.toModel(context: Context): WalletTransaction = WalletTransaction(
+private fun TxmonProto.WalletTransaction.toModel(context: Context): WalletTransaction = WalletTransaction(
     0x01.toByte(),
     Address(input.address),
     Coin.valueOf(input.amount),
-    outputsList.map { transactionOutput ->
+    outputs.map { transactionOutput ->
         Output.of(transactionOutput.address, transactionOutput.amount)
     },
     signatureIndex,
-    SerializeDeserializeService.parsePublicationData(data.toByteArray()),
-    signature.toByteArray(),
-    publicKey.toByteArray(),
+    SerializeDeserializeService.parsePublicationData(data),
+    signature,
+    publicKey,
     context.networkParameters.transactionPrefix,
     meta.toModel()
 ).apply {
-    if (merkleBranch.subject.size() != 0) {
+    if (merkleBranch.subject.isNotEmpty()) {
         merklePath = merkleBranch.toModel()
     }
 }
 
-private fun Protos.MerkleBranch.toModel(): VeriBlockMerklePath = VeriBlockMerklePath(
-    "$merkleSubTreeValue:$index:${Sha256Hash.wrap(subject.toByteArray())}:" +
-        merklePathHashesList.joinToString(":") { Sha256Hash.wrap(it.toByteArray()).toString() }
+private fun TxmonProto.MerkleBranch.toModel(): VeriBlockMerklePath = VeriBlockMerklePath(
+    "$merkleSubTree:$index:${Sha256Hash.wrap(subject)}:" +
+        merklePathHashes.joinToString(":") { Sha256Hash.wrap(it).toString() }
 )
 
-private fun Protos.TransactionMeta.toModel(): TransactionMeta = TransactionMeta(
-    Sha256Hash.wrap(txId.toByteArray())
+private fun TxmonProto.TransactionMeta.toModel(): TransactionMeta = TransactionMeta(
+    Sha256Hash.wrap(txId)
 ).also {
-    it.setState(TransactionMeta.MetaState.forNumber(stateValue))
-    if (appearsInBestChainBlock.size() != 0) {
-        it.appearsInBestChainBlock = VBlakeHash.wrap(appearsInBestChainBlock.toByteArray())
+    it.setState(TransactionMeta.MetaState.forNumber(state))
+    if (appearsInBestChainBlock.isNotEmpty()) {
+        it.appearsInBestChainBlock = VBlakeHash.wrap(appearsInBestChainBlock)
     }
 
-    appearsInBlocksList.forEach { bytes -> it.addBlockAppearance(VBlakeHash.wrap(bytes.toByteArray())) }
+    appearsInBlocks.forEach { bytes -> it.addBlockAppearance(VBlakeHash.wrap(bytes)) }
 
     it.appearsAtChainHeight = appearsAtHeight
     it.depth = depth
