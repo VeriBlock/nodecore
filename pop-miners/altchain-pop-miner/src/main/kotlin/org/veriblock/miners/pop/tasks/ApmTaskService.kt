@@ -349,10 +349,12 @@ class ApmTaskService(
                     " is not in ${operation.chainId.toUpperCase()}'s main chain"
             )
         }
-
         logger.info(operation) { "Successfully confirmed $chainSymbol endorsed block ${endorsedBlock.hash}!" }
 
         val payoutBlockHeight = endorsedBlockHeight + operation.chain.getPayoutInterval()
+        logger.debug(operation) {
+            "$chainSymbol computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
+        }
         logger.info(operation) { "Waiting for $chainSymbol payout block ($payoutBlockHeight) to be confirmed..." }
         val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
             if (block.confirmations < 0) {
