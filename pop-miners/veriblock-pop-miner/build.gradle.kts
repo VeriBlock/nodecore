@@ -29,7 +29,6 @@ dependencies {
     implementation("org.codehaus.groovy:groovy:2.4.12")
 
     implementation(project(":nodecore-ucp"))
-    implementation(project(":nodecore-grpc"))
     implementation(project(":veriblock-shell"))
     implementation(project(":pop-miners:veriblock-pop-miners-common"))
 

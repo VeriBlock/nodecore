@@ -8,7 +8,6 @@ package org.veriblock.miners.pop.model
 
 class ApplicationExceptions {
     class ExceededMaxTransactionFee : RuntimeException("Calculated fee exceeded configured maximum transaction fee")
-    class PoPSubmitRejected : RuntimeException("PoP submission rejected")
     class CorruptSPVChain(message: String) : RuntimeException(message)
     class UnableToAcquireTransactionLock : RuntimeException() {
         override val message: String = "A previous transaction has not yet completed broadcasting to peers and new transactions would result in double spending. Wait a few seconds and try again."

@@ -17,8 +17,6 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toBase58
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.miners.pop.model.ApplicationExceptions.PoPSubmitRejected
-import org.veriblock.miners.pop.model.NodeCoreReply
 import org.veriblock.miners.pop.model.PopEndorsementInfo
 import org.veriblock.miners.pop.model.PopMiningInstruction
 import org.veriblock.miners.pop.model.PopMiningTransaction
@@ -89,7 +87,7 @@ class NodeCoreGateway(
         }
     }
 
-    fun getPop(blockNumber: Int?): NodeCoreReply<PopMiningInstruction> {
+    fun getPop(blockNumber: Int?): PopMiningInstruction {
         val requestBuilder = VeriBlockMessages.GetPopRequest.newBuilder()
         if (blockNumber != null && blockNumber > 0) {
             requestBuilder.blockNum = blockNumber
@@ -100,9 +98,7 @@ class NodeCoreGateway(
                 .withDeadlineAfter(15, TimeUnit.SECONDS)
                 .getPop(request)
         }
-        val result = NodeCoreReply<PopMiningInstruction>()
         if (reply.success) {
-            result.success = true
             val publicationData = reply.fullPop.toByteArray()
             val instruction = PopMiningInstruction(
                 publicationData = publicationData,
@@ -111,9 +107,8 @@ class NodeCoreGateway(
                 endorsedBlockHeader = Arrays.copyOfRange(publicationData, 0, 64),
                 endorsedBlockContextHeaders = reply.lastKnownBlockContextList.map { it.header.toByteArray() }
             )
-            result.result = instruction
+            return instruction
         } else {
-            result.success = false
             val message = StringBuilder()
             for (r in reply.resultsList) {
                 if (r.message != null) {
@@ -123,9 +118,8 @@ class NodeCoreGateway(
                     message.append("\t").append(r.details).append("\n")
                 }
             }
-            result.resultMessage = message.toString()
+            error(message.toString())
         }
-        return result
     }
 
     fun submitPop(popMiningTransaction: PopMiningTransaction): String {
@@ -148,7 +142,7 @@ class NodeCoreGateway(
         if (reply.success) {
             return reply.getResults(0).details
         }
-        throw PoPSubmitRejected()
+        throw PopSubmitRejected()
     }
 
     fun getTransactionConfirmationsById(txId: String): Int? {
@@ -259,6 +253,8 @@ class NodeCoreGateway(
         }
     }
 }
+
+class PopSubmitRejected : RuntimeException("PoP submission rejected")
 
 class TimeoutError(
     override val message: String

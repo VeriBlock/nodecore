@@ -24,6 +24,7 @@ import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree
 import org.veriblock.miners.pop.model.merkle.MerkleProof
 import org.veriblock.miners.pop.services.BitcoinService
 import org.veriblock.miners.pop.services.NodeCoreGateway
+import org.veriblock.miners.pop.services.PopSubmitRejected
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
@@ -43,11 +44,7 @@ class VpmTaskService(
         // PoP miner's address
         try {
             val popReply = nodeCoreGateway.getPop(operation.endorsedBlockHeight)
-            if (popReply.success) {
-                operation.setMiningInstruction(popReply.result!!)
-            } else {
-                error(popReply.resultMessage!!)
-            }
+            operation.setMiningInstruction(popReply)
         } catch (e: StatusRuntimeException) {
             error("Failed to get PoP publication data from NodeCore: ${e.status}")
         }
@@ -256,7 +253,7 @@ class VpmTaskService(
             val popTxId = nodeCoreGateway.submitPop(popMiningTransaction)
             logger.info(operation) { "PoP endorsement submitted! PoP transaction id: $popTxId" }
             operation.setProofOfProofId(popTxId)
-        } catch (e: ApplicationExceptions.PoPSubmitRejected) {
+        } catch (e: PopSubmitRejected) {
             logger.error("NodeCore rejected PoP submission")
             failTask("NodeCore rejected PoP submission. Check NodeCore logs for detail.")
         } catch (e: StatusRuntimeException) {
