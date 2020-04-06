@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.first
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -111,7 +112,7 @@ class SecurityInheritingMonitor(
                 }
             }
         } catch (t: Throwable) {
-            logger.error(t) { "Error when polling SI Chain ($chainId)" }
+            logger.debugWarn(t) { "Error when polling SI Chain ($chainId)" }
         }
     }
 

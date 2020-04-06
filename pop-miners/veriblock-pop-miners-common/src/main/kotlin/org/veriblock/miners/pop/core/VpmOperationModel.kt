@@ -18,7 +18,7 @@ class VpmSpTransaction(
     val transactionBytes: ByteArray
 ) : SpTransaction {
     override val txId: String get() = transaction.txId.toString()
-    override val fee: String get() = transaction.fee.formatBTCFriendlyString()
+    override val fee: String get() = transaction.fee?.formatBTCFriendlyString() ?: "Unknown"
 }
 
 class VpmSpBlock(

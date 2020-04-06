@@ -149,7 +149,7 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getOperations() = operations.values.sortedBy { it.timestamp }
+    override fun getOperations() = operations.values.sortedBy { it.createdAt }
 
     override fun getOperation(id: String): ApmOperation? {
         return operations[id]

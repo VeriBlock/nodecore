@@ -33,7 +33,7 @@ private val logger = createLogger {}
 class VpmTaskService(
     private val nodeCoreGateway: NodeCoreGateway,
     private val bitcoinService: BitcoinService
-) : VTaskService<VpmOperation>() {
+) : TaskService<VpmOperation>() {
     override suspend fun retrieveMiningInstruction(operation: VpmOperation) = operation.runTask(
         taskName = "Retrieve Mining Instruction from NodeCore",
         targetState = OperationState.INSTRUCTION,

@@ -6,6 +6,7 @@ import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
+import java.time.LocalDateTime
 import java.util.Collections
 
 private val logger = createLogger {}
@@ -20,7 +21,8 @@ abstract class MiningOperation<
     val id: String,
     var endorsedBlockHeight: Int?,
     changeHistory: List<StateChangeEvent>,
-    var reconstituting: Boolean = false
+    var reconstituting: Boolean = false,
+    val createdAt: LocalDateTime = LocalDateTime.now()
 ) {
     var state: OperationState = OperationState.INITIAL
         private set
@@ -47,8 +49,6 @@ abstract class MiningOperation<
         private set
 
     private val changeHistory: MutableList<StateChangeEvent> = ArrayList(changeHistory)
-
-    val timestamp = System.currentTimeMillis()
 
     protected fun setState(state: OperationState) {
         if (state.id > 0 && this.state.id != state.id - 1) {

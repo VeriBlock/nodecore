@@ -210,7 +210,7 @@ class MockMinerService(
         error("Operation not supported in the Mock Miner")
 
     override fun getOperations(): List<ApmOperation> =
-        operations.values.sortedBy { it.timestamp }
+        operations.values.sortedBy { it.createdAt }
 
     override fun getOperation(id: String): ApmOperation? =
         operations[id]
