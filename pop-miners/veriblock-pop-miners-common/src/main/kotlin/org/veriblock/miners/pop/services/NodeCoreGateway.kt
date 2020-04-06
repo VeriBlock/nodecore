@@ -168,7 +168,7 @@ class NodeCoreGateway(
         }
     }
 
-    fun getBitcoinBlockIndex(blockHeader: ByteArray?): Int? {
+    fun getBitcoinBlockIndex(blockHeader: ByteArray): Int? {
         val request = VeriBlockMessages.GetBitcoinBlockIndexRequest.newBuilder().apply {
             setBlockHeader(ByteString.copyFrom(blockHeader))
             searchLength = 20

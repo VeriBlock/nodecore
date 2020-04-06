@@ -21,29 +21,26 @@ class BootOptions(
 
     init {
         val optionsContainer = Options()
+        val finalOptions = ArrayList(options)
         if (addConfigFileOption) {
-            optionsContainer.addOption(
-                bootOption(
-                    opt = "c",
-                    longOpt = "config",
-                    argName = "path",
-                    desc = "The configuration file location",
-                    configMapping = CONFIG_FILE_OPTION_KEY
-                ).option
+            finalOptions += bootOption(
+                opt = "c",
+                longOpt = "config",
+                argName = "path",
+                desc = "The configuration file location",
+                configMapping = CONFIG_FILE_OPTION_KEY
             )
         }
         if (addDataDirOption) {
-            optionsContainer.addOption(
-                bootOption(
-                    opt = "d",
-                    longOpt = "dataDir",
-                    argName = "path",
-                    desc = "The data directory where NodeCore generated files reside",
-                    configMapping = DATA_DIR_OPTION_KEY
-                ).option
+            finalOptions += bootOption(
+                opt = "d",
+                longOpt = "dataDir",
+                argName = "path",
+                desc = "The data directory where application files reside",
+                configMapping = DATA_DIR_OPTION_KEY
             )
         }
-        for (option in options) {
+        for (option in finalOptions) {
             optionsContainer.addOption(option.option)
         }
         val paramOption = Option.builder("D").apply {
@@ -58,12 +55,12 @@ class BootOptions(
         val parser: CommandLineParser = DefaultParser()
         val commandLine = parser.parse(optionsContainer, args)
         val properties = commandLine.getOptionProperties("D")
-        for (option in options) {
+        for (option in finalOptions) {
             val optionValue = with(option) {
                 commandLine.getValue()
             }
             if (optionValue != null) {
-                properties.setProperty(option.keyMapping, optionValue)
+                properties.setProperty(option.configMapping, optionValue)
             }
         }
         config = ConfigFactory.parseProperties(properties)
@@ -74,7 +71,7 @@ sealed class BootOption(
     val opt: String,
     val longOpt: String?,
     val desc: String,
-    val keyMapping: String
+    val configMapping: String
 ) {
     abstract val option: Option
     abstract fun CommandLine.getValue(): String?
@@ -101,8 +98,8 @@ class ArgBootOption(
     longOpt: String?,
     desc: String,
     val argName: String,
-    keyMapping: String
-) : BootOption(opt, longOpt, desc, keyMapping) {
+    configMapping: String
+) : BootOption(opt, longOpt, desc, configMapping) {
     override val option: Option = Option.builder(opt).apply {
         longOpt?.let { longOpt(longOpt) }
         desc(desc)
