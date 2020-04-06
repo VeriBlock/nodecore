@@ -22,6 +22,7 @@ import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
+import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Coin;
 import veriblock.SpvContext;
 import veriblock.model.AddressCoinsIndex;
@@ -643,6 +644,18 @@ public class AdminApiServiceImpl implements AdminApiService {
             replyBuilder.setSuccess(false);
             replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error", "An error occurred processing request", true));
         }
+        return replyBuilder.build();
+    }
+
+    @Override
+    public VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request) {
+        VeriBlockMessages.GetLastBitcoinBlockReply.Builder replyBuilder = VeriBlockMessages.GetLastBitcoinBlockReply.newBuilder();
+        replyBuilder.setSuccess(true);
+
+        //Mock todo SPV-111
+        BitcoinBlock block = spvContext.getNetworkParameters().getBitcoinOriginBlock();
+
+        replyBuilder.setHash(ByteString.copyFrom(block.getHash().getBytes()));
         return replyBuilder.build();
     }
 

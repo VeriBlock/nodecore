@@ -15,7 +15,7 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event
-import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.lite.net.NodeCoreGatewayImpl
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
@@ -54,7 +54,7 @@ class NodeCoreLiteKit(
         blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
-            NodeCoreGateway(context.networkParameters),
+            NodeCoreGatewayImpl(context.networkParameters),
             blockChain,
             transactionMonitor,
             addressManager

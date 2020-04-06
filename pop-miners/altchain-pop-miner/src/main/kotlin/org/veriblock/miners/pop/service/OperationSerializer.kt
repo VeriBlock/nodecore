@@ -83,11 +83,11 @@ class OperationSerializer(
             if (serialized.publicationData.header.isNotEmpty()) {
                 setMiningInstruction(
                     ApmInstruction(
-                    serialized.blockHeight,
-                    deserialize(serialized.publicationData),
-                    serialized.publicationContext.map { it },
-                    serialized.publicationBtcContext.map { it }
-                ))
+                        serialized.blockHeight,
+                        deserialize(serialized.publicationData),
+                        serialized.publicationContext.map { it },
+                        serialized.publicationBtcContext.map { it }
+                    ))
             }
 
             if (serialized.txId.isNotEmpty()) {

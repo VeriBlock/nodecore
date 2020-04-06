@@ -34,37 +34,37 @@ fun InputStream.readTransactionMonitor(context: Context): TransactionMonitor {
 }
 
 private fun TransactionMonitor.toProto() = TxmonProto.TransactionMonitor(
-    network = context.networkParameters.network,
-    address = address.toString(),
-    transactions = getTransactions().map { it.toProto() }
+        network = context.networkParameters.network,
+        address = address.toString(),
+        transactions = getTransactions().map { it.toProto() }
 )
 
 private fun WalletTransaction.toProto() = TxmonProto.WalletTransaction(
-    txId = id.bytes,
-    input = TxmonProto.TransactionInput(sourceAddress.toString(), sourceAmount.atomicUnits),
-    outputs = outputs.map { TxmonProto.TransactionOutput(it.address.toString(), it.amount.atomicUnits) },
-    signatureIndex = signatureIndex,
-    signature = signature,
-    publicKey = publicKey,
-    data = SerializeDeserializeService.serialize(publicationData),
-    merkleBranch = merklePath?.toProto() ?: TxmonProto.MerkleBranch(),
-    meta = transactionMeta.toProto()
+        txId = id.bytes,
+        input = TxmonProto.TransactionInput(sourceAddress.toString(), sourceAmount.atomicUnits),
+        outputs = outputs.map { TxmonProto.TransactionOutput(it.address.toString(), it.amount.atomicUnits) },
+        signatureIndex = signatureIndex,
+        signature = signature,
+        publicKey = publicKey,
+        data = SerializeDeserializeService.serialize(publicationData),
+        merkleBranch = merklePath?.toProto() ?: TxmonProto.MerkleBranch(),
+        meta = transactionMeta.toProto()
 )
 
 private fun VeriBlockMerklePath.toProto() = TxmonProto.MerkleBranch(
-    subject = subject.bytes,
-    index = index,
-    merklePathHashes = layers.map { it.bytes },
-    merkleSubTree = treeIndex
+        subject = subject.bytes,
+        index = index,
+        merklePathHashes = layers.map { it.bytes },
+        merkleSubTree = treeIndex
 )
 
 private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
-    txId = txId.bytes,
-    state = state.value,
-    appearsInBestChainBlock = appearsInBestChainBlock?.bytes ?: ByteArray(0),
-    appearsInBlocks = getAppearsInBlock().map { it.bytes },
-    appearsAtHeight = appearsAtChainHeight,
-    depth = depth
+        txId = txId.bytes,
+        state = state.value,
+        appearsInBestChainBlock = appearsInBestChainBlock?.bytes ?: ByteArray(0),
+        appearsInBlocks = getAppearsInBlock().map { it.bytes },
+        appearsAtHeight = appearsAtChainHeight,
+        depth = depth
 )
 
 private fun TxmonProto.TransactionMonitor.toModel(context: Context): TransactionMonitor {
@@ -72,27 +72,27 @@ private fun TxmonProto.TransactionMonitor.toModel(context: Context): Transaction
         "Network ${context.networkParameters.network} attempting to read VBK wallet for $network"
     }
     return TransactionMonitor(
-        context,
-        Address(address),
-        transactions.map {
-            it.toModel(context)
-        }
+            context,
+            Address(address),
+            transactions.map {
+                it.toModel(context)
+            }
     )
 }
 
 private fun TxmonProto.WalletTransaction.toModel(context: Context): WalletTransaction = WalletTransaction(
-    0x01.toByte(),
-    Address(input.address),
-    Coin.valueOf(input.amount),
-    outputs.map { transactionOutput ->
-        Output.of(transactionOutput.address, transactionOutput.amount)
-    },
-    signatureIndex,
-    SerializeDeserializeService.parsePublicationData(data),
-    signature,
-    publicKey,
-    context.networkParameters.transactionPrefix,
-    meta.toModel()
+        0x01.toByte(),
+        Address(input.address),
+        Coin.valueOf(input.amount),
+        outputs.map { transactionOutput ->
+            Output.of(transactionOutput.address, transactionOutput.amount)
+        },
+        signatureIndex,
+        SerializeDeserializeService.parsePublicationData(data),
+        signature,
+        publicKey,
+        context.networkParameters.transactionPrefix,
+        meta.toModel()
 ).apply {
     if (merkleBranch.subject.isNotEmpty()) {
         merklePath = merkleBranch.toModel()
@@ -100,12 +100,12 @@ private fun TxmonProto.WalletTransaction.toModel(context: Context): WalletTransa
 }
 
 private fun TxmonProto.MerkleBranch.toModel(): VeriBlockMerklePath = VeriBlockMerklePath(
-    "$merkleSubTree:$index:${Sha256Hash.wrap(subject)}:" +
-        merklePathHashes.joinToString(":") { Sha256Hash.wrap(it).toString() }
+        "$merkleSubTree:$index:${Sha256Hash.wrap(subject)}:" +
+                merklePathHashes.joinToString(":") { Sha256Hash.wrap(it).toString() }
 )
 
 private fun TxmonProto.TransactionMeta.toModel(): TransactionMeta = TransactionMeta(
-    Sha256Hash.wrap(txId)
+        Sha256Hash.wrap(txId)
 ).also {
     it.setState(TransactionMeta.MetaState.forNumber(state))
     if (appearsInBestChainBlock.isNotEmpty()) {
