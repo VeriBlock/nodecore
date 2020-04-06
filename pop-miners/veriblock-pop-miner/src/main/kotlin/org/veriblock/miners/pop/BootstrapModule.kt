@@ -44,6 +44,7 @@ val bootstrapModule = module {
     single { MinerService(get(), get(), get(), get(), get(), get(), get()) }
     single { PopStateService(get(), get()) }
     single { NodeCoreService(get(), get()) }
+    single { NodeCoreGateway(get()) }
     single { BitcoinService(get()) }
     single { PoPMiningScheduler(get(), get()) }
 
