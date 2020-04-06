@@ -76,7 +76,7 @@ interface SecurityInheritingChain {
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height
      * if [blockHeight] is null).
      */
-    fun getMiningInstruction(blockHeight: Int?): MiningInstruction
+    fun getMiningInstruction(blockHeight: Int?): ApmInstruction
 
     /**
      * Submits ATV ([proofOfProof]) and VTBs ([veriBlockPublications]) to the altchain

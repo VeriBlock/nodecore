@@ -9,6 +9,8 @@ package org.veriblock.miners.pop.common;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath;
+import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree;
 
 import java.util.ArrayList;
 import java.util.List;

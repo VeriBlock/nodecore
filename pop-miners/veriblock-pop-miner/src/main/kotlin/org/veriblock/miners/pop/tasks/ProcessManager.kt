@@ -13,14 +13,11 @@ import kotlinx.coroutines.launch
 import org.bitcoinj.utils.ContextPropagatingThreadFactory
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.VpmOperation
-import org.veriblock.miners.pop.services.BitcoinService
-import org.veriblock.miners.pop.services.NodeCoreService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class ProcessManager(
-    private val nodeCoreService: NodeCoreService,
-    private val bitcoinService: BitcoinService
+    private val taskService: VpmTaskService
 ) {
     private val taskPool = Executors.newFixedThreadPool(
         50,
@@ -55,7 +52,7 @@ class ProcessManager(
             error("Trying to submit operation [${operation.id}] while it already had a running job!")
         }
         operation.job = coroutineScope.launch {
-            runTasks(nodeCoreService, bitcoinService, operation)
+            taskService.runTasks(operation)
         }
     }
 

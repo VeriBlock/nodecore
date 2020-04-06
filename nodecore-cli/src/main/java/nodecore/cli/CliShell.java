@@ -261,7 +261,7 @@ public class CliShell extends Shell {
 
     //TODO Implement it with adding available mods for commands.
     public Set<String> getCommandsSpv() {
-        return Sets.newHashSet("getbalance", "getstateinfo", "send", "lockWallet", "unlockWallet", "decryptWallet", "encryptWallet", "importwallet",
+        return Sets.newHashSet("getbalance", "getstateinfo", "send", "lockwallet", "unlockwallet", "decryptwallet", "encryptwallet", "importwallet",
             "importprivatekey", "backupwallet", "getnewaddress", "disconnect", "exit"
         );
     }

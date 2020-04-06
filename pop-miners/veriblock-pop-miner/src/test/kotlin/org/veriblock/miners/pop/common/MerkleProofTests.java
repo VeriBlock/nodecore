@@ -12,6 +12,9 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.params.TestNet3Params;
 import org.junit.Assert;
 import org.junit.Test;
+import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath;
+import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree;
+import org.veriblock.miners.pop.model.merkle.MerkleProof;
 
 import java.util.Arrays;
 import java.util.LinkedList;

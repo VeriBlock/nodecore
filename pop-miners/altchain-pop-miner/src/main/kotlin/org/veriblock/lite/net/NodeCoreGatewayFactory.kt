@@ -21,19 +21,17 @@ import veriblock.net.BootstrapPeerDiscovery
 
 private val logger = createLogger {}
 
-class NodeCoreGatewayFactory {
+object NodeCoreGatewayFactory {
 
-    companion object Factory {
+    fun create(networkParameters: NetworkParameters): GatewayStrategy {
 
-        fun create(networkParameters: NetworkParameters): GatewayStrategy {
-
-            if (!networkParameters.isSpv) {
-                val rpcConfiguration = configure(networkParameters)
-                val channelBuilder = ChannelBuilder(rpcConfiguration)
-                val channel = channelBuilder.buildManagedChannel()
-                val blockingStub = AdminGrpc.newBlockingStub(channelBuilder.attachPasswordInterceptor(channel))
-                    .withMaxInboundMessageSize(20 * 1024 * 1024)
-                    .withMaxOutboundMessageSize(20 * 1024 * 1024)
+        if (!networkParameters.isSpv) {
+            val rpcConfiguration = configure(networkParameters)
+            val channelBuilder = ChannelBuilder(rpcConfiguration)
+            val channel = channelBuilder.buildManagedChannel()
+            val blockingStub = AdminGrpc.newBlockingStub(channelBuilder.attachPasswordInterceptor(channel))
+                .withMaxInboundMessageSize(20 * 1024 * 1024)
+                .withMaxOutboundMessageSize(20 * 1024 * 1024)
 
                 return GatewayStrategyGrpcImpl(blockingStub, channel)
             } else {
@@ -72,5 +70,3 @@ class NodeCoreGatewayFactory {
         }
 
     }
-
-}

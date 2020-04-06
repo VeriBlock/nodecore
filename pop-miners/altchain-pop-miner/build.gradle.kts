@@ -5,9 +5,6 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-import com.google.protobuf.gradle.proto
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 import groovy.util.Eval
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
@@ -17,7 +14,7 @@ plugins {
     kotlin("jvm")
     idea
     application
-    id("com.google.protobuf")
+    kotlin("plugin.serialization") version kotlinVersion
 }
 
 configurations.all {
@@ -61,34 +58,23 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
+
     implementation("commons-cli:commons-cli:1.4")
     implementation("com.google.code.gson:gson:2.8.2")
     implementation("com.google.guava:guava:26.0-jre")
     implementation("com.diogonunes:JCDP:2.0.3.1")
-    implementation("com.j256.ormlite:ormlite-core:5.1")
-    implementation("com.j256.ormlite:ormlite-jdbc:5.1")
+
+    // Database
+    implementation("org.jetbrains.exposed:exposed:0.17.7")
+    implementation("com.zaxxer:HikariCP:3.3.1")
     implementation("org.xerial:sqlite-jdbc:3.23.1")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
-}
-
-protobuf {
-    generatedFilesBaseDir = "$projectDir/src/generated"
-
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.2.0"
-    }
-}
-
-sourceSets {
-    main {
-        proto {}
-        java {
-            srcDir("$projectDir/src/generated/main/java")
-        }
-    }
 }
 
 tasks.test {
@@ -106,8 +92,8 @@ tasks.named<JavaExec>("run") {
     }
 }
 
-application.applicationName = "veriblock-alt-pop"
-application.mainClassName = "org.veriblock.miners.pop.ProgramKt"
+application.applicationName = "altchain-pop-miner"
+application.mainClassName = "org.veriblock.miners.pop.AltchainPoPMiner"
 
 setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
 

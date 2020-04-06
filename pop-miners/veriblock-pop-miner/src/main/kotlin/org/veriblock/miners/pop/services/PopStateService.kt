@@ -6,27 +6,27 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.services
 
-import com.google.protobuf.ByteString
+import kotlinx.serialization.protobuf.ProtoBuf
 import org.bitcoinj.core.Transaction
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.OperationState
-import org.veriblock.miners.pop.core.OperationStatus
+import org.veriblock.miners.pop.core.VpmContext
+import org.veriblock.miners.pop.core.VpmMerklePath
 import org.veriblock.miners.pop.core.VpmOperation
+import org.veriblock.miners.pop.core.VpmSpBlock
+import org.veriblock.miners.pop.core.VpmSpTransaction
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.model.PopMiningInstruction
-import org.veriblock.miners.pop.storage.OperationStateData
-import org.veriblock.miners.pop.storage.PopRepository
-import org.veriblock.miners.pop.storage.ProofOfProof
-import java.io.ByteArrayOutputStream
-import java.io.IOException
+import org.veriblock.miners.pop.proto.OperationProto
+import org.veriblock.miners.pop.storage.OperationRepository
+import org.veriblock.miners.pop.storage.OperationStateRecord
 import java.util.ArrayList
 
 private val logger = createLogger {}
 
 class PopStateService(
-    private val repository: PopRepository,
+    private val repository: OperationRepository,
     private val bitcoinService: BitcoinService
 ) {
     init {
@@ -34,21 +34,16 @@ class PopStateService(
     }
 
     fun getActiveOperations(): List<VpmOperation> {
-        return repository.getActiveOperations()?.asSequence()?.mapNotNull {
-            try {
-                reconstitute(ProofOfProof.OperationState.parseFrom(it.state))
-            } catch (e: Exception) {
-                logger.error(e.message, e)
-                null
-            }
-        }?.toList() ?: emptyList()
+        return repository.getActiveOperations().map {
+            reconstitute(ProtoBuf.load(OperationProto.Operation.serializer(), it.state))
+        }
     }
 
     fun getOperation(id: String): VpmOperation? {
         val stateData = repository.getOperation(id)
             ?: return null
         try {
-            return reconstitute(ProofOfProof.OperationState.parseFrom(stateData.state))
+            return reconstitute(ProtoBuf.load(OperationProto.Operation.serializer(), stateData.state))
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
@@ -57,132 +52,96 @@ class PopStateService(
 
     private fun onMiningOperationStateChanged(operation: VpmOperation) {
         try {
-            val operationState = operation.state
             val serializedState = serialize(operation)
-            val stateData = OperationStateData()
-            stateData.id = operation.id
-            stateData.status = operation.status.name
-            stateData.action = operationState.type.name
-            stateData.message = operationState.toString()
-            stateData.state = serializedState
-            stateData.isDone = operation.status == OperationStatus.COMPLETED || operation.status == OperationStatus.FAILED
-            stateData.lastUpdated = Utility.getCurrentTimeSeconds()
-            if (operationState is OperationState.Instruction) {
-                stateData.endorsedBlockHash = operationState.miningInstruction.endorsedBlockHash
-                stateData.endorsedBlockNumber = operationState.miningInstruction.endorsedBlockHeight
-            }
+            val stateData = OperationStateRecord(
+                id = operation.id,
+                status = operation.state.id,
+                state = serializedState
+            )
             repository.saveOperationState(stateData)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }
-        return
     }
 
-    private fun serialize(operation: VpmOperation): ByteArray? {
-        val protoState = ProofOfProof.OperationState.newBuilder().apply {
-            id = operation.id
-            status = operation.status.name
-            action = operation.state.toString()
-            endorsedBlockNumber = operation.endorsedBlockHeight ?: -1
-            val state = operation.state.let {
-                if (it !is OperationState.Failed) it else it.previous
-            }
-            if (state is OperationState.Instruction) {
-                miningInstructions = ProofOfProof.MiningInstruction.newBuilder().apply {
-                    publicationData = ByteString.copyFrom(state.miningInstruction.publicationData)
-                    endorsedBlockHeader = ByteString.copyFrom(state.miningInstruction.endorsedBlockHeader)
-                    lastBitcoinBlock = ByteString.copyFrom(state.miningInstruction.lastBitcoinBlock)
-                    minerAddress = ByteString.copyFrom(state.miningInstruction.minerAddressBytes)
-                    addAllBitcoinContextAtEndorsed(state.miningInstruction.endorsedBlockContextHeaders.map { ByteString.copyFrom(it) })
-                }.build()
-            }
-            if (state is OperationState.EndorsementTransaction) {
-                transaction = ByteString.copyFrom(state.endorsementTransactionBytes)
-                bitcoinTxId = state.endorsementTransaction.txId.toString()
-            }
-            if (state is OperationState.BlockOfProof) {
-                blockOfProof = ByteString.copyFrom(state.blockOfProof.bitcoinSerialize())
-            }
-            if (state is OperationState.Proven) {
-                merklePath = state.merklePath
-            }
-            if (state is OperationState.Context) {
-                addAllBitcoinContext(state.bitcoinContextBlocks.map { ByteString.copyFrom(it.bitcoinSerialize()) })
-            }
-            if (state is OperationState.SubmittedPopData) {
-                popTxId = state.proofOfProofId
-            }
-            if (state is OperationState.Completed) {
-                payoutBlockHash = state.payoutBlockHash
-                payoutAmount = state.payoutAmount
-            }
-        }.build()
-        return serialize(protoState)
+    private fun serialize(operation: VpmOperation): ByteArray {
+        val protoData = OperationProto.Operation(
+            id = operation.id,
+            state = operation.state.name,
+            action = operation.state.description,
+            endorsedBlockNumber = operation.endorsedBlockHeight ?: -1,
+            miningInstruction = operation.miningInstruction?.let {
+                OperationProto.MiningInstruction(
+                    it.publicationData,
+                    it.endorsedBlockHeader,
+                    it.lastBitcoinBlock,
+                    it.minerAddressBytes,
+                    it.endorsedBlockContextHeaders
+                )
+            } ?: OperationProto.MiningInstruction(),
+            transaction = operation.endorsementTransaction?.transactionBytes ?: ByteArray(0),
+            bitcoinTxId = operation.endorsementTransaction?.txId ?: "",
+            blockOfProof = operation.blockOfProof?.block?.bitcoinSerialize() ?: ByteArray(0),
+            merklePath = operation.merklePath?.compactFormat ?: "",
+            bitcoinContext = operation.context?.blocks?.map { it.bitcoinSerialize() } ?: emptyList(),
+            popTxId = operation.proofOfProofId ?: "",
+            payoutBlockHash = operation.payoutBlockHash ?: "",
+            payoutAmount = operation.payoutAmount ?: ""
+        )
+        return ProtoBuf.dump(OperationProto.Operation.serializer(), protoData)
     }
 
-    private fun serialize(state: ProofOfProof.OperationState): ByteArray? {
-        try {
-            ByteArrayOutputStream().use { stream ->
-                state.writeTo(stream)
-                return stream.toByteArray()
-            }
-        } catch (ignored: IOException) {
-        }
-        return null
-    }
-
-    private fun reconstitute(state: ProofOfProof.OperationState): VpmOperation {
-        logger.debug("Reconstituting operation {}", state.id)
-        val status = OperationStatus.valueOf(state.status)
+    private fun reconstitute(operation: OperationProto.Operation): VpmOperation {
+        logger.debug("Reconstituting operation {}", operation.id)
+        val state = OperationState.valueOf(operation.state)
         val miningOperation = VpmOperation(
-            id = state.id,
-            status = status,
+            id = operation.id,
             reconstituting = true
         )
-        if (state.endorsedBlockNumber >= 0) {
-            miningOperation.endorsedBlockHeight = state.endorsedBlockNumber
+        if (operation.endorsedBlockNumber >= 0) {
+            miningOperation.endorsedBlockHeight = operation.endorsedBlockNumber
         }
-        if (state.miningInstructions != null && !state.miningInstructions.publicationData.isEmpty) {
+        if (operation.miningInstruction.publicationData.isNotEmpty()) {
             val miningInstruction = PopMiningInstruction(
-                publicationData = state.miningInstructions.publicationData.toByteArray(),
-                endorsedBlockHeader = state.miningInstructions.endorsedBlockHeader.toByteArray(),
-                lastBitcoinBlock = state.miningInstructions.lastBitcoinBlock.toByteArray(),
-                minerAddressBytes = state.miningInstructions.minerAddress.toByteArray(),
-                endorsedBlockContextHeaders = state.miningInstructions.bitcoinContextAtEndorsedList.map { it.toByteArray() }
+                publicationData = operation.miningInstruction.publicationData,
+                endorsedBlockHeader = operation.miningInstruction.endorsedBlockHeader,
+                lastBitcoinBlock = operation.miningInstruction.lastBitcoinBlock,
+                minerAddressBytes = operation.miningInstruction.minerAddress,
+                endorsedBlockContextHeaders = operation.miningInstruction.bitcoinContextAtEndorsed
             )
             miningOperation.setMiningInstruction(miningInstruction)
         }
-        if (state.transaction != null && state.transaction.size() > 0) {
+        if (operation.transaction.isNotEmpty()) {
             logger.debug(miningOperation) { "Rebuilding transaction" }
-            val transaction: Transaction = bitcoinService.makeTransaction(state.transaction.toByteArray())
-            miningOperation.setTransaction(transaction, state.transaction.toByteArray())
+            val transaction: Transaction = bitcoinService.makeTransaction(operation.transaction)
+            miningOperation.setTransaction(VpmSpTransaction(transaction, operation.transaction))
             logger.debug(miningOperation) { "Rebuilt transaction ${transaction.txId}" }
         }
-        if (state.blockOfProof != null && state.blockOfProof.size() > 0) {
+        if (operation.blockOfProof.isNotEmpty()) {
             miningOperation.setConfirmed()
             logger.debug(miningOperation) { "Rebuilding block of proof" }
-            val block = bitcoinService.makeBlock(state.blockOfProof.toByteArray())
-            miningOperation.setBlockOfProof(block)
+            val block = bitcoinService.makeBlock(operation.blockOfProof)
+            miningOperation.setBlockOfProof(VpmSpBlock(block))
             logger.debug(miningOperation) { "Reattached block of proof ${block.hashAsString}" }
         }
-        if (!state.merklePath.isNullOrEmpty()) {
-            miningOperation.setMerklePath(state.merklePath)
+        if (operation.merklePath.isNotEmpty()) {
+            miningOperation.setMerklePath(VpmMerklePath(operation.merklePath))
         }
-        if (state.bitcoinContextList != null && state.bitcoinContextCount > 0) {
+        if (operation.bitcoinContext.isNotEmpty()) {
             logger.debug(miningOperation) { "Rebuilding context blocks" }
-            val contextBytes = state.bitcoinContextList.map { it.toByteArray() }
+            val contextBytes = operation.bitcoinContext
             val blocks = bitcoinService.makeBlocks(contextBytes)
-            miningOperation.setContext(ArrayList(blocks))
-        } else if (!state.popTxId.isNullOrEmpty()) {
-            miningOperation.setContext(emptyList())
+            miningOperation.setContext(VpmContext(ArrayList(blocks)))
+        } else if (operation.popTxId.isNotEmpty()) {
+            miningOperation.setContext(VpmContext())
         }
-        if (!state.popTxId.isNullOrEmpty()) {
-            miningOperation.setProofOfProofId(state.popTxId)
+        if (operation.popTxId.isNotEmpty()) {
+            miningOperation.setProofOfProofId(operation.popTxId)
         }
-        if (!state.payoutBlockHash.isNullOrEmpty()) {
-            miningOperation.complete(state.payoutBlockHash, state.payoutAmount)
+        if (operation.payoutBlockHash.isNotEmpty()) {
+            miningOperation.complete(operation.payoutBlockHash, operation.payoutAmount)
         }
-        if (status == OperationStatus.FAILED) {
+        if (state == OperationState.FAILED) {
             miningOperation.fail("Loaded as failed")
         }
         miningOperation.reconstituting = false

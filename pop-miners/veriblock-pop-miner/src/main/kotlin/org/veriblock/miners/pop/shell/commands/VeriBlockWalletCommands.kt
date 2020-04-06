@@ -11,7 +11,7 @@ package org.veriblock.miners.pop.shell.commands
 import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import org.veriblock.miners.pop.model.PopEndorsementInfo
-import org.veriblock.miners.pop.services.NodeCoreService
+import org.veriblock.miners.pop.services.NodeCoreGateway
 import org.veriblock.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -21,7 +21,7 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.veriBlockWalletCommands(
-    nodeCoreService: NodeCoreService
+    nodeCoreGateway: NodeCoreGateway
 ) {
     val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
     command(
@@ -30,7 +30,7 @@ fun CommandFactory.veriBlockWalletCommands(
         description = "Locks an encrypted VeriBlock wallet to disable creation of PoP transactions"
     ) {
         try {
-            nodeCoreService.lockWallet().toShellResult()
+            nodeCoreGateway.lockWallet().toShellResult()
         } catch (e: StatusRuntimeException) {
             failure {
                 addMessage("V500", "NodeCore Communication Error", e.status.code.toString(), true)
@@ -52,7 +52,7 @@ fun CommandFactory.veriBlockWalletCommands(
     ) {
         try {
             val passphrase: String = getParameter("passphrase")
-            nodeCoreService.unlockWallet(passphrase).toShellResult()
+            nodeCoreGateway.unlockWallet(passphrase).toShellResult()
         } catch (e: StatusRuntimeException) {
             failure {
                 addMessage("V500", "NodeCore Communication Error", e.status.code.toString(), true)
@@ -70,7 +70,7 @@ fun CommandFactory.veriBlockWalletCommands(
         description = "Returns information regarding PoP endorsements for a given address"
     ) {
         try {
-            val endorsements = nodeCoreService.getPopEndorsementInfo()
+            val endorsements = nodeCoreGateway.getPopEndorsementInfo()
             printInfo("${prettyPrintGson.toJson(endorsements)}\n\n")
             success()
         } catch (e: StatusRuntimeException) {
@@ -90,7 +90,7 @@ fun CommandFactory.veriBlockWalletCommands(
         description = "Lists recent and upcoming rewards"
     ) {
         try {
-            val endorsements: List<PopEndorsementInfo> = nodeCoreService.getPopEndorsementInfo().sortedBy {
+            val endorsements: List<PopEndorsementInfo> = nodeCoreGateway.getPopEndorsementInfo().sortedBy {
                 it.endorsedBlockNumber
             }
             for (e in endorsements) {

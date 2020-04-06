@@ -9,7 +9,7 @@
 package org.veriblock.miners.pop.shell.commands
 
 import org.veriblock.lite.core.Context
-import org.veriblock.miners.pop.Miner
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.command
@@ -17,7 +17,8 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.walletCommands(
-    context: Context, miner: Miner
+    context: Context,
+    miner: MinerService
 ) {
     command(
         name = "Get Loaded Address",

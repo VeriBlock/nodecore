@@ -17,7 +17,6 @@ import io.ktor.application.call
 import io.ktor.locations.Location
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import org.veriblock.miners.pop.Miner
 import org.veriblock.miners.pop.api.dto.MineRequest
 import org.veriblock.miners.pop.api.dto.MinerInfoResponse
 import org.veriblock.miners.pop.api.dto.OperationDetailResponse
@@ -25,22 +24,20 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
-import org.veriblock.miners.pop.core.OperationStatus
+import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.service.MinerService
 
 @Location("/api/miner")
 class miner
-
 @Location("/api/miner/mine")
 class mineAction
-
 @Location("/api/miner/operations")
 class minerOperations(val status: String?, val limit: Int?, val offset: Int?)
-
 @Location("/api/miner/operations/{id}")
 class minerOperation(val id: String)
 
 class MiningController(
-    private val miner: Miner
+    private val miner: MinerService
 ) : ApiController {
 
     override fun Route.registerApi() {
@@ -89,13 +86,13 @@ class MiningController(
             val allOperations = miner.getOperations()
             // Get the given status filter
             val filteredOperations = if (location.status != null) {
-                val operationStatus = try {
-                    OperationStatus.valueOf(location.status)
+                val operationState = try {
+                    OperationState.valueOf(location.status)
                 } catch (e: Exception) {
                     throw BadRequestException("Invalid operation status: ${location.status}")
                 }
                 allOperations.filter {
-                    it.status === operationStatus
+                    it.state === operationState
                 }
             } else {
                 allOperations

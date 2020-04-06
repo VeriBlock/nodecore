@@ -19,7 +19,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.alt.MiningInstruction
+import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -30,7 +30,6 @@ import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.lang.Exception
 import java.util.TreeMap
 import kotlin.random.Random
 
@@ -114,7 +113,7 @@ class TestChain(
         return 100
     }
 
-    override fun getMiningInstruction(blockHeight: Int?): MiningInstruction {
+    override fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
         val lastVbkHash = getLastBlockHash().asHexBytes()
         val lastBtcHash = getLastBitcoinBlockHash().asHexBytes()
@@ -136,7 +135,7 @@ class TestChain(
             config.payoutAddress.asHexBytes(),
             context.asHexBytes()
         )
-        return MiningInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
+        return ApmInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
     override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {

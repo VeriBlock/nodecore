@@ -33,7 +33,7 @@ data class OperationSummaryResponse(
 fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
     id,
     chainId,
-    blockHeight,
+    endorsedBlockHeight,
     state.toString()
 )
 
@@ -43,14 +43,14 @@ data class OperationDetailResponse(
     val status: String,
     val blockHeight: Int?,
     val state: String,
-    val stateDetail: List<String>
+    val stateDetail: Any // Not defined as a map because doing so breaks the Swagger library
 )
 
 fun ApmOperation.toDetailedResponse() = OperationDetailResponse(
     id,
     chainId,
-    status.name,
-    blockHeight,
-    state.toString(),
-    state.getDetailedInfo()
+    state.name,
+    endorsedBlockHeight,
+    state.description,
+    getDetailedInfo()
 )
