@@ -21,9 +21,7 @@ import veriblock.net.BootstrapPeerDiscovery
 
 private val logger = createLogger {}
 
-class NodeCoreGatewayFactory {
-
-    companion object Factory {
+object NodeCoreGatewayFactory {
 
         fun create(networkParameters: NetworkParameters): GatewayStrategy {
 
