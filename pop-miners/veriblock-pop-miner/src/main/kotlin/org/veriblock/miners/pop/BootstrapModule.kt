@@ -16,6 +16,7 @@ import org.veriblock.miners.pop.services.ChannelBuilder
 import org.veriblock.miners.pop.services.MinerService
 import org.veriblock.miners.pop.services.NodeCoreService
 import org.veriblock.miners.pop.services.PopStateService
+import org.veriblock.miners.pop.services.NodeCoreGateway
 import org.veriblock.miners.pop.shell.PopShell
 import org.veriblock.miners.pop.shell.commands.bitcoinWalletCommands
 import org.veriblock.miners.pop.shell.commands.configCommands
