@@ -11,6 +11,7 @@ package org.veriblock.core.utilities
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
+import java.io.File
 import java.lang.ClassLoader.getSystemResourceAsStream
 import java.nio.file.Paths
 
@@ -105,7 +106,12 @@ private fun computeConfigPath(configFilePath: String, bootOptions: BootOptions?)
     return if (bootOptions != null && bootOptions.config.hasPath(CONFIG_FILE_OPTION_KEY)) {
         bootOptions.config.getString(CONFIG_FILE_OPTION_KEY)
     } else {
-        System.getenv(CONFIG_FILE_ENV_VAR) ?: configFilePath
+        val baseDir = if (bootOptions != null && bootOptions.config.hasPath(DATA_DIR_OPTION_KEY)) {
+            bootOptions.config.getString(DATA_DIR_OPTION_KEY) + File.separator
+        } else {
+            ""
+        }
+        baseDir + (System.getenv(CONFIG_FILE_ENV_VAR) ?: configFilePath)
     }
 }
 
