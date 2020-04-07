@@ -21,8 +21,8 @@ abstract class MiningOperation<
     val id: String,
     var endorsedBlockHeight: Int?,
     changeHistory: List<StateChangeEvent>,
-    var reconstituting: Boolean = false,
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime,
+    var reconstituting: Boolean
 ) {
     var state: OperationState = OperationState.INITIAL
         private set

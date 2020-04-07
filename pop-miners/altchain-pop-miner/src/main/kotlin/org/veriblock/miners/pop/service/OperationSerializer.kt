@@ -30,6 +30,7 @@ import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPoPTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.time.LocalDateTime
 import java.util.ArrayList
 
 class OperationSerializer(
@@ -65,7 +66,7 @@ class OperationSerializer(
         return protoData
     }
 
-    fun deserialize(serialized: OperationProto.Operation, txFactory: (String) -> WalletTransaction): ApmOperation {
+    fun deserialize(serialized: OperationProto.Operation, createdAt: LocalDateTime, txFactory: (String) -> WalletTransaction): ApmOperation {
         val chain = pluginService[serialized.chainId]
             ?: error("Unable to load plugin ${serialized.chainId} for operation ${serialized.operationId}")
         val chainMonitor = securityInheritingService.getMonitor(serialized.chainId)
@@ -78,7 +79,8 @@ class OperationSerializer(
             changeHistory = serialized.changeHistory.map {
                 deserialize(it)
             },
-            endorsedBlockHeight = serialized.blockHeight
+            endorsedBlockHeight = serialized.blockHeight,
+            createdAt = createdAt
         ).apply {
             if (serialized.publicationData.header.isNotEmpty()) {
                 setMiningInstruction(

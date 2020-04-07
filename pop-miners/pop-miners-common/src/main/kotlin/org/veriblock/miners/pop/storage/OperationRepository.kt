@@ -3,9 +3,9 @@ package org.veriblock.miners.pop.storage
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import javax.sql.rowset.serial.SerialBlob
 
 class OperationRepository(
     private val database: Database
@@ -31,7 +31,7 @@ class OperationRepository(
                     OperationStateTable.id eq record.id
                 }) {
                     it[status] = record.status
-                    it[state] = SerialBlob(record.state)
+                    it[state] = ExposedBlob(record.state)
                 }
             }
         } else {
@@ -39,7 +39,7 @@ class OperationRepository(
                 OperationStateTable.insert {
                     it[id] = record.id
                     it[status] = record.status
-                    it[state] = SerialBlob(record.state)
+                    it[state] = ExposedBlob(record.state)
                 }
             }
         }

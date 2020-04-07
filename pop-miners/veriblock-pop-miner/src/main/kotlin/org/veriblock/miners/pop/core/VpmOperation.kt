@@ -15,14 +15,16 @@ import kotlinx.coroutines.launch
 import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.model.PopMiningInstruction
+import java.time.LocalDateTime
 
 class VpmOperation(
     id: String,
     changeHistory: List<StateChangeEvent> = emptyList(),
     endorsedBlockHeight: Int? = null,
+    createdAt: LocalDateTime = LocalDateTime.now(),
     reconstituting: Boolean = false
 ) : MiningOperation<PopMiningInstruction, VpmSpTransaction, VpmSpBlock, VpmMerklePath, VpmContext>(
-    id, endorsedBlockHeight, changeHistory, reconstituting
+    id, endorsedBlockHeight, changeHistory, createdAt, reconstituting
 ) {
     val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 

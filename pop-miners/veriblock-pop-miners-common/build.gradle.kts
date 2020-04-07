@@ -16,7 +16,6 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.jfrog.artifactory")
-    kotlin("plugin.serialization") version kotlinVersion
 }
 
 configurations.all {
@@ -54,10 +53,6 @@ dependencies {
     implementation("com.j256.ormlite:ormlite-core:5.1")
     implementation("com.j256.ormlite:ormlite-jdbc:5.1")
     implementation("org.xerial:sqlite-jdbc:3.23.1")
-
-    // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
 
     // Scheduling
     implementation("org.quartz-scheduler:quartz:2.2.1")

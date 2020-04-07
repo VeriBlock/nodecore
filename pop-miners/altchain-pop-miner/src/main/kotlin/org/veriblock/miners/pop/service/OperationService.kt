@@ -23,7 +23,7 @@ class OperationService(
         val activeOperations = repository.getActiveOperations()
         return activeOperations.map {
             val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)
-            operationSerializer.deserialize(protoData, txFactory)
+            operationSerializer.deserialize(protoData, it.createdAt, txFactory)
         }
     }
 
@@ -33,7 +33,8 @@ class OperationService(
             OperationStateRecord(
                 operation.id,
                 operation.state.id,
-                ProtoBuf.dump(OperationProto.Operation.serializer(), serialized)
+                ProtoBuf.dump(OperationProto.Operation.serializer(), serialized),
+                operation.createdAt
             )
         )
     }

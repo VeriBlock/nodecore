@@ -18,7 +18,7 @@ import org.veriblock.miners.pop.core.VpmSpBlock
 import org.veriblock.miners.pop.core.VpmSpTransaction
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.model.PopMiningInstruction
-import org.veriblock.miners.pop.proto.OperationProto
+import org.veriblock.miners.pop.model.proto.OperationProto
 import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateRecord
 import java.util.ArrayList
@@ -56,7 +56,8 @@ class PopStateService(
             val stateData = OperationStateRecord(
                 id = operation.id,
                 status = operation.state.id,
-                state = serializedState
+                state = serializedState,
+                createdAt = operation.createdAt
             )
             repository.saveOperationState(stateData)
         } catch (e: Exception) {

@@ -20,6 +20,7 @@ import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPublication
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = createLogger {}
@@ -31,9 +32,11 @@ class ApmOperation(
     val chainMonitor: SecurityInheritingMonitor,
     changeHistory: List<StateChangeEvent> = emptyList(),
     endorsedBlockHeight: Int? = null,
+    createdAt: LocalDateTime = LocalDateTime.now(),
     reconstituting: Boolean = false
-) : MiningOperation<ApmInstruction, ApmSpTransaction, ApmSpBlock, ApmMerklePath, ApmContext>(id, endorsedBlockHeight, changeHistory, reconstituting) {
-
+) : MiningOperation<ApmInstruction, ApmSpTransaction, ApmSpBlock, ApmMerklePath, ApmContext>(
+    id, endorsedBlockHeight, changeHistory, createdAt, reconstituting
+) {
     val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
 
     override fun onStateChanged() {
