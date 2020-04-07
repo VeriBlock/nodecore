@@ -40,6 +40,7 @@ class OperationRepository(
                     it[id] = record.id
                     it[status] = record.status
                     it[state] = ExposedBlob(record.state)
+                    it[createdAt] = record.createdAt
                 }
             }
         }
