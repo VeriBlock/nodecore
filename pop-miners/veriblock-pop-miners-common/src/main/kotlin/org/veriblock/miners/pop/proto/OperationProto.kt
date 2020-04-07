@@ -31,4 +31,3 @@ object OperationProto {
         @ProtoId(13) val payoutAmount: String
     )
 }
-
