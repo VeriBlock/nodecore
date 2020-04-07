@@ -125,7 +125,6 @@ public class SpvContext {
 
             adminService = new AdminServiceFacade(adminApiService);
             adminServerInterceptor = new AdminServerInterceptor();
-            peerTable.start();
 
             if (runAdminServer) {
                 server = createAdminServer();

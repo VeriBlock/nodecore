@@ -360,6 +360,7 @@ public class CliShell extends Shell {
         this.setModeType(ModeType.SPV);
 
         spvContext.init(net, peerDiscovery, true);
+        spvContext.getPeerTable().start();
 
         while (true) {
             DownloadStatusResponse status = spvContext.getPeerTable().getDownloadStatus();
