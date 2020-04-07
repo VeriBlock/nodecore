@@ -10,7 +10,6 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.toHex
 import java.util.ArrayList
-import java.util.Arrays
 
 /**
  * The BitcoinMerkleTree class provides a variety of ways to interact with Bitcoin transaction merkle trees.
@@ -29,9 +28,37 @@ import java.util.Arrays
  * local cache to speed up future queries. The first time a merkle path is requested, if the tree has not already been
  * computed, the tree will be computed and cached for subsequent access.
  */
-class BitcoinMerkleTree {
+class BitcoinMerkleTree(
+    evaluateEagerly: Boolean,
+    txIds: List<String>
+) {
     private val layers = ArrayList<MerkleLayer>()
     private var builtTree = false
+
+    /**
+     * Construct a BitcoinMerkleTree given the provided List<String> of ordered txIDs.
+     *
+     * @param evaluateEagerly Whether or not to compute the entire tree now, or when next needed
+     * @param txIDs           All of the TxIDs included in the transaction merkle tree from Bitcoin
+     */
+    init {
+        val completeTxIds = if (txIds.size % 2 == 1) {
+            txIds + txIds[txIds.size - 1]
+        } else {
+            txIds
+        }
+
+        // All of the data, in internal-endian-order, of the tree
+        val floorData = Array(completeTxIds.size) {
+            // Convert all of the TxIDs to byte[]s, flip them for the correct endianness
+            completeTxIds[it].asHexBytes().flip()
+        }
+        // Create, at a minimum, the bottom floor
+        layers.add(MerkleLayer(floorData))
+        if (evaluateEagerly) {
+            buildTree()
+        }
+    }
 
     private fun buildTree() {
         // When the top layer has a single element, the tree is finished
@@ -43,37 +70,6 @@ class BitcoinMerkleTree {
         // Tree is built, set this to true
         builtTree = true
     }
-
-    /**
-     * Construct a BitcoinMerkleTree given the provided List<String> of ordered txIDs.
-     *
-     * @param evaluateEagerly Whether or not to compute the entire tree now, or when next needed
-     * @param txIDs           All of the TxIDs included in the transaction merkle tree from Bitcoin
-     */
-    constructor(evaluateEagerly: Boolean, txIDs: MutableList<String>) {
-        if (txIDs.size % 2 == 1) {
-            txIDs.add(txIDs[txIDs.size - 1])
-        }
-        // All of the data, in internal-endian-order, of the tree
-        val floorData = Array(txIDs.size) {
-            // Convert all of the TxIDs to byte[]s, flip them for the correct endianness
-            txIDs[it].asHexBytes().flip()
-        }
-        // Create, at a minimum, the bottom floor
-        layers.add(MerkleLayer(floorData))
-        if (evaluateEagerly) {
-            buildTree()
-        }
-    }
-
-    /**
-     * Construct a BitcoinMerkleTree given the provided String[] of ordered txIDs.
-     *
-     * @param evaluateEagerly Whether or not to compute the entire tree now, or when next needed
-     * @param txIDs           All of the TxIDs included in the transaction merkle tree from Bitcoin
-     */
-    constructor(evaluateEagerly: Boolean, txIDs: Array<String>)
-        : this(evaluateEagerly, Arrays.asList<String>(*txIDs))
 
     /**
      * Returns the merkle root of this tree, in network-endian-order (as would be seen in Bitcoin-RPC responses).

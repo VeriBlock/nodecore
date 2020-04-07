@@ -65,6 +65,7 @@ dependencies {
 
     implementation("org.jetbrains.exposed:exposed-core:0.23.1")
     implementation("org.jetbrains.exposed:exposed-java-time:0.23.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")

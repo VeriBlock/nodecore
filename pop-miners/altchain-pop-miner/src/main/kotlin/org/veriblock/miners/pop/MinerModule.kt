@@ -82,7 +82,7 @@ val minerModule = module {
     // Storage
     single<DataSource> {
         val context: Context = get()
-        val sqliteDbFile = context.directory.resolve("apm.dat")
+        val sqliteDbFile = context.directory.resolve("altchain-pop-miner.db")
         val url = "jdbc:sqlite:$sqliteDbFile"
         val hikariConfig = HikariConfig().apply {
             driverClassName = "org.sqlite.JDBC"
