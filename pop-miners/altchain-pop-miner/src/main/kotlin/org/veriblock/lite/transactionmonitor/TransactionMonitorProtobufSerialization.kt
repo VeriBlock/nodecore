@@ -69,7 +69,7 @@ private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
 
 private fun TxmonProto.TransactionMonitor.toModel(context: Context): TransactionMonitor {
     check(context.networkParameters.network == network) {
-        "Network ${context.networkParameters.network} attempting to read VBK wallet for $network"
+        "Network ${context.networkParameters.network} attempting to read ${context.vbkTokenName} wallet for $network"
     }
     return TransactionMonitor(
             context,

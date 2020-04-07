@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
@@ -281,8 +282,6 @@ class ApmTaskService(
         targetState = OperationState.SUBMITTED_POP_DATA,
         timeout = 240.hr
     ) {
-        val miningInstruction = operation.miningInstruction
-            ?: failTask("SubmitProofOfProofTask called without mining instruction!")
         val endorsementTransaction = operation.endorsementTransaction
             ?: failTask("SubmitProofOfProofTask called without endorsement transaction!")
         val blockOfProof = operation.blockOfProof?.block
@@ -302,12 +301,12 @@ class ApmTaskService(
 
             val siTxId = operation.chain.submit(proofOfProof, veriBlockPublications)
 
-            val chainSymbol = operation.chain.key.toUpperCase()
-            logger.info(operation) { "VTB submitted to $chainSymbol! $chainSymbol PoP TxId: $siTxId" }
+            val chainName = operation.chain.name
+            logger.info(operation) { "VTB submitted to $chainName! $chainName PoP TxId: $siTxId" }
 
             operation.setProofOfProofId(siTxId)
         } catch (e: Exception) {
-            logger.error("Error submitting proof of proof", e)
+            logger.debugWarn(e) { "Error submitting proof of proof" }
             failTask("Error submitting proof of proof")
         }
     }

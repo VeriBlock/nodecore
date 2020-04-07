@@ -82,7 +82,7 @@ class NodeCoreLiteKit(
             }
         }
 
-        logger.info { "Send funds to the VBK wallet ${addressManager.defaultAddress.hash}" }
+        logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
         network.startAsync().addListener(Runnable {
