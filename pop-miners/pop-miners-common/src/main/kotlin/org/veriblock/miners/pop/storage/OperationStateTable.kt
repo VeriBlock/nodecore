@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.`java-time`.datetime
 import java.time.LocalDateTime
 
 object OperationStateTable : Table("operation_state") {
-    val id = varchar("id", 20).primaryKey()
+    val id = varchar("id", 32).primaryKey()
     val status = integer("status")
     val state = blob("state")
     val createdAt = datetime("created_at")
