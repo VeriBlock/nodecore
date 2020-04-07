@@ -24,6 +24,7 @@ import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Coin;
+import org.veriblock.sdk.models.Sha256Hash;
 import veriblock.SpvContext;
 import veriblock.model.AddressCoinsIndex;
 import veriblock.model.LedgerContext;
@@ -657,6 +658,22 @@ public class AdminApiServiceImpl implements AdminApiService {
 
         replyBuilder.setHash(ByteString.copyFrom(block.getHash().getBytes()));
         return replyBuilder.build();
+    }
+
+    @Override
+    public VeriBlockMessages.GetTransactionsReply getTransactions(VeriBlockMessages.GetTransactionsRequest request) {
+        List<Sha256Hash> ids = request.getIdsList()
+            .stream()
+            .map(id -> Sha256Hash.wrap(id.toByteArray()))
+            .collect(Collectors.toList());
+
+        List<VeriBlockMessages.TransactionInfo> replyList = ids.stream()
+            .map(pendingTransactionContainer::getTransactionInfo)
+            .collect(Collectors.toList());
+
+        return VeriBlockMessages.GetTransactionsReply.newBuilder()
+            .addAllTransactions(replyList)
+            .build();
     }
 
     private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {

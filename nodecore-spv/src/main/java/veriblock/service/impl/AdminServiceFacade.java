@@ -135,4 +135,13 @@ public class AdminServiceFacade extends AdminGrpc.AdminImplBase {
         responseObserver.onNext(adminApiService.getLastBitcoinBlock(request));
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void getTransactions(
+        VeriBlockMessages.GetTransactionsRequest request,
+        StreamObserver<VeriBlockMessages.GetTransactionsReply> responseObserver
+    ) {
+        responseObserver.onNext(adminApiService.getTransactions(request));
+        responseObserver.onCompleted();
+    }
 }
