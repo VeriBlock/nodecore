@@ -128,7 +128,7 @@ class NodeCoreGatewayImpl(
             }
         } else {
             for (error in reply.resultsList) {
-                logger.error { "NodeCore internal error: ${error.message} | ${error.details}" }
+                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
             }
             error("Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash")
         }
@@ -152,7 +152,7 @@ class NodeCoreGatewayImpl(
             return publications
         } else {
             for (error in reply.resultsList) {
-                logger.error { "NodeCore internal error: ${error.message} | ${error.details}" }
+                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
             }
         }
 
@@ -230,7 +230,7 @@ class NodeCoreGatewayImpl(
 
         if (!createReply.success) {
             for (error in createReply.resultsList) {
-                logger.error { "NodeCore internal error: ${error.message} | ${error.details}" }
+                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
             }
             error("Unable to create endorsement transaction (Publication Data: ${publicationData.toHex()})")
         }
@@ -248,7 +248,7 @@ class NodeCoreGatewayImpl(
 
         if (!submitReply.success) {
             for (error in submitReply.resultsList) {
-                logger.error { "NodeCore internal error: ${error.message} | ${error.details}" }
+                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
             }
             error("Unable to submit endorsement transaction (Publication Data: ${publicationData.toHex()})")
         }
