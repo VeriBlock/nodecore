@@ -116,7 +116,6 @@ class MinerService(
             if (miningInstruction != null) {
                 blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader)
             }
-            val status = operation.state.name
             OperationSummary(operation.id, blockNumber, state.name, state.description)
         }.sortedBy {
             it.endorsedBlockNumber

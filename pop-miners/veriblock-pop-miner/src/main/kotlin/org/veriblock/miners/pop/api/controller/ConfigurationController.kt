@@ -109,15 +109,15 @@ class ConfigurationController(
 @Request("Auto mine configuration request")
 @Response("Auto mine configuration")
 data class AutoMineConfigDto(
-    val round1: Boolean? = null,
-    val round2: Boolean? = null,
-    val round3: Boolean? = null,
-    val round4: Boolean? = null
+    val round1: Boolean?,
+    val round2: Boolean?,
+    val round3: Boolean?,
+    val round4: Boolean?
 )
 
 @Request("Btc fee configuration request")
 @Response("Btc fee configuration")
 class BtcFeeConfigDto(
-    val maxFee: Long? = null,
-    val feePerKB: Long? = null
+    val maxFee: Long?,
+    val feePerKB: Long?
 )

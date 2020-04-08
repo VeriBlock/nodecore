@@ -137,6 +137,7 @@ abstract class MiningOperation<
 
     fun fail(reason: String) {
         logger.warn { "Operation $id failed: $reason" }
+        failureReason = reason
         setState(OperationState.FAILED)
 
         onFailed()
