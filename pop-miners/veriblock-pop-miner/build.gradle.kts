@@ -61,11 +61,13 @@ dependencies {
     implementation("io.ktor:ktor-locations:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")
     // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:-SNAPSHOT")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:reworked-model-SNAPSHOT")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
+    implementation ("io.ktor:ktor-jackson:$ktorVersion") // needed for parameter parsing and multipart parsing
+    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8") // needed for multipart parsing
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")

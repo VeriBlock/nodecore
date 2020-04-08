@@ -7,16 +7,24 @@
 
 package org.veriblock.miners.pop.api
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.util.DefaultIndenter
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.openAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
+import com.papsign.ktor.openapigen.schema.namer.DefaultSchemaNamer
+import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
-import io.ktor.gson.gson
+import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
@@ -29,6 +37,7 @@ import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
+import kotlin.reflect.KType
 
 const val API_VERSION = "0.1"
 
@@ -56,13 +65,7 @@ class ApiServer(
             install(DefaultHeaders)
             install(CallLogging)
 
-            statusPages()
-
-            install(ContentNegotiation) {
-                gson()
-            }
-
-            install(OpenAPIGen) {
+            val api = install(OpenAPIGen) {
                 info {
                     version = API_VERSION
                     title = "Altchain PoP Miner API"
@@ -72,10 +75,30 @@ class ApiServer(
                         email = "https://veriblock.org"
                     }
                 }
-                schemaNamer = {
-                    //rename DTOs from java type name to generator compatible form
+                replaceModule(DefaultSchemaNamer, object: SchemaNamer {
                     val regex = Regex("[A-Za-z0-9_.]+")
-                    it.toString().replace(regex) { it.value.split(".").last() }.replace(Regex(">|<|, "), "_")
+                    override fun get(type: KType): String {
+                        return type.toString().replace(regex) { it.value.split(".").last() }.replace(Regex(">|<|, "), "_")
+                    }
+                })
+            }
+
+            statusPages(api)
+
+            install(ContentNegotiation) {
+                jackson {
+                    enable(
+                        DeserializationFeature.WRAP_EXCEPTIONS,
+                        DeserializationFeature.USE_BIG_INTEGER_FOR_INTS,
+                        DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS
+                    )
+                    enable(SerializationFeature.WRAP_EXCEPTIONS, SerializationFeature.INDENT_OUTPUT)
+                    setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                    setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
+                        indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
+                        indentObjectsWith(DefaultIndenter("  ", "\n"))
+                    })
+                    registerModule(JavaTimeModule())
                 }
             }
 

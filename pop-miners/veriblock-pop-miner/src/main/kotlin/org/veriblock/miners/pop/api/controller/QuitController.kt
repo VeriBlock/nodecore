@@ -24,7 +24,7 @@ class QuitController : ApiController {
 
     @Path("/api/quit")
     data class QuitPath(
-        @QueryParam("Restart Type") val restart: Boolean?
+        @QueryParam("External quit") val restart: Boolean?
     )
 
     override fun NormalOpenAPIRoute.registerApi() {
