@@ -1,18 +1,21 @@
 package org.veriblock.miners.pop.storage
 
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import org.veriblock.miners.pop.core.OperationState
 
 class OperationRepository(
     private val database: Database
 ) {
     fun getActiveOperations(): List<OperationStateRecord> = transaction(database) {
         OperationStateTable.select {
-            OperationStateTable.status eq 1
+            (OperationStateTable.status greaterEq OperationState.INITIAL.id) and
+                (OperationStateTable.status less OperationState.COMPLETED.id)
         }.map {
             it.toOperationStateRecord()
         }.toList()

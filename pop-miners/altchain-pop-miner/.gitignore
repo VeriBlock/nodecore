@@ -5,7 +5,7 @@ mock
 mock.dat
 mock-shm
 mock-wal
-pop.dat
+altchain-pop-miner.db
 *.spvchain
 *.wallet
 *.txmon

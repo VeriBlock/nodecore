@@ -10,7 +10,20 @@ import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.guava.asDeferred
 import kotlinx.coroutines.sync.Mutex
 import org.apache.commons.lang3.tuple.Pair
-import org.bitcoinj.core.*
+import org.bitcoinj.core.Address
+import org.bitcoinj.core.BitcoinSerializer
+import org.bitcoinj.core.Block
+import org.bitcoinj.core.BlockChain
+import org.bitcoinj.core.Coin
+import org.bitcoinj.core.Context
+import org.bitcoinj.core.FilteredBlock
+import org.bitcoinj.core.InsufficientMoneyException
+import org.bitcoinj.core.PartialMerkleTree
+import org.bitcoinj.core.Peer
+import org.bitcoinj.core.PeerGroup
+import org.bitcoinj.core.Sha256Hash
+import org.bitcoinj.core.StoredBlock
+import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener
 import org.bitcoinj.core.listeners.DownloadProgressTracker
 import org.bitcoinj.kits.WalletAppKit
@@ -32,7 +45,9 @@ import org.veriblock.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import java.io.File
-import java.util.*
+import java.util.ArrayList
+import java.util.Date
+import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
@@ -471,8 +486,6 @@ class BitcoinService(
         try {
             val request = requestBuilder()
             try {
-                // WalletShim is a temporary solution until improvements present in bitcoinj's master branch
-                // are packaged into a published release
                 wallet.completeTx(request)
                 if (request.tx.fee.isGreaterThan(getMaximumTransactionFee())) {
                     throw ExceededMaxTransactionFee()
