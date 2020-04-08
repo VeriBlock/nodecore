@@ -47,7 +47,6 @@ dependencies {
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:0.20.0")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
