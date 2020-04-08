@@ -46,7 +46,7 @@ class VpmTaskService(
             val popReply = nodeCoreGateway.getPop(operation.endorsedBlockHeight)
             operation.setMiningInstruction(popReply)
         } catch (e: StatusRuntimeException) {
-            error("Failed to get PoP publication data from NodeCore: ${e.status}")
+            failOperation("Failed to get PoP publication data from NodeCore: ${e.status}")
         }
     }
 
@@ -56,7 +56,7 @@ class VpmTaskService(
         timeout = 15.min
     ) {
         val miningInstruction = operation.miningInstruction
-            ?: error("Trying to create endorsement transaction without the mining instruction!")
+            ?: failOperation("Trying to create endorsement transaction without the mining instruction!")
 
         val opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData)
         try {
@@ -76,7 +76,7 @@ class VpmTaskService(
 
                 operation.setTransaction(VpmSpTransaction(transaction, exposedTransaction.getFilteredTransaction()))
             } else {
-                error("Create Bitcoin transaction returned no transaction")
+                failOperation("Create Bitcoin transaction returned no transaction")
             }
         } catch (e: ApplicationExceptions.UnableToAcquireTransactionLock) {
             failTask(e.message)
@@ -93,14 +93,14 @@ class VpmTaskService(
             ?: failTask("The operation has no transaction set!")
 
         if (endorsementTransaction.transaction.confidence.confidenceType == TransactionConfidence.ConfidenceType.DEAD) {
-            error("The transaction couldn't be confirmed")
+            failOperation("The transaction ${endorsementTransaction.txId} couldn't be confirmed")
         }
 
         if (endorsementTransaction.transaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
             // Wait for the transaction to be ready
             operation.transactionConfidenceEventChannel.asFlow().onEach {
                 if (it == TransactionConfidence.ConfidenceType.DEAD) {
-                    error("The transaction couldn't be confirmed")
+                    failOperation("The transaction couldn't be confirmed")
                 }
             }.first {
                 it == TransactionConfidence.ConfidenceType.BUILDING
@@ -191,7 +191,7 @@ class VpmTaskService(
                 "Unable to calculate the correct Merkle path for transaction ${endorsementTransaction.txId}" +
                     " in block ${blockOfProof.block.hashAsString} from a FilteredBlock or a fully downloaded block!"
             )
-            error(failureReason)
+            failOperation(failureReason)
         }
     }
 
@@ -201,15 +201,15 @@ class VpmTaskService(
         timeout = 2.min
     ) {
         val miningInstruction = operation.miningInstruction
-            ?: error("Trying to build context without the mining instruction!")
+            ?: failOperation("Trying to build context without the mining instruction!")
         val blockOfProof = operation.blockOfProof
-            ?: error("Trying to build context without the block of proof!")
+            ?: failOperation("Trying to build context without the block of proof!")
 
         val contextChainProvided = miningInstruction.endorsedBlockContextHeaders.isNotEmpty()
         // Get all the previous blocks until we find
         val context = generateSequence(blockOfProof.block) { block ->
             bitcoinService.getBlock(block.prevBlockHash)
-                ?: error("Could not retrieve block '${block.prevBlockHash}'")
+                ?: failOperation("Could not retrieve block '${block.prevBlockHash}'")
         }.drop(1).takeWhile { block ->
             val found = if (contextChainProvided) {
                 miningInstruction.endorsedBlockContextHeaders.any {
@@ -235,15 +235,15 @@ class VpmTaskService(
         timeout = 30.sec
     ) {
         val miningInstruction = operation.miningInstruction
-            ?: error("Trying to submit PoP endorsement without the mining instruction!")
+            ?: failOperation("Trying to submit PoP endorsement without the mining instruction!")
         val endorsementTransaction = operation.endorsementTransaction
-            ?: error("Trying to submit PoP endorsement without the endorsement transaction!")
+            ?: failOperation("Trying to submit PoP endorsement without the endorsement transaction!")
         val blockOfProof = operation.blockOfProof
-            ?: error("Trying to submit PoP endorsement without the block of proof!")
+            ?: failOperation("Trying to submit PoP endorsement without the block of proof!")
         val merklePath = operation.merklePath
-            ?: error("Trying to submit PoP endorsement without the merkle path!")
+            ?: failOperation("Trying to submit PoP endorsement without the merkle path!")
         val context = operation.context
-            ?: error("Trying to submit PoP endorsement without the publication context!")
+            ?: failOperation("Trying to submit PoP endorsement without the publication context!")
 
         try {
             val popMiningTransaction = PopMiningTransaction(
@@ -268,10 +268,10 @@ class VpmTaskService(
         timeout = 20.hr
     ) {
         val miningInstruction = operation.miningInstruction
-            ?: error("Trying to confirm Payout without the mining instruction!")
+            ?: failOperation("Trying to confirm Payout without the mining instruction!")
 
         val endorsedBlockHeight = operation.endorsedBlockHeight
-            ?: error("Trying to wait for the payout block without having the endorsed block height set")
+            ?: failOperation("Trying to wait for the payout block without having the endorsed block height set")
 
         // Wait for the endorsement transaction to have enough confirmations
         // DISABLED: it took too much NodeCore power
@@ -303,7 +303,7 @@ class VpmTaskService(
         // FIXME: Retrieve the reward from the payout block itself
         val endorsementInfo = nodeCoreGateway.getPopEndorsementInfo().find {
             it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
-        } ?: error("Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!")
+        } ?: failOperation("Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!")
 
         operation.complete(payoutBlockHash, endorsementInfo.reward)
         logger.info(operation) { "Operation has completed! Payout: ${endorsementInfo.reward} VBK" }

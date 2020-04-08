@@ -47,6 +47,8 @@ abstract class TaskService<
             confirmPayout(operation)
         } catch (e: CancellationException) {
             logger.info(operation) { "Job was cancelled" }
+        } catch (e: OperationException) {
+            operation.fail(e.message)
         } catch (t: Throwable) {
             logger.debug(t) { t.message }
             operation.fail(t.toString())
@@ -103,13 +105,21 @@ abstract class TaskService<
     }
 }
 
-class TaskException(message: String) : RuntimeException(message)
+class TaskException(override val message: String) : RuntimeException()
+class OperationException(override val message: String) : RuntimeException()
 
 /**
  *  Throw an exception as the task failed. It is inline so that call stack is not polluted.
  */
 inline fun failTask(reason: String): Nothing {
     throw TaskException(reason)
+}
+
+/**
+ *  Throw an exception as the task failed. It is inline so that call stack is not polluted.
+ */
+inline fun failOperation(reason: String): Nothing {
+    throw OperationException(reason)
 }
 
 inline val Int.sec get() = Duration.ofSeconds(this.toLong())

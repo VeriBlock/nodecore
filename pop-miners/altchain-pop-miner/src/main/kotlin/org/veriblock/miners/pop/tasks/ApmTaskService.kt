@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
@@ -54,18 +55,18 @@ class ApmTaskService(
         val publicationData = try {
             operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
         } catch (e: Exception) {
-            error("Error while trying to get PoP Mining Instruction from ${operation.chain.name}: ${e.message}")
+            failOperation("Error while trying to get PoP Mining Instruction from ${operation.chain.name}: ${e.message}")
         }
         operation.setMiningInstruction(publicationData)
         logger.info(operation) { "Successfully retrieved the mining instruction!" }
         val vbkContextBlockHash = publicationData.context[0]
         val vbkContextBlock = nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
-            ?: error("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
+            ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
         val vbkChainHead = nodeCoreLiteKit.blockChain.getChainHead()
-            ?: error("Unable to get VBK's chain head!")
+            ?: failOperation("Unable to get VBK's chain head!")
         val contextAge = vbkChainHead.height - vbkContextBlock.height
         if (contextAge > MAX_CONTEXT_AGE) {
-            error(
+            failOperation(
                 "${operation.chain.name}'s VBK context is outdated ($contextAge VBK blocks behind)!" +
                     " Please run 'updatecontext ${operation.chain.key}' in order to mine it."
             )
@@ -85,8 +86,8 @@ class ApmTaskService(
         val transaction = try {
             val endorsementData = SerializeDeserializeService.serialize(miningInstruction.publicationData)
             endorsementData.checkForValidEndorsement {
-                logger.error(it) { "Invalid endorsement data" }
-                error("Invalid endorsement data: ${endorsementData.toHex()}")
+                logger.debugError(it) { "Invalid endorsement data" }
+                failOperation("Invalid endorsement data: ${endorsementData.toHex()}")
             }
             nodeCoreLiteKit.network.submitEndorsement(
                 endorsementData,
@@ -94,7 +95,7 @@ class ApmTaskService(
                 minerConfig.maxFee
             )
         } catch (e: Exception) {
-            error("Could not create endorsement VBK transaction: ${e.message}")
+            failOperation("Could not create endorsement VBK transaction: ${e.message}")
         }
 
         val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)
@@ -117,7 +118,7 @@ class ApmTaskService(
         do {
             val metaState = txMetaChannel.receive()
             if (metaState === TransactionMeta.MetaState.PENDING) {
-                error("The VeriBlock chain has reorganized")
+                failOperation("The VeriBlock chain has reorganized")
             }
         } while (metaState !== TransactionMeta.MetaState.CONFIRMED)
         txMetaChannel.cancel()
@@ -161,13 +162,13 @@ class ApmTaskService(
 
         logger.info(operation) { "Getting the merkle path for the transaction: ${walletTransaction.id}..." }
         val merklePath = walletTransaction.merklePath
-            ?: error("No merkle path found for ${walletTransaction.id}")
+            ?: failOperation("No merkle path found for ${walletTransaction.id}")
         logger.info(operation) { "Successfully retrieved the merkle path for the transaction: ${walletTransaction.id}!" }
 
         val vbkMerkleRoot = merklePath.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
         val verified = vbkMerkleRoot == blockOfProof.block.merkleRoot
         if (!verified) {
-            error(
+            failOperation(
                 "Unable to verify merkle path! VBK Transaction's merkle root: $vbkMerkleRoot;" +
                     " Block of proof's merkle root: ${blockOfProof.block.merkleRoot}"
             )
@@ -192,7 +193,7 @@ class ApmTaskService(
         val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
             logger.debug(operation) { "Checking block ${block.hash} @ ${block.height}..." }
             if (block.height > keystoneOfProofHeight) {
-                error(
+                failOperation(
                     "The next VBK Keystone has been skipped!" +
                         " Expected keystone height: $keystoneOfProofHeight; received block height: ${block.height}"
                 )
@@ -343,7 +344,7 @@ class ApmTaskService(
         val endorsedBlockHeader = miningInstruction.publicationData.header
         val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
         if (!belongsToMainChain) {
-            error(
+            failOperation(
                 "Endorsed block header ${endorsedBlockHeader.toHex()} @ $endorsedBlockHeight" +
                     " is not in ${operation.chainId.toUpperCase()}'s main chain"
             )
@@ -373,7 +374,7 @@ class ApmTaskService(
             logger.info(operation) { "Completed!" }
             operation.complete(payoutBlock.hash, rewardVout.value.toString())
         } else {
-            error(
+            failOperation(
                 "Unable to find ${operation.chainId.toUpperCase()} PoP payout transaction in the expected block's coinbase!" +
                     " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
             )
