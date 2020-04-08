@@ -13,7 +13,7 @@ import org.veriblock.lite.proto.OperationProto
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.parseOperationLogs
-import org.veriblock.miners.pop.core.stringify
+import org.veriblock.miners.pop.core.toJson
 import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateRecord
 
@@ -37,7 +37,7 @@ class OperationService(
                 operation.state.id,
                 ProtoBuf.dump(OperationProto.Operation.serializer(), serialized),
                 operation.createdAt,
-                operation.getLogs().stringify()
+                operation.getLogs().toJson()
             )
         )
     }

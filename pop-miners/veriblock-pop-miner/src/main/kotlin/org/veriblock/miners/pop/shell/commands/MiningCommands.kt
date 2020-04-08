@@ -8,9 +8,11 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import org.veriblock.miners.pop.core.VpmOperation
+import org.veriblock.miners.pop.core.toJson
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
@@ -66,9 +68,32 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val id: String = getParameter("id")
-        val state = minerService.getOperation(id)
-        if (state != null) {
-            printInfo(prettyPrintGson.toJson(OperationInfo(state)))
+        val operation = minerService.getOperation(id)
+        if (operation != null) {
+            printInfo(prettyPrintGson.toJson(OperationInfo(operation)))
+            success()
+        } else {
+            failure {
+                addMessage("V404", "Not found", "Could not find operation '$id'", false)
+            }
+        }
+    }
+
+    command(
+        name = "Get Operation Logs",
+        form = "getoperationlogs",
+        description = "Gets the logs of the supplied operation",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING),
+            CommandParameter("level", CommandParameterMappers.STRING, required = false)
+        )
+    ) {
+        val id: String = getParameter("id")
+        val levelString: String? = getOptionalParameter("level")
+        val level: Level = Level.toLevel(levelString, Level.INFO)
+        val operation = minerService.getOperation(id)
+        if (operation != null) {
+            printInfo(operation.getLogs(level).joinToString("\n"))
             success()
         } else {
             failure {

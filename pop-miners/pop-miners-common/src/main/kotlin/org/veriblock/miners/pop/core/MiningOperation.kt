@@ -160,8 +160,10 @@ abstract class MiningOperation<
         logs.add(log)
     }
 
-    fun getLogs(): List<OperationLog> {
-        return Collections.unmodifiableList(logs)
+    fun getLogs(level: Level = Level.TRACE): List<OperationLog> {
+        return logs.filter {
+            Level.toLevel(it.level).isGreaterOrEqual(level)
+        }
     }
 
     fun getDetailedInfo(): Map<String, String> {

@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
@@ -83,12 +84,34 @@ fun CommandFactory.miningCommands(miner: MinerService) {
     ) {
         val id: String = getParameter("id")
         val operation = miner.getOperation(id)
-        if (operation == null) {
-            printInfo("Operation $id not found")
-            failure()
-        } else {
+        if (operation != null) {
             printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
             success()
+        } else {
+            printInfo("Operation $id not found")
+            failure()
+        }
+    }
+
+    command(
+        name = "Get Operation Logs",
+        form = "getoperationlogs",
+        description = "Gets the logs of the supplied operation",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING),
+            CommandParameter("level", CommandParameterMappers.STRING, required = false)
+        )
+    ) {
+        val id: String = getParameter("id")
+        val levelString: String? = getOptionalParameter("level")
+        val level: Level = Level.toLevel(levelString, Level.INFO)
+        val operation = miner.getOperation(id)
+        if (operation != null) {
+            printInfo(operation.getLogs(level).joinToString("\n"))
+            success()
+        } else {
+            printInfo("Operation $id not found")
+            failure()
         }
     }
 

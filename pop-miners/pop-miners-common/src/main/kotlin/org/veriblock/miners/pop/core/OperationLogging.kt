@@ -13,18 +13,26 @@ import kotlinx.serialization.json.JsonConfiguration
 import mu.KLogger
 import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.contracts.WithDetailedInfo
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Serializable
 class OperationLog(
     val timestamp: Long,
     val level: String,
     val msg: String
-)
+) {
+    override fun toString(): String {
+        val time = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
+        return "$time $level - $msg"
+    }
+}
 
 private val jsonSerialization = Json(JsonConfiguration.Stable)
 private val logSerializer = ListSerializer(OperationLog.serializer())
 
-fun List<OperationLog>.stringify() = jsonSerialization.stringify(logSerializer, this)
+fun List<OperationLog>.toJson() = jsonSerialization.stringify(logSerializer, this)
 fun String.parseOperationLogs() = jsonSerialization.parse(logSerializer, this)
 
 private fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.log(
