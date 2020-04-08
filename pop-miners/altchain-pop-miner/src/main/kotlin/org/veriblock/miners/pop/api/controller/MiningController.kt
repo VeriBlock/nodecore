@@ -7,64 +7,56 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.locations.post
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import org.veriblock.miners.pop.api.dto.MineRequest
-import org.veriblock.miners.pop.api.dto.MinerInfoResponse
-import org.veriblock.miners.pop.api.dto.OperationDetailResponse
-import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
-import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
-import org.veriblock.miners.pop.api.dto.toDetailedResponse
-import org.veriblock.miners.pop.api.dto.toSummaryResponse
+import com.papsign.ktor.openapigen.annotations.Path
+import com.papsign.ktor.openapigen.annotations.parameters.PathParam
+import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
+import com.papsign.ktor.openapigen.route.info
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.respond
+import org.veriblock.miners.pop.api.dto.*
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.service.MinerService
-
-@Location("/api/miner")
-class miner
-@Location("/api/miner/mine")
-class mineAction
-@Location("/api/miner/operations")
-class minerOperations(val status: String?, val limit: Int?, val offset: Int?)
-@Location("/api/miner/operations/{id}")
-class minerOperation(val id: String)
 
 class MiningController(
     private val miner: MinerService
 ) : ApiController {
 
-    override fun Route.registerApi() {
-        get<miner>(
-        //    "miner"
-        //        .description("Get miner data")
-        //        .responds(
-        //            ok<MinerInfoResponse>()
-        //        )
+    @Path("/api/miner")
+    class MinerPath
+    @Path("/api/miner/mine")
+    class MineActionPath
+    @Path("/api/miner/operations")
+    class MinerOperationsPath(
+        @QueryParam("Status filter (optional)") val status: String?,
+        @QueryParam("Pagination limit (optional)") val limit: Int?,
+        @QueryParam("Pagination offset (optional)") val offset: Int?
+    )
+    @Path("/api/miner/operations/{id}")
+    class MinerOperationPath(
+        @PathParam("Operation ID") val id: String
+    )
+
+    override fun NormalOpenAPIRoute.registerApi() {
+        get<MinerPath, MinerInfoResponse>(
+            info("Get miner data")
         ) {
             val responseModel = MinerInfoResponse(
                 vbkAddress = miner.getAddress(),
                 vbkBalance = miner.getBalance()?.confirmedBalance?.atomicUnits ?: 0
             )
-            call.respond(responseModel)
+            respond(responseModel)
         }
-        post<mineAction>(//, MineRequest>(
-        //    "mine"
-        //        .description("Start mining operation")
-        //        .responds(
-        //            ok<OperationSummaryResponse>()
-        //        )
-        ) {
-            val mineRequest: MineRequest = call.receive()
+        post<MineActionPath, OperationSummaryResponse, MineRequest>(
+            info("Start mining operation")
+        ) { _, mineRequest ->
             val result = miner.mine(mineRequest.chainSymbol, mineRequest.height)
             val firstMsg = result.getMessages().first()
             if (result.isFailed) {
                 throw CallFailureException("${firstMsg.message} | ${firstMsg.details}")
             }
-            call.respond(
+            respond(
                 OperationSummaryResponse(
                     firstMsg.message,
                     mineRequest.chainSymbol,
@@ -73,12 +65,8 @@ class MiningController(
                 )
             )
         }
-        get<minerOperations>(
-        //    "operations"
-        //        .description("Get operations list")
-        //        .responds(
-        //            ok<OperationSummaryListResponse>()
-        //        )
+        get<MinerOperationsPath, OperationSummaryListResponse>(
+            info("Get operations list")
         ) { location ->
             // Get all the operations
             val allOperations = miner.getOperations()
@@ -103,15 +91,10 @@ class MiningController(
             val result = filteredOperations.asSequence().drop(offset).take(limit).map {
                 it.toSummaryResponse()
             }.toList()
-            call.respond(result)
+            respond(OperationSummaryListResponse(result))
         }
-        get<minerOperation>(
-        //    "operation"
-        //        .description("Get operation details")
-        //        .responds(
-        //            ok<OperationDetailResponse>(),
-        //            notFound<ApiError>()
-        //        )
+        get<MinerOperationPath, OperationDetailResponse>(
+            info("Get operation details")
         ) { location ->
             val id = location.id
 
@@ -119,7 +102,7 @@ class MiningController(
                 ?: throw NotFoundException("Operation $id not found")
 
             val responseModel = operationState.toDetailedResponse()
-            call.respond(responseModel)
+            respond(responseModel)
         }
     }
 }

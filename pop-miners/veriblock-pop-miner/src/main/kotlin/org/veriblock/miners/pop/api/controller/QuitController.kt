@@ -7,12 +7,12 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
-import io.ktor.locations.Location
-import io.ktor.locations.post
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import com.papsign.ktor.openapigen.annotations.Path
+import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
+import com.papsign.ktor.openapigen.route.info
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.respond
 import mu.KotlinLogging
 import org.veriblock.miners.pop.EventBus
 import java.lang.Thread.sleep
@@ -20,26 +20,26 @@ import java.util.concurrent.Executors
 
 private val logger = KotlinLogging.logger {}
 
-//@Group("Quit")
-@Location("/api/quit")
-class quit(val restart: Boolean = false)
-
 class QuitController : ApiController {
 
-    override fun Route.registerApi() {
-        post<quit>(
-        //    "quit"
-        //        .description("Exits the application")
-        ) { location ->
+    @Path("/api/quit")
+    data class QuitPath(
+        @QueryParam("Restart Type") val restart: Boolean?
+    )
+
+    override fun NormalOpenAPIRoute.registerApi() {
+        post<QuitPath, Unit, Unit>(
+            info("Exits the application")
+        ) { location, _ ->
             logger.info("Terminating the miner now")
-            val quitReason = if (location.restart) 1 else 0
+            val quitReason = if (location.restart == true) 1 else 0
             val quitExecutor = Executors.newSingleThreadExecutor()
             quitExecutor.submit {
                 sleep(100)
                 EventBus.programQuitEvent.trigger(quitReason)
             }
 
-            call.respond(HttpStatusCode.OK)
+            respond(Unit)
         }
     }
 }

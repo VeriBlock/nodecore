@@ -7,12 +7,20 @@
 
 package org.veriblock.miners.pop.api
 
+import com.papsign.ktor.openapigen.OpenAPIGen
+import com.papsign.ktor.openapigen.openAPIGen
+import com.papsign.ktor.openapigen.route.apiRouting
+import io.ktor.application.application
+import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.gson.gson
 import io.ktor.locations.Locations
+import io.ktor.response.respond
+import io.ktor.response.respondRedirect
+import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
@@ -54,26 +62,35 @@ class ApiServer(
                     gson()
                 }
 
-                // Documentation
-                //install(SwaggerSupport) {
-                //    forwardRoot = true
-                //    provideUi = true
-                //    val information = Information(
-                //        version = API_VERSION,
-                //        title = "VeriBlock PoP Miner API",
-                //        description = "This is the VPM's integrated API, through which you can monitor and control the application",
-                //        contact = Contact("VeriBlock", "https://veriblock.org")
-                //    )
-                //    swagger = Swagger().apply {
-                //        info = information
-                //    }
-                //    openApi = OpenApi().apply {
-                //        info = information
-                //    }
-                //}
+                install(OpenAPIGen) {
+                    info {
+                        version = API_VERSION
+                        title = "VeriBlock PoP Miner API"
+                        description = "This is the VPM's integrated API, through which you can monitor and control the application"
+                        contact {
+                            name = "VeriBlock"
+                            email = "https://veriblock.org"
+                        }
+                    }
+                    schemaNamer = {
+                        //rename DTOs from java type name to generator compatible form
+                        val regex = Regex("[A-Za-z0-9_.]+")
+                        it.toString().replace(regex) { it.value.split(".").last() }.replace(Regex(">|<|, "), "_")
+                    }
+                }
 
                 install(Locations)
                 routing {
+                    get("/openapi.json") {
+                        val application = application
+                        call.respond(application.openAPIGen.api)
+                    }
+                    get("/") {
+                        call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
+                    }
+                }
+
+                apiRouting {
                     for (controller in controllers) {
                         with(controller) {
                             registerApi()

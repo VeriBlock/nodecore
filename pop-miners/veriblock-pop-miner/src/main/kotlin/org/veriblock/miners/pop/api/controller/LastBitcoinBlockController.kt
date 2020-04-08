@@ -7,32 +7,27 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import io.ktor.application.call
-import io.ktor.locations.Location
-import io.ktor.locations.get
-import io.ktor.response.respond
-import io.ktor.routing.Route
+import com.papsign.ktor.openapigen.annotations.Path
+import com.papsign.ktor.openapigen.route.info
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.response.respond
 import org.bitcoinj.core.Utils
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.api.models.ShowLastBitcoinBlockResponse
 import org.veriblock.miners.pop.service.MinerService
 import java.io.ByteArrayOutputStream
 
-//@Group("Bitcoin")
-@Location("/api/lastbitcoinblock")
-class lastBitcoinBlock
-
 class LastBitcoinBlockController(
     private val minerService: MinerService
 ) : ApiController {
 
-    override fun Route.registerApi() {
-        get<lastBitcoinBlock>(
-        //    "lastbitcoinblock"
-        //        .description("Get latest bitcoin block known by the PoP Miner")
-        //        .responds(
-        //            ok<ShowLastBitcoinBlockResponse>()
-        //        )
+    @Path("/api/lastbitcoinblock")
+    class LastBitcoinBlockPath
+
+    override fun NormalOpenAPIRoute.registerApi() {
+        get<LastBitcoinBlockPath, ShowLastBitcoinBlockResponse>(
+            info("Get latest bitcoin block known by the PoP Miner")
         ) {
             val lastBlock = minerService.getLastBitcoinBlock()
             val lastBlockHeader = lastBlock.header
@@ -45,12 +40,13 @@ class LastBitcoinBlockController(
             Utils.uint32ToByteStreamLE(lastBlockHeader.difficultyTarget, headerOutputSteram)
             Utils.uint32ToByteStreamLE(lastBlockHeader.nonce, headerOutputSteram)
 
-            val responseModel = ShowLastBitcoinBlockResponse()
-            responseModel.header = headerOutputSteram.toByteArray().toHex()
-            responseModel.hash = lastBlockHeader.hash.bytes.toHex()
-            responseModel.height = lastBlock.height
+            val responseModel = ShowLastBitcoinBlockResponse(
+                headerOutputSteram.toByteArray().toHex(),
+                lastBlockHeader.hash.bytes.toHex(),
+                lastBlock.height
+            )
 
-            call.respond(responseModel)
+            respond(responseModel)
         }
     }
 }

@@ -50,7 +50,7 @@ dependencies {
     implementation("io.ktor:ktor-locations:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")
     // Swagger integration, expecting an official integration to be released soon
-    //implementation("com.github.nielsfalk:ktor-swagger:0.5.0")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:-SNAPSHOT")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")

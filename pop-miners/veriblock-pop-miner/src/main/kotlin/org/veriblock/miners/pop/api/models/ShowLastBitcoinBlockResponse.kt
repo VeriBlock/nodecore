@@ -6,8 +6,11 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.api.models
 
-class ShowLastBitcoinBlockResponse {
-    var header: String? = null
-    var hash: String? = null
-    var height = 0
-}
+import com.papsign.ktor.openapigen.annotations.Response
+
+@Response("Basic information from the last bitcoin block")
+class ShowLastBitcoinBlockResponse (
+    val header: String? = null,
+    val hash: String? = null,
+    val height: Int = 0
+)

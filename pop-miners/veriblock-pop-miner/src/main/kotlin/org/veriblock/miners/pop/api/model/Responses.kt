@@ -7,17 +7,22 @@
 
 package org.veriblock.miners.pop.api.model
 
+import com.papsign.ktor.openapigen.annotations.Response
+
+@Response("Detailed operation information")
 class OperationDetailResponse(
     val operationId: String,
     val status: String,
     val currentAction: String,
-    val detail: Any // Not defined as a map because doing so breaks the Swagger library
+    val detail: Map<String, String>
 )
 
+@Response("List of operations")
 class OperationSummaryListResponse(
     val operations: List<OperationSummaryResponse>
 )
 
+@Response("Basic operation information")
 class OperationSummaryResponse(
     val operationId: String,
     val endorsedBlockNumber: Int,
@@ -25,11 +30,13 @@ class OperationSummaryResponse(
     val action: String
 )
 
+@Response("List of result messages")
 open class ResultResponse(
     val failed: Boolean,
     val messages: List<ResultMessageResponse>
 )
 
+@Response("Basic result message information")
 class ResultMessageResponse(
     val code: String,
     val message: String,
@@ -37,12 +44,14 @@ class ResultMessageResponse(
     val error: Boolean
 )
 
+@Response("Mine operation result")
 class MineResultResponse(
     failed: Boolean,
     messages: List<ResultMessageResponse>,
     val operationId: String
 ) : ResultResponse(failed, messages)
 
+@Response("Basic miner information")
 class MinerInfoResponse(
     val minerAddress: String?,
     val bitcoinAddress: String?,

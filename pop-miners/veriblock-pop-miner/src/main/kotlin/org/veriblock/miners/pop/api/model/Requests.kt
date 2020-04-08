@@ -7,15 +7,20 @@
 
 package org.veriblock.miners.pop.api.model
 
+import com.papsign.ktor.openapigen.annotations.Request
+
+@Request("Mine request, optionally specify the block number")
 class MineRequest(
     val block: Int?
 )
 
+@Request("Withdraw request for the given amount to the given destination address")
 class WithdrawRequest(
     var destinationAddress: String?,
     var amount: String?
 )
 
+@Request("Configuration change request")
 class SetConfigRequest(
     val key: String?,
     val value: String?
