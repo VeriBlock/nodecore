@@ -7,6 +7,7 @@
 
 package org.veriblock.miners.pop.api.controller
 
+import ch.qos.logback.classic.Level
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
@@ -36,6 +37,11 @@ class MiningController(
     @Path("/api/miner/operations/{id}")
     class MinerOperationPath(
         @PathParam("Operation ID") val id: String
+    )
+    @Path("/api/operationlog")
+    class MinerOperationLogPath(
+        @QueryParam("") val id: String,
+        @QueryParam("") val level: String?
     )
 
     override fun NormalOpenAPIRoute.registerApi() {
@@ -102,6 +108,16 @@ class MiningController(
                 ?: throw NotFoundException("Operation $id not found")
 
             val responseModel = operationState.toDetailedResponse()
+            respond(responseModel)
+        }
+        get<MinerOperationLogPath, List<String>>(
+            info("Get the operation logs")
+        ) { location ->
+            val level: Level = Level.toLevel(location.level, Level.INFO)
+            val operation = miner.getOperation(location.id)
+                ?: throw NotFoundException("Operation ${location.id} not found")
+
+            val responseModel = operation.getLogs(level).map { it.toString() }
             respond(responseModel)
         }
     }

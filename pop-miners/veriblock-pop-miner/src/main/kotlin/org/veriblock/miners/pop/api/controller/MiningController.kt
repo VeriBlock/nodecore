@@ -7,8 +7,10 @@
 
 package org.veriblock.miners.pop.api.controller
 
+import ch.qos.logback.classic.Level
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
+import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -27,6 +29,12 @@ class MiningController(
     @Path("/api/operations/{id}")
     class MinerOperationPath(
         @PathParam("Operation ID") val id: String
+    )
+
+    @Path("/api/operationlog")
+    class MinerOperationLogPath(
+        @QueryParam("Operation ID") val id: String,
+        @QueryParam("Log level (optional)") val level: String?
     )
 
     @Path("/api/mine")
@@ -72,6 +80,16 @@ class MiningController(
                 minerAddress = minerService.getMinerAddress(),
                 walletSeed = minerService.getWalletSeed()
             )
+            respond(responseModel)
+        }
+        get<MinerOperationLogPath, List<String>>(
+            info("Get the operation logs")
+        ) { location ->
+            val level: Level = Level.toLevel(location.level, Level.INFO)
+            val operation = minerService.getOperation(location.id)
+                ?: throw NotFoundException("Operation ${location.id} not found")
+
+            val responseModel = operation.getLogs(level).map { it.toString() }
             respond(responseModel)
         }
     }
