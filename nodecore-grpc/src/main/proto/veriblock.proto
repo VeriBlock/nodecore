@@ -744,6 +744,7 @@ message Event {
     }
     string id = 11;
     bool acknowledge = 12;
+    string request_id = 34;
 }
 // --------------------------------------------------------------------
 
