@@ -7,15 +7,11 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import de.nielsfalk.ktor.swagger.description
-import de.nielsfalk.ktor.swagger.get
-import de.nielsfalk.ktor.swagger.notFound
-import de.nielsfalk.ktor.swagger.ok
-import de.nielsfalk.ktor.swagger.post
-import de.nielsfalk.ktor.swagger.responds
-import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
 import io.ktor.locations.Location
+import io.ktor.locations.get
+import io.ktor.locations.post
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import org.veriblock.miners.pop.api.model.MineRequest
@@ -24,21 +20,21 @@ import org.veriblock.miners.pop.api.model.MinerInfoResponse
 import org.veriblock.miners.pop.api.model.OperationDetailResponse
 import org.veriblock.miners.pop.api.model.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.model.toResponse
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 
-@Group("Mining")
+//@Group("Mining")
 @Location("/api/operations")
 class minerOperations
 
-@Group("Mining")
+//@Group("Mining")
 @Location("/api/operations/{id}")
 class minerOperation(val id: String)
 
-@Group("Mining")
+//@Group("Mining")
 @Location("/api/mine")
 class mineAction
 
-@Group("Mining")
+//@Group("Mining")
 @Location("/api/miner")
 class miner
 
@@ -48,11 +44,11 @@ class MiningController(
 
     override fun Route.registerApi() {
         get<minerOperations>(
-            "operations"
-                .description("Get operations list")
-                .responds(
-                    ok<OperationSummaryListResponse>()
-                )
+        //    "operations"
+        //        .description("Get operations list")
+        //        .responds(
+        //            ok<OperationSummaryListResponse>()
+        //        )
         ) {
             val operationSummaries = minerService.listOperations()
 
@@ -60,12 +56,12 @@ class MiningController(
             call.respond(OperationSummaryListResponse(responseModel))
         }
         get<minerOperation>(
-            "operation"
-                .description("Get operation details")
-                .responds(
-                    ok<OperationDetailResponse>(),
-                    notFound<ApiError>()
-                )
+        //    "operation"
+        //        .description("Get operation details")
+        //        .responds(
+        //            ok<OperationDetailResponse>(),
+        //            notFound<ApiError>()
+        //        )
         ) { location ->
             val id = location.id
 
@@ -75,24 +71,25 @@ class MiningController(
             val responseModel = operationState.toResponse()
             call.respond(responseModel)
         }
-        post<mineAction, MineRequest>(
-            "mine"
-                .description("Start mining operation")
-                .responds(
-                    ok<MineResultResponse>()
-                )
-        ) { location, payload ->
+        post<mineAction>(//, MineRequest>(
+        //    "mine"
+        //        .description("Start mining operation")
+        //        .responds(
+        //            ok<MineResultResponse>()
+        //        )
+        ) {
+            val payload: MineRequest = call.receive()
             val result = minerService.mine(payload.block)
 
             val responseModel = result.toResponse()
             call.respond(responseModel)
         }
         get<miner>(
-            "miner"
-                .description("Get miner data")
-                .responds(
-                    ok<MinerInfoResponse>()
-                )
+        //    "miner"
+        //        .description("Get miner data")
+        //        .responds(
+        //            ok<MinerInfoResponse>()
+        //        )
         ) {
             val responseModel = MinerInfoResponse(
                 bitcoinBalance = minerService.getBitcoinBalance().longValue(),

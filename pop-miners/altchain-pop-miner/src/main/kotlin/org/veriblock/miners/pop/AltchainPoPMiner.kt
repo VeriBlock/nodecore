@@ -35,15 +35,15 @@ private fun run(): Int {
     }.koin
 
     val miner: MinerService = koin.get()
-    val pluginFactory: PluginService = koin.get()
+    val pluginService: PluginService = koin.get()
     val securityInheritingService: SecurityInheritingService = koin.get()
     val apiServer: ApiServer = koin.get()
     val shell: Shell = koin.get()
 
     try {
         shell.initialize()
+        pluginService.loadPlugins()
         miner.initialize()
-        pluginFactory.loadPlugins()
         miner.start()
         securityInheritingService.start(miner)
         apiServer.start()

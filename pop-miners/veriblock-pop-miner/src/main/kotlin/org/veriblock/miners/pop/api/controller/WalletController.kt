@@ -1,14 +1,15 @@
 package org.veriblock.miners.pop.api.controller
 
-import de.nielsfalk.ktor.swagger.description
-import de.nielsfalk.ktor.swagger.post
-import de.nielsfalk.ktor.swagger.version.shared.Group
+import io.ktor.application.call
 import io.ktor.locations.Location
+import io.ktor.locations.post
+import io.ktor.request.receive
 import io.ktor.routing.Route
+import org.veriblock.miners.pop.api.model.MineRequest
 import org.veriblock.miners.pop.api.model.WithdrawRequest
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 
-@Group("Wallet")
+//@Group("Wallet")
 @Location("/api/wallet/btc/withdraw")
 class withdrawBtc
 
@@ -17,10 +18,11 @@ class WalletController(
 ) : ApiController {
 
     override fun Route.registerApi() {
-        post<withdrawBtc, WithdrawRequest>(
-            "withdrawbtc"
-                .description("Withdraws BTC from the PoP Miner")
-        ) { _, request ->
+        post<withdrawBtc>(
+        //    "withdrawbtc"
+        //        .description("Withdraws BTC from the PoP Miner")
+        ) {
+            val request: WithdrawRequest = call.receive()
             val address: String = request.destinationAddress
                 ?: throw BadRequestException("Parameter 'destinationAddress' was not supplied")
             val amountString: String = request.amount

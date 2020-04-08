@@ -18,7 +18,7 @@ import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.automine.AutoMineEngine
 import org.veriblock.miners.pop.schedule.PoPMiningScheduler
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.PopShell
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor

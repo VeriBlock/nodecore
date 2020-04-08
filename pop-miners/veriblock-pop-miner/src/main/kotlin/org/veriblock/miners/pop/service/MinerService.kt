@@ -4,7 +4,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package org.veriblock.miners.pop.services
+package org.veriblock.miners.pop.service
 
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.tuple.Pair
@@ -31,6 +31,7 @@ import org.veriblock.miners.pop.model.PopMinerDependencies
 import org.veriblock.miners.pop.model.result.DefaultResultMessage
 import org.veriblock.miners.pop.model.result.MineResult
 import org.veriblock.miners.pop.model.result.Result
+import org.veriblock.miners.pop.service.NodeCoreGateway
 import org.veriblock.miners.pop.storage.KeyValueRecord
 import org.veriblock.miners.pop.storage.KeyValueRepository
 import org.veriblock.miners.pop.tasks.ProcessManager

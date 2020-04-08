@@ -50,15 +50,10 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.2")
     implementation("com.google.guava:guava:26.0-jre")
     implementation("com.diogonunes:JCDP:2.0.3.1")
-    implementation("com.j256.ormlite:ormlite-core:5.1")
-    implementation("com.j256.ormlite:ormlite-jdbc:5.1")
-    implementation("org.xerial:sqlite-jdbc:3.23.1")
 
     // Scheduling
     implementation("org.quartz-scheduler:quartz:2.2.1")
     implementation("org.quartz-scheduler:quartz-jobs:2.2.1")
-
-    implementation("org.jetbrains.exposed:exposed:0.17.7")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")

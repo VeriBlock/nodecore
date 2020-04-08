@@ -66,6 +66,7 @@ alpha/
 testnet/
 unit-tests/
 
+*.db
 *.dat
 *.dat-journal
 *.dat-shm

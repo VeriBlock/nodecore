@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.shell.commands
 
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.automine.AutoMineEngine
-import org.veriblock.miners.pop.services.BitcoinService
+import org.veriblock.miners.pop.service.BitcoinService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers

@@ -1,7 +1,7 @@
 package org.veriblock.miners.pop.core
 
+import ch.qos.logback.classic.Level
 import kotlinx.coroutines.Job
-import mu.KLogger
 import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.Utility
@@ -17,11 +17,11 @@ abstract class MiningOperation<
     SPB : SpBlock,
     MP : MerklePath,
     CD : WithDetailedInfo
-    >(
+>(
     val id: String,
     var endorsedBlockHeight: Int?,
-    changeHistory: List<StateChangeEvent>,
     val createdAt: LocalDateTime,
+    logs: List<OperationLog>,
     var reconstituting: Boolean
 ) {
     var state: OperationState = OperationState.INITIAL
@@ -48,7 +48,7 @@ abstract class MiningOperation<
     var failureReason: String? = null
         private set
 
-    private val changeHistory: MutableList<StateChangeEvent> = ArrayList(changeHistory)
+    private val logs: MutableList<OperationLog> = ArrayList(logs)
 
     protected fun setState(state: OperationState) {
         if (state.id > 0 && this.state.id != state.id - 1) {
@@ -56,8 +56,7 @@ abstract class MiningOperation<
         }
         this.state = state
         if (!reconstituting) {
-            logger.debug(this) { "New state: $state" }
-            changeHistory.add(StateChangeEvent(state.toString(), Utility.getCurrentTimeSeconds()))
+            logger.debug(this, "New state: $state")
             onStateChanged()
         }
     }
@@ -155,8 +154,14 @@ abstract class MiningOperation<
         job = null
     }
 
-    fun getChangeHistory(): List<StateChangeEvent> {
-        return Collections.unmodifiableList(changeHistory)
+    open fun isLoggingEnabled(level: Level): Boolean = true
+
+    fun addLog(log: OperationLog) {
+        logs.add(log)
+    }
+
+    fun getLogs(): List<OperationLog> {
+        return Collections.unmodifiableList(logs)
     }
 
     fun getDetailedInfo(): Map<String, String> {
@@ -209,29 +214,3 @@ interface MerklePath {
 interface SpBlock {
     val hash: String
 }
-
-class StateChangeEvent(
-    val state: String,
-    val timestamp: Int
-)
-
-// Utility functions for logging on an operation
-inline fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo>
-    KLogger.trace(operation: MiningOperation<MI, SPT, SPB, MP, CD>, crossinline msg: () -> Any?) = trace { "[${operation.id}] ${msg()}" }
-
-inline fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo>
-    KLogger.debug(operation: MiningOperation<MI, SPT, SPB, MP, CD>, crossinline msg: () -> Any?) = debug { "[${operation.id}] ${msg()}" }
-
-inline fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo>
-    KLogger.info(operation: MiningOperation<MI, SPT, SPB, MP, CD>, crossinline msg: () -> Any?) = info { "[${operation.id}] ${msg()}" }
-
-inline fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo>
-    KLogger.warn(operation: MiningOperation<MI, SPT, SPB, MP, CD>, crossinline msg: () -> Any?) = warn { "[${operation.id}] ${msg()}" }
-
-inline fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo>
-    KLogger.error(operation: MiningOperation<MI, SPT, SPB, MP, CD>, crossinline msg: () -> Any?) = error { "[${operation.id}] ${msg()}" }
-
-inline fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo>
-    KLogger.error(operation: MiningOperation<MI, SPT, SPB, MP, CD>, e: Throwable, crossinline msg: () -> Any?) = error(
-    e
-) { "[${operation.id}] ${msg()}" }

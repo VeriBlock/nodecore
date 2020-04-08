@@ -7,22 +7,18 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import de.nielsfalk.ktor.swagger.description
-import de.nielsfalk.ktor.swagger.get
-import de.nielsfalk.ktor.swagger.ok
-import de.nielsfalk.ktor.swagger.responds
-import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
 import io.ktor.locations.Location
+import io.ktor.locations.get
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import org.bitcoinj.core.Utils
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.api.models.ShowLastBitcoinBlockResponse
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 import java.io.ByteArrayOutputStream
 
-@Group("Bitcoin")
+//@Group("Bitcoin")
 @Location("/api/lastbitcoinblock")
 class lastBitcoinBlock
 
@@ -32,11 +28,11 @@ class LastBitcoinBlockController(
 
     override fun Route.registerApi() {
         get<lastBitcoinBlock>(
-            "lastbitcoinblock"
-                .description("Get latest bitcoin block known by the PoP Miner")
-                .responds(
-                    ok<ShowLastBitcoinBlockResponse>()
-                )
+        //    "lastbitcoinblock"
+        //        .description("Get latest bitcoin block known by the PoP Miner")
+        //        .responds(
+        //            ok<ShowLastBitcoinBlockResponse>()
+        //        )
         ) {
             val lastBlock = minerService.getLastBitcoinBlock()
             val lastBlockHeader = lastBlock.header

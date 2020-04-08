@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.shell.commands
 
 import kotlinx.coroutines.runBlocking
 import org.veriblock.miners.pop.common.formatBTCFriendlyString
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter

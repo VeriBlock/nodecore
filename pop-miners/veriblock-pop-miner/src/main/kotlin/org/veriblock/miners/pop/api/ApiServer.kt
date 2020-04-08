@@ -7,11 +7,6 @@
 
 package org.veriblock.miners.pop.api
 
-import de.nielsfalk.ktor.swagger.SwaggerSupport
-import de.nielsfalk.ktor.swagger.version.shared.Contact
-import de.nielsfalk.ktor.swagger.version.shared.Information
-import de.nielsfalk.ktor.swagger.version.v2.Swagger
-import de.nielsfalk.ktor.swagger.version.v3.OpenApi
 import io.ktor.application.install
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
@@ -26,7 +21,6 @@ import mu.KotlinLogging
 import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
-import java.util.concurrent.TimeUnit
 
 private val logger = KotlinLogging.logger {}
 
@@ -61,22 +55,22 @@ class ApiServer(
                 }
 
                 // Documentation
-                install(SwaggerSupport) {
-                    forwardRoot = true
-                    provideUi = true
-                    val information = Information(
-                        version = API_VERSION,
-                        title = "VeriBlock PoP Miner API",
-                        description = "This is the VPM's integrated API, through which you can monitor and control the application",
-                        contact = Contact("VeriBlock", "https://veriblock.org")
-                    )
-                    swagger = Swagger().apply {
-                        info = information
-                    }
-                    openApi = OpenApi().apply {
-                        info = information
-                    }
-                }
+                //install(SwaggerSupport) {
+                //    forwardRoot = true
+                //    provideUi = true
+                //    val information = Information(
+                //        version = API_VERSION,
+                //        title = "VeriBlock PoP Miner API",
+                //        description = "This is the VPM's integrated API, through which you can monitor and control the application",
+                //        contact = Contact("VeriBlock", "https://veriblock.org")
+                //    )
+                //    swagger = Swagger().apply {
+                //        info = information
+                //    }
+                //    openApi = OpenApi().apply {
+                //        info = information
+                //    }
+                //}
 
                 install(Locations)
                 routing {
@@ -100,7 +94,7 @@ class ApiServer(
             return
         }
 
-        server?.stop(100, 100, TimeUnit.MILLISECONDS)
+        server?.stop(100, 100)
         running = false
     }
 }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Utils
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure

@@ -4,13 +4,14 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package org.veriblock.miners.pop.services
+package org.veriblock.miners.pop.service
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.model.BlockStore
+import org.veriblock.miners.pop.service.NodeCoreGateway
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit

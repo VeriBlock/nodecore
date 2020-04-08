@@ -16,7 +16,8 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.OperationState
-import org.veriblock.miners.pop.core.StateChangeEvent
+import org.veriblock.miners.pop.core.OperationLog
+import org.veriblock.miners.pop.core.parseOperationLogs
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -60,13 +61,17 @@ class OperationSerializer(
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
-            payoutAmount = operation.payoutAmount ?: "",
-            changeHistory = operation.getChangeHistory().map { serialize(it) }
+            payoutAmount = operation.payoutAmount ?: ""
         )
         return protoData
     }
 
-    fun deserialize(serialized: OperationProto.Operation, createdAt: LocalDateTime, txFactory: (String) -> WalletTransaction): ApmOperation {
+    fun deserialize(
+        serialized: OperationProto.Operation,
+        createdAt: LocalDateTime,
+        logs: List<OperationLog>,
+        txFactory: (String) -> WalletTransaction
+    ): ApmOperation {
         val chain = pluginService[serialized.chainId]
             ?: error("Unable to load plugin ${serialized.chainId} for operation ${serialized.operationId}")
         val chainMonitor = securityInheritingService.getMonitor(serialized.chainId)
@@ -76,9 +81,7 @@ class OperationSerializer(
             chainId = serialized.chainId,
             chain = chain,
             chainMonitor = chainMonitor,
-            changeHistory = serialized.changeHistory.map {
-                deserialize(it)
-            },
+            logs = logs,
             endorsedBlockHeight = serialized.blockHeight,
             createdAt = createdAt
         ).apply {
@@ -162,17 +165,6 @@ class OperationSerializer(
             publicKey = tx.publicKey,
             networkByte = tx.networkByte?.toInt() ?: 0
         )
-    }
-
-    private fun serialize(event: StateChangeEvent): OperationProto.Event {
-        return OperationProto.Event(
-            change = event.state,
-            timestamp = event.timestamp
-        )
-    }
-
-    private fun deserialize(serialized: OperationProto.Event): StateChangeEvent {
-        return StateChangeEvent(serialized.change, serialized.timestamp)
     }
 
     private fun deserialize(serialized: OperationProto.PopTransaction): VeriBlockPoPTransaction {

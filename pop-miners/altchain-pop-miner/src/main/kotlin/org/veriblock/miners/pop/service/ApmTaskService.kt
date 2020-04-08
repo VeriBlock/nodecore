@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.miners.pop.tasks
+package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
@@ -27,6 +27,7 @@ import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.service.TaskService
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
@@ -51,14 +52,14 @@ class ApmTaskService(
         targetState = OperationState.INSTRUCTION,
         timeout = 90.sec
     ) {
-        logger.info(operation) { "Getting the mining instruction..." }
+        logger.info(operation, "Getting the mining instruction...")
         val publicationData = try {
             operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
         } catch (e: Exception) {
             failOperation("Error while trying to get PoP Mining Instruction from ${operation.chain.name}: ${e.message}")
         }
         operation.setMiningInstruction(publicationData)
-        logger.info(operation) { "Successfully retrieved the mining instruction!" }
+        logger.info(operation, "Successfully retrieved the mining instruction!")
         val vbkContextBlockHash = publicationData.context[0]
         val vbkContextBlock = nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
             ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
@@ -82,7 +83,7 @@ class ApmTaskService(
             ?: failTask("CreateEndorsementTransactionTask called without mining instruction!")
 
         // Something to fill in all the gaps
-        logger.info(operation) { "Submitting endorsement VBK transaction..." }
+        logger.info(operation, "Submitting endorsement VBK transaction...")
         val transaction = try {
             val endorsementData = SerializeDeserializeService.serialize(miningInstruction.publicationData)
             endorsementData.checkForValidEndorsement {
@@ -100,7 +101,7 @@ class ApmTaskService(
 
         val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)
         operation.setTransaction(ApmSpTransaction(walletTransaction))
-        logger.info(operation) { "Successfully added the VBK transaction: ${walletTransaction.id}!" }
+        logger.info(operation, "Successfully added the VBK transaction: ${walletTransaction.id}!")
     }
 
     override suspend fun confirmEndorsementTransaction(operation: ApmOperation) = operation.runTask(
@@ -111,7 +112,7 @@ class ApmTaskService(
         val endorsementTransaction = operation.endorsementTransaction
             ?: failTask("ConfirmTransactionTask called without wallet transaction!")
 
-        logger.info(operation) { "Waiting for the transaction to be included in VeriBlock block..." }
+        logger.info(operation, "Waiting for the transaction to be included in VeriBlock block...")
         // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
         val txMetaChannel = endorsementTransaction.transaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
         txMetaChannel.receive() // Skip first state change (PENDING)
@@ -145,7 +146,7 @@ class ApmTaskService(
         } catch (e: BlockStoreException) {
             failTask("Error when retrieving VBK block $blockHash")
         }
-        logger.info(operation) { "Successfully added the VBK block of proof!" }
+        logger.info(operation, "Successfully added the VBK block of proof!")
     }
 
     override suspend fun proveEndorsementTransaction(operation: ApmOperation) = operation.runTask(
@@ -160,10 +161,10 @@ class ApmTaskService(
 
         val walletTransaction = endorsementTransaction.transaction
 
-        logger.info(operation) { "Getting the merkle path for the transaction: ${walletTransaction.id}..." }
+        logger.info(operation, "Getting the merkle path for the transaction: ${walletTransaction.id}...")
         val merklePath = walletTransaction.merklePath
             ?: failOperation("No merkle path found for ${walletTransaction.id}")
-        logger.info(operation) { "Successfully retrieved the merkle path for the transaction: ${walletTransaction.id}!" }
+        logger.info(operation, "Successfully retrieved the merkle path for the transaction: ${walletTransaction.id}!")
 
         val vbkMerkleRoot = merklePath.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
         val verified = vbkMerkleRoot == blockOfProof.block.merkleRoot
@@ -175,7 +176,7 @@ class ApmTaskService(
         }
 
         operation.setMerklePath(ApmMerklePath(merklePath))
-        logger.info(operation) { "Successfully added the verified merkle path!" }
+        logger.info(operation, "Successfully added the verified merkle path!")
     }
 
     override suspend fun buildPublicationContext(operation: ApmOperation) = operation.runTask(
@@ -188,10 +189,10 @@ class ApmTaskService(
         val miningInstruction = operation.miningInstruction
             ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
 
-        logger.info(operation) { "Waiting for the next VBK Keystone..." }
+        logger.info(operation, "Waiting for the next VBK Keystone...")
         val keystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
         val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
-            logger.debug(operation) { "Checking block ${block.hash} @ ${block.height}..." }
+            logger.debug(operation, "Checking block ${block.hash} @ ${block.height}...")
             if (block.height > keystoneOfProofHeight) {
                 failOperation(
                     "The next VBK Keystone has been skipped!" +
@@ -200,7 +201,7 @@ class ApmTaskService(
             }
             block.height == keystoneOfProofHeight
         }
-        logger.info(operation) { "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}" }
+        logger.info(operation, "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}")
 
         // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
         val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
@@ -303,7 +304,7 @@ class ApmTaskService(
             val siTxId = operation.chain.submit(proofOfProof, veriBlockPublications)
 
             val chainName = operation.chain.name
-            logger.info(operation) { "VTB submitted to $chainName! $chainName PoP TxId: $siTxId" }
+            logger.info(operation, "VTB submitted to $chainName! $chainName PoP TxId: $siTxId")
 
             operation.setProofOfProofId(siTxId)
         } catch (e: Exception) {
@@ -323,20 +324,21 @@ class ApmTaskService(
             ?: failTask("PayoutDetectionTask called without proof of proof txId!")
 
         val chainSymbol = operation.chain.key.toUpperCase()
-        logger.info(operation) { "Waiting for $chainSymbol Endorsement Transaction ($endorsementTransactionId) to be confirmed..." }
+        logger.info(operation, "Waiting for $chainSymbol Endorsement Transaction ($endorsementTransactionId) to be confirmed...")
         val endorsementTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
             if (transaction.confirmations < 0) {
                 throw AltchainTransactionReorgException(transaction)
             }
             transaction.confirmations >= operation.chain.config.neededConfirmations
         }
-        logger.info(operation) {
+        logger.info(
+            operation,
             "Successfully confirmed $chainSymbol endorsement transaction ${endorsementTransaction.txId}!" +
                 " Confirmations: ${endorsementTransaction.confirmations}"
-        }
+        )
 
         val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
-        logger.info(operation) { "Waiting for $chainSymbol endorsed block ($endorsedBlockHeight) to be confirmed..." }
+        logger.info(operation, "Waiting for $chainSymbol endorsed block ($endorsedBlockHeight) to be confirmed...")
         val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
             block.confirmations >= operation.chain.config.neededConfirmations
         }
@@ -349,13 +351,14 @@ class ApmTaskService(
                     " is not in ${operation.chainId.toUpperCase()}'s main chain"
             )
         }
-        logger.info(operation) { "Successfully confirmed $chainSymbol endorsed block ${endorsedBlock.hash}!" }
+        logger.info(operation, "Successfully confirmed $chainSymbol endorsed block ${endorsedBlock.hash}!")
 
         val payoutBlockHeight = endorsedBlockHeight + operation.chain.getPayoutInterval()
-        logger.debug(operation) {
+        logger.debug(
+            operation,
             "$chainSymbol computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
-        }
-        logger.info(operation) { "Waiting for $chainSymbol payout block ($payoutBlockHeight) to be confirmed..." }
+        )
+        logger.info(operation, "Waiting for $chainSymbol payout block ($payoutBlockHeight) to be confirmed...")
         val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
             if (block.confirmations < 0) {
                 throw AltchainBlockReorgException(block)
@@ -368,10 +371,11 @@ class ApmTaskService(
             it.addressHash == miningInstruction.publicationData.payoutInfo.toHex()
         }
         if (rewardVout != null) {
-            logger.info(operation) {
+            logger.info(
+                operation,
                 "${operation.chainId.toUpperCase()} PoP Payout detected! Amount: ${rewardVout.value} ${operation.chainId.toUpperCase()}"
-            }
-            logger.info(operation) { "Completed!" }
+            )
+            logger.info(operation, "Completed!")
             operation.complete(payoutBlock.hash, rewardVout.value.toString())
         } else {
             failOperation(

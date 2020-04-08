@@ -24,7 +24,7 @@ import java.net.URL
 private val logger = createLogger {}
 
 class PluginService(
-    private val configuration: Configuration
+    configuration: Configuration
 ) {
     private var loadedPlugins: Map<String, SecurityInheritingChain> = emptyMap()
 

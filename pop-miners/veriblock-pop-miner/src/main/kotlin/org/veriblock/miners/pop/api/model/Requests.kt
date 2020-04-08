@@ -7,8 +7,6 @@
 
 package org.veriblock.miners.pop.api.model
 
-class EmptyRequest
-
 class MineRequest(
     val block: Int?
 )

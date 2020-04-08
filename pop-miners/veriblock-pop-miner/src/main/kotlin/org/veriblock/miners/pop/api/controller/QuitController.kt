@@ -7,33 +7,30 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import de.nielsfalk.ktor.swagger.description
-import de.nielsfalk.ktor.swagger.post
-import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.Location
+import io.ktor.locations.post
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import mu.KotlinLogging
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.api.model.EmptyRequest
 import java.lang.Thread.sleep
 import java.util.concurrent.Executors
 
 private val logger = KotlinLogging.logger {}
 
-@Group("Quit")
+//@Group("Quit")
 @Location("/api/quit")
 class quit(val restart: Boolean = false)
 
 class QuitController : ApiController {
 
     override fun Route.registerApi() {
-        post<quit, EmptyRequest>(
-            "quit"
-                .description("Exits the application")
-        ) { location, _ ->
+        post<quit>(
+        //    "quit"
+        //        .description("Exits the application")
+        ) { location ->
             logger.info("Terminating the miner now")
             val quitReason = if (location.restart) 1 else 0
             val quitExecutor = Executors.newSingleThreadExecutor()

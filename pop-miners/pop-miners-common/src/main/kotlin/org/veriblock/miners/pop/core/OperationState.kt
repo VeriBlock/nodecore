@@ -16,6 +16,7 @@ enum class OperationState(
     FAILED(-1, "Failed");
 
     fun isRunning() = this != INITIAL && this != COMPLETED && this != FAILED
+    fun isDone() = this == COMPLETED || this == FAILED
 
     infix fun hasType(type: OperationState): Boolean = if (type != FAILED) {
         id >= type.id

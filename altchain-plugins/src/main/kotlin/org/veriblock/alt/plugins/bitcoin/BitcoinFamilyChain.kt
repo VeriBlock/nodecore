@@ -53,7 +53,6 @@ class BitcoinFamilyChain(
     override val name: String = configuration.name
         ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
-
     private val payoutAddressScript: ByteArray
 
     init {
@@ -61,15 +60,13 @@ class BitcoinFamilyChain(
         checkNotNull(config.payoutAddress) {
             "$key's payoutAddress must be configured!"
         }
-        payoutAddressScript = when {
-            config.payoutAddress.isHex() ->
-                config.payoutAddress.asHexBytes()
-            else -> {
-                try {
-                    SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress)
-                } catch (e: Exception) {
-                    error("Invalid segwit address: ${e.message}")
-                }
+        payoutAddressScript = if (config.payoutAddress.isHex()) {
+            config.payoutAddress.asHexBytes()
+        } else {
+            try {
+                SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress)
+            } catch (e: Exception) {
+                error("Invalid segwit address: ${e.message}")
             }
         }
     }

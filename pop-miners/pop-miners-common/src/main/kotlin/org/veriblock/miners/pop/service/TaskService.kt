@@ -1,4 +1,4 @@
-package org.veriblock.miners.pop.tasks
+package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -28,11 +28,11 @@ abstract class TaskService<
         out SpBlock,
         out MerklePath,
         out WithDetailedInfo
-        >
-    > {
+    >
+> {
     suspend fun runTasks(operation: MO) {
         if (operation.state == OperationState.FAILED) {
-            logger.warn(operation) { "Attempted to run tasks for a failed operation!" }
+            logger.warn(operation, "Attempted to run tasks for a failed operation!")
             return
         }
 
@@ -46,7 +46,7 @@ abstract class TaskService<
             submitPopEndorsement(operation)
             confirmPayout(operation)
         } catch (e: CancellationException) {
-            logger.info(operation) { "Job was cancelled" }
+            logger.info(operation, "Job was cancelled")
         } catch (e: OperationException) {
             operation.fail(e.message)
         } catch (t: Throwable) {
@@ -84,22 +84,24 @@ abstract class TaskService<
                 }
                 success = true
             } catch (e: TaskException) {
-                logger.warn(this) { "Task '$taskName' has failed: ${e.message}" }
+                logger.warn(this, "Task '$taskName' has failed: ${e.message}")
                 if (attempts < MAX_TASK_RETRIES) {
                     attempts++
                     // Check if the task was cancelled before performing any reattempts
                     yield()
                     // Wait a growing amount of time before every reattempt
                     val secondsToWait = attempts * attempts * 10
-                    logger.info(this) { "Will try again in $secondsToWait seconds..." }
+                    logger.info(this, "Will try again in $secondsToWait seconds...")
                     delay(secondsToWait * 1000L)
-                    logger.info(this) { "Performing attempt #$attempts to $taskName..." }
+                    logger.info(this, "Performing attempt #$attempts to $taskName...")
                 } else {
-                    logger.warn(this) { "Maximum reattempt amount exceeded for task '$taskName'" }
+                    logger.warn(this, "Maximum reattempt amount exceeded for task '$taskName'")
                     throw e
                 }
             } catch (e: TimeoutCancellationException) {
-                error("Operation has been cancelled for taking too long during task '$taskName'.")
+                failOperation(
+                    "Operation has been cancelled for taking too long during task '$taskName'."
+                )
             }
         } while (!success)
     }

@@ -22,6 +22,7 @@ import org.veriblock.lite.params.NetworkConfig
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.AltchainPopMinerService
+import org.veriblock.miners.pop.service.ApmTaskService
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.MockMinerService
@@ -33,8 +34,6 @@ import org.veriblock.miners.pop.storage.KeyValueRepository
 import org.veriblock.miners.pop.storage.KeyValueTable
 import org.veriblock.miners.pop.storage.OperationRepository
 import org.veriblock.miners.pop.storage.OperationStateTable
-import org.veriblock.miners.pop.tasks.ApmTaskService
-import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
@@ -74,7 +73,6 @@ val minerModule = module {
     }
     single { Shell(get()) }
     single { ApmTaskService(get(), get()) }
-    single { WorkflowAuthority(get()) }
     single { OperationSerializer(get(), get()) }
     single { OperationService(get(), get()) }
     single { PluginService(get()) }

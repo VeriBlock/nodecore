@@ -16,6 +16,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.jfrog.artifactory")
+    kotlin("plugin.serialization") version kotlinVersion
 }
 
 configurations.all {
@@ -44,12 +45,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
-    // HTTP API
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-locations:$ktorVersion")
-    implementation("io.ktor:ktor-gson:$ktorVersion")
-    // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.nielsfalk:ktor-swagger:0.5.0")
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:0.20.0")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")

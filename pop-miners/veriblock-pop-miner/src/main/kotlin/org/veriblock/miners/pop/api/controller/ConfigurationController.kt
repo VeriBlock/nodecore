@@ -7,30 +7,29 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import de.nielsfalk.ktor.swagger.description
-import de.nielsfalk.ktor.swagger.get
-import de.nielsfalk.ktor.swagger.put
-import de.nielsfalk.ktor.swagger.version.shared.Group
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.Location
+import io.ktor.locations.get
+import io.ktor.locations.put
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.AutoMineConfig
 import org.veriblock.miners.pop.api.model.SetConfigRequest
 import org.veriblock.miners.pop.automine.AutoMineEngine
-import org.veriblock.miners.pop.services.BitcoinService
+import org.veriblock.miners.pop.service.BitcoinService
 
-@Group("Configuration")
+//@Group("Configuration")
 @Location("/api/config")
 class config
 
-@Group("Configuration")
+//@Group("Configuration")
 @Location("/api/config/automine")
 class automine
 
-@Group("Configuration")
+//@Group("Configuration")
 @Location("/api/config/btc-fee")
 class btcfee
 
@@ -42,16 +41,17 @@ class ConfigurationController(
 
     override fun Route.registerApi() {
         get<config>(
-            "config"
-                .description("Get all configuration values")
+        //    "config"
+        //        .description("Get all configuration values")
         ) {
             val configValues = configuration.list()
             call.respond(configValues)
         }
-        put<config, SetConfigRequest>(
-            "config"
-                .description("Set one configuration value")
-        ) { _, request ->
+        put<config>(//, SetConfigRequest>(
+        //    "config"
+        //        .description("Set one configuration value")
+        ) {// _, request ->
+            val request = call.receive<SetConfigRequest>()
             if (request.key == null) {
                 throw BadRequestException("'key' must be set")
             }
@@ -67,16 +67,17 @@ class ConfigurationController(
             call.respond(HttpStatusCode.OK)
         }
         get<automine>(
-            "automine"
-                .description("Get the automine config")
+        //    "automine"
+        //        .description("Get the automine config")
         ) {
             val configValues = autoMineEngine.config
             call.respond(configValues)
         }
-        put<automine, AutoMineConfigRequest>(
-            "automine"
-                .description("Set the automine config")
-        ) { _, request ->
+        put<automine>(//, AutoMineConfigRequest>(
+        //    "automine"
+        //        .description("Set the automine config")
+        ) {// _, request ->
+            val request = call.receive<AutoMineConfigRequest>()
             autoMineEngine.config = AutoMineConfig(
                 request.round1 ?: autoMineEngine.config.round1,
                 request.round2 ?: autoMineEngine.config.round2,
@@ -86,8 +87,8 @@ class ConfigurationController(
             call.respond(HttpStatusCode.OK)
         }
         get<btcfee>(
-            "btcfee"
-                .description("Get the btcfee config")
+        //    "btcfee"
+        //        .description("Get the btcfee config")
         ) {
             val configValues = BtcFeeConfigRequest(
                 bitcoinService.maxFee,
@@ -95,10 +96,11 @@ class ConfigurationController(
             )
             call.respond(configValues)
         }
-        put<btcfee, BtcFeeConfigRequest>(
-            "btcfee"
-                .description("Set the btcfee config")
-        ) { _, request ->
+        put<btcfee>(//, BtcFeeConfigRequest>(
+        //    "btcfee"
+        //        .description("Set the btcfee config")
+        ) {// _, request ->
+            val request = call.receive<BtcFeeConfigRequest>()
             if (request.maxFee != null) {
                 bitcoinService.maxFee = request.maxFee
             }

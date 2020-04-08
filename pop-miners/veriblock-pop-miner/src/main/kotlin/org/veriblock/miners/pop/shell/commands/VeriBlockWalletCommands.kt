@@ -11,7 +11,7 @@ package org.veriblock.miners.pop.shell.commands
 import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import org.veriblock.miners.pop.model.PopEndorsementInfo
-import org.veriblock.miners.pop.services.NodeCoreGateway
+import org.veriblock.miners.pop.service.NodeCoreGateway
 import org.veriblock.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter

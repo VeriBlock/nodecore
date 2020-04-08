@@ -35,12 +35,6 @@ object OperationProto {
     )
 
     @Serializable
-    data class Event(
-        @ProtoId(1) val change: String,
-        @ProtoId(2) val timestamp: Int
-    )
-
-    @Serializable
     data class Operation(
         @ProtoId(1) val operationId: String,
         @ProtoId(2) val chainId: String,
@@ -55,7 +49,6 @@ object OperationProto {
         @ProtoId(11) val veriblockPublications: List<VeriBlockPublication> = emptyList(),
         @ProtoId(12) val proofOfProofId: String,
         @ProtoId(13) val payoutBlockHash: String,
-        @ProtoId(14) val payoutAmount: String,
-        @ProtoId(15) val changeHistory: List<Event> = emptyList()
+        @ProtoId(14) val payoutAmount: String
     )
 }

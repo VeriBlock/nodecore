@@ -16,17 +16,19 @@ import org.veriblock.sdk.alt.plugin.PluginService
 private val logger = createLogger {}
 
 class SecurityInheritingService(
-    private val configuration: Configuration,
-    private val pluginFactory: PluginService
+    configuration: Configuration,
+    pluginService: PluginService
 ) {
-    private val monitors = HashMap<String, SecurityInheritingMonitor>()
+    private val monitors by lazy {
+        pluginService.getPlugins().entries.associate { (chainId, chain) ->
+            chainId to SecurityInheritingMonitor(configuration, chainId, chain)
+        }
+    }
 
     fun start(miner: MinerService) {
-        for ((chainId, chain) in pluginFactory.getPlugins()) {
+        for ((chainId, monitor) in monitors) {
             logger.debug { "Starting $chainId monitor..." }
-            val autoMiner = SecurityInheritingMonitor(configuration, chainId, chain)
-            autoMiner.start(miner)
-            monitors[chainId] = autoMiner
+            monitor.start(miner)
         }
     }
 

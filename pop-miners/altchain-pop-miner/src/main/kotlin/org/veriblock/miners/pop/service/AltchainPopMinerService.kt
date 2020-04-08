@@ -10,14 +10,17 @@
 
 package org.veriblock.miners.pop.service
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
+import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.miners.pop.tasks.WorkflowAuthority
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
@@ -34,7 +37,7 @@ private val logger = createLogger {}
 class AltchainPopMinerService(
     private val config: MinerConfig,
     private val context: Context,
-    private val workflowAuthority: WorkflowAuthority,
+    private val taskService: ApmTaskService,
     private val nodeCoreLiteKit: NodeCoreLiteKit,
     private val operationService: OperationService,
     private val pluginService: PluginService,
@@ -42,6 +45,8 @@ class AltchainPopMinerService(
 ) : MinerService {
     private val operations = ConcurrentHashMap<String, ApmOperation>()
     private var isShuttingDown: Boolean = false
+
+    private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
     private enum class ReadyCondition {
         SUFFICIENT_FUNDS,
@@ -213,7 +218,7 @@ class AltchainPopMinerService(
 
         registerToStateChangedEvent(operation)
 
-        workflowAuthority.submit(operation)
+        submit(operation)
         operations[operation.id] = operation
 
         logger.info { "Created operation [${operation.id}] on chain ${operation.chainId}" }
@@ -248,7 +253,7 @@ class AltchainPopMinerService(
         registerToStateChangedEvent(newOperation)
 
         // Submit new operation
-        workflowAuthority.submit(newOperation)
+        submit(newOperation)
         operations[newOperation.id] = newOperation
 
         logger.info { "Resubmitted operation [${operation.id}] as new operation [${newOperation.id}]" }
@@ -288,8 +293,10 @@ class AltchainPopMinerService(
         logger.info("Submitting suspended operations")
 
         try {
-            operations.forEachValue(4L) {
-                workflowAuthority.restore(it)
+            for (operation in operations.values) {
+                if (!operation.state.isDone()) {
+                    submit(operation)
+                }
             }
         } catch (e: Exception) {
             logger.error("Unable to resume suspended operations", e)
@@ -301,6 +308,15 @@ class AltchainPopMinerService(
     private fun registerToStateChangedEvent(operation: ApmOperation) {
         operation.stateChangedEvent.register(operationService) {
             operationService.storeOperation(operation)
+        }
+    }
+
+    private fun submit(operation: ApmOperation) {
+        if (operation.job != null) {
+            error("Trying to submit operation [${operation.id}] while it already had a running job!")
+        }
+        operation.job = coroutineScope.launch {
+            taskService.runTasks(operation)
         }
     }
 }

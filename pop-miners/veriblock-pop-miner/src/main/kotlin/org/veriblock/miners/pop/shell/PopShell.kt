@@ -15,7 +15,7 @@ import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.model.result.Result
 import org.veriblock.miners.pop.model.result.ResultMessage
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import kotlin.system.exitProcess

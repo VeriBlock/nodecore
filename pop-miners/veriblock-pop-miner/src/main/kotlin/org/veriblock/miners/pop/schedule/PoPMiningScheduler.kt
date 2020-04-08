@@ -20,7 +20,7 @@ import org.quartz.impl.StdSchedulerFactory
 import org.quartz.spi.JobFactory
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.VpmConfig
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 import java.text.SimpleDateFormat
 
 private val logger = createLogger {}

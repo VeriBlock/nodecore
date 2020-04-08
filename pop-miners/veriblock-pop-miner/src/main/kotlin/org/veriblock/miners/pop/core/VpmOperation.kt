@@ -19,12 +19,12 @@ import java.time.LocalDateTime
 
 class VpmOperation(
     id: String,
-    changeHistory: List<StateChangeEvent> = emptyList(),
     endorsedBlockHeight: Int? = null,
     createdAt: LocalDateTime = LocalDateTime.now(),
+    logs: List<OperationLog> = emptyList(),
     reconstituting: Boolean = false
 ) : MiningOperation<PopMiningInstruction, VpmSpTransaction, VpmSpBlock, VpmMerklePath, VpmContext>(
-    id, endorsedBlockHeight, changeHistory, createdAt, reconstituting
+    id, endorsedBlockHeight, createdAt, logs, reconstituting
 ) {
     val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 

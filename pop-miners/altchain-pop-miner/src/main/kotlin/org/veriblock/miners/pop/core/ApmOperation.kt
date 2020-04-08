@@ -9,7 +9,6 @@
 package org.veriblock.miners.pop.core
 
 import org.veriblock.core.contracts.WithDetailedInfo
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.transactionmonitor.WalletTransaction
@@ -23,19 +22,17 @@ import org.veriblock.sdk.models.VeriBlockPublication
 import java.time.LocalDateTime
 import java.util.UUID
 
-private val logger = createLogger {}
-
 class ApmOperation(
-    id: String = UUID.randomUUID().toString().substring(0, 8),
+    id: String? = null,
     val chainId: String,
     val chain: SecurityInheritingChain,
     val chainMonitor: SecurityInheritingMonitor,
-    changeHistory: List<StateChangeEvent> = emptyList(),
     endorsedBlockHeight: Int? = null,
     createdAt: LocalDateTime = LocalDateTime.now(),
+    logs: List<OperationLog> = emptyList(),
     reconstituting: Boolean = false
 ) : MiningOperation<ApmInstruction, ApmSpTransaction, ApmSpBlock, ApmMerklePath, ApmContext>(
-    id, endorsedBlockHeight, changeHistory, createdAt, reconstituting
+    id ?: chainId + UUID.randomUUID().toString().substring(0, 8), endorsedBlockHeight, createdAt, logs, reconstituting
 ) {
     val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
 

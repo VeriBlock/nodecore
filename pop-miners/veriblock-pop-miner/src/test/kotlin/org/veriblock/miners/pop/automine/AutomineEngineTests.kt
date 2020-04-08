@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.model.VeriBlockHeader
-import org.veriblock.miners.pop.services.MinerService
+import org.veriblock.miners.pop.service.MinerService
 
 class AutomineEngineTests {
     @Test

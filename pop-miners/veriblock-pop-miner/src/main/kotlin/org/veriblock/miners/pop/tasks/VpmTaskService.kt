@@ -22,9 +22,15 @@ import org.veriblock.miners.pop.model.PopMiningTransaction
 import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath
 import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree
 import org.veriblock.miners.pop.model.merkle.MerkleProof
-import org.veriblock.miners.pop.services.BitcoinService
-import org.veriblock.miners.pop.services.NodeCoreGateway
-import org.veriblock.miners.pop.services.PopSubmitRejected
+import org.veriblock.miners.pop.service.TaskService
+import org.veriblock.miners.pop.service.failOperation
+import org.veriblock.miners.pop.service.failTask
+import org.veriblock.miners.pop.service.hr
+import org.veriblock.miners.pop.service.min
+import org.veriblock.miners.pop.service.sec
+import org.veriblock.miners.pop.service.BitcoinService
+import org.veriblock.miners.pop.service.NodeCoreGateway
+import org.veriblock.miners.pop.service.PopSubmitRejected
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
@@ -56,18 +62,18 @@ class VpmTaskService(
         timeout = 15.min
     ) {
         val miningInstruction = operation.miningInstruction
-            ?: failOperation("Trying to create endorsement transaction without the mining instruction!")
+            ?: failOperation(
+                "Trying to create endorsement transaction without the mining instruction!"
+            )
 
         val opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData)
         try {
             val transaction = bitcoinService.createPoPTransaction(opReturnScript)
             if (transaction != null) {
-                logger.info(operation) {
-                    val txSizeKb = transaction.unsafeBitcoinSerialize().size / 1000.0
-                    val feeSats = transaction.fee.value
-                    val feePerKb = (feeSats / txSizeKb).roundToInt()
-                    "Created BTC transaction '${transaction.txId}'. Fee: ${transaction.fee} Sat ($feePerKb Sat/KB)."
-                }
+                val txSizeKb = transaction.unsafeBitcoinSerialize().size / 1000.0
+                val feeSats = transaction.fee.value
+                val feePerKb = (feeSats / txSizeKb).roundToInt()
+                logger.info(operation, "Created BTC transaction '${transaction.txId}'. Fee: ${transaction.fee} Sat ($feePerKb Sat/KB).")
 
                 val exposedTransaction = ExpTransaction(
                     bitcoinService.context.params,
@@ -107,7 +113,7 @@ class VpmTaskService(
             }
         }
 
-        logger.info(operation) { "BTC endorsement transaction has been confirmed!" }
+        logger.info(operation, "BTC endorsement transaction has been confirmed!")
         operation.setConfirmed()
     }
 
@@ -125,7 +131,7 @@ class VpmTaskService(
         val bestBlock = bitcoinService.getBestBlock(blockAppearances.keys)
             ?: failTask("Unable to retrieve block of proof from transaction!")
 
-        logger.info(operation) { "Block of proof: ${bestBlock.hash}" }
+        logger.info(operation, "Block of proof: ${bestBlock.hash}")
 
         // Wait for the actual block appearing in the blockchain (it should already be there given the transaction is confirmed)
         bitcoinService.getFilteredBlock(bestBlock.hash)
@@ -149,11 +155,11 @@ class VpmTaskService(
             val proof = MerkleProof.parse(partialMerkleTree)
             if (proof != null) {
                 val path = proof.getCompactPath(endorsementTransaction.transaction.txId)
-                logger.debug(operation) { "Merkle Proof Compact Path: $path" }
-                logger.debug(operation) { "Merkle Root: ${block.merkleRoot}" }
+                logger.debug(operation, "Merkle Proof Compact Path: $path")
+                logger.debug(operation, "Merkle Root: ${block.merkleRoot}")
                 try {
                     val merklePath = BitcoinMerklePath(path)
-                    logger.debug(operation) { "Computed Merkle Root: ${merklePath.getMerkleRoot()}" }
+                    logger.debug(operation, "Computed Merkle Root: ${merklePath.getMerkleRoot()}")
                     if (merklePath.getMerkleRoot().equals(block.merkleRoot.toString(), ignoreCase = true)) {
                         operation.setMerklePath(VpmMerklePath(merklePath.getCompactFormat()))
                         return@runTask
@@ -172,10 +178,11 @@ class VpmTaskService(
         }
 
         // Retrieving the Merkle path from the PartialMerkleTree failed, try creating manually from the whole block
-        logger.info(operation) {
+        logger.info(
+            operation,
             "Unable to calculate the correct Merkle path for transaction ${endorsementTransaction.txId} in " +
                 "block ${blockOfProof.hash} from a FilteredBlock, trying a fully downloaded block!"
-        }
+        )
         val fullBlock = bitcoinService.downloadBlock(blockOfProof.block.hash)
         val allTransactions = fullBlock!!.transactions
         val txids: MutableList<String> = ArrayList()
@@ -237,7 +244,9 @@ class VpmTaskService(
         val miningInstruction = operation.miningInstruction
             ?: failOperation("Trying to submit PoP endorsement without the mining instruction!")
         val endorsementTransaction = operation.endorsementTransaction
-            ?: failOperation("Trying to submit PoP endorsement without the endorsement transaction!")
+            ?: failOperation(
+                "Trying to submit PoP endorsement without the endorsement transaction!"
+            )
         val blockOfProof = operation.blockOfProof
             ?: failOperation("Trying to submit PoP endorsement without the block of proof!")
         val merklePath = operation.merklePath
@@ -251,14 +260,16 @@ class VpmTaskService(
                 blockOfProof.block, context.blocks
             )
             val popTxId = nodeCoreGateway.submitPop(popMiningTransaction)
-            logger.info(operation) { "PoP endorsement submitted! PoP transaction id: $popTxId" }
+            logger.info(operation, "PoP endorsement submitted! PoP transaction id: $popTxId")
             operation.setProofOfProofId(popTxId)
         } catch (e: PopSubmitRejected) {
             logger.error("NodeCore rejected PoP submission")
             failTask("NodeCore rejected PoP submission. Check NodeCore logs for detail.")
         } catch (e: StatusRuntimeException) {
             logger.error("Failed to submit PoP transaction to NodeCore: {}", e.status)
-            failTask("Unable to submit PoP transaction to NodeCore. Check that NodeCore RPC is available and resubmit operation.")
+            failTask(
+                "Unable to submit PoP transaction to NodeCore. Check that NodeCore RPC is available and resubmit operation."
+            )
         }
     }
 
@@ -271,7 +282,9 @@ class VpmTaskService(
             ?: failOperation("Trying to confirm Payout without the mining instruction!")
 
         val endorsedBlockHeight = operation.endorsedBlockHeight
-            ?: failOperation("Trying to wait for the payout block without having the endorsed block height set")
+            ?: failOperation(
+                "Trying to wait for the payout block without having the endorsed block height set"
+            )
 
         // Wait for the endorsement transaction to have enough confirmations
         // DISABLED: it took too much NodeCore power
@@ -298,14 +311,16 @@ class VpmTaskService(
             }
         } while (payoutBlockHash == null)
 
-        logger.debug(operation) { "Payout block hash: $payoutBlockHash" }
+        logger.debug(operation, "Payout block hash: $payoutBlockHash")
 
         // FIXME: Retrieve the reward from the payout block itself
         val endorsementInfo = nodeCoreGateway.getPopEndorsementInfo().find {
             it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
-        } ?: failOperation("Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!")
+        } ?: failOperation(
+            "Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!"
+        )
 
         operation.complete(payoutBlockHash, endorsementInfo.reward)
-        logger.info(operation) { "Operation has completed! Payout: ${endorsementInfo.reward} VBK" }
+        logger.info(operation, "Operation has completed! Payout: ${endorsementInfo.reward} VBK")
     }
 }

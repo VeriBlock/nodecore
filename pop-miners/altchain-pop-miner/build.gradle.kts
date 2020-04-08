@@ -50,7 +50,7 @@ dependencies {
     implementation("io.ktor:ktor-locations:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")
     // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.nielsfalk:ktor-swagger:0.5.0")
+    //implementation("com.github.nielsfalk:ktor-swagger:0.5.0")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
@@ -66,7 +66,8 @@ dependencies {
     implementation("com.diogonunes:JCDP:2.0.3.1")
 
     // Database
-    implementation("org.jetbrains.exposed:exposed:0.17.7")
+    implementation("org.jetbrains.exposed:exposed-core:0.23.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
     implementation("com.zaxxer:HikariCP:3.3.1")
     implementation("org.xerial:sqlite-jdbc:3.23.1")
 
