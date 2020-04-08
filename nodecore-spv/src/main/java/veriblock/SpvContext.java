@@ -116,7 +116,7 @@ public class SpvContext {
             File walletFile = new File(getDirectory(), getFilePrefix() + FILE_EXTENSION);
             addressManager.load(walletFile);
 
-            peerTable = new PeerTableImpl(this, p2PService, peerDiscovery);
+            peerTable = new PeerTableImpl(this, p2PService, peerDiscovery, pendingTransactionContainer);
             transactionService = new TransactionService(addressManager, networkParameters);
             adminApiService =
                 new AdminApiServiceImpl(this, peerTable, transactionService, addressManager, new TransactionFactoryImpl(networkParameters),
@@ -127,7 +127,6 @@ public class SpvContext {
             adminServerInterceptor = new AdminServerInterceptor();
 
             if (runAdminServer) {
-                peerTable.start();
                 server = createAdminServer();
             }
 

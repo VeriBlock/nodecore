@@ -43,6 +43,7 @@ import veriblock.net.PeerDiscovery;
 import veriblock.net.PeerSocketHandler;
 import veriblock.net.PeerTable;
 import veriblock.serialization.MessageSerializer;
+import veriblock.service.PendingTransactionContainer;
 import veriblock.service.impl.Blockchain;
 import veriblock.util.MessageIdGenerator;
 import veriblock.util.Threading;
@@ -55,6 +56,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -97,8 +99,14 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private final BloomFilter bloomFilter;
     private final P2PService p2PService;
     private final Map<String, LedgerContext> addressesState = new ConcurrentHashMap<>();
+    private final PendingTransactionContainer pendingTransactionContainer;
 
-    public PeerTableImpl(SpvContext spvContext, P2PService p2PService, PeerDiscovery peerDiscovery) {
+    public PeerTableImpl(
+        SpvContext spvContext,
+        P2PService p2PService,
+        PeerDiscovery peerDiscovery,
+        PendingTransactionContainer pendingTransactionContainer
+    ) {
         this.spvContext = spvContext;
         this.p2PService = p2PService;
         this.bloomFilter = createBloomFilter();
@@ -108,6 +116,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
             .listeningDecorator(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("PeerTable Thread").build()));
         this.messageExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build());
         this.discovery = peerDiscovery;
+        this.pendingTransactionContainer = pendingTransactionContainer;
         addPendingTransactionDownloadedEventListeners(executor, spvContext.getPendingTransactionDownloadedListener());
 
     }
@@ -121,6 +130,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
         this.executor.scheduleAtFixedRate(this::requestAddressState, 5, 60, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::discoverPeers, 0, 60, TimeUnit.SECONDS);
+        this.executor.scheduleAtFixedRate(this::requestPendingTransactions, 5, 60, TimeUnit.SECONDS);
 
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
         this.messageExecutor.scheduleWithFixedDelay(this::processIncomingMessages, 1, 1, TimeUnit.SECONDS);
@@ -201,10 +211,10 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         }
 
         VeriBlockMessages.Event request = VeriBlockMessages.Event.newBuilder()
-                .setId(MessageIdGenerator.next())
-                .setAcknowledge(false)
-                .setLedgerProofRequest(ledgerProof.build())
-                .build();
+            .setId(MessageIdGenerator.next())
+            .setAcknowledge(false)
+            .setLedgerProofRequest(ledgerProof.build())
+            .build();
 
         LOGGER.info("Request address state.");
         for (Peer peer : peers.values()) {
@@ -212,9 +222,31 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         }
     }
 
+    private void requestPendingTransactions() {
+        Set<Sha256Hash> pendingTransactionsId = pendingTransactionContainer.getPendingTransactionsId();
+
+        for (Sha256Hash sha256Hash : pendingTransactionsId) {
+            VeriBlockMessages.Event request = VeriBlockMessages.Event.newBuilder()
+                .setId(MessageIdGenerator.next())
+                .setAcknowledge(false)
+                .setTransactionRequest(
+                    VeriBlockMessages.GetTransactionRequest.newBuilder()
+                        .setId(ByteString.copyFrom(sha256Hash.getBytes()))
+                        .build()
+                )
+                .build();
+
+            for (Peer peer : peers.values()) {
+                peer.sendMessage(request);
+            }
+        }
+    }
+
     private void discoverPeers() {
         int maxConnections = getMaximumPeers();
-        if (maxConnections > 0 && countConnectedPeers() >= maxConnections) return;
+        if (maxConnections > 0 && countConnectedPeers() >= maxConnections) {
+            return;
+        }
 
         int needed = maxConnections - (countConnectedPeers() + countPendingPeers());
         if (needed > 0) {
@@ -290,6 +322,10 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                                     .collect(Collectors.toList());
 
                             updateAddressState(ledgerContexts);
+                            break;
+
+                        case TRANSACTION_REPLY:
+                            pendingTransactionContainer.updateTransactionInfo(message.getMessage().getTransactionReply().getTransaction());
                             break;
                     }
 

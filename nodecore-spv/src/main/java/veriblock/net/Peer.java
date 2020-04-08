@@ -165,6 +165,9 @@ public class Peer implements PeerSocketClosedEventListener {
                 notifyMessageReceived(message);
                 break;
 
+            case TRANSACTION_REPLY:
+                notifyMessageReceived(message);
+                break;
         }
 
     }
