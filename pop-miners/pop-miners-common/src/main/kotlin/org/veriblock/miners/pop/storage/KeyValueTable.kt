@@ -4,8 +4,10 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 
 object KeyValueTable : Table("app_values") {
-    val key = varchar("key", 50).primaryKey()
+    val key = varchar("key", 50)
     val value = varchar("value", 50)
+
+    override val primaryKey = PrimaryKey(key)
 }
 
 data class KeyValueRecord(
