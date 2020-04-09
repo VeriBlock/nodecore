@@ -16,6 +16,7 @@ import org.veriblock.miners.pop.core.VpmSpBlock
 import org.veriblock.miners.pop.core.VpmSpTransaction
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
+import org.veriblock.miners.pop.core.trace
 import org.veriblock.miners.pop.model.ApplicationExceptions
 import org.veriblock.miners.pop.model.ExpTransaction
 import org.veriblock.miners.pop.model.PopMiningTransaction
@@ -73,7 +74,10 @@ class VpmTaskService(
                 val txSizeKb = transaction.unsafeBitcoinSerialize().size / 1000.0
                 val feeSats = transaction.fee.value
                 val feePerKb = (feeSats / txSizeKb).roundToInt()
-                logger.info(operation, "Created BTC transaction '${transaction.txId}'. Fee: ${transaction.fee} Sat ($feePerKb Sat/KB).")
+                logger.info(
+                    operation,
+                    "Created BTC transaction '${transaction.txId}'. Fee: $feeSats Sat. Size: $txSizeKb KB. Fee per KB: $feePerKb Sat/KB."
+                )
 
                 val exposedTransaction = ExpTransaction(
                     bitcoinService.context.params,
@@ -226,11 +230,9 @@ class VpmTaskService(
                 val blockIndex = nodeCoreGateway.getBitcoinBlockIndex(block.serializeHeader())
                 blockIndex != null
             }
-            logger.trace {
-                val prefix = if (found) "Found" else "Did not find"
-                val where = if (contextChainProvided) "endorsed block context headers" else "search of current NodeCore view"
-                "$prefix block ${block.hashAsString} in $where"
-            }
+            val prefix = if (found) "Found" else "Did not find"
+            val where = if (contextChainProvided) "endorsed block context headers" else "search of current NodeCore view"
+            logger.trace(operation, "$prefix block ${block.hashAsString} in $where")
             !found
         }.toList().reversed()
         operation.setContext(VpmContext(context))
