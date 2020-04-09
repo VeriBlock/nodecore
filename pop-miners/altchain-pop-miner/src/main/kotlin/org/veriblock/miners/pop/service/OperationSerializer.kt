@@ -41,7 +41,7 @@ class OperationSerializer(
     fun serialize(operation: ApmOperation): OperationProto.Operation {
         val protoData = OperationProto.Operation(
             operationId = operation.id,
-            chainId = operation.chainId,
+            chainId = operation.chain.key,
             state = operation.state.id,
             blockHeight = operation.endorsedBlockHeight ?: 0,
             publicationData = operation.miningInstruction?.let {
@@ -78,7 +78,6 @@ class OperationSerializer(
             ?: error("Unable to load monitor ${serialized.chainId} for operation ${serialized.operationId}")
         return ApmOperation(
             id = serialized.operationId,
-            chainId = serialized.chainId,
             chain = chain,
             chainMonitor = chainMonitor,
             logs = logs,

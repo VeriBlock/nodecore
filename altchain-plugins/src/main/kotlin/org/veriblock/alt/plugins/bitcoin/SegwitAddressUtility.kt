@@ -1,5 +1,6 @@
 package org.veriblock.alt.plugins.bitcoin
 
+import org.veriblock.core.utilities.extensions.toHex
 import kotlin.experimental.or
 
 object SegwitAddressUtility {
@@ -87,4 +88,8 @@ object SegwitAddressUtility {
             decoded
         }
     }
+}
+
+fun main() {
+    println(SegwitAddressUtility.generatePayoutScriptFromSegwitAddress("tb1q0ad0rgrtuha9nu7y9g02pfc5asttmhwz53hr4l").toHex())
 }

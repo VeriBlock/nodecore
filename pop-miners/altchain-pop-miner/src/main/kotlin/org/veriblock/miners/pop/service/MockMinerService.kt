@@ -85,7 +85,6 @@ class MockMinerService(
             ?: error("Unable to load altchain monitor $chainId")
 
         val operation = ApmOperation(
-            chainId = chainId,
             chain = chain,
             chainMonitor = chainMonitor
         )

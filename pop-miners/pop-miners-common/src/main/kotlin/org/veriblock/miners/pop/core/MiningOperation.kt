@@ -4,10 +4,8 @@ import ch.qos.logback.classic.Level
 import kotlinx.coroutines.Job
 import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.contracts.WithDetailedInfo
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import java.time.LocalDateTime
-import java.util.Collections
 
 private val logger = createLogger {}
 
@@ -136,7 +134,7 @@ abstract class MiningOperation<
     open fun onCompleted() {}
 
     fun fail(reason: String) {
-        logger.warn { "Operation $id failed: $reason" }
+        logger.warn(this, "Failed: $reason")
         failureReason = reason
         setState(OperationState.FAILED)
 

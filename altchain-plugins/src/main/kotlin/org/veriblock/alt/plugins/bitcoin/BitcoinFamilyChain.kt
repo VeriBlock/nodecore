@@ -58,7 +58,7 @@ class BitcoinFamilyChain(
     init {
         config.checkValidity()
         checkNotNull(config.payoutAddress) {
-            "$key's payoutAddress must be configured!"
+            "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
         payoutAddressScript = if (config.payoutAddress.isHex()) {
             config.payoutAddress.asHexBytes()
@@ -203,7 +203,7 @@ class BitcoinFamilyChain(
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
-        logger.info { "Retrieving mining instruction at height $actualBlockHeight from $key daemon at ${config.host}..." }
+        logger.info { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
         val jsonBody = JsonRpcRequestBody("getpopdata", listOf(actualBlockHeight)).toJson()
         val response: BtcPublicationData = config.host.httpPost()
             .authenticate()
@@ -233,7 +233,7 @@ class BitcoinFamilyChain(
             return submit(proofOfProof, veriBlockPublications.takeLast(1))
         }
 
-        logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
+        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
 
         val jsonBody = JsonRpcRequestBody("submitpop", listOf(
             SerializeDeserializeService.serialize(proofOfProof).toHex(),
@@ -267,7 +267,7 @@ class BitcoinFamilyChain(
     }
 
     private fun updateContextInternal(veriBlockPublications: List<VeriBlockPublication>): String {
-        logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
+        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
         val jsonBody = JsonRpcRequestBody("updatecontext", listOf(
             veriBlockPublications.map {
                 it.transaction

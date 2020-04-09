@@ -24,7 +24,6 @@ import java.util.UUID
 
 class ApmOperation(
     id: String? = null,
-    val chainId: String,
     val chain: SecurityInheritingChain,
     val chainMonitor: SecurityInheritingMonitor,
     endorsedBlockHeight: Int? = null,
@@ -32,7 +31,7 @@ class ApmOperation(
     logs: List<OperationLog> = emptyList(),
     reconstituting: Boolean = false
 ) : MiningOperation<ApmInstruction, ApmSpTransaction, ApmSpBlock, ApmMerklePath, ApmContext>(
-    id ?: chainId + UUID.randomUUID().toString().substring(0, 8), endorsedBlockHeight, createdAt, logs, reconstituting
+    id ?: chain.key + UUID.randomUUID().toString().substring(0, 8), endorsedBlockHeight, createdAt, logs, reconstituting
 ) {
     val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
 

@@ -14,11 +14,17 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.core.info
+import org.veriblock.miners.pop.service.AltchainBlockReorgException
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.failOperation
+import org.veriblock.miners.pop.service.failTask
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -45,7 +51,7 @@ class SecurityInheritingMonitor(
     private val healthy = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
 
-    var bestBlockHeight: Int = -1
+    private var bestBlockHeight: Int = -1
 
     private var pollSchedule: ScheduledFuture<*>? = null
 
@@ -60,7 +66,7 @@ class SecurityInheritingMonitor(
     fun start(miner: MinerService) {
         this.miner = miner
         pollSchedule = Threading.SI_POLL_THREAD.scheduleWithFixedDelay({
-            this.poll()
+            poll()
         }, 5L, pollingPeriodSeconds, TimeUnit.SECONDS)
 
         logger.info("Connecting to SI Chain ($chainId)...")

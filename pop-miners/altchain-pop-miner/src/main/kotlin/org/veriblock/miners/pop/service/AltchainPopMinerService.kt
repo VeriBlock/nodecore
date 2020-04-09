@@ -210,7 +210,6 @@ class AltchainPopMinerService(
             ?: error("Unable to load altchain monitor $chainId")
 
         val operation = ApmOperation(
-            chainId = chainId,
             endorsedBlockHeight = block,
             chain = chain,
             chainMonitor = chainMonitor
@@ -221,7 +220,7 @@ class AltchainPopMinerService(
         submit(operation)
         operations[operation.id] = operation
 
-        logger.info { "Created operation [${operation.id}] on chain ${operation.chainId}" }
+        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name}" }
 
         return success {
             addMessage("v000", operation.id, "")
@@ -236,7 +235,6 @@ class AltchainPopMinerService(
 
         // Copy the operation
         val newOperation = ApmOperation(
-            chainId = operation.chainId,
             chain = operation.chain,
             chainMonitor = operation.chainMonitor,
             endorsedBlockHeight = operation.endorsedBlockHeight

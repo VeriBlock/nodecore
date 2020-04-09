@@ -8,5 +8,5 @@ data class SecurityInheritingTransaction(
 
 data class SecurityInheritingTransactionVout(
     val value: Double,
-    val addressHash: String
+    val addressHex: String
 )

@@ -64,7 +64,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         description = "Lists the current running operations"
     ) {
         val operations = miner.getOperations().map {
-            "${it.id}: ${it.chainId} (${it.endorsedBlockHeight}) | ${it.state}"
+            "${it.id}: ${it.chain.name} (${it.endorsedBlockHeight}) | ${it.state}"
         }
 
         for (operation in operations) {
@@ -139,9 +139,9 @@ fun CommandFactory.miningCommands(miner: MinerService) {
     }
 }
 
-class WorkflowProcessInfo(
+data class WorkflowProcessInfo(
     val operationId: String,
-    val chainId: String,
+    val chain: String,
     val status: String,
     val blockHeight: Int?,
     val state: String,
@@ -149,7 +149,7 @@ class WorkflowProcessInfo(
 ) {
     constructor(operation: ApmOperation) : this(
         operation.id,
-        operation.chainId,
+        operation.chain.name,
         operation.state.name,
         operation.endorsedBlockHeight,
         operation.state.description,

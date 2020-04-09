@@ -15,6 +15,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
+import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
@@ -26,8 +27,6 @@ import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
-import org.veriblock.miners.pop.service.MinerConfig
-import org.veriblock.miners.pop.service.TaskService
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
@@ -323,8 +322,8 @@ class ApmTaskService(
         val endorsementTransactionId = operation.proofOfProofId
             ?: failTask("PayoutDetectionTask called without proof of proof txId!")
 
-        val chainSymbol = operation.chain.key.toUpperCase()
-        logger.info(operation, "Waiting for $chainSymbol Endorsement Transaction ($endorsementTransactionId) to be confirmed...")
+        val chainName = operation.chain.name
+        logger.info(operation, "Waiting for $chainName Endorsement Transaction ($endorsementTransactionId) to be confirmed...")
         val endorsementTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
             if (transaction.confirmations < 0) {
                 throw AltchainTransactionReorgException(transaction)
@@ -333,12 +332,12 @@ class ApmTaskService(
         }
         logger.info(
             operation,
-            "Successfully confirmed $chainSymbol endorsement transaction ${endorsementTransaction.txId}!" +
+            "Successfully confirmed $chainName endorsement transaction ${endorsementTransaction.txId}!" +
                 " Confirmations: ${endorsementTransaction.confirmations}"
         )
 
         val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
-        logger.info(operation, "Waiting for $chainSymbol endorsed block ($endorsedBlockHeight) to be confirmed...")
+        logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
         val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
             block.confirmations >= operation.chain.config.neededConfirmations
         }
@@ -348,17 +347,17 @@ class ApmTaskService(
         if (!belongsToMainChain) {
             failOperation(
                 "Endorsed block header ${endorsedBlockHeader.toHex()} @ $endorsedBlockHeight" +
-                    " is not in ${operation.chainId.toUpperCase()}'s main chain"
+                    " is not in $chainName's main chain"
             )
         }
-        logger.info(operation, "Successfully confirmed $chainSymbol endorsed block ${endorsedBlock.hash}!")
+        logger.info(operation, "Successfully confirmed $chainName endorsed block ${endorsedBlock.hash}!")
 
         val payoutBlockHeight = endorsedBlockHeight + operation.chain.getPayoutInterval()
         logger.debug(
             operation,
-            "$chainSymbol computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
+            "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
         )
-        logger.info(operation, "Waiting for $chainSymbol payout block ($payoutBlockHeight) to be confirmed...")
+        logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight) to be confirmed...")
         val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
             if (block.confirmations < 0) {
                 throw AltchainBlockReorgException(block)
@@ -368,18 +367,18 @@ class ApmTaskService(
         val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId)
             ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
         val rewardVout = coinbaseTransaction.vout.find {
-            it.addressHash == miningInstruction.publicationData.payoutInfo.toHex()
+            it.addressHex.asHexBytes().contentEquals(miningInstruction.publicationData.payoutInfo)
         }
         if (rewardVout != null) {
             logger.info(
                 operation,
-                "${operation.chainId.toUpperCase()} PoP Payout detected! Amount: ${rewardVout.value} ${operation.chainId.toUpperCase()}"
+                "$chainName PoP Payout detected! Amount: ${rewardVout.value} ${operation.chain.key.toUpperCase()}"
             )
             logger.info(operation, "Completed!")
             operation.complete(payoutBlock.hash, rewardVout.value.toString())
         } else {
             failOperation(
-                "Unable to find ${operation.chainId.toUpperCase()} PoP payout transaction in the expected block's coinbase!" +
+                "Unable to find ${operation.chain.name} PoP payout transaction in the expected block's coinbase!" +
                     " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
             )
         }
