@@ -16,6 +16,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
 import org.veriblock.miners.pop.api.dto.*
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.service.MinerService
@@ -24,28 +25,29 @@ class MiningController(
     private val miner: MinerService
 ) : ApiController {
 
-    @Path("/api/miner")
-    class MinerPath
-    @Path("/api/miner/mine")
+    @Path("mine")
     class MineActionPath
-    @Path("/api/miner/operations")
+
+    @Path("operations")
     class MinerOperationsPath(
         @QueryParam("Status filter (optional)") val status: String?,
         @QueryParam("Pagination limit (optional)") val limit: Int?,
         @QueryParam("Pagination offset (optional)") val offset: Int?
     )
-    @Path("/api/miner/operations/{id}")
+
+    @Path("operations/{id}")
     class MinerOperationPath(
         @PathParam("Operation ID") val id: String
     )
-    @Path("/api/operationlog")
-    class MinerOperationLogPath(
-        @QueryParam("") val id: String,
-        @QueryParam("") val level: String?
+
+    @Path("operations/{id}/logs")
+    class MinerOperationLogsPath(
+        @PathParam("Operation ID") val id: String,
+        @QueryParam("Log level (optional, INFO by default)") val level: String?
     )
 
-    override fun NormalOpenAPIRoute.registerApi() {
-        get<MinerPath, MinerInfoResponse>(
+    override fun NormalOpenAPIRoute.registerApi() = route("miner") {
+        get<Unit, MinerInfoResponse>(
             info("Get miner data")
         ) {
             val responseModel = MinerInfoResponse(
@@ -110,7 +112,7 @@ class MiningController(
             val responseModel = operationState.toDetailedResponse()
             respond(responseModel)
         }
-        get<MinerOperationLogPath, List<String>>(
+        get<MinerOperationLogsPath, List<String>>(
             info("Get the operation logs")
         ) { location ->
             val level: Level = Level.toLevel(location.level, Level.INFO)

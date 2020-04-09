@@ -22,7 +22,7 @@ private val logger = KotlinLogging.logger {}
 
 class QuitController : ApiController {
 
-    @Path("/api/quit")
+    @Path("quit")
     data class QuitPath(
         @QueryParam("External quit") val restart: Boolean?
     )

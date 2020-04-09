@@ -1,8 +1,6 @@
 package org.veriblock.miners.pop.api.controller
 
-import com.google.gson.JsonSyntaxException
-import com.papsign.ktor.openapigen.OpenAPIGen
-import com.papsign.ktor.openapigen.interop.withAPI
+import com.fasterxml.jackson.databind.JsonMappingException
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -11,7 +9,6 @@ import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import mu.KotlinLogging
-import java.io.IOException
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,32 +20,26 @@ data class ApiError(
     val message: String
 )
 
-fun Application.statusPages(api: OpenAPIGen) {
+fun Application.statusPages() {
     install(StatusPages) {
-        withAPI(api) {
-            exception<BadRequestException> {
-                call.respond(HttpStatusCode.BadRequest, it.message)
-            }
-            exception<JsonSyntaxException> {
-                call.respond(HttpStatusCode.BadRequest, ApiError(""))
-            }
-            exception<NotFoundException> {
-                call.respond(HttpStatusCode.NotFound, ApiError(it.message))
-            }
-            exception<CallFailureException> {
-                call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
-            }
-            exception<ContentTransformationException> {
-                call.respond(HttpStatusCode.InternalServerError, ApiError("Unable to process request! Make sure the request is properly formed."))
-            }
-            exception<IOException> {
-                logger.warn("Unhandled exception", it)
-                call.respond(HttpStatusCode.InternalServerError, ApiError("Unhandled exception! Check the console logs for details."))
-            }
-            exception<Exception> {
-                logger.warn("Unhandled exception", it)
-                call.respond(HttpStatusCode.InternalServerError, ApiError("Unhandled exception! Check the console logs for details."))
-            }
+        exception<BadRequestException> {
+            call.respond(HttpStatusCode.BadRequest, ApiError(it.message))
+        }
+        exception<JsonMappingException> {
+            call.respond(HttpStatusCode.BadRequest, ApiError(it.toString()))
+        }
+        exception<NotFoundException> {
+            call.respond(HttpStatusCode.NotFound, ApiError(it.message))
+        }
+        exception<CallFailureException> {
+            call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
+        }
+        exception<ContentTransformationException> {
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Unable to process request! Make sure the request is properly formed."))
+        }
+        exception<Throwable> {
+            logger.warn(it) { "Unhandled exception" }
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Unhandled exception! Check the console logs for details."))
         }
     }
 }

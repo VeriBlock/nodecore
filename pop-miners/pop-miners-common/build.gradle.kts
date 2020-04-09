@@ -53,7 +53,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
     implementation("commons-cli:commons-cli:1.4")
-    implementation("com.google.code.gson:gson:2.8.2")
     implementation("com.google.guava:guava:26.0-jre")
     implementation("com.diogonunes:JCDP:2.0.3.1")
     implementation("com.j256.ormlite:ormlite-core:5.1")

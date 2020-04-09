@@ -12,7 +12,7 @@ class WalletController(
     private val minerService: MinerService
 ) : ApiController {
 
-    @Path("/api/wallet/btc/withdraw")
+    @Path("wallet/btc/withdraw")
     class WithdrawBtcPath
 
     override fun NormalOpenAPIRoute.registerApi() {

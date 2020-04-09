@@ -1,8 +1,6 @@
 package org.veriblock.miners.pop.api.controller
 
-import com.google.gson.JsonSyntaxException
-import com.papsign.ktor.openapigen.OpenAPIGen
-import com.papsign.ktor.openapigen.interop.withAPI
+import com.fasterxml.jackson.databind.JsonMappingException
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -21,26 +19,23 @@ data class ApiError(
     val message: String
 )
 
-fun Application.statusPages(api: OpenAPIGen) {
+fun Application.statusPages() {
     install(StatusPages) {
-        withAPI(api) {
-            exception<BadRequestException> {
-                call.respond(HttpStatusCode.BadRequest, ApiError(it.message))
-            }
-            exception<JsonSyntaxException> {
-                call.respond(HttpStatusCode.BadRequest, ApiError(""))
-            }
-            exception<NotFoundException> {
-                call.respond(HttpStatusCode.NotFound, ApiError(it.message))
-            }
-            exception<CallFailureException> {
-                call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
-            }
-            exception<Exception> {
-                //logger.warn("Unhandled exception", it)
-                //call.respondError(HttpStatusCode.InternalServerError, "Unhandled exception [${it::class.simpleName}]: ${it.message}")
-                call.respond(HttpStatusCode.InternalServerError, ApiError(""))
-            }
+        exception<BadRequestException> {
+            call.respond(HttpStatusCode.BadRequest, ApiError(it.message))
+        }
+        exception<JsonMappingException> {
+            call.respond(HttpStatusCode.BadRequest, ApiError(it.toString()))
+        }
+        exception<NotFoundException> {
+            call.respond(HttpStatusCode.NotFound, ApiError(it.message))
+        }
+        exception<CallFailureException> {
+            call.respond(HttpStatusCode.InternalServerError, ApiError(it.message))
+        }
+        exception<Throwable> {
+            logger.warn(it) { "Unhandled exception" }
+            call.respond(HttpStatusCode.InternalServerError, ApiError("Unhandled exception! Check the console logs for details."))
         }
     }
 }

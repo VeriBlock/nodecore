@@ -23,46 +23,27 @@ class MiningController(
     private val minerService: MinerService
 ) : ApiController {
 
-    @Path("/api/operations")
+    @Path("mine")
+    class MineActionPath
+
+    @Path("miner")
+    class MinerPath
+
+    @Path("operations")
     class MinerOperationsPath
 
-    @Path("/api/operations/{id}")
+    @Path("operations/{id}")
     class MinerOperationPath(
         @PathParam("Operation ID") val id: String
     )
 
-    @Path("/api/operationlog")
-    class MinerOperationLogPath(
-        @QueryParam("Operation ID") val id: String,
-        @QueryParam("Log level (optional)") val level: String?
+    @Path("operations/{id}/logs")
+    class MinerOperationLogsPath(
+        @PathParam("Operation ID") val id: String,
+        @QueryParam("Log level (optional, INFO by default)") val level: String?
     )
 
-    @Path("/api/mine")
-    class MineActionPath
-
-    @Path("/api/miner")
-    class MinerPath
-
     override fun NormalOpenAPIRoute.registerApi() {
-        get<MinerOperationsPath, OperationSummaryListResponse>(
-            info("Get operations list")
-        ) {
-            val operationSummaries = minerService.listOperations()
-
-            val responseModel = operationSummaries.map { it.toResponse() }
-            respond(OperationSummaryListResponse(responseModel))
-        }
-        get<MinerOperationPath, OperationDetailResponse>(
-            info("Get operation details")
-        ) { location ->
-            val id = location.id
-
-            val operationState = minerService.getOperation(id)
-                ?: throw NotFoundException("Operation $id not found")
-
-            val responseModel = operationState.toResponse()
-            respond(responseModel)
-        }
         post<MineActionPath, MineResultResponse, MineRequest>(
             info("Start mining operation")
         ) { _, request ->
@@ -82,7 +63,26 @@ class MiningController(
             )
             respond(responseModel)
         }
-        get<MinerOperationLogPath, List<String>>(
+        get<MinerOperationsPath, OperationSummaryListResponse>(
+            info("Get operations list")
+        ) {
+            val operationSummaries = minerService.listOperations()
+
+            val responseModel = operationSummaries.map { it.toResponse() }
+            respond(OperationSummaryListResponse(responseModel))
+        }
+        get<MinerOperationPath, OperationDetailResponse>(
+            info("Get operation details")
+        ) { location ->
+            val id = location.id
+
+            val operationState = minerService.getOperation(id)
+                ?: throw NotFoundException("Operation $id not found")
+
+            val responseModel = operationState.toResponse()
+            respond(responseModel)
+        }
+        get<MinerOperationLogsPath, List<String>>(
             info("Get the operation logs")
         ) { location ->
             val level: Level = Level.toLevel(location.level, Level.INFO)

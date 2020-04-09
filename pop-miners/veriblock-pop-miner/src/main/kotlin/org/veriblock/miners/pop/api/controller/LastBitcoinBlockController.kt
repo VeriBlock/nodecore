@@ -22,7 +22,7 @@ class LastBitcoinBlockController(
     private val minerService: MinerService
 ) : ApiController {
 
-    @Path("/api/lastbitcoinblock")
+    @Path("lastbitcoinblock")
     class LastBitcoinBlockPath
 
     override fun NormalOpenAPIRoute.registerApi() {

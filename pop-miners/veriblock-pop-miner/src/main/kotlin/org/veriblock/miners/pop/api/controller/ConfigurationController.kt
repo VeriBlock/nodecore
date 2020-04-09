@@ -27,13 +27,13 @@ class ConfigurationController(
     private val bitcoinService: BitcoinService
 ) : ApiController {
 
-    @Path("/api/config")
+    @Path("config")
     class ConfigPath
 
-    @Path("/api/config/automine")
+    @Path("config/automine")
     class AutominePath
 
-    @Path("/api/config/btc-fee")
+    @Path("config/btc-fee")
     class BtcFeePath
 
     override fun NormalOpenAPIRoute.registerApi() {

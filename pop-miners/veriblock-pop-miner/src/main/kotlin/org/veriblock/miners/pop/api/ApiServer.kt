@@ -16,6 +16,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.openAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
+import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.schema.namer.DefaultSchemaNamer
 import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
@@ -65,7 +66,7 @@ class ApiServer(
                 install(DefaultHeaders)
                 install(CallLogging)
 
-                val api = install(OpenAPIGen) {
+                install(OpenAPIGen) {
                     info {
                         version = API_VERSION
                         title = "VeriBlock PoP Miner API"
@@ -83,7 +84,7 @@ class ApiServer(
                     })
                 }
 
-                statusPages(api)
+                statusPages()
 
                 install(ContentNegotiation) {
                     jackson {
@@ -104,19 +105,21 @@ class ApiServer(
 
                 install(Locations)
                 routing {
-                    get("/openapi.json") {
+                    get("openapi.json") {
                         val application = application
                         call.respond(application.openAPIGen.api)
                     }
-                    get("/") {
+                    get("api") {
                         call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
                     }
                 }
 
                 apiRouting {
-                    for (controller in controllers) {
-                        with(controller) {
-                            registerApi()
+                    route("api") {
+                        for (controller in controllers) {
+                            with(controller) {
+                                registerApi()
+                            }
                         }
                     }
                 }

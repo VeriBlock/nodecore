@@ -35,7 +35,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("org.apache.commons:commons-lang3:3.0")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.6")
-    implementation("com.google.code.gson:gson:2.8.2")
     implementation("org.reflections:reflections:0.9.11")
     implementation("com.diogonunes:JCDP:2.0.3.1")
     implementation("org.quartz-scheduler:quartz:2.2.1")
@@ -59,15 +58,14 @@ dependencies {
     // Http API
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-locations:$ktorVersion")
-    implementation("io.ktor:ktor-gson:$ktorVersion")
+    implementation ("io.ktor:ktor-jackson:$ktorVersion") // needed for parameter parsing and multipart parsing
+    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8") // needed for multipart parsing
     // Swagger integration, expecting an official integration to be released soon
     implementation("com.github.papsign:Ktor-OpenAPI-Generator:reworked-model-SNAPSHOT")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
-    implementation ("io.ktor:ktor-jackson:$ktorVersion") // needed for parameter parsing and multipart parsing
-    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8") // needed for multipart parsing
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
