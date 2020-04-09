@@ -168,6 +168,14 @@ public class Peer implements PeerSocketClosedEventListener {
             case TRANSACTION_REPLY:
                 notifyMessageReceived(message);
                 break;
+
+            case DEBUG_VTB_REPLY:
+                notifyMessageReceived(message);
+                break;
+
+            case VERIBLOCK_PUBLICATIONS_REPLY:
+                notifyMessageReceived(message);
+                break;
         }
 
     }

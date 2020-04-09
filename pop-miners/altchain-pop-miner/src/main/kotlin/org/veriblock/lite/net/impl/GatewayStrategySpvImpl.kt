@@ -39,12 +39,12 @@ class GatewayStrategySpvImpl(
         return VeriBlockMessages.PingReply.getDefaultInstance()
     }
 
-    override fun shutdown() {
-        spvContext.peerTable.shutdown()
+    override fun getVeriBlockPublications(getVeriBlockPublicationsRequest: VeriBlockMessages.GetVeriBlockPublicationsRequest): VeriBlockMessages.GetVeriBlockPublicationsReply {
+        return adminApiService.getVeriBlockPublications(getVeriBlockPublicationsRequest)
     }
 
-    override fun getVeriBlockPublications(getVeriBlockPublicationsRequest: VeriBlockMessages.GetVeriBlockPublicationsRequest): VeriBlockMessages.GetVeriBlockPublicationsReply {
-        TODO("Not yet implemented")
+    override fun shutdown() {
+        spvContext.peerTable.shutdown()
     }
 
     override fun getDebugVeriBlockPublications(getDebugVTBsRequest: VeriBlockMessages.GetDebugVTBsRequest): VeriBlockMessages.GetDebugVTBsReply {

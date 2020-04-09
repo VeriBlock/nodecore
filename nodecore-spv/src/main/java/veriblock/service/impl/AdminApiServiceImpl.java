@@ -36,6 +36,7 @@ import veriblock.net.PeerTable;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
 import veriblock.service.TransactionFactory;
+import veriblock.util.MessageIdGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +46,8 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class AdminApiServiceImpl implements AdminApiService {
@@ -674,6 +677,24 @@ public class AdminApiServiceImpl implements AdminApiService {
         return VeriBlockMessages.GetTransactionsReply.newBuilder()
             .addAllTransactions(replyList)
             .build();
+    }
+
+    @Override
+    public VeriBlockMessages.GetVeriBlockPublicationsReply getVeriBlockPublications(VeriBlockMessages.GetVeriBlockPublicationsRequest getVeriBlockPublicationsRequest) {
+        VeriBlockMessages.Event advertise = VeriBlockMessages.Event.newBuilder()
+            .setId(MessageIdGenerator.next())
+            .setAcknowledge(false)
+            .setVeriblockPublicationsRequest(getVeriBlockPublicationsRequest)
+            .build();
+
+        Future<VeriBlockMessages.Event> futureEventReply = peerTable.advertiseWithReply(advertise);
+
+        try {
+            return futureEventReply.get().getVeriblockPublicationsReply();
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
     }
 
     private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {

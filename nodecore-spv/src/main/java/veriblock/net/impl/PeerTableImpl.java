@@ -25,6 +25,7 @@ import veriblock.SpvContext;
 import veriblock.listeners.PendingTransactionDownloadedListener;
 import veriblock.model.DownloadStatus;
 import veriblock.model.DownloadStatusResponse;
+import veriblock.model.FutureEventReply;
 import veriblock.model.LedgerContext;
 import veriblock.model.ListenerRegistration;
 import veriblock.model.NetworkMessage;
@@ -61,7 +62,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +89,9 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private static final BlockingQueue<NetworkMessage> incomingQueue = new LinkedTransferQueue<>();
     private static final CopyOnWriteArrayList<ListenerRegistration<PendingTransactionDownloadedListener>> pendingTransactionDownloadedEventListeners =
         new CopyOnWriteArrayList<>();
+
+    private static final ExecutorService futureExecutor = Executors.newCachedThreadPool();
+    private static final Map<String, FutureEventReply> futureEventReplyList = new ConcurrentHashMap<>();
 
     private final SpvContext spvContext;
     private final PeerDiscovery discovery;
@@ -141,6 +147,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
         // Shut down executors
         Threading.shutdown(messageExecutor);
+        Threading.shutdown(futureExecutor);
         Threading.shutdown(executor);
 
         // Close peer connections
@@ -327,6 +334,17 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                         case TRANSACTION_REPLY:
                             pendingTransactionContainer.updateTransactionInfo(message.getMessage().getTransactionReply().getTransaction());
                             break;
+
+                        case DEBUG_VTB_REPLY:
+                            // TODO
+                            break;
+
+                        case VERIBLOCK_PUBLICATIONS_REPLY:
+                            if (futureEventReplyList.containsKey(message.getMessage().getRequestId())) {
+                                futureEventReplyList.get(message.getMessage().getRequestId())
+                                    .response(message.getMessage());
+                            }
+                            break;
                     }
 
                 } catch (InterruptedException e) {
@@ -416,25 +434,51 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     @Override
     public void advertise(Transaction transaction) {
         VeriBlockMessages.Event advertise = VeriBlockMessages.Event.newBuilder()
-                .setId(MessageIdGenerator.next())
-                .setAcknowledge(false)
-                .setAdvertiseTx(VeriBlockMessages.AdvertiseTransaction.newBuilder()
-                        .addTransactions(VeriBlockMessages.TransactionAnnounce.newBuilder()
-                                .setType(transaction.getTransactionTypeIdentifier() == TransactionTypeIdentifier.PROOF_OF_PROOF ?
-                                        VeriBlockMessages.TransactionAnnounce.Type.PROOF_OF_PROOF :
-                                        VeriBlockMessages.TransactionAnnounce.Type.NORMAL)
-                                .setTxId(ByteString.copyFrom(transaction.getTxId().getBytes()))
-                                .build())
-                        .build())
-                .build();
+            .setId(MessageIdGenerator.next())
+            .setAcknowledge(false)
+            .setAdvertiseTx(VeriBlockMessages.AdvertiseTransaction.newBuilder()
+                .addTransactions(VeriBlockMessages.TransactionAnnounce.newBuilder()
+                    .setType(transaction.getTransactionTypeIdentifier() == TransactionTypeIdentifier.PROOF_OF_PROOF ?
+                        VeriBlockMessages.TransactionAnnounce.Type.PROOF_OF_PROOF :
+                        VeriBlockMessages.TransactionAnnounce.Type.NORMAL)
+                    .setTxId(ByteString.copyFrom(transaction.getTxId().getBytes()))
+                    .build())
+                .build())
+            .build();
 
         for (Peer peer : peers.values()) {
             try {
                 peer.sendMessage(advertise);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 LOGGER.error(ex.getMessage(), ex);
             }
         }
+    }
+
+    @Override
+    public Future<VeriBlockMessages.Event> advertiseWithReply(VeriBlockMessages.Event event) {
+        FutureEventReply futureEventReply = new FutureEventReply();
+
+        futureEventReplyList.put(event.getId(), futureEventReply);
+
+        for (Peer peer : peers.values()) {
+            try {
+                peer.sendMessage(event);
+            } catch (Exception ex) {
+                LOGGER.error(ex.getMessage(), ex);
+            }
+        }
+
+        return futureExecutor.submit(() -> {
+            while (!futureEventReply.isDone()) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
+            }
+            return futureEventReply.getResponse();
+        });
     }
 
     @Override

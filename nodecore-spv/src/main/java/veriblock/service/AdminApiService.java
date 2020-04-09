@@ -48,4 +48,6 @@ public interface AdminApiService {
     VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request);
 
     VeriBlockMessages.GetTransactionsReply getTransactions(VeriBlockMessages.GetTransactionsRequest request);
+
+    VeriBlockMessages.GetVeriBlockPublicationsReply getVeriBlockPublications(VeriBlockMessages.GetVeriBlockPublicationsRequest getVeriBlockPublicationsRequest);
 }
