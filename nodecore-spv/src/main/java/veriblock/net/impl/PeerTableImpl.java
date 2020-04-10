@@ -477,6 +477,8 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                     LOGGER.error(e.getMessage(), e);
                 }
             }
+
+            futureEventReplyList.remove(event.getId());
             return futureEventReply.getResponse();
         });
     }
