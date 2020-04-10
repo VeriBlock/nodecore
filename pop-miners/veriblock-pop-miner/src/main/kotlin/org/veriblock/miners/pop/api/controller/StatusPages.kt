@@ -1,6 +1,8 @@
 package org.veriblock.miners.pop.api.controller
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -25,8 +27,14 @@ fun Application.statusPages() {
         exception<BadRequestException> {
             call.respond(HttpStatusCode.BadRequest, ApiError(it.message))
         }
+        exception<JsonParseException> {
+            call.respond(HttpStatusCode.BadRequest, "Invalid JSON")
+        }
         exception<JsonMappingException> {
-            call.respond(HttpStatusCode.BadRequest, ApiError(it.toString()))
+            call.respond(HttpStatusCode.BadRequest, it.message ?: "Unable to parse JSON body")
+        }
+        exception<MissingKotlinParameterException> {
+            call.respond(HttpStatusCode.BadRequest, "Missing body parameter: ${it.parameter.name}")
         }
         exception<NotFoundException> {
             call.respond(HttpStatusCode.NotFound, ApiError(it.message))
