@@ -56,5 +56,6 @@ logger("org.veriblock.miners.pop", toLevel(logLevel, DEBUG))
 
 logger("org.bitcoinj", INFO, ["BITCOINJ-FILE"], false)
 logger("shell-printing", INFO, ["FILE"], false)
+logger("Exposed", ERROR)
 
 root(ERROR, ["TERMINAL", "FILE", "ERROR-FILE"])
