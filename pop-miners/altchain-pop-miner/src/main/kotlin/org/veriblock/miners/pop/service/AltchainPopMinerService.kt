@@ -292,7 +292,7 @@ class AltchainPopMinerService(
 
         try {
             for (operation in operations.values) {
-                if (!operation.state.isDone()) {
+                if (!operation.state.isDone() && operation.job == null) {
                     submit(operation)
                 }
             }
