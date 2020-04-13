@@ -8,13 +8,14 @@
 
 package veriblock.net;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import nodecore.api.grpc.VeriBlockMessages;
 import veriblock.model.DownloadStatusResponse;
 import veriblock.model.LedgerContext;
 import veriblock.model.Transaction;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Service for working with peers.
@@ -22,6 +23,8 @@ import java.util.concurrent.ExecutionException;
 public interface PeerTable {
 
     void advertise(Transaction signedTransaction);
+
+    Future<VeriBlockMessages.Event> advertiseWithReply(VeriBlockMessages.Event event);
 
     void start();
 
