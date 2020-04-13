@@ -193,6 +193,35 @@ message GetPoPEndorsementsInfoReply {
     repeated PoPEndorsementInfo pop_endorsements = 3;
 }
 
+message GetPoPRewardEstimatesRequest {
+    int32 keystones_to_search = 1;
+}
+
+message RewardPair {
+    int64 block_number = 1;
+    int64 reward_per_point = 2;
+}
+
+message RewardEstimate {
+    enum Round {
+        ROUND_1 = 0;
+        ROUND_2 = 1;
+        ROUND_3 = 2;
+        ROUND_3_SPECIAL = 3;
+        ROUND_4 = 4;
+    }
+
+    repeated RewardPair recent_reward_estimates = 1;
+}
+
+message GetPoPRewardEstimatesReply {
+    RewardEstimate round_1_estimate = 1;
+    RewardEstimate round_2_estimate = 2;
+    RewardEstimate round_3_estimate = 3;
+    RewardEstimate round_3_special_estimate = 4;
+    RewardEstimate round_4_estimate = 5;
+}
+
 message GetProtectedChildrenRequest {
     int32 search_length = 1;
     bytes veriblock_block_hash = 2 [(hex_encoded)=true];
@@ -1637,6 +1666,8 @@ service Admin {
     rpc GetPendingTransactions(GetPendingTransactionsRequest) returns (GetPendingTransactionsReply) {}
 
     rpc GetPoPEndorsementsInfo(GetPoPEndorsementsInfoRequest) returns (GetPoPEndorsementsInfoReply) {}
+
+    rpc GetPoPRewardEstimates(GetPoPRewardEstimatesRequest) returns (GetPoPRewardEstimatesReply) {}
 
     rpc Ping(PingRequest) returns (PingReply) {}
 
