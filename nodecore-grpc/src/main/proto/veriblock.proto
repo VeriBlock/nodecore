@@ -211,13 +211,14 @@ message RewardEstimate {
         ROUND_4 = 4;
     }
 
-    repeated RewardPair recent_reward_estimates = 1;
+    Round round = 1;
+    repeated RewardPair recent_reward_estimates = 2;
 }
 
 message GetPoPRewardEstimatesReply {
     bool success = 1;
     repeated Result results = 2;
-    
+
     RewardEstimate round_1_estimate = 3;
     RewardEstimate round_2_estimate = 4;
     RewardEstimate round_3_estimate = 5;
