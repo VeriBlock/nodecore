@@ -14,9 +14,9 @@ import org.veriblock.miners.pop.schedule.PoPMiningScheduler
 import org.veriblock.miners.pop.service.BitcoinService
 import org.veriblock.miners.pop.service.ChannelBuilder
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.NodeCoreGateway
 import org.veriblock.miners.pop.service.NodeCoreService
 import org.veriblock.miners.pop.service.PopStateService
-import org.veriblock.miners.pop.service.NodeCoreGateway
 import org.veriblock.miners.pop.shell.PopShell
 import org.veriblock.miners.pop.shell.commands.bitcoinWalletCommands
 import org.veriblock.miners.pop.shell.commands.configCommands
@@ -39,11 +39,11 @@ val bootstrapModule = module {
     single { BlockStore() }
     single { AutoMineEngine(get(), get()) }
     single { VpmTaskService(get(), get()) }
-    single { ProcessManager(get()) }
+    single { ProcessManager(get(), get()) }
     single { ChannelBuilder(get()) }
     single { MinerService(get(), get(), get(), get(), get(), get(), get()) }
     single { PopStateService(get(), get()) }
-    single { NodeCoreService(get(), get()) }
+    single { NodeCoreService(get(), get(), get()) }
     single { NodeCoreGateway(get()) }
     single { BitcoinService(get()) }
     single { PoPMiningScheduler(get(), get()) }

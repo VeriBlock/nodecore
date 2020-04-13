@@ -16,7 +16,12 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
-import org.veriblock.miners.pop.api.model.*
+import org.veriblock.miners.pop.api.model.MineRequest
+import org.veriblock.miners.pop.api.model.MineResultResponse
+import org.veriblock.miners.pop.api.model.MinerInfoResponse
+import org.veriblock.miners.pop.api.model.OperationDetailResponse
+import org.veriblock.miners.pop.api.model.OperationSummaryListResponse
+import org.veriblock.miners.pop.api.model.toResponse
 import org.veriblock.miners.pop.service.MinerService
 
 class MiningController(

@@ -9,7 +9,7 @@ package org.veriblock.miners.pop.api.models
 import com.papsign.ktor.openapigen.annotations.Response
 
 @Response("Basic information from the last bitcoin block")
-class ShowLastBitcoinBlockResponse (
+class ShowLastBitcoinBlockResponse(
     val header: String? = null,
     val hash: String? = null,
     val height: Int = 0

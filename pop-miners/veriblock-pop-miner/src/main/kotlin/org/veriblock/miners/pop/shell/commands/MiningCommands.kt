@@ -12,7 +12,6 @@ import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import org.veriblock.miners.pop.core.VpmOperation
-import org.veriblock.miners.pop.core.toJson
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory

@@ -6,26 +6,24 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.tasks
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.bitcoinj.utils.ContextPropagatingThreadFactory
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.VpmOperation
+import org.veriblock.miners.pop.service.BitcoinService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class ProcessManager(
-    private val taskService: VpmTaskService
+    private val taskService: VpmTaskService,
+    private val bitcoinService: BitcoinService
 ) {
-    private val taskPool = Executors.newFixedThreadPool(
-        50,
-        ThreadFactoryBuilder().apply {
-            setNameFormat("pop-tasks-%d")
-            setThreadFactory(ContextPropagatingThreadFactory("pop-tasks"))
-        }.build()
+    private val taskPool = Executors.newSingleThreadScheduledExecutor(
+        ContextPropagatingThreadFactory("pop-tasks")
     )
+
     private val coroutineScope = CoroutineScope(taskPool.asCoroutineDispatcher())
 
     init {
@@ -51,8 +49,11 @@ class ProcessManager(
         if (operation.job != null) {
             error("Trying to submit operation [${operation.id}] while it already had a running job!")
         }
-        operation.job = coroutineScope.launch {
-            taskService.runTasks(operation)
+        // Launching from the bitcoin context in order to propagate it
+        bitcoinService.contextCoroutineScope.launch {
+            operation.job = coroutineScope.launch {
+                taskService.runTasks(operation)
+            }
         }
     }
 

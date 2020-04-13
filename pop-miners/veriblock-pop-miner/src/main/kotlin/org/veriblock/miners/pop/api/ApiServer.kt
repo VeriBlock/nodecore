@@ -76,7 +76,7 @@ class ApiServer(
                             email = "https://veriblock.org"
                         }
                     }
-                    replaceModule(DefaultSchemaNamer, object: SchemaNamer {
+                    replaceModule(DefaultSchemaNamer, object : SchemaNamer {
                         val regex = Regex("[A-Za-z0-9_.]+")
                         override fun get(type: KType): String {
                             return type.toString().replace(regex) { it.value.split(".").last() }.replace(Regex(">|<|, "), "_")

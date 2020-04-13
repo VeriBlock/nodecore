@@ -6,32 +6,46 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.bitcoinj.utils.ContextPropagatingThreadFactory
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.model.BlockStore
-import org.veriblock.miners.pop.service.NodeCoreGateway
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val logger = createLogger {}
 
 class NodeCoreService(
     private val nodeCoreGateway: NodeCoreGateway,
-    private val blockStore: BlockStore
+    private val blockStore: BlockStore,
+    bitcoinService: BitcoinService
 ) {
     private val healthy = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
 
     private val scheduledExecutorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
-        ThreadFactoryBuilder().setNameFormat("nc-poll").build()
+        ContextPropagatingThreadFactory("nc-poll")
     )
 
+    private val coroutineScope = CoroutineScope(scheduledExecutorService.asCoroutineDispatcher())
+
     init {
-        scheduledExecutorService.scheduleWithFixedDelay({ poll() }, 5, 1, TimeUnit.SECONDS)
+        // Launching from the bitcoin context in order to propagate it
+        bitcoinService.contextCoroutineScope.launch {
+            coroutineScope.launch {
+                delay(5000)
+                while (true) {
+                    poll()
+                    delay(1000)
+                }
+            }
+        }
     }
 
     private fun isHealthy(): Boolean =

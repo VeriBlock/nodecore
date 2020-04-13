@@ -59,8 +59,8 @@ dependencies {
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
-    implementation ("io.ktor:ktor-jackson:$ktorVersion") // needed for parameter parsing and multipart parsing
-    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8") // needed for multipart parsing
+    implementation("io.ktor:ktor-jackson:$ktorVersion") // needed for parameter parsing and multipart parsing
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8") // needed for multipart parsing
 
     implementation("commons-cli:commons-cli:1.4")
     implementation("com.google.code.gson:gson:2.8.2")

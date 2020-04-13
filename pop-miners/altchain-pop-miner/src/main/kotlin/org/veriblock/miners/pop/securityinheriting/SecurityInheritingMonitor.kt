@@ -14,17 +14,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.util.Threading
-import org.veriblock.miners.pop.core.info
-import org.veriblock.miners.pop.service.AltchainBlockReorgException
 import org.veriblock.miners.pop.service.MinerService
-import org.veriblock.miners.pop.service.failOperation
-import org.veriblock.miners.pop.service.failTask
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction

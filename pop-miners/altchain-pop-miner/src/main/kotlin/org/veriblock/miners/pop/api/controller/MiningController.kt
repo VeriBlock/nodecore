@@ -17,7 +17,13 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import org.veriblock.miners.pop.api.dto.*
+import org.veriblock.miners.pop.api.dto.MineRequest
+import org.veriblock.miners.pop.api.dto.MinerInfoResponse
+import org.veriblock.miners.pop.api.dto.OperationDetailResponse
+import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
+import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
+import org.veriblock.miners.pop.api.dto.toDetailedResponse
+import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.service.MinerService
 

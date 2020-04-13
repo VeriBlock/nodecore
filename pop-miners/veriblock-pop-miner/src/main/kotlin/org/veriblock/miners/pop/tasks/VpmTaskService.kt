@@ -23,15 +23,15 @@ import org.veriblock.miners.pop.model.PopMiningTransaction
 import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath
 import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree
 import org.veriblock.miners.pop.model.merkle.MerkleProof
+import org.veriblock.miners.pop.service.BitcoinService
+import org.veriblock.miners.pop.service.NodeCoreGateway
+import org.veriblock.miners.pop.service.PopSubmitRejected
 import org.veriblock.miners.pop.service.TaskService
 import org.veriblock.miners.pop.service.failOperation
 import org.veriblock.miners.pop.service.failTask
 import org.veriblock.miners.pop.service.hr
 import org.veriblock.miners.pop.service.min
 import org.veriblock.miners.pop.service.sec
-import org.veriblock.miners.pop.service.BitcoinService
-import org.veriblock.miners.pop.service.NodeCoreGateway
-import org.veriblock.miners.pop.service.PopSubmitRejected
 import java.util.ArrayList
 import kotlin.math.roundToInt
 

@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 @file:JvmName("AltchainPoPMiner")
+
 package org.veriblock.miners.pop
 
 import org.koin.core.context.startKoin

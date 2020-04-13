@@ -15,9 +15,8 @@ import org.veriblock.miners.pop.core.ApmMerklePath
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
-import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.OperationLog
-import org.veriblock.miners.pop.core.parseOperationLogs
+import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.plugin.PluginService

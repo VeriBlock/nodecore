@@ -7,8 +7,14 @@
 package org.veriblock.miners.pop.service
 
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.guava.asDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.BitcoinSerializer
@@ -50,6 +56,8 @@ import java.util.Date
 import java.util.LinkedHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
 
 private val logger = createLogger {}
@@ -90,6 +98,14 @@ class BitcoinService(
     private var isServiceReady = false
     private var receiveAddress: String? = null
     private var changeAddress: Address? = null
+
+    private val scheduledExecutorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+        ThreadFactoryBuilder().setNameFormat("bitcoin-context").build()
+    )
+
+    val contextCoroutineScope = CoroutineScope(scheduledExecutorService.asCoroutineDispatcher()).apply {
+        launch { Context.propagate(config.bitcoin.context) }
+    }
 
     init {
         logger.info("Using Bitcoin {} network", bitcoinNetwork.toString())
@@ -240,11 +256,17 @@ class BitcoinService(
         }
     }
 
-    fun getBalance(): Coin =
-        wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+    fun getBalance(): Coin = runBlocking {
+        withContext(contextCoroutineScope.coroutineContext) {
+            wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+        }
+    }
 
-    fun getPendingBalance(): Coin =
-        wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE)
+    fun getPendingBalance(): Coin = runBlocking {
+        withContext(contextCoroutineScope.coroutineContext) {
+            wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE)
+        }
+    }
 
     fun resetWallet() {
         receiveAddress = null
