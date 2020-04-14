@@ -101,16 +101,10 @@ application.applicationName = "veriblock-pop-miner"
 application.mainClassName = "org.veriblock.miners.pop.VeriBlockPoPMiner"
 
 tasks.distZip {
-    dependsOn("addConfigFile")
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
 }
 tasks.distTar {
-    dependsOn("addConfigFile")
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.tar")
-}
-
-tasks.installDist {
-    dependsOn("addConfigFile")
 }
 
 tasks.startScripts {
@@ -119,9 +113,13 @@ tasks.startScripts {
 
 setupJacoco()
 
-// This task will add the default application.conf file into the 'bin' folder
-tasks.register<Copy>("addConfigFile") {
-    from("src/main/resources/application-default.conf")
-    into("$buildDir/scripts")
-    rename("application-default.conf", "application.conf")
+distributions {
+    main {
+        contents {
+            from ("./src/main/resources/application-default.conf") {
+                into("bin")
+            }
+            rename("application-default.conf", "application.conf")
+        }
+    }
 }
