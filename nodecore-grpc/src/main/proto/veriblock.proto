@@ -197,11 +197,6 @@ message GetPoPRewardEstimatesRequest {
     int32 keystones_to_search = 1;
 }
 
-message RewardPair {
-    int64 block_number = 1;
-    int64 reward_per_point = 2;
-}
-
 message RewardEstimate {
     enum Round {
         ROUND_1 = 0;
@@ -212,18 +207,15 @@ message RewardEstimate {
     }
 
     Round round = 1;
-    repeated RewardPair recent_reward_estimates = 2;
+    int64 block_number = 2;
+    int64 reward_per_point = 3;
 }
 
 message GetPoPRewardEstimatesReply {
     bool success = 1;
     repeated Result results = 2;
 
-    RewardEstimate round_1_estimate = 3;
-    RewardEstimate round_2_estimate = 4;
-    RewardEstimate round_3_estimate = 5;
-    RewardEstimate round_3_special_estimate = 6;
-    RewardEstimate round_4_estimate = 7;
+    repeated RewardEstimate reward_estimates = 3;
 }
 
 message GetProtectedChildrenRequest {
