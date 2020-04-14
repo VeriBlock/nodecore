@@ -99,9 +99,11 @@ application.mainClassName = "org.veriblock.miners.pop.AltchainPoPMiner"
 setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
 
 tasks.distZip {
+    dependsOn("addConfigFile")
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
 }
 tasks.distTar {
+    dependsOn("addConfigFile")
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.tar")
 }
 
@@ -110,4 +112,15 @@ tasks.startScripts {
         resources.text.fromFile("windowsStartScript.txt")
 }
 
+tasks.installDist {
+    dependsOn("addConfigFile")
+}
+
 setupJacoco()
+
+// This task will add the default application.conf file into the 'bin' folder
+tasks.register<Copy>("addConfigFile") {
+    from("src/main/resources/application-default.conf")
+    into("$buildDir/scripts")
+    rename("application-default.conf", "application.conf")
+}
