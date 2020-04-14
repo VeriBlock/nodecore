@@ -52,16 +52,18 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
-    implementation("commons-cli:commons-cli:1.4")
-    implementation("com.google.guava:guava:26.0-jre")
-    implementation("com.diogonunes:JCDP:2.0.3.1")
-    implementation("com.j256.ormlite:ormlite-core:5.1")
-    implementation("com.j256.ormlite:ormlite-jdbc:5.1")
-    implementation("org.xerial:sqlite-jdbc:3.23.1")
-
+    // Persistence
     implementation("org.jetbrains.exposed:exposed-core:0.23.1")
     implementation("org.jetbrains.exposed:exposed-java-time:0.23.1")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
+
+    // Metrics
+    implementation("io.micrometer:micrometer-core:1.1.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
+
+    implementation("commons-cli:commons-cli:1.4")
+    implementation("com.google.guava:guava:26.0-jre")
+    implementation("com.diogonunes:JCDP:2.0.3.1")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")

@@ -255,7 +255,7 @@ class NodeCoreNetwork(
 
             blockChain.handleNewBestChain(blockChainDelta.removed, added)
         } catch (e: Exception) {
-            logger.error("NodeCore Error", e)
+            logger.warn("NodeCore Error", e)
         }
     }
 

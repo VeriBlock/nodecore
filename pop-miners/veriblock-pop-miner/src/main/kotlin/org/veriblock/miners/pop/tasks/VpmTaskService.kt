@@ -283,6 +283,9 @@ class VpmTaskService(
         val miningInstruction = operation.miningInstruction
             ?: failOperation("Trying to confirm Payout without the mining instruction!")
 
+        val bitcoinTransactionId = operation.endorsementTransaction?.txId
+            ?: failOperation("Trying to confirm Payout without the endorsement transaction!")
+
         val endorsedBlockHeight = operation.endorsedBlockHeight
             ?: failOperation(
                 "Trying to wait for the payout block without having the endorsed block height set"
@@ -315,9 +318,9 @@ class VpmTaskService(
 
         logger.debug(operation, "Payout block hash: $payoutBlockHash")
 
-        // FIXME: Retrieve the reward from the payout block itself
         val endorsementInfo = nodeCoreGateway.getPopEndorsementInfo().find {
-            it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress
+            it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress &&
+                it.bitcoinTransactionId == bitcoinTransactionId
         } ?: failOperation(
             "Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!"
         )

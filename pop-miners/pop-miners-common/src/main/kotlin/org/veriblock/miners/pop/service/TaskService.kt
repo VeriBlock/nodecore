@@ -1,5 +1,6 @@
 package org.veriblock.miners.pop.service
 
+import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -75,9 +76,12 @@ abstract class TaskService<
             return
         }
 
+        val timer = Metrics.operationStateTimersByTargetState.getValue(targetState)
+
         var success = false
         var attempts = 1
         do {
+            val timerSample = Timer.start(Metrics.registry)
             try {
                 withTimeout(timeout) {
                     block()
@@ -102,6 +106,8 @@ abstract class TaskService<
                 failOperation(
                     "Operation has been cancelled for taking too long during task '$taskName'."
                 )
+            } finally {
+                timerSample.stop(timer)
             }
         } while (!success)
     }
