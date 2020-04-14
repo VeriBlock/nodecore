@@ -22,6 +22,7 @@ import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
 import org.veriblock.core.wallet.Address;
 import org.veriblock.core.wallet.WalletLockedException;
+import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -649,6 +651,21 @@ public class AdminApiServiceImpl implements AdminApiService {
             replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error", "An error occurred processing request", true));
         }
         return replyBuilder.build();
+    }
+
+    @Override
+    public VeriBlockMessages.BlockInfo getLastVBKBlock() {
+        try {
+            StoredVeriBlockBlock lastBlock = blockchain.getBlockStore().getChainHead();
+            return VeriBlockMessages.BlockInfo.newBuilder()
+                .setNumber(lastBlock.getHeight())
+                .setHash(ByteString.copyFrom(lastBlock.getHash().getBytes()))
+                .build();
+        } catch (SQLException ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+
+        return null;
     }
 
     @Override

@@ -9,6 +9,7 @@
 package org.veriblock.lite.net
 
 import nodecore.api.grpc.VeriBlockMessages
+import org.veriblock.lite.core.BlockInfo
 
 interface GatewayStrategy {
 
@@ -25,6 +26,8 @@ interface GatewayStrategy {
     fun submitTransactions(submitTransactionsRequest: VeriBlockMessages.SubmitTransactionsRequest): VeriBlockMessages.ProtocolReply
 
     fun createAltChainEndorsement(altChainEndorsementRequest: VeriBlockMessages.CreateAltChainEndorsementRequest): VeriBlockMessages.CreateAltChainEndorsementReply
+
+    fun getLastVBKBlockInfo(): BlockInfo
 
     fun shutdown()
 

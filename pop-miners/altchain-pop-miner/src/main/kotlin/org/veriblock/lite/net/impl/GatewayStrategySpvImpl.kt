@@ -9,7 +9,9 @@
 package org.veriblock.lite.net.impl
 
 import nodecore.api.grpc.VeriBlockMessages
+import org.veriblock.lite.core.BlockInfo
 import org.veriblock.lite.net.GatewayStrategy
+import org.veriblock.sdk.models.VBlakeHash
 import veriblock.SpvContext
 import veriblock.service.AdminApiService
 
@@ -33,6 +35,11 @@ class GatewayStrategySpvImpl(
 
     override fun createAltChainEndorsement(altChainEndorsementRequest: VeriBlockMessages.CreateAltChainEndorsementRequest): VeriBlockMessages.CreateAltChainEndorsementReply {
         return adminApiService.createAltChainEndorsement(altChainEndorsementRequest)
+    }
+
+    override fun getLastVBKBlockInfo(): BlockInfo {
+        val lastBlock = adminApiService.lastVBKBlock
+        return BlockInfo(lastBlock.number, VBlakeHash.hash(lastBlock.hash.toByteArray()))
     }
 
     override fun ping(pingRequest: VeriBlockMessages.PingRequest): VeriBlockMessages.PingReply {

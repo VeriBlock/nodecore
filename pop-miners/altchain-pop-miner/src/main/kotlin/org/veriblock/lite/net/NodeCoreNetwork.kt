@@ -11,6 +11,7 @@ package org.veriblock.lite.net
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.delay
+import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Balance
@@ -25,6 +26,7 @@ import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
+import sun.invoke.empty.Empty
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -46,6 +48,8 @@ class NodeCoreNetwork(
     val unhealthyEvent = EmptyEvent()
     val healthySyncEvent = EmptyEvent()
     val unhealthySyncEvent = EmptyEvent()
+
+    var lastBlockInfo: BlockInfo? = null
 
     fun isHealthy(): Boolean =
         healthy.get()
@@ -124,8 +128,8 @@ class NodeCoreNetwork(
             if (isHealthy() && isSynchronized()) {
                 // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
                 // APM can continue with its work
-                val lastBlock: VeriBlockBlock = try {
-                    gateway.getLastBlock()
+                val lastBlock: BlockInfo = try {
+                    gateway.getLastVBKBlockInfo()
                 } catch (e: Exception) {
                     logger.error(e) { "Unable to get the last block from NodeCore" }
                     if (isHealthy()) {
@@ -135,11 +139,10 @@ class NodeCoreNetwork(
                     return
                 }
                 try {
-                    val currentChainHead = blockChain.getChainHead()
-                    if (currentChainHead == null || currentChainHead != lastBlock) {
+                    if (lastBlockInfo == null || lastBlockInfo?.hash != lastBlock.hash) {
                         logger.debug { "New chain head detected!" }
-                        reconcileBlockChain(currentChainHead, lastBlock)
                         pollForVeriBlockPublications()
+                        lastBlockInfo = lastBlock
                     }
                 } catch (e: BlockStoreException) {
                     logger.error(e) { "VeriBlockBlock store exception" }

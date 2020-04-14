@@ -18,6 +18,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
+import org.veriblock.lite.core.BlockInfo
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
@@ -254,6 +255,10 @@ class NodeCoreGatewayImpl(
         }
 
         return signedTransaction.deserializeStandardTransaction(params.transactionPrefix)
+    }
+
+    override fun getLastVBKBlockInfo(): BlockInfo {
+        return gatewayStrategy.getLastVBKBlockInfo()
     }
 
     private fun generateSignedRegularTransaction(

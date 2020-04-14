@@ -11,7 +11,10 @@ package org.veriblock.lite.net.impl
 import io.grpc.ManagedChannel
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
+import org.veriblock.lite.core.BlockInfo
 import org.veriblock.lite.net.GatewayStrategy
+import org.veriblock.lite.serialization.deserialize
+import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.concurrent.TimeUnit
 
 class GatewayStrategyGrpcImpl(
@@ -59,6 +62,13 @@ class GatewayStrategyGrpcImpl(
         return blockingStub
             .withDeadlineAfter(2, TimeUnit.SECONDS)
             .createAltChainEndorsement(altChainEndorsementRequest)
+    }
+
+    override fun getLastVBKBlockInfo(): BlockInfo {
+        val lastBlock = blockingStub.getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
+        val verBloBlock = lastBlock.header.deserialize()
+
+        return BlockInfo(verBloBlock.height, verBloBlock.hash)
     }
 
     override fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply {

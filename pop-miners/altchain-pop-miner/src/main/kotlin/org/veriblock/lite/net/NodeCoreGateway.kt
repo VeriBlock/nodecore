@@ -3,6 +3,7 @@ package org.veriblock.lite.net
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
+import org.veriblock.lite.core.BlockInfo
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -23,6 +24,8 @@ interface NodeCoreGateway {
     fun submitEndorsementTransaction(publicationData: ByteArray, addressManager: AddressManager, feePerByte: Long, maxFee: Long): VeriBlockTransaction
 
     fun shutdown()
+
+    fun getLastVBKBlockInfo(): BlockInfo
 
     data class NodeCoreSyncStatus(
         val networkHeight: Int,
