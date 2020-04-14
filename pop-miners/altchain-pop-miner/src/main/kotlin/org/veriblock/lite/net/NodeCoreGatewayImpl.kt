@@ -257,8 +257,8 @@ class NodeCoreGatewayImpl(
         return signedTransaction.deserializeStandardTransaction(params.transactionPrefix)
     }
 
-    override fun getLastVBKBlockInfo(): BlockInfo {
-        return gatewayStrategy.getLastVBKBlockInfo()
+    override fun getLastVBKBlockHeader(): VeriBlockBlock {
+        return gatewayStrategy.getLastVBKBlockHeader().deserialize()
     }
 
     private fun generateSignedRegularTransaction(

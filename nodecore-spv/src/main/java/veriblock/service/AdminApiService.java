@@ -45,7 +45,7 @@ public interface AdminApiService {
 
     VeriBlockMessages.CreateAltChainEndorsementReply createAltChainEndorsement(VeriBlockMessages.CreateAltChainEndorsementRequest request);
 
-    VeriBlockMessages.BlockInfo getLastVBKBlock();
+    VeriBlockMessages.BlockHeader getLastVBKBlockHeader();
 
     //    VeriBlockMessages.BlockHeader getLastBTCBlockHeader();
 

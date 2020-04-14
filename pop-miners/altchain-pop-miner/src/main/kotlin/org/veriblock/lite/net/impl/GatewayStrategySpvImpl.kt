@@ -37,9 +37,8 @@ class GatewayStrategySpvImpl(
         return adminApiService.createAltChainEndorsement(altChainEndorsementRequest)
     }
 
-    override fun getLastVBKBlockInfo(): BlockInfo {
-        val lastBlock = adminApiService.lastVBKBlock
-        return BlockInfo(lastBlock.number, VBlakeHash.hash(lastBlock.hash.toByteArray()))
+    override fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
+        return adminApiService.lastVBKBlockHeader
     }
 
     override fun ping(pingRequest: VeriBlockMessages.PingRequest): VeriBlockMessages.PingReply {

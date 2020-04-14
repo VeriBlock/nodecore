@@ -64,11 +64,9 @@ class GatewayStrategyGrpcImpl(
             .createAltChainEndorsement(altChainEndorsementRequest)
     }
 
-    override fun getLastVBKBlockInfo(): BlockInfo {
+    override fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
         val lastBlock = blockingStub.getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
-        val verBloBlock = lastBlock.header.deserialize()
-
-        return BlockInfo(verBloBlock.height, verBloBlock.hash)
+        return lastBlock.header
     }
 
     override fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply {

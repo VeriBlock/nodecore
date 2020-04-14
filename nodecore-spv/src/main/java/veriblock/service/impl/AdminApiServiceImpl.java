@@ -26,6 +26,8 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Coin;
 import org.veriblock.sdk.models.Sha256Hash;
+import org.veriblock.sdk.models.VeriBlockBlock;
+import org.veriblock.sdk.services.SerializeDeserializeService;
 import veriblock.SpvContext;
 import veriblock.model.AddressCoinsIndex;
 import veriblock.model.LedgerContext;
@@ -654,12 +656,14 @@ public class AdminApiServiceImpl implements AdminApiService {
     }
 
     @Override
-    public VeriBlockMessages.BlockInfo getLastVBKBlock() {
+    public VeriBlockMessages.BlockHeader getLastVBKBlockHeader() {
         try {
             StoredVeriBlockBlock lastBlock = blockchain.getBlockStore().getChainHead();
-            return VeriBlockMessages.BlockInfo.newBuilder()
-                .setNumber(lastBlock.getHeight())
-                .setHash(ByteString.copyFrom(lastBlock.getHash().getBytes()))
+            VeriBlockBlock block = lastBlock.getBlock();
+
+            return VeriBlockMessages.BlockHeader.newBuilder()
+                .setHash(ByteString.copyFrom(block.getHash().getBytes()))
+                .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
                 .build();
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);

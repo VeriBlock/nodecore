@@ -25,7 +25,7 @@ interface NodeCoreGateway {
 
     fun shutdown()
 
-    fun getLastVBKBlockInfo(): BlockInfo
+    fun getLastVBKBlockHeader(): VeriBlockBlock
 
     data class NodeCoreSyncStatus(
         val networkHeight: Int,

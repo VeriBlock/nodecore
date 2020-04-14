@@ -27,7 +27,7 @@ interface GatewayStrategy {
 
     fun createAltChainEndorsement(altChainEndorsementRequest: VeriBlockMessages.CreateAltChainEndorsementRequest): VeriBlockMessages.CreateAltChainEndorsementReply
 
-    fun getLastVBKBlockInfo(): BlockInfo
+    fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader
 
     fun shutdown()
 
