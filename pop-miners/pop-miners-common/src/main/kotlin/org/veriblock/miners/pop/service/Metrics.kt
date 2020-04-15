@@ -26,7 +26,7 @@ object Metrics {
         ClassLoaderMetrics()
     )
 
-    val startedOperationsCounter = Counter.builder("pop-miner.operations")
+    val startedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "started")
         .description("Number of mining operations that were started")
         .register(registry)

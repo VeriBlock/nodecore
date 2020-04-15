@@ -5,6 +5,7 @@ import kotlinx.coroutines.Job
 import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
 
 private val logger = createLogger {}
@@ -47,6 +48,10 @@ abstract class MiningOperation<
         private set
 
     private val logs: MutableList<OperationLog> = ArrayList(logs)
+
+    init {
+        Metrics.startedOperationsCounter.increment()
+    }
 
     protected fun setState(state: OperationState) {
         if (state.id > 0 && this.state.id != state.id - 1) {
@@ -129,6 +134,7 @@ abstract class MiningOperation<
 
         onCompleted()
         stopJob()
+        Metrics.completedOperationsCounter.increment()
     }
 
     open fun onCompleted() {}
@@ -140,6 +146,7 @@ abstract class MiningOperation<
 
         onFailed()
         stopJob()
+        Metrics.failedOperationsCounter.increment()
     }
 
     open fun onFailed() {}

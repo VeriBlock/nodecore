@@ -27,6 +27,7 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
+import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
@@ -38,6 +39,7 @@ import mu.KotlinLogging
 import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
+import org.veriblock.miners.pop.service.Metrics
 import kotlin.reflect.KType
 
 private val logger = KotlinLogging.logger {}
@@ -50,94 +52,89 @@ class ApiServer(
 ) {
     private val config = vpmConfig.api
 
-    private var running = false
-
     var server: ApplicationEngine? = null
 
     fun start() {
-        if (running) {
+        if (server != null) {
             return
         }
 
         logger.info { "Starting HTTP API on ${config.host}:${config.port}" }
 
-        server = try {
-            embeddedServer(Netty, host = config.host, port = config.port) {
-                install(DefaultHeaders)
-                install(CallLogging)
+        server = embeddedServer(Netty, host = config.host, port = config.port) {
+            install(DefaultHeaders)
+            install(CallLogging)
 
-                install(OpenAPIGen) {
-                    info {
-                        version = API_VERSION
-                        title = "VeriBlock PoP Miner API"
-                        description = "This is the VPM's integrated API, through which you can monitor and control the application"
-                        contact {
-                            name = "VeriBlock"
-                            email = "https://veriblock.org"
-                        }
+            install(OpenAPIGen) {
+                info {
+                    version = API_VERSION
+                    title = "VeriBlock PoP Miner API"
+                    description = "This is the VPM's integrated API, through which you can monitor and control the application"
+                    contact {
+                        name = "VeriBlock"
+                        email = "https://veriblock.org"
                     }
-                    replaceModule(DefaultSchemaNamer, object : SchemaNamer {
-                        val regex = Regex("[A-Za-z0-9_.]+")
-                        override fun get(type: KType): String {
-                            return type.toString().replace(regex) { it.value.split(".").last() }.replace(Regex(">|<|, "), "_")
-                        }
+                }
+                replaceModule(DefaultSchemaNamer, object : SchemaNamer {
+                    val regex = Regex("[A-Za-z0-9_.]+")
+                    override fun get(type: KType): String {
+                        return type.toString().replace(regex) { it.value.split(".").last() }.replace(Regex(">|<|, "), "_")
+                    }
+                })
+            }
+
+            statusPages()
+
+            install(ContentNegotiation) {
+                jackson {
+                    enable(
+                        DeserializationFeature.WRAP_EXCEPTIONS,
+                        DeserializationFeature.USE_BIG_INTEGER_FOR_INTS,
+                        DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS
+                    )
+                    enable(SerializationFeature.WRAP_EXCEPTIONS, SerializationFeature.INDENT_OUTPUT)
+                    setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                    setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
+                        indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
+                        indentObjectsWith(DefaultIndenter("  ", "\n"))
                     })
+                    registerModule(JavaTimeModule())
                 }
+            }
 
-                statusPages()
+            install(MicrometerMetrics) {
+                registry = Metrics.registry
+                meterBinders = Metrics.meterBinders
+            }
 
-                install(ContentNegotiation) {
-                    jackson {
-                        enable(
-                            DeserializationFeature.WRAP_EXCEPTIONS,
-                            DeserializationFeature.USE_BIG_INTEGER_FOR_INTS,
-                            DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS
-                        )
-                        enable(SerializationFeature.WRAP_EXCEPTIONS, SerializationFeature.INDENT_OUTPUT)
-                        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                        setDefaultPrettyPrinter(DefaultPrettyPrinter().apply {
-                            indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
-                            indentObjectsWith(DefaultIndenter("  ", "\n"))
-                        })
-                        registerModule(JavaTimeModule())
-                    }
+            install(Locations)
+            routing {
+                get("openapi.json") {
+                    val application = application
+                    call.respond(application.openAPIGen.api)
                 }
-
-                install(Locations)
-                routing {
-                    get("openapi.json") {
-                        val application = application
-                        call.respond(application.openAPIGen.api)
-                    }
-                    get("api") {
-                        call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
-                    }
+                get("api") {
+                    call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
                 }
+                get("metrics") {
+                    call.respond(Metrics.registry.scrape())
+                }
+            }
 
-                apiRouting {
-                    route("api") {
-                        for (controller in controllers) {
-                            with(controller) {
-                                registerApi()
-                            }
+            apiRouting {
+                route("api") {
+                    for (controller in controllers) {
+                        with(controller) {
+                            registerApi()
                         }
                     }
                 }
-            }.start()
-        } catch (e: Exception) {
-            logger.warn(e) { "Could not start the API" }
-            return
-        }
-
-        running = true
+            }
+        }.start()
     }
 
     fun shutdown() {
-        if (!running) {
-            return
-        }
-
         server?.stop(100, 100)
-        running = false
+        server = null
     }
 }

@@ -27,6 +27,7 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
+import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
@@ -38,6 +39,7 @@ import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
+import org.veriblock.miners.pop.service.Metrics
 import kotlin.reflect.KType
 
 const val API_VERSION = "0.1"
@@ -48,15 +50,13 @@ class ApiServer(
     configuration: Configuration,
     private val controllers: List<ApiController>
 ) {
-    private var running = false
-
     private val port: Int = configuration.getInt("miner.api.port") ?: 8080
     private val host: String = configuration.getString("miner.api.host") ?: "0.0.0.0"
 
-    var server: ApplicationEngine? = null
+    private var server: ApplicationEngine? = null
 
     fun start() {
-        if (running) {
+        if (server != null) {
             return
         }
 
@@ -103,6 +103,11 @@ class ApiServer(
                 }
             }
 
+            install(MicrometerMetrics) {
+                registry = Metrics.registry
+                meterBinders = Metrics.meterBinders
+            }
+
             install(Locations)
             routing {
                 get("openapi.json") {
@@ -111,6 +116,9 @@ class ApiServer(
                 }
                 get("api") {
                     call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
+                }
+                get("metrics") {
+                    call.respond(Metrics.registry.scrape())
                 }
             }
             apiRouting {
@@ -123,16 +131,10 @@ class ApiServer(
                 }
             }
         }.start()
-
-        running = true
     }
 
     fun shutdown() {
-        if (!running) {
-            return
-        }
-
         server?.stop(100, 100)
-        running = false
+        server = null
     }
 }
