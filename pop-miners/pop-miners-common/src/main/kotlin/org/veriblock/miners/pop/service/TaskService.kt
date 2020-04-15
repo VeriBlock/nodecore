@@ -65,11 +65,11 @@ abstract class TaskService<
     abstract suspend fun submitPopEndorsement(operation: MO)
     abstract suspend fun confirmPayout(operation: MO)
 
-    protected suspend inline fun MO.runTask(
+    protected suspend fun MO.runTask(
         taskName: String,
         targetState: OperationState,
         timeout: Duration,
-        crossinline block: suspend () -> Unit
+        block: suspend () -> Unit
     ) {
         // Check if this operation needs to run this task first
         if (state hasType targetState) {

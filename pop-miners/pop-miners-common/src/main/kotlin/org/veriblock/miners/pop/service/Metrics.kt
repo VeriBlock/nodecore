@@ -26,22 +26,22 @@ object Metrics {
         ClassLoaderMetrics()
     )
 
-    val startedOperationsCounter = Counter.builder("pop_miner.operations")
+    internal val startedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "started")
         .description("Number of mining operations that were started")
         .register(registry)
 
-    val completedOperationsCounter = Counter.builder("pop_miner.operations")
+    internal val completedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "completed")
         .description("Number of mining operations that were completed")
         .register(registry)
 
-    val failedOperationsCounter = Counter.builder("pop_miner.operations")
+    internal val failedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "failed")
         .description("Number of mining operations that failed")
         .register(registry)
 
-    val operationStateTimersByTargetState = mapOf(
+    internal val operationStateTimersByTargetState = mapOf(
         OperationState.INSTRUCTION to createOperationStateTimer("retrieveMiningInstruction"),
         OperationState.ENDORSEMENT_TRANSACTION to createOperationStateTimer("createEndorsementTransaction"),
         OperationState.CONFIRMED to createOperationStateTimer("confirmEndorsementTransaction"),
