@@ -9,7 +9,6 @@
 package org.veriblock.lite.net
 
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.lite.core.BlockInfo
 
 interface GatewayStrategy {
 
@@ -29,10 +28,7 @@ interface GatewayStrategy {
 
     fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader
 
-    fun shutdown()
+    fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader
 
-    //TODO remove on the next step
-    fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply
-    fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply
-    fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply
+    fun shutdown()
 }

@@ -17,9 +17,6 @@ import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
-import org.veriblock.lite.core.BlockChainDelta
-import org.veriblock.lite.core.BlockInfo
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
@@ -42,56 +39,6 @@ class NodeCoreGatewayImpl(
     @Throws(InterruptedException::class)
     override fun shutdown() {
         gatewayStrategy.shutdown()
-    }
-
-    override fun getLastBlock(): VeriBlockBlock {
-        return try {
-            val lastBlock = gatewayStrategy.getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
-
-            lastBlock.header.deserialize()
-        } catch (e: Exception) {
-            logger.warn("Unable to get last VBK block", e)
-            throw e
-        }
-    }
-
-    override fun getBlock(height: Int): FullBlock? {
-        logger.debug { "Requesting VBK block at height $height..." }
-        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
-            .addFilters(
-                VeriBlockMessages.BlockFilter.newBuilder()
-                    .setIndex(height)
-                    .build()
-            )
-            .build()
-
-        val reply = gatewayStrategy.getBlock(request)
-        if (reply.success && reply.blocksCount > 0) {
-            val deserialized = reply.getBlocks(0).deserialize(params.transactionPrefix)
-            return deserialized
-        }
-
-        return null
-    }
-
-    override fun getBlock(hash: String): FullBlock? {
-        logger.debug { "Requesting VBK block with hash $hash..." }
-        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
-            .addFilters(
-                VeriBlockMessages.BlockFilter.newBuilder()
-                    .setHash(ByteStringUtility.hexToByteString(hash))
-                    .build()
-            )
-            .build()
-
-        val reply = gatewayStrategy.getBlock(request)
-
-        if (reply.success && reply.blocksCount > 0) {
-            val deserialized = reply.getBlocks(0).deserialize(params.transactionPrefix)
-            return deserialized
-        }
-
-        return null
     }
 
     override fun getBalance(address: String): Balance {
@@ -194,22 +141,6 @@ class NodeCoreGatewayImpl(
         }
     }
 
-    override fun listChangesSince(hash: String?): BlockChainDelta {
-        logger.debug { "Requesting delta since hash $hash..." }
-        val builder = VeriBlockMessages.ListBlocksSinceRequest.newBuilder()
-        if (hash != null && hash.isNotEmpty()) {
-            builder.hash = ByteStringUtility.hexToByteString(hash)
-        }
-        val reply = gatewayStrategy.listChangesSince(builder.build())
-
-        if (!reply.success) {
-            error("Unable to retrieve changes since VBK block $hash")
-        }
-        val removed = reply.removedList.map { msg -> msg.deserialize() }
-        val added = reply.addedList.map { msg -> msg.deserialize() }
-        return BlockChainDelta(removed, added)
-    }
-
     private val lock = ReentrantLock()
 
     override fun submitEndorsementTransaction(
@@ -260,6 +191,11 @@ class NodeCoreGatewayImpl(
     override fun getLastVBKBlockHeader(): VeriBlockBlock {
         return gatewayStrategy.getLastVBKBlockHeader().deserialize()
     }
+
+    override fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockBlock {
+        return gatewayStrategy.getVBKBlockHeader(blockHash).deserialize()
+    }
+
 
     private fun generateSignedRegularTransaction(
         addressManager: AddressManager,

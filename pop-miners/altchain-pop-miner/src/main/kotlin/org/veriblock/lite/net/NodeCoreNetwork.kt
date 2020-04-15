@@ -83,8 +83,8 @@ class NodeCoreNetwork(
         publicationSubscriptions.remove(operationId)
     }
 
-    fun getBlock(hash: VBlakeHash): FullBlock? {
-        return gateway.getBlock(hash.toString())
+    fun getBlock(hash: VBlakeHash): VeriBlockBlock? {
+        return gateway.getVBKBlockHeader(hash.bytes)
     }
 
     private fun poll() {
@@ -228,43 +228,45 @@ class NodeCoreNetwork(
         }
     }
 
-    private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
-        logger.debug { "Reconciling VBK blockchain..." }
-        try {
-            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 500
-            if (tooFarBehind) {
-                logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
-                blockChain.reset()
-            }
-            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
-                val downloaded = getBlock(latestBlock.hash)
-                if (downloaded != null) {
-                    blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
-                }
-                return
-            }
-
-            val blockChainDelta = gateway.listChangesSince(previousHead.hash.toString())
-
-            val added = ArrayList<FullBlock>(blockChainDelta.added.size)
-            for (block in blockChainDelta.added) {
-                val downloaded = gateway.getBlock(block.hash.toString())
-                    ?: throw BlockDownloadException("Unable to download VBK block " + block.hash.toString())
-
-                added.add(downloaded)
-            }
-
-            blockChain.handleNewBestChain(blockChainDelta.removed, added)
-        } catch (e: Exception) {
-            logger.warn("NodeCore Error", e)
-        }
-    }
-
     fun getBalance(): Balance =
         gateway.getBalance(addressManager.defaultAddress.hash)
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
+
+    //TODO remove after refactoring
+//    private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
+//        logger.debug { "Reconciling VBK blockchain..." }
+//        try {
+//            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 500
+//            if (tooFarBehind) {
+//                logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
+//                blockChain.reset()
+//            }
+//            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
+//                val downloaded = getBlock(latestBlock.hash)
+//                if (downloaded != null) {
+////                    blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
+//                }
+//                return
+//            }
+//
+//            val blockChainDelta = gateway.listChangesSince(previousHead.hash.toString())
+//
+//            val added = ArrayList<FullBlock>(blockChainDelta.added.size)
+//            for (block in blockChainDelta.added) {
+//                val downloaded = gateway.getBlock(block.hash.toString())
+//                    ?: throw BlockDownloadException("Unable to download VBK block " + block.hash.toString())
+//
+//                added.add(downloaded)
+//            }
+//
+//            blockChain.handleNewBestChain(blockChainDelta.removed, added)
+//        } catch (e: Exception) {
+//            logger.warn("NodeCore Error", e)
+//        }
+//    }
+
 }
 
 class BlockDownloadException(message: String) : Exception(message)

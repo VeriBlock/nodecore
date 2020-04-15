@@ -8,6 +8,7 @@
 
 package veriblock.service;
 
+import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;
 
 /**
@@ -46,6 +47,8 @@ public interface AdminApiService {
     VeriBlockMessages.CreateAltChainEndorsementReply createAltChainEndorsement(VeriBlockMessages.CreateAltChainEndorsementRequest request);
 
     VeriBlockMessages.BlockHeader getLastVBKBlockHeader();
+
+    VeriBlockMessages.BlockHeader getVBKBlockHeader(ByteString hash);
 
     //    VeriBlockMessages.BlockHeader getLastBTCBlockHeader();
 

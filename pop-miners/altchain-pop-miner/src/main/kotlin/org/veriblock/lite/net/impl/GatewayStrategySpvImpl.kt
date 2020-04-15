@@ -8,10 +8,9 @@
 
 package org.veriblock.lite.net.impl
 
+import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.lite.core.BlockInfo
 import org.veriblock.lite.net.GatewayStrategy
-import org.veriblock.sdk.models.VBlakeHash
 import veriblock.SpvContext
 import veriblock.service.AdminApiService
 
@@ -41,6 +40,10 @@ class GatewayStrategySpvImpl(
         return adminApiService.lastVBKBlockHeader
     }
 
+    override fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader {
+        return adminApiService.getVBKBlockHeader(ByteString.copyFrom(blockHash))
+    }
+
     override fun ping(pingRequest: VeriBlockMessages.PingRequest): VeriBlockMessages.PingReply {
         return VeriBlockMessages.PingReply.getDefaultInstance()
     }
@@ -57,17 +60,4 @@ class GatewayStrategySpvImpl(
         TODO("Not yet implemented")
     }
 
-
-    // TODO remove on the next step
-    override fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply {
-        TODO("Not yet implemented")
-    }
-
-    override fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply {
-        TODO("Not yet implemented")
-    }
 }

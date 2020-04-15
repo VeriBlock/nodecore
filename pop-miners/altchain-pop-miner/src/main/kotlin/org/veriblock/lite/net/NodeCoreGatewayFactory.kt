@@ -33,7 +33,7 @@ object NodeCoreGatewayFactory {
                 .withMaxInboundMessageSize(20 * 1024 * 1024)
                 .withMaxOutboundMessageSize(20 * 1024 * 1024)
 
-            return GatewayStrategyGrpcImpl(blockingStub, channel)
+            return GatewayStrategyGrpcImpl(blockingStub, channel, networkParameters)
         } else {
             val spvContext = SpvContext()
             spvContext.init(

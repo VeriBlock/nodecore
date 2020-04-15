@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.sdk.blockchain.store.VeriBlockStore;
+import org.veriblock.sdk.models.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import spark.utils.CollectionUtils;
 
@@ -54,6 +55,10 @@ public class Blockchain {
         return null;
     }
 
+    public StoredVeriBlockBlock get(VBlakeHash hash) throws SQLException {
+        return blockStore.get(hash);
+    }
+
     public void add(VeriBlockBlock block) throws SQLException {
 
         StoredVeriBlockBlock previous = blockStore.get(block.getPreviousBlock());
@@ -61,7 +66,8 @@ public class Blockchain {
             // Nothing to build on
             return;
         }
-        StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(block, previous.getWork().add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())));
+        StoredVeriBlockBlock storedBlock =
+            new StoredVeriBlockBlock(block, previous.getWork().add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())));
 
         // TODO: Make the put(...) and setChainHead(...) atomic
 
