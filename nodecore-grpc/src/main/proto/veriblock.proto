@@ -873,6 +873,7 @@ message GetEndorsementsOfBlockReply {
 message SendCoinsRequest {
     bytes source_address = 1 [(address_encoded)=true];
     repeated Output amounts = 2;
+    bool take_fee_from_outputs = 3;
 }
 
 message SendCoinsReply {
