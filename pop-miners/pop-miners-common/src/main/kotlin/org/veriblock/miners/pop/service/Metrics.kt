@@ -55,5 +55,6 @@ object Metrics {
     private fun createOperationStateTimer(taskName: String) = Timer.builder("pop_miner.operations_timer")
         .description("Total time spent in the $taskName task")
         .tags("task", taskName)
+        .publishPercentiles(0.5, 0.9, 0.95, 0.99)
         .register(registry)
 }

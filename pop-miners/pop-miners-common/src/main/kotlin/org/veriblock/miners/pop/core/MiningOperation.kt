@@ -50,7 +50,9 @@ abstract class MiningOperation<
     private val logs: MutableList<OperationLog> = ArrayList(logs)
 
     init {
-        Metrics.startedOperationsCounter.increment()
+        if (!reconstituting) {
+            Metrics.startedOperationsCounter.increment()
+        }
     }
 
     protected fun setState(state: OperationState) {
