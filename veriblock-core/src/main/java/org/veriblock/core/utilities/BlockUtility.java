@@ -11,6 +11,12 @@ import org.veriblock.core.Context;
 import org.veriblock.core.SharedConstants;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.crypto.Crypto;
+import org.veriblock.core.tuweni.bytes.Bytes32;
+import org.veriblock.core.tuweni.ethash.EthHash;
+import org.veriblock.core.tuweni.progpow.ProgPoW;
+import org.veriblock.core.tuweni.progpow.ProgPoWCache;
+import org.veriblock.core.tuweni.units.bigints.UInt32;
+import org.veriblock.core.types.Pair;
 
 import java.math.BigInteger;
 
@@ -154,19 +160,14 @@ public final class BlockUtility {
      * @return Whether or not this block header's hash meets it's embedded difficulty
      */
     public static boolean isMinerHashBelowTarget(byte[] blockHeader) {
-        Crypto crypto = new Crypto();
-        String blockHash = crypto.vBlakeReturnHex(blockHeader);
+        String blockHash = hashBlock(blockHeader);
         BigInteger difficulty = BitcoinUtilities.decodeCompactBits(extractDifficultyFromBlockHeader(blockHeader));
-
         if (difficulty.compareTo(BigInteger.ZERO) < 0 || !isEmbeddedDifficultyValid(difficulty) ) {
             return false;
         }
 
         BigInteger target = SharedConstants.DIFFICULTY_CALCULATOR_MAXIMUM_TARGET.divide(difficulty.multiply(BigInteger.valueOf(1)));
-
-        boolean valid = new BigInteger(blockHash, 16).compareTo(target) < 0;
-
-        return valid;
+        return new BigInteger(blockHash, 16).compareTo(target) < 0;
     }
 
     public static boolean isEmbeddedDifficultyValid(BigInteger embeddedDifficulty) {
@@ -351,8 +352,62 @@ public final class BlockUtility {
         return extracted;
     }
 
+    public static byte[] getProgPoWHeaderHash(byte[] header) {
+        Crypto crypto = new Crypto();
+
+        byte[] choppedHeaderToHash = extractHeaderBytesForProgPoWHeaderHashCalculation(header);
+        byte[] headerHash = crypto.SHA256D(choppedHeaderToHash);
+        return headerHash;
+    }
+
+    public static byte[] extractHeaderBytesForProgPoWHeaderHashCalculation(byte[] header) {
+        // Chop off the last 4 bytes of the header (nonce)
+        byte[] chopped = new byte[header.length - 4];
+        System.arraycopy(header, 0, chopped, 0, chopped.length);
+
+        return chopped;
+    }
+
     public static String hashBlock(byte[] blockHeader) {
-        String blockHashUnchopped = new Crypto().vBlakeReturnHex(blockHeader);
-        return blockHashUnchopped.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+        int blockNum = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
+
+        int ProgPoWForkHeight;
+
+        if (Context.get().getNetworkParameters().equals("mainnet")) {
+            ProgPoWForkHeight = Integer.MAX_VALUE; // No scheduled height yet
+        } else if (Context.get().getNetworkParameters().getNetworkName().equals("testnet")) {
+            ProgPoWForkHeight = 435000; // For testing purposes only, subject to change!
+        } else {
+            ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
+        }
+
+        Crypto crypto = new Crypto();
+
+        String blockHash;
+        if (blockNum < ProgPoWForkHeight) {
+            blockHash = crypto.vBlakeReturnHex(blockHeader);
+        } else {
+            // Generate header hash...
+            byte[] headerHash = getProgPoWHeaderHash(blockHeader);
+            int extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
+
+            long converted = (extractedNonce & 0xFFFFFFFFL);
+
+            // TODO: Move to crypto
+            Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
+            UInt32[] cache = cachePair.getFirst();
+            UInt32[] cDag = cachePair.getSecond();
+            Bytes32 digest = ProgPoW.progPowHash(
+                blockNum,
+                converted,
+                Bytes32.wrap(headerHash),
+                cDag,
+                (ind) -> EthHash.calcDatasetItem(cache, ind)
+            );
+
+            blockHash = digest.toUnprefixedHexString().toUpperCase();
+        }
+
+        return blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
     }
 }
