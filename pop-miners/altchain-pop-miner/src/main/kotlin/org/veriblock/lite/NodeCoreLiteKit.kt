@@ -8,6 +8,10 @@
 
 package org.veriblock.lite
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
@@ -27,6 +31,7 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
 import java.io.IOException
+import java.time.Duration
 
 val logger = createLogger {}
 
@@ -44,6 +49,7 @@ class NodeCoreLiteKit(
 
     var beforeNetworkStart: () -> Unit = {}
     val balanceChangedEvent = Event<Balance>()
+    private var lastKnownBalance: Balance? = null
 
     fun initialize() {
         if (!context.directory.exists() && !context.directory.mkdirs()) {
@@ -54,11 +60,9 @@ class NodeCoreLiteKit(
         this.blockStore = createBlockStore()
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
-        blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
             gateway,
-            blockChain,
             transactionMonitor,
             addressManager
         )
@@ -68,38 +72,37 @@ class NodeCoreLiteKit(
 
     fun start() {
         logger.info { "VeriBlock Network: ${context.networkParameters.network}" }
-
-        blockChain.newBestBlockEvent.register(transactionMonitor) {
-            val balanceChanged = transactionMonitor.onNewBestBlock(it)
-            if (balanceChanged) {
-                if (network.isHealthy()) {
-                    balanceChangedEvent.trigger(network.getBalance())
-                }
-            }
-        }
-        blockChain.blockChainReorganizedEvent.register(transactionMonitor) {
-            transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
-        }
-        blockChain.blockChainReorganizedEvent.register(this) {
-            for (newBlock in it.newBlocks) {
-                blockChain.newBestBlockEvent.trigger(newBlock)
-                blockChain.newBestBlockChannel.offer(newBlock)
-            }
-        }
-
         logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
-        network.startAsync().addListener(Runnable {
-            if (network.isHealthy()) {
-                balanceChangedEvent.trigger(network.getBalance())
-            }
-        }, Threading.LISTENER_THREAD)
+
+        balanceUpdater()
     }
 
     fun shutdown() {
         if (this::network.isInitialized) {
             network.shutdown()
+        }
+    }
+
+    fun balanceUpdater() {
+        GlobalScope.launch {
+            while (isActive) {
+                try {
+                    updateBalance()
+                } catch (e: Exception) {
+                    logger.error { e.message; e }
+                }
+                delay(Duration.ofSeconds(60).toMillis())
+            }
+        }
+    }
+
+    fun updateBalance() {
+        val balance = gateway.getBalance(addressManager.defaultAddress.hash)
+        if (lastKnownBalance == null || lastKnownBalance != balance) {
+            balanceChangedEvent.trigger(balance)
+            lastKnownBalance = balance
         }
     }
 

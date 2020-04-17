@@ -125,6 +125,7 @@ class ApmTaskService(
 
         // Transaction has been confirmed!
         operation.setConfirmed()
+        nodeCoreLiteKit.updateBalance()
     }
 
     override suspend fun determineBlockOfProof(operation: ApmOperation) = operation.runTask(

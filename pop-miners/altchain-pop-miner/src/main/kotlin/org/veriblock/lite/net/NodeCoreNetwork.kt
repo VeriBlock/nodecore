@@ -14,9 +14,7 @@ import kotlinx.coroutines.delay
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Balance
-import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.EmptyEvent
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.PublicationSubscription
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
@@ -33,7 +31,6 @@ private val logger = createLogger {}
 
 class NodeCoreNetwork(
     private val gateway: NodeCoreGateway,
-    private val blockChain: BlockChain,
     private val transactionMonitor: TransactionMonitor,
     private val addressManager: AddressManager
 ) {
@@ -58,7 +55,7 @@ class NodeCoreNetwork(
     fun startAsync(): ListenableFuture<Boolean> {
         Threading.NODECORE_POLL_THREAD.scheduleWithFixedDelay({
             this.poll()
-        }, 1L, 1L, TimeUnit.SECONDS)
+        }, 1L, 30L, TimeUnit.SECONDS)
 
         return connected
     }
@@ -234,39 +231,5 @@ class NodeCoreNetwork(
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
 
-    //TODO remove after refactoring
-//    private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
-//        logger.debug { "Reconciling VBK blockchain..." }
-//        try {
-//            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 500
-//            if (tooFarBehind) {
-//                logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
-//                blockChain.reset()
-//            }
-//            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
-//                val downloaded = getBlock(latestBlock.hash)
-//                if (downloaded != null) {
-////                    blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
-//                }
-//                return
-//            }
-//
-//            val blockChainDelta = gateway.listChangesSince(previousHead.hash.toString())
-//
-//            val added = ArrayList<FullBlock>(blockChainDelta.added.size)
-//            for (block in blockChainDelta.added) {
-//                val downloaded = gateway.getBlock(block.hash.toString())
-//                    ?: throw BlockDownloadException("Unable to download VBK block " + block.hash.toString())
-//
-//                added.add(downloaded)
-//            }
-//
-//            blockChain.handleNewBestChain(blockChainDelta.removed, added)
-//        } catch (e: Exception) {
-//            logger.warn("NodeCore Error", e)
-//        }
-//    }
 
 }
-
-class BlockDownloadException(message: String) : Exception(message)
