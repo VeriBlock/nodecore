@@ -9,6 +9,8 @@
 package org.veriblock.lite.net
 
 import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
+import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 
 interface GatewayStrategy {
 
@@ -29,6 +31,8 @@ interface GatewayStrategy {
     fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader
 
     fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader
+
+    fun getTransactions(request: GetTransactionsRequest?): GetTransactionsReply?
 
     fun shutdown()
 }

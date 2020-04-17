@@ -96,6 +96,12 @@ class GatewayStrategyGrpcImpl(
         return VeriBlockMessages.BlockHeader.getDefaultInstance()
     }
 
+    override fun getTransactions(request: VeriBlockMessages.GetTransactionsRequest?): VeriBlockMessages.GetTransactionsReply? {
+        return blockingStub
+            .withDeadlineAfter(300, TimeUnit.SECONDS)
+            .getTransactions(request)
+    }
+
     override fun shutdown() {
         channel.shutdown().awaitTermination(15, TimeUnit.SECONDS)
     }

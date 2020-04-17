@@ -15,6 +15,7 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event
+import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreGatewayImpl
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.store.VeriBlockBlockStore
@@ -39,6 +40,7 @@ class NodeCoreLiteKit(
     lateinit var addressManager: AddressManager
     lateinit var transactionMonitor: TransactionMonitor
     lateinit var network: NodeCoreNetwork
+    lateinit var gateway: NodeCoreGateway
 
     var beforeNetworkStart: () -> Unit = {}
     val balanceChangedEvent = Event<Balance>()
@@ -48,17 +50,20 @@ class NodeCoreLiteKit(
             throw IOException("Unable to create directory")
         }
 
+        this.gateway = NodeCoreGatewayImpl(context.networkParameters)
         this.blockStore = createBlockStore()
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
         blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
-            NodeCoreGatewayImpl(context.networkParameters),
+            gateway,
             blockChain,
             transactionMonitor,
             addressManager
         )
+
+        transactionMonitor.start()
     }
 
     fun start() {
@@ -111,13 +116,13 @@ class NodeCoreLiteKit(
         val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
         return if (file.exists()) {
             try {
-                file.loadTransactionMonitor(context)
+                file.loadTransactionMonitor(context, gateway)
             } catch (e: Exception) {
                 throw IOException("Unable to load the transaction monitoring data", e)
             }
         } else {
             val address = Address(addressManager.defaultAddress.hash)
-            TransactionMonitor(context, address)
+            TransactionMonitor(context, address, gateway)
         }
     }
 

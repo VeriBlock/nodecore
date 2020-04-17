@@ -8,11 +8,16 @@
 
 package org.veriblock.lite.transactionmonitor
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -21,6 +26,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.time.Duration
 import java.util.Collections
 import java.util.HashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -28,10 +34,12 @@ import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 const val TM_FILE_EXTENSION = ".txmon"
+const val MIN_TX_CONFIRMATIONS: Int = 1
 
 class TransactionMonitor(
     val context: Context,
     val address: Address,
+    val gateway: NodeCoreGateway,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
     private val lock = ReentrantLock(true)
@@ -41,6 +49,41 @@ class TransactionMonitor(
         for (tx in transactionsToLoad) {
             transactions[tx.id] = tx
         }
+    }
+
+    fun start() {
+        GlobalScope.launch {
+            while (isActive) {
+                delay(Duration.ofSeconds(60).toMillis())
+                checkPendingTransactions()
+            }
+        }
+
+    }
+
+    private fun checkPendingTransactions() {
+        val pendingTxs = pendingTransactions()
+        val txsInfo = gateway.getTransactions(pendingTxs)
+
+        for (txInfo in txsInfo!!) {
+            if (txInfo.confirmations > MIN_TX_CONFIRMATIONS) {
+                val tx = transactions[Sha256Hash.wrap(txInfo.transaction.txId.toByteArray())]
+                tx?.transactionMeta?.depth = txInfo.confirmations
+                tx?.transactionMeta?.setState(TransactionMeta.MetaState.CONFIRMED)
+            }
+        }
+
+
+    }
+
+    private fun pendingTransactions(): List<Sha256Hash> {
+        val pendingTxs = arrayListOf<Sha256Hash>()
+        for (transaction in transactions) {
+            if (transaction.value.transactionMeta.state === TransactionMeta.MetaState.PENDING) {
+                pendingTxs.add(transaction.key)
+            }
+        }
+        return pendingTxs
     }
 
     fun getTransactions(): Collection<WalletTransaction> =
@@ -78,6 +121,7 @@ class TransactionMonitor(
     private fun handleReorganizedBlocks(blocks: List<VeriBlockBlock>) = lock.withLock {
         removeConfirmations(blocks.size)
     }
+
 
     private fun handleNewBlock(block: FullBlock) = lock.withLock {
         logger.debug { "New VBK block received at height ${block.height}: ${block.hash}" }
@@ -197,9 +241,9 @@ class TransactionMonitor(
     }
 }
 
-fun File.loadTransactionMonitor(context: Context): TransactionMonitor = try {
+fun File.loadTransactionMonitor(context: Context, gateway: NodeCoreGateway): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
-        stream.readTransactionMonitor(context)
+        stream.readTransactionMonitor(context, gateway)
     }
 } catch (e: IOException) {
     throw IllegalStateException("Unable to read VBK wallet from disk")

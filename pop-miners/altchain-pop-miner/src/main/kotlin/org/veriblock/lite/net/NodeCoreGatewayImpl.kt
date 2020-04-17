@@ -21,10 +21,12 @@ import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.util.concurrent.locks.ReentrantLock
+import java.util.stream.Collectors
 import kotlin.concurrent.withLock
 import kotlin.math.abs
 
@@ -196,6 +198,19 @@ class NodeCoreGatewayImpl(
         return gatewayStrategy.getVBKBlockHeader(blockHash).deserialize()
     }
 
+    override fun getTransactions(ids: List<Sha256Hash>): List<VeriBlockMessages.TransactionInfo>? {
+        val request =
+            VeriBlockMessages.GetTransactionsRequest.newBuilder()
+                .addAllIds(ids.stream()
+                    .map { ByteString.copyFrom(it.bytes) }
+                    .collect(Collectors.toList())
+                )
+                .build()
+
+        val response = gatewayStrategy.getTransactions(request)
+
+        return response?.transactionsList ?: emptyList()
+    }
 
     private fun generateSignedRegularTransaction(
         addressManager: AddressManager,

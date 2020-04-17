@@ -52,6 +52,10 @@ class GatewayStrategySpvImpl(
         return adminApiService.getVeriBlockPublications(getVeriBlockPublicationsRequest)
     }
 
+    override fun getTransactions(request: VeriBlockMessages.GetTransactionsRequest?): VeriBlockMessages.GetTransactionsReply? {
+        return adminApiService.getTransactions(request)
+    }
+
     override fun shutdown() {
         spvContext.peerTable.shutdown()
     }
