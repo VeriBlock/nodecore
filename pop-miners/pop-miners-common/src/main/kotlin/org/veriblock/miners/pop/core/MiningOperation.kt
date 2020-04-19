@@ -91,6 +91,10 @@ abstract class MiningOperation<
             error("Trying to set as transaction confirmed without such transaction")
         }
         setState(OperationState.CONFIRMED)
+
+        endorsementTransaction?.let {
+            Metrics.spentFeesCounter.increment(it.fee.toDouble())
+        }
     }
 
     fun setBlockOfProof(blockOfProof: SPB) {
@@ -136,6 +140,7 @@ abstract class MiningOperation<
         onCompleted()
         stopJob()
         Metrics.completedOperationsCounter.increment()
+        Metrics.miningRewardCounter.increment(payoutAmount.toDouble())
     }
 
     open fun onCompleted() {}

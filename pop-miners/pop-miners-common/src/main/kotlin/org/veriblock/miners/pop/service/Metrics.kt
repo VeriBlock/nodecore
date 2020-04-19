@@ -41,6 +41,14 @@ object Metrics {
         .description("Number of mining operations that failed")
         .register(registry)
 
+    internal val spentFeesCounter = Counter.builder("pop_miner.spent_fees")
+        .description("Total amount of spent fees")
+        .register(registry)
+
+    internal val miningRewardCounter = Counter.builder("pop_miner.mining_rewards")
+        .description("Total amount of mining rewards")
+        .register(registry)
+
     internal val operationStateTimersByTargetState = mapOf(
         OperationState.INSTRUCTION to createOperationStateTimer("retrieveMiningInstruction"),
         OperationState.ENDORSEMENT_TRANSACTION to createOperationStateTimer("createEndorsementTransaction"),
