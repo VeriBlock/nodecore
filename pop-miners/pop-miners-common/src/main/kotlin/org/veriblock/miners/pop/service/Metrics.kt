@@ -42,11 +42,11 @@ object Metrics {
         .register(registry)
 
     internal val spentFeesCounter = Counter.builder("pop_miner.spent_fees")
-        .description("Total amount of spent coins")
+        .description("Total amount of spent fees")
         .register(registry)
 
     internal val miningRewardCounter = Counter.builder("pop_miner.mining_rewards")
-        .description("Total amount of rewarded coins")
+        .description("Total amount of mining rewards")
         .register(registry)
 
     internal val operationStateTimersByTargetState = mapOf(
