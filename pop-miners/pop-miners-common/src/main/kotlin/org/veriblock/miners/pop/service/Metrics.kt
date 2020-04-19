@@ -41,13 +41,11 @@ object Metrics {
         .description("Number of mining operations that failed")
         .register(registry)
 
-    internal val spentFeesCounter = Counter.builder("pop_miner.coin_spent")
-        .tags("coin", "spent")
+    internal val spentFeesCounter = Counter.builder("pop_miner.spent_fees")
         .description("Total amount of spent coins")
         .register(registry)
 
-    internal val miningRewardCounter = Counter.builder("pop_miner.coin_reward")
-        .tags("coin", "reward")
+    internal val miningRewardCounter = Counter.builder("pop_miner.mining_rewards")
         .description("Total amount of rewarded coins")
         .register(registry)
 
