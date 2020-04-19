@@ -238,7 +238,7 @@ class TestChain(
             Random.nextBytes(22).toHex(),
             100,
             listOf(
-                SecurityInheritingTransactionVout(20.0, receiver)
+                SecurityInheritingTransactionVout(20__000_000_00, receiver)
             )
         )
         transactions[transaction.txId] = transaction

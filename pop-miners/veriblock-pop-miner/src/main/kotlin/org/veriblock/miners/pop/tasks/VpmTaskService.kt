@@ -320,7 +320,7 @@ class VpmTaskService(
 
         val endorsementInfo = nodeCoreGateway.getPopEndorsementInfo().find {
             it.endorsedBlockNumber == endorsedBlockHeight && it.minerAddress == payoutAddress &&
-                it.bitcoinTransactionId == bitcoinTransactionId
+                it.bitcoinTransactionId.equals(bitcoinTransactionId, ignoreCase = true)
         } ?: failOperation(
             "Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!"
         )

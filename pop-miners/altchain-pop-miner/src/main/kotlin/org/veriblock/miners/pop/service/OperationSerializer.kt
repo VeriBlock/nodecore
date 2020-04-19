@@ -60,7 +60,7 @@ class OperationSerializer(
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
-            payoutAmount = operation.payoutAmount ?: ""
+            payoutAmount = operation.payoutAmount ?: 0L
         )
         return protoData
     }
@@ -120,7 +120,7 @@ class OperationSerializer(
                 setProofOfProofId(serialized.proofOfProofId)
             }
 
-            if (serialized.payoutBlockHash.isNotEmpty() && serialized.payoutAmount.isNotEmpty()) {
+            if (serialized.payoutBlockHash.isNotEmpty()) {
                 complete(serialized.payoutBlockHash, serialized.payoutAmount)
             }
 

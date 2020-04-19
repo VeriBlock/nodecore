@@ -40,7 +40,7 @@ class PopEndorsementInfo(
     val bitcoinBlockHeaderHash: String
 
     @SerializedName("reward")
-    val reward: String
+    val reward: Long
 
     @SerializedName("finalized")
     val finalized: Boolean
@@ -57,7 +57,7 @@ class PopEndorsementInfo(
         bitcoinTransactionId = popEndorsementInfo.bitcoinTxId.toByteArray().toHex()
         bitcoinBlockHeader = popEndorsementInfo.bitcoinBlockHeader.toByteArray().toHex()
         bitcoinBlockHeaderHash = popEndorsementInfo.bitcoinBlockHeaderHash.toByteArray().toHex()
-        reward = popEndorsementInfo.reward.formatAtomicLongWithDecimal()
+        reward = popEndorsementInfo.reward
         finalized = popEndorsementInfo.finalized
         endorsedBlockNumber = popEndorsementInfo.endorsedBlockNumber
     }

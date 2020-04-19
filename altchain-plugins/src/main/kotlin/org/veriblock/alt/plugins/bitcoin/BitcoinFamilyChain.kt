@@ -187,7 +187,7 @@ class BitcoinFamilyChain(
             btcTransaction.confirmations,
             btcTransaction.vout.map {
                 SecurityInheritingTransactionVout(
-                    it.value,
+                    Math.round(it.value * 100000000),
                     it.scriptPubKey.hex
                 )
             }
@@ -309,10 +309,10 @@ class BitcoinFamilyChain(
     override fun isConnected(): Boolean {
         val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
         return try{
-            val response: String = config.host.httpPost()
+            config.host.httpPost()
                 .authenticate()
                 .body(jsonBody)
-                .rpcResponse()
+                .rpcResponse<String>()
             true
         } catch (e: Exception) {
             false

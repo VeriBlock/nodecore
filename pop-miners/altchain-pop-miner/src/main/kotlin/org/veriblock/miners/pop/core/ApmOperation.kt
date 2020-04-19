@@ -44,7 +44,7 @@ class ApmSpTransaction(
     val transaction: WalletTransaction
 ) : SpTransaction {
     override val txId: String get() = transaction.id.bytes.toHex()
-    override val fee: String get() = "Unknown" // TODO
+    override val fee: Long get() = 0L // TODO
 }
 
 class ApmSpBlock(

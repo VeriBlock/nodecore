@@ -16,6 +16,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
@@ -372,10 +373,10 @@ class ApmTaskService(
         if (rewardVout != null) {
             logger.info(
                 operation,
-                "$chainName PoP Payout detected! Amount: ${rewardVout.value} ${operation.chain.key.toUpperCase()}"
+                "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} ${operation.chain.key.toUpperCase()}"
             )
             logger.info(operation, "Completed!")
-            operation.complete(payoutBlock.hash, rewardVout.value.toString())
+            operation.complete(payoutBlock.hash, rewardVout.value)
         } else {
             failOperation(
                 "Unable to find ${operation.chain.name} PoP payout transaction in the expected block's coinbase!" +
