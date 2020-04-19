@@ -228,9 +228,8 @@ class AltchainPopMinerService(
     }
 
     override fun resubmit(operation: ApmOperation) {
-        val operationState = operation.state
-        if (operationState != OperationState.COMPLETED) {
-            error("The operation [${operation.id}] is not completed, so it can't be resubmitted!")
+        if (operation.context == null) {
+            error("The operation [${operation.id}] has no context to be resubmitted!")
         }
 
         // Copy the operation
