@@ -38,7 +38,7 @@ setupJar("NodeCore Reference Proof-of-Work Miner", "nodecore.miners.pow")
 val sourcesJar = setupSourcesJar()
 
 application.applicationName = "veriblock-pow-miner"
-application.mainClassName = "nodecore.miners.pow.MainClass"
+application.mainClassName = "nodecore.miners.pow.VeriBlockPoWMiner"
 
 tasks.distZip {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")

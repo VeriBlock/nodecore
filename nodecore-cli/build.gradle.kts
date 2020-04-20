@@ -60,7 +60,7 @@ tasks.named<JavaExec>("run") {
 }
 
 application.applicationName = "nodecore-cli"
-application.mainClassName = "nodecore.cli.ProgramKt"
+application.mainClassName = "nodecore.cli.NodeCoreCLI"
 
 setupJar("NodeCore Command-Line Interface", "nodecore.cli")
 

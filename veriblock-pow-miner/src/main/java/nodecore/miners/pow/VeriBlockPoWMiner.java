@@ -38,7 +38,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Scanner;
 
-public class MainClass {
+public class VeriBlockPoWMiner {
     private static final int MAX_PORT_NUM = 65335;
     private static final int MIN_PORT_NUM = 0;
 
