@@ -22,6 +22,7 @@ object EventBus {
     val popMinerReadyEvent = EmptyEvent("PoP Miner Ready")
     val popMinerNotReadyEvent = Event<PopMinerDependencies>("PoP Miner Not Ready")
     val popMiningOperationCompletedEvent = Event<String>("PoP Mining Operation Completed")
+    val popMiningOperationFinishedEvent = Event<VpmOperation>("PoP Mining Operation Finished")
     val popMiningOperationStateChangedEvent = Event<VpmOperation>("PoP Mining Operation State Changed")
     val programQuitEvent = Event<Int>("Program Quit")
     val shellCompletedEvent = EmptyEvent("Shell Completed")

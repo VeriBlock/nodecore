@@ -111,6 +111,11 @@ class BitcoinService(
         logger.info("Using Bitcoin {} network", bitcoinNetwork.toString())
         serializer = BitcoinSerializer(context.params, true)
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
+        EventBus.popMiningOperationFinishedEvent.register(this) {
+            contextCoroutineScope.launch {
+                it.endorsementTransaction?.transaction?.confidence?.removeEventListener(it.transactionListener)
+            }
+        }
         logger.info("BitcoinService constructor finished")
     }
 

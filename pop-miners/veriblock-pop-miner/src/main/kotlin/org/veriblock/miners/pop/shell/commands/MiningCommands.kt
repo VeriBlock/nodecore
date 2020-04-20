@@ -136,6 +136,19 @@ fun CommandFactory.miningCommands(
             }
         }
     }
+
+    command(
+        name = "Cancel Operation",
+        form = "canceloperation",
+        description = "Cancels the operations",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING)
+        )
+    ) {
+        val id: String = getParameter("id")
+        minerService.cancelOperation(id)
+        success("V200", "Success", "The operation '$id' has been cancelled")
+    }
 }
 
 class OperationInfo(

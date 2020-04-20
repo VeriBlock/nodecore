@@ -33,14 +33,16 @@ data class OperationSummaryResponse(
     val operationId: String,
     val chain: String,
     val endorsedBlockNumber: Int?,
-    val state: String
+    val state: String,
+    val stateDescription: String
 )
 
 fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
     id,
     chain.name,
     endorsedBlockHeight,
-    state.toString()
+    state.toString(),
+    getStateDescription()
 )
 
 @Response("Detailed mining operation information")

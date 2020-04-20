@@ -38,6 +38,7 @@ fun MineResult.toResponse() = MineResultResponse(
     messages = messages.map { it.toResponse() }
 )
 
+
 fun ResultMessage.toResponse() = ResultMessageResponse(
     code = code,
     message = message,

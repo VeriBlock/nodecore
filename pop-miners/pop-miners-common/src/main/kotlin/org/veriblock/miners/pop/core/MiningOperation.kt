@@ -160,10 +160,14 @@ abstract class MiningOperation<
     fun isFailed() = state == OperationState.FAILED
 
     fun stopJob() {
-        if (state != OperationState.COMPLETED) {
-            job?.cancel()
-        }
+        job?.cancel()
         job = null
+    }
+
+    fun getStateDescription() = if (isFailed()) {
+        "Failed: $failureReason"
+    } else {
+        state.description
     }
 
     open fun isLoggingEnabled(level: Level): Boolean = true

@@ -19,7 +19,6 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -236,7 +235,8 @@ class AltchainPopMinerService(
         val newOperation = ApmOperation(
             chain = operation.chain,
             chainMonitor = operation.chainMonitor,
-            endorsedBlockHeight = operation.endorsedBlockHeight
+            endorsedBlockHeight = operation.endorsedBlockHeight,
+            reconstituting = true
         )
 
         // Replicate its state up until prior to the PoP data submission
@@ -246,6 +246,7 @@ class AltchainPopMinerService(
         newOperation.setBlockOfProof(operation.blockOfProof!!)
         newOperation.setMerklePath(operation.merklePath!!)
         newOperation.setContext(operation.context!!)
+        newOperation.reconstituting = false
 
         registerToStateChangedEvent(newOperation)
 
@@ -254,6 +255,12 @@ class AltchainPopMinerService(
         operations[newOperation.id] = newOperation
 
         logger.info { "Resubmitted operation [${operation.id}] as new operation [${newOperation.id}]" }
+    }
+
+    override fun cancelOperation(id: String) {
+        val operation = operations[id]
+            ?: error(String.format("Could not find operation with id '%s'", id))
+        cancel(operation)
     }
 
     override fun shutdown() {
@@ -315,5 +322,12 @@ class AltchainPopMinerService(
         operation.job = coroutineScope.launch {
             taskService.runTasks(operation)
         }
+    }
+
+    fun cancel(operation: ApmOperation) {
+        if (operation.job == null) {
+            error("Trying to cancel operation [${operation.id}] while it doesn't have a running job!")
+        }
+        operation.fail("Cancellation requested by the user")
     }
 }
