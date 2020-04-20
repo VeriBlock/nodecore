@@ -81,7 +81,8 @@ class OperationSerializer(
             chainMonitor = chainMonitor,
             logs = logs,
             endorsedBlockHeight = serialized.blockHeight,
-            createdAt = createdAt
+            createdAt = createdAt,
+            reconstituting = true
         ).apply {
             if (serialized.publicationData.header.isNotEmpty()) {
                 setMiningInstruction(
@@ -127,6 +128,8 @@ class OperationSerializer(
             if (state == OperationState.FAILED) {
                 fail("Loaded as failed")
             }
+
+            reconstituting = false
         }
     }
 
