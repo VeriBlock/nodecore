@@ -35,6 +35,8 @@ interface MinerService {
 
     fun resubmit(operation: ApmOperation)
 
+    fun cancelOperation(id: String)
+
     fun shutdown()
 
     fun setIsShuttingDown(b: Boolean)

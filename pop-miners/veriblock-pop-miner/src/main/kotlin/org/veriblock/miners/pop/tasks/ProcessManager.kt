@@ -57,6 +57,13 @@ class ProcessManager(
         }
     }
 
+    fun cancel(operation: VpmOperation) {
+        if (operation.job == null) {
+            error("Trying to cancel operation [${operation.id}] while it doesn't have a running job!")
+        }
+        operation.fail("Cancellation requested by the user")
+    }
+
     private fun onReorg(operation: VpmOperation) {
         // Cancel that mining operation's job
         operation.stopJob()

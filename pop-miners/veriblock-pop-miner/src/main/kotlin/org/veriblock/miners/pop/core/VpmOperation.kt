@@ -14,11 +14,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.model.PopMiningInstruction
 import java.time.LocalDateTime
 
 class VpmOperation(
-    id: String,
+    id: String = generateOperationId(),
     endorsedBlockHeight: Int? = null,
     createdAt: LocalDateTime = LocalDateTime.now(),
     logs: List<OperationLog> = emptyList(),
@@ -28,7 +29,7 @@ class VpmOperation(
 ) {
     val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 
-    private val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
+    val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
         if (reason == TransactionConfidence.Listener.ChangeReason.TYPE) {
             transactionConfidenceEventChannel.offer(confidence.confidenceType)
         }
@@ -53,10 +54,10 @@ class VpmOperation(
 
     override fun onCompleted() {
         EventBus.popMiningOperationCompletedEvent.trigger(id)
-        endorsementTransaction?.transaction?.confidence?.removeEventListener(transactionListener)
+        EventBus.popMiningOperationFinishedEvent.trigger(this)
     }
 
     override fun onFailed() {
-        endorsementTransaction?.transaction?.confidence?.removeEventListener(transactionListener)
+        EventBus.popMiningOperationFinishedEvent.trigger(this)
     }
 }

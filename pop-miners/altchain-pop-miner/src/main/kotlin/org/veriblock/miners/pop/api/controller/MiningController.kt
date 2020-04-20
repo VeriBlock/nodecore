@@ -46,6 +46,11 @@ class MiningController(
         @PathParam("Operation ID") val id: String
     )
 
+    @Path("operations/{id}/cancel")
+    class CancelOperationPath(
+        @PathParam("Operation ID") val id: String
+    )
+
     @Path("operations/{id}/logs")
     class MinerOperationLogsPath(
         @PathParam("Operation ID") val id: String,
@@ -75,7 +80,8 @@ class MiningController(
                     firstMsg.message,
                     mineRequest.chainSymbol,
                     mineRequest.height,
-                    "Starting..."
+                    "Starting...",
+                    ""
                 )
             )
         }
@@ -117,6 +123,12 @@ class MiningController(
 
             val responseModel = operationState.toDetailedResponse()
             respond(responseModel)
+        }
+        post<CancelOperationPath, Unit, Unit>(
+            info("Cancel an operation")
+        ) { location, _ ->
+            val result = miner.cancelOperation(location.id)
+            respond(result)
         }
         get<MinerOperationLogsPath, List<String>>(
             info("Get the operation logs")
