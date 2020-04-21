@@ -46,8 +46,8 @@ class OperationSerializer(
             publicationData = operation.miningInstruction?.let {
                 serialize(it.publicationData)
             } ?: OperationProto.PublicationData(),
-            publicationContext = operation.miningInstruction?.context?.map { it } ?: emptyList(),
-            publicationBtcContext = operation.miningInstruction?.btcContext?.map { it } ?: emptyList(),
+            publicationContext = operation.miningInstruction?.context ?: emptyList(),
+            publicationBtcContext = operation.miningInstruction?.btcContext ?: emptyList(),
             txId = operation.endorsementTransaction?.txId ?: "",
             blockOfProof = operation.blockOfProof?.let {
                 SerializeDeserializeService.serializeHeaders(it.block)
@@ -89,8 +89,8 @@ class OperationSerializer(
                     ApmInstruction(
                         serialized.blockHeight,
                         deserialize(serialized.publicationData),
-                        serialized.publicationContext.map { it },
-                        serialized.publicationBtcContext.map { it }
+                        serialized.publicationContext,
+                        serialized.publicationBtcContext
                     ))
             }
 

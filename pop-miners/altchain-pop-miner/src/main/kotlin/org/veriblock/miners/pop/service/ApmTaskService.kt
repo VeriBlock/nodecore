@@ -284,6 +284,8 @@ class ApmTaskService(
         targetState = OperationState.SUBMITTED_POP_DATA,
         timeout = 240.hr
     ) {
+        val miningInstruction = operation.miningInstruction
+            ?: failTask("SubmitProofOfProofTask called without mining instruction!")
         val endorsementTransaction = operation.endorsementTransaction
             ?: failTask("SubmitProofOfProofTask called without endorsement transaction!")
         val blockOfProof = operation.blockOfProof?.block
@@ -298,7 +300,9 @@ class ApmTaskService(
                 endorsementTransaction.transaction,
                 merklePath,
                 blockOfProof,
-                emptyList()
+                miningInstruction.context.map {
+                    SerializeDeserializeService.parseVeriBlockBlock(it)
+                }
             )
 
             val siTxId = operation.chain.submit(proofOfProof, veriBlockPublications)
