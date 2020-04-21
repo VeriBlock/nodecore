@@ -8,6 +8,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
+import java.util.concurrent.CopyOnWriteArrayList
 
 private val logger = createLogger {}
 
@@ -48,7 +49,7 @@ abstract class MiningOperation<
     var failureReason: String? = null
         private set
 
-    private val logs: MutableList<OperationLog> = ArrayList(logs)
+    private val logs: MutableList<OperationLog> = CopyOnWriteArrayList(logs)
 
     init {
         if (!reconstituting) {
