@@ -69,6 +69,11 @@ class TransactionMonitor(
             if (txInfo.confirmations > MIN_TX_CONFIRMATIONS) {
                 val tx = transactions[Sha256Hash.wrap(txInfo.transaction.txId.toByteArray())]
                 tx?.transactionMeta?.depth = txInfo.confirmations
+                tx?.transactionMeta?.appearsAtChainHeight = txInfo.blockNumber
+
+                //TODO SPV-119 Implement it.
+//                tx?.transactionMeta?.appearsInBestChainBlock =
+//                tx?.merklePath =
                 tx?.transactionMeta?.setState(TransactionMeta.MetaState.CONFIRMED)
             }
         }

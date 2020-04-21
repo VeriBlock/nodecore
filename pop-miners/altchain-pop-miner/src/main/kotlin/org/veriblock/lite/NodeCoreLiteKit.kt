@@ -26,7 +26,6 @@ import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
-import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
@@ -76,6 +75,7 @@ class NodeCoreLiteKit(
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
 
+        network.startAsync()
         balanceUpdater()
     }
 

@@ -62,7 +62,7 @@ class ApmTaskService(
         val vbkContextBlockHash = publicationData.context[0]
         val vbkContextBlock = nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
             ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
-        val vbkChainHead = nodeCoreLiteKit.blockChain.getChainHead()
+        val vbkChainHead = nodeCoreLiteKit.network.lastBlockHeader
             ?: failOperation("Unable to get VBK's chain head!")
         val contextAge = vbkChainHead.height - vbkContextBlock.height
         if (contextAge > MAX_CONTEXT_AGE) {
@@ -140,11 +140,11 @@ class ApmTaskService(
             ?: failTask("Unable to retrieve block of proof from transaction")
 
         try {
-            val block = nodeCoreLiteKit.blockChain.get(blockHash)
-                ?: failTask("Unable to retrieve VBK block $blockHash")
+            val block = nodeCoreLiteKit.gateway.getVBKBlockHeader(blockHash.bytes)
+
             operation.setBlockOfProof(ApmSpBlock(block))
         } catch (e: BlockStoreException) {
-            failTask("Error when retrieving VBK block $blockHash")
+            failTask("Error when retrieving VBK block ${transaction.transactionMeta.txId}")
         }
         logger.info(operation, "Successfully added the VBK block of proof!")
     }
@@ -202,6 +202,7 @@ class ApmTaskService(
             block.height == keystoneOfProofHeight
         }
         logger.info(operation, "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}")
+
 
         // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
         val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
