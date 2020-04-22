@@ -18,6 +18,8 @@ import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
 import java.io.FileInputStream
@@ -70,10 +72,8 @@ class TransactionMonitor(
                 val tx = transactions[Sha256Hash.wrap(txInfo.transaction.txId.toByteArray())]
                 tx?.transactionMeta?.depth = txInfo.confirmations
                 tx?.transactionMeta?.appearsAtChainHeight = txInfo.blockNumber
-
-                //TODO SPV-119 Implement it.
-//                tx?.transactionMeta?.appearsInBestChainBlock =
-//                tx?.merklePath =
+                tx?.transactionMeta?.appearsInBestChainBlock = VBlakeHash.wrap(txInfo.blockHash.toByteArray())
+                tx?.merklePath = VeriBlockMerklePath(txInfo.merklePath)
                 tx?.transactionMeta?.setState(TransactionMeta.MetaState.CONFIRMED)
             }
         }
