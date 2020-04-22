@@ -1060,7 +1060,6 @@ message ImportPrivateKeyReply {
 }
 
 message GetLastBitcoinBlockRequest {
-    bytes vbk_block_hash = 1 [(hex_encoded)=true];
 }
 
 message GetLastBlockRequest {
@@ -1075,6 +1074,7 @@ message GetLastBitcoinBlockReply {
 }
 
 message GetLastBitcoinBlockAtVeriBlockBlockRequest {
+    bytes vbk_block_hash = 1 [(hex_encoded)=true];
 }
 
 message GetLastBitcoinBlockAtVeriBlockBlockReply {
