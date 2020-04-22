@@ -54,9 +54,7 @@ class OperationSerializer(
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.compactFormat ?: "",
             veriblockPublications = operation.context?.publications?.map {
-                serialize(
-                    it
-                )
+                serialize(it)
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",

@@ -87,6 +87,7 @@ abstract class TaskService<
                     block()
                 }
                 success = true
+                timerSample.stop(timer)
             } catch (e: TaskException) {
                 logger.warn(this, "Task '$taskName' has failed: ${e.message}")
                 if (attempts < MAX_TASK_RETRIES) {
@@ -106,8 +107,6 @@ abstract class TaskService<
                 failOperation(
                     "Operation has been cancelled for taking too long during task '$taskName'."
                 )
-            } finally {
-                timerSample.stop(timer)
             }
         } while (!success)
     }

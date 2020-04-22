@@ -25,8 +25,8 @@ class PublicationSubscription(
         listener(results)
     }
 
-    fun trySetResults(publications: List<VeriBlockPublication>?): Boolean {
-        if (publications.isNullOrEmpty()) {
+    fun trySetResults(publications: List<VeriBlockPublication>): Boolean {
+        if (publications.isEmpty()) {
             return false
         }
 
