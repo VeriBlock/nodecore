@@ -131,7 +131,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
             if (!(process.state hasType OperationState.CONTEXT)) {
                 printInfo("Operation $id has no VTBs yet")
             } else {
-                printInfo(prettyPrintGson.toJson(process.context))
+                printInfo(prettyPrintGson.toJson(process.context?.detailedInfo))
             }
         }
 
