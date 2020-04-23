@@ -152,10 +152,10 @@ fun CommandFactory.transactionCommands() {
         form = "settxfee",
         description = "Set the transaction fee for future transactions",
         parameters = listOf(
-            CommandParameter(name = "transactionFee", mapper = CommandParameterMappers.STRING, required = true)
+            CommandParameter(name = "transactionFee", mapper = CommandParameterMappers.LONG, required = true)
         )
     ) {
-        val fee = Utility.convertDecimalCoinToAtomicLong(getParameter("transactionFee"))
+        val fee = getParameter<Long>("transactionFee")
         val request = VeriBlockMessages.SetTransactionFeeRequest.newBuilder().setAmount(fee).build()
         val result = cliShell.adminService.setTransactionFee(request)
 
