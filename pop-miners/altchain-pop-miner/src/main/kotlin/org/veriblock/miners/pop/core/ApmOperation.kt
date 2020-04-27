@@ -44,7 +44,14 @@ class ApmSpTransaction(
     val transaction: WalletTransaction
 ) : SpTransaction {
     override val txId: String get() = transaction.id.bytes.toHex()
-    override val fee: Long get() = 0L // TODO
+    // sourceAmount - sum(outputs)
+    override val fee: Long get() = transaction.sourceAmount.subtract(
+        transaction.outputs.asSequence().map {
+            it.amount
+        }.reduce { total, out ->
+            total.add(out)
+        }
+    ).atomicUnits
 }
 
 class ApmSpBlock(
