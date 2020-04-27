@@ -19,6 +19,7 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -317,7 +318,8 @@ class AltchainPopMinerService(
 
     private fun submit(operation: ApmOperation) {
         if (operation.job != null) {
-            error("Trying to submit operation [${operation.id}] while it already had a running job!")
+            logger.warn(operation, "Trying to submit operation while it already had a running job!")
+            return
         }
         operation.job = coroutineScope.launch {
             taskService.runTasks(operation)
