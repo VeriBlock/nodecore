@@ -30,6 +30,8 @@ interface NodeCoreGateway {
 
     fun getTransactions(request: List<Sha256Hash>): List<VeriBlockMessages.TransactionInfo>?
 
+    fun getVBKBlockHeader(height: Int): VeriBlockBlock
+
     data class NodeCoreSyncStatus(
         val networkHeight: Int,
         val localBlockchainHeight: Int,

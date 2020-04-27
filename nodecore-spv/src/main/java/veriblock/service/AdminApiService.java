@@ -50,6 +50,8 @@ public interface AdminApiService {
 
     VeriBlockMessages.BlockHeader getVBKBlockHeader(ByteString hash);
 
+    VeriBlockMessages.BlockHeader getVBKBlockHeader(Integer height);
+
     //    VeriBlockMessages.BlockHeader getLastBTCBlockHeader();
 
     VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request);

@@ -690,6 +690,20 @@ public class AdminApiServiceImpl implements AdminApiService {
     }
 
     @Override
+    public VeriBlockMessages.BlockHeader getVBKBlockHeader(Integer height) {
+        StoredVeriBlockBlock block = blockchain.getBlockByHeight(height);
+
+        if (block == null) {
+            return null;
+        }
+
+        return VeriBlockMessages.BlockHeader.newBuilder()
+            .setHash(ByteString.copyFrom(block.getHash().getBytes()))
+            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.getBlock())))
+            .build();
+    }
+
+    @Override
     public VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request) {
         VeriBlockMessages.GetLastBitcoinBlockReply.Builder replyBuilder = VeriBlockMessages.GetLastBitcoinBlockReply.newBuilder();
         replyBuilder.setSuccess(true);

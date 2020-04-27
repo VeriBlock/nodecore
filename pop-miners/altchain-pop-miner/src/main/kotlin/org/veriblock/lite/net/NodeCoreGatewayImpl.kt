@@ -194,6 +194,10 @@ class NodeCoreGatewayImpl(
         return gatewayStrategy.getLastVBKBlockHeader().deserialize()
     }
 
+    override fun getVBKBlockHeader(height: Int): VeriBlockBlock {
+        return gatewayStrategy.getVBKBlockHeader(height).deserialize()
+    }
+
     override fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockBlock {
         return gatewayStrategy.getVBKBlockHeader(blockHash).deserialize()
     }
@@ -201,8 +205,9 @@ class NodeCoreGatewayImpl(
     override fun getTransactions(ids: List<Sha256Hash>): List<VeriBlockMessages.TransactionInfo>? {
         val request =
             VeriBlockMessages.GetTransactionsRequest.newBuilder()
-                .addAllIds(ids.stream()
-                    .map { ByteString.copyFrom(it.bytes) }
+                .addAllIds(
+                    ids.stream()
+                        .map { ByteString.copyFrom(it.bytes) }
                     .collect(Collectors.toList())
                 )
                 .build()

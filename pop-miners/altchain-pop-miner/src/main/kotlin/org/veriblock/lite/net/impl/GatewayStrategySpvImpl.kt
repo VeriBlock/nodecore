@@ -44,6 +44,10 @@ class GatewayStrategySpvImpl(
         return adminApiService.getVBKBlockHeader(ByteString.copyFrom(blockHash))
     }
 
+    override fun getVBKBlockHeader(blockHeingt: Int): VeriBlockMessages.BlockHeader {
+        return adminApiService.getVBKBlockHeader(blockHeingt)
+    }
+
     override fun ping(pingRequest: VeriBlockMessages.PingRequest): VeriBlockMessages.PingReply {
         return VeriBlockMessages.PingReply.getDefaultInstance()
     }

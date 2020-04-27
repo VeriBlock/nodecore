@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.service.impl;
 
+import com.google.common.collect.EvictingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
@@ -33,6 +34,7 @@ public class Blockchain {
 
     private final VeriBlockBlock genesisBlock;
     private final VeriBlockStore blockStore;
+    private final EvictingQueue<StoredVeriBlockBlock> blocksCash = EvictingQueue.create(1000);
 
     public Blockchain(VeriBlockBlock genesisBlock, VeriBlockStore blockStore) {
         this.genesisBlock = genesisBlock;
@@ -60,7 +62,6 @@ public class Blockchain {
     }
 
     public void add(VeriBlockBlock block) throws SQLException {
-
         StoredVeriBlockBlock previous = blockStore.get(block.getPreviousBlock());
         if (previous == null) {
             // Nothing to build on
@@ -72,6 +73,8 @@ public class Blockchain {
         // TODO: Make the put(...) and setChainHead(...) atomic
 
         blockStore.put(storedBlock);
+        blocksCash.add(storedBlock);
+
         // TODO: PoP fork resolution additional
         if (storedBlock.getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
             blockStore.setChainHead(storedBlock);
@@ -103,12 +106,19 @@ public class Blockchain {
         List<StoredVeriBlockBlock> storedBlocks = convertToStoreVeriBlocks(listToStore);
 
         blockStore.put(storedBlocks);
+        blocksCash.addAll(storedBlocks);
 
         // TODO: PoP fork resolution additional
         if (storedBlocks.get(storedBlocks.size() - 1).getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
             blockStore.setChainHead(storedBlocks.get(storedBlocks.size() - 1));
         }
+    }
 
+    public StoredVeriBlockBlock getBlockByHeight(Integer height) {
+        return blocksCash.stream()
+            .filter(block -> block.getHeight() == height)
+            .findAny()
+            .orElse(null);
     }
 
     private List<VeriBlockBlock> listToStore(List<VeriBlockBlock> veriBlockBlocks) throws SQLException {
