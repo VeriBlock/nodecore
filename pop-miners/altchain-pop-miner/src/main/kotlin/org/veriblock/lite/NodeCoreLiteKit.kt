@@ -16,18 +16,15 @@ import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
 import org.veriblock.lite.core.Balance
-import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreGatewayImpl
 import org.veriblock.lite.net.NodeCoreNetwork
-import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
 import java.io.IOException
 import java.time.Duration
@@ -39,8 +36,6 @@ private const val WALLET_FILE_EXTENSION = ".wallet"
 class NodeCoreLiteKit(
     private val context: Context
 ) {
-    lateinit var blockStore: VeriBlockBlockStore
-    lateinit var blockChain: BlockChain
     lateinit var addressManager: AddressManager
     lateinit var transactionMonitor: TransactionMonitor
     lateinit var network: NodeCoreNetwork
@@ -56,7 +51,6 @@ class NodeCoreLiteKit(
         }
 
         this.gateway = NodeCoreGatewayImpl(context.networkParameters)
-        this.blockStore = createBlockStore()
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
 
@@ -107,13 +101,6 @@ class NodeCoreLiteKit(
     }
 
     fun getAddress(): String = addressManager.defaultAddress.hash
-
-    private fun createBlockStore(): VeriBlockBlockStore = try {
-        val chainFile = File(context.directory, context.filePrefix + ".spvchain")
-        VeriBlockBlockStore(chainFile)
-    } catch (e: BlockStoreException) {
-        throw IOException("Unable to initialize VBK block store", e)
-    }
 
     private fun createOrLoadTransactionMonitor(): TransactionMonitor {
         val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
