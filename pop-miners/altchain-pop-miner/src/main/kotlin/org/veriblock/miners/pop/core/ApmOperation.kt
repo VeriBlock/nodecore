@@ -16,6 +16,7 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -46,11 +47,7 @@ class ApmSpTransaction(
     override val txId: String get() = transaction.id.bytes.toHex()
     // sourceAmount - sum(outputs)
     override val fee: Long get() = transaction.sourceAmount.subtract(
-        transaction.outputs.asSequence().map {
-            it.amount
-        }.reduce { total, out ->
-            total.add(out)
-        }
+        Coin.valueOf(transaction.outputs.asSequence().map { it.amount.atomicUnits }.sum())
     ).atomicUnits
 }
 

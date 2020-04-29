@@ -14,7 +14,7 @@ if "%DIRNAME%" == "" set DIRNAME=.\
 set APP_BASE_NAME=%~n0
 set APP_HOME=%DIRNAME%${appHomeRelativePath}
 
-SET APP_TITLE=AltChain Proof-of-Proof (PoP) Miner
+SET APP_TITLE=Altchain Proof-of-Proof (PoP) Miner
 TITLE %APP_TITLE%
 
 @rem Add default JVM options here. You can also use JAVA_OPTS and ${optsEnvironmentVar} to pass JVM options to this script.
