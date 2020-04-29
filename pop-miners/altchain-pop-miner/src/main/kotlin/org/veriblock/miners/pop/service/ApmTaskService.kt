@@ -262,7 +262,7 @@ class ApmTaskService(
                 val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
                 val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
 
-                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect)) {
+                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i-1) else ArrayList<VeriBlockPublication>()))) {
                     logger.error {
                         """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:
