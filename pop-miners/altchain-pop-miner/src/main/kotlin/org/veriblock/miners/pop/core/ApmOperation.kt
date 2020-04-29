@@ -47,7 +47,11 @@ class ApmSpTransaction(
     override val txId: String get() = transaction.id.bytes.toHex()
     // sourceAmount - sum(outputs)
     override val fee: Long get() = transaction.sourceAmount.subtract(
-        Coin.valueOf(transaction.outputs.asSequence().map { it.amount.atomicUnits }.sum())
+        transaction.outputs.asSequence().map {
+            it.amount
+        }.fold(Coin.ZERO) { total, out ->
+            total.add(out)
+        }
     ).atomicUnits
 }
 
