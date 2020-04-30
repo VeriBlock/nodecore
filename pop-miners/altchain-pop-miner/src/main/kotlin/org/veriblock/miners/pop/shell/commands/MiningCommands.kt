@@ -64,7 +64,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         description = "Lists the current running operations"
     ) {
         val operations = miner.getOperations().map {
-            "${it.id}: ${it.chain.name} (${it.endorsedBlockHeight}) | ${it.state}"
+            "${it.id}: ${it.chain.name} (${it.endorsedBlockHeight}) | ${it.state} | ${it.getStateDescription()}"
         }
 
         for (operation in operations) {
@@ -131,11 +131,24 @@ fun CommandFactory.miningCommands(miner: MinerService) {
             if (!(process.state hasType OperationState.CONTEXT)) {
                 printInfo("Operation $id has no VTBs yet")
             } else {
-                printInfo(prettyPrintGson.toJson(process.context))
+                printInfo(prettyPrintGson.toJson(process.context?.detailedInfo))
             }
         }
 
         success()
+    }
+
+    command(
+        name = "Cancel Operation",
+        form = "canceloperation",
+        description = "Cancels the operations",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING)
+        )
+    ) {
+        val id: String = getParameter("id")
+        miner.cancelOperation(id)
+        success("V200", "Success", "The operation '$id' has been cancelled")
     }
 }
 

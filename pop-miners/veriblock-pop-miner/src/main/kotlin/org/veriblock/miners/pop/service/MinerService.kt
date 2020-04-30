@@ -30,6 +30,7 @@ import org.veriblock.miners.pop.model.OperationSummary
 import org.veriblock.miners.pop.model.PopMinerDependencies
 import org.veriblock.miners.pop.model.result.DefaultResultMessage
 import org.veriblock.miners.pop.model.result.MineResult
+import org.veriblock.miners.pop.model.result.OperationNotFoundException
 import org.veriblock.miners.pop.model.result.Result
 import org.veriblock.miners.pop.storage.KeyValueRecord
 import org.veriblock.miners.pop.storage.KeyValueRepository
@@ -109,13 +110,12 @@ class MinerService(
 
     fun listOperations(): List<OperationSummary> {
         return operations.values.asSequence().map { operation ->
-            val state = operation.state
             val miningInstruction = operation.miningInstruction
             var blockNumber = -1
             if (miningInstruction != null) {
                 blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader)
             }
-            OperationSummary(operation.id, blockNumber, state.name, state.description)
+            OperationSummary(operation.id, blockNumber, operation.state.name, operation.getStateDescription())
         }.sortedBy {
             it.endorsedBlockNumber
         }.toList()
@@ -170,18 +170,43 @@ class MinerService(
         if (!readyToMine()) {
             result.fail()
             val reasons = listPendingReadyConditions()
-            result.addMessage("V412", "Miner is not ready", java.lang.String.join("; ", reasons), true)
+            result.addMessage("V412", "Miner is not ready", reasons.joinToString(";"), true)
             return result
         }
+
         val operation = operations[id]
         if (operation == null) {
             result.fail()
             result.addMessage("V404", "Operation not found", String.format("Could not find operation with id '%s'", id), true)
             return result
         }
-        processManager.submit(operation)
-        result.addMessage("V200", "Success", String.format("To view details, run command: getoperation %s", operation.id), false)
+
+        // Copy the operation
+        val newOperation = VpmOperation(
+            endorsedBlockHeight = operation.endorsedBlockHeight,
+            reconstituting = true
+        )
+
+        // Replicate its state up until prior to the PoP data submission
+        newOperation.setMiningInstruction(operation.miningInstruction!!)
+        newOperation.setTransaction(operation.endorsementTransaction!!)
+        newOperation.setConfirmed()
+        newOperation.setBlockOfProof(operation.blockOfProof!!)
+        newOperation.setMerklePath(operation.merklePath!!)
+        newOperation.setContext(operation.context!!)
+        newOperation.reconstituting = false
+
+        processManager.submit(newOperation)
+        operations[newOperation.id] = newOperation
+
+        result.addMessage("V200", "Success", String.format("To view details, run command: getoperation %s", newOperation.id), false)
         return result
+    }
+
+    fun cancelOperation(id: String) {
+        val operation = operations[id]
+            ?: throw OperationNotFoundException(String.format("Could not find operation with id '%s'", id))
+        processManager.cancel(operation)
     }
 
     fun getMinerAddress(): String? {
@@ -426,13 +451,6 @@ class MinerService(
     private fun onBitcoinServiceReady() {
         try {
             addReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
-            if (!readyToMine()) {
-                val failed = EnumSet.complementOf(readyConditions)
-                for (flag in failed) {
-                    logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag))
-                    EventBus.popMinerNotReadyEvent.trigger(flag)
-                }
-            }
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

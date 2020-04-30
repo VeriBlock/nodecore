@@ -5,9 +5,12 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+import com.netflix.gradle.plugins.deb.Deb
 import groovy.util.Eval
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.redline_rpm.header.Flags.EQUAL
+import org.redline_rpm.header.Flags.GREATER
 
 plugins {
     java
@@ -15,6 +18,7 @@ plugins {
     idea
     application
     kotlin("plugin.serialization") version kotlinVersion
+    id("nebula.ospackage")
 }
 
 configurations.all {
@@ -49,6 +53,12 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-locations:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")
+    // Serialization
+    implementation("io.ktor:ktor-jackson:$ktorVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8")
+    // Metrics
+    implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
     // Swagger integration, expecting an official integration to be released soon
     implementation("com.github.papsign:Ktor-OpenAPI-Generator:reworked-model-SNAPSHOT")
 
@@ -56,11 +66,9 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
-    // Serialization
+    // Protobuf Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
-    implementation("io.ktor:ktor-jackson:$ktorVersion") // needed for parameter parsing and multipart parsing
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8") // needed for multipart parsing
 
     implementation("commons-cli:commons-cli:1.4")
     implementation("com.google.code.gson:gson:2.8.2")
@@ -99,11 +107,9 @@ application.mainClassName = "org.veriblock.miners.pop.AltchainPoPMiner"
 setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
 
 tasks.distZip {
-    dependsOn("addConfigFile")
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
 }
 tasks.distTar {
-    dependsOn("addConfigFile")
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.tar")
 }
 
@@ -112,15 +118,45 @@ tasks.startScripts {
         resources.text.fromFile("windowsStartScript.txt")
 }
 
-tasks.installDist {
-    dependsOn("addConfigFile")
+apply(plugin = "nebula.ospackage")
+
+tasks.register<Deb>("createDeb") {
+    dependsOn("installDist")
+    packageName = application.applicationName
+    packageDescription = "VeriBlock Proof-of-Proof (PoP) Miner"
+    archStr = "amd64"
+    distribution = "bionic"
+    url = "https://github.com/VeriBlock/nodecore"
+    version = prettyVersion()
+    release = "1"
+
+    requires("default-jre", "1.8", GREATER or EQUAL)
+        .or("openjdk-8-jre", "8u242-b08", GREATER or EQUAL)
+
+    into("/opt/nodecore/${application.applicationName}")
+
+    from("$buildDir/install/${application.applicationName}/LICENSE") {
+        into("/opt/nodecore/${application.applicationName}")
+    }
+    from("$buildDir/install/${application.applicationName}/lib") {
+        into("lib")
+    }
+    from("$buildDir/install/${application.applicationName}/bin") {
+        into("bin")
+        exclude("*.bat")
+    }
+    link("/usr/local/bin/$packageName", "/opt/nodecore/$packageName/bin/$packageName")
 }
 
 setupJacoco()
 
-// This task will add the default application.conf file into the 'bin' folder
-tasks.register<Copy>("addConfigFile") {
-    from("src/main/resources/application-default.conf")
-    into("$buildDir/scripts")
-    rename("application-default.conf", "application.conf")
+distributions {
+    main {
+        contents {
+            from ("./src/main/resources/application-default.conf") {
+                into("bin")
+            }
+            rename("application-default.conf", "application.conf")
+        }
+    }
 }

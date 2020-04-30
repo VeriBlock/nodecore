@@ -10,6 +10,7 @@ package org.veriblock.miners.pop.shell.commands
 
 import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.model.PopEndorsementInfo
 import org.veriblock.miners.pop.service.NodeCoreGateway
 import org.veriblock.miners.pop.shell.toShellResult
@@ -96,7 +97,7 @@ fun CommandFactory.veriBlockWalletCommands(
             for (e in endorsements) {
                 printInfo(
                     "{endorsed_block: ${e.endorsedBlockNumber}, ${if (e.finalized) "reward" else "projected_reward"}:" +
-                        " ${e.reward}, paid_in_block: ${e.endorsedBlockNumber + 500}}"
+                        " ${e.reward.formatAtomicLongWithDecimal()}, paid_in_block: ${e.endorsedBlockNumber + 500}}"
                 )
             }
             success()

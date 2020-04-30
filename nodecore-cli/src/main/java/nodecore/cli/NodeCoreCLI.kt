@@ -4,6 +4,9 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
+@file:JvmName("NodeCoreCLI")
+
 package nodecore.cli
 
 import com.google.gson.GsonBuilder

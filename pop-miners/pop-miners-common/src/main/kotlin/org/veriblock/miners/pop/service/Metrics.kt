@@ -26,22 +26,30 @@ object Metrics {
         ClassLoaderMetrics()
     )
 
-    val startedOperationsCounter = Counter.builder("pop-miner.operations")
+    internal val startedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "started")
         .description("Number of mining operations that were started")
         .register(registry)
 
-    val completedOperationsCounter = Counter.builder("pop_miner.operations")
+    internal val completedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "completed")
         .description("Number of mining operations that were completed")
         .register(registry)
 
-    val failedOperationsCounter = Counter.builder("pop_miner.operations")
+    internal val failedOperationsCounter = Counter.builder("pop_miner.operations")
         .tags("action", "failed")
         .description("Number of mining operations that failed")
         .register(registry)
 
-    val operationStateTimersByTargetState = mapOf(
+    internal val spentFeesCounter = Counter.builder("pop_miner.spent_fees")
+        .description("Total amount of spent fees")
+        .register(registry)
+
+    internal val miningRewardCounter = Counter.builder("pop_miner.mining_rewards")
+        .description("Total amount of mining rewards")
+        .register(registry)
+
+    internal val operationStateTimersByTargetState = mapOf(
         OperationState.INSTRUCTION to createOperationStateTimer("retrieveMiningInstruction"),
         OperationState.ENDORSEMENT_TRANSACTION to createOperationStateTimer("createEndorsementTransaction"),
         OperationState.CONFIRMED to createOperationStateTimer("confirmEndorsementTransaction"),
@@ -55,5 +63,6 @@ object Metrics {
     private fun createOperationStateTimer(taskName: String) = Timer.builder("pop_miner.operations_timer")
         .description("Total time spent in the $taskName task")
         .tags("task", taskName)
+        .publishPercentiles(0.5, 0.9, 0.95, 0.99)
         .register(registry)
 }

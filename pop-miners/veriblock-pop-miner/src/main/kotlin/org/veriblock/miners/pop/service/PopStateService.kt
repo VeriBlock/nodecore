@@ -90,7 +90,7 @@ class PopStateService(
             bitcoinContext = operation.context?.blocks?.map { it.bitcoinSerialize() } ?: emptyList(),
             popTxId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
-            payoutAmount = operation.payoutAmount ?: ""
+            payoutAmount = operation.payoutAmount ?: 0L
         )
         return ProtoBuf.dump(OperationProto.Operation.serializer(), protoData)
     }

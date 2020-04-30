@@ -65,11 +65,11 @@ abstract class TaskService<
     abstract suspend fun submitPopEndorsement(operation: MO)
     abstract suspend fun confirmPayout(operation: MO)
 
-    protected suspend inline fun MO.runTask(
+    protected suspend fun MO.runTask(
         taskName: String,
         targetState: OperationState,
         timeout: Duration,
-        crossinline block: suspend () -> Unit
+        block: suspend () -> Unit
     ) {
         // Check if this operation needs to run this task first
         if (state hasType targetState) {
@@ -87,6 +87,7 @@ abstract class TaskService<
                     block()
                 }
                 success = true
+                timerSample.stop(timer)
             } catch (e: TaskException) {
                 logger.warn(this, "Task '$taskName' has failed: ${e.message}")
                 if (attempts < MAX_TASK_RETRIES) {
@@ -106,8 +107,6 @@ abstract class TaskService<
                 failOperation(
                     "Operation has been cancelled for taking too long during task '$taskName'."
                 )
-            } finally {
-                timerSample.stop(timer)
             }
         } while (!success)
     }

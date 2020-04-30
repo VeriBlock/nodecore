@@ -50,7 +50,7 @@ class TestChain(
     private val blocks = TreeMap<Int, TestBlock>()
     private val transactions = HashMap<String, SecurityInheritingTransaction>()
 
-    private val startingHeight = (System.currentTimeMillis() / 10000).toInt()
+    private val startingHeight = (System.currentTimeMillis() / 10000).toInt() - 20
 
     init {
         config.checkValidity()
@@ -238,7 +238,7 @@ class TestChain(
             Random.nextBytes(22).toHex(),
             100,
             listOf(
-                SecurityInheritingTransactionVout(20.0, receiver)
+                SecurityInheritingTransactionVout(20__000_000_00, receiver)
             )
         )
         transactions[transaction.txId] = transaction
@@ -264,7 +264,7 @@ private class TestBlock(
     val secondPreviousKeystone: TestBlock?
 )
 
-private val TestBlock?.hash get() = if (this != null) data.hash else "00000000000000000000000000000000"
+private val TestBlock?.hash get() = if (this != null) data.hash else "00000000"
 
 //private data class VbkInfo(
 //    val lastBlock: VbkBlockData

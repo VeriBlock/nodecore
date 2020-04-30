@@ -134,7 +134,7 @@ class MockMinerService(
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
-        operation.complete("", "0.0")
+        operation.complete("", 0)
         return success()
     }
 
@@ -206,6 +206,9 @@ class MockMinerService(
     }
 
     override fun resubmit(operation: ApmOperation) =
+        error("Operation not supported in the Mock Miner")
+
+    override fun cancelOperation(id: String) =
         error("Operation not supported in the Mock Miner")
 
     override fun getOperations(): List<ApmOperation> =

@@ -46,21 +46,19 @@ class OperationSerializer(
             publicationData = operation.miningInstruction?.let {
                 serialize(it.publicationData)
             } ?: OperationProto.PublicationData(),
-            publicationContext = operation.miningInstruction?.context?.map { it } ?: emptyList(),
-            publicationBtcContext = operation.miningInstruction?.btcContext?.map { it } ?: emptyList(),
+            publicationContext = operation.miningInstruction?.context ?: emptyList(),
+            publicationBtcContext = operation.miningInstruction?.btcContext ?: emptyList(),
             txId = operation.endorsementTransaction?.txId ?: "",
             blockOfProof = operation.blockOfProof?.let {
                 SerializeDeserializeService.serializeHeaders(it.block)
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.compactFormat ?: "",
             veriblockPublications = operation.context?.publications?.map {
-                serialize(
-                    it
-                )
+                serialize(it)
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
-            payoutAmount = operation.payoutAmount ?: ""
+            payoutAmount = operation.payoutAmount ?: 0L
         )
         return protoData
     }
@@ -81,15 +79,16 @@ class OperationSerializer(
             chainMonitor = chainMonitor,
             logs = logs,
             endorsedBlockHeight = serialized.blockHeight,
-            createdAt = createdAt
+            createdAt = createdAt,
+            reconstituting = true
         ).apply {
             if (serialized.publicationData.header.isNotEmpty()) {
                 setMiningInstruction(
                     ApmInstruction(
                         serialized.blockHeight,
                         deserialize(serialized.publicationData),
-                        serialized.publicationContext.map { it },
-                        serialized.publicationBtcContext.map { it }
+                        serialized.publicationContext,
+                        serialized.publicationBtcContext
                     ))
             }
 
@@ -120,13 +119,15 @@ class OperationSerializer(
                 setProofOfProofId(serialized.proofOfProofId)
             }
 
-            if (serialized.payoutBlockHash.isNotEmpty() && serialized.payoutAmount.isNotEmpty()) {
+            if (serialized.payoutBlockHash.isNotEmpty()) {
                 complete(serialized.payoutBlockHash, serialized.payoutAmount)
             }
 
             if (state == OperationState.FAILED) {
                 fail("Loaded as failed")
             }
+
+            reconstituting = false
         }
     }
 

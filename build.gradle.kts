@@ -13,6 +13,7 @@ buildscript {
     }
     dependencies {
         classpath("com.netflix.nebula:nebula-release-plugin:6.0.0")
+        classpath("com.netflix.nebula:gradle-ospackage-plugin:1.12.2")
         classpath("org.ajoberstar:grgit:1.1.0")
         classpath("org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1")
         classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.8")
@@ -25,6 +26,7 @@ plugins {
     id("com.jfrog.artifactory") version "4.15.1"
     jacoco
     id("org.sonarqube") version "2.8"
+    id("nebula.ospackage") version "8.3.0"
 }
 
 allprojects {

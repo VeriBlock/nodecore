@@ -13,6 +13,7 @@ import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.CancellationException
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toBase58
@@ -238,6 +239,60 @@ class NodeCoreGateway(
             result.addMessage(r.code, r.message, r.details, r.error)
         }
         return result
+    }
+
+    fun getPopEstimates(keystonesToSearch: Int): List<VeriBlockMessages.RewardEstimate> {
+        val request = VeriBlockMessages.GetPoPRewardEstimatesRequest.newBuilder().apply {
+            this.keystonesToSearch = keystonesToSearch
+        }.build()
+        val reply = checkGrpcError {
+            blockingStub
+                .withDeadlineAfter(15, TimeUnit.SECONDS)
+                .getPoPRewardEstimates(request)
+        }
+        if (reply.success) {
+            return reply.rewardEstimatesList
+        } else {
+            val message = StringBuilder()
+            for (r in reply.resultsList) {
+                if (r.message != null) {
+                    message.append(r.message).append("\n")
+                }
+                if (r.details != null) {
+                    message.append("\t").append(r.details).append("\n")
+                }
+            }
+            error(message.toString())
+        }
+    }
+
+    fun sendCoins(address: String, amount: Long, takeFeeFromOutputs: Boolean): List<String> {
+        val request = VeriBlockMessages.SendCoinsRequest.newBuilder().apply {
+            addAmounts(VeriBlockMessages.Output.newBuilder().apply {
+                this.address = ByteStringAddressUtility.createProperByteStringAutomatically(address)
+                this.amount = amount
+            })
+            this.takeFeeFromOutputs = takeFeeFromOutputs
+        }.build()
+        val reply = checkGrpcError {
+            blockingStub
+                .withDeadlineAfter(15, TimeUnit.SECONDS)
+                .sendCoins(request)
+        }
+        if (reply.success) {
+            return reply.txIdsList.map { it.toByteArray().toHex() }
+        } else {
+            val message = StringBuilder()
+            for (r in reply.resultsList) {
+                if (r.message != null) {
+                    message.append(r.message).append("\n")
+                }
+                if (r.details != null) {
+                    message.append("\t").append(r.details).append("\n")
+                }
+            }
+            error(message.toString())
+        }
     }
 
     private inline fun <T> checkGrpcError(block: () -> T): T = try {

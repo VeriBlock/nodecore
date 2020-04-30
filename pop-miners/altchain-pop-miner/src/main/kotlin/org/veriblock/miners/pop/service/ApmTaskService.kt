@@ -16,6 +16,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
@@ -259,7 +260,7 @@ class ApmTaskService(
                 val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
                 val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
 
-                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect)) {
+                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i-1) else ArrayList<VeriBlockPublication>()))) {
                     logger.error {
                         """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:
@@ -281,6 +282,8 @@ class ApmTaskService(
         targetState = OperationState.SUBMITTED_POP_DATA,
         timeout = 240.hr
     ) {
+        val miningInstruction = operation.miningInstruction
+            ?: failTask("SubmitProofOfProofTask called without mining instruction!")
         val endorsementTransaction = operation.endorsementTransaction
             ?: failTask("SubmitProofOfProofTask called without endorsement transaction!")
         val blockOfProof = operation.blockOfProof?.block
@@ -295,7 +298,9 @@ class ApmTaskService(
                 endorsementTransaction.transaction,
                 merklePath,
                 blockOfProof,
-                emptyList()
+                miningInstruction.context.mapNotNull {
+                    nodeCoreLiteKit.blockStore.get(VBlakeHash.wrap(it))?.block
+                }
             )
 
             val siTxId = operation.chain.submit(proofOfProof, veriBlockPublications)
@@ -370,10 +375,10 @@ class ApmTaskService(
         if (rewardVout != null) {
             logger.info(
                 operation,
-                "$chainName PoP Payout detected! Amount: ${rewardVout.value} ${operation.chain.key.toUpperCase()}"
+                "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} ${operation.chain.key.toUpperCase()}"
             )
             logger.info(operation, "Completed!")
-            operation.complete(payoutBlock.hash, rewardVout.value.toString())
+            operation.complete(payoutBlock.hash, rewardVout.value)
         } else {
             failOperation(
                 "Unable to find ${operation.chain.name} PoP payout transaction in the expected block's coinbase!" +

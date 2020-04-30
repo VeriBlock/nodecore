@@ -5,7 +5,10 @@ import kotlinx.coroutines.Job
 import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
+import java.util.concurrent.CopyOnWriteArrayList
 
 private val logger = createLogger {}
 
@@ -41,12 +44,18 @@ abstract class MiningOperation<
         private set
     var payoutBlockHash: String? = null
         private set
-    var payoutAmount: String? = null
+    var payoutAmount: Long? = null
         private set
     var failureReason: String? = null
         private set
 
-    private val logs: MutableList<OperationLog> = ArrayList(logs)
+    private val logs: MutableList<OperationLog> = CopyOnWriteArrayList(logs)
+
+    init {
+        if (!reconstituting) {
+            Metrics.startedOperationsCounter.increment()
+        }
+    }
 
     protected fun setState(state: OperationState) {
         if (state.id > 0 && this.state.id != state.id - 1) {
@@ -85,6 +94,10 @@ abstract class MiningOperation<
             error("Trying to set as transaction confirmed without such transaction")
         }
         setState(OperationState.CONFIRMED)
+
+        endorsementTransaction?.let {
+            Metrics.spentFeesCounter.increment(it.fee.toDouble())
+        }
     }
 
     fun setBlockOfProof(blockOfProof: SPB) {
@@ -119,7 +132,7 @@ abstract class MiningOperation<
         setState(OperationState.SUBMITTED_POP_DATA)
     }
 
-    fun complete(payoutBlockHash: String, payoutAmount: String) {
+    fun complete(payoutBlockHash: String, payoutAmount: Long) {
         if (state != OperationState.SUBMITTED_POP_DATA) {
             error("Trying to mark the process as complete without having submitted the PoP data")
         }
@@ -129,6 +142,8 @@ abstract class MiningOperation<
 
         onCompleted()
         stopJob()
+        Metrics.completedOperationsCounter.increment()
+        Metrics.miningRewardCounter.increment(payoutAmount.toDouble())
     }
 
     open fun onCompleted() {}
@@ -140,6 +155,7 @@ abstract class MiningOperation<
 
         onFailed()
         stopJob()
+        Metrics.failedOperationsCounter.increment()
     }
 
     open fun onFailed() {}
@@ -147,10 +163,14 @@ abstract class MiningOperation<
     fun isFailed() = state == OperationState.FAILED
 
     fun stopJob() {
-        if (state != OperationState.COMPLETED) {
-            job?.cancel()
-        }
+        job?.cancel()
         job = null
+    }
+
+    fun getStateDescription() = if (isFailed()) {
+        "Failed: $failureReason"
+    } else {
+        state.description
     }
 
     open fun isLoggingEnabled(level: Level): Boolean = true
@@ -172,7 +192,7 @@ abstract class MiningOperation<
         }
         endorsementTransaction?.let {
             result["endorsementTransactionId"] = it.txId
-            result["endorsementTransactionFee"] = it.fee
+            result["endorsementTransactionFee"] = it.fee.formatAtomicLongWithDecimal()
         }
         blockOfProof?.let {
             result["blockOfProof"] = it.hash
@@ -190,7 +210,7 @@ abstract class MiningOperation<
             result["payoutBlockHash"] = it
         }
         payoutAmount?.let {
-            result["payoutAmount"] = it
+            result["payoutAmount"] = it.toString()
         }
         failureReason?.let {
             result["failureReason"] = it
@@ -205,7 +225,7 @@ abstract class MiningOperation<
 
 interface SpTransaction {
     val txId: String
-    val fee: String
+    val fee: Long
 }
 
 interface MerklePath {

@@ -34,18 +34,31 @@ object VTBDebugUtility {
         }
     }
 
-    fun doVtbsConnect(oldVtb: VeriBlockPublication, newVtb: VeriBlockPublication): Boolean {
+    fun doVtbsConnect(oldVtb: VeriBlockPublication, newVtb: VeriBlockPublication, previousVTBs: List<VeriBlockPublication>): Boolean {
         val oldVtbBtcBlocks = extractOrderedBtcBlocksFromPopTransaction(oldVtb.transaction)
         val newVtbBtcBlocks = extractOrderedBtcBlocksFromPopTransaction(newVtb.transaction)
-
+        val directConnection : Boolean
         // Look for a spot where the BTC blocks of oldVtb and newVtb either overlap (both contain at least one header
         // in common) or where one of the BTC blocks in newVtb references one of the BTC blocks in oldVtb as the
         // previous block hash.
-        return oldVtbBtcBlocks.any { oldVtbBtcBlock ->
+        directConnection = oldVtbBtcBlocks.any { oldVtbBtcBlock ->
             newVtbBtcBlocks.any { newVtbBtcBlock ->
                 Utility.byteArraysAreEqual(oldVtbBtcBlock.hash.bytes, newVtbBtcBlock.hash.bytes) ||
                     Utility.byteArraysAreEqual(oldVtbBtcBlock.hash.bytes, newVtbBtcBlock.previousBlock.bytes)
             }
+        }
+        return if (!directConnection) {
+            val oldList = previousVTBs.flatMap {
+                extractOrderedBtcBlocksFromPopTransaction(it.transaction)
+            }
+            oldList.any { oldVtbBtcBlock ->
+                newVtbBtcBlocks.any { newVtbBtcBlock ->
+                    Utility.byteArraysAreEqual(oldVtbBtcBlock.hash.bytes, newVtbBtcBlock.hash.bytes) ||
+                        Utility.byteArraysAreEqual(oldVtbBtcBlock.hash.bytes, newVtbBtcBlock.previousBlock.bytes)
+                }
+            }
+        } else {
+            directConnection // True
         }
     }
 
