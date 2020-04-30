@@ -8,8 +8,6 @@
 
 package org.veriblock.miners.pop.service
 
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.first
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
@@ -298,8 +296,8 @@ class ApmTaskService(
                 endorsementTransaction.transaction,
                 merklePath,
                 blockOfProof,
-                miningInstruction.context.mapNotNull {
-                    nodeCoreLiteKit.blockStore.get(VBlakeHash.wrap(it))?.block
+                miningInstruction.context.map {
+                    nodeCoreLiteKit.gateway.getVBKBlockHeader(it)
                 }
             )
 
