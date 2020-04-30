@@ -24,10 +24,10 @@ import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
+import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.Address
 import java.io.File
 import java.io.IOException
-import java.time.Duration
 
 val logger = createLogger {}
 
@@ -85,9 +85,9 @@ class NodeCoreLiteKit(
                 try {
                     updateBalance()
                 } catch (e: Exception) {
-                    logger.error { e.message; e }
+                    logger.error(e) { e.message }
                 }
-                delay(Duration.ofSeconds(60).toMillis())
+                delay(60.sec.toMillis())
             }
         }
     }

@@ -205,11 +205,7 @@ class NodeCoreGatewayImpl(
     override fun getTransactions(ids: List<Sha256Hash>): List<VeriBlockMessages.TransactionInfo>? {
         val request =
             VeriBlockMessages.GetTransactionsRequest.newBuilder()
-                .addAllIds(
-                    ids.stream()
-                        .map { ByteString.copyFrom(it.bytes) }
-                    .collect(Collectors.toList())
-                )
+                .addAllIds(ids.map { ByteString.copyFrom(it.bytes) })
                 .build()
 
         val response = gatewayStrategy.getTransactions(request)

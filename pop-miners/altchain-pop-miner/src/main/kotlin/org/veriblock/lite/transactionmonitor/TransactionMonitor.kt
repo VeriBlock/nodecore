@@ -16,6 +16,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
@@ -24,7 +25,6 @@ import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.time.Duration
 import java.util.Collections
 import java.util.HashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -52,7 +52,7 @@ class TransactionMonitor(
     fun start() {
         GlobalScope.launch {
             while (isActive) {
-                delay(Duration.ofSeconds(60).toMillis())
+                delay(60.sec.toMillis())
                 try {
                     checkPendingTransactions()
                 } catch (e: Exception) {
@@ -65,16 +65,17 @@ class TransactionMonitor(
 
     private fun checkPendingTransactions() {
         val pendingTxs = pendingTransactions()
-        val txsInfo = gateway.getTransactions(pendingTxs)
+        val txsInfo = gateway.getTransactions(pendingTxs) ?: emptyList()
 
-        for (txInfo in txsInfo!!) {
+        for (txInfo in txsInfo) {
             if (txInfo.confirmations > MIN_TX_CONFIRMATIONS) {
                 val tx = transactions[Sha256Hash.wrap(txInfo.transaction.txId.toByteArray())]
-                tx?.transactionMeta?.depth = txInfo.confirmations
-                tx?.transactionMeta?.appearsAtChainHeight = txInfo.blockNumber
-                tx?.transactionMeta?.appearsInBestChainBlock = VBlakeHash.wrap(txInfo.blockHash.toByteArray())
-                tx?.merklePath = VeriBlockMerklePath(txInfo.merklePath)
-                tx?.transactionMeta?.setState(TransactionMeta.MetaState.CONFIRMED)
+                    ?: error("Unable to retrieve pending transactions")
+                tx.transactionMeta.depth = txInfo.confirmations
+                tx.transactionMeta.appearsAtChainHeight = txInfo.blockNumber
+                tx.transactionMeta.appearsInBestChainBlock = VBlakeHash.wrap(txInfo.blockHash.toByteArray())
+                tx.merklePath = VeriBlockMerklePath(txInfo.merklePath)
+                tx.transactionMeta.setState(TransactionMeta.MetaState.CONFIRMED)
             }
         }
 

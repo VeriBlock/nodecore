@@ -34,7 +34,8 @@ public class Blockchain {
 
     private final VeriBlockBlock genesisBlock;
     private final VeriBlockStore blockStore;
-    private final EvictingQueue<StoredVeriBlockBlock> blocksCash = EvictingQueue.create(1000);
+    //TODO SPV-124
+    private final EvictingQueue<StoredVeriBlockBlock> blocksCache = EvictingQueue.create(1000);
 
     public Blockchain(VeriBlockBlock genesisBlock, VeriBlockStore blockStore) {
         this.genesisBlock = genesisBlock;
@@ -73,7 +74,7 @@ public class Blockchain {
         // TODO: Make the put(...) and setChainHead(...) atomic
 
         blockStore.put(storedBlock);
-        blocksCash.add(storedBlock);
+        blocksCache.add(storedBlock);
 
         // TODO: PoP fork resolution additional
         if (storedBlock.getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
@@ -106,7 +107,7 @@ public class Blockchain {
         List<StoredVeriBlockBlock> storedBlocks = convertToStoreVeriBlocks(listToStore);
 
         blockStore.put(storedBlocks);
-        blocksCash.addAll(storedBlocks);
+        blocksCache.addAll(storedBlocks);
 
         // TODO: PoP fork resolution additional
         if (storedBlocks.get(storedBlocks.size() - 1).getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
@@ -115,7 +116,7 @@ public class Blockchain {
     }
 
     public StoredVeriBlockBlock getBlockByHeight(Integer height) {
-        return blocksCash.stream()
+        return blocksCache.stream()
             .filter(block -> block.getHeight() == height)
             .findAny()
             .orElse(null);

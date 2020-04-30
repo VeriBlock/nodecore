@@ -674,7 +674,7 @@ public class AdminApiServiceImpl implements AdminApiService {
     }
 
     @Override
-    public VeriBlockMessages.BlockHeader getVBKBlockHeader(ByteString hash) {
+    public VeriBlockMessages.BlockHeader getVbkBlockHeader(ByteString hash) {
         try {
             StoredVeriBlockBlock block = blockchain.get(VBlakeHash.hash(hash.toByteArray()));
 
@@ -690,7 +690,7 @@ public class AdminApiServiceImpl implements AdminApiService {
     }
 
     @Override
-    public VeriBlockMessages.BlockHeader getVBKBlockHeader(Integer height) {
+    public VeriBlockMessages.BlockHeader getVbkBlockHeader(Integer height) {
         StoredVeriBlockBlock block = blockchain.getBlockByHeight(height);
 
         if (block == null) {
