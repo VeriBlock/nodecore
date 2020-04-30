@@ -300,8 +300,8 @@ class ApmTaskService(
                 endorsementTransaction.transaction,
                 merklePath,
                 blockOfProof,
-                miningInstruction.context.map {
-                    SerializeDeserializeService.parseVeriBlockBlock(it)
+                miningInstruction.context.mapNotNull {
+                    nodeCoreLiteKit.blockStore.get(VBlakeHash.wrap(it))?.block
                 }
             )
 
