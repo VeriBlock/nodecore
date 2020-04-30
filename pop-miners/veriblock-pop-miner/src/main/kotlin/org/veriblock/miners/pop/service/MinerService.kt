@@ -451,13 +451,6 @@ class MinerService(
     private fun onBitcoinServiceReady() {
         try {
             addReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
-            if (!readyToMine()) {
-                val failed = EnumSet.complementOf(readyConditions)
-                for (flag in failed) {
-                    logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag))
-                    EventBus.popMinerNotReadyEvent.trigger(flag)
-                }
-            }
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

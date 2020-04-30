@@ -52,9 +52,6 @@ public class CliShell extends Shell {
 
     private ModeType modeType = ModeType.STANDARD;
 
-    public void onStart() {
-    }
-
     public void onStop() {
         disconnect();
     }

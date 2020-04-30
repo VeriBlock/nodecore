@@ -66,6 +66,7 @@ fun run(args: Array<String>): Int {
     shell.initialize()
     try {
         popMinerService.run()
+        shell.runOnce()
         scheduler.run()
         autoMineEngine.run()
         apiServer.start()

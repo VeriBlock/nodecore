@@ -43,11 +43,7 @@ class PopShell(
         )
     }
 
-    override fun onStart() {
-        runOnce()
-    }
-
-    private fun runOnce() {
+    fun runOnce() {
         if (mustAcceptWalletSeed) {
             val walletSeed: List<String?>? = minerService.getWalletSeed()
             if (walletSeed != null) {
