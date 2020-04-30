@@ -66,7 +66,7 @@ class ProcessManager(
 
     private fun onReorg(operation: VpmOperation) {
         // Cancel that mining operation's job
-        operation.stopJob()
+        operation.cancelJob()
         // Resubmit it
         submit(operation)
     }

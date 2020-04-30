@@ -141,7 +141,6 @@ abstract class MiningOperation<
         setState(OperationState.COMPLETED)
 
         onCompleted()
-        stopJob()
         Metrics.completedOperationsCounter.increment()
         Metrics.miningRewardCounter.increment(payoutAmount.toDouble())
     }
@@ -154,7 +153,7 @@ abstract class MiningOperation<
         setState(OperationState.FAILED)
 
         onFailed()
-        stopJob()
+        cancelJob()
         Metrics.failedOperationsCounter.increment()
     }
 
@@ -162,7 +161,7 @@ abstract class MiningOperation<
 
     fun isFailed() = state == OperationState.FAILED
 
-    fun stopJob() {
+    fun cancelJob() {
         job?.cancel()
         job = null
     }
