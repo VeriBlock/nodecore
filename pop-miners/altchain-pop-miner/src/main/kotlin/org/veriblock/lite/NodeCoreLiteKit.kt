@@ -8,22 +8,24 @@
 
 package org.veriblock.lite
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
 import org.veriblock.lite.core.Balance
-import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event
+import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreGatewayImpl
 import org.veriblock.lite.net.NodeCoreNetwork
-import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
-import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
 import java.io.IOException
 
@@ -34,62 +36,41 @@ private const val WALLET_FILE_EXTENSION = ".wallet"
 class NodeCoreLiteKit(
     private val context: Context
 ) {
-    lateinit var blockStore: VeriBlockBlockStore
-    lateinit var blockChain: BlockChain
     lateinit var addressManager: AddressManager
     lateinit var transactionMonitor: TransactionMonitor
     lateinit var network: NodeCoreNetwork
+    lateinit var gateway: NodeCoreGateway
 
     var beforeNetworkStart: () -> Unit = {}
     val balanceChangedEvent = Event<Balance>()
+    private var lastKnownBalance: Balance? = null
 
     fun initialize() {
         if (!context.directory.exists() && !context.directory.mkdirs()) {
             throw IOException("Unable to create directory")
         }
 
-        this.blockStore = createBlockStore()
+        this.gateway = NodeCoreGatewayImpl(context.networkParameters)
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
-        blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
-            NodeCoreGatewayImpl(context.networkParameters),
-            blockChain,
+            gateway,
             transactionMonitor,
             addressManager
         )
+
+        transactionMonitor.start()
     }
 
     fun start() {
         logger.info { "VeriBlock Network: ${context.networkParameters.network}" }
-
-        blockChain.newBestBlockEvent.register(transactionMonitor) {
-            val balanceChanged = transactionMonitor.onNewBestBlock(it)
-            if (balanceChanged) {
-                if (network.isHealthy()) {
-                    balanceChangedEvent.trigger(network.getBalance())
-                }
-            }
-        }
-        blockChain.blockChainReorganizedEvent.register(transactionMonitor) {
-            transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
-        }
-        blockChain.blockChainReorganizedEvent.register(this) {
-            for (newBlock in it.newBlocks) {
-                blockChain.newBestBlockEvent.trigger(newBlock)
-                blockChain.newBestBlockChannel.offer(newBlock)
-            }
-        }
-
         logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
-        network.startAsync().addListener(Runnable {
-            if (network.isHealthy()) {
-                balanceChangedEvent.trigger(network.getBalance())
-            }
-        }, Threading.LISTENER_THREAD)
+
+        network.startAsync()
+        balanceUpdater()
     }
 
     fun shutdown() {
@@ -98,26 +79,40 @@ class NodeCoreLiteKit(
         }
     }
 
-    fun getAddress(): String = addressManager.defaultAddress.hash
-
-    private fun createBlockStore(): VeriBlockBlockStore = try {
-        val chainFile = File(context.directory, context.filePrefix + ".spvchain")
-        VeriBlockBlockStore(chainFile)
-    } catch (e: BlockStoreException) {
-        throw IOException("Unable to initialize VBK block store", e)
+    fun balanceUpdater() {
+        GlobalScope.launch {
+            while (isActive) {
+                try {
+                    updateBalance()
+                } catch (e: Exception) {
+                    logger.error(e) { e.message }
+                }
+                delay(60.sec.toMillis())
+            }
+        }
     }
+
+    fun updateBalance() {
+        val balance = gateway.getBalance(addressManager.defaultAddress.hash)
+        if (lastKnownBalance == null || lastKnownBalance != balance) {
+            balanceChangedEvent.trigger(balance)
+            lastKnownBalance = balance
+        }
+    }
+
+    fun getAddress(): String = addressManager.defaultAddress.hash
 
     private fun createOrLoadTransactionMonitor(): TransactionMonitor {
         val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
         return if (file.exists()) {
             try {
-                file.loadTransactionMonitor(context)
+                file.loadTransactionMonitor(context, gateway)
             } catch (e: Exception) {
                 throw IOException("Unable to load the transaction monitoring data", e)
             }
         } else {
             val address = Address(addressManager.defaultAddress.hash)
-            TransactionMonitor(context, address)
+            TransactionMonitor(context, address, gateway)
         }
     }
 

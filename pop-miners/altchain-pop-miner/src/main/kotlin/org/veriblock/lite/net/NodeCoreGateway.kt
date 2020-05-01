@@ -1,9 +1,9 @@
 package org.veriblock.lite.net
 
+import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.lite.core.Balance
-import org.veriblock.lite.core.BlockChainDelta
-import org.veriblock.lite.core.FullBlock
+import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
@@ -24,17 +24,19 @@ interface NodeCoreGateway {
 
     fun shutdown()
 
+    fun getLastVBKBlockHeader(): VeriBlockBlock
+
+    fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockBlock
+
+    fun getTransactions(request: List<Sha256Hash>): List<VeriBlockMessages.TransactionInfo>?
+
+    fun getVBKBlockHeader(height: Int): VeriBlockBlock
+
     data class NodeCoreSyncStatus(
         val networkHeight: Int,
         val localBlockchainHeight: Int,
         val blockDifference: Int,
         val isSynchronized: Boolean
     )
-
-    //TODO remove on the next step
-    fun listChangesSince(hash: String?): BlockChainDelta
-    fun getBlock(height: Int): FullBlock?
-    fun getBlock(hash: String): FullBlock?
-    fun getLastBlock(): VeriBlockBlock
 
 }

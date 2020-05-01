@@ -8,6 +8,7 @@
 
 package org.veriblock.lite.net.impl
 
+import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.lite.net.GatewayStrategy
 import veriblock.SpvContext
@@ -35,12 +36,28 @@ class GatewayStrategySpvImpl(
         return adminApiService.createAltChainEndorsement(altChainEndorsementRequest)
     }
 
+    override fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
+        return adminApiService.lastVBKBlockHeader
+    }
+
+    override fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader {
+        return adminApiService.getVbkBlockHeader(ByteString.copyFrom(blockHash))
+    }
+
+    override fun getVBKBlockHeader(blockHeingt: Int): VeriBlockMessages.BlockHeader {
+        return adminApiService.getVbkBlockHeader(blockHeingt)
+    }
+
     override fun ping(pingRequest: VeriBlockMessages.PingRequest): VeriBlockMessages.PingReply {
         return VeriBlockMessages.PingReply.getDefaultInstance()
     }
 
     override fun getVeriBlockPublications(getVeriBlockPublicationsRequest: VeriBlockMessages.GetVeriBlockPublicationsRequest): VeriBlockMessages.GetVeriBlockPublicationsReply {
         return adminApiService.getVeriBlockPublications(getVeriBlockPublicationsRequest)
+    }
+
+    override fun getTransactions(request: VeriBlockMessages.GetTransactionsRequest?): VeriBlockMessages.GetTransactionsReply? {
+        return adminApiService.getTransactions(request)
     }
 
     override fun shutdown() {
@@ -51,17 +68,4 @@ class GatewayStrategySpvImpl(
         TODO("Not yet implemented")
     }
 
-
-    // TODO remove on the next step
-    override fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply {
-        TODO("Not yet implemented")
-    }
-
-    override fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply {
-        TODO("Not yet implemented")
-    }
-
-    override fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply {
-        TODO("Not yet implemented")
-    }
 }

@@ -8,15 +8,19 @@
 
 package org.veriblock.lite.net.impl
 
+import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.lite.net.GatewayStrategy
+import org.veriblock.lite.params.NetworkParameters
+import org.veriblock.lite.serialization.deserialize
 import java.util.concurrent.TimeUnit
 
 class GatewayStrategyGrpcImpl(
     private val blockingStub: AdminGrpc.AdminBlockingStub,
-    private val channel: ManagedChannel
+    private val channel: ManagedChannel,
+    private val networkParameters: NetworkParameters
 ) : GatewayStrategy {
 
     override fun getBalance(getBalanceRequest: VeriBlockMessages.GetBalanceRequest): VeriBlockMessages.GetBalanceReply {
@@ -61,22 +65,67 @@ class GatewayStrategyGrpcImpl(
             .createAltChainEndorsement(altChainEndorsementRequest)
     }
 
-    override fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply {
-        return blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
-            .listBlocksSince(listBlocksSinceRequest)
+    override fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
+        val lastBlock = blockingStub.getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
+        return lastBlock.header
     }
 
-    override fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply {
-        return blockingStub
+    override fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader {
+        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
+            .addFilters(
+                VeriBlockMessages.BlockFilter.newBuilder()
+                    .setHash(ByteString.copyFrom(blockHash))
+                    .build()
+            )
+            .build()
+
+        val reply = blockingStub
             .withDeadlineAfter(5, TimeUnit.SECONDS)
-            .getBlocks(getBlocksRequest)
+            .getBlocks(request)
+
+        if (reply.success && reply.blocksCount > 0) {
+            val block = reply.getBlocks(0)
+            val bytesHeader = block.deserialize(networkParameters.transactionPrefix).raw
+            return VeriBlockMessages.BlockHeader
+                .newBuilder()
+                .setHash(block.hash)
+                .setHeader(ByteString.copyFrom(bytesHeader))
+                .build()
+        }
+
+        return VeriBlockMessages.BlockHeader.getDefaultInstance()
     }
 
-    override fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply {
+    override fun getVBKBlockHeader(blockHeingt: Int): VeriBlockMessages.BlockHeader {
+        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
+            .addFilters(
+                VeriBlockMessages.BlockFilter.newBuilder()
+                    .setNumber(blockHeingt)
+                    .build()
+            )
+            .build()
+
+        val reply = blockingStub
+            .withDeadlineAfter(5, TimeUnit.SECONDS)
+            .getBlocks(request)
+
+        if (reply.success && reply.blocksCount > 0) {
+            val block = reply.getBlocks(0)
+            val bytesHeader = block.deserialize(networkParameters.transactionPrefix).raw
+            return VeriBlockMessages.BlockHeader
+                .newBuilder()
+                .setHash(block.hash)
+                .setHeader(ByteString.copyFrom(bytesHeader))
+                .build()
+        }
+
+        return VeriBlockMessages.BlockHeader.getDefaultInstance()
+    }
+
+    override fun getTransactions(request: VeriBlockMessages.GetTransactionsRequest?): VeriBlockMessages.GetTransactionsReply? {
         return blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
-            .getLastBlock(getLastBlockRequest)
+            .withDeadlineAfter(300, TimeUnit.SECONDS)
+            .getTransactions(request)
     }
 
     override fun shutdown() {

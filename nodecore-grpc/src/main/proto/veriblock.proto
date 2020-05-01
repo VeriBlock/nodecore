@@ -1022,9 +1022,9 @@ message TransactionInfo {
     Transaction transaction = 2;
     int32 block_number = 3;
     int32 timestamp = 4;
-    bytes endorsed_block_hash = 5 [(hex_encoded)=true];
-    bytes bitcoin_block_hash = 6 [(hex_encoded)=true];
-    bytes bitcoin_tx_id = 7 [(hex_encoded)=true];
+    bytes endorsed_block_hash = 5 [(hex_encoded) = true];
+    bytes bitcoin_block_hash = 6 [(hex_encoded) = true];
+    bytes bitcoin_tx_id = 7 [(hex_encoded) = true];
     int32 bitcoin_confirmations = 8;
     bytes block_hash = 9 [(hex_encoded) = true];
     string merkle_path = 10;

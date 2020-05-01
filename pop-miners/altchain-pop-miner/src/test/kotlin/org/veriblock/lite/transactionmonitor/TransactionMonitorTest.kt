@@ -23,11 +23,13 @@ import org.veriblock.lite.core.randomTransactionMonitor
 import org.veriblock.lite.core.randomVeriBlockBlock
 import org.veriblock.lite.core.randomVeriBlockTransaction
 import org.veriblock.lite.core.randomWalletTransaction
+import org.veriblock.lite.net.NodeCoreGatewayImpl
 import org.veriblock.lite.params.NetworkConfig
 import org.veriblock.lite.params.NetworkParameters
 
 class TransactionMonitorTest {
     private val networkParameters = NetworkParameters(NetworkConfig())
+    private val gateway = NodeCoreGatewayImpl(networkParameters)
     private val context = Context(Configuration(), networkParameters)
 
     @Test
@@ -36,7 +38,7 @@ class TransactionMonitorTest {
         val walletTransactions = (1..10).map { randomWalletTransaction(context) }
 
         // When
-        val transactionMonitor = randomTransactionMonitor(context, walletTransactions = walletTransactions)
+        val transactionMonitor = randomTransactionMonitor(context, gateway, walletTransactions = walletTransactions)
 
         // Then
         transactionMonitor.getTransactions() shouldContainExactlyInAnyOrder walletTransactions
@@ -46,7 +48,7 @@ class TransactionMonitorTest {
     fun commitTransaction() {
         // Given
         val transaction = randomVeriBlockTransaction(context)
-        val transactionMonitor = randomTransactionMonitor(context)
+        val transactionMonitor = randomTransactionMonitor(context, gateway)
 
         // When
         transactionMonitor.commitTransaction(transaction)
@@ -65,43 +67,4 @@ class TransactionMonitorTest {
         walletTransaction.transactionMeta.state shouldBe TransactionMeta.MetaState.PENDING
     }
 
-    @Test
-    fun onBlockChainReorganized() {
-        // Given
-        val address = randomAddress()
-        val oldBlocks = (1..10).map {
-            randomVeriBlockBlock()
-        }
-        val confirmedWithWrongDepthTransactions = (1..5).map {
-            randomWalletTransaction(
-                context, sourceAddress = address,
-                transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount = 50)
-            )
-        }
-        val confirmedWithRightDepthTransactions = (1..5).map {
-            randomWalletTransaction(
-                context, sourceAddress = address, sourceAmount = randomCoin(5),
-                transactionMeta = randomTransactionMeta(metaState = TransactionMeta.MetaState.CONFIRMED, depthCount = oldBlocks.size)
-            )
-        }
-
-        val allTransactions = confirmedWithWrongDepthTransactions + confirmedWithRightDepthTransactions
-        val newBlocks = (1..20).map {
-            randomFullBlock(context, normalTransactions = confirmedWithRightDepthTransactions)
-        }
-
-        val transactionMonitor = randomTransactionMonitor(context, address = address, walletTransactions = allTransactions)
-
-        // When
-        transactionMonitor.onBlockChainReorganized(oldBlocks, newBlocks)
-
-        // Then
-        confirmedWithWrongDepthTransactions.forEach {
-            it.transactionMeta.depth shouldBe 60
-        }
-        confirmedWithRightDepthTransactions.forEach {
-            it.transactionMeta.state shouldBe TransactionMeta.MetaState.CONFIRMED
-            it.merklePath shouldNotBe null
-        }
-    }
 }

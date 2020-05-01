@@ -8,18 +8,22 @@
 
 package org.veriblock.lite.transactionmonitor
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.FullBlock
-import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Sha256Hash
-import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Collections
 import java.util.HashMap
@@ -28,10 +32,12 @@ import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 const val TM_FILE_EXTENSION = ".txmon"
+const val MIN_TX_CONFIRMATIONS: Int = 1
 
 class TransactionMonitor(
     val context: Context,
     val address: Address,
+    val gateway: NodeCoreGateway,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
     private val lock = ReentrantLock(true)
@@ -43,22 +49,51 @@ class TransactionMonitor(
         }
     }
 
-    fun getTransactions(): Collection<WalletTransaction> =
-        Collections.unmodifiableCollection(transactions.values)
-
-    private fun save() {
-        val diskWallet = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
-
-        lock.withLock {
-            try {
-                FileOutputStream(diskWallet).use { stream ->
-                    stream.writeTransactionMonitor(this@TransactionMonitor)
+    fun start() {
+        GlobalScope.launch {
+            while (isActive) {
+                delay(60.sec.toMillis())
+                try {
+                    checkPendingTransactions()
+                } catch (e: Exception) {
+                    logger.error { e.message; e }
                 }
-            } catch (e: IOException) {
-                logger.error("Unable to save VBK wallet to disk", e)
             }
         }
+
     }
+
+    private fun checkPendingTransactions() {
+        val pendingTxs = pendingTransactions()
+        val txsInfo = gateway.getTransactions(pendingTxs) ?: emptyList()
+
+        for (txInfo in txsInfo) {
+            if (txInfo.confirmations > MIN_TX_CONFIRMATIONS) {
+                val tx = transactions[Sha256Hash.wrap(txInfo.transaction.txId.toByteArray())]
+                    ?: error("Unable to retrieve pending transactions")
+                tx.transactionMeta.depth = txInfo.confirmations
+                tx.transactionMeta.appearsAtChainHeight = txInfo.blockNumber
+                tx.transactionMeta.appearsInBestChainBlock = VBlakeHash.wrap(txInfo.blockHash.toByteArray())
+                tx.merklePath = VeriBlockMerklePath(txInfo.merklePath)
+                tx.transactionMeta.setState(TransactionMeta.MetaState.CONFIRMED)
+            }
+        }
+
+
+    }
+
+    private fun pendingTransactions(): List<Sha256Hash> {
+        val pendingTxs = arrayListOf<Sha256Hash>()
+        for (transaction in transactions) {
+            if (transaction.value.transactionMeta.state === TransactionMeta.MetaState.PENDING) {
+                pendingTxs.add(transaction.key)
+            }
+        }
+        return pendingTxs
+    }
+
+    fun getTransactions(): Collection<WalletTransaction> =
+        Collections.unmodifiableCollection(transactions.values)
 
     fun commitTransaction(transaction: VeriBlockTransaction) = lock.withLock {
         if (transactions.containsKey(transaction.id)) {
@@ -73,92 +108,6 @@ class TransactionMonitor(
     fun getTransaction(transactionId: Sha256Hash): WalletTransaction {
         return transactions[transactionId]
             ?: error("Unable to find transaction $transactionId in the monitored address")
-    }
-
-    private fun handleReorganizedBlocks(blocks: List<VeriBlockBlock>) = lock.withLock {
-        removeConfirmations(blocks.size)
-    }
-
-    private fun handleNewBlock(block: FullBlock) = lock.withLock {
-        logger.debug { "New VBK block received at height ${block.height}: ${block.hash}" }
-        val blockTransactions = filterTransactionsFrom(block)
-
-        logger.debug { "Found ${blockTransactions.size} relevant transactions in the VBK block" }
-        for (tx in transactions.values) {
-            val meta = tx.transactionMeta
-            if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
-                meta.incrementDepth()
-            } else if (blockTransactions.containsKey(tx.id)) {
-                meta.setState(TransactionMeta.MetaState.CONFIRMED)
-                meta.depth = 1
-                meta.addBlockAppearance(block.hash)
-                meta.appearsInBestChainBlock = block.hash
-                meta.appearsAtChainHeight = block.height
-                tx.merklePath = blockTransactions.getValue(tx.id).merklePath
-            }
-        }
-
-        var balanceChanged = false
-        for (tx in blockTransactions.values) {
-            if (tx.sourceAddress == address) {
-                logger.info { "Detected outgoing VBK transaction: ${tx.id}" }
-                balanceChanged = true
-            }
-            if (tx.outputs.any { it.address == address }) {
-                logger.info { "Detected incoming VBK transaction: ${tx.id}" }
-                balanceChanged = true
-            }
-        }
-        balanceChanged
-    }
-
-    private fun removeConfirmations(amount: Int) = lock.withLock {
-        for (tx in transactions.values) {
-            val meta = tx.transactionMeta
-            if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
-                if (amount < meta.depth) {
-                    meta.depth = meta.depth - amount
-                } else {
-                    meta.setState(TransactionMeta.MetaState.PENDING)
-                    tx.merklePath = null
-                }
-            }
-        }
-    }
-
-    private fun filterTransactionsFrom(block: FullBlock): Map<Sha256Hash, WalletTransaction> {
-        val relevantTransactions = HashMap<Sha256Hash, WalletTransaction>()
-
-        val merkleTree: MerkleTree by lazy {
-            MerkleTree.of(block)
-        }
-
-        block.normalTransactions.forEachIndexed { i, transaction ->
-            if (transaction.isRelevant()) {
-                val walletTransaction = WalletTransaction.wrap(transaction)
-                walletTransaction.merklePath = merkleTree.getMerklePath(transaction.id, i, true)
-
-                relevantTransactions[transaction.id] = walletTransaction
-            }
-        }
-        return relevantTransactions
-    }
-
-    fun onBlockChainReorganized(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {
-        handleReorganizedBlocks(oldBlocks)
-        for (block in newBlocks) {
-            handleNewBlock(block)
-        }
-
-        save()
-    }
-
-    fun onNewBestBlock(newBlock: FullBlock): Boolean {
-        val balanceChanged = handleNewBlock(newBlock)
-
-        save()
-
-        return balanceChanged
     }
 
     override fun equals(other: Any?): Boolean {
@@ -197,9 +146,9 @@ class TransactionMonitor(
     }
 }
 
-fun File.loadTransactionMonitor(context: Context): TransactionMonitor = try {
+fun File.loadTransactionMonitor(context: Context, gateway: NodeCoreGateway): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
-        stream.readTransactionMonitor(context)
+        stream.readTransactionMonitor(context, gateway)
     }
 } catch (e: IOException) {
     throw IllegalStateException("Unable to read VBK wallet from disk")

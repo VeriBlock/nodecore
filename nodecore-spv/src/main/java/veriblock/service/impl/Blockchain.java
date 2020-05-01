@@ -7,11 +7,13 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.service.impl;
 
+import com.google.common.collect.EvictingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.sdk.blockchain.store.VeriBlockStore;
+import org.veriblock.sdk.models.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import spark.utils.CollectionUtils;
 
@@ -32,6 +34,8 @@ public class Blockchain {
 
     private final VeriBlockBlock genesisBlock;
     private final VeriBlockStore blockStore;
+    //TODO SPV-124
+    private final EvictingQueue<StoredVeriBlockBlock> blocksCache = EvictingQueue.create(1000);
 
     public Blockchain(VeriBlockBlock genesisBlock, VeriBlockStore blockStore) {
         this.genesisBlock = genesisBlock;
@@ -54,18 +58,24 @@ public class Blockchain {
         return null;
     }
 
-    public void add(VeriBlockBlock block) throws SQLException {
+    public StoredVeriBlockBlock get(VBlakeHash hash) throws SQLException {
+        return blockStore.get(hash);
+    }
 
+    public void add(VeriBlockBlock block) throws SQLException {
         StoredVeriBlockBlock previous = blockStore.get(block.getPreviousBlock());
         if (previous == null) {
             // Nothing to build on
             return;
         }
-        StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(block, previous.getWork().add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())));
+        StoredVeriBlockBlock storedBlock =
+            new StoredVeriBlockBlock(block, previous.getWork().add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())));
 
         // TODO: Make the put(...) and setChainHead(...) atomic
 
         blockStore.put(storedBlock);
+        blocksCache.add(storedBlock);
+
         // TODO: PoP fork resolution additional
         if (storedBlock.getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
             blockStore.setChainHead(storedBlock);
@@ -97,12 +107,19 @@ public class Blockchain {
         List<StoredVeriBlockBlock> storedBlocks = convertToStoreVeriBlocks(listToStore);
 
         blockStore.put(storedBlocks);
+        blocksCache.addAll(storedBlocks);
 
         // TODO: PoP fork resolution additional
         if (storedBlocks.get(storedBlocks.size() - 1).getWork().compareTo(blockStore.getChainHead().getWork()) > 0) {
             blockStore.setChainHead(storedBlocks.get(storedBlocks.size() - 1));
         }
+    }
 
+    public StoredVeriBlockBlock getBlockByHeight(Integer height) {
+        return blocksCache.stream()
+            .filter(block -> block.getHeight() == height)
+            .findAny()
+            .orElse(null);
     }
 
     private List<VeriBlockBlock> listToStore(List<VeriBlockBlock> veriBlockBlocks) throws SQLException {

@@ -78,7 +78,7 @@ fun CommandFactory.altchainCommands(
                     val vbkContextBlockHash = publicationData.context[0]
                     val vbkContextBlock = nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
                         ?: error("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
-                    val vbkChainHead = nodeCoreLiteKit.blockChain.getChainHead()
+                    val vbkChainHead = nodeCoreLiteKit.network.lastBlockHeader
                         ?: error("Unable to get VBK's chain head!")
                     val contextAge = vbkChainHead.height - vbkContextBlock.height
 

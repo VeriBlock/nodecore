@@ -9,6 +9,8 @@
 package org.veriblock.lite.net
 
 import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
+import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 
 interface GatewayStrategy {
 
@@ -26,10 +28,13 @@ interface GatewayStrategy {
 
     fun createAltChainEndorsement(altChainEndorsementRequest: VeriBlockMessages.CreateAltChainEndorsementRequest): VeriBlockMessages.CreateAltChainEndorsementReply
 
-    fun shutdown()
+    fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader
 
-    //TODO remove on the next step
-    fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply
-    fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply
-    fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply
+    fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader
+
+    fun getVBKBlockHeader(blockHeingt: Int): VeriBlockMessages.BlockHeader
+
+    fun getTransactions(request: GetTransactionsRequest?): GetTransactionsReply?
+
+    fun shutdown()
 }
