@@ -10,26 +10,20 @@ package org.veriblock.lite.transactionmonitor
 
 import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.shouldBe
-import io.kotlintest.shouldNotBe
 import org.junit.Test
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.lite.core.randomAddress
-import org.veriblock.lite.core.randomCoin
-import org.veriblock.lite.core.randomFullBlock
-import org.veriblock.lite.core.randomTransactionMeta
 import org.veriblock.lite.core.randomTransactionMonitor
-import org.veriblock.lite.core.randomVeriBlockBlock
 import org.veriblock.lite.core.randomVeriBlockTransaction
 import org.veriblock.lite.core.randomWalletTransaction
-import org.veriblock.lite.net.NodeCoreGatewayImpl
+import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.params.NetworkConfig
 import org.veriblock.lite.params.NetworkParameters
 
 class TransactionMonitorTest {
     private val networkParameters = NetworkParameters(NetworkConfig())
-    private val gateway = NodeCoreGatewayImpl(networkParameters)
+    private val gateway = NodeCoreGateway(networkParameters)
     private val context = Context(Configuration(), networkParameters)
 
     @Test

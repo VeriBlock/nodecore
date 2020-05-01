@@ -19,7 +19,6 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event
 import org.veriblock.lite.net.NodeCoreGateway
-import org.veriblock.lite.net.NodeCoreGatewayImpl
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
@@ -50,7 +49,7 @@ class NodeCoreLiteKit(
             throw IOException("Unable to create directory")
         }
 
-        this.gateway = NodeCoreGatewayImpl(context.networkParameters)
+        this.gateway = NodeCoreGateway(context.networkParameters)
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
 

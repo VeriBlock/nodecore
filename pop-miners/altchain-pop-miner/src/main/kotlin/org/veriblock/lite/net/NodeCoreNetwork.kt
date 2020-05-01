@@ -86,7 +86,7 @@ class NodeCoreNetwork(
 
     private fun poll() {
         try {
-            var nodeCoreSyncStatus: NodeCoreGateway.NodeCoreSyncStatus? = null
+            var nodeCoreSyncStatus: NodeCoreSyncStatus? = null
             // Verify if we can make a connection with the remote NodeCore
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine

@@ -32,9 +32,9 @@ interface GatewayStrategy {
 
     fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader
 
-    fun getVBKBlockHeader(blockHeingt: Int): VeriBlockMessages.BlockHeader
+    fun getVBKBlockHeader(blockHeight: Int): VeriBlockMessages.BlockHeader
 
-    fun getTransactions(request: GetTransactionsRequest?): GetTransactionsReply?
+    fun getTransactions(request: GetTransactionsRequest): GetTransactionsReply
 
     fun shutdown()
 }

@@ -56,21 +56,21 @@ class TransactionMonitor(
                 try {
                     checkPendingTransactions()
                 } catch (e: Exception) {
-                    logger.error { e.message; e }
+                    logger.error(e) { "Error while polling for VBK transactions!" }
                 }
             }
         }
-
     }
 
-    private fun checkPendingTransactions() {
-        val pendingTxs = pendingTransactions()
-        val txsInfo = gateway.getTransactions(pendingTxs) ?: emptyList()
+    private fun checkPendingTransactions() = lock.withLock {
+        val pendingTxs = transactions.filter {
+            it.value.transactionMeta.state === TransactionMeta.MetaState.PENDING
+        }
 
+        val txsInfo = gateway.getTransactions(pendingTxs.keys)
         for (txInfo in txsInfo) {
-            if (txInfo.confirmations > MIN_TX_CONFIRMATIONS) {
-                val tx = transactions[Sha256Hash.wrap(txInfo.transaction.txId.toByteArray())]
-                    ?: error("Unable to retrieve pending transactions")
+            if (txInfo.confirmations > MIN_TX_CONFIRMATIONS && !txInfo.blockHash.isEmpty) {
+                val tx = pendingTxs.getValue(Sha256Hash.wrap(txInfo.transaction.txId.toByteArray()))
                 tx.transactionMeta.depth = txInfo.confirmations
                 tx.transactionMeta.appearsAtChainHeight = txInfo.blockNumber
                 tx.transactionMeta.appearsInBestChainBlock = VBlakeHash.wrap(txInfo.blockHash.toByteArray())
@@ -78,18 +78,6 @@ class TransactionMonitor(
                 tx.transactionMeta.setState(TransactionMeta.MetaState.CONFIRMED)
             }
         }
-
-
-    }
-
-    private fun pendingTransactions(): List<Sha256Hash> {
-        val pendingTxs = arrayListOf<Sha256Hash>()
-        for (transaction in transactions) {
-            if (transaction.value.transactionMeta.state === TransactionMeta.MetaState.PENDING) {
-                pendingTxs.add(transaction.key)
-            }
-        }
-        return pendingTxs
     }
 
     fun getTransactions(): Collection<WalletTransaction> =

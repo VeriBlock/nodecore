@@ -96,11 +96,11 @@ class GatewayStrategyGrpcImpl(
         return VeriBlockMessages.BlockHeader.getDefaultInstance()
     }
 
-    override fun getVBKBlockHeader(blockHeingt: Int): VeriBlockMessages.BlockHeader {
+    override fun getVBKBlockHeader(blockHeight: Int): VeriBlockMessages.BlockHeader {
         val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
             .addFilters(
                 VeriBlockMessages.BlockFilter.newBuilder()
-                    .setNumber(blockHeingt)
+                    .setNumber(blockHeight)
                     .build()
             )
             .build()
@@ -122,7 +122,7 @@ class GatewayStrategyGrpcImpl(
         return VeriBlockMessages.BlockHeader.getDefaultInstance()
     }
 
-    override fun getTransactions(request: VeriBlockMessages.GetTransactionsRequest?): VeriBlockMessages.GetTransactionsReply? {
+    override fun getTransactions(request: VeriBlockMessages.GetTransactionsRequest): VeriBlockMessages.GetTransactionsReply {
         return blockingStub
             .withDeadlineAfter(300, TimeUnit.SECONDS)
             .getTransactions(request)
