@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.common.serializeHeader
 import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.core.VpmContext
@@ -326,6 +327,6 @@ class VpmTaskService(
         )
 
         operation.complete(payoutBlockHash, endorsementInfo.reward)
-        logger.info(operation, "Operation has completed! Payout: ${endorsementInfo.reward} VBK")
+        logger.info(operation, "Operation has completed! Payout: ${endorsementInfo.reward.formatAtomicLongWithDecimal()} VBK")
     }
 }
