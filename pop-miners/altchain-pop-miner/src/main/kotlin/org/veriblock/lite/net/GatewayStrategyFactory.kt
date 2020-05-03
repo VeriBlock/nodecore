@@ -11,52 +11,24 @@ package org.veriblock.lite.net
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.AdminRpcConfiguration
 import nodecore.api.grpc.utilities.ChannelBuilder
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.net.impl.GatewayStrategyGrpcImpl
 import org.veriblock.lite.net.impl.GatewayStrategySpvImpl
 import org.veriblock.lite.params.NetworkParameters
 import veriblock.SpvContext
-import veriblock.model.DownloadStatusResponse
-import veriblock.net.BootstrapPeerDiscovery
 
-private val logger = createLogger {}
+fun createFullNode(networkParameters: NetworkParameters): GatewayStrategy {
+    val rpcConfiguration = configure(networkParameters)
+    val channelBuilder = ChannelBuilder(rpcConfiguration)
+    val channel = channelBuilder.buildManagedChannel()
+    val blockingStub = AdminGrpc.newBlockingStub(channelBuilder.attachPasswordInterceptor(channel))
+        .withMaxInboundMessageSize(20 * 1024 * 1024)
+        .withMaxOutboundMessageSize(20 * 1024 * 1024)
 
-fun createGatewayStrategy(networkParameters: NetworkParameters): GatewayStrategy {
+    return GatewayStrategyGrpcImpl(blockingStub, channel, networkParameters)
+}
 
-    if (!networkParameters.isSpv) {
-        val rpcConfiguration = configure(networkParameters)
-        val channelBuilder = ChannelBuilder(rpcConfiguration)
-        val channel = channelBuilder.buildManagedChannel()
-        val blockingStub = AdminGrpc.newBlockingStub(channelBuilder.attachPasswordInterceptor(channel))
-            .withMaxInboundMessageSize(20 * 1024 * 1024)
-            .withMaxOutboundMessageSize(20 * 1024 * 1024)
-
-        return GatewayStrategyGrpcImpl(blockingStub, channel, networkParameters)
-    } else {
-        val spvContext = SpvContext()
-        spvContext.init(
-            networkParameters.spvNetworkParameters,
-            BootstrapPeerDiscovery(networkParameters.spvNetworkParameters), false
-        )
-        spvContext.peerTable.start()
-
-        logger.info { "Initialize SPV: " }
-        while (true) {
-            val status: DownloadStatusResponse = spvContext.peerTable.downloadStatus
-            if (status.downloadStatus.isDiscovering) {
-                logger.info { "Waiting for peers response." }
-            } else if (status.downloadStatus.isDownloading) {
-                logger.info { "Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
-            } else {
-                logger.info { "Blockchain is ready. Current height " + status.currentHeight }
-                break
-            }
-            Thread.sleep(5000L)
-        }
-
-        return GatewayStrategySpvImpl(spvContext)
-    }
-
+fun createSpv(spvContext: SpvContext): GatewayStrategy {
+    return GatewayStrategySpvImpl(spvContext)
 }
 
 private fun configure(networkParameters: NetworkParameters): AdminRpcConfiguration = AdminRpcConfiguration().apply {

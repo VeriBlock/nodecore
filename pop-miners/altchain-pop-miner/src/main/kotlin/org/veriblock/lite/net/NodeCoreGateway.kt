@@ -33,13 +33,9 @@ import kotlin.math.abs
 private val logger = createLogger {}
 
 class NodeCoreGateway(
-    private val params: NetworkParameters
+    private val params: NetworkParameters,
+    private val gatewayStrategy: GatewayStrategy
 ) {
-    private val gatewayStrategy: GatewayStrategy = createGatewayStrategy(params)
-
-    fun shutdown() {
-        gatewayStrategy.shutdown()
-    }
 
     fun getBalance(address: String): Balance {
         logger.debug { "Requesting balance for address $address..." }
@@ -133,7 +129,7 @@ class NodeCoreGateway(
                 request.networkHeight,
                 request.localBlockchainHeight,
                 blockDifference,
-                request.networkHeight > 0 && blockDifference < 4
+                request.networkHeight > 0 && blockDifference < 10
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
