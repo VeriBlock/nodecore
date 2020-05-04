@@ -14,6 +14,7 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -221,6 +222,14 @@ class NodeCoreGateway(
         }
         val transactionId = unsignedTransaction.txId.toByteArray()
         val signature = addressManager.signMessage(transactionId, sourceAddress)
+
+        val valid = AddressUtility.isSignatureValid(
+            transactionId, signature, addressManager.getPublicKeyForAddress(sourceAddress).encoded, sourceAddress
+        )
+
+        if (!valid) {
+            error("Transaction is not valid. TxId: ${unsignedTransaction.txId})")
+        }
 
         return VeriBlockMessages.SignedTransaction.newBuilder()
             .setPublicKey(ByteString.copyFrom(addressManager.getPublicKeyForAddress(sourceAddress).encoded))

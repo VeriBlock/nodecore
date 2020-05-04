@@ -332,7 +332,9 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                             break;
 
                         case TRANSACTION_REPLY:
-                            pendingTransactionContainer.updateTransactionInfo(message.getMessage().getTransactionReply().getTransaction());
+                            if (message.getMessage().getTransactionReply().getSuccess()) {
+                                pendingTransactionContainer.updateTransactionInfo(message.getMessage().getTransactionReply().getTransaction());
+                            }
                             break;
 
                         case DEBUG_VTB_REPLY:

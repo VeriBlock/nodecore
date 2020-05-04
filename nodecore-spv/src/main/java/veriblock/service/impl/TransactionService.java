@@ -194,7 +194,7 @@ public class TransactionService {
                 "createAltChainEndorsementTransaction cannot be called with a non-positive" + "inputAmount (" + fee + ")!");
         }
 
-        return new StandardTransaction(inputAddress, fee, Collections.emptyList(), signatureIndex, publicationData, networkParameters);
+        return new StandardTransaction(null, inputAddress, fee, Collections.emptyList(), signatureIndex, publicationData, networkParameters);
     }
 
     public int predictStandardTransactionToAllStandardOutputSize(long inputAmount, List<Output> outputs, long sigIndex, int extraDataLength) {
