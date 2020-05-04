@@ -129,4 +129,6 @@ public interface AdminService {
     VeriBlockMessages.GetPoolStateReply getPoolState(VeriBlockMessages.GetPoolStateRequest request);
 
     VeriBlockMessages.AbandonTransactionReply abandonTransactionRequest(VeriBlockMessages.AbandonTransactionRequest request);
+
+    VeriBlockMessages.RebroadcastTransactionReply rebroadcastTransactionRequest(VeriBlockMessages.RebroadcastTransactionRequest request);
 }
