@@ -14,6 +14,7 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -32,13 +33,9 @@ import kotlin.math.abs
 private val logger = createLogger {}
 
 class NodeCoreGateway(
-    private val params: NetworkParameters
+    private val params: NetworkParameters,
+    private val gatewayStrategy: GatewayStrategy
 ) {
-    private val gatewayStrategy: GatewayStrategy = createGatewayStrategy(params)
-
-    fun shutdown() {
-        gatewayStrategy.shutdown()
-    }
 
     fun getBalance(address: String): Balance {
         logger.debug { "Requesting balance for address $address..." }
@@ -132,7 +129,7 @@ class NodeCoreGateway(
                 request.networkHeight,
                 request.localBlockchainHeight,
                 blockDifference,
-                request.networkHeight > 0 && blockDifference < 4
+                request.networkHeight > 0 && blockDifference < 10
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
@@ -221,6 +218,14 @@ class NodeCoreGateway(
         }
         val transactionId = unsignedTransaction.txId.toByteArray()
         val signature = addressManager.signMessage(transactionId, sourceAddress)
+
+        val valid = AddressUtility.isSignatureValid(
+            transactionId, signature, addressManager.getPublicKeyForAddress(sourceAddress).encoded, sourceAddress
+        )
+
+        if (!valid) {
+            error("Transaction is not valid. TxId: ${unsignedTransaction.txId})")
+        }
 
         return VeriBlockMessages.SignedTransaction.newBuilder()
             .setPublicKey(ByteString.copyFrom(addressManager.getPublicKeyForAddress(sourceAddress).encoded))

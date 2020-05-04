@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.service
 
 import org.veriblock.core.altchain.checkForValidEndorsement
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -95,6 +96,14 @@ class ApmTaskService(
             )
         } catch (e: Exception) {
             failOperation("Could not create endorsement VBK transaction: ${e.message}")
+        }
+
+        val valid = AddressUtility.isSignatureValid(
+            transaction.id.bytes, transaction.signature, transaction.publicKey, transaction.sourceAddress.address
+        )
+
+        if (!valid) {
+            failOperation("Endorsement VBK transaction signature is not valid")
         }
 
         val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)

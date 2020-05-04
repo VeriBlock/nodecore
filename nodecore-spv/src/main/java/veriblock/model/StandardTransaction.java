@@ -52,11 +52,17 @@ public class StandardTransaction extends Transaction {
     public StandardTransaction(
         String inputAddress, long inputAmount, List<Output> outputs, long signatureIndex, NetworkParameters networkParameters
     ) {
-        this(inputAddress, inputAmount, outputs, signatureIndex, new byte[0], networkParameters);
+        this(null, inputAddress, inputAmount, outputs, signatureIndex, new byte[0], networkParameters);
     }
 
     public StandardTransaction(
-        String inputAddress, long inputAmount, List<Output> outputs, long signatureIndex, byte[] data, NetworkParameters networkParameters
+        Sha256Hash txId,
+        String inputAddress,
+        long inputAmount,
+        List<Output> outputs,
+        long signatureIndex,
+        byte[] data,
+        NetworkParameters networkParameters
     ) {
 
         long totalOutput = 0L;
@@ -73,7 +79,12 @@ public class StandardTransaction extends Transaction {
         this.setInputAmount(Coin.valueOf(inputAmount));
         this.setInputAddress(new StandardAddress(inputAddress));
         this.setTransactionFee(fee);
-        this.setTxId(TransactionService.calculateTxID(this, networkParameters));
+
+        if (txId == null) {
+            this.setTxId(TransactionService.calculateTxID(this, networkParameters));
+        } else {
+            this.setTxId(txId);
+        }
     }
 
     public byte[] toByteArray(NetworkParameters networkParameters) {

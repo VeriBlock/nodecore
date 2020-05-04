@@ -676,7 +676,7 @@ public class AdminApiServiceImpl implements AdminApiService {
     @Override
     public VeriBlockMessages.BlockHeader getVbkBlockHeader(ByteString hash) {
         try {
-            StoredVeriBlockBlock block = blockchain.get(VBlakeHash.hash(hash.toByteArray()));
+            StoredVeriBlockBlock block = blockchain.get(VBlakeHash.wrap(hash.toByteArray()));
 
             return VeriBlockMessages.BlockHeader.newBuilder()
                 .setHash(ByteString.copyFrom(block.getHash().getBytes()))
