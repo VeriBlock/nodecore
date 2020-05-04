@@ -37,6 +37,9 @@ dependencies {
     implementation(project(":pop-miners:veriblock-pop-miners-common"))
 
     implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5")
+    implementation("ch.qos.logback.contrib:logback-jackson:0.1.5")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
     implementation("org.apache.commons:commons-lang3:3.0")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.6")
     implementation("org.reflections:reflections:0.9.11")

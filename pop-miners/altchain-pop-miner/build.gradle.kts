@@ -65,6 +65,9 @@ dependencies {
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5")
+    implementation("ch.qos.logback.contrib:logback-jackson:0.1.5")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
 
     // Protobuf Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
