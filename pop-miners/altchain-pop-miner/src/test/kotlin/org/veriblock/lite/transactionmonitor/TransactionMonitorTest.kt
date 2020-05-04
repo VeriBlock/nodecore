@@ -18,12 +18,13 @@ import org.veriblock.lite.core.randomTransactionMonitor
 import org.veriblock.lite.core.randomVeriBlockTransaction
 import org.veriblock.lite.core.randomWalletTransaction
 import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.lite.net.createFullNode
 import org.veriblock.lite.params.NetworkConfig
 import org.veriblock.lite.params.NetworkParameters
 
 class TransactionMonitorTest {
     private val networkParameters = NetworkParameters(NetworkConfig())
-    private val gateway = NodeCoreGateway(networkParameters)
+    private val gateway = NodeCoreGateway(networkParameters, createFullNode(networkParameters))
     private val context = Context(Configuration(), networkParameters)
 
     @Test
