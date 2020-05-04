@@ -61,13 +61,13 @@ class NodeCoreLiteKit(
         addressManager = loadAddressManager()
 
         if (context.networkParameters.isSpv) {
-            this.spvContext = initSpvContest(context.networkParameters, addressManager.all)
-            this.gatewayStrategy = createSpv(this.spvContext)
+            spvContext = initSpvContest(context.networkParameters, addressManager.all)
+            gatewayStrategy = createSpv(spvContext)
         } else {
-            this.gatewayStrategy = createFullNode(context.networkParameters)
+            gatewayStrategy = createFullNode(context.networkParameters)
         }
 
-        this.gateway = NodeCoreGateway(context.networkParameters, gatewayStrategy)
+        gateway = NodeCoreGateway(context.networkParameters, gatewayStrategy)
         transactionMonitor = createOrLoadTransactionMonitor()
 
         network = NodeCoreNetwork(
