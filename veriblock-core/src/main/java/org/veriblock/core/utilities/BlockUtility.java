@@ -19,6 +19,7 @@ import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.veriblock.core.types.Pair;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 
 public final class BlockUtility {
     private BlockUtility(){}
@@ -368,7 +369,15 @@ public final class BlockUtility {
         return chopped;
     }
 
+    // The same block header is hashed many times in different operations, cache out expensive hash calculations
+    // TODO: Cache pruning
+    private static HashMap<String, String> hashCache = new HashMap<>();
+
     public static String hashBlock(byte[] blockHeader) {
+        String blockHeaderHex = Utility.bytesToHex(blockHeader);
+        if (hashCache.containsKey(blockHeaderHex)) {
+            return hashCache.get(blockHeaderHex);
+        }
         int blockNum = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
 
         int ProgPoWForkHeight;
@@ -408,6 +417,8 @@ public final class BlockUtility {
             blockHash = digest.toUnprefixedHexString().toUpperCase();
         }
 
-        return blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+        String hash = blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+        hashCache.put(blockHeaderHex, hash);
+        return hash;
     }
 }
