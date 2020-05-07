@@ -132,3 +132,4 @@ inline fun failOperation(reason: String): Nothing {
 inline val Int.sec get() = Duration.ofSeconds(this.toLong())
 inline val Int.min get() = Duration.ofMinutes(this.toLong())
 inline val Int.hr get() = Duration.ofHours(this.toLong())
+inline val Int.days get() = Duration.ofDays(this.toLong())

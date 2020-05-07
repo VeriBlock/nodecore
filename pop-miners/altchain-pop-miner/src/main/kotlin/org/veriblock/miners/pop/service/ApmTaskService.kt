@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.service
 
+import kotlinx.coroutines.time.delay
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
@@ -101,7 +102,6 @@ class ApmTaskService(
         val valid = AddressUtility.isSignatureValid(
             transaction.id.bytes, transaction.signature, transaction.publicKey, transaction.sourceAddress.address
         )
-
         if (!valid) {
             failOperation("Endorsement VBK transaction signature is not valid")
         }
@@ -114,7 +114,7 @@ class ApmTaskService(
     override suspend fun confirmEndorsementTransaction(operation: ApmOperation) = operation.runTask(
         taskName = "Confirm transaction",
         targetState = OperationState.CONFIRMED,
-        timeout = 240.hr
+        timeout = 1.hr
     ) {
         val endorsementTransaction = operation.endorsementTransaction
             ?: failTask("ConfirmTransactionTask called without wallet transaction!")
@@ -139,7 +139,7 @@ class ApmTaskService(
     override suspend fun determineBlockOfProof(operation: ApmOperation) = operation.runTask(
         taskName = "Determine Block of Proof",
         targetState = OperationState.BLOCK_OF_PROOF,
-        timeout = 240.hr
+        timeout = 20.sec
     ) {
         val transaction = operation.endorsementTransaction?.transaction
             ?: failTask("The operation has no transaction set!")
@@ -160,7 +160,7 @@ class ApmTaskService(
     override suspend fun proveEndorsementTransaction(operation: ApmOperation) = operation.runTask(
         taskName = "Prove Transaction",
         targetState = OperationState.PROVEN,
-        timeout = 240.hr
+        timeout = 20.sec
     ) {
         val endorsementTransaction = operation.endorsementTransaction
             ?: failTask("ProveTransactionTask called without VBK endorsement transaction!")
@@ -190,7 +190,7 @@ class ApmTaskService(
     override suspend fun buildPublicationContext(operation: ApmOperation) = operation.runTask(
         taskName = "Wait for next VeriBlock Keystone",
         targetState = OperationState.CONTEXT,
-        timeout = 240.hr
+        timeout = 2.hr
     ) {
         val blockOfProof = operation.blockOfProof?.block
             ?: failTask("RegisterVeriBlockPublicationPollingTask called without block of proof!")
@@ -200,13 +200,12 @@ class ApmTaskService(
         val keystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
 
         while (nodeCoreLiteKit.gateway.getLastVBKBlockHeader().height < keystoneOfProofHeight) {
-            Thread.sleep(5000L)
+            delay(5.sec)
         }
 
         val keystoneOfProof = nodeCoreLiteKit.gateway.getVBKBlockHeader(keystoneOfProofHeight)
 
         logger.info(operation, "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}")
-
 
         // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
         val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
@@ -268,7 +267,7 @@ class ApmTaskService(
                 val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
 
                 if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i-1) else ArrayList<VeriBlockPublication>()))) {
-                    logger.error {
+                    logger.warn {
                         """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:
                                    $serializedAnchorBTCBlocks
@@ -325,7 +324,7 @@ class ApmTaskService(
     override suspend fun confirmPayout(operation: ApmOperation) = operation.runTask(
         taskName = "Payout Detection",
         targetState = OperationState.COMPLETED,
-        timeout = 240.hr
+        timeout = 10.days
     ) {
         val miningInstruction = operation.miningInstruction
             ?: failTask("PayoutDetectionTask called without mining instruction!")
