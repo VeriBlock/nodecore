@@ -6,8 +6,7 @@ import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.shell.CommandParameterMapper
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.syntaxError
-import veriblock.conf.NetworkParameters
-import veriblock.conf.NetworkParametersFactory
+import veriblock.conf.getNetworkParameters
 
 object ShellCommandParameterMappers {
     val HASH: CommandParameterMapper = CommandParameterMappers.HEX_STRING
@@ -25,7 +24,7 @@ object ShellCommandParameterMappers {
 
     var NET: CommandParameterMapper = { suppliedParam ->
         try {
-            NetworkParametersFactory.get(suppliedParam)
+            getNetworkParameters(suppliedParam)
         } catch(ignored: Exception) {
             throw syntaxError(
                     command,

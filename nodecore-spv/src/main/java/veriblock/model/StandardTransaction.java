@@ -142,7 +142,7 @@ public class StandardTransaction extends Transaction {
     }
 
     private void serializeToStream(OutputStream stream, NetworkParameters networkParameters) throws IOException {
-        Byte magicByte = !networkParameters.getNetworkName().equals(MainNetParameters.NETWORK) ? NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND : null;
+        Byte magicByte = !networkParameters.getNetworkName().equals(MainNetParameters.INSTANCE.getNetworkName()) ? NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND : null;
 
         if (magicByte != null) {
             stream.write(magicByte);

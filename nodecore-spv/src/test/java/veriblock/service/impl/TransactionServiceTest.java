@@ -26,10 +26,10 @@ public class TransactionServiceTest extends TestCase {
 
     @Override
     public void setUp() throws Exception {
-        spvContext.init(TestNetParameters.get(), new LocalhostDiscovery(TestNetParameters.get()), false);
+        spvContext.init(TestNetParameters.INSTANCE, new LocalhostDiscovery(TestNetParameters.INSTANCE), false);
 
         this.addressManager = mock(AddressManager.class);
-        this.transactionService = new TransactionService(addressManager, TestNetParameters.get());
+        this.transactionService = new TransactionService(addressManager, TestNetParameters.INSTANCE);
     }
 
     @Test

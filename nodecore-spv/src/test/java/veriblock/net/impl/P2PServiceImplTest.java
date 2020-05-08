@@ -33,7 +33,7 @@ public class P2PServiceImplTest {
 
     @Before
     public void setUp() {
-        spvContext.init(TestNetParameters.get(), new LocalhostDiscovery(TestNetParameters.get()), false);
+        spvContext.init(TestNetParameters.INSTANCE, new LocalhostDiscovery(TestNetParameters.INSTANCE), false);
 
         this.pendingTransactionContainer = mock(PendingTransactionContainer.class);
         this.peer = mock(Peer.class);

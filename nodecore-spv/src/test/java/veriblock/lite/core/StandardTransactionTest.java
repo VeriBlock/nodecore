@@ -22,7 +22,7 @@ public class StandardTransactionTest {
 
     @Before
     public void setUp() {
-        spvContext.init(MainNetParameters.get(), new LocalhostDiscovery(MainNetParameters.get()), false);
+        spvContext.init(MainNetParameters.INSTANCE, new LocalhostDiscovery(MainNetParameters.INSTANCE), false);
     }
 
     @Test

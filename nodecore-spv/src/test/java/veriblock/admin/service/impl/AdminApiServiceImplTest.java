@@ -62,7 +62,7 @@ public class AdminApiServiceImplTest {
 
     @Before
     public void setUp() throws IOException {
-        spvContext.init(TestNetParameters.get(), new LocalhostDiscovery(TestNetParameters.get()), false);
+        spvContext.init(TestNetParameters.INSTANCE, new LocalhostDiscovery(TestNetParameters.INSTANCE), false);
 
         this.peerTable = mock(PeerTable.class);
         this.transactionService = mock(TransactionService.class);

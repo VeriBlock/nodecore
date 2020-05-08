@@ -13,6 +13,8 @@ import veriblock.model.PeerAddress;
 import java.util.Collection;
 import java.util.Collections;
 
+import static veriblock.conf.NetworkParametersKt.LOCALHOST;
+
 /**
  * Discovery peer locally.
  */
@@ -25,6 +27,6 @@ public class LocalhostDiscovery implements PeerDiscovery {
 
     @Override
     public Collection<PeerAddress> getPeers(int count) {
-        return Collections.singletonList(new PeerAddress(NetworkParameters.LOCALHOST, networkParameters.getP2pPort()));
+        return Collections.singletonList(new PeerAddress(LOCALHOST, networkParameters.getP2pPort()));
     }
 }

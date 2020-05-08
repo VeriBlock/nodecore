@@ -158,7 +158,7 @@ public class SpvContext {
     private Server createAdminServer() throws NumberFormatException {
         try {
             InetSocketAddress rpcBindAddress = new InetSocketAddress(getNetworkParameters().getAdminHost(), getNetworkParameters().getAdminPort());
-            log.info("Starting Admin RPC service on {} with password {}", rpcBindAddress, getNetworkParameters().getAdminPassword());
+            log.info("Starting Admin RPC service on {}", rpcBindAddress);
 
             return NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor))
                 .build()
