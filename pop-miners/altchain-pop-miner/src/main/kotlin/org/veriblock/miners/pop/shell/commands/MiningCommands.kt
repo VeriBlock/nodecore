@@ -36,7 +36,10 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         val chain: String = getParameter("chain")
         val block: Int? = getOptionalParameter("block")
 
-        miner.mine(chain, block)
+        val operationId = miner.mine(chain, block)
+        success {
+            addMessage("v200", "Mining operation started", "Operation id: $operationId")
+        }
     }
 
     command(

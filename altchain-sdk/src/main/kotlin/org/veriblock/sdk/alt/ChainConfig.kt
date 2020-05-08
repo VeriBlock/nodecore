@@ -1,7 +1,10 @@
 package org.veriblock.sdk.alt
 
+import org.veriblock.sdk.alt.plugin.HttpAuthConfig
+
 abstract class ChainConfig {
     abstract val host: String
+    abstract val auth: HttpAuthConfig?
     abstract val keystonePeriod: Int
     abstract val neededConfirmations: Int
     abstract val spFinalityDelay: Int

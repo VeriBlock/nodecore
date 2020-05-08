@@ -8,6 +8,7 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
+import kotlinx.coroutines.runBlocking
 import org.junit.Ignore
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -25,44 +26,43 @@ class BitcoinFamilyChainTest {
             id = 0,
             name = "Bitcoin",
             host = "http://localhost:18332",
-            username = "FILLME",
-            password = "FILLME",
+            auth = null,
             payoutAddress = "FILLME"
         )
     )
 
     @Test
-    fun getBestBlockHeight() {
+    fun getBestBlockHeight() = runBlocking {
         val data = chain.getBestBlockHeight()
         println(data)
     }
 
     @Test
-    fun getBlockByHash() {
+    fun getBlockByHash() = runBlocking {
         val data = chain.getBlock("5d29bf53ee5840979b1601219666ece6b5a41d35b4602e342959b89c80218dea")
         println(data)
     }
 
     @Test
-    fun getBlockByHeight() {
+    fun getBlockByHeight() = runBlocking {
         val data = chain.getBlock(223)
         println(data)
     }
 
     @Test
-    fun checkBlockIsOnMainChain() {
+    fun checkBlockIsOnMainChain() = runBlocking {
         val data = chain.checkBlockIsOnMainChain(223, "000000303c1682d3552038664b5f606f3d8655cb82cf566950cef8c67ba1b2".asHexBytes())
         println(data)
     }
 
     @Test
-    fun getTransaction() {
+    fun getTransaction() = runBlocking {
         val data = chain.getTransaction("be3aeeae1428b21ab244180ebca7494a3ae413d50f917e6a227ed2cae36c9503")
         println(data)
     }
 
     @Test
-    fun getPublicationData() {
+    fun getPublicationData() = runBlocking {
         val data = chain.getMiningInstruction(null)
         println(data.detailedInfo)
     }

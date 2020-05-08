@@ -2,6 +2,7 @@ package org.veriblock.alt.plugins.test
 
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ChainConfig
+import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 import org.veriblock.sdk.alt.plugin.PluginConfig
 
 class TestConfig(
@@ -13,6 +14,8 @@ class TestConfig(
     override val blockRoundIndices: IntArray = (1..keystonePeriod).map { 1 }.toIntArray(),
     val autoMinePeriod: Int? = null
 ) : ChainConfig() {
+    override val auth: HttpAuthConfig? = null
+
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
         configuration.payoutAddress ?: "give it to me".toByteArray().toHex(),

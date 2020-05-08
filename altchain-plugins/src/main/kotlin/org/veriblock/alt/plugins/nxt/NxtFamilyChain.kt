@@ -8,12 +8,11 @@
 
 package org.veriblock.alt.plugins.nxt
 
-import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.fuel.httpPost
 import com.google.gson.Gson
-import org.veriblock.alt.plugins.util.httpResponse
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.http.ContentType
+import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.utilities.createLogger
@@ -46,36 +45,35 @@ class NxtFamilyChain(
     override val name: String = configuration.name
         ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
+    private val httpClient = createHttpClient(
+        authConfig = config.auth,
+        contentTypes = listOf(ContentType.Application.Json, ContentType.Text.Any)
+    )
+
     init {
         config.checkValidity()
     }
 
-    private fun Request.authenticate() = if (config.username != null && config.password != null) {
-        authentication().basic(config.username, config.password)
-    } else {
-        this
-    }
-
-    override fun getBestBlockHeight(): Int {
+    override suspend fun getBestBlockHeight(): Int {
         logger.debug { "Retrieving best block height..." }
-        return "${config.host}/nxt".httpGet(listOf(
-            "requestType" to "getBlock"
-        )).authenticate().httpResponse<NxtBlockData>().height
+        return httpClient.get<NxtBlockData>("${config.host}/nxt") {
+            parameter("requestType", "getBlock")
+        }.height
     }
 
-    override fun getBlock(hash: String): SecurityInheritingBlock? {
+    override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         TODO("Not yet implemented")
     }
 
-    override fun getBlock(height: Int): SecurityInheritingBlock? {
+    override suspend fun getBlock(height: Int): SecurityInheritingBlock? {
         TODO("Not yet implemented")
     }
 
-    override fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
+    override suspend fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
         TODO("Not yet implemented")
     }
 
-    override fun getTransaction(txId: String): SecurityInheritingTransaction? {
+    override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
         TODO("Not yet implemented")
     }
 
@@ -83,7 +81,7 @@ class NxtFamilyChain(
         TODO("TBD")
     }
 
-    override fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
+    override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         val payoutAddress = config.payoutAddress
                 ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
 
@@ -92,11 +90,11 @@ class NxtFamilyChain(
                 ?: getBestBlockHeight()
 
         logger.info { "Retrieving mining instruction at height $actualBlockHeight from $key daemon at ${config.host}..." }
-        val response: NxtPublicationData = "${config.host}/nxt".httpGet(
-                listOf(
-                "requestType" to "getPopData",
-            "height" to actualBlockHeight
-        )).authenticate().httpResponse()
+
+        val response: NxtPublicationData = httpClient.get("${config.host}/nxt") {
+            parameter("requestType", "getPopData")
+            parameter("height", actualBlockHeight)
+        }
 
         if (response.error != null) {
             error("Error calling $key daemon's API: ${response.error} (${response.errorDescription})")
@@ -129,16 +127,16 @@ class NxtFamilyChain(
         )
     }
 
-    override fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
         val jsonBody = NxtSubmitData(
             atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
             vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ).toJson()
-        val submitResponse: NxtSubmitResponse = "${config.host}/nxt".httpPost(listOf(
-            "requestType" to "submitPop"
-        )
-        ).authenticate().header("content-type", "application/json").body(jsonBody).httpResponse()
+        val submitResponse: NxtSubmitResponse = httpClient.get("${config.host}/nxt") {
+            parameter("requestType", "submitPop")
+            body = jsonBody
+        }
 
         if (submitResponse.error != null) {
             error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
@@ -148,13 +146,13 @@ class NxtFamilyChain(
             ?: error("Unable to retrieve $key's submission response data")
     }
 
-    override fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String = TODO()
+    override suspend fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String = TODO()
 
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
 
-    override fun isConnected(): Boolean = TODO()
+    override suspend fun isConnected(): Boolean = TODO()
 
-    override fun isSynchronized(): Boolean = TODO()
+    override suspend fun isSynchronized(): Boolean = TODO()
     
     private fun Any.toJson() = Gson().toJson(this)
 }

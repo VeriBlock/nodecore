@@ -1,12 +1,12 @@
 package org.veriblock.alt.plugins.bitcoin
 
 import org.veriblock.sdk.alt.ChainConfig
+import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 import org.veriblock.sdk.alt.plugin.PluginConfig
 
 class BitcoinConfig(
     override val host: String = "http://localhost:18332",
-    val username: String? = null,
-    val password: String? = null,
+    override val auth: HttpAuthConfig? = null,
     override val payoutAddress: String? = null,
     override val keystonePeriod: Int = 5,
     override val neededConfirmations: Int = 10,
@@ -16,8 +16,7 @@ class BitcoinConfig(
 ) : ChainConfig() {
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
-        configuration.username,
-        configuration.password,
+        configuration.auth,
         configuration.payoutAddress,
         configuration.keystonePeriod ?: 5,
         configuration.neededConfirmations ?: 10,

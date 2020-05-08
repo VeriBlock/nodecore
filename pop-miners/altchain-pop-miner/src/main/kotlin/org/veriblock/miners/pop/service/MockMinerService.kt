@@ -1,5 +1,6 @@
 package org.veriblock.miners.pop.service
 
+import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -74,12 +75,9 @@ class MockMinerService(
     override fun shutdown() {
     }
 
-    override fun mine(chainId: String, block: Int?): Result {
+    override fun mine(chainId: String, block: Int?): String {
         val chain = pluginService[chainId]
-        if (chain == null) {
-            logger.warn { "Unable to load plugin $chainId" }
-            return failure()
-        }
+            ?: error("Unable to load plugin $chainId")
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
             ?: error("Unable to load altchain monitor $chainId")
@@ -91,7 +89,9 @@ class MockMinerService(
         operations[operation.id] = operation
 
         val miningInstruction = try {
-            chain.getMiningInstruction(block)
+            runBlocking {
+                chain.getMiningInstruction(block)
+            }
         } catch (e: Exception) {
             operation.fail(e.message ?: "Unknown reason")
             throw e
@@ -125,7 +125,9 @@ class MockMinerService(
         operation.setContext(ApmContext(vtbs))
 
         val submissionResult = try {
-            chain.submit(atv, vtbs)
+            runBlocking {
+                chain.submit(atv, vtbs)
+            }
         } catch (e: Exception) {
             operation.fail(e.message ?: "Unknown reason")
             throw e
@@ -135,7 +137,7 @@ class MockMinerService(
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
         operation.complete("", 0)
-        return success()
+        return operation.id
     }
 
     private fun createVeriBlockContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock> {
