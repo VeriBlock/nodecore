@@ -87,6 +87,11 @@ dependencies {
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
+
+    // Integration tests
+    testImplementation("org.testcontainers:testcontainers:1.14.1")
+    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-gson:$ktorVersion")
 }
 
 tasks.test {
@@ -163,3 +168,5 @@ distributions {
         }
     }
 }
+
+customTests("integration")

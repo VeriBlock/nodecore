@@ -69,17 +69,16 @@ fun Project.publish(artifactName: String, sourcesJar: Jar) {
     }
 }
 
-fun Project.customTests(name: String, config: Test.() -> Unit = {}) {
-    // Get extensions
-    val idea = extensions.getByName("idea") as? IdeaModel
-
-    sourceSets.create("test-$name") {
+fun Project.customTests(name: String, testTaskConfig: Test.() -> Unit = {}) {
+    // Create source set
+    val testSourceSet = sourceSets.create("test-$name") {
         java {
             compileClasspath += sourceSets.getByName("main").output + configurations.named("testRuntimeClasspath").get()
             runtimeClasspath += output + compileClasspath
         }
     }
 
+    // Create new test task
     task<Test>("test${name.split("-").joinToString("") { it.capitalize() }}") {
         description = "Run $name tests"
         group = "verification"
@@ -87,14 +86,19 @@ fun Project.customTests(name: String, config: Test.() -> Unit = {}) {
         classpath = sourceSets["test-$name"].runtimeClasspath
         outputs.upToDateWhen { false }
 
-        config()
+        testTaskConfig()
     }
 
-    idea?.apply {
-        module {
-            testSourceDirs = testSourceDirs + sourceSets["test-$name"].java.srcDirs
-            testSourceDirs = testSourceDirs + sourceSets["test-$name"].resources.srcDirs
-        }
+    // Configure IDE
+    val idea = extensions.getByName("idea") as? IdeaModel
+    idea?.module {
+        sourceDirs = sourceDirs - testSourceSet.java.srcDirs
+        testSourceDirs = testSourceDirs + testSourceSet.java.srcDirs
+        sourceDirs = sourceDirs - testSourceSet.resources.srcDirs
+        testSourceDirs = testSourceDirs + testSourceSet.resources.srcDirs
+        // Hack for kotlin
+        sourceDirs = sourceDirs - file("src/test-$name/kotlin")
+        testSourceDirs = testSourceDirs + file("src/test-$name/kotlin")
     }
 }
 
