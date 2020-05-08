@@ -99,7 +99,7 @@ class NodeCoreLiteKit(
                 try {
                     updateBalance()
                 } catch (e: Exception) {
-                    logger.error(e) { e.message }
+                    logger.warn(e) { e.message }
                 }
                 delay(60.sec.toMillis())
             }
@@ -107,6 +107,9 @@ class NodeCoreLiteKit(
     }
 
     fun updateBalance() {
+        if (!gateway.ping()) {
+            return
+        }
         val balance = gateway.getBalance(addressManager.defaultAddress.hash)
         if (lastKnownBalance == null || lastKnownBalance != balance) {
             balanceChangedEvent.trigger(balance)

@@ -56,13 +56,17 @@ class TransactionMonitor(
                 try {
                     checkPendingTransactions()
                 } catch (e: Exception) {
-                    logger.error(e) { "Error while polling for VBK transactions!" }
+                    logger.warn(e) { "Error while polling for VBK transactions!" }
                 }
             }
         }
     }
 
     private fun checkPendingTransactions() = lock.withLock {
+        if (!gateway.ping()) {
+            return
+        }
+
         val pendingTxs = transactions.filter {
             it.value.transactionMeta.state === TransactionMeta.MetaState.PENDING
         }
@@ -85,7 +89,7 @@ class TransactionMonitor(
 
     fun commitTransaction(transaction: VeriBlockTransaction) = lock.withLock {
         if (transactions.containsKey(transaction.id)) {
-            return@withLock
+            return
         }
 
         val walletTransaction = WalletTransaction.wrap(transaction)
