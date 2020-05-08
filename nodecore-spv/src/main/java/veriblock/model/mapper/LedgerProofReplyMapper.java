@@ -1,4 +1,4 @@
-package veriblock.model.maper;
+package veriblock.model.mapper;
 
 import nodecore.api.grpc.VeriBlockMessages;
 import org.veriblock.sdk.models.Address;

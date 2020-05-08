@@ -4,10 +4,10 @@ import nodecore.api.grpc.VeriBlockMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.extensions.ledger.LedgerProofWithContext;
-import veriblock.net.impl.PeerTableImpl;
+import veriblock.net.SpvPeerTable;
 
 public class LedgerProofReplyValidator {
-    private static final Logger logger = LoggerFactory.getLogger(PeerTableImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(SpvPeerTable.class);
 
     public static boolean validate(VeriBlockMessages.LedgerProofReply.LedgerProofResult ledgerProofResult){
         try {

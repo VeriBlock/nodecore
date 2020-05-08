@@ -29,18 +29,14 @@ import veriblock.listeners.PendingTransactionDownloadedListener;
 import veriblock.model.TransactionPool;
 import veriblock.net.P2PService;
 import veriblock.net.PeerDiscovery;
-import veriblock.net.PeerTable;
-import veriblock.net.impl.P2PServiceImpl;
-import veriblock.net.impl.PeerTableImpl;
+import veriblock.net.SpvPeerTable;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
-import veriblock.service.impl.AdminApiServiceImpl;
-import veriblock.service.impl.AdminServerInterceptor;
-import veriblock.service.impl.AdminServiceFacade;
-import veriblock.service.impl.Blockchain;
-import veriblock.service.impl.PendingTransactionContainerImpl;
-import veriblock.service.impl.TransactionFactoryImpl;
-import veriblock.service.impl.TransactionService;
+import veriblock.service.AdminServerInterceptor;
+import veriblock.service.AdminServiceFacade;
+import veriblock.service.Blockchain;
+import veriblock.service.TransactionFactory;
+import veriblock.service.TransactionService;
 import veriblock.wallet.PendingTransactionDownloadedListenerImpl;
 
 import java.io.File;
@@ -71,7 +67,7 @@ public class SpvContext {
     private AdminApiService adminApiService;
     private AdminServiceFacade adminService;
     private AdminServerInterceptor adminServerInterceptor;
-    private PeerTable peerTable;
+    private SpvPeerTable peerTable;
     private P2PService p2PService;
     private Server server;
     private AddressManager addressManager;
@@ -109,17 +105,17 @@ public class SpvContext {
             transactionPool = new TransactionPool();
             blockchain = new Blockchain(networkParameters.getGenesisBlock(), veriBlockStore);
 
-            pendingTransactionContainer = new PendingTransactionContainerImpl();
-            p2PService = new P2PServiceImpl(pendingTransactionContainer, networkParameters);
+            pendingTransactionContainer = new PendingTransactionContainer();
+            p2PService = new P2PService(pendingTransactionContainer, networkParameters);
 
             addressManager = new DefaultAddressManager();
             File walletFile = new File(getDirectory(), getFilePrefix() + FILE_EXTENSION);
             addressManager.load(walletFile);
 
-            peerTable = new PeerTableImpl(this, p2PService, peerDiscovery, pendingTransactionContainer);
+            peerTable = new SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer);
             transactionService = new TransactionService(addressManager, networkParameters);
             adminApiService =
-                new AdminApiServiceImpl(this, peerTable, transactionService, addressManager, new TransactionFactoryImpl(networkParameters),
+                new AdminApiService(this, peerTable, transactionService, addressManager, new TransactionFactory(networkParameters),
                     pendingTransactionContainer, blockchain
                 );
 
@@ -246,7 +242,7 @@ public class SpvContext {
         return adminServerInterceptor;
     }
 
-    public PeerTable getPeerTable() {
+    public SpvPeerTable getPeerTable() {
         return peerTable;
     }
 

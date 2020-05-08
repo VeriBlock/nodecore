@@ -19,7 +19,7 @@ import org.veriblock.sdk.services.SerializeDeserializeService;
 import veriblock.SpvContext;
 import veriblock.model.ListenerRegistration;
 import veriblock.model.NodeMetadata;
-import veriblock.service.impl.Blockchain;
+import veriblock.service.Blockchain;
 import veriblock.util.MessageIdGenerator;
 
 import java.util.Comparator;

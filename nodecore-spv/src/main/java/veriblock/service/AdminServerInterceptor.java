@@ -1,4 +1,4 @@
-package veriblock.service.impl;
+package veriblock.service;
 
 import io.grpc.Context;
 import io.grpc.Contexts;

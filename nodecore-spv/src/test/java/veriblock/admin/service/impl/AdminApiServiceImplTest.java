@@ -5,7 +5,6 @@ import nodecore.api.grpc.VeriBlockMessages;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.veriblock.core.contracts.AddressManager;
@@ -25,13 +24,12 @@ import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.net.LocalhostDiscovery;
-import veriblock.net.PeerTable;
+import veriblock.net.SpvPeerTable;
 import veriblock.service.AdminApiService;
 import veriblock.service.PendingTransactionContainer;
 import veriblock.service.TransactionFactory;
-import veriblock.service.impl.AdminApiServiceImpl;
-import veriblock.service.impl.Blockchain;
-import veriblock.service.impl.TransactionService;
+import veriblock.service.Blockchain;
+import veriblock.service.TransactionService;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +52,7 @@ public class AdminApiServiceImplTest {
     private final SpvContext spvContext = new SpvContext();
     private TransactionService transactionService;
     private AddressManager addressManager;
-    private PeerTable peerTable;
+    private SpvPeerTable peerTable;
     private AdminApiService adminApiService;
     private TransactionFactory transactionFactory;
     private PendingTransactionContainer transactionContainer;
@@ -64,14 +62,14 @@ public class AdminApiServiceImplTest {
     public void setUp() throws IOException {
         spvContext.init(TestNetParameters.INSTANCE, new LocalhostDiscovery(TestNetParameters.INSTANCE), false);
 
-        this.peerTable = mock(PeerTable.class);
+        this.peerTable = mock(SpvPeerTable.class);
         this.transactionService = mock(TransactionService.class);
         this.addressManager = mock(AddressManager.class);
         this.transactionFactory = mock(TransactionFactory.class);
         this.transactionContainer = mock(PendingTransactionContainer.class);
         this.blockchain = mock(Blockchain.class);
         this.adminApiService =
-            new AdminApiServiceImpl(spvContext, peerTable, transactionService, addressManager, transactionFactory, transactionContainer, blockchain);
+            new AdminApiService(spvContext, peerTable, transactionService, addressManager, transactionFactory, transactionContainer, blockchain);
     }
 
     @Test

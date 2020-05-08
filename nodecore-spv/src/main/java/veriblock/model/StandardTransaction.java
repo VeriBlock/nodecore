@@ -18,7 +18,7 @@ import org.veriblock.sdk.models.Sha256Hash;
 import org.veriblock.sdk.services.SerializeDeserializeService;
 import veriblock.conf.MainNetParameters;
 import veriblock.conf.NetworkParameters;
-import veriblock.service.impl.TransactionService;
+import veriblock.service.TransactionService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

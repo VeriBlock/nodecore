@@ -10,6 +10,7 @@ import veriblock.model.Output;
 import veriblock.model.StandardAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.net.LocalhostDiscovery;
+import veriblock.net.P2PService;
 import veriblock.net.Peer;
 import veriblock.service.PendingTransactionContainer;
 
@@ -29,7 +30,7 @@ public class P2PServiceImplTest {
 
     private PendingTransactionContainer pendingTransactionContainer;
     private Peer peer;
-    private P2PServiceImpl p2PService;
+    private P2PService p2PService;
 
     @Before
     public void setUp() {
@@ -37,7 +38,7 @@ public class P2PServiceImplTest {
 
         this.pendingTransactionContainer = mock(PendingTransactionContainer.class);
         this.peer = mock(Peer.class);
-        this.p2PService = new P2PServiceImpl(pendingTransactionContainer, spvContext.getNetworkParameters());
+        this.p2PService = new P2PService(pendingTransactionContainer, spvContext.getNetworkParameters());
     }
 
     @Test

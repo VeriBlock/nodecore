@@ -5,7 +5,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.service.impl;
+package veriblock.service;
 
 import com.google.common.collect.EvictingQueue;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package veriblock.service.impl;
+package veriblock.service;
 
 import io.grpc.stub.StreamObserver;
 import nodecore.api.grpc.AdminGrpc;

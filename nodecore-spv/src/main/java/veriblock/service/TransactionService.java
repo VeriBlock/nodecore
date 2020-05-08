@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package veriblock.service.impl;
+package veriblock.service;
 
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;

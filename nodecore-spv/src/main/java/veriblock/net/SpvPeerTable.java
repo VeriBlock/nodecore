@@ -5,7 +5,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.net.impl;
+package veriblock.net;
 
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -34,18 +34,10 @@ import veriblock.model.PeerAddress;
 import veriblock.model.StandardTransaction;
 import veriblock.model.Transaction;
 import veriblock.model.TransactionTypeIdentifier;
-import veriblock.model.maper.LedgerProofReplyMapper;
-import veriblock.net.MessageReceivedEventListener;
-import veriblock.net.P2PService;
-import veriblock.net.Peer;
-import veriblock.net.PeerConnectedEventListener;
-import veriblock.net.PeerDisconnectedEventListener;
-import veriblock.net.PeerDiscovery;
-import veriblock.net.PeerSocketHandler;
-import veriblock.net.PeerTable;
+import veriblock.model.mapper.LedgerProofReplyMapper;
 import veriblock.serialization.MessageSerializer;
 import veriblock.service.PendingTransactionContainer;
-import veriblock.service.impl.Blockchain;
+import veriblock.service.Blockchain;
 import veriblock.util.MessageIdGenerator;
 import veriblock.util.Threading;
 import veriblock.validator.LedgerProofReplyValidator;
@@ -72,9 +64,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-
-public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PeerTableImpl.class);
+public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpvPeerTable.class);
 
     public static final int DEFAULT_CONNECTIONS = 12;
     public static final int BLOOM_FILTER_TWEAK = 710699166;
@@ -107,7 +98,7 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
     private final Map<String, LedgerContext> addressesState = new ConcurrentHashMap<>();
     private final PendingTransactionContainer pendingTransactionContainer;
 
-    public PeerTableImpl(
+    public SpvPeerTable(
         SpvContext spvContext,
         P2PService p2PService,
         PeerDiscovery peerDiscovery,
@@ -127,8 +118,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
 
     }
 
-
-    @Override
     public void start() {
         running.set(true);
 
@@ -433,7 +422,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         }
     }
 
-    @Override
     public void advertise(Transaction transaction) {
         VeriBlockMessages.Event advertise = VeriBlockMessages.Event.newBuilder()
             .setId(MessageIdGenerator.next())
@@ -457,7 +445,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         }
     }
 
-    @Override
     public Future<VeriBlockMessages.Event> advertiseWithReply(VeriBlockMessages.Event event) {
         FutureEventReply futureEventReply = new FutureEventReply();
 
@@ -485,17 +472,14 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         });
     }
 
-    @Override
     public Long getSignatureIndex(String address) {
         return addressesState.get(address).getLedgerValue() != null ? addressesState.get(address).getLedgerValue().getSignatureIndex() : null;
     }
 
-    @Override
     public Integer getAvailablePeers() {
         return peers.size();
     }
 
-    @Override
     public Integer getBestBlockHeight(){
         return peers.values().stream()
                 .map(Peer::getBestBlockHeight)
@@ -504,7 +488,6 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
                 .orElse(0);
     }
 
-    @Override
     public DownloadStatusResponse getDownloadStatus() {
         DownloadStatus status;
         Integer currentHeight = blockchain.getChainHead().getHeight();
@@ -520,12 +503,10 @@ public class PeerTableImpl implements PeerTable, PeerConnectedEventListener, Pee
         return new DownloadStatusResponse(status, currentHeight, bestBlockHeight);
     }
 
-    @Override
     public Map<String, LedgerContext> getAddressesState() {
         return addressesState;
     }
 
-    @Override
     public LedgerContext getAddressState(String address) {
         return addressesState.get(address);
     }
