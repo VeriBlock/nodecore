@@ -52,7 +52,9 @@ private fun run(): Int {
     } catch (e: Exception) {
         logger.warn(e) { "Fatal error: ${e.message}" }
     } finally {
-        shutdownSignal.countDown()
+        if (!shell.running) {
+            shutdownSignal.countDown()
+        }
     }
 
     try {

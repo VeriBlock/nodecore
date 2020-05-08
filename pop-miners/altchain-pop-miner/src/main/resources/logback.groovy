@@ -13,7 +13,7 @@ import ch.qos.logback.contrib.json.classic.JsonLayout
 import ch.qos.logback.core.spi.FilterReply
 import org.veriblock.shell.LoggingLineAppender
 
-def logRootPath = System.getProperty("logging.path", System.getenv('APM_LOG_PATH')) ?: 'logs/'
+def logRootPath = System.getProperty("logging.path", System.getenv('APM_LOG_PATH')) ?: 'logs'
 def logLevel = System.getProperty("logging.level", System.getenv('APM_LOG_LEVEL')) ?: ''
 def consoleLogLevel = System.getProperty("logging.level.console", System.getenv('APM_CONSOLE_LOG_LEVEL')) ?: ''
 boolean addJsonLogs = System.getenv('APM_ENABLE_JSON_LOG')?.toBoolean() ?: false
@@ -28,7 +28,7 @@ appender("TERMINAL", LoggingLineAppender) {
 }
 
 appender("FILE", RollingFileAppender) {
-    file = "${logRootPath}org.veriblock.nodecore-pop.log" + (addJsonLogs ? ".json" : ".log")
+    file = "${logRootPath}/apm" + (addJsonLogs ? ".json" : ".log")
     rollingPolicy(SizeAndTimeBasedRollingPolicy) {
         fileNamePattern = "${logRootPath}org.veriblock.nodecore-pop.%d{yyyy-MM-dd}.%i.log"
         maxHistory = 30
@@ -48,7 +48,7 @@ appender("FILE", RollingFileAppender) {
 }
 
 appender("FILE-ERROR", FileAppender) {
-    file = "${logRootPath}org.veriblock.nodecore-pop-error.log" + (addJsonLogs ? ".json" : ".log")
+    file = "${logRootPath}/apm-error" + (addJsonLogs ? ".json" : ".log")
     filter(LevelFilter) {
         level = ERROR
         onMatch = FilterReply.ACCEPT

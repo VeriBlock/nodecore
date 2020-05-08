@@ -43,7 +43,8 @@ open class Shell(
 ) {
     private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
-    private var running = false
+    var running = false
+        private set
 
     private val terminal: Terminal = TerminalBuilder.builder().apply {
         if (testData != null) {
