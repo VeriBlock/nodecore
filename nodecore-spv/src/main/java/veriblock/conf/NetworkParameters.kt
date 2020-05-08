@@ -42,7 +42,7 @@ object MainNetParameters : NetworkParameters() {
     override val adminPort = 10500
     override val p2pPort = 7500
     override val bootstrapDns = "seed.veriblock.org"
-    override val databaseName = "database.sqlite"
+    override val databaseName = "database.db"
     override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
         "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAp+Xyt+yUKRdntNZ7SjNoLVyYfgsGAOjUET2FTQ=="
     ))
@@ -63,7 +63,7 @@ object TestNetParameters : NetworkParameters() {
     override val adminPort = 10501
     override val p2pPort = 7501
     override val bootstrapDns = "seedtestnet.veriblock.org"
-    override val databaseName = "database-test.sqlite"
+    override val databaseName = "database-test.db"
     override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
         "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ=="
     ))
@@ -84,7 +84,7 @@ object AlphaNetParameters : NetworkParameters() {
     override val adminPort = 10502
     override val p2pPort = 7502
     override val bootstrapDns = null
-    override val databaseName = "database-alpha.sqlite"
+    override val databaseName = "database-alpha.db"
     override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
         "AAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzyAl7A64qKMlSV/rWVALUFx5fAIEBfXhAw0E3w=="
     ))
