@@ -47,6 +47,7 @@ dependencies {
     testImplementation("junit:junit:4.12")
     // required if you want to use Mockito for unit tests
     testCompile("org.mockito:mockito-core:2.7.22")
+    testImplementation("io.mockk:mockk:1.9.3")
 }
 
 protobuf {
