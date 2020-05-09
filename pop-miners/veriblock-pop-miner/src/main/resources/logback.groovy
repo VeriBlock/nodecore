@@ -18,9 +18,9 @@ appender("TERMINAL", LoggingLineAppender) {
     }
 }
 appender("FILE", RollingFileAppender) {
-    file = "${logRootPath}veriblock.nodecore-pop.log" + (addJsonLogs ? ".json" : ".log")
+    file = "${logRootPath}veriblock.nodecore-pop" + (addJsonLogs ? ".json" : ".log")
     rollingPolicy(SizeAndTimeBasedRollingPolicy) {
-        fileNamePattern = "${logRootPath}veriblock.nodecore-pop.%d{yyyy-MM-dd}.%i.log"
+        fileNamePattern = "${logRootPath}veriblock.nodecore-pop.%d{yyyy-MM-dd}.%i" + (addJsonLogs ? ".json" : ".log")
         maxHistory = 30
         maxFileSize = "10MB"
         totalSizeCap = "1GB"
@@ -38,7 +38,7 @@ appender("FILE", RollingFileAppender) {
 }
 
 appender("ERROR-FILE", FileAppender) {
-    file = "${logRootPath}veriblock.nodecore-pop-error.log" + (addJsonLogs ? ".json" : ".log")
+    file = "${logRootPath}veriblock.nodecore-pop-error" + (addJsonLogs ? ".json" : ".log")
     filter(ThresholdFilter) {
         level = ERROR
     }
@@ -55,9 +55,9 @@ appender("ERROR-FILE", FileAppender) {
 }
 
 appender("BITCOINJ-FILE", RollingFileAppender) {
-    file = "${logRootPath}bitcoinj.nodecore-pop.log" + (addJsonLogs ? ".json" : ".log")
+    file = "${logRootPath}bitcoinj.nodecore-pop" + (addJsonLogs ? ".json" : ".log")
     rollingPolicy(SizeAndTimeBasedRollingPolicy) {
-        fileNamePattern = "${logRootPath}bitcoinj.nodecore-pop.%d{yyyy-MM-dd}.%i.log"
+        fileNamePattern = "${logRootPath}bitcoinj.nodecore-pop.%d{yyyy-MM-dd}.%i" + (addJsonLogs ? ".json" : ".log")
         maxHistory = 10
         maxFileSize = "10MB"
         totalSizeCap = "100MB"
