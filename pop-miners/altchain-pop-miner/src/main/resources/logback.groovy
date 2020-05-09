@@ -30,7 +30,7 @@ appender("TERMINAL", LoggingLineAppender) {
 appender("FILE", RollingFileAppender) {
     file = "${logRootPath}/apm" + (addJsonLogs ? ".json" : ".log")
     rollingPolicy(SizeAndTimeBasedRollingPolicy) {
-        fileNamePattern = "${logRootPath}org.veriblock.nodecore-pop.%d{yyyy-MM-dd}.%i.log"
+        fileNamePattern = "${logRootPath}/apm.%d{yyyy-MM-dd}.%i" + (addJsonLogs ? ".json" : ".log")
         maxHistory = 30
         maxFileSize = "10MB"
         totalSizeCap = "1GB"
