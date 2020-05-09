@@ -85,11 +85,6 @@ interface SecurityInheritingChain {
     suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String
 
     /**
-     * Updates the chain's context with a set of VTBs ([veriBlockPublications])
-     */
-    suspend fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String
-
-    /**
      * Extracts a block endorsement from the given data (coming from a VBK PoP Transaction)
      */
     fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement

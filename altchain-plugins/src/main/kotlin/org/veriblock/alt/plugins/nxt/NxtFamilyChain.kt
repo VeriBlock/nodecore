@@ -146,8 +146,6 @@ class NxtFamilyChain(
             ?: error("Unable to retrieve $key's submission response data")
     }
 
-    override suspend fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String = TODO()
-
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
 
     override suspend fun isConnected(): Boolean = TODO()

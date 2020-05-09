@@ -151,25 +151,6 @@ class TestChain(
         return block.data.coinbaseTransactionId
     }
 
-    override suspend fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
-        logger.info {
-            """Update context called with the following data:
-            |ATVs: ${veriBlockPublications.map {
-                it.transaction
-            }.flatMap {
-                it.blocks
-            }.map {
-                SerializeDeserializeService.getHeaderBytesBitcoinBlock(it).toHex()
-            }}
-            |VTBs: ${veriBlockPublications.flatMap {
-                it.blocks
-            }.map {
-                SerializeDeserializeService.serializeHeaders(it).toHex()
-            }}""".trimMargin()
-        }
-        return ""
-    }
-
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
         val context = altchainPopEndorsement.getContextInfo()
         val hash = context.copyOfRange(0, 4)
