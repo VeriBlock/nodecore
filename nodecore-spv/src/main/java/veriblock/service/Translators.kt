@@ -5,91 +5,97 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package veriblock.service
 
-package veriblock.service;
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.utilities.Utility
+import java.nio.charset.StandardCharsets
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonPrimitive;
-import org.veriblock.core.utilities.AddressUtility;
-import org.veriblock.core.utilities.Utility;
-
-import java.nio.charset.StandardCharsets;
-
-public class Translators {
-
-    public static JsonElement base64ToHex(JsonElement element) {
-        byte[] bytes = Utility.base64ToBytes(element.getAsString());
-        return new JsonPrimitive(Utility.bytesToHex(bytes));
+object Translators {
+    @JvmStatic
+    fun base64ToHex(element: JsonElement): JsonElement {
+        val bytes = Utility.base64ToBytes(element.asString)
+        return JsonPrimitive(Utility.bytesToHex(bytes))
     }
 
-    public static JsonElement hexToBase64(JsonElement element) {
-        byte[] bytes = Utility.hexToBytes(element.getAsString());
-        return new JsonPrimitive(Utility.bytesToBase64(bytes));
+    @JvmStatic
+    fun hexToBase64(element: JsonElement): JsonElement {
+        val bytes = Utility.hexToBytes(element.asString)
+        return JsonPrimitive(Utility.bytesToBase64(bytes))
     }
 
-    public static JsonElement base64ToProperAddressType(JsonElement element) {
-        byte[] bytes = Utility.base64ToBytes(element.getAsString());
-        if (isByteStringValidAddress(bytes)) {
-            return new JsonPrimitive(Utility.bytesToBase58(bytes));
+    @JvmStatic
+    fun base64ToProperAddressType(element: JsonElement): JsonElement {
+        val bytes = Utility.base64ToBytes(element.asString)
+        return if (isByteStringValidAddress(bytes)) {
+            JsonPrimitive(Utility.bytesToBase58(bytes))
         } else if (isByteStringValidMultisigAddress(bytes)) {
-            return new JsonPrimitive(Utility.bytesToBase59(bytes));
+            JsonPrimitive(Utility.bytesToBase59(bytes))
         } else {
-            throw new IllegalArgumentException("hexToProperAddressType cannot be called with an invalid input!");
+            throw IllegalArgumentException("hexToProperAddressType cannot be called with an invalid input!")
         }
     }
 
-    public static JsonElement arbitraryAddressTypeToBase64(JsonElement element) {
-        String address = element.getAsString();
-        if (AddressUtility.isValidStandardAddress(address)) {
-            byte[] bytes = Utility.base58ToBytes(address);
-            return new JsonPrimitive(Utility.bytesToBase64(bytes));
+    @JvmStatic
+    fun arbitraryAddressTypeToBase64(element: JsonElement): JsonElement {
+        val address = element.asString
+        return if (AddressUtility.isValidStandardAddress(address)) {
+            val bytes = Utility.base58ToBytes(address)
+            JsonPrimitive(Utility.bytesToBase64(bytes))
         } else if (AddressUtility.isValidMultisigAddress(address)) {
-            byte[] bytes = Utility.base59ToBytes(address);
-            return new JsonPrimitive(Utility.bytesToBase64(bytes));
+            val bytes = Utility.base59ToBytes(address)
+            JsonPrimitive(Utility.bytesToBase64(bytes))
         } else {
-            throw new IllegalArgumentException("arbitraryAddressTypeToHex cannot be called with an invalid input (" + address + ")!");
+            throw IllegalArgumentException("arbitraryAddressTypeToHex cannot be called with an invalid input ($address)!")
         }
     }
 
-    public static JsonElement base64ToAscii(JsonElement element) {
-        byte[] bytes = Utility.base64ToBytes(element.getAsString());
-        return new JsonPrimitive(new String(bytes, StandardCharsets.US_ASCII));
+    @JvmStatic
+    fun base64ToAscii(element: JsonElement): JsonElement {
+        val bytes = Utility.base64ToBytes(element.asString)
+        return JsonPrimitive(String(bytes, StandardCharsets.US_ASCII))
     }
 
-    public static JsonElement asciiToBase64(JsonElement element) {
-        byte[] bytes = element.getAsString().getBytes(StandardCharsets.US_ASCII);
-        return new JsonPrimitive(Utility.bytesToBase64(bytes));
+    @JvmStatic
+    fun asciiToBase64(element: JsonElement): JsonElement {
+        val bytes = element.asString.toByteArray(StandardCharsets.US_ASCII)
+        return JsonPrimitive(Utility.bytesToBase64(bytes))
     }
 
-    public static JsonElement base64ToUtf8(JsonElement element) {
-        byte[] bytes = Utility.base64ToBytes(element.getAsString());
-        return new JsonPrimitive(new String(bytes, StandardCharsets.UTF_8));
+    @JvmStatic
+    fun base64ToUtf8(element: JsonElement): JsonElement {
+        val bytes = Utility.base64ToBytes(element.asString)
+        return JsonPrimitive(String(bytes, StandardCharsets.UTF_8))
     }
 
-    public static JsonElement utf8ToBase64(JsonElement element) {
-        byte[] bytes = element.getAsString().getBytes(StandardCharsets.UTF_8);
-        return new JsonPrimitive(Utility.bytesToBase64(bytes));
+    @JvmStatic
+    fun utf8ToBase64(element: JsonElement): JsonElement {
+        val bytes = element.asString.toByteArray(StandardCharsets.UTF_8)
+        return JsonPrimitive(Utility.bytesToBase64(bytes))
     }
 
-    public static JsonElement noOp(JsonElement element) {
-        return element;
+    @JvmStatic
+    fun noOp(element: JsonElement): JsonElement {
+        return element
     }
 
-    private static boolean isByteStringValidAddress(byte[] bytes) {
-        if (bytes == null) {
-            throw new IllegalArgumentException("isByteStringValidAddress cannot be called with a null toTest ByteString!");
+    private fun isByteStringValidAddress(bytes: ByteArray?): Boolean {
+        return if (bytes == null) {
+            throw IllegalArgumentException("isByteStringValidAddress cannot be called with a null toTest ByteString!")
         } else {
-            String potentialAddress = Utility.bytesToBase58(bytes);
-            return AddressUtility.isValidStandardAddress(potentialAddress);
+            val potentialAddress = Utility.bytesToBase58(bytes)
+            AddressUtility.isValidStandardAddress(potentialAddress)
         }
     }
 
-    private static boolean isByteStringValidMultisigAddress(byte[] bytes) {
-        if (bytes == null) {
-            throw new IllegalArgumentException("isByteStringValidMultisigAddress cannot be called with a null toTest ByteString!");
+    private fun isByteStringValidMultisigAddress(bytes: ByteArray?): Boolean {
+        return if (bytes == null) {
+            throw IllegalArgumentException("isByteStringValidMultisigAddress cannot be called with a null toTest ByteString!")
         } else {
-            String potentialMultisigAddress = Utility.bytesToBase59(bytes);
-            return AddressUtility.isValidMultisigAddress(potentialMultisigAddress);
+            val potentialMultisigAddress = Utility.bytesToBase59(bytes)
+            AddressUtility.isValidMultisigAddress(potentialMultisigAddress)
         }
     }
 }

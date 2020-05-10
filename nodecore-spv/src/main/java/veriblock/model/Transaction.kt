@@ -27,11 +27,11 @@ abstract class Transaction {
 
     abstract fun getOutputs(): List<Output>
     abstract fun getSignatureIndex(): Long
-    abstract fun getData(): ByteArray?
     abstract fun getTransactionFee(): Long
     abstract fun toByteArray(networkParameters: NetworkParameters): ByteArray?
     abstract fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder?
 
+    abstract val data: ByteArray?
     abstract val transactionTypeIdentifier: TransactionTypeIdentifier
 
     fun addSignature(signature: ByteArray?, publicKey: ByteArray?) {

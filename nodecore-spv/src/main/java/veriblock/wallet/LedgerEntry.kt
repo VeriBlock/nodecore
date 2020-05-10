@@ -5,126 +5,67 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.wallet;
+package veriblock.wallet
 
-import org.veriblock.core.utilities.SerializerUtility;
-import org.veriblock.sdk.models.Coin;
-import org.veriblock.sdk.models.Sha256Hash;
-import org.veriblock.sdk.services.SerializeDeserializeService;
-import veriblock.model.AddressFactory;
-import veriblock.model.AddressLight;
+import org.veriblock.core.utilities.SerializerUtility
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.services.SerializeDeserializeService
+import veriblock.model.AddressFactory.create
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+class LedgerEntry(
+    val address: String,
+    val txId: Sha256Hash,
+    val debitAmount: Coin,
+    val creditAmount: Coin,
+    val signatureIndex: Long,
+    val positionIndex: Int,
+    var status: Status
+) {
+    val key: Sha256Hash = generateKey(address, txId, debitAmount, creditAmount, positionIndex)
 
-public class LedgerEntry {
-    public enum Status {
+    enum class Status(val value: Int) {
         PENDING(0),
         CONFIRMED(1),
         FINALIZED(2);
 
-        private int value;
-        Status(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-
-        public static Status forNumber(int value) {
-            switch (value) {
-                case 0:
-                    return PENDING;
-                case 1:
-                    return CONFIRMED;
-                case 2:
-                    return FINALIZED;
-                default:
-                    return null;
+        companion object {
+            fun forNumber(value: Int): Status? {
+                return when (value) {
+                    0 -> PENDING
+                    1 -> CONFIRMED
+                    2 -> FINALIZED
+                    else -> null
+                }
             }
         }
+
     }
 
-    private final Sha256Hash key;
-    private final String address;
-    private final Sha256Hash txId;
-    private final Coin debitAmount;
-    private final Coin creditAmount;
-    private final long signatureIndex;
-    private final int positionIndex;
-    private Status status;
-
-    public Sha256Hash getKey() {
-        return key;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public Sha256Hash getTxId() {
-        return txId;
-    }
-
-    public Coin getDebitAmount() {
-        return debitAmount;
-    }
-
-    public Coin getCreditAmount() {
-        return creditAmount;
-    }
-
-    public long getSignatureIndex() {
-        return signatureIndex;
-    }
-
-    public int getPositionIndex() {
-        return positionIndex;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public LedgerEntry(String address,
-                       Sha256Hash txId,
-                       Coin debitAmount,
-                       Coin creditAmount,
-                       long signatureIndex,
-                       int positionIndex,
-                       Status status) {
-        this.address = address;
-        this.txId = txId;
-        this.debitAmount = debitAmount;
-        this.creditAmount = creditAmount;
-        this.signatureIndex = signatureIndex;
-        this.positionIndex = positionIndex;
-        this.status = status;
-
-        this.key = generateKey(address, txId, debitAmount, creditAmount, positionIndex);
-    }
-
-    public static Sha256Hash generateKey(String address, Sha256Hash txId, Coin debitAmount, Coin creditAmount, Integer positionIndex) {
-        AddressLight a = AddressFactory.create(address);
-
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            a.serializeToStream(stream);
-            SerializerUtility.writeSingleByteLengthValueToStream(stream, txId.getBytes());
-            SerializeDeserializeService.serialize(debitAmount, stream);
-            SerializeDeserializeService.serialize(creditAmount, stream);
-
-            SerializerUtility.writeVariableLengthValueToStream(stream, positionIndex);
-
-            return Sha256Hash.wrap(stream.toByteArray());
-        } catch (IOException e) {
-            // Should not happen
+    companion object {
+        fun generateKey(
+            address: String?,
+            txId: Sha256Hash,
+            debitAmount: Coin?,
+            creditAmount: Coin?,
+            positionIndex: Int?
+        ): Sha256Hash {
+            val a = create(address!!)
+            try {
+                ByteArrayOutputStream().use { stream ->
+                    a.serializeToStream(stream)
+                    SerializerUtility.writeSingleByteLengthValueToStream(stream, txId.bytes)
+                    SerializeDeserializeService.serialize(debitAmount, stream)
+                    SerializeDeserializeService.serialize(creditAmount, stream)
+                    SerializerUtility.writeVariableLengthValueToStream(stream, positionIndex!!)
+                    return Sha256Hash.wrap(stream.toByteArray())
+                }
+            } catch (e: IOException) {
+                // Should not happen
+            }
+            return Sha256Hash.ZERO_HASH
         }
-
-        return Sha256Hash.ZERO_HASH;
     }
 }

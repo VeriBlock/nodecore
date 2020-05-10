@@ -30,8 +30,8 @@ class MerkleBranch(
     val merklePathHashes: List<Sha256Hash>
         get() = merklePath.layers
 
-    fun verify(root: Sha256Hash?): Boolean {
-        var calculated: Sha256Hash? = subject
+    fun verify(root: Sha256Hash): Boolean {
+        var calculated = subject
         for (j in merklePathHashes.indices) {
             calculated = if (j == merklePathHashes.size - 1) {
                 // Transactions always come from the right child
@@ -56,11 +56,10 @@ class MerkleBranch(
     }
 
     override fun toString(): String {
-        val hashes: MutableList<String> = ArrayList()
-        hashes.add(merklePath.subject.toString())
-        hashes.addAll(
-            merklePathHashes.stream().map { obj: Sha256Hash -> obj.toString() }.collect(Collectors.toList())
+        return (
+            sequenceOf(merklePath.subject) + merklePathHashes.asSequence()
+        ).joinToString(
+            separator = ":"
         )
-        return java.lang.String.join(":", hashes)
     }
 }

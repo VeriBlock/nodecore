@@ -5,49 +5,41 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.net;
+package veriblock.net
 
-import nodecore.p2p.DnsResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xbill.DNS.TextParseException;
-import veriblock.model.PeerAddress;
-import veriblock.conf.NetworkParameters;
+import nodecore.p2p.DnsResolver
+import org.slf4j.LoggerFactory
+import org.veriblock.core.utilities.createLogger
+import org.xbill.DNS.TextParseException
+import veriblock.conf.NetworkParameters
+import veriblock.model.PeerAddress
+import java.util.ArrayList
+import java.util.Collections
+import java.util.stream.Collectors
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+private val logger = createLogger {}
 
 /**
  * Discovery peers from bootstrap nodes.
  */
-public class BootstrapPeerDiscovery implements PeerDiscovery {
-    private static final Logger logger = LoggerFactory.getLogger(BootstrapPeerDiscovery.class);
+class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscovery {
+    private val peers: MutableList<PeerAddress> = ArrayList()
 
-    private static final List<PeerAddress> peers = new ArrayList<>();
-
-    public BootstrapPeerDiscovery(NetworkParameters networkParameters) {
-        DnsResolver dnsResolver = new DnsResolver();
-        String dns = networkParameters.getBootstrapDns();
-        Integer port  = networkParameters.getP2pPort();
+    init {
+        val dnsResolver = DnsResolver()
+        val dns = networkParameters.bootstrapDns
+        val port = networkParameters.p2pPort
         try {
-            peers.addAll(dnsResolver.query(dns).stream()
-                    .map(address -> new PeerAddress(address, port))
-                    .collect(Collectors.toList()));
-        } catch (TextParseException e) {
-            logger.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            peers.addAll(dnsResolver.query(dns).map {
+                PeerAddress(it, port)
+            })
+        } catch (e: TextParseException) {
+            logger.error(e.message, e)
+            throw RuntimeException(e)
         }
     }
 
-    @Override
-    public Collection<PeerAddress> getPeers(int count) {
-        Collections.shuffle(peers);
-        if (count > peers.size()) {
-            return peers;
-        }
-        return peers.stream().limit(count).collect(Collectors.toList());
+    override fun getPeers(count: Int): Collection<PeerAddress> {
+        return peers.shuffled().take(count)
     }
 }

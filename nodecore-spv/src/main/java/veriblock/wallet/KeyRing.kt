@@ -5,43 +5,38 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.wallet;
+package veriblock.wallet
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.HashMap
 
-public class KeyRing {
-    private final Map<String, Key> keys = new HashMap<>();
-
-    public void add(Key key) {
-        if (!keys.containsKey(key.getAddress())) {
-            keys.put(key.getAddress(), key);
+class KeyRing {
+    private val keys: MutableMap<String, Key> = HashMap()
+    fun add(key: Key) {
+        if (!keys.containsKey(key.address)) {
+            keys[key.address] = key
         }
     }
 
-    public Key get(String address) {
-        return keys.get(address);
+    operator fun get(address: String): Key? {
+        return keys[address]
     }
 
-    public Collection<Key> list() {
-        return keys.values();
+    fun list(): Collection<Key> {
+        return keys.values
     }
 
-    public void load(List<Key> toLoad) {
-        keys.clear();
-        for (Key key : toLoad) {
-            add(key);
+    fun load(toLoad: List<Key>) {
+        keys.clear()
+        for (key in toLoad) {
+            add(key)
         }
     }
 
-    public boolean contains(String address) {
-        return address != null && keys.containsKey(address);
-
+    operator fun contains(address: String?): Boolean {
+        return address != null && keys.containsKey(address)
     }
 
-    public int size() {
-        return keys.size();
+    fun size(): Int {
+        return keys.size
     }
 }

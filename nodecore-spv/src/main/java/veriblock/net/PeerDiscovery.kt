@@ -5,15 +5,13 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.net;
+package veriblock.net
 
-import veriblock.model.PeerAddress;
-
-import java.util.Collection;
+import veriblock.model.PeerAddress
 
 /**
  * Discovery peers depends on strategy.
  */
-public interface PeerDiscovery {
-    Collection<PeerAddress> getPeers(int count);
+interface PeerDiscovery {
+    fun getPeers(count: Int): Collection<PeerAddress>
 }

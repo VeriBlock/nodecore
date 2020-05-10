@@ -282,7 +282,7 @@ public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnecte
 
                             List<VeriBlockBlock> veriBlockBlocks = advertiseBlocks.getHeadersList()
                                     .stream()
-                                    .map(MessageSerializer::deserialize)
+                                    .map(MessageSerializer.INSTANCE::deserialize)
                                     .collect(Collectors.toList());
                             try {
                                 blockchain.addAll(veriBlockBlocks);

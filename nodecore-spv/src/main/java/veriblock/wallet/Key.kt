@@ -5,42 +5,30 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.wallet;
+package veriblock.wallet
 
-import org.veriblock.core.utilities.AddressUtility;
-import org.veriblock.core.wallet.AddressKeyGenerator;
+import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.wallet.AddressKeyGenerator
+import java.security.KeyPair
+import java.security.spec.InvalidKeySpecException
 
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
+class Key(
+    private val keyPair: KeyPair
+) {
+    val address: String = AddressUtility.addressFromPublicKey(keyPair.public)
 
-public class Key {
+    val publicKey: ByteArray
+        get() = keyPair.public.encoded
 
-    private final String address;
-    private final KeyPair keyPair;
+    val privateKey: ByteArray
+        get() = keyPair.private.encoded
 
-    public String getAddress() {
-        return address;
-    }
-
-    public byte[] getPublicKey() {
-        return keyPair.getPublic().getEncoded();
-    }
-
-    public byte[] getPrivateKey() {
-        return keyPair.getPrivate().getEncoded();
-    }
-
-    public Key(KeyPair keyPair) {
-        this.keyPair = keyPair;
-        this.address = AddressUtility.addressFromPublicKey(keyPair.getPublic());
-    }
-
-    public static Key parse(byte[] publicKeyBytes, byte[] privateKeyBytes) throws InvalidKeySpecException {
-        PublicKey publicKey = AddressKeyGenerator.getPublicKey(publicKeyBytes);
-        PrivateKey privateKey = AddressKeyGenerator.getPrivateKey(privateKeyBytes);
-
-        return new Key(new KeyPair(publicKey, privateKey));
+    companion object {
+        @Throws(InvalidKeySpecException::class)
+        fun parse(publicKeyBytes: ByteArray?, privateKeyBytes: ByteArray?): Key {
+            val publicKey = AddressKeyGenerator.getPublicKey(publicKeyBytes)
+            val privateKey = AddressKeyGenerator.getPrivateKey(privateKeyBytes)
+            return Key(KeyPair(publicKey, privateKey))
+        }
     }
 }

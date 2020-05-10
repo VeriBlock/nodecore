@@ -1,87 +1,73 @@
-package veriblock.wallet;
+package veriblock.wallet
 
-import org.veriblock.sdk.models.Sha256Hash;
-import veriblock.SpvContext;
-import veriblock.listeners.PendingTransactionDownloadedListener;
-import veriblock.model.StandardTransaction;
-import veriblock.model.TransactionMeta;
+import org.veriblock.sdk.models.Sha256Hash
+import veriblock.SpvContext
+import veriblock.listeners.PendingTransactionDownloadedListener
+import veriblock.model.Output
+import veriblock.model.StandardTransaction
+import veriblock.model.TransactionMeta
+import java.util.Collections
+import java.util.concurrent.locks.ReentrantLock
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+class PendingTransactionDownloadedListenerImpl(
+    private val spvContext: SpvContext
+) : PendingTransactionDownloadedListener {
+    private val transactions: MutableMap<Sha256Hash?, StandardTransaction>? = null
+    private val ledger = Ledger()
+    private val keyRing = KeyRing()
+    private val lock = ReentrantLock(true)
+    override fun onPendingTransactionDownloaded(transaction: StandardTransaction?) {}
 
-public class PendingTransactionDownloadedListenerImpl implements PendingTransactionDownloadedListener {
-
-    private final SpvContext spvContext;
-
-    private Map<Sha256Hash, StandardTransaction> transactions;
-    private final Ledger ledger = new Ledger();
-
-    private final KeyRing keyRing = new KeyRing();
-    private final ReentrantLock lock = new ReentrantLock(true);
-
-    public PendingTransactionDownloadedListenerImpl(SpvContext spvContext) {
-        this.spvContext = spvContext;
-    }
-
-    @Override
-    public void onPendingTransactionDownloaded(StandardTransaction transaction) {
-
-    }
-
-    void loadTransactions(List<StandardTransaction> toLoad) {
-        for (StandardTransaction tx : toLoad) {
-            transactions.put(tx.getTxId(), tx);
-            spvContext.getTransactionPool().insert(tx.getTransactionMeta());
+    fun loadTransactions(toLoad: List<StandardTransaction>) {
+        for (tx in toLoad) {
+            transactions!![tx.txId] = tx
+            spvContext.transactionPool.insert(tx.transactionMeta!!)
         }
     }
 
-    public void commitTx(StandardTransaction tx) {
-        lock.lock();
+    fun commitTx(tx: StandardTransaction) {
+        lock.lock()
         try {
-            if (transactions.containsKey(tx.getTxId())) {
-                return;
+            if (transactions!!.containsKey(tx.txId)) {
+                return
             }
-
-            tx.getTransactionMeta().setState(TransactionMeta.MetaState.PENDING);
-            transactions.put(tx.getTxId(), tx);
-
-            ledger.record(tx);
+            tx.transactionMeta!!.setState(TransactionMeta.MetaState.PENDING)
+            transactions[tx.txId] = tx
+            ledger.record(tx)
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    public StandardTransaction getStandardTransaction(Sha256Hash txId) {
-        return transactions.get(txId);
+    fun getStandardTransaction(txId: Sha256Hash?): StandardTransaction? {
+        return transactions!![txId]
     }
 
-    public Collection<StandardTransaction> getStandardTransactions() {
-        return Collections.unmodifiableCollection(transactions.values());
-    }
+    fun getStandardTransactions(): Collection<StandardTransaction> =
+        Collections.unmodifiableCollection(transactions!!.values)
 
-    private boolean isTransactionRelevant(StandardTransaction tx) {
-        if (this.transactions.containsKey(tx.getTxId())) {
-            return true;
+    private fun isTransactionRelevant(tx: StandardTransaction): Boolean {
+        if (transactions!!.containsKey(tx.txId)) {
+            return true
         }
-
-        if (keyRing.contains(tx.getInputAddress().get())) {
-            return true;
+        return if (keyRing.contains(tx.inputAddress!!.get())) {
+            true
+        } else {
+            tx.getOutputs().any {
+                keyRing.contains(it.address.get())
+            }
         }
-
-        return tx.getOutputs().stream().anyMatch(output -> keyRing.contains(output.getAddress().get()));
     }
 
-    private void addTransaction(StandardTransaction tx) {
-        lock.lock();
+    private fun addTransaction(tx: StandardTransaction) {
+        lock.lock()
         try {
-            transactions.putIfAbsent(tx.getTxId(), tx);
-            ledger.record(tx);
-//            save();
+            transactions!!.putIfAbsent(tx.txId, tx)
+            ledger.record(tx)
+            //save();
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
+
 }

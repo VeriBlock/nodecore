@@ -1,70 +1,60 @@
-package veriblock.service;
+package veriblock.service
 
-import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.utilities.ByteStringAddressUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.core.utilities.AddressUtility;
-import org.veriblock.sdk.models.Sha256Hash;
-import veriblock.conf.NetworkParameters;
-import veriblock.model.StandardTransaction;
-import veriblock.model.Transaction;
-import veriblock.wallet.WalletProtobufSerializer;
+import nodecore.api.grpc.VeriBlockMessages.SignedMultisigTransaction
+import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
+import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
+import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.slf4j.LoggerFactory
+import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.models.Sha256Hash
+import veriblock.conf.NetworkParameters
+import veriblock.model.StandardTransaction
+import veriblock.model.Transaction
+import veriblock.wallet.WalletProtobufSerializer
 
-public class TransactionFactory {
-    private static final Logger logger = LoggerFactory.getLogger(TransactionFactory.class);
+private val logger = createLogger {}
 
-    private final NetworkParameters networkParameters;
-
-    public TransactionFactory(NetworkParameters networkParameters) {
-        this.networkParameters = networkParameters;
-    }
-
-    public Transaction create(VeriBlockMessages.TransactionUnion message) {
-        switch (message.getTransactionCase()) {
-            case UNSIGNED:
-                throw new IllegalArgumentException("Cannot use this constructor with an Unsigned transaction type");
-            case SIGNED:
-                return create(message.getSigned());
-            case SIGNED_MULTISIG:
-                return create(message.getSignedMultisig());
-            case TRANSACTION_NOT_SET:
-                throw new IllegalArgumentException("Cannot use this constructor with an unset transaction type");
+class TransactionFactory(private val networkParameters: NetworkParameters) {
+    fun create(message: TransactionUnion): Transaction? {
+        return when (message.transactionCase) {
+            TransactionUnion.TransactionCase.UNSIGNED -> throw IllegalArgumentException(
+                "Cannot use this constructor with an Unsigned transaction type"
+            )
+            TransactionUnion.TransactionCase.SIGNED -> create(message.signed)
+            TransactionUnion.TransactionCase.SIGNED_MULTISIG -> create(message.signedMultisig)
+            TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> throw IllegalArgumentException(
+                "Cannot use this constructor with an unset transaction type"
+            )
+            null -> null
         }
-
-        return null;
     }
 
-    public Transaction create(VeriBlockMessages.SignedTransaction message) {
-        WalletProtobufSerializer serializer = new WalletProtobufSerializer();
-
-        Transaction transaction = new StandardTransaction(
-            Sha256Hash.wrap(message.getTransaction().getTxId().toByteArray()),
-            ByteStringAddressUtility.parseProperAddressTypeAutomatically(message.getTransaction().getSourceAddress()),
-            message.getTransaction().getSourceAmount(),
-            serializer.deserializeOutputs(message.getTransaction().getOutputsList()),
-            message.getSignatureIndex(),
-            message.getTransaction().getData().toByteArray(),
+    fun create(message: SignedTransaction): Transaction {
+        val serializer = WalletProtobufSerializer()
+        val transaction: Transaction = StandardTransaction(
+            Sha256Hash.wrap(message.transaction.txId.toByteArray()),
+            ByteStringAddressUtility.parseProperAddressTypeAutomatically(message.transaction.sourceAddress),
+            message.transaction.sourceAmount,
+            serializer.deserializeOutputs(message.transaction.outputsList),
+            message.signatureIndex,
+            message.transaction.data.toByteArray(),
             networkParameters
-        );
-
-        transaction.addSignature(message.getSignature().toByteArray(), message.getPublicKey().toByteArray());
-        boolean valid = AddressUtility.isSignatureValid(
-            transaction.getTxId().getBytes(), transaction.getSignature(), transaction.getPublicKey(), transaction.getInputAddress().get()
-        );
-
+        )
+        transaction.addSignature(message.signature.toByteArray(), message.publicKey.toByteArray())
+        val valid = AddressUtility.isSignatureValid(
+            transaction.txId!!.bytes, transaction.signature, transaction.publicKey, transaction.inputAddress!!.get()
+        )
         if (!valid) {
-            logger.error("Transaction signature is not valid.");
-            throw new RuntimeException();
+            logger.error("Transaction signature is not valid.")
+            throw RuntimeException()
         }
-
-        return transaction;
+        return transaction
     }
 
-    public Transaction create(VeriBlockMessages.SignedMultisigTransaction message) {
+    fun create(message: SignedMultisigTransaction?): Transaction {
         //TODO implement working with Multisig
 //        setSignatureBundle(message.getSignatureBundle());
-        throw  new UnsupportedOperationException();
+        throw UnsupportedOperationException()
     }
-
 }

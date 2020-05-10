@@ -107,13 +107,13 @@ class TransactionMeta(
         UNKNOWN(0);
 
         companion object {
-            fun forNumber(value: Int): MetaState? {
+            fun forNumber(value: Int): MetaState {
                 return when (value) {
                     0 -> UNKNOWN
                     1 -> PENDING
                     2 -> CONFIRMED
                     3 -> DEAD
-                    else -> null
+                    else -> throw IllegalArgumentException("There's no MetaState for value $value")
                 }
             }
         }

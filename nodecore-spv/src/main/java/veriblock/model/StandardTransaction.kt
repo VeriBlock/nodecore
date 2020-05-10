@@ -31,7 +31,7 @@ open class StandardTransaction : Transaction {
     private val outputs: MutableList<Output> = ArrayList()
     private var signatureIndex: Long = 0
     private var transactionFee: Long = 0
-    private var data: ByteArray? = null
+    override var data: ByteArray? = null
 
     constructor(txId: Sha256Hash) : super(txId)
 
@@ -86,7 +86,7 @@ open class StandardTransaction : Transaction {
         return null
     }
 
-    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder? {
+    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder {
         val transaction = getTransactionMessageBuilder(networkParameters).build()
         val builder = SignedTransaction.newBuilder()
         builder.transaction = transaction
@@ -160,13 +160,6 @@ open class StandardTransaction : Transaction {
 
     fun setSignatureIndex(signatureIndex: Long) {
         this.signatureIndex = signatureIndex
-    }
-
-    override fun getData(): ByteArray? =
-        data
-
-    fun setData(data: ByteArray) {
-        this.data = data
     }
 
     override fun getTransactionFee(): Long =

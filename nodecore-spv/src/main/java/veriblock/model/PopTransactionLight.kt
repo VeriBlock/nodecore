@@ -39,9 +39,8 @@ class PopTransactionLight(txId: Sha256Hash) : StandardTransaction(txId) {
         return calculateHash()
     }
 
-    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder? {
-        //TODO SPV-48
-        return null
+    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder {
+        TODO() // SPV-48
     }
 
     private fun calculateHash(): ByteArray? {

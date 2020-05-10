@@ -5,10 +5,10 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.net;
+package veriblock.net
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.VeriBlockMessages
 
-public interface MessageReceivedEventListener {
-    void onMessageReceived(VeriBlockMessages.Event message, Peer sender);
+interface MessageReceivedEventListener {
+    fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer)
 }

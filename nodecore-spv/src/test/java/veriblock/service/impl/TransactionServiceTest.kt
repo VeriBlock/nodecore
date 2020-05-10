@@ -37,18 +37,16 @@ class TransactionServiceTest : TestCase() {
                 Coin.valueOf(450L * Coin.COIN_VALUE)
             )
         )
-        val result = transactionService!!.createTransactionsByOutputList(
+        val result = transactionService.createTransactionsByOutputList(
             addressCoinsIndexList, outputList
         )
         Assert.assertNotNull(result)
 
-        val totalResultOutPut = result.stream()
-            .map { tx: Transaction ->
-                tx.outputs.stream()
-                    .map { o: Output -> o.amount.atomicUnits }
-                    .reduce(0L) { a: Long, b: Long -> java.lang.Long.sum(a, b) }
-            }
-            .reduce(0L) { a: Long, b: Long -> java.lang.Long.sum(a, b) }
+        val totalResultOutPut = result.map { tx ->
+            tx.getOutputs().map {
+                it.amount.atomicUnits
+            }.sum()
+        }.sum()
 
         Assert.assertEquals(totalResultOutPut, 450L * Coin.COIN_VALUE)
     }

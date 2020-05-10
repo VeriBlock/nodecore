@@ -1,24 +1,25 @@
-package veriblock.validator;
+package veriblock.validator
 
-import nodecore.api.grpc.VeriBlockMessages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.extensions.ledger.LedgerProofWithContext;
-import veriblock.net.SpvPeerTable;
+import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
+import org.slf4j.LoggerFactory
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.extensions.ledger.LedgerProofWithContext
+import veriblock.net.SpvPeerTable
 
-public class LedgerProofReplyValidator {
-    private static final Logger logger = LoggerFactory.getLogger(SpvPeerTable.class);
+private val logger = createLogger {}
 
-    public static boolean validate(VeriBlockMessages.LedgerProofReply.LedgerProofResult ledgerProofResult){
+object LedgerProofReplyValidator {
+    @JvmStatic
+    fun validate(ledgerProofResult: LedgerProofResult): Boolean {
         try {
-            LedgerProofWithContext ledgerProofWithContext = LedgerProofWithContext.parseFrom(ledgerProofResult.getLedgerProofWithContext());
-        } catch (Exception ex){
-            logger.warn("LedgerProofWithContext is not valid. " + ex.getMessage(), ex);
+            LedgerProofWithContext.parseFrom(
+                ledgerProofResult.ledgerProofWithContext
+            )
+        } catch (ex: Exception) {
+            logger.warn(ex) {"LedgerProofWithContext is not valid. ${ex.message}" }
             //TODO SPV-67 add ban for peer.
-            return false;
+            return false
         }
-        return true;
+        return true
     }
-
-
 }
