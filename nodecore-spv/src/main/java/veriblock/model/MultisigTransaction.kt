@@ -5,10 +5,11 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.listeners
+package veriblock.model
 
-import veriblock.model.StandardTransaction
+import org.veriblock.sdk.models.Sha256Hash
 
-interface PendingTransactionDownloadedListener {
-    fun onPendingTransactionDownloaded(transaction: StandardTransaction?)
+class MultisigTransaction(txId: Sha256Hash) : StandardTransaction(txId) {
+    override val transactionTypeIdentifier: TransactionTypeIdentifier
+        get() = TransactionTypeIdentifier.MULTISIG
 }

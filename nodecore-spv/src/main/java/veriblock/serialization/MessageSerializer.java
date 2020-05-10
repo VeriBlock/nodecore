@@ -25,7 +25,7 @@ import veriblock.model.BlockMetaPackage;
 import veriblock.model.FullBlock;
 import veriblock.model.MultisigTransaction;
 import veriblock.model.OutputFactory;
-import veriblock.model.PoPTransactionLight;
+import veriblock.model.PopTransactionLight;
 import veriblock.model.StandardTransaction;
 
 import java.util.stream.Collectors;
@@ -49,11 +49,11 @@ public class MessageSerializer {
         }
     }
 
-    public static PoPTransactionLight deserializePoPTransaction(VeriBlockMessages.TransactionUnion transactionUnionMessage) {
+    public static PopTransactionLight deserializePoPTransaction(VeriBlockMessages.TransactionUnion transactionUnionMessage) {
         VeriBlockMessages.SignedTransaction signed = transactionUnionMessage.getSigned();
         VeriBlockMessages.Transaction txMessage = signed.getTransaction();
 
-        PoPTransactionLight tx = new PoPTransactionLight(Sha256Hash.wrap(txMessage.getTxId().toByteArray()));
+        PopTransactionLight tx = new PopTransactionLight(Sha256Hash.wrap(txMessage.getTxId().toByteArray()));
         tx.setInputAddress(AddressFactory.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.getSourceAddress())));
         tx.setEndorsedBlock(SerializeDeserializeService.parseVeriBlockBlock(txMessage.getEndorsedBlockHeader().toByteArray()));
         tx.setBitcoinTx(new BitcoinTransaction(txMessage.getBitcoinTransaction().toByteArray()));
@@ -80,7 +80,7 @@ public class MessageSerializer {
         block.setNormalTransactions(blockMessage.getRegularTransactionsList().stream()
                 .map(MessageSerializer::deserializeNormalTransaction)
                 .collect(Collectors.toList()));
-        block.setPoPTransactions(blockMessage.getPopTransactionsList().stream()
+        block.setPopTransactions(blockMessage.getPopTransactionsList().stream()
                 .map(MessageSerializer::deserializePoPTransaction)
                 .collect(Collectors.toList()));
         block.setMetaPackage(new BlockMetaPackage(Sha256Hash.wrap(blockMessage.getBlockContentMetapackage().getHash().toByteArray())));
@@ -94,7 +94,7 @@ public class MessageSerializer {
         tx.setInputAddress(AddressFactory.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.getSourceAddress())));
         tx.setInputAmount(Coin.valueOf(txMessage.getSourceAmount()));
         txMessage.getOutputsList().stream()
-                .map(o -> OutputFactory.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.getAddress()),
+                .map(o -> OutputFactory.INSTANCE.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.getAddress()),
                         o.getAmount()))
                 .forEach(tx::addOutput);
         tx.setSignatureIndex(signedTransaction.getSignatureIndex());
@@ -108,7 +108,7 @@ public class MessageSerializer {
         tx.setInputAddress(AddressFactory.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.getSourceAddress())));
         tx.setInputAmount(Coin.valueOf(txMessage.getSourceAmount()));
         txMessage.getOutputsList().stream()
-                .map(o -> OutputFactory.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.getAddress()),
+                .map(o -> OutputFactory.INSTANCE.create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.getAddress()),
                         o.getAmount()))
                 .forEach(tx::addOutput);
         tx.setSignatureIndex(signedTransaction.getSignatureIndex());

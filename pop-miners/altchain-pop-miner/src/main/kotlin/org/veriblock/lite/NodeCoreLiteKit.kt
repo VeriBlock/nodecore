@@ -157,9 +157,9 @@ class NodeCoreLiteKit(
         logger.info { "Initialize SPV: " }
         while (true) {
             val status: DownloadStatusResponse = spvContext.peerTable.downloadStatus
-            if (status.downloadStatus.isDiscovering) {
+            if (status.downloadStatus.isDiscovering()) {
                 logger.info { "Waiting for peers response." }
-            } else if (status.downloadStatus.isDownloading) {
+            } else if (status.downloadStatus.isDownloading()) {
                 logger.info { "Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
             } else {
                 logger.info { "Blockchain is ready. Current height " + status.currentHeight }

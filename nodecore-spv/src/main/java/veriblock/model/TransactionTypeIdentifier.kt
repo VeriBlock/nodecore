@@ -5,10 +5,12 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.listeners
+package veriblock.model
 
-import veriblock.model.StandardTransaction
-
-interface PendingTransactionDownloadedListener {
-    fun onPendingTransactionDownloaded(transaction: StandardTransaction?)
+enum class TransactionTypeIdentifier(
+    val id: Byte
+) {
+    STANDARD(0x01.toByte()),
+    PROOF_OF_PROOF(0x02.toByte()),
+    MULTISIG(0x03.toByte());
 }

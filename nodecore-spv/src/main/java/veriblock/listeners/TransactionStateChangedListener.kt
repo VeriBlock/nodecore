@@ -5,14 +5,18 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.listeners;
+package veriblock.listeners
 
-import veriblock.model.TransactionMeta;
+import veriblock.model.TransactionMeta
 
-public interface TransactionStateChangedListener {
-    enum ChangeReason {
+interface TransactionStateChangedListener {
+    enum class ChangeReason {
         STATE,
         DEPTH
     }
-    void onTransactionStateChanged(TransactionMeta meta, ChangeReason reason);
+
+    fun onTransactionStateChanged(
+        meta: TransactionMeta?,
+        reason: ChangeReason?
+    )
 }

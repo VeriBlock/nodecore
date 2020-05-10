@@ -147,7 +147,7 @@ public class AdminApiService {
                     "Perhaps your node is waiting for this information. Try to do it later.", true
                 ));
                 return replyBuilder.build();
-            } else if (!ledgerContext.getLedgerProofStatus().isExists()) {
+            } else if (!ledgerContext.getLedgerProofStatus().exists()) {
                 replyBuilder.setSuccess(false);
                 replyBuilder
                     .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));

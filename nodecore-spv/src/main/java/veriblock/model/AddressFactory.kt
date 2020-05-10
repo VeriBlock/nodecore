@@ -5,21 +5,19 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.model;
+package veriblock.model
 
-import org.veriblock.core.utilities.AddressUtility;
+import org.veriblock.core.utilities.AddressUtility
 
-public class AddressFactory {
-    public static AddressLight create(String address) {
-        if (address == null) throw new IllegalArgumentException("Address cannot be null");
-
+object AddressFactory {
+    @kotlin.jvm.JvmStatic
+    fun create(address: String): AddressLight {
         if (AddressUtility.isValidStandardAddress(address)) {
-            return new StandardAddress(address);
+            return StandardAddress(address)
         }
         if (AddressUtility.isValidMultisigAddress(address)) {
-            return new MultisigAddress(address);
+            return MultisigAddress(address)
         }
-
-        throw new IllegalArgumentException("Supplied argument is not a valid address");
+        throw IllegalArgumentException("Supplied argument is not a valid address")
     }
 }

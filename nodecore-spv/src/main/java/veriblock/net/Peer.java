@@ -231,7 +231,7 @@ public class Peer implements PeerSocketClosedEventListener {
 
     private void notifyPeerConnected() {
         for (ListenerRegistration<PeerConnectedEventListener> registration : connectedEventListeners) {
-            registration.executor.execute(() -> registration.listener.onPeerConnected(this));
+            registration.getExecutor().execute(() -> registration.getListener().onPeerConnected(this));
         }
     }
 
@@ -241,7 +241,7 @@ public class Peer implements PeerSocketClosedEventListener {
 
     private void notifyPeerDisconnected() {
         for (ListenerRegistration<PeerDisconnectedEventListener> registration : disconnectedEventListeners) {
-            registration.executor.execute(() -> registration.listener.onPeerDisconnected(this));
+            registration.getExecutor().execute(() -> registration.getListener().onPeerDisconnected(this));
         }
     }
 
@@ -251,7 +251,7 @@ public class Peer implements PeerSocketClosedEventListener {
 
     private void notifyMessageReceived(VeriBlockMessages.Event message) {
         for (ListenerRegistration<MessageReceivedEventListener> registration : messageReceivedEventListeners) {
-            registration.executor.execute(() -> registration.listener.onMessageReceived(message,this));
+            registration.getExecutor().execute(() -> registration.getListener().onMessageReceived(message,this));
         }
     }
 

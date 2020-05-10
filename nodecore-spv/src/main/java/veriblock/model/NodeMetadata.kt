@@ -5,10 +5,12 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.listeners
+package veriblock.model
 
-import veriblock.model.StandardTransaction
-
-interface PendingTransactionDownloadedListener {
-    fun onPendingTransactionDownloaded(transaction: StandardTransaction?)
+object NodeMetadata {
+    val application: String = ""
+    val platform: String = ""
+    val startTimestamp: Int = 1552064237
+    val id: String = "SPV"
+    val port: Int = 7501
 }

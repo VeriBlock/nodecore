@@ -87,7 +87,6 @@ public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnecte
     private final SpvContext spvContext;
     private final PeerDiscovery discovery;
     private final Blockchain blockchain;
-    private final NodeMetadata self = new NodeMetadata();
     private final ListeningScheduledExecutorService executor;
     private final ScheduledExecutorService messageExecutor;
 
@@ -169,7 +168,7 @@ public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnecte
     }
 
     public Peer createPeer(PeerAddress address) {
-        return new Peer(spvContext, blockchain, self, address.getAddress(), address.getPort());
+        return new Peer(spvContext, blockchain, NodeMetadata.INSTANCE, address.getAddress(), address.getPort());
     }
 
     public void openConnection(Peer peer) throws IOException {
@@ -314,7 +313,7 @@ public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnecte
                             List<LedgerContext> ledgerContexts =
                                 proofReply.stream().filter(lpr -> addressesState.containsKey(Base58.encode(lpr.getAddress().toByteArray())))
                                     .filter(LedgerProofReplyValidator::validate)
-                                    .map(LedgerProofReplyMapper::map)
+                                    .map(LedgerProofReplyMapper.INSTANCE::map)
                                     .collect(Collectors.toList());
 
                             updateAddressState(ledgerContexts);
@@ -373,7 +372,7 @@ public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnecte
 
     private void notifyPendingTransactionDownloaded(StandardTransaction tx) {
         for (ListenerRegistration<PendingTransactionDownloadedListener> registration : pendingTransactionDownloadedEventListeners) {
-            registration.executor.execute(() -> registration.listener.onPendingTransactionDownloaded(tx));
+            registration.getExecutor().execute(() -> registration.getListener().onPendingTransactionDownloaded(tx));
         }
     }
 

@@ -47,7 +47,7 @@ public class WalletProtobufSerializer {
         tx.setInputAmount(Coin.valueOf(proto.getInput().getAmount()));
 
         for (Protos.TransactionOutput o : proto.getOutputsList()) {
-            tx.addOutput(OutputFactory.create(o.getAddress(), o.getAmount()));
+            tx.addOutput(OutputFactory.INSTANCE.create(o.getAddress(), o.getAmount()));
         }
 
         tx.setSignatureIndex(proto.getSignatureIndex());
@@ -60,7 +60,7 @@ public class WalletProtobufSerializer {
 
     public TransactionMeta deserialize(Protos.TransactionMeta proto) {
         TransactionMeta meta = new TransactionMeta(Sha256Hash.wrap(proto.getTxId().toByteArray()));
-        meta.setState(TransactionMeta.MetaState.forNumber(proto.getStateValue()));
+        meta.setState(TransactionMeta.MetaState.Companion.forNumber(proto.getStateValue()));
         meta.setAppearsInBestChainBlock(VBlakeHash.wrap(proto.getAppearsInBestChainBlock().toByteArray()));
 
         proto.getAppearsInBlocksList().forEach(bytes -> meta.addBlockAppearance(VBlakeHash.wrap(bytes.toByteArray())));

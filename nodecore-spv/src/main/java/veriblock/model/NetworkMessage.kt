@@ -5,17 +5,12 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package veriblock.model
 
-package veriblock.model;
+import nodecore.api.grpc.VeriBlockMessages
+import veriblock.net.Peer
 
-public enum TransactionTypeIdentifier {
-    STANDARD((byte)0x01),
-    PROOF_OF_PROOF((byte)0x02),
-    MULTISIG((byte)0x03);
-
-    private final byte id;
-    TransactionTypeIdentifier(byte id) { this.id = id; }
-
-
-    public byte id() { return id; }
-}
+class NetworkMessage(
+    val sender: Peer,
+    val message: VeriBlockMessages.Event
+)
