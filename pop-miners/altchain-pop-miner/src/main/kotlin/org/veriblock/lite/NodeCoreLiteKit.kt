@@ -146,7 +146,7 @@ class NodeCoreLiteKit(
         val spvContext = SpvContext()
         spvContext.init(
             networkParameters.spvNetworkParameters,
-            LocalhostDiscovery(networkParameters.spvNetworkParameters), false
+            LocalhostDiscovery(networkParameters.spvNetworkParameters!!), false
         )
         spvContext.peerTable.start()
 

@@ -12,7 +12,7 @@ import org.veriblock.sdk.models.Sha256Hash
 import veriblock.conf.NetworkParameters
 
 abstract class Transaction {
-    var txId: Sha256Hash? = null
+    lateinit var txId: Sha256Hash
     var inputAddress: AddressLight? = null
     var transactionMeta: TransactionMeta? = null
     var signature: ByteArray? = null

@@ -19,9 +19,9 @@ import veriblock.service.PendingTransactionContainer
 
 class P2PServiceTest {
     private val spvContext = SpvContext()
-    private var pendingTransactionContainer: PendingTransactionContainer? = null
-    private var peer: Peer? = null
-    private var p2PService: P2PService? = null
+    private lateinit var pendingTransactionContainer: PendingTransactionContainer
+    private lateinit var peer: Peer
+    private lateinit var p2PService: P2PService
 
     @Before
     fun setUp() {
@@ -35,13 +35,13 @@ class P2PServiceTest {
     fun onTransactionRequestWhenNotFindTx() {
         val txIds = listOf(Sha256Hash.ZERO_HASH)
 
-        every { pendingTransactionContainer!!.getTransaction(any()) } returns null
-        every {peer?.sendMessage((any()))} returns Unit
+        every { pendingTransactionContainer.getTransaction(any()) } returns null
+        every {peer.sendMessage((any()))} returns Unit
 
-        p2PService!!.onTransactionRequest(txIds, peer)
+        p2PService.onTransactionRequest(txIds, peer)
 
-        verify(exactly = 1 )  { pendingTransactionContainer?.getTransaction(any()) }
-        verify(exactly = 1 )  { peer?.sendMessage(any()) }
+        verify(exactly = 1 )  { pendingTransactionContainer.getTransaction(any()) }
+        verify(exactly = 1 )  { peer.sendMessage(any()) }
     }
 
     @Test
@@ -57,12 +57,12 @@ class P2PServiceTest {
         val sign = byteArrayOf(3, 2, 1)
         standardTransaction.addSignature(sign, pub)
 
-        every { pendingTransactionContainer!!.getTransaction(txIds[0]) } returns standardTransaction
-        every {peer?.sendMessage((any()))} returns Unit
+        every { pendingTransactionContainer.getTransaction(txIds[0]) } returns standardTransaction
+        every {peer.sendMessage((any()))} returns Unit
 
-        p2PService!!.onTransactionRequest(txIds, peer)
+        p2PService.onTransactionRequest(txIds, peer)
 
-        verify(exactly = 1 )  { pendingTransactionContainer?.getTransaction(txIds[0]) }
-        verify(exactly = 1 )  { peer?.sendMessage(any()) }
+        verify(exactly = 1 )  { pendingTransactionContainer.getTransaction(txIds[0]) }
+        verify(exactly = 1 )  { peer.sendMessage(any()) }
     }
 }

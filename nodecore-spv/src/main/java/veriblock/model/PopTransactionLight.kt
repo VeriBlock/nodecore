@@ -35,7 +35,7 @@ class PopTransactionLight(txId: Sha256Hash) : StandardTransaction(txId) {
         blockOfProofContext.add(contextBitcoinBlock)
     }
 
-    override fun toByteArray(networkParameters: NetworkParameters): ByteArray? {
+    override fun toByteArray(networkParameters: NetworkParameters): ByteArray {
         return calculateHash()
     }
 
@@ -43,16 +43,11 @@ class PopTransactionLight(txId: Sha256Hash) : StandardTransaction(txId) {
         TODO() // SPV-48
     }
 
-    private fun calculateHash(): ByteArray? {
-        try {
-            ByteArrayOutputStream().use { stream ->
-                serializeToStream(stream)
-                return stream.toByteArray()
-            }
-        } catch (e: IOException) {
-            // Should not happen
+    private fun calculateHash(): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serializeToStream(stream)
+            return stream.toByteArray()
         }
-        return null
     }
 
     override val transactionTypeIdentifier: TransactionTypeIdentifier

@@ -12,8 +12,10 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.slf4j.LoggerFactory
+import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -25,6 +27,10 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.util.ArrayList
+
+const val NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND = 0xAA.toByte()
+
+private val logger = createLogger {}
 
 open class StandardTransaction : Transaction {
     var inputAmount: Coin? = null
@@ -40,9 +46,10 @@ open class StandardTransaction : Transaction {
         inputAmount: Long,
         outputs: List<Output>,
         signatureIndex: Long,
-        networkParameters: NetworkParameters?
-    ) : this(null, inputAddress, inputAmount, outputs, signatureIndex, ByteArray(0), networkParameters) {
-    }
+        networkParameters: NetworkParameters
+    ) : this(
+        null, inputAddress, inputAmount, outputs, signatureIndex, ByteArray(0), networkParameters
+    )
 
     constructor(
         txId: Sha256Hash?,
@@ -51,7 +58,7 @@ open class StandardTransaction : Transaction {
         outputs: List<Output>,
         signatureIndex: Long,
         data: ByteArray?,
-        networkParameters: NetworkParameters?
+        networkParameters: NetworkParameters
     ) {
         var totalOutput = 0L
         for (o in outputs) {
@@ -67,23 +74,17 @@ open class StandardTransaction : Transaction {
         this.inputAddress = StandardAddress(inputAddress)
         transactionFee = fee
         if (txId == null) {
-            this.txId = TransactionService.calculateTxID(this, networkParameters)
+            this.txId = calculateTxId(networkParameters)
         } else {
             this.txId = txId
         }
     }
 
-    override fun toByteArray(networkParameters: NetworkParameters): ByteArray? {
-        try {
-            ByteArrayOutputStream().use { stream ->
-                serializeToStream(stream, networkParameters)
-                return stream.toByteArray()
-            }
-        } catch (e: IOException) {
-            // Should not happen
-            logger.error(e.message, e)
+    override fun toByteArray(networkParameters: NetworkParameters): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serializeToStream(stream, networkParameters)
+            return stream.toByteArray()
         }
-        return null
     }
 
     override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder {
@@ -109,7 +110,7 @@ open class StandardTransaction : Transaction {
         builder.sourceAmount = inputAmount!!.atomicUnits
         builder.sourceAddress = ByteString.copyFrom(inputAddress!!.toByteArray())
         builder.data = ByteString.copyFrom(data)
-        builder.size = toByteArray(networkParameters)!!.size
+        builder.size = toByteArray(networkParameters).size
         for (output in getOutputs()) {
             val outputBuilder = builder.addOutputsBuilder()
             outputBuilder.address = ByteString.copyFrom(output.address.toByteArray())
@@ -168,8 +169,13 @@ open class StandardTransaction : Transaction {
     override val transactionTypeIdentifier: TransactionTypeIdentifier
         get() = TransactionTypeIdentifier.STANDARD
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(StandardTransaction::class.java)
-        const val NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND = 0xAA.toByte()
+    private fun calculateTxId(
+        networkParameters: NetworkParameters
+    ): Sha256Hash {
+        return Sha256Hash.wrap(calculateTxIDBytes(toByteArray(networkParameters)))
+    }
+
+    private fun calculateTxIDBytes(rawTx: ByteArray): ByteArray {
+        return Crypto().SHA256ReturnBytes(rawTx)
     }
 }

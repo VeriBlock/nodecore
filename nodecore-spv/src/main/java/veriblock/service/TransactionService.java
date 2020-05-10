@@ -11,7 +11,6 @@ package veriblock.service;
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.VeriBlockMessages;
 import org.veriblock.core.contracts.AddressManager;
-import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.types.Pair;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
@@ -281,14 +280,6 @@ public class TransactionService {
             outputBuilder.setAmount(output.getAmount().getAtomicUnits());
         }
         return builder;
-    }
-
-    public static Sha256Hash calculateTxID(Transaction transaction, NetworkParameters networkParameters) {
-        return Sha256Hash.wrap(calculateTxIDBytes(transaction.toByteArray(networkParameters)));
-    }
-
-    public static byte[] calculateTxIDBytes(byte[] rawTx) {
-        return new Crypto().SHA256ReturnBytes(rawTx);
     }
 
     public SigningResult signTransaction(Sha256Hash txId, String address) {

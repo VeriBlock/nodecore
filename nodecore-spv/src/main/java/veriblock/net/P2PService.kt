@@ -1,72 +1,59 @@
-package veriblock.net;
+package veriblock.net
 
-import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.sdk.models.Sha256Hash;
-import veriblock.conf.NetworkParameters;
-import veriblock.model.Transaction;
-import veriblock.service.PendingTransactionContainer;
-import veriblock.util.MessageIdGenerator;
+import com.google.protobuf.ByteString
+import nodecore.api.grpc.VeriBlockMessages
+import org.slf4j.LoggerFactory
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.models.Sha256Hash
+import veriblock.conf.NetworkParameters
+import veriblock.model.TransactionTypeIdentifier
+import veriblock.service.PendingTransactionContainer
+import veriblock.util.MessageIdGenerator.next
 
-import java.util.List;
+private val logger = createLogger {}
 
-public class P2PService {
-    private static final Logger logger = LoggerFactory.getLogger(P2PService.class);
-
-    private final PendingTransactionContainer pendingTransactionContainer;
-    private final NetworkParameters networkParameters;
-
-    public P2PService(PendingTransactionContainer pendingTransactionContainer, NetworkParameters networkParameters) {
-        this.pendingTransactionContainer = pendingTransactionContainer;
-        this.networkParameters = networkParameters;
-    }
-
-    public void onTransactionRequest(List<Sha256Hash> txIds, Peer sender) {
-        for (Sha256Hash txId : txIds) {
-            Transaction transaction = pendingTransactionContainer.getTransaction(txId);
-
+class P2PService(
+    private val pendingTransactionContainer: PendingTransactionContainer,
+    private val networkParameters: NetworkParameters
+) {
+    fun onTransactionRequest(txIds: List<Sha256Hash>, sender: Peer) {
+        for (txId in txIds) {
+            val transaction = pendingTransactionContainer.getTransaction(txId)
             if (transaction != null) {
-                logger.info("Found a transaction for the given transaction id: " + txId);
-                VeriBlockMessages.Event.Builder builder = VeriBlockMessages.Event.newBuilder()
-                        .setId(MessageIdGenerator.next())
-                        .setAcknowledge(false);
-
-                switch (transaction.getTransactionTypeIdentifier()) {
-                    case STANDARD:
-                        builder.setTransaction(
-                            VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters)));
-                        break;
-                    case MULTISIG:
-                        //TODO SPV-47
-                        throw new UnsupportedOperationException();
-
-                    case PROOF_OF_PROOF:
-                        builder.setTransaction(
-                            VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters)));
-                        break;
+                logger.info("Found a transaction for the given transaction id: $txId")
+                val builder = VeriBlockMessages.Event.newBuilder()
+                    .setId(next())
+                    .setAcknowledge(false)
+                when (transaction.transactionTypeIdentifier) {
+                    TransactionTypeIdentifier.STANDARD -> builder.setTransaction(
+                        VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters))
+                    )
+                    TransactionTypeIdentifier.MULTISIG -> throw UnsupportedOperationException()
+                    TransactionTypeIdentifier.PROOF_OF_PROOF -> builder.setTransaction(
+                        VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters))
+                    )
                 }
-
                 try {
-                    sender.sendMessage(builder.build());
-                } catch (Exception e) {
-                    logger.error("Unable to respond to transaction request", e);
-                    return;
+                    sender.sendMessage(builder.build())
+                } catch (e: Exception) {
+                    logger.error("Unable to respond to transaction request", e)
+                    return
                 }
             } else {
-                logger.info("Couldn't find a transaction for the given id " + txId);
-                VeriBlockMessages.Event.Builder builder = VeriBlockMessages.Event.newBuilder()
-                        .setId(MessageIdGenerator.next())
-                        .setAcknowledge(false)
-                        .setNotFound(VeriBlockMessages.NotFound.newBuilder()
-                                .setId(ByteString.copyFrom(txId.getBytes()))
-                                .setType(VeriBlockMessages.NotFound.Type.TX));
+                logger.info("Couldn't find a transaction for the given id $txId")
+                val builder = VeriBlockMessages.Event.newBuilder()
+                    .setId(next())
+                    .setAcknowledge(false)
+                    .setNotFound(
+                        VeriBlockMessages.NotFound.newBuilder()
+                            .setId(ByteString.copyFrom(txId.bytes))
+                            .setType(VeriBlockMessages.NotFound.Type.TX)
+                    )
                 try {
-                    sender.sendMessage(builder.build());
-                } catch (Exception e) {
-                    logger.error("Unable to respond to transaction request", e);
-                    return;
+                    sender.sendMessage(builder.build())
+                } catch (e: Exception) {
+                    logger.error("Unable to respond to transaction request", e)
+                    return
                 }
             }
         }
