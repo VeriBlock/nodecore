@@ -5,77 +5,89 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock;
+package veriblock
 
-import io.grpc.Server;
-import io.grpc.ServerInterceptors;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.core.bitcoinj.BitcoinUtilities;
-import org.veriblock.core.contracts.AddressManager;
-import org.veriblock.core.wallet.DefaultAddressManager;
-import org.veriblock.sdk.auditor.store.AuditorChangesStore;
-import org.veriblock.sdk.blockchain.store.BitcoinStore;
-import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
-import org.veriblock.sdk.blockchain.store.VeriBlockStore;
-import org.veriblock.sdk.models.BitcoinBlock;
-import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.sqlite.ConnectionSelector;
-import org.veriblock.sdk.sqlite.FileManager;
-import veriblock.conf.NetworkParameters;
-import veriblock.listeners.PendingTransactionDownloadedListener;
-import veriblock.model.TransactionPool;
-import veriblock.net.P2PService;
-import veriblock.net.PeerDiscovery;
-import veriblock.net.SpvPeerTable;
-import veriblock.service.AdminApiService;
-import veriblock.service.PendingTransactionContainer;
-import veriblock.service.AdminServerInterceptor;
-import veriblock.service.AdminServiceFacade;
-import veriblock.service.Blockchain;
-import veriblock.service.TransactionFactory;
-import veriblock.service.TransactionService;
-import veriblock.wallet.PendingTransactionDownloadedListenerImpl;
+import io.grpc.Server
+import io.grpc.ServerInterceptors
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
+import org.veriblock.core.bitcoinj.BitcoinUtilities
+import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.wallet.DefaultAddressManager
+import org.veriblock.sdk.auditor.store.AuditorChangesStore
+import org.veriblock.sdk.blockchain.store.BitcoinStore
+import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
+import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
+import org.veriblock.sdk.blockchain.store.VeriBlockStore
+import org.veriblock.sdk.sqlite.ConnectionSelector
+import org.veriblock.sdk.sqlite.FileManager
+import veriblock.conf.NetworkParameters
+import veriblock.listeners.PendingTransactionDownloadedListener
+import veriblock.model.TransactionPool
+import veriblock.net.P2PService
+import veriblock.net.PeerDiscovery
+import veriblock.net.SpvPeerTable
+import veriblock.service.AdminApiService
+import veriblock.service.AdminServerInterceptor
+import veriblock.service.AdminServiceFacade
+import veriblock.service.Blockchain
+import veriblock.service.PendingTransactionContainer
+import veriblock.service.TransactionFactory
+import veriblock.service.TransactionService
+import veriblock.wallet.PendingTransactionDownloadedListenerImpl
+import java.io.File
+import java.io.IOException
+import java.net.InetSocketAddress
+import java.nio.file.Paths
+import java.sql.SQLException
+import java.time.Instant
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.time.Instant;
+const val FILE_EXTENSION = ".vbkwallet"
+
+private val logger = createLogger {}
 
 /**
  * Initialize and hold beans/classes.
  * Required initialization. Context.init(....)
  */
-public class SpvContext {
-    private static final Logger log = LoggerFactory.getLogger(SpvContext.class);
-
-    private NetworkParameters networkParameters;
-    private File directory;
-    private String filePrefix;
-    private TransactionPool transactionPool;
-
-    private VeriBlockStore veriBlockStore;
-    private BitcoinStore bitcoinStore;
-
-    private AuditorChangesStore auditStore;
-    private Blockchain blockchain;
-    private Instant startTime = Instant.now();
-    private AdminApiService adminApiService;
-    private AdminServiceFacade adminService;
-    private AdminServerInterceptor adminServerInterceptor;
-    private SpvPeerTable peerTable;
-    private P2PService p2PService;
-    private Server server;
-    private AddressManager addressManager;
-    private TransactionService transactionService;
-    private PendingTransactionContainer pendingTransactionContainer;
-    private PendingTransactionDownloadedListener pendingTransactionDownloadedListener;
-
-    public static final String FILE_EXTENSION = ".vbkwallet";
+class SpvContext {
+    lateinit var networkParameters: NetworkParameters
+        private set
+    lateinit var directory: File
+        private set
+    lateinit var filePrefix: String
+        private set
+    lateinit var transactionPool: TransactionPool
+        private set
+    lateinit var veriBlockStore: VeriBlockStore
+        private set
+    lateinit var bitcoinStore: BitcoinStore
+        private set
+    lateinit var auditStore: AuditorChangesStore
+        private set
+    lateinit var blockchain: Blockchain
+        private set
+    val startTime = Instant.now()
+    lateinit var adminApiService: AdminApiService
+        private set
+    lateinit var adminService: AdminServiceFacade
+        private set
+    lateinit var adminServerInterceptor: AdminServerInterceptor
+        private set
+    lateinit var peerTable: SpvPeerTable
+        private set
+    lateinit var p2PService: P2PService
+        private set
+    var server: Server? = null
+        private set
+    lateinit var addressManager: AddressManager
+        private set
+    lateinit var transactionService: TransactionService
+        private set
+    lateinit var pendingTransactionContainer: PendingTransactionContainer
+        private set
+    lateinit var pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
+        private set
 
     /**
      * Initialise context. This method should be call on the start app.
@@ -86,50 +98,49 @@ public class SpvContext {
      * @param peerDiscovery  discovery peers.
      * @param runAdminServer Start Admin RPC service. (It can be not necessary for tests.)
      */
-    public synchronized void init(NetworkParameters networkParam, File baseDir, String filePr, PeerDiscovery peerDiscovery, boolean runAdminServer) {
+    @Synchronized
+    fun init(
+        networkParam: NetworkParameters,
+        baseDir: File,
+        filePr: String,
+        peerDiscovery: PeerDiscovery,
+        runAdminServer: Boolean
+    ) {
         try {
-            Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ShutdownHook nodecore-spv"));
-
-            networkParameters = networkParam;
-            directory = baseDir;
-            filePrefix = filePr;
-
-            String databasePath = Paths.get(FileManager.getDataDirectory(), networkParam.getDatabaseName()).toString();
-            veriBlockStore = new VeriBlockStore(ConnectionSelector.setConnection(databasePath));
-            bitcoinStore = new BitcoinStore(ConnectionSelector.setConnection(databasePath));
-
-            init(veriBlockStore, networkParameters);
-            init(bitcoinStore, networkParameters);
-
-            auditStore = new AuditorChangesStore(ConnectionSelector.setConnectionDefault());
-            transactionPool = new TransactionPool();
-            blockchain = new Blockchain(networkParameters.getGenesisBlock(), veriBlockStore);
-
-            pendingTransactionContainer = new PendingTransactionContainer();
-            p2PService = new P2PService(pendingTransactionContainer, networkParameters);
-
-            addressManager = new DefaultAddressManager();
-            File walletFile = new File(getDirectory(), getFilePrefix() + FILE_EXTENSION);
-            addressManager.load(walletFile);
-
-            peerTable = new SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer);
-            transactionService = new TransactionService(addressManager, networkParameters);
-            adminApiService =
-                new AdminApiService(this, peerTable, transactionService, addressManager, new TransactionFactory(networkParameters),
-                    pendingTransactionContainer, blockchain
-                );
-
-            adminService = new AdminServiceFacade(adminApiService);
-            adminServerInterceptor = new AdminServerInterceptor();
-
+            Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdown() }, "ShutdownHook nodecore-spv"))
+            networkParameters = networkParam
+            directory = baseDir
+            filePrefix = filePr
+            val databasePath = Paths.get(
+                FileManager.getDataDirectory(), networkParam.databaseName
+            ).toString()
+            veriBlockStore = VeriBlockStore(ConnectionSelector.setConnection(databasePath))
+            bitcoinStore = BitcoinStore(ConnectionSelector.setConnection(databasePath))
+            init(veriBlockStore, networkParameters)
+            init(bitcoinStore, networkParameters)
+            auditStore = AuditorChangesStore(ConnectionSelector.setConnectionDefault())
+            transactionPool = TransactionPool()
+            blockchain = Blockchain(networkParameters.genesisBlock, veriBlockStore)
+            pendingTransactionContainer = PendingTransactionContainer()
+            p2PService = P2PService(pendingTransactionContainer, networkParameters)
+            addressManager = DefaultAddressManager()
+            val walletFile = File(directory, filePrefix + FILE_EXTENSION)
+            addressManager.load(walletFile)
+            pendingTransactionDownloadedListener = PendingTransactionDownloadedListenerImpl(this)
+            peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
+            transactionService = TransactionService(addressManager, networkParameters)
+            adminApiService = AdminApiService(
+                this, peerTable, transactionService, addressManager, TransactionFactory(networkParameters),
+                pendingTransactionContainer, blockchain
+            )
+            adminService = AdminServiceFacade(adminApiService)
+            adminServerInterceptor = AdminServerInterceptor()
             if (runAdminServer) {
-                server = createAdminServer();
+                server = createAdminServer()
             }
-
-            pendingTransactionDownloadedListener = new PendingTransactionDownloadedListenerImpl(this);
-        } catch (Exception e) {
-            log.error("Could not initialize VeriBlock security", e);
-            throw new RuntimeException(e);
+        } catch (e: Exception) {
+            logger.error("Could not initialize VeriBlock security", e)
+            throw RuntimeException(e)
         }
     }
 
@@ -140,133 +151,57 @@ public class SpvContext {
      * @param peerDiscovery     discovery peers.
      * @param runAdminServer    Start Admin RPC service. (It can be not necessary for tests.)
      */
-    public synchronized void init(NetworkParameters networkParameters, PeerDiscovery peerDiscovery, boolean runAdminServer) {
-        init(networkParameters, new File("."), String.format("vbk-%s", networkParameters.getNetworkName()), peerDiscovery, runAdminServer);
+    @Synchronized
+    fun init(networkParameters: NetworkParameters, peerDiscovery: PeerDiscovery, runAdminServer: Boolean) {
+        init(networkParameters, File("."), String.format("vbk-%s", networkParameters.networkName), peerDiscovery, runAdminServer)
     }
 
-    public void shutdown() {
-        peerTable.shutdown();
-        if (server != null) {
-            server.shutdown();
-        }
+    fun shutdown() {
+        peerTable.shutdown()
+        server?.shutdown()
     }
 
-    private Server createAdminServer() throws NumberFormatException {
-        try {
-            InetSocketAddress rpcBindAddress = new InetSocketAddress(getNetworkParameters().getAdminHost(), getNetworkParameters().getAdminPort());
-            log.info("Starting Admin RPC service on {}", rpcBindAddress);
-
-            return NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor))
+    @Throws(NumberFormatException::class)
+    private fun createAdminServer(): Server {
+        return try {
+            val rpcBindAddress = InetSocketAddress(networkParameters.adminHost, networkParameters.adminPort)
+            logger.info("Starting Admin RPC service on {}", rpcBindAddress)
+            NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor))
                 .build()
-                .start();
-        } catch (IOException ex) {
-            throw new RuntimeException(
-                "Can't run admin RPC service. Address already in use " + getNetworkParameters().getAdminHost() + ":" + getNetworkParameters()
-                    .getAdminPort());
+                .start()
+        } catch (ex: IOException) {
+            throw RuntimeException(
+                "Can't run admin RPC service. Address already in use " + networkParameters.adminHost + ":" + networkParameters
+                    .adminPort
+            )
         }
     }
 
-    private void init(VeriBlockStore veriBlockStore, NetworkParameters params) {
+    private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters?) {
         try {
-            if (veriBlockStore.getChainHead() == null) {
-                VeriBlockBlock genesis = params.getGenesisBlock();
-                StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(genesis, BitcoinUtilities.decodeCompactBits(genesis.getDifficulty()));
-
-                veriBlockStore.put(storedBlock);
-                veriBlockStore.setChainHead(storedBlock);
+            if (veriBlockStore.chainHead == null) {
+                val genesis = params!!.genesisBlock
+                val storedBlock = StoredVeriBlockBlock(
+                    genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong())
+                )
+                veriBlockStore.put(storedBlock)
+                veriBlockStore.chainHead = storedBlock
             }
-        } catch (SQLException e) {
-            log.error(e.getMessage(), e);
+        } catch (e: SQLException) {
+            logger.error(e.message, e)
         }
     }
 
-    private void init(BitcoinStore bitcoinStore, NetworkParameters params) {
+    private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters?) {
         try {
-            if (bitcoinStore.getChainHead() == null) {
-                BitcoinBlock origin = params.getBitcoinOriginBlock();
-                StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.getBits()), 0);
-
-                bitcoinStore.put(storedBlock);
-                bitcoinStore.setChainHead(storedBlock);
+            if (bitcoinStore.chainHead == null) {
+                val origin = params!!.bitcoinOriginBlock
+                val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.bits.toLong()), 0)
+                bitcoinStore.put(storedBlock)
+                bitcoinStore.chainHead = storedBlock
             }
-        } catch (SQLException e) {
-            log.error(e.getMessage(), e);
+        } catch (e: SQLException) {
+            logger.error(e.message, e)
         }
-    }
-
-    public NetworkParameters getNetworkParameters() {
-        return networkParameters;
-    }
-
-    public File getDirectory() {
-        return directory;
-    }
-
-    public String getFilePrefix() {
-        return filePrefix;
-    }
-
-    public TransactionPool getTransactionPool() {
-        return transactionPool;
-    }
-
-    public VeriBlockStore getVeriBlockStore() {
-        return veriBlockStore;
-    }
-
-    public BitcoinStore getBitcoinStore() {
-        return bitcoinStore;
-    }
-
-    public AuditorChangesStore getAuditStore() {
-        return auditStore;
-    }
-
-    public Blockchain getBlockchain() {
-        return blockchain;
-    }
-
-    public Instant getStartTime() {
-        return startTime;
-    }
-
-    public AdminApiService getAdminApiService() {
-        return adminApiService;
-    }
-
-    public AdminServiceFacade getAdminService() {
-        return adminService;
-    }
-
-    public AdminServerInterceptor getAdminServerInterceptor() {
-        return adminServerInterceptor;
-    }
-
-    public SpvPeerTable getPeerTable() {
-        return peerTable;
-    }
-
-    public P2PService getP2PService() {
-        return p2PService;
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    public PendingTransactionDownloadedListener getPendingTransactionDownloadedListener() {
-        return pendingTransactionDownloadedListener;
-    }
-
-    public AddressManager getAddressManager() {
-        return addressManager;
-    }
-
-    public TransactionService getTransactionService() {
-        return transactionService;
-    }
-
-    public PendingTransactionContainer getPendingTransactionContainer() {
-        return pendingTransactionContainer;
     }
 }

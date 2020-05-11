@@ -5,182 +5,139 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.net;
+package veriblock.net
 
-import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.utilities.ByteStringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.core.crypto.BloomFilter;
-import org.veriblock.sdk.models.Sha256Hash;
-import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.services.SerializeDeserializeService;
-import veriblock.SpvContext;
-import veriblock.model.ListenerRegistration;
-import veriblock.model.NodeMetadata;
-import veriblock.service.Blockchain;
-import veriblock.util.MessageIdGenerator;
+import com.google.protobuf.ByteString
+import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
+import nodecore.api.grpc.VeriBlockMessages.KeystoneQuery
+import nodecore.api.grpc.utilities.ByteStringUtility
+import org.slf4j.LoggerFactory
+import org.veriblock.core.crypto.BloomFilter
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.services.SerializeDeserializeService
+import veriblock.SpvContext
+import veriblock.model.ListenerRegistration
+import veriblock.model.NodeMetadata
+import veriblock.service.Blockchain
+import veriblock.util.MessageIdGenerator.next
+import java.util.Comparator
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executor
+import java.util.stream.Collectors
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
+private val logger = createLogger {}
 
-public class Peer implements PeerSocketClosedEventListener {
-    private static final Logger logger = LoggerFactory.getLogger(Peer.class);
+class Peer(
+    private val spvContext: SpvContext,
+    private val blockchain: Blockchain,
+    private val self: NodeMetadata,
+    val address: String,
+    val port: Int
+) : PeerSocketClosedEventListener {
+    private val connectedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PeerConnectedEventListener>>()
+    private val disconnectedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PeerDisconnectedEventListener>>()
+    private val messageReceivedEventListeners = CopyOnWriteArrayList<ListenerRegistration<MessageReceivedEventListener>>()
+    private lateinit var handler: PeerSocketHandler
+    var bestBlockHeight = 0
+        private set
+    var bestBlockHash: String? = null
+        private set
 
-    private final CopyOnWriteArrayList<ListenerRegistration<PeerConnectedEventListener>> connectedEventListeners =
-            new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<ListenerRegistration<PeerDisconnectedEventListener>> disconnectedEventListeners =
-            new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<ListenerRegistration<MessageReceivedEventListener>> messageReceivedEventListeners =
-            new CopyOnWriteArrayList<>();
-
-    private final SpvContext spvContext;
-    private final Blockchain blockchain;
-    private final NodeMetadata self;
-    private final String address;
-    private final int port;
-
-    private PeerSocketHandler handler;
-    private int bestBlockHeight;
-    private String bestBlockHash;
-
-    public Peer(SpvContext spvContext, Blockchain blockchain, NodeMetadata self, String address, int port) {
-        this.spvContext = spvContext;
-        this.blockchain = blockchain;
-        this.self = self;
-        this.address = address;
-        this.port = port;
+    fun setConnection(handler: PeerSocketHandler) {
+        this.handler = handler
+        this.handler.setPeer(this)
+        this.handler.start()
+        val announce = VeriBlockMessages.Event.newBuilder()
+            .setId(next())
+            .setAcknowledge(false)
+            .setAnnounce(
+                VeriBlockMessages.Announce.newBuilder()
+                    .setReply(false)
+                    .setNodeInfo(
+                        VeriBlockMessages.NodeInfo.newBuilder().setApplication(self.application)
+                            .setProtocolVersion(spvContext.networkParameters.protocolVersion)
+                            .setPlatform(self.platform)
+                            .setStartTimestamp(self.startTimestamp)
+                            .setShare(false)
+                            .setId(self.id)
+                            .setPort(self.port)
+                            .build()
+                    )
+                    .build()
+            )
+            .build()
+        sendMessage(announce)
     }
 
-    public String getAddress() {
-        return this.address;
+    fun sendMessage(message: VeriBlockMessages.Event) {
+        handler.write(message)
     }
 
-    public int getPort() {
-        return this.port;
-    }
-
-    public int getBestBlockHeight() {
-        return this.bestBlockHeight;
-    }
-
-    public String getBestBlockHash() {
-        return this.bestBlockHash;
-    }
-
-    public void setConnection(PeerSocketHandler handler) {
-        this.handler = handler;
-        this.handler.setPeer(this);
-
-        this.handler.start();
-
-        VeriBlockMessages.Event announce = VeriBlockMessages.Event.newBuilder()
-                .setId(MessageIdGenerator.next())
-                .setAcknowledge(false)
-                .setAnnounce(VeriBlockMessages.Announce.newBuilder()
-                        .setReply(false)
-                        .setNodeInfo(VeriBlockMessages.NodeInfo.newBuilder().setApplication(self.getApplication())
-                            .setProtocolVersion(spvContext.getNetworkParameters().getProtocolVersion())
-                                .setPlatform(self.getPlatform())
-                                .setStartTimestamp(self.getStartTimestamp())
-                                .setShare(false)
-                                .setId(self.getId())
-                                .setPort(self.getPort())
-                                .build())
-                        .build())
-                .build();
-        sendMessage(announce);
-    }
-
-    public void sendMessage(VeriBlockMessages.Event message) {
-        handler.write(message);
-    }
-
-    public void processMessage(VeriBlockMessages.Event message) {
-        switch (message.getResultsCase()) {
-            case ANNOUNCE:
-                // Set a status to "Open"
+    fun processMessage(message: VeriBlockMessages.Event) {
+        when (message.resultsCase) {
+            ResultsCase.ANNOUNCE ->                 // Set a status to "Open"
                 // Extract peer info
-
-                notifyPeerConnected();
-                break;
-            case ADVERTISE_BLOCKS:
-                if (message.getAdvertiseBlocks().getHeadersCount() >= 1000) {
-                    logger.info("Received advertisement of {} blocks", message.getAdvertiseBlocks().getHeadersCount());
+                notifyPeerConnected()
+            ResultsCase.ADVERTISE_BLOCKS -> {
+                if (message.advertiseBlocks.headersCount >= 1000) {
+                    logger.info("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
 
                     // Extract latest keystones and ask for more
-                    List<VeriBlockBlock> extractedKeystones = message.getAdvertiseBlocks().getHeadersList().stream()
-                            .map(blockHeader -> SerializeDeserializeService.parseVeriBlockBlock(blockHeader.getHeader().toByteArray()))
-                            .filter(block -> block.getHeight() % 20 == 0)
-                            .sorted(Comparator.comparingInt(VeriBlockBlock::getHeight).reversed())
-                            .limit(10)
-                            .collect(Collectors.toList());
-
-                    requestBlockDownload(extractedKeystones);
+                    val extractedKeystones = message.advertiseBlocks.headersList.stream()
+                        .map { blockHeader: VeriBlockMessages.BlockHeader ->
+                            SerializeDeserializeService.parseVeriBlockBlock(
+                                blockHeader.header.toByteArray()
+                            )
+                        }
+                        .filter { block: VeriBlockBlock -> block.height % 20 == 0 }
+                        .sorted(
+                            Comparator.comparingInt { obj: VeriBlockBlock -> obj.height }.reversed()
+                        )
+                        .limit(10)
+                        .collect(Collectors.toList())
+                    requestBlockDownload(extractedKeystones)
                 }
-
-                notifyMessageReceived(message);
-                break;
-            case ADVERTISE_TX:
-                VeriBlockMessages.TransactionRequest.Builder txRequestBuilder = VeriBlockMessages.TransactionRequest.newBuilder();
-
-                List<VeriBlockMessages.TransactionAnnounce> transactions = message.getAdvertiseTx().getTransactionsList();
-                for (VeriBlockMessages.TransactionAnnounce tx : transactions) {
-                    Sha256Hash txId = Sha256Hash.wrap(tx.getTxId().toByteArray());
-                    int broadcastCount = spvContext.getTransactionPool().record(txId, getAddress());
+                notifyMessageReceived(message)
+            }
+            ResultsCase.ADVERTISE_TX -> {
+                val txRequestBuilder = VeriBlockMessages.TransactionRequest.newBuilder()
+                val transactions = message.advertiseTx.transactionsList
+                for (tx in transactions) {
+                    val txId = Sha256Hash.wrap(tx.txId.toByteArray())
+                    val broadcastCount = spvContext.transactionPool.record(txId, address)
                     if (broadcastCount == 1) {
-                        txRequestBuilder.addTransactions(tx);
+                        txRequestBuilder.addTransactions(tx)
                     }
                 }
-
-                if (txRequestBuilder.getTransactionsCount() > 0) {
-                    sendMessage(VeriBlockMessages.Event.newBuilder()
-                            .setId(MessageIdGenerator.next())
+                if (txRequestBuilder.transactionsCount > 0) {
+                    sendMessage(
+                        VeriBlockMessages.Event.newBuilder()
+                            .setId(next())
                             .setAcknowledge(false)
                             .setTxRequest(txRequestBuilder)
-                            .build());
+                            .build()
+                    )
                 }
-
-                break;
-            case TRANSACTION:
-                notifyMessageReceived(message);
-                break;
-            case HEARTBEAT:
+            }
+            ResultsCase.TRANSACTION -> notifyMessageReceived(message)
+            ResultsCase.HEARTBEAT -> {
                 // TODO: Need a way to request this or get it sooner than the current cycle time
-                bestBlockHeight = message.getHeartbeat().getBlock().getNumber();
-                bestBlockHash = ByteStringUtility.byteStringToHex(message.getHeartbeat().getBlock().getHash());
-
-                notifyMessageReceived(message);
-                break;
-
-            case TX_REQUEST:
-                notifyMessageReceived(message);
-                break;
-
-            case LEDGER_PROOF_REPLY:
-                notifyMessageReceived(message);
-                break;
-
-            case TRANSACTION_REPLY:
-                notifyMessageReceived(message);
-                break;
-
-            case DEBUG_VTB_REPLY:
-                notifyMessageReceived(message);
-                break;
-
-            case VERIBLOCK_PUBLICATIONS_REPLY:
-                notifyMessageReceived(message);
-                break;
+                bestBlockHeight = message.heartbeat.block.number
+                bestBlockHash = ByteStringUtility.byteStringToHex(message.heartbeat.block.hash)
+                notifyMessageReceived(message)
+            }
+            ResultsCase.TX_REQUEST -> notifyMessageReceived(message)
+            ResultsCase.LEDGER_PROOF_REPLY -> notifyMessageReceived(message)
+            ResultsCase.TRANSACTION_REPLY -> notifyMessageReceived(message)
+            ResultsCase.DEBUG_VTB_REPLY -> notifyMessageReceived(message)
+            ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> notifyMessageReceived(message)
         }
-
     }
 
-    public void startBlockchainDownload() {
+    fun startBlockchainDownload() {
         /* 1. Notify download is starting
          * 2. Get the peer's best block?
          * 3. Compare against our local blockchain
@@ -189,74 +146,81 @@ public class Peer implements PeerSocketClosedEventListener {
          * 6. Allow the advertise to pass through to the handler for adding to blockchain
          * 7. If it was the maximum number of advertisements though, send another keystone query
          */
-
-        requestBlockDownload(blockchain.getPeerQuery());
+        requestBlockDownload(blockchain.getPeerQuery())
     }
 
-    public void setFilter(BloomFilter filter) {
-        sendMessage(VeriBlockMessages.Event.newBuilder()
-                .setId(MessageIdGenerator.next())
+    fun setFilter(filter: BloomFilter) {
+        sendMessage(
+            VeriBlockMessages.Event.newBuilder()
+                .setId(next())
                 .setAcknowledge(false)
-                .setCreateFilter(VeriBlockMessages.CreateFilter.newBuilder()
-                        .setFilter(ByteString.copyFrom(filter.getBits()))
+                .setCreateFilter(
+                    VeriBlockMessages.CreateFilter.newBuilder()
+                        .setFilter(ByteString.copyFrom(filter.bits))
                         .setFlags(BloomFilter.Flags.BLOOM_UPDATE_NONE.Value)
-                        .setHashIterations(filter.getHashIterations())
-                        .setTweak(filter.getTweak()))
-                .build());
+                        .setHashIterations(filter.hashIterations)
+                        .setTweak(filter.tweak)
+                )
+                .build()
+        )
     }
 
-    public void closeConnection() {
-        handler.stop();
+    fun closeConnection() {
+        handler.stop()
     }
 
-    private void requestBlockDownload(List<VeriBlockBlock> keystones) {
-        VeriBlockMessages.KeystoneQuery.Builder queryBuilder = VeriBlockMessages.KeystoneQuery.newBuilder();
-        for (VeriBlockBlock block : keystones) {
-            queryBuilder.addHeaders(VeriBlockMessages.BlockHeader.newBuilder()
-                    .setHash(ByteString.copyFrom(block.getHash().getBytes()))
-                    .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block))));
+    private fun requestBlockDownload(keystones: List<VeriBlockBlock>) {
+        val queryBuilder = KeystoneQuery.newBuilder()
+        for (block in keystones) {
+            queryBuilder.addHeaders(
+                VeriBlockMessages.BlockHeader.newBuilder()
+                    .setHash(ByteString.copyFrom(block.hash.bytes))
+                    .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
+            )
         }
-
-        logger.info("Sending keystone query, last block @ {}", keystones.get(0).getHeight());
-        sendMessage(VeriBlockMessages.Event.newBuilder()
-                .setId(MessageIdGenerator.next())
+        logger.info("Sending keystone query, last block @ {}", keystones[0].height)
+        sendMessage(
+            VeriBlockMessages.Event.newBuilder()
+                .setId(next())
                 .setAcknowledge(false)
                 .setKeystoneQuery(queryBuilder.build())
-                .build());
+                .build()
+        )
     }
 
-    public void addConnectedEventListener(Executor executor, PeerConnectedEventListener listener) {
-        connectedEventListeners.add(new ListenerRegistration<>(listener, executor));
+    fun addConnectedEventListener(executor: Executor?, listener: PeerConnectedEventListener) {
+        connectedEventListeners.add(ListenerRegistration(listener, executor!!))
     }
 
-    private void notifyPeerConnected() {
-        for (ListenerRegistration<PeerConnectedEventListener> registration : connectedEventListeners) {
-            registration.getExecutor().execute(() -> registration.getListener().onPeerConnected(this));
+    private fun notifyPeerConnected() {
+        for (registration in connectedEventListeners) {
+            registration.executor.execute { registration.listener.onPeerConnected(this) }
         }
     }
 
-    public void addDisconnectedEventListener(Executor executor, PeerDisconnectedEventListener listener) {
-        disconnectedEventListeners.add(new ListenerRegistration<>(listener, executor));
+    fun addDisconnectedEventListener(executor: Executor?, listener: PeerDisconnectedEventListener) {
+        disconnectedEventListeners.add(ListenerRegistration(listener, executor!!))
     }
 
-    private void notifyPeerDisconnected() {
-        for (ListenerRegistration<PeerDisconnectedEventListener> registration : disconnectedEventListeners) {
-            registration.getExecutor().execute(() -> registration.getListener().onPeerDisconnected(this));
+    private fun notifyPeerDisconnected() {
+        for (registration in disconnectedEventListeners) {
+            registration.executor.execute { registration.listener.onPeerDisconnected(this) }
         }
     }
 
-    public void addMessageReceivedEventListeners(Executor executor, MessageReceivedEventListener listener) {
-        messageReceivedEventListeners.add(new ListenerRegistration<>(listener, executor));
+    fun addMessageReceivedEventListeners(executor: Executor?, listener: MessageReceivedEventListener) {
+        messageReceivedEventListeners.add(ListenerRegistration(listener, executor!!))
     }
 
-    private void notifyMessageReceived(VeriBlockMessages.Event message) {
-        for (ListenerRegistration<MessageReceivedEventListener> registration : messageReceivedEventListeners) {
-            registration.getExecutor().execute(() -> registration.getListener().onMessageReceived(message,this));
+    private fun notifyMessageReceived(message: VeriBlockMessages.Event) {
+        for (registration in messageReceivedEventListeners) {
+            registration.executor.execute { registration.listener.onMessageReceived(message, this) }
         }
     }
 
-    public void onPeerSocketClosed() {
+    override fun onPeerSocketClosed() {
         // Set a status to "Closed"
-        notifyPeerDisconnected();
+        notifyPeerDisconnected()
     }
+
 }

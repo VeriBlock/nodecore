@@ -145,7 +145,7 @@ class NodeCoreLiteKit(
     private fun initSpvContest(networkParameters: NetworkParameters, addresses: Collection<org.veriblock.core.wallet.Address>): SpvContext {
         val spvContext = SpvContext()
         spvContext.init(
-            networkParameters.spvNetworkParameters,
+            networkParameters.spvNetworkParameters!!,
             LocalhostDiscovery(networkParameters.spvNetworkParameters!!), false
         )
         spvContext.peerTable.start()
