@@ -5,116 +5,101 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package veriblock.service
 
-package veriblock.service;
+import com.google.protobuf.ByteString
+import nodecore.api.grpc.VeriBlockMessages
+import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.types.Pair
+import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Sha256Hash
+import veriblock.conf.NetworkParameters
+import veriblock.model.AddressCoinsIndex
+import veriblock.model.Output
+import veriblock.model.SigningResult
+import veriblock.model.StandardTransaction
+import veriblock.model.Transaction
+import java.util.ArrayList
 
-import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
-import org.veriblock.core.contracts.AddressManager;
-import org.veriblock.core.types.Pair;
-import org.veriblock.core.utilities.AddressUtility;
-import org.veriblock.core.utilities.Utility;
-import org.veriblock.sdk.models.Coin;
-import org.veriblock.sdk.models.Sha256Hash;
-import veriblock.conf.NetworkParameters;
-import veriblock.model.AddressCoinsIndex;
-import veriblock.model.Output;
-import veriblock.model.SigningResult;
-import veriblock.model.StandardTransaction;
-import veriblock.model.Transaction;
-
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class TransactionService {
-
-    private static final long DEFAULT_TRANSACTION_FEE = 1000L;
-    private final AddressManager addressManager;
-    private final NetworkParameters networkParameters;
-
-    public TransactionService(AddressManager addressManager, NetworkParameters networkParameters) {
-        this.addressManager = addressManager;
-        this.networkParameters = networkParameters;
-    }
-
-    public long calculateFee(String requestedSourceAddress, long totalOutputAmount, List<Output> outputList, long signatureIndex) {
+class TransactionService(
+    private val addressManager: AddressManager,
+    private val networkParameters: NetworkParameters
+) {
+    fun calculateFee(
+        requestedSourceAddress: String?,
+        totalOutputAmount: Long,
+        outputList: List<Output>,
+        signatureIndex: Long
+    ): Long {
         // This is for over-estimating the size of the transaction by one byte in the edge case where totalOutputAmount
         // is right below a power-of-two barrier
-        long feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L;
-
-        int predictedTransactionSize =
-            predictStandardTransactionToAllStandardOutputSize(totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0);
-
-        return predictedTransactionSize * DEFAULT_TRANSACTION_FEE;
+        val feeFudgeFactor = DEFAULT_TRANSACTION_FEE * 500L
+        val predictedTransactionSize = predictStandardTransactionToAllStandardOutputSize(
+            totalOutputAmount + feeFudgeFactor, outputList, signatureIndex + 1, 0
+        )
+        return predictedTransactionSize * DEFAULT_TRANSACTION_FEE
     }
 
-    public List<Transaction> createTransactionsByOutputList(List<AddressCoinsIndex> addressCoinsIndexList, List<Output> outputList) {
-        List<Transaction> transactions = new ArrayList<>();
-        List<Output> sortedOutputs = outputList.stream()
-            .sorted((o1, o2) -> Long.compare(o2.getAmount().getAtomicUnits(), o1.getAmount().getAtomicUnits()))
-            .collect(Collectors.toList());
-        List<AddressCoinsIndex> sortedAddressCoinsIndexList = addressCoinsIndexList.stream()
-            .filter(b -> b.getCoins() > 0)
-            .sorted((b1, b2) -> Long.compare(b2.getCoins(), b1.getCoins()))
-            .collect(Collectors.toList());
-
-        long totalOutputAmount = sortedOutputs.stream()
-            .map(output -> output.getAmount().getAtomicUnits())
-            .reduce(0L, Long::sum);
-
-        for (AddressCoinsIndex sourceAddressesIndex : sortedAddressCoinsIndexList) {
-            long fee = calculateFee(sourceAddressesIndex.getAddress(), totalOutputAmount, sortedOutputs, sourceAddressesIndex.getIndex());
-
-            Pair<List<Output>, List<Output>> fulfillAndForPay =
-                splitOutPutsAccordingBalance(sortedOutputs, Coin.valueOf(sourceAddressesIndex.getCoins() - fee));
-            sortedOutputs = fulfillAndForPay.getFirst();
-            List<Output> outputsForPay = fulfillAndForPay.getSecond();
-
-            long transactionInputAmount = outputsForPay.stream()
-                .map(o -> o.getAmount().getAtomicUnits())
-                .reduce(0L, Long::sum) + fee;
-
-            Transaction transaction =
-                createStandardTransaction(
-                    sourceAddressesIndex.getAddress(), transactionInputAmount, outputsForPay, sourceAddressesIndex.getIndex() + 1);
-            transactions.add(transaction);
-            if (sortedOutputs.size() == 0) {
-                break;
+    fun createTransactionsByOutputList(
+        addressCoinsIndexList: List<AddressCoinsIndex>,
+        outputList: List<Output>
+    ): List<Transaction> {
+        val transactions: MutableList<Transaction> = ArrayList()
+        var sortedOutputs = outputList.sortedBy { it.amount.atomicUnits }.toMutableList()
+        val sortedAddressCoinsIndexList = addressCoinsIndexList.filter { it.coins > 0 }.sortedBy { it.coins }
+        val totalOutputAmount = sortedOutputs.map { it.amount.atomicUnits }.sum()
+        for (sourceAddressesIndex in sortedAddressCoinsIndexList) {
+            val fee = calculateFee(sourceAddressesIndex.address, totalOutputAmount, sortedOutputs, sourceAddressesIndex.index)
+            val fulfillAndForPay = splitOutPutsAccordingBalance(
+                sortedOutputs, Coin.valueOf(sourceAddressesIndex.coins - fee)
+            )
+            sortedOutputs = fulfillAndForPay.first
+            val outputsForPay = fulfillAndForPay.second
+            val transactionInputAmount = outputsForPay.map {
+                    it.amount.atomicUnits
+                }.sum() + fee
+            val transaction = createStandardTransaction(
+                sourceAddressesIndex.address, transactionInputAmount, outputsForPay, sourceAddressesIndex.index + 1
+            )
+            transactions.add(transaction)
+            if (sortedOutputs.size == 0) {
+                break
             }
         }
-        return transactions;
+        return transactions
     }
 
-    public Pair<List<Output>, List<Output>> splitOutPutsAccordingBalance(List<Output> outputs, Coin balance) {
-        List<Output> outputsLeft = new ArrayList<>();
-        List<Output> outputsForPay = new ArrayList<>();
-        Coin balanceLeft = balance;
-
-        for (int i = 0; i < outputs.size(); i++) {
-            Output output = outputs.get(i);
-
-            if (balanceLeft.getAtomicUnits() > output.getAmount().getAtomicUnits()) {
-                outputsForPay.add(output);
-                balanceLeft = balance.subtract(output.getAmount());
+    fun splitOutPutsAccordingBalance(
+        outputs: MutableList<Output>,
+        balance: Coin
+    ): Pair<MutableList<Output>, List<Output>> {
+        val outputsLeft: MutableList<Output> = ArrayList()
+        val outputsForPay: MutableList<Output> = ArrayList()
+        var balanceLeft = balance
+        for (i in outputs.indices) {
+            val output = outputs[i]
+            balanceLeft = if (balanceLeft.atomicUnits > output.amount.atomicUnits) {
+                outputsForPay.add(output)
+                balance.subtract(output.amount)
             } else {
-                Output partForPay = new Output(output.getAddress(), balanceLeft);
-                outputsForPay.add(partForPay);
-
-                Coin leftToPay = output.getAmount().subtract(balanceLeft);
-                outputs.add(new Output(output.getAddress(), leftToPay));
-                outputs.remove(output);
-
-                for (int j = i; j < outputs.size(); j++) {
-                    outputsLeft.add(outputs.get(j));
+                val partForPay = Output(output.address, balanceLeft)
+                outputsForPay.add(partForPay)
+                val leftToPay = output.amount.subtract(balanceLeft)
+                outputs.add(Output(output.address, leftToPay))
+                outputs.remove(output)
+                for (j in i until outputs.size) {
+                    outputsLeft.add(outputs[j])
                 }
-
-                return new Pair<>(outputsLeft, outputsForPay);
+                return Pair(
+                    outputsLeft, outputsForPay
+                )
             }
         }
-        return new Pair<>(outputsLeft, outputsForPay);
+        return Pair(
+            outputsLeft, outputsForPay
+        )
     }
 
     /**
@@ -126,174 +111,141 @@ public class TransactionService {
      * @param signatureIndex The index of signature for inputAddress
      * @return A StandardTransaction object
      */
-    public Transaction createStandardTransaction(String inputAddress, Long inputAmount, List<Output> outputs, Long signatureIndex) {
-        if (inputAddress == null) {
-            throw new IllegalArgumentException("createStandardTransaction cannot be called with a null inputAddress!");
+    fun createStandardTransaction(
+        inputAddress: String?,
+        inputAmount: Long,
+        outputs: List<Output>,
+        signatureIndex: Long?
+    ): Transaction {
+        requireNotNull(inputAddress) { "createStandardTransaction cannot be called with a null inputAddress!" }
+        require(
+            AddressUtility.isValidStandardAddress(inputAddress)
+        ) { "createStandardTransaction cannot be called with an invalid inputAddress ($inputAddress)!" }
+        require(Utility.isPositive(inputAmount)) {
+            "createStandardTransaction cannot be called with a non-positive" +
+                "inputAmount (" + inputAmount + ")!"
         }
-
-        if (!AddressUtility.isValidStandardAddress(inputAddress)) {
-            throw new IllegalArgumentException(
-                "createStandardTransaction cannot be called with an invalid " + "inputAddress (" + inputAddress + ")!");
-        }
-
-        if (!Utility.isPositive(inputAmount)) {
-            throw new IllegalArgumentException("createStandardTransaction cannot be called with a non-positive" +
-                    "inputAmount (" + inputAmount + ")!");
-        }
-
-        long outputTotal = 0L;
-        for (int outputCount = 0; outputCount < outputs.size(); outputCount++) {
-            Output output = outputs.get(outputCount);
-
-            if (output == null) {
-                throw new IllegalArgumentException("createStandardTransaction cannot be called with a null output " +
-                        "(at index " + outputCount + ")!");
+        var outputTotal = 0L
+        for (outputCount in outputs.indices) {
+            val output = outputs[outputCount]
+            val outputAmount = output.amount.atomicUnits
+            require(Utility.isPositive(outputAmount)) {
+                "createStandardTransaction cannot be called with an output " +
+                    "(at index " + outputCount + ") with a non-positive output amount!"
             }
-
-            Long outputAmount = output.getAmount().getAtomicUnits();
-            if (!Utility.isPositive(outputAmount)) {
-                throw new IllegalArgumentException("createStandardTransaction cannot be called with an output " +
-                        "(at index " + outputCount + ") with a non-positive output amount!");
-            }
-
-            outputTotal += outputAmount;
+            outputTotal += outputAmount
         }
-
-        if (outputTotal > inputAmount) {
-            throw new IllegalArgumentException("createStandardTransaction cannot be called with an output total " +
-                    "which is larger than the inputAmount (outputTotal = " + outputTotal + ", inputAmount = " +
-                    inputAmount + ")!");
+        require(outputTotal <= inputAmount) {
+            "createStandardTransaction cannot be called with an output total " +
+                "which is larger than the inputAmount (outputTotal = " + outputTotal + ", inputAmount = " +
+                inputAmount + ")!"
         }
-
-        Transaction transaction = new StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex, networkParameters);
-
-        SigningResult signingResult = signTransaction(transaction.getTxId(), inputAddress);
-
+        val transaction: Transaction = StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex!!, networkParameters)
+        val signingResult = signTransaction(transaction.txId, inputAddress)
         if (signingResult.succeeded()) {
-            transaction.addSignature(signingResult.getSignature(), signingResult.getPublicKey());
+            transaction.addSignature(signingResult.signature, signingResult.publicKey)
         }
-
-        return transaction;
+        return transaction
     }
 
-    public Transaction createUnsignedAltChainEndorsementTransaction(
-        String inputAddress, long fee, byte[] publicationData, long signatureIndex
-    ) {
-        if (inputAddress == null) {
-            throw new IllegalArgumentException("createAltChainEndorsementTransaction cannot be called with a null inputAddress!");
-        }
-
-        if (!AddressUtility.isValidStandardAddress(inputAddress)) {
-            throw new IllegalArgumentException(
-                "createAltChainEndorsementTransaction cannot be called with an invalid " + "inputAddress (" + inputAddress + ")!");
-        }
-
-        if (!Utility.isPositive(fee)) {
-            throw new IllegalArgumentException(
-                "createAltChainEndorsementTransaction cannot be called with a non-positive" + "inputAmount (" + fee + ")!");
-        }
-
-        return new StandardTransaction(null, inputAddress, fee, Collections.emptyList(), signatureIndex, publicationData, networkParameters);
+    fun createUnsignedAltChainEndorsementTransaction(
+        inputAddress: String?, fee: Long, publicationData: ByteArray?, signatureIndex: Long
+    ): Transaction {
+        requireNotNull(inputAddress) { "createAltChainEndorsementTransaction cannot be called with a null inputAddress!" }
+        require(
+            AddressUtility.isValidStandardAddress(inputAddress)
+        ) { "createAltChainEndorsementTransaction cannot be called with an invalid inputAddress ($inputAddress)!" }
+        require(Utility.isPositive(fee)) { "createAltChainEndorsementTransaction cannot be called with a non-positiveinputAmount ($fee)!" }
+        return StandardTransaction(null, inputAddress, fee, emptyList(), signatureIndex, publicationData, networkParameters)
     }
 
-    public int predictStandardTransactionToAllStandardOutputSize(long inputAmount, List<Output> outputs, long sigIndex, int extraDataLength) {
-        int totalSize = 0;
-        totalSize += 1; // Transaction Version
-        totalSize += 1; // Type of Input Address
-        totalSize += 1; // Standard Input Address Length Byte
-        totalSize += 22; // Standard Input Address Length
-
-        byte[] inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount);
-
-        totalSize += 1; // Input Amount Length Byte
-        totalSize += inputAmountBytes.length; // Input Amount Length
-
-        totalSize += 1; // Number of Outputs
-
-        for (int i = 0; i < outputs.size(); i++) {
-            totalSize += 1; // ID of Output Address
-            totalSize += 1; // Output Address Length Bytes
-            totalSize += 22; // Output Address Length
-
-            byte[] outputAmount = Utility.trimmedByteArrayFromLong(outputs.get(i).getAmount().getAtomicUnits());
-            totalSize += 1; // Output Amount Length Bytes
-            totalSize += outputAmount.length; // Output Amount Length
+    fun predictStandardTransactionToAllStandardOutputSize(
+        inputAmount: Long,
+        outputs: List<Output>,
+        sigIndex: Long,
+        extraDataLength: Int
+    ): Int {
+        var totalSize = 0
+        totalSize += 1 // Transaction Version
+        totalSize += 1 // Type of Input Address
+        totalSize += 1 // Standard Input Address Length Byte
+        totalSize += 22 // Standard Input Address Length
+        val inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount)
+        totalSize += 1 // Input Amount Length Byte
+        totalSize += inputAmountBytes.size // Input Amount Length
+        totalSize += 1 // Number of Outputs
+        for (i in outputs.indices) {
+            totalSize += 1 // ID of Output Address
+            totalSize += 1 // Output Address Length Bytes
+            totalSize += 22 // Output Address Length
+            val outputAmount = Utility.trimmedByteArrayFromLong(outputs[i].amount.atomicUnits)
+            totalSize += 1 // Output Amount Length Bytes
+            totalSize += outputAmount.size // Output Amount Length
         }
-
-        byte[] sigIndexBytes = Utility.trimmedByteArrayFromLong(sigIndex);
-        totalSize += 1; // Sig Index Length Bytes
-        totalSize += sigIndexBytes.length; // Sig Index Bytes
-
-        byte[] dataLengthBytes = Utility.trimmedByteArrayFromInteger(extraDataLength);
-        totalSize += 1; // Data Length Bytes Length
-        totalSize += dataLengthBytes.length; // Data Length Bytes
-        totalSize += extraDataLength; // Extra data section
-
-        return totalSize;
+        val sigIndexBytes = Utility.trimmedByteArrayFromLong(sigIndex)
+        totalSize += 1 // Sig Index Length Bytes
+        totalSize += sigIndexBytes.size // Sig Index Bytes
+        val dataLengthBytes = Utility.trimmedByteArrayFromInteger(extraDataLength)
+        totalSize += 1 // Data Length Bytes Length
+        totalSize += dataLengthBytes.size // Data Length Bytes
+        totalSize += extraDataLength // Extra data section
+        return totalSize
     }
 
-    public static int predictAltChainEndorsementTransactionSize(int dataLength, long sigIndex) {
-        int totalSize = 0;
-
-        // Using an estimated total fee of 1 VBK
-        long inputAmount = 100000000L;
-        long inputAmountLength = 0L;
-
-        totalSize += 1; // Transaction Version
-        totalSize += 1; // Type of Input Address
-        totalSize += 1; // Standard Input Address Length Byte
-        totalSize += 22; // Standard Input Address Length
-
-        byte[] inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount);
-        inputAmountLength = inputAmountBytes.length;
-
-        totalSize += 1; // Input Amount Length Byte
-        totalSize += inputAmountLength; // Input Amount Length
-
-        totalSize += 1; // Number of Outputs, will be 0
-
-        byte[] sigIndexBytes = Utility.trimmedByteArrayFromLong(sigIndex);
-        totalSize += 1; // Sig Index Length Bytes
-        totalSize += sigIndexBytes.length; // Sig Index Bytes
-
-        byte[] dataSizeBytes = Utility.trimmedByteArrayFromInteger(dataLength);
-        totalSize += 1; // Data Length Bytes Length
-        totalSize += dataSizeBytes.length; // Data Length Bytes (value will be 0)
-        totalSize += dataLength;
-
-        return totalSize;
+    fun signTransaction(txId: Sha256Hash, address: String?): SigningResult {
+        val signature = addressManager.signMessage(txId.bytes, address)
+            ?: return SigningResult(false, null, null)
+        val publicKey = addressManager.getPublicKeyForAddress(address)
+            ?: return SigningResult(false, null, null)
+        return SigningResult(true, signature, publicKey.encoded)
     }
 
-    public static VeriBlockMessages.Transaction.Builder getRegularTransactionMessageBuilder(StandardTransaction tx) {
-        VeriBlockMessages.Transaction.Builder builder = VeriBlockMessages.Transaction.newBuilder();
-        builder.setTransactionFee(tx.getTransactionFee());
-        builder.setTxId(ByteString.copyFrom(tx.getTxId().getBytes()));
-        builder.setType(VeriBlockMessages.Transaction.Type.STANDARD);
-        builder.setSourceAmount(tx.getInputAmount().getAtomicUnits());
-        builder.setSourceAddress(ByteString.copyFrom(tx.getInputAddress().toByteArray()));
-        builder.setData(ByteString.copyFrom(tx.getData()));
-        //        builder.setTimestamp(getTimeStamp());
-        //        builder.setSize(tx.getSize());
-        for (Output output : tx.getOutputs()) {
-            VeriBlockMessages.Output.Builder outputBuilder = builder.addOutputsBuilder();
-            outputBuilder.setAddress(ByteString.copyFrom(output.getAddress().toByteArray()));
-            outputBuilder.setAmount(output.getAmount().getAtomicUnits());
-        }
-        return builder;
-    }
+    companion object {
+        private const val DEFAULT_TRANSACTION_FEE = 1000L
+        @JvmStatic
+        fun predictAltChainEndorsementTransactionSize(dataLength: Int, sigIndex: Long): Int {
+            var totalSize = 0
 
-    public SigningResult signTransaction(Sha256Hash txId, String address) {
-        byte[] signature = addressManager.signMessage(txId.getBytes(), address);
-        if (signature == null) {
-            return new SigningResult(false, null, null);
+            // Using an estimated total fee of 1 VBK
+            val inputAmount = 100000000L
+            var inputAmountLength = 0L
+            totalSize += 1 // Transaction Version
+            totalSize += 1 // Type of Input Address
+            totalSize += 1 // Standard Input Address Length Byte
+            totalSize += 22 // Standard Input Address Length
+            val inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount)
+            inputAmountLength = inputAmountBytes.size.toLong()
+            totalSize += 1 // Input Amount Length Byte
+            totalSize += inputAmountLength.toInt() // Input Amount Length
+            totalSize += 1 // Number of Outputs, will be 0
+            val sigIndexBytes = Utility.trimmedByteArrayFromLong(sigIndex)
+            totalSize += 1 // Sig Index Length Bytes
+            totalSize += sigIndexBytes.size // Sig Index Bytes
+            val dataSizeBytes = Utility.trimmedByteArrayFromInteger(dataLength)
+            totalSize += 1 // Data Length Bytes Length
+            totalSize += dataSizeBytes.size // Data Length Bytes (value will be 0)
+            totalSize += dataLength
+            return totalSize
         }
 
-        PublicKey publicKey = addressManager.getPublicKeyForAddress(address);
-        if (publicKey == null) {
-            return new SigningResult(false, null, null);
+        @JvmStatic
+        fun getRegularTransactionMessageBuilder(tx: StandardTransaction): VeriBlockMessages.Transaction.Builder {
+            val builder = VeriBlockMessages.Transaction.newBuilder()
+            builder.transactionFee = tx.getTransactionFee()
+            builder.txId = ByteString.copyFrom(tx.txId.bytes)
+            builder.type = VeriBlockMessages.Transaction.Type.STANDARD
+            builder.sourceAmount = tx.inputAmount!!.atomicUnits
+            builder.sourceAddress = ByteString.copyFrom(tx.inputAddress!!.toByteArray())
+            builder.data = ByteString.copyFrom(tx.data)
+            //        builder.setTimestamp(getTimeStamp());
+            //        builder.setSize(tx.getSize());
+            for (output in tx.getOutputs()) {
+                val outputBuilder = builder.addOutputsBuilder()
+                outputBuilder.address = ByteString.copyFrom(output.address.toByteArray())
+                outputBuilder.amount = output.amount.atomicUnits
+            }
+            return builder
         }
-
-        return new SigningResult(true, signature, publicKey.getEncoded());
     }
 
 }

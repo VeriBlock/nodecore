@@ -8,8 +8,8 @@ package veriblock.model
 
 class SigningResult(
     private val succeeded: Boolean,
-    val signature: ByteArray,
-    val publicKey: ByteArray
+    val signature: ByteArray?,
+    val publicKey: ByteArray?
 ) {
     fun succeeded(): Boolean {
         return succeeded
