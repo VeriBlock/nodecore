@@ -148,8 +148,8 @@ class NodeCoreLiteKit(
     private fun initSpvContest(networkParameters: NetworkParameters, addresses: Collection<org.veriblock.core.wallet.Address>): SpvContext {
         val spvContext = SpvContext()
         spvContext.init(
-            networkParameters.spvNetworkParameters,
-            LocalhostDiscovery(networkParameters.spvNetworkParameters), false
+            networkParameters.spvNetworkParameters!!,
+            LocalhostDiscovery(networkParameters.spvNetworkParameters!!), false
         )
         spvContext.peerTable.start()
 
@@ -159,10 +159,10 @@ class NodeCoreLiteKit(
 
         logger.info { "Initialize SPV: " }
         while (true) {
-            val status: DownloadStatusResponse = spvContext.peerTable.downloadStatus
-            if (status.downloadStatus.isDiscovering) {
+            val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
+            if (status.downloadStatus.isDiscovering()) {
                 logger.info { "Waiting for peers response." }
-            } else if (status.downloadStatus.isDownloading) {
+            } else if (status.downloadStatus.isDownloading()) {
                 logger.info { "Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
             } else {
                 logger.info { "Blockchain is ready. Current height " + status.currentHeight }

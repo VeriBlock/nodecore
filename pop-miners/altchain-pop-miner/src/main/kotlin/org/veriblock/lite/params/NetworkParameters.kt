@@ -9,7 +9,7 @@
 package org.veriblock.lite.params
 
 import veriblock.conf.NetworkParameters
-import veriblock.conf.NetworkParametersFactory
+import veriblock.conf.getNetworkParameters
 import java.math.BigInteger
 
 class NetworkConfig(
@@ -47,7 +47,7 @@ class NetworkParameters(
             else -> error("Invalid network")
         }
         if (isSpv) {
-            spvNetworkParameters = NetworkParametersFactory.get(config.network)
+            spvNetworkParameters = getNetworkParameters(config.network)
         }
         network = template.network
         adminHost = config.ip ?: LOCALHOST
