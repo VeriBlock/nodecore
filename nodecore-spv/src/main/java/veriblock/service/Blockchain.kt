@@ -33,7 +33,7 @@ class Blockchain(
     val blockStore: VeriBlockStore
 ) {
     //TODO SPV-124
-    private val blocksCache = EvictingQueue.create<StoredVeriBlockBlock?>(
+    private val blocksCache = EvictingQueue.create<StoredVeriBlockBlock>(
         1000
     )
 
@@ -94,16 +94,15 @@ class Blockchain(
         blocksCache.addAll(storedBlocks)
 
         // TODO: PoP fork resolution additional
-        if (storedBlocks[storedBlocks.size - 1]!!.work.compareTo(blockStore.chainHead.work) > 0) {
+        if (storedBlocks[storedBlocks.size - 1].work.compareTo(blockStore.chainHead.work) > 0) {
             blockStore.chainHead = storedBlocks[storedBlocks.size - 1]
         }
     }
 
     fun getBlockByHeight(height: Int): StoredVeriBlockBlock? {
-        return blocksCache.stream()
-            .filter { block: StoredVeriBlockBlock? -> block!!.height == height }
-            .findAny()
-            .orElse(null)
+        return blocksCache.find {
+            it.height == height
+        }
     }
 
     @Throws(SQLException::class)

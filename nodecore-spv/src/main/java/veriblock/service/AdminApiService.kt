@@ -5,795 +5,834 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package veriblock.service
 
-package veriblock.service;
+import com.google.protobuf.ByteString
+import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.VeriBlockMessages.BackupWalletReply
+import nodecore.api.grpc.VeriBlockMessages.BackupWalletRequest
+import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementReply
+import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementRequest
+import nodecore.api.grpc.VeriBlockMessages.DecryptWalletRequest
+import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyReply
+import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyRequest
+import nodecore.api.grpc.VeriBlockMessages.EncryptWalletRequest
+import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
+import nodecore.api.grpc.VeriBlockMessages.GetBalanceRequest
+import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockReply
+import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockRequest
+import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
+import nodecore.api.grpc.VeriBlockMessages.GetNewAddressRequest
+import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexReply
+import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexRequest
+import nodecore.api.grpc.VeriBlockMessages.GetStateInfoReply
+import nodecore.api.grpc.VeriBlockMessages.GetStateInfoRequest
+import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
+import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
+import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
+import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
+import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyReply
+import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyRequest
+import nodecore.api.grpc.VeriBlockMessages.ImportWalletReply
+import nodecore.api.grpc.VeriBlockMessages.ImportWalletRequest
+import nodecore.api.grpc.VeriBlockMessages.LockWalletRequest
+import nodecore.api.grpc.VeriBlockMessages.ProtocolReply
+import nodecore.api.grpc.VeriBlockMessages.SendCoinsReply
+import nodecore.api.grpc.VeriBlockMessages.SendCoinsRequest
+import nodecore.api.grpc.VeriBlockMessages.SubmitTransactionsRequest
+import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
+import nodecore.api.grpc.VeriBlockMessages.UnlockWalletRequest
+import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.p2p.Constants
+import org.slf4j.LoggerFactory
+import org.veriblock.core.bitcoinj.Base58
+import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.types.Pair
+import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.utilities.Utility
+import org.veriblock.core.wallet.Address
+import org.veriblock.core.wallet.WalletLockedException
+import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.services.SerializeDeserializeService
+import veriblock.SpvContext
+import veriblock.model.AddressCoinsIndex
+import veriblock.model.LedgerContext
+import veriblock.model.Output
+import veriblock.model.StandardAddress
+import veriblock.model.StandardTransaction
+import veriblock.net.SpvPeerTable
+import veriblock.service.TransactionService.Companion.getRegularTransactionMessageBuilder
+import veriblock.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
+import veriblock.util.MessageIdGenerator.next
+import java.io.File
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.security.PrivateKey
+import java.sql.SQLException
+import java.util.ArrayList
+import java.util.concurrent.ExecutionException
+import java.util.function.Consumer
+import java.util.stream.Collectors
 
-import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.utilities.ByteStringAddressUtility;
-import nodecore.api.grpc.utilities.ByteStringUtility;
-import nodecore.p2p.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.core.bitcoinj.Base58;
-import org.veriblock.core.contracts.AddressManager;
-import org.veriblock.core.types.Pair;
-import org.veriblock.core.utilities.AddressUtility;
-import org.veriblock.core.utilities.Utility;
-import org.veriblock.core.wallet.Address;
-import org.veriblock.core.wallet.WalletLockedException;
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
-import org.veriblock.sdk.models.BitcoinBlock;
-import org.veriblock.sdk.models.Coin;
-import org.veriblock.sdk.models.Sha256Hash;
-import org.veriblock.sdk.models.VBlakeHash;
-import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.services.SerializeDeserializeService;
-import veriblock.SpvContext;
-import veriblock.model.AddressCoinsIndex;
-import veriblock.model.LedgerContext;
-import veriblock.model.Output;
-import veriblock.model.StandardAddress;
-import veriblock.model.StandardTransaction;
-import veriblock.model.Transaction;
-import veriblock.net.SpvPeerTable;
-import veriblock.util.MessageIdGenerator;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-
-public class AdminApiService {
-    private static final Logger logger = LoggerFactory.getLogger(AdminApiService.class);
-
-    private final SpvContext spvContext;
-    private final SpvPeerTable peerTable;
-    private final TransactionService transactionService;
-    private final AddressManager addressManager;
-    private final TransactionFactory transactionFactory;
-    private final PendingTransactionContainer pendingTransactionContainer;
-    private final Blockchain blockchain;
-
-    public AdminApiService(
-        SpvContext spvContext,
-        SpvPeerTable peerTable,
-        TransactionService transactionService,
-        AddressManager addressManager,
-        TransactionFactory transactionFactory,
-        PendingTransactionContainer pendingTransactionContainer,
-        Blockchain blockchain
-    ) {
-        this.spvContext = spvContext;
-        this.peerTable = peerTable;
-        this.transactionService = transactionService;
-        this.addressManager = addressManager;
-        this.transactionFactory = transactionFactory;
-        this.pendingTransactionContainer = pendingTransactionContainer;
-        this.blockchain = blockchain;
-    }
-
-    public VeriBlockMessages.GetStateInfoReply getStateInfo(VeriBlockMessages.GetStateInfoRequest request) {
+class AdminApiService(
+    private val spvContext: SpvContext,
+    private val peerTable: SpvPeerTable,
+    private val transactionService: TransactionService,
+    private val addressManager: AddressManager,
+    private val transactionFactory: TransactionFactory,
+    private val pendingTransactionContainer: PendingTransactionContainer,
+    private val blockchain: Blockchain
+) {
+    fun getStateInfo(request: GetStateInfoRequest?): GetStateInfoReply {
         //TODO do real statuses.
-        int blockchainStateValue = VeriBlockMessages.BlockchainStateInfo.State.LOADED_VALUE;
-        int operatingStateValue = VeriBlockMessages.OperatingStateInfo.State.STARTED_VALUE;
-        int networkStateValue = VeriBlockMessages.NetworkStateInfo.State.CONNECTED_VALUE;
-
-        VeriBlockMessages.GetStateInfoReply.Builder replyBuilder = VeriBlockMessages.GetStateInfoReply.newBuilder();
-        replyBuilder.setBlockchainState(VeriBlockMessages.BlockchainStateInfo.newBuilder().setStateValue(blockchainStateValue));
-        replyBuilder.setOperatingState(VeriBlockMessages.OperatingStateInfo.newBuilder().setStateValue(operatingStateValue));
-        replyBuilder.setNetworkState(VeriBlockMessages.NetworkStateInfo.newBuilder().setStateValue(networkStateValue));
-
-        replyBuilder.setConnectedPeerCount(peerTable.getAvailablePeers());
-        replyBuilder.setNetworkHeight(peerTable.getBestBlockHeight());
-        replyBuilder.setLocalBlockchainHeight(blockchain.getChainHead().getHeight());
-
-        replyBuilder.setNetworkVersion(spvContext.getNetworkParameters().getNetworkName());
-        replyBuilder.setDataDirectory(spvContext.getDirectory().getPath());
-        replyBuilder.setProgramVersion(Constants.PROGRAM_VERSION == null ? "UNKNOWN" : Constants.PROGRAM_VERSION);
-        replyBuilder.setNodecoreStarttime(spvContext.getStartTime().getEpochSecond());
+        val blockchainStateValue = VeriBlockMessages.BlockchainStateInfo.State.LOADED_VALUE
+        val operatingStateValue = VeriBlockMessages.OperatingStateInfo.State.STARTED_VALUE
+        val networkStateValue = VeriBlockMessages.NetworkStateInfo.State.CONNECTED_VALUE
+        val replyBuilder = GetStateInfoReply.newBuilder()
+        replyBuilder.setBlockchainState(VeriBlockMessages.BlockchainStateInfo.newBuilder().setStateValue(blockchainStateValue))
+        replyBuilder.setOperatingState(VeriBlockMessages.OperatingStateInfo.newBuilder().setStateValue(operatingStateValue))
+        replyBuilder.setNetworkState(VeriBlockMessages.NetworkStateInfo.newBuilder().setStateValue(networkStateValue))
+        replyBuilder.connectedPeerCount = peerTable.getAvailablePeers()
+        replyBuilder.networkHeight = peerTable.getBestBlockHeight()
+        replyBuilder.localBlockchainHeight = blockchain.getChainHead()!!.height
+        replyBuilder.networkVersion = spvContext.networkParameters.networkName
+        replyBuilder.dataDirectory = spvContext.directory.path
+        replyBuilder.programVersion = if (Constants.PROGRAM_VERSION == null) "UNKNOWN" else Constants.PROGRAM_VERSION
+        replyBuilder.nodecoreStarttime = spvContext.startTime.epochSecond
         //TODO does it need for spv?
-        replyBuilder.setWalletCacheSyncHeight(blockchain.getChainHead().getHeight());
-        if (!addressManager.isEncrypted()) {
-            replyBuilder.setWalletState(VeriBlockMessages.GetStateInfoReply.WalletState.DEFAULT);
+        replyBuilder.walletCacheSyncHeight = blockchain.getChainHead()!!.height
+        if (!addressManager.isEncrypted) {
+            replyBuilder.walletState = GetStateInfoReply.WalletState.DEFAULT
         } else {
-            if (addressManager.isLocked()) {
-                replyBuilder.setWalletState(VeriBlockMessages.GetStateInfoReply.WalletState.LOCKED);
+            if (addressManager.isLocked) {
+                replyBuilder.walletState = GetStateInfoReply.WalletState.LOCKED
             } else {
-                replyBuilder.setWalletState(VeriBlockMessages.GetStateInfoReply.WalletState.UNLOCKED);
+                replyBuilder.walletState = GetStateInfoReply.WalletState.UNLOCKED
             }
         }
-        replyBuilder.setSuccess(true);
-
-        return replyBuilder.build();
+        replyBuilder.success = true
+        return replyBuilder.build()
     }
 
-
-    public VeriBlockMessages.SendCoinsReply sendCoins(VeriBlockMessages.SendCoinsRequest request) {
-        VeriBlockMessages.SendCoinsReply.Builder replyBuilder = VeriBlockMessages.SendCoinsReply.newBuilder();
-        ByteString sourceAddress = request.getSourceAddress();
-        List<AddressCoinsIndex> addressCoinsIndexList = new ArrayList<>();
-
-        ArrayList<Output> outputList = new ArrayList<>();
-        for (VeriBlockMessages.Output output : request.getAmountsList()) {
-            String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.getAddress());
-            outputList.add(new Output(new StandardAddress(address), Coin.valueOf(output.getAmount())));
+    fun sendCoins(request: SendCoinsRequest): SendCoinsReply {
+        val replyBuilder = SendCoinsReply.newBuilder()
+        val sourceAddress = request.sourceAddress
+        val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
+        val outputList = ArrayList<Output>()
+        for (output in request.amountsList) {
+            val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.address)
+            outputList.add(
+                Output(StandardAddress(address), Coin.valueOf(output.amount))
+            )
         }
-        long totalOutputAmount = outputList.stream()
-            .map(o -> o.getAmount().getAtomicUnits())
-            .reduce(0L, Long::sum);
-
-        if (sourceAddress.isEmpty()) {
-            for (Pair<String, Long> availableAddress : getAvailableAddresses(totalOutputAmount)) {
-                addressCoinsIndexList.add(new AddressCoinsIndex(availableAddress.getFirst(), availableAddress.getSecond(),
-                    getSignatureIndex(availableAddress.getFirst())
-                ));
+        val totalOutputAmount = outputList.map {
+            it.amount.atomicUnits
+        }.sum()
+        if (sourceAddress.isEmpty) {
+            for (availableAddress in getAvailableAddresses(totalOutputAmount)) {
+                addressCoinsIndexList.add(
+                    AddressCoinsIndex(
+                        availableAddress.first!!, availableAddress.second!!,
+                        getSignatureIndex(availableAddress.first)
+                    )
+                )
             }
         } else {
-            String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
-            LedgerContext ledgerContext = peerTable.getAddressState(address);
-
+            val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.sourceAddress)
+            val ledgerContext = peerTable.getAddressState(address)
             if (ledgerContext == null) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V008", "Information about this address does not exist.",
-                    "Perhaps your node is waiting for this information. Try to do it later.", true
-                ));
-                return replyBuilder.build();
-            } else if (!ledgerContext.getLedgerProofStatus().exists()) {
-                replyBuilder.setSuccess(false);
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
+                        "V008", "Information about this address does not exist.",
+                        "Perhaps your node is waiting for this information. Try to do it later.", true
+                    )
+                )
+                return replyBuilder.build()
+            } else if (!ledgerContext.ledgerProofStatus!!.exists()) {
+                replyBuilder.success = false
                 replyBuilder
-                    .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true));
-                return replyBuilder.build();
+                    .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true))
+                return replyBuilder.build()
             }
-
-            addressCoinsIndexList.add(new AddressCoinsIndex(address, ledgerContext.getLedgerValue().getAvailableAtomicUnits(),
-                getSignatureIndex(address)
-            ));
+            addressCoinsIndexList.add(
+                AddressCoinsIndex(
+                    address, ledgerContext.ledgerValue!!.availableAtomicUnits,
+                    getSignatureIndex(address)
+                )
+            )
         }
-
-        long totalAvailableBalance = addressCoinsIndexList.stream()
-            .map(AddressCoinsIndex::getCoins)
-            .reduce(0L, Long::sum);
-
+        val totalAvailableBalance = addressCoinsIndexList.map(AddressCoinsIndex::coins).sum()
         if (totalOutputAmount > totalAvailableBalance) {
-            replyBuilder.setSuccess(false);
+            replyBuilder.success = false
             replyBuilder
-                .addResults(makeResult("V008", "Available balance is not enough.", "Check your address that you use for this operation.", true));
-            return replyBuilder.build();
+                .addResults(makeResult("V008", "Available balance is not enough.", "Check your address that you use for this operation.", true))
+            return replyBuilder.build()
         }
-
-        List<Transaction> transactions = transactionService.createTransactionsByOutputList(addressCoinsIndexList, outputList);
-
-        if (transactions.size() == 0) {
-            replyBuilder.setSuccess(false);
+        val transactions = transactionService.createTransactionsByOutputList(
+            addressCoinsIndexList, outputList
+        )
+        if (transactions.isEmpty()) {
+            replyBuilder.success = false
             replyBuilder
                 .addResults(
-                    makeResult("V008", "Transaction has not been created, there is an exception.", "Check your address balance and try later.", true));
-            return replyBuilder.build();
+                    makeResult("V008", "Transaction has not been created, there is an exception.", "Check your address balance and try later.", true)
+                )
+            return replyBuilder.build()
         }
-
-        for (Transaction transaction : transactions) {
-            pendingTransactionContainer.addTransaction(transaction);
-            peerTable.advertise(transaction);
-            replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.getTxId().toString()));
+        for (transaction in transactions) {
+            pendingTransactionContainer.addTransaction(transaction)
+            peerTable.advertise(transaction)
+            replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.txId.toString()))
         }
-
-        replyBuilder.setSuccess(true);
-        return replyBuilder.build();
+        replyBuilder.success = true
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.GetSignatureIndexReply getSignatureIndex(VeriBlockMessages.GetSignatureIndexRequest request) {
-        VeriBlockMessages.GetSignatureIndexReply.Builder replyBuilder = VeriBlockMessages.GetSignatureIndexReply.newBuilder();
-        replyBuilder.setSuccess(true);
-
-        ArrayList<String> addresses = new ArrayList<>();
-        if (request.getAddressesCount() > 0) {
-            for (ByteString value : request.getAddressesList()) {
-                addresses.add(ByteStringAddressUtility.parseProperAddressTypeAutomatically(value));
+    fun getSignatureIndex(request: GetSignatureIndexRequest): GetSignatureIndexReply {
+        val replyBuilder = GetSignatureIndexReply.newBuilder()
+        replyBuilder.success = true
+        val addresses = ArrayList<String>()
+        if (request.addressesCount > 0) {
+            for (value in request.addressesList) {
+                addresses.add(ByteStringAddressUtility.parseProperAddressTypeAutomatically(value))
             }
         } else {
-            addresses.add(addressManager.getDefaultAddress().getHash());
+            addresses.add(addressManager.defaultAddress.hash)
         }
-
-        for (String address : addresses) {
-            byte[] addressBytes;
-            if (AddressUtility.isValidMultisigAddress(address)) {
-                addressBytes = Utility.base59ToBytes(address);
+        for (address in addresses) {
+            var addressBytes: ByteArray?
+            addressBytes = if (AddressUtility.isValidMultisigAddress(address)) {
+                Utility.base59ToBytes(address)
             } else {
-                addressBytes = Utility.base58ToBytes(address);
+                Utility.base58ToBytes(address)
             }
-            long blockchainLastSignatureIndex = peerTable.getSignatureIndex(address);
-            long poolLastSignatureIndex = getSignatureIndex(address);
-            replyBuilder.addIndexes(VeriBlockMessages.AddressSignatureIndexes
+            val blockchainLastSignatureIndex = peerTable.getSignatureIndex(address)!!
+            val poolLastSignatureIndex = getSignatureIndex(address)
+            replyBuilder.addIndexes(
+                VeriBlockMessages.AddressSignatureIndexes
                     .newBuilder()
                     .setAddress(ByteString.copyFrom(addressBytes))
                     .setBlockchainIndex(blockchainLastSignatureIndex)
-                    .setPoolIndex(poolLastSignatureIndex));
+                    .setPoolIndex(poolLastSignatureIndex)
+            )
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ProtocolReply submitTransactions(VeriBlockMessages.SubmitTransactionsRequest request) {
-        VeriBlockMessages.ProtocolReply.Builder replyBuilder = VeriBlockMessages.ProtocolReply.newBuilder();
-        replyBuilder.setSuccess(true);
-
-        for (VeriBlockMessages.TransactionUnion union : request.getTransactionsList()) {
-            boolean added = false;
-            switch (union.getTransactionCase()) {
-                case UNSIGNED:
-                    replyBuilder.setSuccess(false);
-                    replyBuilder.addResults(makeResult("V008",
+    fun submitTransactions(request: SubmitTransactionsRequest): ProtocolReply {
+        val replyBuilder = ProtocolReply.newBuilder()
+        replyBuilder.success = true
+        for (union in request.transactionsList) {
+            var added = false
+            when (union.transactionCase) {
+                TransactionUnion.TransactionCase.UNSIGNED -> {
+                    replyBuilder.success = false
+                    replyBuilder.addResults(
+                        makeResult(
+                            "V008",
                             "Transaction is unsigned!",
                             "Unsigned transactions cannot be submitted to the network without signing first",
-                            true));
-                    break;
-                case SIGNED:
-                    Transaction t = transactionFactory.create(union.getSigned());
-                    peerTable.advertise(t);
-                    added = pendingTransactionContainer.addTransaction(t);
-                    break;
-                case SIGNED_MULTISIG:
-                    Transaction multisigTransaction = transactionFactory.create(union.getSignedMultisig());
-                    peerTable.advertise(multisigTransaction);
-                    added = pendingTransactionContainer.addTransaction(multisigTransaction);
-                    break;
-                case TRANSACTION_NOT_SET:
-                    replyBuilder.setSuccess(false);
-                    replyBuilder.addResults(makeResult(
+                            true
+                        )
+                    )
+                }
+                TransactionUnion.TransactionCase.SIGNED -> {
+                    val t = transactionFactory.create(union.signed)
+                    peerTable.advertise(t)
+                    added = pendingTransactionContainer.addTransaction(t)
+                }
+                TransactionUnion.TransactionCase.SIGNED_MULTISIG -> {
+                    val multisigTransaction = transactionFactory.create(union.signedMultisig)
+                    peerTable.advertise(multisigTransaction)
+                    added = pendingTransactionContainer.addTransaction(multisigTransaction)
+                }
+                TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> {
+                    replyBuilder.success = false
+                    replyBuilder.addResults(
+                        makeResult(
                             "V008",
                             "Invalid transaction type",
                             "Either a signed or unsigned transaction should be passed",
-                            true));
-                    break;
+                            true
+                        )
+                    )
+                }
             }
             if (!added) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult(
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
                         "V008",
                         "Submit transaction error",
                         "The transaction was not added to the pool",
-                        true));
+                        true
+                    )
+                )
             }
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.DumpPrivateKeyReply dumpPrivateKey(VeriBlockMessages.DumpPrivateKeyRequest request) {
-        VeriBlockMessages.DumpPrivateKeyReply.Builder replyBuilder = VeriBlockMessages.DumpPrivateKeyReply.newBuilder();
-
-        if (!ByteStringAddressUtility.isByteStringValidAddress(request.getAddress())) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "Invalid Address",
-                    "The provided address is not a valid address", true));
-            return replyBuilder.build();
+    fun dumpPrivateKey(request: DumpPrivateKeyRequest): DumpPrivateKeyReply {
+        val replyBuilder = DumpPrivateKeyReply.newBuilder()
+        if (!ByteStringAddressUtility.isByteStringValidAddress(request.address)) {
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V008", "Invalid Address",
+                    "The provided address is not a valid address", true
+                )
+            )
+            return replyBuilder.build()
         }
-
-        String address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getAddress());
-
-        PublicKey publicKey = addressManager.getPublicKeyForAddress(address);
-        PrivateKey privateKey;
+        val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.address)
+        val publicKey = addressManager.getPublicKeyForAddress(address)
+        val privateKey: PrivateKey?
         try {
-            privateKey = addressManager.getPrivateKeyForAddress(address);
-        } catch (IllegalStateException e) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "Wallet Locked", e.getMessage(), true));
-            return replyBuilder.build();
+            privateKey = addressManager.getPrivateKeyForAddress(address)
+        } catch (e: IllegalStateException) {
+            replyBuilder.success = false
+            replyBuilder.addResults(makeResult("V008", "Wallet Locked", e.message, true))
+            return replyBuilder.build()
         }
-
         if (privateKey == null || publicKey == null) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008",
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V008",
                     "The provided address is not an address in this wallet!",
-                    address + " is not a valid address!", true));
-            return replyBuilder.build();
+                    "$address is not a valid address!", true
+                )
+            )
+            return replyBuilder.build()
         }
-
-        byte[] privateKeyBytes = privateKey.getEncoded();
-        byte[] publicKeyBytes = publicKey.getEncoded();
-
-        byte[] fullBytes = new byte[privateKeyBytes.length + publicKeyBytes.length + 1];
-        fullBytes[0] = (byte) privateKeyBytes.length;
-        System.arraycopy(privateKeyBytes, 0, fullBytes, 1, privateKeyBytes.length);
-        System.arraycopy(publicKeyBytes, 0, fullBytes, 1 + privateKeyBytes.length, publicKeyBytes.length);
-
-        replyBuilder.setAddress(ByteString.copyFrom(Base58.decode(address)));
-        replyBuilder.setPrivateKey(ByteString.copyFrom(fullBytes));
-        replyBuilder.setSuccess(true);
-        return replyBuilder.build();
+        val privateKeyBytes = privateKey.encoded
+        val publicKeyBytes = publicKey.encoded
+        val fullBytes = ByteArray(privateKeyBytes.size + publicKeyBytes.size + 1)
+        fullBytes[0] = privateKeyBytes.size.toByte()
+        System.arraycopy(privateKeyBytes, 0, fullBytes, 1, privateKeyBytes.size)
+        System.arraycopy(publicKeyBytes, 0, fullBytes, 1 + privateKeyBytes.size, publicKeyBytes.size)
+        replyBuilder.address = ByteString.copyFrom(Base58.decode(address))
+        replyBuilder.privateKey = ByteString.copyFrom(fullBytes)
+        replyBuilder.success = true
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ImportPrivateKeyReply importPrivateKey(VeriBlockMessages.ImportPrivateKeyRequest request) {
-        VeriBlockMessages.ImportPrivateKeyReply.Builder replyBuilder = VeriBlockMessages.ImportPrivateKeyReply.newBuilder();
-
-        if (addressManager.isLocked()) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V045", "Import Failed", "Wallet must be unlocked before importing a key", true));
-            return replyBuilder.build();
+    fun importPrivateKey(request: ImportPrivateKeyRequest): ImportPrivateKeyReply {
+        val replyBuilder = ImportPrivateKeyReply.newBuilder()
+        if (addressManager.isLocked) {
+            replyBuilder.success = false
+            replyBuilder.addResults(makeResult("V045", "Import Failed", "Wallet must be unlocked before importing a key", true))
+            return replyBuilder.build()
         }
 
         // The "Private" key is really the public and private key together encoded
-        byte[] fullBytes = request.getPrivateKey().toByteArray();
-        byte[] privateKeyBytes = new byte[fullBytes[0]];
-        byte[] publicKeyBytes = new byte[fullBytes.length - fullBytes[0] - 1];
-
-        System.arraycopy(fullBytes, 1, privateKeyBytes, 0, privateKeyBytes.length);
-        System.arraycopy(fullBytes, privateKeyBytes.length + 1, publicKeyBytes, 0, publicKeyBytes.length);
-
-        Address importedAddress = addressManager.importKeyPair(publicKeyBytes, privateKeyBytes);
-
+        val fullBytes = request.privateKey.toByteArray()
+        val privateKeyBytes = ByteArray(fullBytes[0].toInt())
+        val publicKeyBytes = ByteArray(fullBytes.size - fullBytes[0] - 1)
+        System.arraycopy(fullBytes, 1, privateKeyBytes, 0, privateKeyBytes.size)
+        System.arraycopy(fullBytes, privateKeyBytes.size + 1, publicKeyBytes, 0, publicKeyBytes.size)
+        val importedAddress = addressManager.importKeyPair(publicKeyBytes, privateKeyBytes)
         if (importedAddress == null) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "The provided private key was invalid or corrupted!", Utility.bytesToHex(fullBytes) + " is  not a valid private key!", true));
-            return replyBuilder.build();
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V008", "The provided private key was invalid or corrupted!",
+                    Utility.bytesToHex(fullBytes) + " is  not a valid private key!", true
+                )
+            )
+            return replyBuilder.build()
         }
-
-        replyBuilder.setResultantAddress(ByteStringAddressUtility.createProperByteStringAutomatically(importedAddress.getHash()));
-        replyBuilder.setSuccess(true);
-        return replyBuilder.build();
+        replyBuilder.resultantAddress = ByteStringAddressUtility.createProperByteStringAutomatically(importedAddress.hash)
+        replyBuilder.success = true
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ProtocolReply encryptWallet(VeriBlockMessages.EncryptWalletRequest request) {
-        VeriBlockMessages.ProtocolReply.Builder replyBuilder = VeriBlockMessages.ProtocolReply.newBuilder();
-
-        if (request.getPassphraseBytes().size() <= 0) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V041", "Invalid passphrase",
-                    "A blank passphrase is invalid for encrypting a wallet", true));
+    fun encryptWallet(request: EncryptWalletRequest): ProtocolReply {
+        val replyBuilder = ProtocolReply.newBuilder()
+        if (request.passphraseBytes.size() <= 0) {
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V041", "Invalid passphrase",
+                    "A blank passphrase is invalid for encrypting a wallet", true
+                )
+            )
         } else {
-            char[] passphrase = request.getPassphrase().toCharArray();
-
+            val passphrase = request.passphrase.toCharArray()
             try {
-                boolean result = addressManager.encryptWallet(passphrase);
+                val result = addressManager.encryptWallet(passphrase)
                 if (result) {
-                    replyBuilder.setSuccess(true);
-                    replyBuilder.addResults(makeResult("V200", "Success",
-                            "Wallet has been encrypted with supplied passphrase", false));
+                    replyBuilder.success = true
+                    replyBuilder.addResults(
+                        makeResult(
+                            "V200", "Success",
+                            "Wallet has been encrypted with supplied passphrase", false
+                        )
+                    )
                 } else {
-                    replyBuilder.setSuccess(false);
-                    replyBuilder.addResults(makeResult("V043", "Encryption Failed",
-                            "Unable to encrypt wallet, see NodeCore logs", true));
+                    replyBuilder.success = false
+                    replyBuilder.addResults(
+                        makeResult(
+                            "V043", "Encryption Failed",
+                            "Unable to encrypt wallet, see NodeCore logs", true
+                        )
+                    )
                 }
-            } catch (IllegalStateException e) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V042", "Wallet already encrypted",
-                        "Wallet is already encrypted and must be decrypted first", true));
+            } catch (e: IllegalStateException) {
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
+                        "V042", "Wallet already encrypted",
+                        "Wallet is already encrypted and must be decrypted first", true
+                    )
+                )
             }
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ProtocolReply decryptWallet(VeriBlockMessages.DecryptWalletRequest request) {
-        VeriBlockMessages.ProtocolReply.Builder replyBuilder = VeriBlockMessages.ProtocolReply.newBuilder();
-
-        if (request.getPassphraseBytes().size() <= 0) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V041", "Invalid passphrase",
-                    "A blank passphrase is invalid for decrypting a wallet", true));
+    fun decryptWallet(request: DecryptWalletRequest): ProtocolReply {
+        val replyBuilder = ProtocolReply.newBuilder()
+        if (request.passphraseBytes.size() <= 0) {
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V041", "Invalid passphrase",
+                    "A blank passphrase is invalid for decrypting a wallet", true
+                )
+            )
         } else {
-            char[] passphrase = request.getPassphrase().toCharArray();
-
+            val passphrase = request.passphrase.toCharArray()
             try {
-                boolean result = addressManager.decryptWallet(passphrase);
+                val result = addressManager.decryptWallet(passphrase)
                 if (result) {
-                    replyBuilder.setSuccess(true);
-                    replyBuilder.addResults(makeResult("V200", "Success",
-                            "Wallet has been decrypted", false));
+                    replyBuilder.success = true
+                    replyBuilder.addResults(
+                        makeResult(
+                            "V200", "Success",
+                            "Wallet has been decrypted", false
+                        )
+                    )
                 } else {
-                    replyBuilder.setSuccess(false);
-                    replyBuilder.addResults(makeResult("V044", "Decryption Failed",
-                            "Unable to decrypt wallet, see NodeCore logs", true));
+                    replyBuilder.success = false
+                    replyBuilder.addResults(
+                        makeResult(
+                            "V044", "Decryption Failed",
+                            "Unable to decrypt wallet, see NodeCore logs", true
+                        )
+                    )
                 }
-            } catch (IllegalStateException e) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V042", "Wallet already encrypted",
-                        "Wallet is already encrypted and must be decrypted first", true));
+            } catch (e: IllegalStateException) {
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
+                        "V042", "Wallet already encrypted",
+                        "Wallet is already encrypted and must be decrypted first", true
+                    )
+                )
             }
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ProtocolReply unlockWallet(VeriBlockMessages.UnlockWalletRequest request) {
-        VeriBlockMessages.ProtocolReply.Builder replyBuilder = VeriBlockMessages.ProtocolReply.newBuilder();
-
-        if (request.getPassphraseBytes().size() <= 0) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V041", "Invalid passphrase",
-                    "Passphrase is invalid for unlocking this wallet", true));
+    fun unlockWallet(request: UnlockWalletRequest): ProtocolReply {
+        val replyBuilder = ProtocolReply.newBuilder()
+        if (request.passphraseBytes.size() <= 0) {
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V041", "Invalid passphrase",
+                    "Passphrase is invalid for unlocking this wallet", true
+                )
+            )
         } else {
-            char[] passphrase = request.getPassphrase().toCharArray();
-
-            boolean result = addressManager.unlock(passphrase);
+            val passphrase = request.passphrase.toCharArray()
+            val result = addressManager.unlock(passphrase)
             if (result) {
-                replyBuilder.setSuccess(true);
-                replyBuilder.addResults(makeResult("V200", "Success",
-                        "Wallet has been unlocked", false));
+                replyBuilder.success = true
+                replyBuilder.addResults(
+                    makeResult(
+                        "V200", "Success",
+                        "Wallet has been unlocked", false
+                    )
+                )
             } else {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V041", "Invalid passphrase",
-                        "Passphrase is invalid for unlocking this wallet", true));
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
+                        "V041", "Invalid passphrase",
+                        "Passphrase is invalid for unlocking this wallet", true
+                    )
+                )
             }
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ProtocolReply lockWallet(VeriBlockMessages.LockWalletRequest request) {
-        VeriBlockMessages.ProtocolReply.Builder replyBuilder = VeriBlockMessages.ProtocolReply.newBuilder();
-
-        addressManager.lock();
-        replyBuilder.setSuccess(true);
-        replyBuilder.addResults(makeResult("V200", "Success",
-                "Wallet has been locked", false));
-
-        return replyBuilder.build();
+    fun lockWallet(request: LockWalletRequest?): ProtocolReply {
+        val replyBuilder = ProtocolReply.newBuilder()
+        addressManager.lock()
+        replyBuilder.success = true
+        replyBuilder.addResults(
+            makeResult(
+                "V200", "Success",
+                "Wallet has been locked", false
+            )
+        )
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.BackupWalletReply backupWallet(VeriBlockMessages.BackupWalletRequest request) {
-        VeriBlockMessages.BackupWalletReply.Builder replyBuilder = VeriBlockMessages.BackupWalletReply.newBuilder();
-
+    fun backupWallet(request: BackupWalletRequest): BackupWalletReply {
+        val replyBuilder = BackupWalletReply.newBuilder()
         try {
-            String backupLocation = new String(request.getTargetLocation().toByteArray());
-            Pair<Boolean, String> saveWalletResult = addressManager.saveWalletToFile(backupLocation);
-            boolean success = saveWalletResult.getFirst();
-
+            val backupLocation = String(request.targetLocation.toByteArray())
+            val saveWalletResult = addressManager.saveWalletToFile(backupLocation)
+            val success = saveWalletResult.first
             if (!success) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult(
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
                         "V008",
                         "Unable to save backup wallet file!",
-                        saveWalletResult.getSecond(),
-                        true));
+                        saveWalletResult.second,
+                        true
+                    )
+                )
             } else {
-                replyBuilder.setSuccess(true);
+                replyBuilder.success = true
             }
-        } catch (Exception e) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult(
+        } catch (e: Exception) {
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
                     "V008",
                     "Writing wallet backup failed!",
-                    "The following error occurred while writing the backup files: " + e.getMessage() + ".",
-                    true));
+                    "The following error occurred while writing the backup files: " + e.message + ".",
+                    true
+                )
+            )
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.ImportWalletReply importWallet(VeriBlockMessages.ImportWalletRequest request) {
-        VeriBlockMessages.ImportWalletReply.Builder replyBuilder = VeriBlockMessages.ImportWalletReply.newBuilder();
-
-        if (addressManager.isLocked()) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V045", "Import Failed",
-                    "Wallet must be unlocked before importing another wallet", true));
-            return replyBuilder.build();
+    fun importWallet(request: ImportWalletRequest): ImportWalletReply {
+        val replyBuilder = ImportWalletReply.newBuilder()
+        if (addressManager.isLocked) {
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
+                    "V045", "Import Failed",
+                    "Wallet must be unlocked before importing another wallet", true
+                )
+            )
+            return replyBuilder.build()
         }
-
         try {
-            String importFromLocation = new String(request.getSourceLocation().toByteArray(), StandardCharsets.UTF_8);
-            String passphrase = request.getPassphrase();
-
-            Pair<Boolean, String> result;
-            if (passphrase != null && passphrase.length() > 0) {
-                result = addressManager.importEncryptedWallet(new File(importFromLocation), passphrase.toCharArray());
+            val importFromLocation = String(request.sourceLocation.toByteArray(), StandardCharsets.UTF_8)
+            val passphrase = request.passphrase
+            val result: Pair<Boolean, String>
+            result = if (passphrase != null && passphrase.length > 0) {
+                addressManager.importEncryptedWallet(File(importFromLocation), passphrase.toCharArray())
             } else {
-                result = addressManager.importWallet(new File(importFromLocation));
+                addressManager.importWallet(File(importFromLocation))
             }
-            boolean success = result.getFirst();
-
+            val success = result.first
             if (!success) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult(
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
                         "V008",
                         "Unable to load/import wallet file!",
-                        result.getSecond(),
-                        true));
+                        result.second,
+                        true
+                    )
+                )
             } else {
-                replyBuilder.setSuccess(true);
+                replyBuilder.success = true
             }
-
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult(
+        } catch (e: Exception) {
+            logger.error(e.message, e)
+            replyBuilder.success = false
+            replyBuilder.addResults(
+                makeResult(
                     "V008",
                     "Reading wallet file failed!",
-                    "The following error occurred while reading the wallet file: " + e.getMessage() + ".",
-                    true));
+                    "The following error occurred while reading the wallet file: " + e.message + ".",
+                    true
+                )
+            )
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.GetNewAddressReply getNewAddress(VeriBlockMessages.GetNewAddressRequest request) {
-        VeriBlockMessages.GetNewAddressReply.Builder replyBuilder = VeriBlockMessages.GetNewAddressReply.newBuilder();
-        replyBuilder.setSuccess(true);
-
-        if (addressManager.isLocked()) {
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Wallet must be unlocked before creating a new address", true));
+    fun getNewAddress(request: GetNewAddressRequest): GetNewAddressReply {
+        val replyBuilder = GetNewAddressReply.newBuilder()
+        replyBuilder.success = true
+        if (addressManager.isLocked) {
+            replyBuilder.success = false
+            replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Wallet must be unlocked before creating a new address", true))
         } else {
             try {
-                int count = request.getCount();
+                var count = request.count
                 if (count < 1) {
-                    count = 1;
+                    count = 1
                 }
-
-                boolean success = true;
-                List<Address> addresses = new ArrayList<>(count);
-                for (int i = 0; i < count; i++) {
-                    Address address = addressManager.getNewAddress();
+                var success = true
+                val addresses: MutableList<Address> = ArrayList(
+                    count
+                )
+                for (i in 0 until count) {
+                    val address = addressManager.newAddress
                     if (address != null) {
-                        addresses.add(address);
-                        logger.info("New address: {}", address.getHash());
+                        addresses.add(address)
+                        logger.info("New address: {}", address.hash)
                     } else {
-                        success = false;
-                        replyBuilder.setSuccess(false);
-                        replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Unable to generate new address", true));
-                        break;
+                        success = false
+                        replyBuilder.success = false
+                        replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Unable to generate new address", true))
+                        break
                     }
                 }
-
                 if (success) {
-                    if (addresses.size() > 0) {
+                    if (addresses.size > 0) {
                         // New addresses from the normal address manager will always be standard addresses
-                        replyBuilder.setAddress(ByteStringUtility.base58ToByteString(addresses.get(0).getHash()));
+                        replyBuilder.address = ByteStringUtility.base58ToByteString(addresses[0].hash)
                     }
-                    if (addresses.size() > 1) {
-                        addresses.subList(1, addresses.size())
-                                .forEach(a -> replyBuilder.addAdditionalAddresses(ByteStringUtility.base58ToByteString(a.getHash())));
+                    if (addresses.size > 1) {
+                        addresses.subList(1, addresses.size)
+                            .forEach(
+                                Consumer { a: Address ->
+                                    replyBuilder.addAdditionalAddresses(
+                                        ByteStringUtility.base58ToByteString(a.hash)
+                                    )
+                                }
+                            )
                     }
-
-                    replyBuilder.addResults(makeResult("V200", "Wallet Updated", "The wallet has been modified. Please make a backup of the wallet data file.", false));
+                    replyBuilder.addResults(
+                        makeResult("V200", "Wallet Updated", "The wallet has been modified. Please make a backup of the wallet data file.", false)
+                    )
                 }
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Unable to generate new address", true));
-            } catch (WalletLockedException e) {
-                logger.warn(e.getMessage());
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Wallet must be unlocked before creating a new address", true));
+            } catch (e: IOException) {
+                logger.error(e.message, e)
+                replyBuilder.success = false
+                replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Unable to generate new address", true))
+            } catch (e: WalletLockedException) {
+                logger.warn(e.message)
+                replyBuilder.success = false
+                replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Wallet must be unlocked before creating a new address", true))
             }
         }
-
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.GetBalanceReply getBalance(VeriBlockMessages.GetBalanceRequest request) {
-        VeriBlockMessages.GetBalanceReply.Builder replyBuilder = VeriBlockMessages.GetBalanceReply.newBuilder();
+    fun getBalance(request: GetBalanceRequest): GetBalanceReply {
+        val replyBuilder = GetBalanceReply.newBuilder()
         // All of the addresses from the normal address manager will be standard
-        Map<String, LedgerContext> addressLedgerContext = peerTable.getAddressesState();
-
-        if (request.getAddressesCount() == 0) {
-            for (String address : addressLedgerContext.keySet()) {
-                LedgerContext ledgerContext = addressLedgerContext.get(address);
-                formGetBalanceReply(address, ledgerContext, replyBuilder);
+        val addressLedgerContext = peerTable.getAddressesState()
+        if (request.addressesCount == 0) {
+            for (address in addressLedgerContext.keys) {
+                val ledgerContext = addressLedgerContext[address]
+                formGetBalanceReply(address, ledgerContext, replyBuilder)
             }
         } else {
-            for (ByteString address : request.getAddressesList()) {
-                String addressString = ByteStringAddressUtility.parseProperAddressTypeAutomatically(address);
-                LedgerContext ledgerContext = addressLedgerContext.get(addressString);
+            for (address in request.addressesList) {
+                val addressString = ByteStringAddressUtility.parseProperAddressTypeAutomatically(address)
+                val ledgerContext = addressLedgerContext[addressString]
                 if (ledgerContext != null) {
-                    formGetBalanceReply(addressString, ledgerContext, replyBuilder);
+                    formGetBalanceReply(addressString, ledgerContext, replyBuilder)
                 } else {
-                    addressManager.monitor(new Address(addressString, null));
-                    replyBuilder.addConfirmed(VeriBlockMessages.AddressBalance
-                        .newBuilder()
-                        .setAddress(address)
-                        .setLockedAmount(0L)
-                        .setUnlockedAmount(0L)
-                        .setTotalAmount(0L));
-                    replyBuilder.addUnconfirmed(VeriBlockMessages.Output
-                        .newBuilder()
-                        .setAddress(address)
-                        .setAmount(0L));
+                    addressManager.monitor(Address(addressString, null))
+                    replyBuilder.addConfirmed(
+                        VeriBlockMessages.AddressBalance
+                            .newBuilder()
+                            .setAddress(address)
+                            .setLockedAmount(0L)
+                            .setUnlockedAmount(0L)
+                            .setTotalAmount(0L)
+                    )
+                    replyBuilder.addUnconfirmed(
+                        VeriBlockMessages.Output
+                            .newBuilder()
+                            .setAddress(address)
+                            .setAmount(0L)
+                    )
                 }
             }
         }
-
-        replyBuilder.setSuccess(true);
-
-        return replyBuilder.build();
+        replyBuilder.success = true
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.CreateAltChainEndorsementReply createAltChainEndorsement(VeriBlockMessages.CreateAltChainEndorsementRequest request) {
-        VeriBlockMessages.CreateAltChainEndorsementReply.Builder replyBuilder = VeriBlockMessages.CreateAltChainEndorsementReply.newBuilder();
+    fun createAltChainEndorsement(request: CreateAltChainEndorsementRequest): CreateAltChainEndorsementReply {
+        val replyBuilder = CreateAltChainEndorsementReply.newBuilder()
         try {
-            byte[] publicationData = request.getPublicationData().toByteArray();
-            String sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.getSourceAddress());
-            long signatureIndex = getSignatureIndex(sourceAddress) + 1;
-            long fee = request.getFeePerByte() * transactionService.predictAltChainEndorsementTransactionSize(publicationData.length, signatureIndex);
-
-            if (fee > request.getMaxFee()) {
-                replyBuilder.setSuccess(false);
-                replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error",
-                    "Calcualated fee (" + fee + ") was above the maximum configured amount (" + request.getMaxFee() + ").", true
-                ));
-                return replyBuilder.build();
+            val publicationData = request.publicationData.toByteArray()
+            val sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.sourceAddress)
+            val signatureIndex = getSignatureIndex(sourceAddress) + 1
+            val fee = request.feePerByte * predictAltChainEndorsementTransactionSize(
+                publicationData.size, signatureIndex
+            )
+            if (fee > request.maxFee) {
+                replyBuilder.success = false
+                replyBuilder.addResults(
+                    makeResult(
+                        "V008", "Create Alt Endorsement Error",
+                        "Calcualated fee (" + fee + ") was above the maximum configured amount (" + request.maxFee + ").", true
+                    )
+                )
+                return replyBuilder.build()
             }
-
-            Transaction tx = transactionService.createUnsignedAltChainEndorsementTransaction(sourceAddress, fee, publicationData, signatureIndex);
-
-            replyBuilder.setSuccess(true);
-            replyBuilder.setTransaction(TransactionService.getRegularTransactionMessageBuilder((StandardTransaction) tx));
-            replyBuilder.setSignatureIndex(signatureIndex);
-        } catch (Exception e) {
-            logger.error("Unable to create alt chain endorsement", e);
-            replyBuilder.setSuccess(false);
-            replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error", "An error occurred processing request", true));
+            val tx = transactionService.createUnsignedAltChainEndorsementTransaction(
+                sourceAddress, fee, publicationData, signatureIndex
+            )
+            replyBuilder.success = true
+            replyBuilder.setTransaction(getRegularTransactionMessageBuilder((tx as StandardTransaction)))
+            replyBuilder.signatureIndex = signatureIndex
+        } catch (e: Exception) {
+            logger.error("Unable to create alt chain endorsement", e)
+            replyBuilder.success = false
+            replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error", "An error occurred processing request", true))
         }
-        return replyBuilder.build();
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.BlockHeader getLastVBKBlockHeader() {
-        try {
-            StoredVeriBlockBlock lastBlock = blockchain.getBlockStore().getChainHead();
-            VeriBlockBlock block = lastBlock.getBlock();
-
-            return VeriBlockMessages.BlockHeader.newBuilder()
-                .setHash(ByteString.copyFrom(block.getHash().getBytes()))
-                .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
-                .build();
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-
-        return null;
-    }
-
-    public VeriBlockMessages.BlockHeader getVbkBlockHeader(ByteString hash) {
-        try {
-            StoredVeriBlockBlock block = blockchain.get(VBlakeHash.wrap(hash.toByteArray()));
-
-            return VeriBlockMessages.BlockHeader.newBuilder()
-                .setHash(ByteString.copyFrom(block.getHash().getBytes()))
-                .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.getBlock())))
-                .build();
-        } catch (SQLException ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-
-        return null;
-    }
-
-    public VeriBlockMessages.BlockHeader getVbkBlockHeader(Integer height) {
-        StoredVeriBlockBlock block = blockchain.getBlockByHeight(height);
-
-        if (block == null) {
-            return null;
-        }
-
+    fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
+        val lastBlock = blockchain.blockStore.chainHead
+        val block = lastBlock.block
         return VeriBlockMessages.BlockHeader.newBuilder()
-            .setHash(ByteString.copyFrom(block.getHash().getBytes()))
-            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.getBlock())))
-            .build();
+            .setHash(ByteString.copyFrom(block.hash.bytes))
+            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
+            .build()
     }
 
-    public VeriBlockMessages.GetLastBitcoinBlockReply getLastBitcoinBlock(VeriBlockMessages.GetLastBitcoinBlockRequest request) {
-        VeriBlockMessages.GetLastBitcoinBlockReply.Builder replyBuilder = VeriBlockMessages.GetLastBitcoinBlockReply.newBuilder();
-        replyBuilder.setSuccess(true);
+    fun getVbkBlockHeader(hash: ByteString): VeriBlockMessages.BlockHeader {
+        val block = blockchain[VBlakeHash.wrap(hash.toByteArray())]
+        return VeriBlockMessages.BlockHeader.newBuilder()
+            .setHash(ByteString.copyFrom(block.hash.bytes))
+            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.block)))
+            .build()
+    }
+
+    fun getVbkBlockHeader(height: Int): VeriBlockMessages.BlockHeader? {
+        val block = blockchain.getBlockByHeight(height)
+            ?: return null
+        return VeriBlockMessages.BlockHeader.newBuilder()
+            .setHash(ByteString.copyFrom(block.hash.bytes))
+            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.block)))
+            .build()
+    }
+
+    fun getLastBitcoinBlock(request: GetLastBitcoinBlockRequest): GetLastBitcoinBlockReply {
+        val replyBuilder = GetLastBitcoinBlockReply.newBuilder()
+        replyBuilder.success = true
 
         //Mock todo SPV-111
-        BitcoinBlock block = spvContext.getNetworkParameters().getBitcoinOriginBlock();
-
-        replyBuilder.setHash(ByteString.copyFrom(block.getHash().getBytes()));
-        return replyBuilder.build();
+        val block = spvContext.networkParameters.bitcoinOriginBlock
+        replyBuilder.hash = ByteString.copyFrom(block.hash.bytes)
+        return replyBuilder.build()
     }
 
-    public VeriBlockMessages.GetTransactionsReply getTransactions(VeriBlockMessages.GetTransactionsRequest request) {
-        List<Sha256Hash> ids = request.getIdsList()
-            .stream()
-            .map(id -> Sha256Hash.wrap(id.toByteArray()))
-            .collect(Collectors.toList());
-
-        List<VeriBlockMessages.TransactionInfo> replyList = ids.stream()
-            .map(pendingTransactionContainer::getTransactionInfo)
-            .collect(Collectors.toList());
-
-        return VeriBlockMessages.GetTransactionsReply.newBuilder()
+    fun getTransactions(request: GetTransactionsRequest): GetTransactionsReply {
+        val ids = request.idsList.map {
+            Sha256Hash.wrap(it.toByteArray())
+        }
+        val replyList: List<VeriBlockMessages.TransactionInfo> = ids.map {
+            pendingTransactionContainer.getTransactionInfo(it)
+        }
+        return GetTransactionsReply.newBuilder()
             .addAllTransactions(replyList)
-            .build();
+            .build()
     }
 
-    public VeriBlockMessages.GetVeriBlockPublicationsReply getVeriBlockPublications(VeriBlockMessages.GetVeriBlockPublicationsRequest getVeriBlockPublicationsRequest) {
-        VeriBlockMessages.Event advertise = VeriBlockMessages.Event.newBuilder()
-            .setId(MessageIdGenerator.next())
+    fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest?): GetVeriBlockPublicationsReply {
+        val advertise = VeriBlockMessages.Event.newBuilder()
+            .setId(next())
             .setAcknowledge(false)
             .setVeriblockPublicationsRequest(getVeriBlockPublicationsRequest)
-            .build();
-
-        Future<VeriBlockMessages.Event> futureEventReply = peerTable.advertiseWithReply(advertise);
-
-        try {
-            return futureEventReply.get().getVeriblockPublicationsReply();
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error(e.getMessage(), e);
-        }
-        return null;
+            .build()
+        val futureEventReply = peerTable.advertiseWithReply(advertise)
+        return futureEventReply.get().veriblockPublicationsReply
     }
 
-    private List<Pair<String, Long>> getAvailableAddresses(long totalOutputAmount) {
-        List<Pair<String, Long>> addressCoinsForPayment = new ArrayList<>();
+    private fun getAvailableAddresses(totalOutputAmount: Long): List<Pair<String, Long>> {
+        val addressCoinsForPayment: MutableList<Pair<String, Long>> = ArrayList()
 
         //Use default address if there balance is enough.
-        LedgerContext ledgerContext = peerTable.getAddressState(addressManager.getDefaultAddress().getHash());
-        if (ledgerContext.getLedgerValue().getAvailableAtomicUnits() > totalOutputAmount) {
-            addressCoinsForPayment.add(new Pair<>(ledgerContext.getAddress().getAddress(), ledgerContext.getLedgerValue().getAvailableAtomicUnits()));
-
-            return addressCoinsForPayment;
+        val ledgerContext = peerTable.getAddressState(addressManager.defaultAddress.hash)!!
+        if (ledgerContext.ledgerValue!!.availableAtomicUnits > totalOutputAmount) {
+            return listOf(
+                Pair(ledgerContext.address!!.address, ledgerContext.ledgerValue!!.availableAtomicUnits)
+            )
         }
-
-        List<Pair<String, Long>> addressBalanceList = new ArrayList<>();
-        Map<String, LedgerContext> ledgerContextMap = peerTable.getAddressesState();
-
-        for (Address address : addressManager.getAll()) {
-            if (ledgerContextMap.containsKey(address.getHash()) && ledgerContextMap.get(address.getHash()).getLedgerValue() != null) {
+        val addressBalanceList: MutableList<Pair<String, Long>> = ArrayList()
+        val ledgerContextMap = peerTable.getAddressesState()
+        for (address in addressManager.all) {
+            if (ledgerContextMap.containsKey(address.hash) && ledgerContextMap[address.hash]!!.ledgerValue != null) {
                 addressBalanceList
-                    .add(new Pair<>(address.getHash(), ledgerContextMap.get(address.getHash()).getLedgerValue().getAvailableAtomicUnits()));
+                    .add(
+                        Pair(
+                            address.hash, ledgerContextMap[address.hash]!!.ledgerValue!!.availableAtomicUnits
+                        )
+                    )
             }
         }
-
-        return addressBalanceList.stream()
-            .filter(b -> b.getSecond() > 0)
-            .sorted((b1, b2) -> Long.compare(b2.getSecond(), b1.getSecond()))
-            .collect(Collectors.toList());
-    }
-
-    private void formGetBalanceReply(String address, LedgerContext ledgerContext, VeriBlockMessages.GetBalanceReply.Builder replyBuilder) {
-        long balance = 0L;
-        long lockedCoins = 0L;
-
-        if (ledgerContext != null && ledgerContext.getLedgerValue() != null) {
-            balance = ledgerContext.getLedgerValue().getAvailableAtomicUnits();
-            lockedCoins = ledgerContext.getLedgerValue().getFrozenAtomicUnits();
+        return addressBalanceList.filter {
+            it.second > 0
+        }.sortedBy {
+            it.second
         }
-
-        replyBuilder.addConfirmed(VeriBlockMessages.AddressBalance
-            .newBuilder()
-            .setAddress(ByteStringUtility.base58ToByteString(address))
-            .setLockedAmount(lockedCoins)
-            .setUnlockedAmount(balance - lockedCoins)
-            .setTotalAmount(balance));
-
-        replyBuilder.addUnconfirmed(VeriBlockMessages.Output
-            .newBuilder()
-            .setAddress(ByteStringUtility.base58ToByteString(address))
-            .setAmount(0L));
     }
 
-    private Long getSignatureIndex(String address){
-        Long signatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address);
-
-        if(signatureIndex == null){
-            return peerTable.getSignatureIndex(address);
+    private fun formGetBalanceReply(address: String, ledgerContext: LedgerContext?, replyBuilder: GetBalanceReply.Builder) {
+        var balance = 0L
+        var lockedCoins = 0L
+        if (ledgerContext != null && ledgerContext.ledgerValue != null) {
+            balance = ledgerContext.ledgerValue!!.availableAtomicUnits
+            lockedCoins = ledgerContext.ledgerValue!!.frozenAtomicUnits
         }
-        return signatureIndex;
-    }
-
-    private VeriBlockMessages.Result makeResult(
-            String code,
-            String message,
-            String details,
-            boolean error) {
-        return VeriBlockMessages.Result
+        replyBuilder.addConfirmed(
+            VeriBlockMessages.AddressBalance
                 .newBuilder()
-                .setCode(code)
-                .setMessage(message)
-                .setDetails(details)
-                .setError(error)
-                .build();
+                .setAddress(ByteStringUtility.base58ToByteString(address))
+                .setLockedAmount(lockedCoins)
+                .setUnlockedAmount(balance - lockedCoins)
+                .setTotalAmount(balance)
+        )
+        replyBuilder.addUnconfirmed(
+            VeriBlockMessages.Output
+                .newBuilder()
+                .setAddress(ByteStringUtility.base58ToByteString(address))
+                .setAmount(0L)
+        )
+    }
+
+    private fun getSignatureIndex(address: String?): Long {
+        return pendingTransactionContainer.getPendingSignatureIndexForAddress(address!!)
+            ?: return peerTable.getSignatureIndex(address)!!
+    }
+
+    private fun makeResult(
+        code: String,
+        message: String,
+        details: String?,
+        error: Boolean
+    ): VeriBlockMessages.Result {
+        return VeriBlockMessages.Result
+            .newBuilder()
+            .setCode(code)
+            .setMessage(message)
+            .setDetails(details)
+            .setError(error)
+            .build()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AdminApiService::class.java)
     }
 
 }

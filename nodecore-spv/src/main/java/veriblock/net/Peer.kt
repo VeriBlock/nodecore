@@ -86,18 +86,15 @@ class Peer(
                     logger.info("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
 
                     // Extract latest keystones and ask for more
-                    val extractedKeystones = message.advertiseBlocks.headersList.stream()
-                        .map { blockHeader: VeriBlockMessages.BlockHeader ->
+                    val extractedKeystones = message.advertiseBlocks.headersList.asSequence().map {
                             SerializeDeserializeService.parseVeriBlockBlock(
-                                blockHeader.header.toByteArray()
+                                it.header.toByteArray()
                             )
-                        }
-                        .filter { block: VeriBlockBlock -> block.height % 20 == 0 }
-                        .sorted(
-                            Comparator.comparingInt { obj: VeriBlockBlock -> obj.height }.reversed()
-                        )
-                        .limit(10)
-                        .collect(Collectors.toList())
+                        }.filter {
+                        it.height % 20 == 0
+                    }.sortedByDescending {
+                        it.height
+                    }.take(10).toList()
                     requestBlockDownload(extractedKeystones)
                 }
                 notifyMessageReceived(message)

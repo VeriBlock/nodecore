@@ -21,9 +21,9 @@ class PendingTransactionContainer {
         return allPendingTx
     }
 
-    fun getTransactionInfo(txId: Sha256Hash): VeriBlockMessages.TransactionInfo? {
-        if (confirmedTxIdTransactionReply.containsKey(txId)) {
-            return confirmedTxIdTransactionReply[txId]
+    fun getTransactionInfo(txId: Sha256Hash): VeriBlockMessages.TransactionInfo {
+        confirmedTxIdTransactionReply[txId]?.let {
+            return it
         }
         if (!pendingTxIdTransaction.containsKey(txId)) {
             transactionsForMonitoring.add(txId)
@@ -50,11 +50,11 @@ class PendingTransactionContainer {
         val transactions = pendingAddressTransaction[transaction.inputAddress.toString()]!!
         if (CollectionUtils.isNotEmpty(transactions)) {
             transactions.add(transaction)
-            pendingTxIdTransaction[transaction.txId!!] = transaction
+            pendingTxIdTransaction[transaction.txId] = transaction
         } else {
             val newList = ArrayList<Transaction?>()
             newList.add(transaction)
-            pendingTxIdTransaction[transaction.txId!!] = transaction
+            pendingTxIdTransaction[transaction.txId] = transaction
             pendingAddressTransaction[transaction.inputAddress.toString()] = newList
         }
         return true

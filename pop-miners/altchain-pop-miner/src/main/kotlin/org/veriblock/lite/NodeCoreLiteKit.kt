@@ -156,7 +156,7 @@ class NodeCoreLiteKit(
 
         logger.info { "Initialize SPV: " }
         while (true) {
-            val status: DownloadStatusResponse = spvContext.peerTable.downloadStatus
+            val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
             if (status.downloadStatus.isDiscovering()) {
                 logger.info { "Waiting for peers response." }
             } else if (status.downloadStatus.isDownloading()) {

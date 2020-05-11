@@ -5,545 +5,481 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package veriblock.net;
+package veriblock.net
 
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.utilities.ByteStringUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.veriblock.core.crypto.BloomFilter;
-import org.veriblock.core.wallet.Address;
-import org.veriblock.sdk.models.Sha256Hash;
-import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.util.Base58;
-import spark.utils.CollectionUtils;
-import veriblock.SpvContext;
-import veriblock.listeners.PendingTransactionDownloadedListener;
-import veriblock.model.DownloadStatus;
-import veriblock.model.DownloadStatusResponse;
-import veriblock.model.FutureEventReply;
-import veriblock.model.LedgerContext;
-import veriblock.model.ListenerRegistration;
-import veriblock.model.NetworkMessage;
-import veriblock.model.NodeMetadata;
-import veriblock.model.PeerAddress;
-import veriblock.model.StandardTransaction;
-import veriblock.model.Transaction;
-import veriblock.model.TransactionTypeIdentifier;
-import veriblock.model.mapper.LedgerProofReplyMapper;
-import veriblock.serialization.MessageSerializer;
-import veriblock.service.PendingTransactionContainer;
-import veriblock.service.Blockchain;
-import veriblock.util.MessageIdGenerator;
-import veriblock.util.Threading;
-import veriblock.validator.LedgerProofReplyValidator;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService
+import com.google.common.util.concurrent.MoreExecutors
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.google.protobuf.ByteString
+import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
+import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
+import nodecore.api.grpc.VeriBlockMessages.LedgerProofRequest
+import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
+import nodecore.api.grpc.utilities.ByteStringUtility
+import org.veriblock.core.crypto.BloomFilter
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.util.Base58
+import spark.utils.CollectionUtils
+import veriblock.SpvContext
+import veriblock.listeners.PendingTransactionDownloadedListener
+import veriblock.model.DownloadStatus
+import veriblock.model.DownloadStatusResponse
+import veriblock.model.FutureEventReply
+import veriblock.model.LedgerContext
+import veriblock.model.ListenerRegistration
+import veriblock.model.NetworkMessage
+import veriblock.model.NodeMetadata
+import veriblock.model.PeerAddress
+import veriblock.model.StandardTransaction
+import veriblock.model.Transaction
+import veriblock.model.TransactionTypeIdentifier
+import veriblock.model.mapper.LedgerProofReplyMapper
+import veriblock.serialization.MessageSerializer
+import veriblock.serialization.MessageSerializer.deserializeNormalTransaction
+import veriblock.service.Blockchain
+import veriblock.service.PendingTransactionContainer
+import veriblock.util.MessageIdGenerator.next
+import veriblock.util.Threading
+import veriblock.util.Threading.shutdown
+import veriblock.validator.LedgerProofReplyValidator
+import java.io.IOException
+import java.net.Socket
+import java.sql.SQLException
+import java.util.Collections
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.Callable
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.LinkedTransferQueue
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import java.util.function.Predicate
+import java.util.stream.Collectors
 
-import java.io.IOException;
-import java.net.Socket;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
+private val logger = createLogger {}
 
-public class SpvPeerTable implements PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SpvPeerTable.class);
+const val DEFAULT_CONNECTIONS = 12
+const val BLOOM_FILTER_TWEAK = 710699166
+const val BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.02
+const val BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER = 200
+const val AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 50
 
-    public static final int DEFAULT_CONNECTIONS = 12;
-    public static final int BLOOM_FILTER_TWEAK = 710699166;
-    public static final double BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.02;
-    public static final int BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER = 200;
-    public static final int AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 50;
+class SpvPeerTable(
+    private val spvContext: SpvContext,
+    private val p2PService: P2PService,
+    peerDiscovery: PeerDiscovery,
+    pendingTransactionContainer: PendingTransactionContainer
+) : PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
+    private val lock = ReentrantLock()
+    private val running = AtomicBoolean(false)
+    val discovery: PeerDiscovery
+    private val blockchain: Blockchain
+    private val executor: ListeningScheduledExecutorService
+    private val messageExecutor: ScheduledExecutorService
+    var maximumPeers = DEFAULT_CONNECTIONS
+    var downloadPeer: Peer? = null
+    val bloomFilter: BloomFilter
+    private val addressesState: MutableMap<String, LedgerContext> = ConcurrentHashMap()
+    private val pendingTransactionContainer: PendingTransactionContainer
 
-    private final ReentrantLock lock = new ReentrantLock();
-    private final AtomicBoolean running = new AtomicBoolean(false);
-    private static final ConcurrentHashMap<String, Peer> peers = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, Peer> pendingPeers = new ConcurrentHashMap<>();
-    private static final BlockingQueue<NetworkMessage> incomingQueue = new LinkedTransferQueue<>();
-    private static final CopyOnWriteArrayList<ListenerRegistration<PendingTransactionDownloadedListener>> pendingTransactionDownloadedEventListeners =
-        new CopyOnWriteArrayList<>();
+    private val peers = ConcurrentHashMap<String, Peer>()
+    private val pendingPeers = ConcurrentHashMap<String, Peer>()
+    private val incomingQueue: BlockingQueue<NetworkMessage> = LinkedTransferQueue()
+    private val pendingTransactionDownloadedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PendingTransactionDownloadedListener>>()
+    private val futureExecutor = Executors.newCachedThreadPool()
+    private val futureEventReplyList: MutableMap<String, FutureEventReply> = ConcurrentHashMap()
 
-    private static final ExecutorService futureExecutor = Executors.newCachedThreadPool();
-    private static final Map<String, FutureEventReply> futureEventReplyList = new ConcurrentHashMap<>();
-
-    private final SpvContext spvContext;
-    private final PeerDiscovery discovery;
-    private final Blockchain blockchain;
-    private final ListeningScheduledExecutorService executor;
-    private final ScheduledExecutorService messageExecutor;
-
-    private int maximumPeers = DEFAULT_CONNECTIONS;
-    private Peer downloadPeer;
-    private final BloomFilter bloomFilter;
-    private final P2PService p2PService;
-    private final Map<String, LedgerContext> addressesState = new ConcurrentHashMap<>();
-    private final PendingTransactionContainer pendingTransactionContainer;
-
-    public SpvPeerTable(
-        SpvContext spvContext,
-        P2PService p2PService,
-        PeerDiscovery peerDiscovery,
-        PendingTransactionContainer pendingTransactionContainer
-    ) {
-        this.spvContext = spvContext;
-        this.p2PService = p2PService;
-        this.bloomFilter = createBloomFilter();
-
-        this.blockchain = spvContext.getBlockchain();
-        this.executor = MoreExecutors
-            .listeningDecorator(Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("PeerTable Thread").build()));
-        this.messageExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build());
-        this.discovery = peerDiscovery;
-        this.pendingTransactionContainer = pendingTransactionContainer;
-        addPendingTransactionDownloadedEventListeners(executor, spvContext.getPendingTransactionDownloadedListener());
-
+    init {
+        bloomFilter = createBloomFilter()
+        blockchain = spvContext.blockchain
+        executor = MoreExecutors
+            .listeningDecorator(
+                Executors.newSingleThreadScheduledExecutor(
+                    ThreadFactoryBuilder().setNameFormat("PeerTable Thread").build()
+                )
+            )
+        messageExecutor = Executors.newSingleThreadScheduledExecutor(
+            ThreadFactoryBuilder().setNameFormat("Message Handler Thread").build()
+        )
+        discovery = peerDiscovery
+        this.pendingTransactionContainer = pendingTransactionContainer
+        addPendingTransactionDownloadedEventListeners(executor, spvContext.pendingTransactionDownloadedListener)
     }
 
-    public void start() {
-        running.set(true);
-
-        discoverPeers();
-
-        this.executor.scheduleAtFixedRate(this::requestAddressState, 5, 60, TimeUnit.SECONDS);
-        this.executor.scheduleAtFixedRate(this::discoverPeers, 0, 60, TimeUnit.SECONDS);
-        this.executor.scheduleAtFixedRate(this::requestPendingTransactions, 5, 60, TimeUnit.SECONDS);
+    fun start() {
+        running.set(true)
+        discoverPeers()
+        executor.scheduleAtFixedRate({ requestAddressState() }, 5, 60, TimeUnit.SECONDS)
+        executor.scheduleAtFixedRate({ discoverPeers() }, 0, 60, TimeUnit.SECONDS)
+        executor.scheduleAtFixedRate({ requestPendingTransactions() }, 5, 60, TimeUnit.SECONDS)
 
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
-        this.messageExecutor.scheduleWithFixedDelay(this::processIncomingMessages, 1, 1, TimeUnit.SECONDS);
+        messageExecutor.scheduleWithFixedDelay({ processIncomingMessages() }, 1, 1, TimeUnit.SECONDS)
     }
 
-    public void shutdown() {
-        running.set(false);
+    fun shutdown() {
+        running.set(false)
 
         // Shut down executors
-        Threading.shutdown(messageExecutor);
-        Threading.shutdown(futureExecutor);
-        Threading.shutdown(executor);
+        shutdown(messageExecutor)
+        shutdown(futureExecutor)
+        shutdown(executor)
 
         // Close peer connections
-        incomingQueue.clear();
-        pendingPeers.clear();
-
-        peers.forEachValue(4, Peer::closeConnection);
+        incomingQueue.clear()
+        pendingPeers.clear()
+        peers.forEachValue(
+            4
+        ) { obj: Peer? -> obj!!.closeConnection() }
     }
 
-    public Peer connectTo(PeerAddress address) {
-        if (peers.containsKey(address.getAddress())) {
-            return peers.get(address.getAddress());
+    fun connectTo(address: PeerAddress): Peer? {
+        if (peers.containsKey(address.address)) {
+            return peers[address.address]
         }
-
-        Peer peer = createPeer(address);
-        peer.addConnectedEventListener(Threading.LISTENER_THREAD, this);
-        peer.addDisconnectedEventListener(Threading.LISTENER_THREAD, this);
-
-        lock.lock();
-        try {
-            openConnection(peer);
-            pendingPeers.put(address.getAddress(), peer);
-            return peer;
-        } catch (IOException e) {
-            LOGGER.error("Unable to open connection", e);
-            return null;
+        val peer = createPeer(address)
+        peer.addConnectedEventListener(Threading.LISTENER_THREAD, this)
+        peer.addDisconnectedEventListener(Threading.LISTENER_THREAD, this)
+        lock.lock()
+        return try {
+            openConnection(peer)
+            pendingPeers[address.address] = peer
+            peer
+        } catch (e: IOException) {
+            logger.error("Unable to open connection", e)
+            null
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    public Peer createPeer(PeerAddress address) {
-        return new Peer(spvContext, blockchain, NodeMetadata.INSTANCE, address.getAddress(), address.getPort());
+    fun createPeer(address: PeerAddress): Peer {
+        return Peer(spvContext, blockchain, NodeMetadata, address.address, address.port)
     }
 
-    public void openConnection(Peer peer) throws IOException {
-        Socket socket = new Socket(peer.getAddress(), peer.getPort());
-        PeerSocketHandler handler = new PeerSocketHandler(socket);
-
-        peer.setConnection(handler);
+    @Throws(IOException::class)
+    fun openConnection(peer: Peer) {
+        val socket = Socket(peer.address, peer.port)
+        val handler = PeerSocketHandler(socket)
+        peer.setConnection(handler)
     }
 
-    public void startBlockchainDownload(Peer peer) {
-        LOGGER.info("Beginning blockchain download");
+    fun startBlockchainDownload(peer: Peer) {
+        logger.info("Beginning blockchain download")
         try {
-            setDownloadPeer(peer);
-            peer.startBlockchainDownload();
-        } catch (Exception ex){
-            setDownloadPeer(null);
+            downloadPeer = peer
+            peer.startBlockchainDownload()
+        } catch (ex: Exception) {
+            downloadPeer = null
             //TODO SPV-70 add bun on some time.
-            LOGGER.error(ex.getMessage(), ex);
+            logger.error(ex.message, ex)
         }
     }
 
-    private void requestAddressState() {
-        List<Address> addresses = spvContext.getAddressManager().getAll();
+    private fun requestAddressState() {
+        val addresses = spvContext.addressManager.all
         if (CollectionUtils.isEmpty(addresses)) {
-            return;
+            return
         }
-
-        VeriBlockMessages.LedgerProofRequest.Builder ledgerProof = VeriBlockMessages.LedgerProofRequest.newBuilder();
-        for (Address address : addresses) {
-            if (!addressesState.containsKey(address.getHash())) {
-                addressesState.put(address.getHash(), new LedgerContext());
+        val ledgerProof = LedgerProofRequest.newBuilder()
+        for (address in addresses) {
+            if (!addressesState.containsKey(address!!.hash)) {
+                addressesState[address.hash] = LedgerContext()
             }
-
-            ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.getHash())));
+            ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
         }
-
-        VeriBlockMessages.Event request = VeriBlockMessages.Event.newBuilder()
-            .setId(MessageIdGenerator.next())
+        val request = VeriBlockMessages.Event.newBuilder()
+            .setId(next())
             .setAcknowledge(false)
             .setLedgerProofRequest(ledgerProof.build())
-            .build();
-
-        LOGGER.info("Request address state.");
-        for (Peer peer : peers.values()) {
-            peer.sendMessage(request);
+            .build()
+        logger.info("Request address state.")
+        for (peer in peers.values) {
+            peer!!.sendMessage(request)
         }
     }
 
-    private void requestPendingTransactions() {
-        Set<Sha256Hash> pendingTransactionsId = pendingTransactionContainer.getPendingTransactionsId();
-
-        for (Sha256Hash sha256Hash : pendingTransactionsId) {
-            VeriBlockMessages.Event request = VeriBlockMessages.Event.newBuilder()
-                .setId(MessageIdGenerator.next())
+    private fun requestPendingTransactions() {
+        val pendingTransactionsId = pendingTransactionContainer.getPendingTransactionsId()
+        for (sha256Hash in pendingTransactionsId) {
+            val request = VeriBlockMessages.Event.newBuilder()
+                .setId(next())
                 .setAcknowledge(false)
                 .setTransactionRequest(
                     VeriBlockMessages.GetTransactionRequest.newBuilder()
-                        .setId(ByteString.copyFrom(sha256Hash.getBytes()))
+                        .setId(ByteString.copyFrom(sha256Hash.bytes))
                         .build()
                 )
-                .build();
-
-            for (Peer peer : peers.values()) {
-                peer.sendMessage(request);
+                .build()
+            for (peer in peers.values) {
+                peer!!.sendMessage(request)
             }
         }
     }
 
-    private void discoverPeers() {
-        int maxConnections = getMaximumPeers();
+    private fun discoverPeers() {
+        val maxConnections = maximumPeers
         if (maxConnections > 0 && countConnectedPeers() >= maxConnections) {
-            return;
+            return
         }
-
-        int needed = maxConnections - (countConnectedPeers() + countPendingPeers());
+        val needed = maxConnections - (countConnectedPeers() + countPendingPeers())
         if (needed > 0) {
-            Collection<PeerAddress> candidates = getDiscovery().getPeers(needed);
-            for (PeerAddress address : candidates) {
-                if (peers.containsKey(address.getAddress()) || pendingPeers.containsKey(address.getAddress())) {
-                    continue;
+            val candidates = discovery.getPeers(needed)
+            for (address in candidates) {
+                if (peers.containsKey(address.address) || pendingPeers.containsKey(address.address)) {
+                    continue
                 }
-
-                LOGGER.info("Attempting connection to {}:{}", address.getAddress(), address.getPort());
-                Peer peer = connectTo(address);
-                LOGGER.info("Discovered peer connected {}:{}", peer.getAddress(), peer.getPort());
+                logger.info("Attempting connection to {}:{}", address.address, address.port)
+                val peer = connectTo(address)
+                logger.info("Discovered peer connected {}:{}", peer!!.address, peer.port)
             }
         }
     }
 
-    private void processIncomingMessages() {
+    private fun processIncomingMessages() {
         try {
             while (running.get()) {
                 try {
-                    NetworkMessage message = incomingQueue.take();
-                    LOGGER.info("{} message from {}", message.getMessage().getResultsCase().name(), message.getSender().getAddress());
-
-                    switch (message.getMessage().getResultsCase()) {
-                        case HEARTBEAT:
-                            VeriBlockMessages.Heartbeat heartbeat = message.getMessage().getHeartbeat();
-
-                            if(downloadPeer == null && heartbeat.getBlock().getNumber()>0){
-                                startBlockchainDownload(message.getSender());
-                            } else if(downloadPeer != null &&
-                                    heartbeat.getBlock().getNumber() - downloadPeer.getBestBlockHeight()  > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER){
-                                startBlockchainDownload(message.getSender());
+                    val message = incomingQueue.take()
+                    logger.info("{} message from {}", message.message.resultsCase.name, message.sender.address)
+                    when (message.message.resultsCase) {
+                        ResultsCase.HEARTBEAT -> {
+                            val heartbeat = message.message.heartbeat
+                            if (downloadPeer == null && heartbeat.block.number > 0) {
+                                startBlockchainDownload(message.sender)
+                            } else if (downloadPeer != null &&
+                                heartbeat.block.number - downloadPeer!!.bestBlockHeight > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER
+                            ) {
+                                startBlockchainDownload(message.sender)
                             }
-                            break;
-                        case ADVERTISE_BLOCKS:
-                            VeriBlockMessages.AdvertiseBlocks advertiseBlocks = message.getMessage().getAdvertiseBlocks();
-                            LOGGER.info("PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.getHeadersList().size(), blockchain.getChainHead().getHeight());
-
-                            List<VeriBlockBlock> veriBlockBlocks = advertiseBlocks.getHeadersList()
-                                    .stream()
-                                    .map(MessageSerializer.INSTANCE::deserialize)
-                                    .collect(Collectors.toList());
+                        }
+                        ResultsCase.ADVERTISE_BLOCKS -> {
+                            val advertiseBlocks = message.message.advertiseBlocks
+                            logger.info(
+                                "PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.headersList.size,
+                                blockchain.getChainHead()!!.height
+                            )
+                            val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
+                                MessageSerializer.deserialize(it)
+                            }
                             try {
-                                blockchain.addAll(veriBlockBlocks);
-                            } catch (SQLException e) {
-                                LOGGER.error("Unable to add block to blockchain", e);
+                                blockchain.addAll(veriBlockBlocks)
+                            } catch (e: SQLException) {
+                                logger.error("Unable to add block to blockchain", e)
                             }
-
-                            break;
-                        case TRANSACTION:
+                        }
+                        ResultsCase.TRANSACTION -> {
                             // TODO: Different Transaction types
-                            StandardTransaction standardTransaction = MessageSerializer.deserializeNormalTransaction(message.getMessage().getTransaction());
-                            if (standardTransaction != null) {
-                                notifyPendingTransactionDownloaded(standardTransaction);
+                            val standardTransaction = deserializeNormalTransaction(
+                                message.message.transaction
+                            )
+                            notifyPendingTransactionDownloaded(standardTransaction)
+                        }
+                        ResultsCase.TX_REQUEST -> {
+                            val txIds = message.message.txRequest.transactionsList.map {
+                                Sha256Hash.wrap(
+                                    ByteStringUtility.byteStringToHex(it.txId)
+                                )
                             }
-                            break;
-
-                        case TX_REQUEST:
-                            List<Sha256Hash> txIds = message.getMessage().getTxRequest().getTransactionsList().stream()
-                                .map(tx -> ByteStringUtility.byteStringToHex(tx.getTxId()))
-                                .map(Sha256Hash::wrap)
-                                .collect(Collectors.toList());
-                            p2PService.onTransactionRequest(txIds, message.getSender());
-                            break;
-
-                        case LEDGER_PROOF_REPLY:
-                            List<VeriBlockMessages.LedgerProofReply.LedgerProofResult> proofReply =
-                                message.getMessage().getLedgerProofReply().getProofsList();
-                            List<LedgerContext> ledgerContexts =
-                                proofReply.stream().filter(lpr -> addressesState.containsKey(Base58.encode(lpr.getAddress().toByteArray())))
-                                    .filter(LedgerProofReplyValidator::validate)
-                                    .map(LedgerProofReplyMapper.INSTANCE::map)
-                                    .collect(Collectors.toList());
-
-                            updateAddressState(ledgerContexts);
-                            break;
-
-                        case TRANSACTION_REPLY:
-                            if (message.getMessage().getTransactionReply().getSuccess()) {
-                                pendingTransactionContainer.updateTransactionInfo(message.getMessage().getTransactionReply().getTransaction());
-                            }
-                            break;
-
-                        case DEBUG_VTB_REPLY:
-                            // TODO
-                            break;
-
-                        case VERIBLOCK_PUBLICATIONS_REPLY:
-                            if (futureEventReplyList.containsKey(message.getMessage().getRequestId())) {
-                                futureEventReplyList.get(message.getMessage().getRequestId())
-                                    .response(message.getMessage());
-                            }
-                            break;
+                            p2PService.onTransactionRequest(txIds, message.sender)
+                        }
+                        ResultsCase.LEDGER_PROOF_REPLY -> {
+                            val proofReply = message.message.ledgerProofReply.proofsList
+                            val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
+                                addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
+                            }.filter {
+                                LedgerProofReplyValidator.validate(it)
+                            }.map {
+                                LedgerProofReplyMapper.map(it)
+                            }.toList()
+                            updateAddressState(ledgerContexts)
+                        }
+                        ResultsCase.TRANSACTION_REPLY -> if (message.message.transactionReply.success) {
+                            pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction)
+                        }
+                        ResultsCase.DEBUG_VTB_REPLY -> {
+                        }
+                        ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> if (futureEventReplyList.containsKey(message.message.requestId)) {
+                            futureEventReplyList[message.message.requestId]!!.response(message.message)
+                        }
                     }
-
-                } catch (InterruptedException e) {
-                    break;
+                } catch (e: InterruptedException) {
+                    break
                 }
             }
-        } catch (Exception e) {
-            LOGGER.error("An unhandled exception occurred processing message queue", e);
+        } catch (e: Exception) {
+            logger.error("An unhandled exception occurred processing message queue", e)
         }
     }
 
-    private BloomFilter createBloomFilter() {
-        List<Address> addresses = spvContext.getAddressManager().getAll();
-        BloomFilter filter =
-            new BloomFilter((spvContext.getAddressManager().getNumAddresses() + 10), BLOOM_FILTER_FALSE_POSITIVE_RATE, BLOOM_FILTER_TWEAK);
-
-        for (Address address : addresses) {
-            filter.insert(address.getHash());
+    private fun createBloomFilter(): BloomFilter {
+        val addresses = spvContext.addressManager.all
+        val filter = BloomFilter(
+            spvContext.addressManager.numAddresses + 10, BLOOM_FILTER_FALSE_POSITIVE_RATE,
+            BLOOM_FILTER_TWEAK
+        )
+        for (address in addresses) {
+            filter.insert(address.hash)
         }
-
-        return filter;
+        return filter
     }
 
-    private void updateAddressState(List<LedgerContext> ledgerContexts){
-        for (LedgerContext ledgerContext : ledgerContexts) {
-            if (addressesState.get(ledgerContext.getAddress().getAddress()).compareTo(ledgerContext) > 0) {
-                addressesState.replace(ledgerContext.getAddress().getAddress(), ledgerContext);
+    private fun updateAddressState(ledgerContexts: List<LedgerContext>) {
+        for (ledgerContext in ledgerContexts) {
+            if (addressesState[ledgerContext.address!!.address]!!.compareTo(ledgerContext) > 0) {
+                addressesState.replace(ledgerContext.address!!.address, ledgerContext)
             }
         }
     }
 
-    public void addPendingTransactionDownloadedEventListeners(Executor executor, PendingTransactionDownloadedListener listener) {
-        pendingTransactionDownloadedEventListeners.add(new ListenerRegistration<>(listener, executor));
+    fun addPendingTransactionDownloadedEventListeners(
+        executor: Executor?,
+        listener: PendingTransactionDownloadedListener
+    ) {
+        pendingTransactionDownloadedEventListeners.add(
+            ListenerRegistration(listener, executor!!)
+        )
     }
 
-    private void notifyPendingTransactionDownloaded(StandardTransaction tx) {
-        for (ListenerRegistration<PendingTransactionDownloadedListener> registration : pendingTransactionDownloadedEventListeners) {
-            registration.getExecutor().execute(() -> registration.getListener().onPendingTransactionDownloaded(tx));
+    private fun notifyPendingTransactionDownloaded(tx: StandardTransaction) {
+        for (registration in pendingTransactionDownloadedEventListeners) {
+            registration.executor.execute { registration.listener.onPendingTransactionDownloaded(tx) }
         }
     }
 
-    @Override
-    public void onPeerConnected(Peer peer) {
-        lock.lock();
+    override fun onPeerConnected(peer: Peer?) {
+        lock.lock()
         try {
-            LOGGER.info("Peer {} connected", peer.getAddress());
-            pendingPeers.remove(peer.getAddress());
-            peers.put(peer.getAddress(), peer);
+            logger.info("Peer {} connected", peer!!.address)
+            pendingPeers.remove(peer.address)
+            peers[peer.address] = peer
 
             // TODO: Wallet related setup (bloom filter)
 
             // Attach listeners
-            peer.addMessageReceivedEventListeners(executor, this);
-
-            peer.setFilter(this.bloomFilter);
-
+            peer.addMessageReceivedEventListeners(executor, this)
+            peer.setFilter(bloomFilter)
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    @Override
-    public void onPeerDisconnected(Peer peer) {
-        lock.lock();
+    override fun onPeerDisconnected(peer: Peer) {
+        lock.lock()
         try {
-            pendingPeers.remove(peer.getAddress());
-            peers.remove(peer.getAddress());
-
-            if (downloadPeer != null && downloadPeer.getAddress().equalsIgnoreCase(peer.getAddress())) {
-                downloadPeer = null;
+            pendingPeers.remove(peer.address)
+            peers.remove(peer.address)
+            if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
+                downloadPeer = null
             }
         } finally {
-            lock.unlock();
+            lock.unlock()
         }
     }
 
-    @Override
-    public void onMessageReceived(VeriBlockMessages.Event message, Peer sender) {
+    override fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
         try {
-            LOGGER.info("Message Received messageId: {}, from: {}:{}", message.getId(), sender.getAddress(), sender.getPort());
-            incomingQueue.put(new NetworkMessage(sender, message));
-        } catch (InterruptedException e) {
-            LOGGER.error("onMessageReceived interrupted", e);
+            logger.info("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
+            incomingQueue.put(NetworkMessage(sender, message))
+        } catch (e: InterruptedException) {
+            logger.error("onMessageReceived interrupted", e)
         }
     }
 
-    public void advertise(Transaction transaction) {
-        VeriBlockMessages.Event advertise = VeriBlockMessages.Event.newBuilder()
-            .setId(MessageIdGenerator.next())
+    fun advertise(transaction: Transaction) {
+        val advertise = VeriBlockMessages.Event.newBuilder()
+            .setId(next())
             .setAcknowledge(false)
-            .setAdvertiseTx(VeriBlockMessages.AdvertiseTransaction.newBuilder()
-                .addTransactions(VeriBlockMessages.TransactionAnnounce.newBuilder()
-                    .setType(transaction.getTransactionTypeIdentifier() == TransactionTypeIdentifier.PROOF_OF_PROOF ?
-                        VeriBlockMessages.TransactionAnnounce.Type.PROOF_OF_PROOF :
-                        VeriBlockMessages.TransactionAnnounce.Type.NORMAL)
-                    .setTxId(ByteString.copyFrom(transaction.getTxId().getBytes()))
-                    .build())
-                .build())
-            .build();
-
-        for (Peer peer : peers.values()) {
+            .setAdvertiseTx(
+                VeriBlockMessages.AdvertiseTransaction.newBuilder()
+                    .addTransactions(
+                        TransactionAnnounce.newBuilder()
+                            .setType(
+                                if (transaction.transactionTypeIdentifier === TransactionTypeIdentifier.PROOF_OF_PROOF) TransactionAnnounce.Type.PROOF_OF_PROOF else TransactionAnnounce.Type.NORMAL
+                            )
+                            .setTxId(ByteString.copyFrom(transaction.txId.bytes))
+                            .build()
+                    )
+                    .build()
+            )
+            .build()
+        for (peer in peers.values) {
             try {
-                peer.sendMessage(advertise);
-            } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(), ex);
+                peer!!.sendMessage(advertise)
+            } catch (ex: Exception) {
+                logger.error(ex.message, ex)
             }
         }
     }
 
-    public Future<VeriBlockMessages.Event> advertiseWithReply(VeriBlockMessages.Event event) {
-        FutureEventReply futureEventReply = new FutureEventReply();
-
-        futureEventReplyList.put(event.getId(), futureEventReply);
-
-        for (Peer peer : peers.values()) {
+    fun advertiseWithReply(event: VeriBlockMessages.Event): Future<VeriBlockMessages.Event> {
+        val futureEventReply = FutureEventReply()
+        futureEventReplyList[event.id] = futureEventReply
+        for (peer in peers.values) {
             try {
-                peer.sendMessage(event);
-            } catch (Exception ex) {
-                LOGGER.error(ex.getMessage(), ex);
+                peer.sendMessage(event)
+            } catch (ex: Exception) {
+                logger.error(ex.message, ex)
             }
         }
-
-        return futureExecutor.submit(() -> {
+        return futureExecutor.submit(Callable {
             while (!futureEventReply.isDone()) {
                 try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    LOGGER.error(e.getMessage(), e);
+                    Thread.sleep(2000)
+                } catch (e: InterruptedException) {
+                    logger.error(e.message, e)
                 }
             }
-
-            futureEventReplyList.remove(event.getId());
-            return futureEventReply.getResponse();
-        });
+            futureEventReplyList.remove(event.id)
+            futureEventReply.response
+        })
     }
 
-    public Long getSignatureIndex(String address) {
-        return addressesState.get(address).getLedgerValue() != null ? addressesState.get(address).getLedgerValue().getSignatureIndex() : null;
+    fun getSignatureIndex(address: String): Long? {
+        return if (addressesState[address]!!.ledgerValue != null) addressesState[address]!!.ledgerValue!!.signatureIndex else null
     }
 
-    public Integer getAvailablePeers() {
-        return peers.size();
-    }
+    fun getAvailablePeers(): Int = peers.size
 
-    public Integer getBestBlockHeight(){
-        return peers.values().stream()
-                .map(Peer::getBestBlockHeight)
-                .mapToInt(v -> v)
-                .max()
-                .orElse(0);
-    }
+    fun getBestBlockHeight(): Int = peers.values.map { it.bestBlockHeight }.max() ?: 0
 
-    public DownloadStatusResponse getDownloadStatus() {
-        DownloadStatus status;
-        Integer currentHeight = blockchain.getChainHead().getHeight();
-        Integer bestBlockHeight = downloadPeer==null ? 0 : downloadPeer.getBestBlockHeight();
-        if (downloadPeer == null) {
-            status = DownloadStatus.DISCOVERING;
+    fun getDownloadStatus(): DownloadStatusResponse {
+        val status: DownloadStatus
+        val currentHeight = blockchain.getChainHead()!!.height
+        val bestBlockHeight = if (downloadPeer == null) 0 else downloadPeer!!.bestBlockHeight
+        status = if (downloadPeer == null) {
+            DownloadStatus.DISCOVERING
         } else if (bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING) {
-            status = DownloadStatus.READY;
+            DownloadStatus.READY
         } else {
-            status = DownloadStatus.DOWNLOADING;
+            DownloadStatus.DOWNLOADING
         }
-
-        return new DownloadStatusResponse(status, currentHeight, bestBlockHeight);
+        return DownloadStatusResponse(status, currentHeight, bestBlockHeight)
     }
 
-    public Map<String, LedgerContext> getAddressesState() {
-        return addressesState;
+    fun getAddressesState(): Map<String, LedgerContext> {
+        return addressesState
     }
 
-    public LedgerContext getAddressState(String address) {
-        return addressesState.get(address);
+    fun getAddressState(address: String): LedgerContext? {
+        return addressesState[address]
     }
 
-    public PeerDiscovery getDiscovery() {
-        return discovery;
+    fun getConnectedPeers(): Collection<Peer> = Collections.unmodifiableCollection(peers.values)
+
+    fun countConnectedPeers(): Int {
+        return peers.size
     }
 
-    public int getMaximumPeers() {
-        return maximumPeers;
+    fun countPendingPeers(): Int {
+        return pendingPeers.size
     }
-
-    public void setMaximumPeers(int maximumPeers) {
-        this.maximumPeers = maximumPeers;
-    }
-
-    public Peer getDownloadPeer() {
-        return downloadPeer;
-    }
-
-    public void setDownloadPeer(Peer peer) {
-        this.downloadPeer = peer;
-    }
-
-    BloomFilter getBloomFilter() {
-        return bloomFilter;
-    }
-
-    public Collection<Peer> getConnectedPeers() {
-        return Collections.unmodifiableCollection(peers.values());
-    }
-
-    public int countConnectedPeers() {
-        return peers.size();
-    }
-
-    public int countPendingPeers() {
-        return pendingPeers.size();
-    }
-
 }

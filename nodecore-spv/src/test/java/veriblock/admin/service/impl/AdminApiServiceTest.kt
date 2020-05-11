@@ -37,13 +37,13 @@ import java.security.KeyPairGenerator
 
 class AdminApiServiceTest {
     private val spvContext = SpvContext()
-    private var transactionService: TransactionService? = null
-    private var addressManager: AddressManager? = null
-    private var peerTable: SpvPeerTable? = null
-    private var adminApiService: AdminApiService? = null
-    private var transactionFactory: TransactionFactory? = null
-    private var transactionContainer: PendingTransactionContainer? = null
-    private var blockchain: Blockchain? = null
+    private lateinit var transactionService: TransactionService
+    private lateinit var addressManager: AddressManager
+    private lateinit var peerTable: SpvPeerTable
+    private lateinit var adminApiService: AdminApiService
+    private lateinit var transactionFactory: TransactionFactory
+    private lateinit var transactionContainer: PendingTransactionContainer
+    private lateinit var blockchain: Blockchain
 
     @Before
     fun setUp() {
