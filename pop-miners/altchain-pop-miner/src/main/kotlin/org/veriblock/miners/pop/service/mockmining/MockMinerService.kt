@@ -44,10 +44,10 @@ class MockMinerService(
     private val connection = ConnectionSelector.setConnection("mock")
     private val veriBlockStore = VeriBlockStore(connection)
     private val bitcoinStore = BitcoinStore(connection)
-    private val veriBlockBlockchain = VeriBlockBlockchain(
+    private val veriBlockBlockchain = VeriBlockMockBlockchain(
         VeriBlockDefaults.networkParameters, veriBlockStore, bitcoinStore
     )
-    private val bitcoinBlockchain = BitcoinBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
+    private val bitcoinBlockchain = BitcoinMockBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
 
     private val operations = HashMap<String, ApmOperation>()

@@ -5,83 +5,88 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.miners.pop.service.mockmining
 
-package org.veriblock.miners.pop.service.mockmining;
-
-import org.veriblock.sdk.blockchain.store.BlockStore;
-import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
-import org.veriblock.sdk.models.BlockStoreException;
-import org.veriblock.sdk.models.Sha256Hash;
-
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.veriblock.sdk.blockchain.store.BlockStore
+import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
+import org.veriblock.sdk.models.BlockStoreException
+import org.veriblock.sdk.models.Sha256Hash
+import java.sql.SQLException
+import java.util.HashMap
 
 // A stopgap store wrapper that implements get(height) on top of BlockStore interface
-public class IndexedBitcoinBlockStore implements BlockStore<StoredBitcoinBlock, Sha256Hash> {
+class IndexedBitcoinBlockStore(
+    private val store: BlockStore<StoredBitcoinBlock, Sha256Hash>
+) : BlockStore<StoredBitcoinBlock, Sha256Hash> {
+    private val blockByHeightIndex: MutableMap<Int, StoredBitcoinBlock> = HashMap()
 
-    private final BlockStore<StoredBitcoinBlock, Sha256Hash> store;
-
-    private final Map<Integer, StoredBitcoinBlock> blockByHeightIndex = new HashMap<>();
-
-    public IndexedBitcoinBlockStore(BlockStore<StoredBitcoinBlock, Sha256Hash> store) throws SQLException {
-        this.store = store;
-        
+    init {
         //FIXME: read and index the store
     }
 
-    public void shutdown() {
-        store.shutdown();
+    override fun shutdown() {
+        store.shutdown()
     }
 
-    public void clear() throws SQLException {
-        store.clear();
-        blockByHeightIndex.clear();
+    @Throws(SQLException::class)
+    override fun clear() {
+        store.clear()
+        blockByHeightIndex.clear()
     }
 
-    public StoredBitcoinBlock getChainHead() throws BlockStoreException, SQLException {
-        return store.getChainHead();
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun getChainHead(): StoredBitcoinBlock {
+        return store.chainHead
     }
 
-    public StoredBitcoinBlock setChainHead(StoredBitcoinBlock chainHead) throws BlockStoreException, SQLException {
-        return store.setChainHead(chainHead);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun setChainHead(chainHead: StoredBitcoinBlock): StoredBitcoinBlock {
+        return store.setChainHead(chainHead)
     }
 
-    public void put(StoredBitcoinBlock block) throws BlockStoreException, SQLException {
-        store.put(block);
-        blockByHeightIndex.put(block.getHeight(), block);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun put(block: StoredBitcoinBlock) {
+        store.put(block)
+        blockByHeightIndex[block.height] = block
     }
 
-    public StoredBitcoinBlock get(Sha256Hash hash) throws BlockStoreException, SQLException {
-        return store.get(hash);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override operator fun get(hash: Sha256Hash): StoredBitcoinBlock {
+        return store[hash]
     }
 
-    public StoredBitcoinBlock get(int height) throws BlockStoreException, SQLException {
-        return blockByHeightIndex.get(height);
+    @Throws(BlockStoreException::class, SQLException::class)
+    operator fun get(height: Int): StoredBitcoinBlock? {
+        return blockByHeightIndex[height]
     }
 
-    public StoredBitcoinBlock erase(Sha256Hash hash) throws BlockStoreException, SQLException {
-        StoredBitcoinBlock erased = store.erase(hash);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun erase(hash: Sha256Hash): StoredBitcoinBlock {
+        val erased = store.erase(hash)
         if (erased != null) {
-            blockByHeightIndex.remove(erased.getHeight());
+            blockByHeightIndex.remove(erased.height)
         }
-        return erased;
-     }
-
-    public StoredBitcoinBlock replace(Sha256Hash hash, StoredBitcoinBlock block) throws BlockStoreException, SQLException {
-        return store.replace(hash, block);
+        return erased
     }
 
-    public List<StoredBitcoinBlock> get(Sha256Hash hash, int count) throws BlockStoreException, SQLException {
-        return store.get(hash, count);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun replace(hash: Sha256Hash, block: StoredBitcoinBlock): StoredBitcoinBlock {
+        return store.replace(hash, block)
     }
 
-    public StoredBitcoinBlock getFromChain(Sha256Hash hash, int blocksAgo) throws BlockStoreException, SQLException {
-        return store.getFromChain(hash, blocksAgo);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override operator fun get(hash: Sha256Hash, count: Int): List<StoredBitcoinBlock> {
+        return store[hash, count]
     }
 
-    public StoredBitcoinBlock scanBestChain(Sha256Hash hash) throws BlockStoreException, SQLException {
-        return store.scanBestChain(hash);
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun getFromChain(hash: Sha256Hash, blocksAgo: Int): StoredBitcoinBlock {
+        return store.getFromChain(hash, blocksAgo)
     }
+
+    @Throws(BlockStoreException::class, SQLException::class)
+    override fun scanBestChain(hash: Sha256Hash): StoredBitcoinBlock {
+        return store.scanBestChain(hash)
+    }
+
 }
