@@ -36,8 +36,6 @@ dependencies {
     implementation(project(":altchain-sdk"))
     runtimeOnly(project(":altchain-plugins"))
 
-    implementation("com.github.veriblock.alt-integration:mock-pop-mining:0.0.7")
-
     // Dependency Injection
     implementation("org.koin:koin-core:$koinVersion")
 

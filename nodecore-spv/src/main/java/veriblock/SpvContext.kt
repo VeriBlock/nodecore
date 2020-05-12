@@ -14,7 +14,6 @@ import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
-import org.veriblock.sdk.auditor.store.AuditorChangesStore
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
@@ -62,8 +61,6 @@ class SpvContext {
     lateinit var veriBlockStore: VeriBlockStore
         private set
     lateinit var bitcoinStore: BitcoinStore
-        private set
-    lateinit var auditStore: AuditorChangesStore
         private set
     lateinit var blockchain: Blockchain
         private set
@@ -118,7 +115,6 @@ class SpvContext {
             bitcoinStore = BitcoinStore(ConnectionSelector.setConnection(databasePath))
             init(veriBlockStore, networkParameters)
             init(bitcoinStore, networkParameters)
-            auditStore = AuditorChangesStore(ConnectionSelector.setConnectionDefault())
             transactionPool = TransactionPool()
             blockchain = Blockchain(networkParameters.genesisBlock, veriBlockStore)
             pendingTransactionContainer = PendingTransactionContainer()

@@ -36,6 +36,8 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 private val logger = createLogger {}
 
@@ -178,7 +180,7 @@ class BitcoinFamilyChain(
             btcTransaction.confirmations,
             btcTransaction.vout.map {
                 SecurityInheritingTransactionVout(
-                    Math.round(it.value * 100000000),
+                    (it.value * 100000000).roundToLong(),
                     it.scriptPubKey.hex
                 )
             }

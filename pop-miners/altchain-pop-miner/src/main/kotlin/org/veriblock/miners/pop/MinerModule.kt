@@ -25,7 +25,7 @@ import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.service.ApmTaskService
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
-import org.veriblock.miners.pop.service.MockMinerService
+import org.veriblock.miners.pop.service.mockmining.MockMinerService
 import org.veriblock.miners.pop.service.OperationSerializer
 import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.shell.commands.altchainCommands

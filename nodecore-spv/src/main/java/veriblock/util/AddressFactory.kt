@@ -1,7 +1,7 @@
 package veriblock.util
 
+import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.util.Base58
 
 object AddressFactory {
     fun build(bytes: ByteArray?): Address {

@@ -18,9 +18,8 @@ plugins {
 }
 
 dependencies {
-    api("com.github.veriblock.alt-integration:core:0.0.7")
-
     implementation(project(":veriblock-core"))
+    api(project(":altchain-integration-core"))
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")

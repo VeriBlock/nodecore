@@ -33,14 +33,13 @@ dependencies {
     runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
 
     implementation(project(":veriblock-core"))
+    implementation(project(":altchain-integration-core"))
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-grpc"))
     implementation(project(":altchain-sdk"))
     implementation(project(":nodecore-spv"))
     implementation(project(":pop-miners:pop-miners-common"))
     runtimeOnly(project(":altchain-plugins"))
-
-    implementation("com.github.veriblock.alt-integration:mock-pop-mining:0.0.7")
 
     // Dependency Injection
     implementation("org.koin:koin-core:$koinVersion")

@@ -17,11 +17,11 @@ import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofRequest
 import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
+import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.util.Base58
 import spark.utils.CollectionUtils
 import veriblock.SpvContext
 import veriblock.listeners.PendingTransactionDownloadedListener
@@ -203,7 +203,7 @@ class SpvPeerTable(
             .build()
         logger.info("Request address state.")
         for (peer in peers.values) {
-            peer!!.sendMessage(request)
+            peer.sendMessage(request)
         }
     }
 

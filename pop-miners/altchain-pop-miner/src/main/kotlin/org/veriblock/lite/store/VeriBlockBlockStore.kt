@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.lite.store
 
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.Constants
@@ -477,7 +478,7 @@ class VeriBlockBlockStore(
     protected fun archive() {
         val seriesNumber = getFileSeriesNumber()
         val fileName = Utils.getFileNameWithoutExtension(workingStoreFile)
-        val fileSeries = Utils.leftPad(Integer.toHexString(seriesNumber).toCharArray(), '0', 8)
+        val fileSeries = Utility.leftPad(Integer.toHexString(seriesNumber).toCharArray(), '0', 8)
         val archiveName = "$fileName-$fileSeries.spv"
 
         val archive = File(workingStoreFile.parentFile, archiveName)

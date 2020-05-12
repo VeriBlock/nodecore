@@ -10,13 +10,13 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.Address
 import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Sha256Hash
-import org.veriblock.sdk.util.Base58
 import veriblock.SpvContext
 import veriblock.conf.TestNetParameters
 import veriblock.model.LedgerContext
@@ -76,18 +76,18 @@ class AdminApiServiceTest {
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .build()
 
-        every { peerTable!!.getAddressState(any()) } returns ledgerContext
-        every { transactionService?.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
-        every { transactionService?.createTransactionsByOutputList(any(), any()) } returns transactions
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any())}
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 1
-        every { peerTable!!.advertise(any()) } returns Unit
+        every { peerTable.getAddressState(any()) } returns ledgerContext
+        every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
+        every { transactionService.createTransactionsByOutputList(any(), any()) } returns transactions
+        every { transactionContainer.getPendingSignatureIndexForAddress(any())}
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
+        every { peerTable.advertise(any()) } returns Unit
 
-        val reply = adminApiService!!.sendCoins(request)
+        val reply = adminApiService.sendCoins(request)
 
-        verify(exactly = 1) { transactionService!!.createTransactionsByOutputList(any(), any()) }
-        verify(exactly = 1) { transactionContainer!!.getPendingSignatureIndexForAddress(any()) }
-        verify(exactly = 1) { peerTable!!.advertise(any()) }
+        verify(exactly = 1) { transactionService.createTransactionsByOutputList(any(), any()) }
+        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
+        verify(exactly = 1) { peerTable.advertise(any()) }
 
         Assert.assertTrue(reply.success)
         Assert.assertNotNull(reply.getTxIds(0))
@@ -109,12 +109,12 @@ class AdminApiServiceTest {
             .addAmounts(output)
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .build()
-        every { transactionService!!.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
-        every { transactionService!!.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable!!.getAddressState(any()) } returns ledgerContext
-        every { peerTable!!.advertise(any()) } returns Unit
-        val reply = adminApiService!!.sendCoins(request)
+        every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
+        every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { peerTable.getAddressState(any()) } returns ledgerContext
+        every { peerTable.advertise(any()) } returns Unit
+        val reply = adminApiService.sendCoins(request)
         Assert.assertFalse(reply.success)
         Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
     }
@@ -134,12 +134,12 @@ class AdminApiServiceTest {
             .addAmounts(output)
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .build()
-        every { transactionService!!.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
-        every { transactionService!!.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable!!.getAddressState(any()) } returns ledgerContext
-        every { peerTable!!.advertise(any()) } returns Unit
-        val reply = adminApiService!!.sendCoins(request)
+        every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
+        every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { peerTable.getAddressState(any()) } returns ledgerContext
+        every { peerTable.advertise(any()) } returns Unit
+        val reply = adminApiService.sendCoins(request)
         Assert.assertFalse(reply.success)
         Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
     }
@@ -159,12 +159,12 @@ class AdminApiServiceTest {
             .addAmounts(output)
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .build()
-        every { transactionService!!.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
-        every { transactionService!!.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable!!.getAddressState(any()) } returns ledgerContext
-        every { peerTable!!.advertise(any()) } returns Unit
-        val reply = adminApiService!!.sendCoins(request)
+        every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
+        every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { peerTable.getAddressState(any()) } returns ledgerContext
+        every { peerTable.advertise(any()) } returns Unit
+        val reply = adminApiService.sendCoins(request)
         Assert.assertFalse(reply.success)
         Assert.assertTrue(reply.getResults(0).message.contains("Available balance is not enough"))
     }
@@ -180,12 +180,12 @@ class AdminApiServiceTest {
             .addAmounts(output)
             .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .build()
-        every { transactionService!!.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
-        every { transactionService!!.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable!!.getAddressState(any()) } returns null
-        every { peerTable!!.advertise(any()) } returns Unit
-        val reply = adminApiService!!.sendCoins(request)
+        every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
+        every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { peerTable.getAddressState(any()) } returns null
+        every { peerTable.advertise(any()) } returns Unit
+        val reply = adminApiService.sendCoins(request)
         Assert.assertFalse(reply.success)
         Assert.assertTrue(reply.getResults(0).message.contains("Information about this address does not exist"))
     }
@@ -193,18 +193,18 @@ class AdminApiServiceTest {
     @Test
     fun unlockWalletWhenWalletIsLockThenTrue() {
         val unlockWalletRequest = UnlockWalletRequest.newBuilder().setPassphrase("123").build()
-        every { addressManager!!.unlock(any()) } returns true
-        val reply = adminApiService!!.unlockWallet(unlockWalletRequest)
-        verify(exactly = 1) { addressManager!!.unlock(any()) }
+        every { addressManager.unlock(any()) } returns true
+        val reply = adminApiService.unlockWallet(unlockWalletRequest)
+        verify(exactly = 1) { addressManager.unlock(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
     @Test
     fun unlockWalletWhenWalletIsUnlockThenFalse() {
         val unlockWalletRequest = UnlockWalletRequest.newBuilder().setPassphrase("123").build()
-        every { addressManager!!.unlock(any()) } returns false
-        val reply = adminApiService!!.unlockWallet(unlockWalletRequest)
-        verify(exactly = 1) { addressManager!!.unlock(any()) }
+        every { addressManager.unlock(any()) } returns false
+        val reply = adminApiService.unlockWallet(unlockWalletRequest)
+        verify(exactly = 1) { addressManager.unlock(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -214,9 +214,9 @@ class AdminApiServiceTest {
             .setPassphrase("123")
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
-        every { addressManager!!.isLocked } returns true
-        val reply = adminApiService!!.importWallet(importWalletRequest)
-        verify(exactly = 1) { addressManager!!.isLocked }
+        every { addressManager.isLocked } returns true
+        val reply = adminApiService.importWallet(importWalletRequest)
+        verify(exactly = 1) { addressManager.isLocked }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -225,14 +225,14 @@ class AdminApiServiceTest {
         val importWalletRequest = ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
-        every { addressManager!!.isLocked } returns false
+        every { addressManager.isLocked } returns false
         val result = Pair(
             false, "test_string"
         )
-        every { addressManager!!.importWallet(any()) } returns result
-        val reply = adminApiService!!.importWallet(importWalletRequest)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.importWallet(any()) }
+        every { addressManager.importWallet(any()) } returns result
+        val reply = adminApiService.importWallet(importWalletRequest)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.importWallet(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -241,12 +241,12 @@ class AdminApiServiceTest {
         val importWalletRequest = ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
-        every { addressManager!!.isLocked } returns false
+        every { addressManager.isLocked } returns false
         val result = Pair(true, "test_string")
-        every { addressManager!!.importWallet(any()) } returns result
-        val reply = adminApiService!!.importWallet(importWalletRequest)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.importWallet(any()) }
+        every { addressManager.importWallet(any()) } returns result
+        val reply = adminApiService.importWallet(importWalletRequest)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.importWallet(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -255,11 +255,11 @@ class AdminApiServiceTest {
         val importWalletRequest = ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
-        every { addressManager!!.isLocked  } returns false
-        every { addressManager!!.importWallet(any()) } throws RuntimeException()
-        val reply = adminApiService!!.importWallet(importWalletRequest)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.importWallet(any()) }
+        every { addressManager.isLocked  } returns false
+        every { addressManager.importWallet(any()) } throws RuntimeException()
+        val reply = adminApiService.importWallet(importWalletRequest)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.importWallet(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -268,7 +268,7 @@ class AdminApiServiceTest {
         val request = EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom(ByteArray(0)))
             .build()
-        val reply = adminApiService!!.encryptWallet(request)
+        val reply = adminApiService.encryptWallet(request)
         Assert.assertEquals(false, reply.success)
     }
 
@@ -277,9 +277,9 @@ class AdminApiServiceTest {
         val request = EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
-        every { addressManager!!.encryptWallet(any()) } returns false
-        val reply = adminApiService!!.encryptWallet(request)
-        verify(exactly = 1) { addressManager!!.encryptWallet(any()) }
+        every { addressManager.encryptWallet(any()) } returns false
+        val reply = adminApiService.encryptWallet(request)
+        verify(exactly = 1) { addressManager.encryptWallet(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -288,9 +288,9 @@ class AdminApiServiceTest {
         val request = EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
-        every { addressManager!!.encryptWallet(any()) } throws IllegalStateException()
-        val reply = adminApiService!!.encryptWallet(request)
-        verify(exactly = 1) { addressManager!!.encryptWallet(any()) }
+        every { addressManager.encryptWallet(any()) } throws IllegalStateException()
+        val reply = adminApiService.encryptWallet(request)
+        verify(exactly = 1) { addressManager.encryptWallet(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -299,9 +299,9 @@ class AdminApiServiceTest {
         val request = EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
-        every { addressManager!!.encryptWallet(any()) } returns true
-        val reply = adminApiService!!.encryptWallet(request)
-        verify(exactly = 1) { addressManager!!.encryptWallet(any()) }
+        every { addressManager.encryptWallet(any()) } returns true
+        val reply = adminApiService.encryptWallet(request)
+        verify(exactly = 1) { addressManager.encryptWallet(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -310,7 +310,7 @@ class AdminApiServiceTest {
         val request = DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom(ByteArray(0)))
             .build()
-        val reply = adminApiService!!.decryptWallet(request)
+        val reply = adminApiService.decryptWallet(request)
         Assert.assertEquals(false, reply.success)
     }
 
@@ -319,9 +319,9 @@ class AdminApiServiceTest {
         val request = DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
-        every { addressManager!!.decryptWallet(any()) } returns false
-        val reply = adminApiService!!.decryptWallet(request)
-        verify(exactly = 1) { addressManager!!.decryptWallet(any()) }
+        every { addressManager.decryptWallet(any()) } returns false
+        val reply = adminApiService.decryptWallet(request)
+        verify(exactly = 1) { addressManager.decryptWallet(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -330,9 +330,9 @@ class AdminApiServiceTest {
         val request = DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
-        every { addressManager!!.decryptWallet(any()) } throws IllegalStateException()
-        val reply = adminApiService!!.decryptWallet(request)
-        verify(exactly = 1) { addressManager!!.decryptWallet(any()) }
+        every { addressManager.decryptWallet(any()) } throws IllegalStateException()
+        val reply = adminApiService.decryptWallet(request)
+        verify(exactly = 1) { addressManager.decryptWallet(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -341,17 +341,17 @@ class AdminApiServiceTest {
         val request = DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
-        every { addressManager!!.decryptWallet(any()) } returns true
-        val reply = adminApiService!!.decryptWallet(request)
-        verify(exactly = 1) { addressManager!!.decryptWallet(any()) }
+        every { addressManager.decryptWallet(any()) } returns true
+        val reply = adminApiService.decryptWallet(request)
+        verify(exactly = 1) { addressManager.decryptWallet(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
     @Test
     fun lockWallet() {
-        every { addressManager!!.lock() } returns Unit
-        val reply = adminApiService!!.lockWallet(LockWalletRequest.newBuilder().build())
-        verify(exactly = 1) { addressManager!!.lock() }
+        every { addressManager.lock() } returns Unit
+        val reply = adminApiService.lockWallet(LockWalletRequest.newBuilder().build())
+        verify(exactly = 1) { addressManager.lock() }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -363,9 +363,9 @@ class AdminApiServiceTest {
         val saveWalletResult = Pair(
             false, "Result"
         )
-        every { addressManager!!.saveWalletToFile(any()) } returns saveWalletResult
-        val reply = adminApiService!!.backupWallet(request)
-        verify { addressManager!!.saveWalletToFile(any()) }
+        every { addressManager.saveWalletToFile(any()) } returns saveWalletResult
+        val reply = adminApiService.backupWallet(request)
+        verify { addressManager.saveWalletToFile(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -374,9 +374,9 @@ class AdminApiServiceTest {
         val request = BackupWalletRequest.newBuilder()
             .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
             .build()
-        every { addressManager!!.saveWalletToFile(any()) } throws RuntimeException()
-        val reply = adminApiService!!.backupWallet(request)
-        verify(exactly = 1) { addressManager!!.saveWalletToFile(any()) }
+        every { addressManager.saveWalletToFile(any()) } throws RuntimeException()
+        val reply = adminApiService.backupWallet(request)
+        verify(exactly = 1) { addressManager.saveWalletToFile(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -388,9 +388,9 @@ class AdminApiServiceTest {
         val saveWalletResult = Pair(
             true, "Result"
         )
-        every { addressManager!!.saveWalletToFile(any()) } returns saveWalletResult
-        val reply = adminApiService!!.backupWallet(request)
-        verify(exactly = 1) { addressManager!!.saveWalletToFile(any()) }
+        every { addressManager.saveWalletToFile(any()) } returns saveWalletResult
+        val reply = adminApiService.backupWallet(request)
+        verify(exactly = 1) { addressManager.saveWalletToFile(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -400,7 +400,7 @@ class AdminApiServiceTest {
             .newBuilder()
             .setAddress(ByteString.copyFromUtf8("Not valid address"))
             .build()
-        val reply = adminApiService!!.dumpPrivateKey(request)
+        val reply = adminApiService.dumpPrivateKey(request)
         Assert.assertEquals(false, reply.success)
     }
 
@@ -413,11 +413,11 @@ class AdminApiServiceTest {
             .newBuilder()
             .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
             .build()
-        every { addressManager!!.getPublicKeyForAddress(any()) } returns null
-        every { addressManager!!.getPrivateKeyForAddress(any()) } returns keyPair.private
-        val reply = adminApiService!!.dumpPrivateKey(request)
-        verify(exactly = 1) { addressManager!!.getPublicKeyForAddress(validAddress) }
-        verify(exactly = 1) { addressManager!!.getPrivateKeyForAddress(validAddress) }
+        every { addressManager.getPublicKeyForAddress(any()) } returns null
+        every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
+        val reply = adminApiService.dumpPrivateKey(request)
+        verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
+        verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -430,11 +430,11 @@ class AdminApiServiceTest {
             .newBuilder()
             .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
             .build()
-        every { addressManager!!.getPublicKeyForAddress(any()) } returns keyPair.public
-        every { addressManager!!.getPrivateKeyForAddress(any()) } returns null
-        val reply = adminApiService!!.dumpPrivateKey(request)
-        verify(exactly = 1) { addressManager!!.getPublicKeyForAddress(validAddress) }
-        verify(exactly = 1) { addressManager!!.getPrivateKeyForAddress(validAddress) }
+        every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
+        every { addressManager.getPrivateKeyForAddress(any()) } returns null
+        val reply = adminApiService.dumpPrivateKey(request)
+        verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
+        verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -447,20 +447,20 @@ class AdminApiServiceTest {
             .newBuilder()
             .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
             .build()
-        every { addressManager!!.getPublicKeyForAddress(any()) } returns keyPair.public
-        every { addressManager!!.getPrivateKeyForAddress(any()) } returns keyPair.private
-        val reply = adminApiService!!.dumpPrivateKey(request)
-        verify(exactly = 1) { addressManager!!.getPublicKeyForAddress(validAddress) }
-        verify(exactly = 1) { addressManager!!.getPrivateKeyForAddress(validAddress) }
+        every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
+        every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
+        val reply = adminApiService.dumpPrivateKey(request)
+        verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
+        verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
         Assert.assertEquals(true, reply.success)
     }
 
     @Test
     fun importPrivateKeyWhenWalletLockedThenFalse() {
         val request = ImportPrivateKeyRequest.newBuilder().build()
-        every { addressManager!!.isLocked } returns true
-        val reply = adminApiService!!.importPrivateKey(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
+        every { addressManager.isLocked } returns true
+        val reply = adminApiService.importPrivateKey(request)
+        verify(exactly = 1) { addressManager.isLocked }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -469,11 +469,11 @@ class AdminApiServiceTest {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
         val request = ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
-        every { addressManager!!.isLocked } returns false
-        every { addressManager!!.importKeyPair(any(), any()) } returns null
-        val reply = adminApiService!!.importPrivateKey(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.importKeyPair(any(), any()) }
+        every { addressManager.isLocked } returns false
+        every { addressManager.importKeyPair(any(), any()) } returns null
+        val reply = adminApiService.importPrivateKey(request)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -485,53 +485,53 @@ class AdminApiServiceTest {
         val importedAddress = Address(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public
         )
-        every { addressManager!!.isLocked } returns false
-        every { addressManager!!.importKeyPair(any(), any()) } returns importedAddress
-        val reply = adminApiService!!.importPrivateKey(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.importKeyPair(any(), any()) }
+        every { addressManager.isLocked } returns false
+        every { addressManager.importKeyPair(any(), any()) } returns importedAddress
+        val reply = adminApiService.importPrivateKey(request)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
         Assert.assertEquals(true, reply.success)
     }
 
     @Test
     fun newAddressWhenWalletLockedThenFalse() {
         val request = GetNewAddressRequest.newBuilder().build()
-        every { addressManager!!.isLocked } returns true
-        val reply = adminApiService!!.getNewAddress(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
+        every { addressManager.isLocked } returns true
+        val reply = adminApiService.getNewAddress(request)
+        verify(exactly = 1) { addressManager.isLocked }
         Assert.assertEquals(false, reply.success)
     }
 
     @Test
     fun newAddressWhenGetNewAddressNullThenFalse() {
         val request = GetNewAddressRequest.newBuilder().build()
-        every { addressManager!!.isLocked } returns false
-        every { addressManager!!.newAddress } returns null
-        val reply = adminApiService!!.getNewAddress(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.newAddress }
+        every { addressManager.isLocked } returns false
+        every { addressManager.newAddress } returns null
+        val reply = adminApiService.getNewAddress(request)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.newAddress }
         Assert.assertEquals(false, reply.success)
     }
 
     @Test
     fun newAddressWhenIOExceptionThenFalse() {
         val request = GetNewAddressRequest.newBuilder().build()
-        every { addressManager!!.isLocked } returns false
-        every { addressManager!!.newAddress } throws IOException()
-        val reply = adminApiService!!.getNewAddress(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.newAddress }
+        every { addressManager.isLocked } returns false
+        every { addressManager.newAddress } throws IOException()
+        val reply = adminApiService.getNewAddress(request)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.newAddress }
         Assert.assertEquals(false, reply.success)
     }
 
     @Test
     fun newAddressWhenWalletLockedExceptionThenFalse() {
         val request = GetNewAddressRequest.newBuilder().build()
-        every { addressManager!!.isLocked } returns false
-        every { addressManager!!.newAddress } throws WalletLockedException("Exception")
-        val reply = adminApiService!!.getNewAddress(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.newAddress }
+        every { addressManager.isLocked } returns false
+        every { addressManager.newAddress } throws WalletLockedException("Exception")
+        val reply = adminApiService.getNewAddress(request)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.newAddress }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -541,11 +541,11 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         val request = GetNewAddressRequest.newBuilder().build()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
-        every { addressManager!!.isLocked } returns false
-        every { addressManager!!.newAddress } returns address
-        val reply = adminApiService!!.getNewAddress(request)
-        verify(exactly = 1) { addressManager!!.isLocked }
-        verify(exactly = 1) { addressManager!!.newAddress }
+        every { addressManager.isLocked } returns false
+        every { addressManager.newAddress } returns address
+        val reply = adminApiService.getNewAddress(request)
+        verify(exactly = 1) { addressManager.isLocked }
+        verify(exactly = 1) { addressManager.newAddress }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -557,7 +557,7 @@ class AdminApiServiceTest {
         val request = SubmitTransactionsRequest.newBuilder()
             .addTransactions(transactionUnion)
             .build()
-        val reply = adminApiService!!.submitTransactions(request)
+        val reply = adminApiService.submitTransactions(request)
         Assert.assertEquals(false, reply.success)
     }
 
@@ -566,11 +566,11 @@ class AdminApiServiceTest {
         val signTx = SignedTransaction.newBuilder().build()
         val transactionUnion = TransactionUnion.newBuilder().setSigned(signTx).build()
         val request = SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
-        every { transactionFactory!!.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
-        every { transactionContainer!!.addTransaction(any()) } returns false
-        val reply = adminApiService!!.submitTransactions(request)
-        verify(exactly = 1) { transactionFactory!!.create(signTx) }
-        verify(exactly = 1) { transactionContainer!!.addTransaction(any()) }
+        every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
+        every { transactionContainer.addTransaction(any()) } returns false
+        val reply = adminApiService.submitTransactions(request)
+        verify(exactly = 1) { transactionFactory.create(signTx) }
+        verify(exactly = 1) { transactionContainer.addTransaction(any()) }
         Assert.assertEquals(false, reply.success)
     }
 
@@ -579,11 +579,11 @@ class AdminApiServiceTest {
         val signTx = SignedTransaction.newBuilder().build()
         val transactionUnion = TransactionUnion.newBuilder().setSigned(signTx).build()
         val request = SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
-        every { transactionFactory!!.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
-        every { transactionContainer!!.addTransaction(any()) } returns true
-        val reply = adminApiService!!.submitTransactions(request)
-        verify(exactly = 1) { transactionFactory!!.create(signTx) }
-        verify(exactly = 1) { transactionContainer!!.addTransaction(any()) }
+        every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
+        every { transactionContainer.addTransaction(any()) } returns true
+        val reply = adminApiService.submitTransactions(request)
+        verify(exactly = 1) { transactionFactory.create(signTx) }
+        verify(exactly = 1) { transactionContainer.addTransaction(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -597,12 +597,12 @@ class AdminApiServiceTest {
             .addTransactions(transactionUnion)
             .build()
 
-        every { transactionFactory!!.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
-        every { transactionContainer!!.addTransaction(any()) } returns true
+        every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
+        every { transactionContainer.addTransaction(any()) } returns true
 
-        val reply = adminApiService!!.submitTransactions(request)
-        verify(exactly = 1) { transactionFactory!!.create(signTx) }
-        verify(exactly = 1) { transactionContainer!!.addTransaction(any()) }
+        val reply = adminApiService.submitTransactions(request)
+        verify(exactly = 1) { transactionFactory.create(signTx) }
+        verify(exactly = 1) { transactionContainer.addTransaction(any()) }
 
         Assert.assertEquals(true, reply.success)
     }
@@ -613,13 +613,13 @@ class AdminApiServiceTest {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
-        every { addressManager!!.defaultAddress } returns address
-        every { peerTable!!.getSignatureIndex(any()) } returns 1L
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 2L
-        val reply = adminApiService!!.getSignatureIndex(request)
-        verify(exactly = 1) { addressManager!!.defaultAddress }
-        verify(exactly = 1) { peerTable!!.getSignatureIndex(any()) }
-        verify(exactly = 1) { transactionContainer!!.getPendingSignatureIndexForAddress(any()) }
+        every { addressManager.defaultAddress } returns address
+        every { peerTable.getSignatureIndex(any()) } returns 1L
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
+        val reply = adminApiService.getSignatureIndex(request)
+        verify(exactly = 1) { addressManager.defaultAddress }
+        verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
+        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -631,11 +631,11 @@ class AdminApiServiceTest {
         val request = GetSignatureIndexRequest.newBuilder()
             .addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
             .build()
-        every { peerTable!!.getSignatureIndex(any()) } returns 1L
-        every { transactionContainer!!.getPendingSignatureIndexForAddress(any()) } returns 2L
-        val reply = adminApiService!!.getSignatureIndex(request)
-        verify(exactly = 1) { peerTable!!.getSignatureIndex(any()) }
-        verify(exactly = 1) { transactionContainer!!.getPendingSignatureIndexForAddress(any()) }
+        every { peerTable.getSignatureIndex(any()) } returns 1L
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
+        val reply = adminApiService.getSignatureIndex(request)
+        verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
+        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
         Assert.assertEquals(true, reply.success)
     }
 
@@ -652,9 +652,9 @@ class AdminApiServiceTest {
         ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .setFeePerByte(10000L).setMaxFee(1000L).build()
 
-        every { transactionService!!.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
+        every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = adminApiService!!.createAltChainEndorsement(request)
+        val reply = adminApiService.createAltChainEndorsement(request)
         Assert.assertNotNull(reply)
         Assert.assertFalse(reply.success)
         Assert.assertFalse(reply.getResults(0).message.contains("Calcualated fee"))
@@ -673,9 +673,9 @@ class AdminApiServiceTest {
         ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .setFeePerByte(10000L).setMaxFee(100000000L).build()
 
-        every { transactionService!!.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } throws RuntimeException()
+        every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } throws RuntimeException()
 
-        val reply = adminApiService!!.createAltChainEndorsement(request)
+        val reply = adminApiService.createAltChainEndorsement(request)
         Assert.assertNotNull(reply)
         Assert.assertFalse(reply.success)
         Assert.assertFalse(reply.getResults(0).message.contains("An error occurred processing"))
@@ -693,9 +693,9 @@ class AdminApiServiceTest {
         ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .setFeePerByte(10000L).setMaxFee(100000000L).build()
 
-        every { transactionService!!.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
+        every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = adminApiService!!.createAltChainEndorsement(request)
+        val reply = adminApiService.createAltChainEndorsement(request)
         Assert.assertNotNull(reply)
         Assert.assertTrue(reply.success)
     }

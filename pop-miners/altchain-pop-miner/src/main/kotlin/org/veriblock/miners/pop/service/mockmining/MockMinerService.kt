@@ -1,4 +1,4 @@
-package org.veriblock.miners.pop.service
+package org.veriblock.miners.pop.service.mockmining
 
 import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.createLogger
@@ -11,15 +11,10 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
+import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
-import org.veriblock.sdk.mock.BitcoinBlockchain
-import org.veriblock.sdk.mock.BitcoinDefaults
-import org.veriblock.sdk.mock.VeriBlockBlockData
-import org.veriblock.sdk.mock.VeriBlockBlockchain
-import org.veriblock.sdk.mock.VeriBlockDefaults
-import org.veriblock.sdk.mock.VeriBlockPopMiner
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.Coin
@@ -33,9 +28,6 @@ import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.sdk.util.Base58
 import org.veriblock.sdk.util.KeyGenerator
 import org.veriblock.sdk.util.Utils
-import org.veriblock.shell.core.Result
-import org.veriblock.shell.core.failure
-import org.veriblock.shell.core.success
 import java.nio.charset.StandardCharsets
 import java.security.KeyPair
 import java.security.PrivateKey
@@ -52,7 +44,9 @@ class MockMinerService(
     private val connection = ConnectionSelector.setConnection("mock")
     private val veriBlockStore = VeriBlockStore(connection)
     private val bitcoinStore = BitcoinStore(connection)
-    private val veriBlockBlockchain = VeriBlockBlockchain(VeriBlockDefaults.networkParameters, veriBlockStore, bitcoinStore)
+    private val veriBlockBlockchain = VeriBlockBlockchain(
+        VeriBlockDefaults.networkParameters, veriBlockStore, bitcoinStore
+    )
     private val bitcoinBlockchain = BitcoinBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
 

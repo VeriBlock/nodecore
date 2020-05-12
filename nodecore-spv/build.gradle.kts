@@ -28,7 +28,7 @@ dependencies {
     implementation(project(":nodecore-grpc"))
     implementation(project(":nodecore-p2p"))
 
-    implementation("com.github.veriblock.alt-integration:core:0.0.7")
+    implementation(project(":altchain-integration-core"))
 
     runtime("org.codehaus.groovy:groovy:2.4.12")
 

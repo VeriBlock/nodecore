@@ -1,0 +1,16 @@
+# Gradle
+.idea/**/gradle.xml
+.idea/**/libraries
+.gradle/
+build/
+
+# Application specific
+*.spv
+*.jrnl
+tmp/
+
+# Eclipse
+.settings
+.classpath
+.project
+bin/
