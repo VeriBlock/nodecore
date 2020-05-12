@@ -28,7 +28,6 @@ import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.mockmining.MockMinerService
 import org.veriblock.miners.pop.service.OperationSerializer
 import org.veriblock.miners.pop.service.OperationService
-import org.veriblock.miners.pop.shell.commands.altchainCommands
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.miners.pop.storage.KeyValueRepository
 import org.veriblock.miners.pop.storage.KeyValueTable
@@ -66,9 +65,6 @@ val minerModule = module {
     single {
         CommandFactory().apply {
             configure(get(), get(), get())
-            if (!minerConfig.mock) {
-                altchainCommands(get(), get(), get())
-            }
         }
     }
     single { Shell(get()) }

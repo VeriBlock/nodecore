@@ -220,11 +220,6 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
-        if (veriBlockPublications.calculateSize() >= 100_000) {
-            updateContext(veriBlockPublications.take(veriBlockPublications.size - 1))
-            return submit(proofOfProof, veriBlockPublications.takeLast(1))
-        }
-
         logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
 
         val jsonBody = JsonRpcRequestBody("submitpop", listOf(
@@ -236,52 +231,6 @@ class BitcoinFamilyChain(
             body = jsonBody
         }.handle()
     }
-
-    override suspend fun updateContext(veriBlockPublications: List<VeriBlockPublication>): String {
-        if (veriBlockPublications.calculateSize() < 100_000) {
-            return updateContextInternal(veriBlockPublications)
-        } else {
-            val toEmpty = ArrayList(veriBlockPublications)
-            var lastResponse = ""
-            while (toEmpty.isNotEmpty()) {
-                val publications = ArrayList<VeriBlockPublication>()
-                while (toEmpty.isNotEmpty() && publications.calculateSize() + toEmpty.first().calculateSize() < 100_000) {
-                    publications.add(toEmpty.removeAt(0))
-                }
-                if (publications.isEmpty() && toEmpty.isNotEmpty()) {
-                    error("Too big publication: ${toEmpty.first().calculateSize()} bytes")
-                }
-                lastResponse = updateContextInternal(publications)
-            }
-            return lastResponse
-        }
-    }
-
-    private suspend fun updateContextInternal(veriBlockPublications: List<VeriBlockPublication>): String {
-        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
-        val jsonBody = JsonRpcRequestBody("updatecontext", listOf(
-            veriBlockPublications.map {
-                it.transaction
-            }.flatMap {
-                it.blocks
-            }.map {
-                SerializeDeserializeService.getHeaderBytesBitcoinBlock(it).toHex()
-            },
-            veriBlockPublications.flatMap {
-                it.blocks
-            }.map {
-                SerializeDeserializeService.serializeHeaders(it).toHex()
-            }
-        )).toJson()
-
-        return httpClient.post<RpcResponse>(config.host) {
-            body = jsonBody
-        }.handle()
-    }
-
-    private fun List<VeriBlockPublication>.calculateSize() = 1 + sumBy { it.calculateSize() }
-
-    private fun VeriBlockPublication.calculateSize() = transaction.blocks.size * 81 + blocks.size * 65
 
     private val crypto = Crypto()
 

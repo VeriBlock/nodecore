@@ -61,18 +61,10 @@ class ApmTaskService(
         operation.setMiningInstruction(publicationData)
         logger.info(operation, "Successfully retrieved the mining instruction!")
         val vbkContextBlockHash = publicationData.context[0]
-        val vbkContextBlock = nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
+        nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
             ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
-        val vbkChainHead = nodeCoreLiteKit.network.lastBlockHeader
+        nodeCoreLiteKit.network.lastBlockHeader
             ?: failOperation("Unable to get VBK's chain head!")
-        // Disabled - Bohdan request
-        /*val contextAge = vbkChainHead.height - vbkContextBlock.height
-        if (contextAge > MAX_CONTEXT_AGE) {
-            failOperation(
-                "${operation.chain.name}'s VBK context is outdated ($contextAge VBK blocks behind)!" +
-                    " Please run 'updatecontext ${operation.chain.key}' in order to mine it."
-            )
-        }*/
     }
 
     override suspend fun createEndorsementTransaction(operation: ApmOperation) = operation.runTask(
