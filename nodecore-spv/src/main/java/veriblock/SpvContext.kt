@@ -12,6 +12,7 @@ import io.grpc.ServerInterceptors
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
 import org.veriblock.sdk.blockchain.store.BitcoinStore
@@ -20,7 +21,6 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.sdk.sqlite.FileManager
-import veriblock.conf.NetworkParameters
 import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.TransactionPool
 import veriblock.net.P2PService
@@ -149,7 +149,7 @@ class SpvContext {
      */
     @Synchronized
     fun init(networkParameters: NetworkParameters, peerDiscovery: PeerDiscovery, runAdminServer: Boolean) {
-        init(networkParameters, File("."), String.format("vbk-%s", networkParameters.networkName), peerDiscovery, runAdminServer)
+        init(networkParameters, File("."), String.format("vbk-%s", networkParameters.name), peerDiscovery, runAdminServer)
     }
 
     fun shutdown() {

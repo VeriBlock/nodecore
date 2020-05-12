@@ -22,6 +22,7 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.params.NetworkParameters;
 import org.veriblock.shell.Command;
 import org.veriblock.shell.CommandContext;
 import org.veriblock.shell.CommandFactory;
@@ -29,7 +30,6 @@ import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
 import veriblock.SpvContext;
-import veriblock.conf.NetworkParameters;
 import veriblock.model.DownloadStatusResponse;
 import veriblock.net.BootstrapPeerDiscovery;
 import veriblock.net.PeerDiscovery;
@@ -275,7 +275,7 @@ public class CliShell extends Shell {
 
         if(programOptions.getSpvNetworkParameters() != null){
             try {
-                endpoint = startSPV(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
+                endpoint = startSpv(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
                 host = programOptions.getSpvNetworkParameters().getAdminHost() + ":" + programOptions.getSpvNetworkParameters().getAdminPort();
 
                 disconnectCallBack = spvContext::shutdown;
@@ -353,7 +353,7 @@ public class CliShell extends Shell {
         t.start();
     }
 
-    public ProtocolEndpoint startSPV(NetworkParameters net, PeerDiscovery peerDiscovery) throws ExecutionException, InterruptedException {
+    public ProtocolEndpoint startSpv(NetworkParameters net, PeerDiscovery peerDiscovery) throws ExecutionException, InterruptedException {
         this.setModeType(ModeType.SPV);
 
         spvContext.init(net, peerDiscovery, true);

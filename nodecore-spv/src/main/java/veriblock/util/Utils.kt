@@ -8,7 +8,7 @@
 package veriblock.util
 
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 
 object Utils {
     fun hash(left: Sha256Hash, right: Sha256Hash): Sha256Hash {

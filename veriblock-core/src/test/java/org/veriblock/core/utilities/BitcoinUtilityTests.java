@@ -13,13 +13,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.veriblock.core.Context;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
-import org.veriblock.core.params.AlphaNetParameters;
 import org.veriblock.core.types.BitString;
+
+import static org.veriblock.core.params.NetworkParametersKt.defaultAlphaNetParameters;
 
 public class BitcoinUtilityTests {
     @BeforeClass
     public static void setupFixture() {
-        Context.create(new AlphaNetParameters());
+        Context.create(defaultAlphaNetParameters);
     }
 
     @Test

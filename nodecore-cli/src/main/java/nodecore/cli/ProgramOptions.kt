@@ -11,8 +11,8 @@ import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.ParseException
-import veriblock.conf.NetworkParameters
-import veriblock.conf.getNetworkParameters
+import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.params.getDefaultNetworkParameters
 import java.util.ArrayList
 import java.util.Properties
 
@@ -66,7 +66,7 @@ class ProgramOptions {
             _properties = commandLine.getOptionProperties("D")
             if (commandLine.hasOption("c")) configPath = commandLine.getOptionValue('c')
             if (commandLine.hasOption("startspv")) {
-                spvNetworkParameters = getNetworkParameters(commandLine.getOptionValue("startspv"))
+                spvNetworkParameters = getDefaultNetworkParameters(commandLine.getOptionValue("startspv"))
             } else if (commandLine.hasOption("connect")) {
                 connect = commandLine.getOptionValue("connect")
             }

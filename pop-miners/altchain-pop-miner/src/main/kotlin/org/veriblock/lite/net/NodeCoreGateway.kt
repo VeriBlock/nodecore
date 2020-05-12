@@ -18,11 +18,11 @@ import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction

@@ -8,7 +8,7 @@
 
 package org.veriblock.lite.core
 
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 
 class BlockMetaPackage(
     val hash: Sha256Hash

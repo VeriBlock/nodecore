@@ -4,14 +4,12 @@ import io.mockk.mockk
 import junit.framework.TestCase
 import org.junit.Assert
 import org.junit.Test
-import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.Coin
 import veriblock.SpvContext
-import veriblock.conf.TestNetParameters
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.Output
 import veriblock.model.StandardAddress
-import veriblock.model.Transaction
 import veriblock.net.LocalhostDiscovery
 import veriblock.service.TransactionService
 
@@ -19,12 +17,12 @@ class TransactionServiceTest : TestCase() {
     private val spvContext = SpvContext()
 
     public override fun setUp() {
-        spvContext.init(TestNetParameters, LocalhostDiscovery(TestNetParameters), false)
+        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters), false)
     }
 
     @Test
     fun testCreateTransactionsByOutputList() {
-        val transactionService = TransactionService(mockk(relaxed = true), TestNetParameters)
+        val transactionService = TransactionService(mockk(relaxed = true), defaultTestNetParameters)
         val addressCoinsIndexList = listOf(
             AddressCoinsIndex("V9YtYGe28er1D79qkshWHcxfbH3p2j", 100L * Coin.COIN_VALUE, 1L),
             AddressCoinsIndex("V66n5xh5Mu8nnR1D3is3eRkp92ktL9", 0L, 1L),

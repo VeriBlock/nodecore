@@ -8,14 +8,11 @@
 package veriblock.net
 
 import nodecore.p2p.DnsResolver
-import org.slf4j.LoggerFactory
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.xbill.DNS.TextParseException
-import veriblock.conf.NetworkParameters
 import veriblock.model.PeerAddress
 import java.util.ArrayList
-import java.util.Collections
-import java.util.stream.Collectors
 
 private val logger = createLogger {}
 

@@ -11,7 +11,7 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import org.slf4j.LoggerFactory
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import veriblock.model.AddressFactory.create
 import veriblock.model.Output

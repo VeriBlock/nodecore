@@ -12,10 +12,10 @@ import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
-import veriblock.conf.NetworkParameters
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream

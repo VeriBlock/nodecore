@@ -14,8 +14,8 @@ import org.veriblock.core.types.Pair
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
-import veriblock.conf.NetworkParameters
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.Output
 import veriblock.model.SigningResult

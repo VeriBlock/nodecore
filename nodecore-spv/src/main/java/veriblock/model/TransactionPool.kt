@@ -8,7 +8,7 @@
 package veriblock.model
 
 import com.google.common.base.Preconditions
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import java.lang.ref.Reference
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference

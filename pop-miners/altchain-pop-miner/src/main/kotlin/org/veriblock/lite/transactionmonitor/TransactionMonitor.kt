@@ -18,7 +18,7 @@ import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction

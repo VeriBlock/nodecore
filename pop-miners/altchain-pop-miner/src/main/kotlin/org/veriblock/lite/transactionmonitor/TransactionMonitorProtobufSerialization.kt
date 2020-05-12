@@ -17,7 +17,7 @@ import org.veriblock.lite.proto.TxmonProto
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -35,7 +35,7 @@ fun InputStream.readTransactionMonitor(context: Context, gateway: NodeCoreGatewa
 }
 
 private fun TransactionMonitor.toProto() = TxmonProto.TransactionMonitor(
-    network = context.networkParameters.network,
+    network = context.networkParameters.name,
     address = address.toString(),
     transactions = getTransactions().map { it.toProto() }
 )
@@ -69,8 +69,8 @@ private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
 )
 
 private fun TxmonProto.TransactionMonitor.toModel(context: Context, gateway: NodeCoreGateway): TransactionMonitor {
-    check(context.networkParameters.network == network) {
-        "Network ${context.networkParameters.network} attempting to read ${context.vbkTokenName} wallet for $network"
+    check(context.networkParameters.name == network) {
+        "Network ${context.networkParameters.name} attempting to read ${context.vbkTokenName} wallet for $network"
     }
     return TransactionMonitor(
         context,

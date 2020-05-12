@@ -235,7 +235,7 @@ public class PeerTable {
 
     private void addPeerCandidate(NodeMetadata node) {
         if (node.getPort() == 0) {
-            node.setPort(networkParameters.getP2PPort());
+            node.setPort(networkParameters.getP2pPort());
         }
 
         if (isNodeSelf(node.getId(), node.getAddress()) || isAddressPrivate(node.getAddress())) {
@@ -244,7 +244,7 @@ public class PeerTable {
 
         // TODO: Remove once this is no longer needed
         if (node.getPort() > 50000) {
-            node.setPort(networkParameters.getP2PPort());
+            node.setPort(networkParameters.getP2pPort());
         }
 
         if (peers.containsKey(node.getAddressKey())) {

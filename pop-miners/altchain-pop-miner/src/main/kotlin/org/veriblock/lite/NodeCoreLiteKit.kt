@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
 import org.veriblock.lite.core.Balance
@@ -22,8 +23,6 @@ import org.veriblock.lite.net.GatewayStrategy
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.net.createFullNode
-import org.veriblock.lite.net.createSpv
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
@@ -60,12 +59,13 @@ class NodeCoreLiteKit(
 
         addressManager = loadAddressManager()
 
-        if (context.networkParameters.isSpv) {
-            spvContext = initSpvContest(context.networkParameters, addressManager.all)
-            gatewayStrategy = createSpv(spvContext)
-        } else {
+        // TODO
+        //if (context.networkParameters.isSpv) {
+        //    spvContext = initSpvContest(context.networkParameters, addressManager.all)
+        //    gatewayStrategy = createSpv(spvContext)
+        //} else {
             gatewayStrategy = createFullNode(context.networkParameters)
-        }
+        //}
 
         gateway = NodeCoreGateway(context.networkParameters, gatewayStrategy)
         transactionMonitor = createOrLoadTransactionMonitor()
@@ -80,7 +80,7 @@ class NodeCoreLiteKit(
     }
 
     fun start() {
-        logger.info { "VeriBlock Network: ${context.networkParameters.network}" }
+        logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
         logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
         beforeNetworkStart()
@@ -148,8 +148,8 @@ class NodeCoreLiteKit(
     private fun initSpvContest(networkParameters: NetworkParameters, addresses: Collection<org.veriblock.core.wallet.Address>): SpvContext {
         val spvContext = SpvContext()
         spvContext.init(
-            networkParameters.spvNetworkParameters!!,
-            LocalhostDiscovery(networkParameters.spvNetworkParameters!!), false
+            networkParameters,
+            LocalhostDiscovery(networkParameters), false
         )
         spvContext.peerTable.start()
 

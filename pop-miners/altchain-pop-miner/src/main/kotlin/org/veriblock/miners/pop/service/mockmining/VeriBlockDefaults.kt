@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.service.mockmining
 import org.veriblock.sdk.blockchain.VeriBlockBlockchainBootstrapConfig
 import org.veriblock.sdk.conf.RegTestParameters
 import org.veriblock.sdk.conf.VeriBlockNetworkParameters
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.util.BitcoinUtils

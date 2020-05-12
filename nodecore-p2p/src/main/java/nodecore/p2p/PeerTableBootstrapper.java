@@ -71,7 +71,7 @@ public class PeerTableBootstrapper {
                 if (peer == null || peer.length() == 0) continue;
 
                 try {
-                    peerPool.add(new PeerEndpoint(peer, networkParameters.getP2PPort()));
+                    peerPool.add(new PeerEndpoint(peer, networkParameters.getP2pPort()));
                 } catch (Exception e) {
                     logger.error("Unable to add bootstrap peer '{}'", peer, e);
                 }
@@ -82,7 +82,7 @@ public class PeerTableBootstrapper {
             for (String dns : dnsSeeds) {
                 try {
                     List<String> ipAddresses = dnsResolver.query(dns);
-                    ipAddresses.forEach(ip -> peerPool.add(new PeerEndpoint(ip, networkParameters.getP2PPort())));
+                    ipAddresses.forEach(ip -> peerPool.add(new PeerEndpoint(ip, networkParameters.getP2pPort())));
                 } catch (Exception e) {
                     logger.error("Could not query '{}' for bootstrap nodes", dns, e);
                 }

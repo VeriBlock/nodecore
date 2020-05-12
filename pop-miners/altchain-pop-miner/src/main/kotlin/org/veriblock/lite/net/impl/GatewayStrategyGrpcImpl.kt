@@ -12,8 +12,8 @@ import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.lite.net.GatewayStrategy
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.serialization.deserialize
 import java.util.concurrent.TimeUnit
 

@@ -12,7 +12,7 @@ import org.veriblock.sdk.blockchain.store.BlockStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.conf.BitcoinNetworkParameters
 import org.veriblock.sdk.models.BitcoinBlock
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.sdk.util.Utils
 import java.sql.SQLException

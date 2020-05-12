@@ -15,11 +15,11 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.koin.dsl.module
+import org.veriblock.core.params.NetworkConfig
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
-import org.veriblock.lite.params.NetworkConfig
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.service.ApmTaskService

@@ -11,9 +11,9 @@ package org.veriblock.lite.net
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.AdminRpcConfiguration
 import nodecore.api.grpc.utilities.ChannelBuilder
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.lite.net.impl.GatewayStrategyGrpcImpl
 import org.veriblock.lite.net.impl.GatewayStrategySpvImpl
-import org.veriblock.lite.params.NetworkParameters
 import veriblock.SpvContext
 
 fun createFullNode(networkParameters: NetworkParameters): GatewayStrategy {

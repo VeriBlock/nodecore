@@ -8,7 +8,7 @@
 package veriblock.wallet
 
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import veriblock.model.Balance
 import java.util.LinkedHashMap
 import java.util.Objects

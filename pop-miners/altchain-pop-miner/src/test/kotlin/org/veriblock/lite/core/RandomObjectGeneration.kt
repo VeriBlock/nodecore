@@ -21,7 +21,7 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath

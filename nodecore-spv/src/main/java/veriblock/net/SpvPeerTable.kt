@@ -20,7 +20,7 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
 import spark.utils.CollectionUtils
 import veriblock.SpvContext

@@ -20,7 +20,7 @@ import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.MerklePath
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService

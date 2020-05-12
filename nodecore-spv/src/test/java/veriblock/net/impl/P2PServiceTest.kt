@@ -6,9 +6,9 @@ import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.defaultTestNetParameters
 import veriblock.SpvContext
-import veriblock.conf.TestNetParameters
 import veriblock.model.Output
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
@@ -25,7 +25,7 @@ class P2PServiceTest {
 
     @Before
     fun setUp() {
-        spvContext.init(TestNetParameters, LocalhostDiscovery(TestNetParameters), false)
+        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters), false)
         pendingTransactionContainer = mockk(relaxed = true)
         peer = mockk(relaxed = true)
         p2PService = P2PService(pendingTransactionContainer, spvContext.networkParameters)

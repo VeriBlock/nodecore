@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.service.mockmining
 import org.veriblock.sdk.blockchain.store.BlockStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import java.sql.SQLException
 import java.util.HashMap
 

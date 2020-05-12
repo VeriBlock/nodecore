@@ -4,11 +4,10 @@ import nodecore.api.grpc.VeriBlockMessages.SignedMultisigTransaction
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.sdk.models.Sha256Hash
-import veriblock.conf.NetworkParameters
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
 import veriblock.wallet.WalletProtobufSerializer
@@ -43,7 +42,7 @@ class TransactionFactory(private val networkParameters: NetworkParameters) {
         )
         transaction.addSignature(message.signature.toByteArray(), message.publicKey.toByteArray())
         val valid = AddressUtility.isSignatureValid(
-            transaction.txId!!.bytes, transaction.signature, transaction.publicKey, transaction.inputAddress!!.get()
+            transaction.txId.bytes, transaction.signature, transaction.publicKey, transaction.inputAddress!!.get()
         )
         if (!valid) {
             logger.error("Transaction signature is not valid.")

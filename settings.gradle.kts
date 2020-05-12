@@ -10,7 +10,6 @@ include("veriblock-pow-miner")
 include("veriblock-extensions")
 
 include("altchain-sdk")
-include("altchain-integration-core")
 
 include("pop-miners:pop-miners-common")
 include("pop-miners:veriblock-pop-miners-common")

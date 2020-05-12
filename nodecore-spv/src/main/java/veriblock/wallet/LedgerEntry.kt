@@ -9,7 +9,7 @@ package veriblock.wallet
 
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.model.AddressFactory.create
 import java.io.ByteArrayOutputStream

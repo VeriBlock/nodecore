@@ -1,12 +1,12 @@
 package nodecore.cli.commands
 
 import nodecore.cli.contracts.PeerEndpoint
+import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.shell.CommandParameterMapper
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.syntaxError
-import veriblock.conf.getNetworkParameters
 
 object ShellCommandParameterMappers {
     val HASH: CommandParameterMapper = CommandParameterMappers.HEX_STRING
@@ -24,7 +24,7 @@ object ShellCommandParameterMappers {
 
     var NET: CommandParameterMapper = { suppliedParam ->
         try {
-            getNetworkParameters(suppliedParam)
+            getDefaultNetworkParameters(suppliedParam)
         } catch(ignored: Exception) {
             throw syntaxError(
                     command,

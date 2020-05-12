@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service.mockmining
 
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPoPTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction

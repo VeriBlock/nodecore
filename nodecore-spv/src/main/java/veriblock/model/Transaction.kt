@@ -8,8 +8,8 @@
 package veriblock.model
 
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
-import org.veriblock.sdk.models.Sha256Hash
-import veriblock.conf.NetworkParameters
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 
 abstract class Transaction {
     lateinit var txId: Sha256Hash

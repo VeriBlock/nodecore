@@ -1,6 +1,6 @@
 package veriblock.wallet
 
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import veriblock.SpvContext
 import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.Output

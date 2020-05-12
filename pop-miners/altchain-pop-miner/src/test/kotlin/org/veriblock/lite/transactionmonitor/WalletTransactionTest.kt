@@ -10,6 +10,8 @@ package org.veriblock.lite.transactionmonitor
 
 import io.kotlintest.shouldBe
 import org.junit.Test
+import org.veriblock.core.params.NetworkConfig
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
@@ -20,8 +22,6 @@ import org.veriblock.lite.core.randomPublicationData
 import org.veriblock.lite.core.randomTransactionMeta
 import org.veriblock.lite.core.randomVeriBlockMerklePath
 import org.veriblock.lite.core.randomWalletTransaction
-import org.veriblock.lite.params.NetworkConfig
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockTransaction
 
 class WalletTransactionTest {

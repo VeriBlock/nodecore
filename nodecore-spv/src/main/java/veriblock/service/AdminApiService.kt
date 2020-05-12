@@ -54,7 +54,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.wallet.Address
 import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
@@ -98,7 +98,7 @@ class AdminApiService(
         replyBuilder.connectedPeerCount = peerTable.getAvailablePeers()
         replyBuilder.networkHeight = peerTable.getBestBlockHeight()
         replyBuilder.localBlockchainHeight = blockchain.getChainHead()!!.height
-        replyBuilder.networkVersion = spvContext.networkParameters.networkName
+        replyBuilder.networkVersion = spvContext.networkParameters.name
         replyBuilder.dataDirectory = spvContext.directory.path
         replyBuilder.programVersion = if (Constants.PROGRAM_VERSION == null) "UNKNOWN" else Constants.PROGRAM_VERSION
         replyBuilder.nodecoreStarttime = spvContext.startTime.epochSecond

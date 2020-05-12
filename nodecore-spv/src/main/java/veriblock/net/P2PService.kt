@@ -2,10 +2,9 @@ package veriblock.net
 
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.sdk.models.Sha256Hash
-import veriblock.conf.NetworkParameters
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import veriblock.model.TransactionTypeIdentifier
 import veriblock.service.PendingTransactionContainer
 import veriblock.util.MessageIdGenerator.next

@@ -22,6 +22,12 @@ dependencies {
     api("io.github.config4k:config4k:0.4.0")
     api("commons-cli:commons-cli:1.4")
 
+    // Crypto
+    api("org.bouncycastle:bcprov-jdk15on:1.60")
+
+    // Persistence (TODO: remove me)
+    api("org.xerial:sqlite-jdbc:3.23.1")
+
     // Logging
     api("ch.qos.logback:logback-classic:1.2.3")
     api("io.github.microutils:kotlin-logging:1.6.26")

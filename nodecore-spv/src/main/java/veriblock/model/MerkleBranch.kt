@@ -7,8 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.model
 
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.MerklePath
-import org.veriblock.sdk.models.Sha256Hash
 import veriblock.util.Utils
 import java.util.ArrayList
 import java.util.stream.Collectors

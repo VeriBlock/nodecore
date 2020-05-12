@@ -8,7 +8,7 @@
 package org.veriblock.lite.store
 
 import org.veriblock.sdk.models.Constants
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService

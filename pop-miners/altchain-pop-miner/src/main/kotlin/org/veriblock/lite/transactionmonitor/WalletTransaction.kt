@@ -8,12 +8,12 @@
 
 package org.veriblock.lite.transactionmonitor
 
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 

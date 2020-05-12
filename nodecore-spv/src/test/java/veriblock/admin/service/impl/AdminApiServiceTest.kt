@@ -16,9 +16,9 @@ import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.Address
 import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.defaultTestNetParameters
 import veriblock.SpvContext
-import veriblock.conf.TestNetParameters
 import veriblock.model.LedgerContext
 import veriblock.model.LedgerProofStatus
 import veriblock.model.LedgerValue
@@ -47,7 +47,7 @@ class AdminApiServiceTest {
 
     @Before
     fun setUp() {
-        spvContext.init(TestNetParameters, LocalhostDiscovery(TestNetParameters), false)
+        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters), false)
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)

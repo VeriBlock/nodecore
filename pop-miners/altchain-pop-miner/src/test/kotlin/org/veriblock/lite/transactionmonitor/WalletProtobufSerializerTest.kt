@@ -10,11 +10,11 @@ package org.veriblock.lite.core
 
 import io.kotlintest.shouldBe
 import org.junit.Test
+import org.veriblock.core.params.NetworkConfig
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.createFullNode
-import org.veriblock.lite.params.NetworkConfig
-import org.veriblock.lite.params.NetworkParameters
 import org.veriblock.lite.transactionmonitor.readTransactionMonitor
 import org.veriblock.lite.transactionmonitor.writeTransactionMonitor
 import java.io.ByteArrayInputStream

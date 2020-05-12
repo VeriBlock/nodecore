@@ -1,7 +1,7 @@
 package veriblock.service
 
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import spark.utils.CollectionUtils
 import veriblock.model.Transaction
 import java.util.ArrayList

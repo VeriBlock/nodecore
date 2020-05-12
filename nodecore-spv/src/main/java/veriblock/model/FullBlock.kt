@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.model
 
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 

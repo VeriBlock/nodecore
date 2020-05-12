@@ -4,10 +4,10 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
 import veriblock.SpvContext
-import veriblock.conf.MainNetParameters
 import veriblock.model.Output
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
@@ -18,7 +18,7 @@ class StandardTransactionTest {
 
     @Before
     fun setUp() {
-        spvContext.init(MainNetParameters, LocalhostDiscovery(MainNetParameters), false)
+        spvContext.init(defaultMainNetParameters, LocalhostDiscovery(defaultMainNetParameters), false)
     }
 
     @Test

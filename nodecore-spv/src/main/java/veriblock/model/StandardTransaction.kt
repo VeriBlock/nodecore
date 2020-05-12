@@ -17,18 +17,15 @@ import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.services.SerializeDeserializeService
-import veriblock.conf.MainNetParameters.networkName
-import veriblock.conf.NetworkParameters
 import veriblock.model.StandardTransaction
 import veriblock.service.TransactionService
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.util.ArrayList
-
-const val NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND = 0xAA.toByte()
 
 private val logger = createLogger {}
 
@@ -121,7 +118,7 @@ open class StandardTransaction : Transaction {
 
     @Throws(IOException::class)
     private fun serializeToStream(stream: OutputStream, networkParameters: NetworkParameters) {
-        val magicByte = if (networkParameters.networkName != networkName) NON_MAINNET_TRANSACTION_SERIALIZATION_PREPEND else null
+        val magicByte = networkParameters.transactionPrefix
         if (magicByte != null) {
             stream.write(magicByte.toInt())
         }

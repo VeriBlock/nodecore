@@ -12,11 +12,12 @@ import org.junit.Test;
 import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.Utility;
 
+import static org.veriblock.core.params.NetworkParametersKt.defaultMainNetParameters;
+
 public class MainNetParametersTests {
     @Test
     public void getInitialBitcoinBlockHeader() {
-        NetworkParameters params = new MainNetParameters();
-        byte[] header = params.getInitialBitcoinBlockHeader();
+        byte[] header = defaultMainNetParameters.getBitcoinOriginBlock().getRaw();
 
         /* Compute the block hash by SHA256D on the header */
         Crypto crypto = new Crypto();

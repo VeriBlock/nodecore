@@ -8,8 +8,8 @@
 
 package org.veriblock.lite.core
 
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.lite.params.NetworkParameters
 import java.io.File
 
 class Context(
@@ -21,8 +21,8 @@ class Context(
         ?: "./"
 
     val directory: File = File(dataDir)
-    val filePrefix: String = "vbk-${networkParameters.network}"
+    val filePrefix: String = "vbk-${networkParameters.name}"
 
-    val vbkTokenName: String = if (networkParameters.network.toLowerCase() == "mainnet") "VBK" else "tVBK"
-    val btcTokenName: String = if (networkParameters.network.toLowerCase() == "mainnet") "BTC" else "tBTC"
+    val vbkTokenName: String = if (networkParameters.name.toLowerCase() == "mainnet") "VBK" else "tVBK"
+    val btcTokenName: String = if (networkParameters.name.toLowerCase() == "mainnet") "BTC" else "tBTC"
 }

@@ -28,8 +28,6 @@ dependencies {
     implementation(project(":nodecore-grpc"))
     implementation(project(":nodecore-p2p"))
 
-    implementation(project(":altchain-integration-core"))
-
     runtime("org.codehaus.groovy:groovy:2.4.12")
 
     compile("ch.qos.logback:logback-classic:1.2.3")

@@ -34,7 +34,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService

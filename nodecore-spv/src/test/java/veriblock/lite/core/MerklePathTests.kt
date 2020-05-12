@@ -9,7 +9,7 @@ package veriblock.lite.core
 
 import org.junit.Assert
 import org.junit.Test
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import veriblock.model.MerkleBranch
 import java.util.*
 

@@ -1,10 +1,10 @@
 package nodecore.p2p
 
-import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.params.defaultMainNetParameters
 
 class P2PConfiguration(
-    val networkParameters: NetworkParameters = MainNetParameters(),
+    val networkParameters: NetworkParameters = defaultMainNetParameters,
     val peerBindAddress: String = "0.0.0.0",
     val peerBindPort: Int = 6500,
     val peerMinCount: Int = 8,

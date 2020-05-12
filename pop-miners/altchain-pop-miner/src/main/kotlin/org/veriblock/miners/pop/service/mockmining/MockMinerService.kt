@@ -1,6 +1,7 @@
 package org.veriblock.miners.pop.service.mockmining
 
 import kotlinx.coroutines.runBlocking
+import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -19,7 +20,6 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction

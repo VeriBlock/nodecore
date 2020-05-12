@@ -8,7 +8,7 @@
 package org.veriblock.miners.pop.service.mockmining
 
 import org.veriblock.sdk.models.MerklePath
-import org.veriblock.sdk.models.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash
 import java.util.ArrayList
 import kotlin.math.ln
 
