@@ -18,6 +18,7 @@ import nodecore.cli.commands.rpc.transactionCommands
 import nodecore.cli.commands.rpc.walletCommands
 import nodecore.cli.commands.rpc.whitelistCommands
 import nodecore.cli.commands.shell.connectionCommands
+import nodecore.cli.commands.shell.debugCommands
 import nodecore.cli.commands.shell.standardCommands
 import nodecore.cli.commands.shell.startApplicationCommands
 import nodecore.cli.serialization.EmptyPayload
@@ -33,6 +34,7 @@ fun CommandFactory.registerCommands() {
     standardCommands()
     startApplicationCommands()
     connectionCommands()
+    debugCommands()
     // RPC commands
     addressCommands()
     balanceCommands()
