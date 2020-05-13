@@ -160,15 +160,15 @@ class SpvContext {
     @Throws(NumberFormatException::class)
     private fun createAdminServer(): Server {
         return try {
-            val rpcBindAddress = InetSocketAddress(networkParameters.adminHost, networkParameters.adminPort)
+            val rpcBindAddress = InetSocketAddress(networkParameters.rpcHost, networkParameters.rpcPort)
             logger.info("Starting Admin RPC service on {}", rpcBindAddress)
             NettyServerBuilder.forAddress(rpcBindAddress).addService(ServerInterceptors.intercept(adminService, adminServerInterceptor))
                 .build()
                 .start()
         } catch (ex: IOException) {
             throw RuntimeException(
-                "Can't run admin RPC service. Address already in use " + networkParameters.adminHost + ":" + networkParameters
-                    .adminPort
+                "Can't run admin RPC service. Address already in use " + networkParameters.rpcHost + ":" + networkParameters
+                    .rpcPort
             )
         }
     }

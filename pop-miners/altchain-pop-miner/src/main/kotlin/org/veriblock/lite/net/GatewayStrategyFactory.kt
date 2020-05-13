@@ -34,7 +34,7 @@ fun createSpv(spvContext: SpvContext): GatewayStrategy {
 private fun configure(networkParameters: NetworkParameters): AdminRpcConfiguration = AdminRpcConfiguration().apply {
     isSsl = networkParameters.isSsl
     certificateChainPath = networkParameters.certificateChainPath
-    nodeCoreHost = networkParameters.adminHost
-    nodeCorePort = networkParameters.adminPort
+    nodeCoreHost = networkParameters.rpcHost
+    nodeCorePort = networkParameters.rpcPort
     nodeCorePassword = networkParameters.adminPassword
 }

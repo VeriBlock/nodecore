@@ -276,7 +276,7 @@ public class CliShell extends Shell {
         if(programOptions.getSpvNetworkParameters() != null){
             try {
                 endpoint = startSpv(programOptions.getSpvNetworkParameters(), new BootstrapPeerDiscovery(programOptions.getSpvNetworkParameters()));
-                host = programOptions.getSpvNetworkParameters().getAdminHost() + ":" + programOptions.getSpvNetworkParameters().getAdminPort();
+                host = programOptions.getSpvNetworkParameters().getRpcHost() + ":" + programOptions.getSpvNetworkParameters().getRpcPort();
 
                 disconnectCallBack = spvContext::shutdown;
             } catch (Exception e) {
@@ -373,7 +373,7 @@ public class CliShell extends Shell {
             Thread.sleep(5000L);
         }
 
-        return new ProtocolEndpoint(net.getAdminHost(), (short) net.getAdminPort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP);
+        return new ProtocolEndpoint(net.getRpcHost(), (short) net.getRpcPort(), ProtocolEndpointType.RPC, EndpointTransportType.HTTP);
     }
 
     private void printIntroStandard() {

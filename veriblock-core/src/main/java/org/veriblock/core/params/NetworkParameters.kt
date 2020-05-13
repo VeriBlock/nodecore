@@ -8,7 +8,6 @@
 
 package org.veriblock.core.params
 
-import io.github.config4k.registerCustomType
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -18,7 +17,7 @@ import java.util.Base64
 
 class NetworkConfig(
     val network: String = "mainnet",
-    val ip: String? = null,
+    val host: String? = null,
     val port: Int? = null,
     val certificateChainPath: String? = null,
     val isSsl: Boolean = false,
@@ -31,8 +30,8 @@ class NetworkParameters(
     config: NetworkConfig
 ) {
     val name: String
-    val adminHost: String
-    val adminPort: Int
+    val rpcHost: String
+    val rpcPort: Int
     val p2pPort: Int
 
     val bootstrapDns: String?
@@ -65,8 +64,8 @@ class NetworkParameters(
             else -> error("Invalid network")
         }
         name = template.name
-        adminHost = config.ip ?: LOCALHOST
-        adminPort = config.port ?: template.adminPort
+        rpcHost = config.host ?: LOCALHOST
+        rpcPort = config.port ?: template.rpcPort
         p2pPort = template.p2pPort
         bootstrapDns = template.bootstrapDns
         fileTag = template.fileTag
@@ -81,7 +80,7 @@ class NetworkParameters(
 
 sealed class NetworkParametersTemplate {
     abstract val name: String
-    abstract val adminPort: Int
+    abstract val rpcPort: Int
     abstract val p2pPort: Int
 
     abstract val bootstrapDns: String?
@@ -101,7 +100,7 @@ private object MainNetParameters : NetworkParametersTemplate() {
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
 
     override val name = NETWORK
-    override val adminPort = 10500
+    override val rpcPort = 10500
     override val p2pPort = 7500
 
     override val bootstrapDns = "seed.veriblock.org"
@@ -130,7 +129,7 @@ private object TestNetParameters : NetworkParametersTemplate() {
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L)
 
     override val name = NETWORK
-    override val adminPort = 10501
+    override val rpcPort = 10501
     override val p2pPort = 7501
 
     override val bootstrapDns = "seedtestnet.veriblock.org"
@@ -159,7 +158,7 @@ private object AlphaNetParameters : NetworkParametersTemplate() {
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(9_999_872L)
 
     override val name = NETWORK
-    override val adminPort = 10502
+    override val rpcPort = 10502
     override val p2pPort = 7502
 
     override val bootstrapDns = null
@@ -187,7 +186,7 @@ private object RegTestParameters : NetworkParametersTemplate() {
     const val NETWORK = "RegTest"
 
     override val name = NETWORK
-    override val adminPort = 10503
+    override val rpcPort = 10503
     override val p2pPort = 7503
 
     override val bootstrapDns = null

@@ -52,7 +52,7 @@ abstract class TaskService<
             operation.fail(e.message)
         } catch (t: Throwable) {
             logger.debug(t) { t.message }
-            operation.fail(t.toString())
+            operation.fail(t.message ?: t.toString())
         }
     }
 

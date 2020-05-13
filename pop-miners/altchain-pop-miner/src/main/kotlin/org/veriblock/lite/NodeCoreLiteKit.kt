@@ -82,7 +82,7 @@ class NodeCoreLiteKit(
     fun start() {
         logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
         logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
-        logger.info { "Connecting to NodeCore at ${context.networkParameters.adminHost}:${context.networkParameters.adminPort}..." }
+        logger.info { "Connecting to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}..." }
         beforeNetworkStart()
 
         network.startAsync()
