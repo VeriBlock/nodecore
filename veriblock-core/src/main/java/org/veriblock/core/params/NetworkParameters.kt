@@ -54,6 +54,7 @@ class NetworkParameters(
 
     val transactionPrefix: Byte?
     val minimumDifficulty: BigInteger
+    val powNoRetargeting: Boolean
 
     var certificateChainPath: String? = config.certificateChainPath
     var isSsl = config.isSsl
@@ -67,7 +68,7 @@ class NetworkParameters(
         }
 
     init {
-        val template = when (config.network.toLowerCase()) {
+        val template = when (config.network) {
             "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
             "alpha" -> AlphaNetParameters
@@ -95,6 +96,7 @@ class NetworkParameters(
         protocolVersion = template.protocolVersion
         transactionPrefix = template.transactionPrefix
         minimumDifficulty = template.minimumDifficulty
+        powNoRetargeting = template.powNoRetargeting
     }
 }
 
@@ -116,7 +118,7 @@ sealed class NetworkParametersTemplate {
 }
 
 object MainNetParameters : NetworkParametersTemplate() {
-    const val NETWORK = "MainNet"
+    const val NETWORK = "mainnet"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
 
     override val name = NETWORK
@@ -145,7 +147,7 @@ object MainNetParameters : NetworkParametersTemplate() {
 }
 
 object TestNetParameters : NetworkParametersTemplate() {
-    const val NETWORK = "TestNet"
+    const val NETWORK = "testnet"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L)
 
     override val name = NETWORK
@@ -174,7 +176,7 @@ object TestNetParameters : NetworkParametersTemplate() {
 }
 
 object AlphaNetParameters : NetworkParametersTemplate() {
-    const val NETWORK = "Alpha"
+    const val NETWORK = "alpha"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(9_999_872L)
 
     override val name = NETWORK
@@ -203,7 +205,7 @@ object AlphaNetParameters : NetworkParametersTemplate() {
 }
 
 object RegTestParameters : NetworkParametersTemplate() {
-    const val NETWORK = "RegTest"
+    const val NETWORK = "regtest"
 
     override val name = NETWORK
     override val rpcPort = 10503
