@@ -118,7 +118,7 @@ public class VeriBlockPublicationUtilities {
         // Step 1: Find the publications in the earliest block of proof
         int firstBTCBlockOfPublicationIndex = Integer.MAX_VALUE - 1;
         for (VeriBlockPublication vtb : publications) {
-            StoredBitcoinBlock storedBitcoinBlock = bitcoinStore.scanBestChain(vtb.getTransaction().getBlockOfProof().hash);
+            StoredBitcoinBlock storedBitcoinBlock = bitcoinStore.scanBestChain(vtb.getTransaction().getBlockOfProof().getHash());
             if (storedBitcoinBlock != null) {
                 if (storedBitcoinBlock.getHeight() < firstBTCBlockOfPublicationIndex) {
                     bestBlockOfProofPublications.clear();

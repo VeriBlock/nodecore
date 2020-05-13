@@ -34,7 +34,7 @@ public class LogFormatter {
                              publication.getTransaction().getId().toString(),
                              toString(publication.getContainingBlock()),
                              toString(publication.getTransaction().getPublishedBlock()),
-                             publication.getTransaction().getBlockOfProof().hash.toString(),
+                             publication.getTransaction().getBlockOfProof().getHash().toString(),
                              veriblockContextToString(publication.getContext()),
                              bitcoinContextToString(publication.getTransaction().getBlockOfProofContext()));
     }
@@ -51,7 +51,7 @@ public class LogFormatter {
         return blocks.isEmpty()
              ? "empty"
              : String.format("%s to %s",
-                             blocks.get(0).hash.toString(),
-                             blocks.get(blocks.size() - 1).hash.toString());
+                             blocks.get(0).getHash().toString(),
+                             blocks.get(blocks.size() - 1).getHash().toString());
     }
 }

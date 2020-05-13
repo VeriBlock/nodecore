@@ -21,7 +21,6 @@ class BitcoinBlock(
 ) {
     val raw: ByteArray = SerializeDeserializeService.getHeaderBytesBitcoinBlock(this)
 
-    //TODO move it out of here.
     val hash: Sha256Hash = Sha256Hash.wrapReversed(Sha256Hash.hashTwice(raw))
 
     fun getMerkleRootReversed(): Sha256Hash =

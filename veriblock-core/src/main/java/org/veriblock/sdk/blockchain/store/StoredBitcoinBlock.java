@@ -50,7 +50,7 @@ public class StoredBitcoinBlock {
         Preconditions.argument(work.compareTo(BigInteger.ZERO) >= 0, "Work must be positive");
         Preconditions.argument(blockIndex >= 0, "Block index must be positive");
 
-        this.hash = block.hash;
+        this.hash = block.getHash();
         this.block = block;
         this.height = blockIndex;
         this.work = work;

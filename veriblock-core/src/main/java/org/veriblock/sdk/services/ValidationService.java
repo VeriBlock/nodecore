@@ -80,7 +80,7 @@ public class ValidationService {
                     throw new VerificationException("Blocks are not contiguous");
                 }
             }
-            lastHash = block.hash;
+            lastHash = block.getHash();
         }
     }
 
@@ -181,7 +181,7 @@ public class ValidationService {
 
     public static boolean isProofOfWorkValid(BitcoinBlock block) throws VerificationException {
         BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getBits());
-        BigInteger hash = block.hash.toBigInteger();
+        BigInteger hash = block.getHash().toBigInteger();
 
         return hash.compareTo(embeddedTarget) <= 0;
     }
@@ -192,7 +192,7 @@ public class ValidationService {
 
             throw new VerificationException(
                     String.format(Locale.US, "Block hash is higher than target: %s vs %s",
-                            block.hash.toString(),
+                            block.getHash().toString(),
                             embeddedTarget.toString(16)));
         }
     }
