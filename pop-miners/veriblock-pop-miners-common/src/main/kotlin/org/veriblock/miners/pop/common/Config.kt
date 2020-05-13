@@ -22,21 +22,22 @@ data class ApiConfig(
 
 class BitcoinConfig(
     network: String = "mainnet",
-    val maxFee: Long = 8000,
-    val feePerKB: Long = 20000,
+    val maxFee: Long = 8_000,
+    val feePerKB: Long = 20_000,
     val enableMinRelayFee: Boolean = true,
     val useLocalhostPeer: Boolean = false,
     // Experimental settings:
     minimalPeerProtocolVersion: String = "BLOOM_FILTER",
     val maxPeerConnections: Int = 12,
-    val peerDiscoveryTimeoutMillis: Int = 5000,
+    val peerDiscoveryTimeoutMillis: Int = 5_000,
     val peerDownloadTxDependencyDepth: Int = Int.MAX_VALUE,
     requiredPeerServices: String = "",
     val minPeerBroadcastConnections: Int = 0,
     val maxPeersToDiscoverCount: Int = 100,
-    val peerPingIntervalMillis: Long = 2000L,
+    val peerPingIntervalMillis: Long = 2_000L,
     val downloadBlockchainPeriodSeconds: Int = 10,
-    val downloadBlockchainBytesPerSecond: Int = 800
+    val downloadBlockchainBytesPerSecond: Int = 800,
+    val blockStoreCapacity: Int = 5_000
 ) {
     val network = when (network.toLowerCase()) {
         "mainnet" -> BitcoinNetwork.MainNet

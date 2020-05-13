@@ -38,9 +38,11 @@ import org.bitcoinj.script.ScriptBuilder
 import org.bitcoinj.script.ScriptOpCodes
 import org.bitcoinj.store.BlockStore
 import org.bitcoinj.store.BlockStoreException
+import org.bitcoinj.store.SPVBlockStore
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
@@ -142,8 +144,13 @@ class BitcoinService(
         var kit: WalletAppKit = object : WalletAppKit(
             context, Script.ScriptType.P2WPKH, null, File("."), filePrefix
         ) {
+            override fun provideBlockStore(file: File): BlockStore {
+                return SPVBlockStore(context.params, file, configuration.blockStoreCapacity, true)
+            }
+
             override fun onSetupCompleted() {
                 super.onSetupCompleted()
+
                 blockStore = store()
 
                 wallet = wallet().apply {
