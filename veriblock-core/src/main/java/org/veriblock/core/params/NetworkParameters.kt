@@ -95,7 +95,7 @@ sealed class NetworkParametersTemplate {
     abstract val powNoRetargeting: Boolean
 }
 
-private object MainNetParameters : NetworkParametersTemplate() {
+object MainNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "MainNet"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
 
@@ -124,7 +124,7 @@ private object MainNetParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = false
 }
 
-private object TestNetParameters : NetworkParametersTemplate() {
+object TestNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "TestNet"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L)
 
@@ -153,7 +153,7 @@ private object TestNetParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = false
 }
 
-private object AlphaNetParameters : NetworkParametersTemplate() {
+object AlphaNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "Alpha"
     private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(9_999_872L)
 
@@ -182,7 +182,7 @@ private object AlphaNetParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = false
 }
 
-private object RegTestParameters : NetworkParametersTemplate() {
+object RegTestParameters : NetworkParametersTemplate() {
     const val NETWORK = "RegTest"
 
     override val name = NETWORK
