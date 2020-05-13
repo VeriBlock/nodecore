@@ -30,8 +30,8 @@ class BitcoinOriginBlockConfig(
     val version: Int,
     val previousBlock: String,
     val merkleRoot: String,
-    val timestamp: Int,
-    val bits: Int,
+    val timestamp: Long,
+    val difficulty: Long,
     val nonce: Long
 )
 
@@ -87,8 +87,8 @@ class NetworkParameters(
                 it.version,
                 Sha256Hash.wrap(it.previousBlock),
                 Sha256Hash.wrap(it.merkleRoot),
-                it.timestamp,
-                it.bits,
+                it.timestamp.toInt(),
+                it.difficulty.toInt(),
                 it.nonce.toInt()
             )
         } ?: template.bitcoinOriginBlock

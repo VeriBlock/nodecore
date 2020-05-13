@@ -192,7 +192,7 @@ class SpvContext {
         try {
             if (bitcoinStore.chainHead == null) {
                 val origin = params!!.bitcoinOriginBlock
-                val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.bits.toLong()), 0)
+                val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.difficulty.toLong()), 0)
                 bitcoinStore.put(storedBlock)
                 bitcoinStore.chainHead = storedBlock
             }

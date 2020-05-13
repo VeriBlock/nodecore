@@ -180,7 +180,7 @@ public class ValidationService {
     }
 
     public static boolean isProofOfWorkValid(BitcoinBlock block) throws VerificationException {
-        BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getBits());
+        BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getDifficulty());
         BigInteger hash = block.getHash().toBigInteger();
 
         return hash.compareTo(embeddedTarget) <= 0;
@@ -188,7 +188,7 @@ public class ValidationService {
 
     public static void checkProofOfWork(BitcoinBlock block) throws VerificationException {
         if (!isProofOfWorkValid(block)) {
-            BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getBits());
+            BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getDifficulty());
 
             throw new VerificationException(
                     String.format(Locale.US, "Block hash is higher than target: %s vs %s",

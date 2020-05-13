@@ -119,7 +119,7 @@ public class BitcoinBlockchain {
 
         StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(
                 block,
-                work.add(BitcoinUtils.decodeCompactBits(block.getBits())),
+                work.add(BitcoinUtils.decodeCompactBits(block.getDifficulty())),
                 currentHeight);
 
         List<Change> changes = new ArrayList<>();
@@ -163,7 +163,7 @@ public class BitcoinBlockchain {
 
         StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(
                 block,
-                previous.getWork().add(BitcoinUtils.decodeCompactBits(block.getBits())),
+                previous.getWork().add(BitcoinUtils.decodeCompactBits(block.getDifficulty())),
                 previous.getHeight() + 1);
 
         temporalStore.put(block.getHash(), storedBlock);
@@ -331,7 +331,7 @@ public class BitcoinBlockchain {
                                          / networkParameters.getPowTargetSpacing();
 
         // Special rule for the regtest: all blocks are minimum difficulty
-        if (networkParameters.getPowNoRetargeting()) return OptionalLong.of(previous.getBlock().getBits());
+        if (networkParameters.getPowNoRetargeting()) return OptionalLong.of(previous.getBlock().getDifficulty());
 
         // Previous + 1 = height of block
         if ((previous.getHeight() + 1) % difficultyAdjustmentInterval > 0) {
@@ -339,7 +339,7 @@ public class BitcoinBlockchain {
             // Unless minimum difficulty blocks are allowed(special difficulty rule for the testnet),
             // the difficulty should be same as previous
             if (!networkParameters.getAllowMinDifficultyBlocks()) {
-                return OptionalLong.of(previous.getBlock().getBits());
+                return OptionalLong.of(previous.getBlock().getDifficulty());
 
             } else {
 
@@ -355,7 +355,7 @@ public class BitcoinBlockchain {
                     // Find the last non-minimum difficulty block
                     while (previous != null && previous.getBlock().getPreviousBlock() != null
                         && previous.getHeight() % difficultyAdjustmentInterval != 0
-                        && previous.getBlock().getBits() == proofOfWorkLimit) {
+                        && previous.getBlock().getDifficulty() == proofOfWorkLimit) {
 
                         previous = getInternal(previous.getBlock().getPreviousBlock());
                     }
@@ -365,7 +365,7 @@ public class BitcoinBlockchain {
                     if (previous == null) return OptionalLong.empty();
 
                     // Difficulty matches the closest non-minimum difficulty block
-                    return OptionalLong.of(previous.getBlock().getBits());
+                    return OptionalLong.of(previous.getBlock().getDifficulty());
                 }
             }
         } else {
@@ -391,7 +391,7 @@ public class BitcoinBlockchain {
             }
 
             long newTarget = calculateNewTarget(
-                    previous.getBlock().getBits(),
+                    previous.getBlock().getDifficulty(),
                     cycleStart.getBlock().getTimestamp(),
                     previous.getBlock().getTimestamp());
 
@@ -408,7 +408,7 @@ public class BitcoinBlockchain {
         OptionalLong difficulty = getNextDifficulty(block.getTimestamp(), previous);
 
         if (difficulty.isPresent()) {
-            if (block.getBits() != difficulty.getAsLong()) {
+            if (block.getDifficulty() != difficulty.getAsLong()) {
                 throw new VerificationException("Block does not match computed difficulty adjustment");
             }
         } else {
@@ -465,7 +465,7 @@ public class BitcoinBlockchain {
 
             int blockHeight = firstBlockHeight;
             for (BitcoinBlock block : blocks) {
-                BigInteger work = BitcoinUtils.decodeCompactBits(block.getBits());
+                BigInteger work = BitcoinUtils.decodeCompactBits(block.getDifficulty());
                 StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(block, work, blockHeight);
                 blockHeight++;
                 store.put(storedBlock);

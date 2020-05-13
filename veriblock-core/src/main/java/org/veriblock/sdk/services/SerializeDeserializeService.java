@@ -568,7 +568,7 @@ public class SerializeDeserializeService {
         Utils.Bytes.putLEBytes(buffer, bitcoinBlock.getPreviousBlock().getBytes());
         Utils.Bytes.putLEBytes(buffer, bitcoinBlock.getMerkleRoot().getBytes());
         Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getTimestamp());
-        Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getBits());
+        Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getDifficulty());
         Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getNonce());
 
         buffer.flip();

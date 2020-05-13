@@ -16,7 +16,7 @@ class BitcoinBlock(
     val previousBlock: Sha256Hash,
     val merkleRoot: Sha256Hash,
     val timestamp: Int,
-    val bits: Int,
+    val difficulty: Int,
     val nonce: Int
 ) {
     val raw: ByteArray = SerializeDeserializeService.getHeaderBytesBitcoinBlock(this)
