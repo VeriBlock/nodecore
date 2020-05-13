@@ -8,6 +8,7 @@
 
 package org.veriblock.sdk.util;
 
+import org.veriblock.core.crypto.Crypto;
 import org.veriblock.sdk.transactions.SharedConstants;
 import org.veriblock.sdk.transactions.signature.AddressConstants;
 

@@ -1,12 +1,11 @@
-// VeriBlock Blockchain Project
-// Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2019 Xenios SEZC
+// VeriBlock NodeCore
+// Copyright 2017-2020 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.sdk.util;
+package org.veriblock.core.crypto;
 
 /**
  *
@@ -20,8 +19,8 @@ package org.veriblock.sdk.util;
  * 64-byte-512-byte output.
  *
  */
-public class VBlake {
-
+public class VBlake
+{
     // The modified for bias-free initialization vector for the blake2b algorithm
     private static final long vBlake_iv[] = new long[] {
             0x4BBF42C1F006AD9Dl, 0x5D11A8C3B5AEB12El,

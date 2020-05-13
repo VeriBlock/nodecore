@@ -44,7 +44,9 @@ class SecurityInheritingMonitor(
     private val chainId: String,
     private val chain: SecurityInheritingChain
 ) {
-    private val pollingPeriodSeconds = configuration.getLong("securityInheriting.$chainId.pollingPeriodSeconds") ?: 20L
+    private val pollingPeriodSeconds = configuration.getLong(
+        "securityInheriting.$chainId.pollingPeriodSeconds"
+    ) ?: 20L
 
     private val lock = ReentrantLock()
 

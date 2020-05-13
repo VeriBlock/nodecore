@@ -10,12 +10,12 @@ package org.veriblock.lite.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.EmptyEvent
-import org.veriblock.lite.core.PublicationSubscription
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.BlockStoreException
@@ -23,7 +23,6 @@ import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -36,7 +35,6 @@ class NodeCoreNetwork(
 ) {
     private val healthy = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
-    private val publicationSubscriptions = ConcurrentHashMap<String, PublicationSubscription>()
     private val connected = SettableFuture.create<Boolean>()
 
     val healthyEvent = EmptyEvent()
@@ -44,6 +42,7 @@ class NodeCoreNetwork(
     val healthySyncEvent = EmptyEvent()
     val unhealthySyncEvent = EmptyEvent()
 
+    val newBlockBroadcastChannel = ConflatedBroadcastChannel<VeriBlockBlock>()
     var lastBlockHeader: VeriBlockBlock? = null
 
     fun isHealthy(): Boolean =
@@ -66,14 +65,6 @@ class NodeCoreNetwork(
         )
         transactionMonitor.commitTransaction(transaction)
         return transaction
-    }
-
-    fun addVeriBlockPublicationSubscription(operationId: String, subscription: PublicationSubscription) {
-        publicationSubscriptions[operationId] = subscription
-    }
-
-    fun removeVeriBlockPublicationSubscription(operationId: String) {
-        publicationSubscriptions.remove(operationId)
     }
 
     fun getBlock(hash: VBlakeHash): VeriBlockBlock? {
@@ -132,7 +123,7 @@ class NodeCoreNetwork(
                 try {
                     if (lastBlockHeader == null || lastBlockHeader?.hash != lastBlock.hash) {
                         logger.debug { "New chain head detected!" }
-                        pollForVeriBlockPublications()
+                        newBlockBroadcastChannel.offer(lastBlock)
                         lastBlockHeader = lastBlock
                     }
                 } catch (e: BlockStoreException) {
@@ -156,8 +147,7 @@ class NodeCoreNetwork(
                 }
             }
         } catch (e: Exception) {
-            logger.error { "Error when polling NodeCore" }
-            logger.debug(e) { "Stack Trace:" }
+            logger.debugError(e) { "Error when polling NodeCore" }
         }
     }
 
@@ -168,57 +158,27 @@ class NodeCoreNetwork(
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
-        var publications: List<VeriBlockPublication>? = null
-        var error: Throwable? = null
-        val subscription = PublicationSubscription(
-            keystoneHash,
-            contextHash,
-            btcContextHash,
-            {
-                publications = it
-            },
-            {
-                error = it
-            }
-        )
-
-        addVeriBlockPublicationSubscription(operationId, subscription)
-
+        val newBlockChannel = newBlockBroadcastChannel.openSubscription()
         logger.info {
             """[$operationId] Successfully subscribed to VTB retrieval event!
-                |   - Keystone Hash: ${subscription.keystoneHash}
-                |   - VBK Context Hash: ${subscription.contextHash}
-                |   - BTC Context Hash: ${subscription.btcContextHash}""".trimMargin()
+                |   - Keystone Hash: $keystoneHash
+                |   - VBK Context Hash: $contextHash
+                |   - BTC Context Hash: $btcContextHash""".trimMargin()
         }
         logger.info { "[$operationId] Waiting for this operation's VTBs..." }
-
-        try {
-            while (publications == null) {
-                error?.let {
-                    removeVeriBlockPublicationSubscription(operationId)
-                    throw it
-                }
-                delay(1000)
-            }
-        } finally {
-            removeVeriBlockPublicationSubscription(operationId)
-        }
-
-        return publications!!
-    }
-
-    private fun pollForVeriBlockPublications() {
-        logger.debug { "Polling for VeriBlock publications..." }
-        for (subscription in publicationSubscriptions.values) {
-            try {
-                val veriBlockPublications = gateway.getVeriBlockPublications(
-                    subscription.keystoneHash, subscription.contextHash, subscription.btcContextHash
-                )
-                subscription.trySetResults(veriBlockPublications)
-            } catch (e: Exception) {
-                subscription.onError(e)
+        // Loop through each new block until we get a not-empty publication list
+        for (newBlock in newBlockChannel) {
+            // Retrieve VTBs from NodeCore
+            val veriBlockPublications = gateway.getVeriBlockPublications(
+                keystoneHash, contextHash, btcContextHash
+            )
+            // If the list is not empty, return it
+            if (veriBlockPublications.isNotEmpty()) {
+                return veriBlockPublications
             }
         }
+        // The new block channel never ends, so this will never happen
+        error("Unable to retrieve veriblock publications: the subscription to new blocks has been interrupted")
     }
 
     fun getBalance(): Balance =
@@ -226,6 +186,4 @@ class NodeCoreNetwork(
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
-
-
 }

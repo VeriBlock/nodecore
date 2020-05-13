@@ -8,6 +8,10 @@
 
 package org.veriblock.sdk.services;
 
+import org.veriblock.core.bitcoinj.Base58;
+import org.veriblock.core.bitcoinj.Base59;
+import org.veriblock.core.crypto.Sha256Hash;
+import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.models.Address;
 import org.veriblock.sdk.models.AltPublication;
 import org.veriblock.sdk.models.BitcoinBlock;
@@ -18,16 +22,12 @@ import org.veriblock.sdk.models.Constants;
 import org.veriblock.sdk.models.MerklePath;
 import org.veriblock.sdk.models.Output;
 import org.veriblock.sdk.models.PublicationData;
-import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.models.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VeriBlockMerklePath;
 import org.veriblock.sdk.models.VeriBlockPoPTransaction;
 import org.veriblock.sdk.models.VeriBlockPublication;
 import org.veriblock.sdk.models.VeriBlockTransaction;
-import org.veriblock.sdk.util.Base58;
-import org.veriblock.sdk.util.Base59;
-import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.util.StreamUtils;
 import org.veriblock.sdk.util.Utils;
 

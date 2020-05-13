@@ -8,9 +8,9 @@
 
 package org.veriblock.sdk.models;
 
+import org.veriblock.core.crypto.VBlake;
 import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.util.Utils;
-import org.veriblock.sdk.util.VBlake;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;

@@ -8,10 +8,10 @@
 
 package org.veriblock.sdk.models;
 
+import org.veriblock.core.bitcoinj.Base58;
+import org.veriblock.core.bitcoinj.Base59;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.core.utilities.Preconditions;
-import org.veriblock.sdk.util.Base58;
-import org.veriblock.sdk.util.Base59;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

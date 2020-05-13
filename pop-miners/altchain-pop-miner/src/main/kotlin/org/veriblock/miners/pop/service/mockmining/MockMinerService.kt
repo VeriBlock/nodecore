@@ -1,6 +1,7 @@
 package org.veriblock.miners.pop.service.mockmining
 
 import kotlinx.coroutines.runBlocking
+import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
@@ -25,7 +26,6 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
-import org.veriblock.sdk.util.Base58
 import org.veriblock.sdk.util.KeyGenerator
 import org.veriblock.sdk.util.Utils
 import java.nio.charset.StandardCharsets

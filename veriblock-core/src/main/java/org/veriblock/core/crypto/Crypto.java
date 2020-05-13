@@ -36,7 +36,7 @@ public class Crypto {
         }
     }
 
-    public byte[] vBlakeReturnBytes(byte[] input) { return vBlake.hash(input); }
+    public byte[] vBlakeReturnBytes(byte[] input) { return VBlake.hash(input); }
 
     public String vBlakeReturnHex(byte[] input) { return Utility.bytesToHex(vBlakeReturnBytes(input)); }
 

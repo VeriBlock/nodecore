@@ -421,43 +421,6 @@ public class Utils {
     }
 
     /**
-     * Encodes the provided byte array into a base-58 string.
-     *
-     * @param bytes The byte array to encode
-     * @return A String of the base-58 representation of the provided byte array
-     */
-    public static String bytesToBase58(byte[] bytes) {
-        return Base58.encode(bytes);
-    }
-
-    /**
-     * Encodes the provided byte array into a base-59 string.
-     *
-     * @param bytes The byte array to encode
-     * @return A String of the base-59 representation of the provided byte array
-     */
-    public static String bytesToBase59(byte[] bytes) {
-        return Base59.encode(bytes);
-    }
-
-    public static byte[] base58ToBytes(String base58) {
-        return Base58.decode(base58);
-    }
-
-    public static byte[] base59ToBytes(String base59) {
-        return Base59.decode(base59);
-    }
-
-    public static byte[] base64ToBytes(String base64) {
-        return java.util.Base64.getDecoder().decode(base64);
-    }
-
-    public static String bytesToBase64(byte[] bytes) {
-        return java.util.Base64.getEncoder().encodeToString(bytes);
-    }
-
-
-    /**
      * Returns a reversed copy of the provided byte[]. While some use cases would certainly benefit from an in-place reversal
      * of the bytes in the array itself rather than creation of a new byte[], always creating a new, reversed array is the
      * easiest way to avoid unexpected modification.
