@@ -62,7 +62,7 @@ public class BitcoinStore implements BlockStore<StoredBitcoinBlock, Sha256Hash> 
     }
 
     public StoredBitcoinBlock setChainHead(StoredBitcoinBlock chainHead) throws BlockStoreException, SQLException {
-        log.info("Setting BTC chain head to: " + chainHead.getBlock().getHash());
+        log.info("Setting BTC chain head to: " + chainHead.getBlock().hash);
         StoredBitcoinBlock existingBlock = get(chainHead.getHash());
         if(existingBlock == null) {
             throw new BlockStoreException("Chain head should reference existing block");
@@ -70,7 +70,7 @@ public class BitcoinStore implements BlockStore<StoredBitcoinBlock, Sha256Hash> 
         
         StoredBitcoinBlock previousBlock = getChainHead();
         
-        String headEncoded = Utils.encodeHex(chainHead.getBlock().getHash().getBytes());
+        String headEncoded = Utils.encodeHex(chainHead.getBlock().hash.getBytes());
         KeyValueData data = new KeyValueData();
         data.key = chainHeadRepositoryName;
         data.value = headEncoded;

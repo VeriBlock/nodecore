@@ -559,8 +559,8 @@ public class SerializeDeserializeService {
 // BitcoinBlock
 
     public static byte[] getHeaderBytesBitcoinBlock(BitcoinBlock bitcoinBlock) {
-        if (bitcoinBlock.getRaw() != null && bitcoinBlock.getRaw().length == Constants.HEADER_SIZE_BitcoinBlock){
-            return bitcoinBlock.getRaw();
+        if (bitcoinBlock.raw != null && bitcoinBlock.raw.length == Constants.HEADER_SIZE_BitcoinBlock){
+            return bitcoinBlock.raw;
         }
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_BitcoinBlock);

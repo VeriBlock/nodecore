@@ -21,7 +21,18 @@ class NetworkConfig(
     val port: Int? = null,
     val certificateChainPath: String? = null,
     val isSsl: Boolean = false,
-    val adminPassword: String? = null
+    val adminPassword: String? = null,
+    val bitcoinOriginBlock: BitcoinOriginBlockConfig? = null
+)
+
+class BitcoinOriginBlockConfig(
+    val height: Int,
+    val version: Int,
+    val previousBlock: String,
+    val merkleRoot: String,
+    val timestamp: Int,
+    val bits: Int,
+    val nonce: Long
 )
 
 const val LOCALHOST = "127.0.0.1"
@@ -70,8 +81,17 @@ class NetworkParameters(
         bootstrapDns = template.bootstrapDns
         fileTag = template.fileTag
         genesisBlock = template.genesisBlock
-        bitcoinOriginBlockHeight = template.bitcoinOriginBlockHeight
-        bitcoinOriginBlock = template.bitcoinOriginBlock
+        bitcoinOriginBlockHeight = config.bitcoinOriginBlock?.height ?: template.bitcoinOriginBlockHeight
+        bitcoinOriginBlock = config.bitcoinOriginBlock?.let {
+            BitcoinBlock(
+                it.version,
+                Sha256Hash.wrap(it.previousBlock),
+                Sha256Hash.wrap(it.merkleRoot),
+                it.timestamp,
+                it.bits,
+                it.nonce.toInt()
+            )
+        } ?: template.bitcoinOriginBlock
         protocolVersion = template.protocolVersion
         transactionPrefix = template.transactionPrefix
         minimumDifficulty = template.minimumDifficulty

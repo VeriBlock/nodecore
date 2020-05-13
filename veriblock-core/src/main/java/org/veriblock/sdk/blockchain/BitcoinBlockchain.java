@@ -166,7 +166,7 @@ public class BitcoinBlockchain {
                 previous.getWork().add(BitcoinUtils.decodeCompactBits(block.getBits())),
                 previous.getHeight() + 1);
 
-        temporalStore.put(block.getHash(), storedBlock);
+        temporalStore.put(block.hash, storedBlock);
 
         StoredBitcoinBlock chainHead = getChainHeadInternal();
         if (storedBlock.getWork().compareTo(chainHead.getWork()) > 0) {
@@ -266,9 +266,9 @@ public class BitcoinBlockchain {
 
     private boolean checkDuplicate(BitcoinBlock block) throws BlockStoreException, SQLException {
         // Duplicate?
-        StoredBitcoinBlock duplicate = getInternal(block.getHash());
+        StoredBitcoinBlock duplicate = getInternal(block.hash);
         if (duplicate != null) {
-            log.trace("Block '{}' has already been added", block.getHash().toString());
+            log.trace("Block '{}' has already been added", block.hash.toString());
             return false;
         }
 
@@ -281,7 +281,7 @@ public class BitcoinBlockchain {
         if (previous == null) {
             // corner case: the first bootstrap block connects to the blockchain
             // by definition despite not having the previous block in the store
-            if (getInternal(block.getHash()) == null) {
+            if (getInternal(block.hash) == null) {
                 throw new VerificationException("Block does not fit");
             }
         }
@@ -322,7 +322,7 @@ public class BitcoinBlockchain {
                 throw new VerificationException("Block is too far in the past");
             }
         } else {
-            log.debug("Not enough context blocks to check the timestamp of block '{}'", block.getHash().toString());
+            log.debug("Not enough context blocks to check the timestamp of block '{}'", block.hash.toString());
         }
     }
 
@@ -412,7 +412,7 @@ public class BitcoinBlockchain {
                 throw new VerificationException("Block does not match computed difficulty adjustment");
             }
         } else {
-            log.debug("Not enough context blocks to check the difficulty of block '{}'", block.getHash().toString());
+            log.debug("Not enough context blocks to check the difficulty of block '{}'", block.hash.toString());
         }
 
 
@@ -452,15 +452,15 @@ public class BitcoinBlockchain {
             log.info("Bootstrapping starting at height {} with {} blocks: {} to {}",
                      String.valueOf(firstBlockHeight),
                      String.valueOf(blocks.size()),
-                     blocks.get(0).getHash().toString(),
-                     blocks.get(blocks.size() - 1).getHash().toString());
+                     blocks.get(0).hash.toString(),
+                     blocks.get(blocks.size() - 1).hash.toString());
 
             Sha256Hash prevHash = null;
             for (BitcoinBlock block : blocks) {
                 if (prevHash != null && !block.getPreviousBlock().equals(prevHash) )
                     throw new VerificationException("Bitcoin bootstrap blocks must be contiguous");
 
-                prevHash = block.getHash();
+                prevHash = block.hash;
             }
 
             int blockHeight = firstBlockHeight;

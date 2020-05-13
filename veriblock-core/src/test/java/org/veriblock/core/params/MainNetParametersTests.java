@@ -17,7 +17,7 @@ import static org.veriblock.core.params.NetworkParametersKt.defaultMainNetParame
 public class MainNetParametersTests {
     @Test
     public void getInitialBitcoinBlockHeader() {
-        byte[] header = defaultMainNetParameters.getBitcoinOriginBlock().getRaw();
+        byte[] header = defaultMainNetParameters.getBitcoinOriginBlock().raw;
 
         /* Compute the block hash by SHA256D on the header */
         Crypto crypto = new Crypto();
