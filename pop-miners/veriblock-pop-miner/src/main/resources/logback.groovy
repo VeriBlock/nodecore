@@ -9,6 +9,8 @@ def logLevel = System.getenv('VPM_LOG_LEVEL') ?: ''
 def consoleLogLevel = System.getenv('VPM_CONSOLE_LOG_LEVEL') ?: ''
 boolean addJsonLogs = System.getenv('VPM_ENABLE_JSON_LOG')?.toBoolean() ?: false
 
+statusListener(NopStatusListener)
+
 appender("TERMINAL", LoggingLineAppender) {
     filter(ThresholdFilter) {
         level = toLevel(consoleLogLevel, INFO)

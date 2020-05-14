@@ -18,6 +18,8 @@ def logLevel = System.getProperty("logging.level", System.getenv('APM_LOG_LEVEL'
 def consoleLogLevel = System.getProperty("logging.level.console", System.getenv('APM_CONSOLE_LOG_LEVEL')) ?: ''
 boolean addJsonLogs = System.getenv('APM_ENABLE_JSON_LOG')?.toBoolean() ?: false
 
+statusListener(NopStatusListener)
+
 appender("TERMINAL", LoggingLineAppender) {
     filter(ThresholdFilter) {
         level = toLevel(consoleLogLevel, INFO)
