@@ -30,12 +30,10 @@ import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.util.checkSuccess
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.time.seconds
 
 private val logger = createLogger {}
 
@@ -207,7 +205,7 @@ class SecurityInheritingMonitor(
         val channel = Channel<R>(CONFLATED)
         lock.withLock {
             container.getOrPut(key) {
-                arrayListOf()
+                CopyOnWriteArrayList()
             }.add(channel)
         }
         channel.invokeOnClose {

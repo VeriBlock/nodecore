@@ -68,7 +68,7 @@ class NetworkParameters(
         }
 
     init {
-        val template = when (config.network) {
+        val template = when (config.network.toLowerCase()) {
             "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
             "alpha" -> AlphaNetParameters
