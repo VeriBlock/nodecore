@@ -63,9 +63,9 @@ fun CommandFactory.debugCommands() {
         // Get the data folder provided by the user
         val dataFolder = File(getParameter<String>("dataFolder"))
         if (!dataFolder.exists()) {
-            failure("V004", "Unknown Network", "The supplied network $dataFolder doesn't exists.")
+            failure("V004", "Unable to find the data folder", "The supplied data folder $dataFolder doesn't exists.")
         }
-        // Check all the files inside the data folder, and verify the file integration
+        // Check all the files inside the data folder, and verify the file integrity
         val fileInformation = dataFolder.walk().filter {
             it.absolutePath.toLowerCase().contains(network) || it.absolutePath == dataFolder.absolutePath || it.name == "nodecore.properties"
         }.map { file ->
@@ -104,7 +104,7 @@ fun CommandFactory.debugCommands() {
             it
         }.toList()
 
-        // Verify if the common NodeCore ports used by are available
+        // Verify if the common NodeCore ports are available
         val ports = listOf(10500, 10501, 10502, 7500, 8500, 7500, 6500, 8080, 8081)
         val portInformation = ports.map { port ->
             try {
