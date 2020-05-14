@@ -188,12 +188,22 @@ class MinerService(
         )
 
         // Replicate its state up until prior to the PoP data submission
-        newOperation.setMiningInstruction(operation.miningInstruction!!)
-        newOperation.setTransaction(operation.endorsementTransaction!!)
-        newOperation.setConfirmed()
-        newOperation.setBlockOfProof(operation.blockOfProof!!)
-        newOperation.setMerklePath(operation.merklePath!!)
-        newOperation.setContext(operation.context!!)
+        operation.miningInstruction?.let {
+            newOperation.setMiningInstruction(it)
+        }
+        operation.endorsementTransaction?.let {
+            newOperation.setTransaction(it)
+            newOperation.setConfirmed()
+        }
+        operation.blockOfProof?.let {
+            newOperation.setBlockOfProof(it)
+        }
+        operation.merklePath?.let {
+            newOperation.setMerklePath(it)
+        }
+        operation.context?.let {
+            newOperation.setContext(it)
+        }
         newOperation.reconstituting = false
 
         processManager.submit(newOperation)
