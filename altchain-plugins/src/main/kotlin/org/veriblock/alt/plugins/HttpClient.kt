@@ -45,5 +45,6 @@ fun createHttpClient(authConfig: HttpAuthConfig? = null, contentTypes: List<Cont
             }
         }
     }
+    // We will handle error responses manually as we'll be calling a RPC service's API
     expectSuccess = false
 }

@@ -35,6 +35,7 @@ import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.io.File
 import java.nio.ByteBuffer
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -78,6 +79,9 @@ class BitcoinFamilyChain(
     override suspend fun getBestBlockHeight(): Int {
         logger.debug { "Retrieving best block height..." }
         val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getblockcount.json").writeText(jsonBody)
+        }
         return httpClient.post<RpcResponse>(config.host) {
             body = jsonBody
         }.handle()
@@ -86,6 +90,9 @@ class BitcoinFamilyChain(
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         logger.debug { "Retrieving block $hash..." }
         val jsonBody = JsonRpcRequestBody("getblock", listOf(hash, 1)).toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getblock.json").writeText(jsonBody)
+        }
         val btcBlock: BtcBlock = try {
             httpClient.post<RpcResponse>(config.host) {
                 body = jsonBody
@@ -115,6 +122,9 @@ class BitcoinFamilyChain(
     private suspend fun getBlockHash(height: Int): String? {
         logger.debug { "Retrieving block hash @$height..." }
         val jsonBody = JsonRpcRequestBody("getblockhash", listOf(height)).toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getblockhash.json").writeText(jsonBody)
+        }
         return try {
             httpClient.post<RpcResponse>(config.host) {
                 body = jsonBody
@@ -142,6 +152,9 @@ class BitcoinFamilyChain(
             ?: return false
         // Get raw block
         val jsonBody = JsonRpcRequestBody("getblock", listOf(blockHash, 0)).toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getblock.json").writeText(jsonBody)
+        }
         val rawBlock: String = try {
             httpClient.post<RpcResponse>(config.host) {
                 body = jsonBody
@@ -163,6 +176,9 @@ class BitcoinFamilyChain(
     override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
         val jsonBody = JsonRpcRequestBody("getrawtransaction", listOf(txId, 1)).toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getrawtransaction.json").writeText(jsonBody)
+        }
         val btcTransaction: BtcTransaction = try {
             httpClient.post<RpcResponse>(config.host) {
                 body = jsonBody
@@ -198,6 +214,9 @@ class BitcoinFamilyChain(
 
         logger.info { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
         val jsonBody = JsonRpcRequestBody("getpopdata", listOf(actualBlockHeight)).toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getpopdata.json").writeText(jsonBody)
+        }
         val response: BtcPublicationData = httpClient.post<RpcResponse>(config.host) {
             body = jsonBody
         }.handle()
@@ -226,6 +245,9 @@ class BitcoinFamilyChain(
             SerializeDeserializeService.serialize(proofOfProof).toHex(),
             veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         )).toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_submitpop.json").writeText(jsonBody)
+        }
 
         return httpClient.post<RpcResponse>(config.host) {
             body = jsonBody
@@ -247,7 +269,10 @@ class BitcoinFamilyChain(
 
     override suspend fun isConnected(): Boolean {
         val jsonBody = JsonRpcRequestBody("getblockcount").toJson()
-        return try{
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getblockcount.json").writeText(jsonBody)
+        }
+        return try {
             httpClient.post<RpcResponse>(config.host) {
                 body = jsonBody
             }.handle<String>()
@@ -259,6 +284,9 @@ class BitcoinFamilyChain(
 
     override suspend fun isSynchronized(): Boolean {
         val jsonBody = JsonRpcRequestBody("getblockchaininfo").toJson()
+        if (config.enableRequestSuperLogging) {
+            File("./request-logs/${System.currentTimeMillis()}_getblockchaininfo.json").writeText(jsonBody)
+        }
         val response: BtcSyncStatus = try {
             httpClient.post<RpcResponse>(config.host) {
                 body = jsonBody
