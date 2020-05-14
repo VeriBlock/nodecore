@@ -14,15 +14,15 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.AddressManager
-import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
+import org.veriblock.lite.core.BlockChainDelta
+import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
 import org.veriblock.sdk.models.Coin
-import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
@@ -33,9 +33,65 @@ import kotlin.math.abs
 private val logger = createLogger {}
 
 class NodeCoreGateway(
-    private val params: NetworkParameters,
-    private val gatewayStrategy: GatewayStrategy
+    private val params: NetworkParameters
 ) {
+
+    private val gatewayStrategy: GatewayStrategy = createFullNode(params)
+
+    @Throws(InterruptedException::class)
+    fun shutdown() {
+        gatewayStrategy.shutdown()
+    }
+
+    fun getLastBlock(): VeriBlockBlock {
+        return try {
+            val lastBlock = gatewayStrategy.getLastBlock(VeriBlockMessages.GetLastBlockRequest.getDefaultInstance())
+
+            lastBlock.header.deserialize()
+        } catch (e: Exception) {
+            logger.warn("Unable to get last VBK block", e)
+            throw e
+        }
+    }
+
+    fun getBlock(height: Int): FullBlock? {
+        logger.debug { "Requesting VBK block at height $height..." }
+        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
+            .addFilters(
+                VeriBlockMessages.BlockFilter.newBuilder()
+                    .setIndex(height)
+                    .build()
+            )
+            .build()
+
+        val reply = gatewayStrategy.getBlock(request)
+        if (reply.success && reply.blocksCount > 0) {
+            val deserialized = reply.getBlocks(0).deserialize(params.transactionPrefix)
+            return deserialized
+        }
+
+        return null
+    }
+
+    fun getBlock(hash: String): FullBlock? {
+        logger.debug { "Requesting VBK block with hash $hash..." }
+        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
+            .addFilters(
+                VeriBlockMessages.BlockFilter.newBuilder()
+                    .setHash(ByteStringUtility.hexToByteString(hash))
+                    .build()
+            )
+            .build()
+
+        val reply = gatewayStrategy.getBlock(request)
+
+        if (reply.success && reply.blocksCount > 0) {
+            val deserialized = reply.getBlocks(0).deserialize(params.transactionPrefix)
+            return deserialized
+        }
+
+        return null
+    }
 
     fun getBalance(address: String): Balance {
         logger.debug { "Requesting balance for address $address..." }
@@ -129,12 +185,28 @@ class NodeCoreGateway(
                 request.networkHeight,
                 request.localBlockchainHeight,
                 blockDifference,
-                request.networkHeight > 0 && blockDifference < 10
+                request.networkHeight > 0 && blockDifference < 4
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
             NodeCoreSyncStatus(0, 0, 0, false)
         }
+    }
+
+    fun listChangesSince(hash: String?): BlockChainDelta {
+        logger.debug { "Requesting delta since hash $hash..." }
+        val builder = VeriBlockMessages.ListBlocksSinceRequest.newBuilder()
+        if (hash != null && hash.isNotEmpty()) {
+            builder.hash = ByteStringUtility.hexToByteString(hash)
+        }
+        val reply = gatewayStrategy.listChangesSince(builder.build())
+
+        if (!reply.success) {
+            error("Unable to retrieve changes since VBK block $hash")
+        }
+        val removed = reply.removedList.map { msg -> msg.deserialize() }
+        val added = reply.addedList.map { msg -> msg.deserialize() }
+        return BlockChainDelta(removed, added)
     }
 
     private val lock = ReentrantLock()
@@ -184,30 +256,7 @@ class NodeCoreGateway(
         return signedTransaction.deserializeStandardTransaction(params.transactionPrefix)
     }
 
-    fun getLastVBKBlockHeader(): VeriBlockBlock {
-        return gatewayStrategy.getLastVBKBlockHeader().deserialize()
-    }
-
-    fun getVBKBlockHeader(height: Int): VeriBlockBlock {
-        return gatewayStrategy.getVBKBlockHeader(height).deserialize()
-    }
-
-    fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockBlock {
-        return gatewayStrategy.getVBKBlockHeader(blockHash).deserialize()
-    }
-
-    fun getTransactions(ids: Collection<Sha256Hash>): List<VeriBlockMessages.TransactionInfo> {
-        val request =
-            VeriBlockMessages.GetTransactionsRequest.newBuilder()
-                .addAllIds(ids.map { ByteString.copyFrom(it.bytes) })
-                .build()
-
-        val response = gatewayStrategy.getTransactions(request)
-
-        return response.transactionsList
-    }
-
-    fun generateSignedRegularTransaction(
+    private fun generateSignedRegularTransaction(
         addressManager: AddressManager,
         unsignedTransaction: VeriBlockMessages.Transaction,
         signatureIndex: Long
@@ -218,14 +267,6 @@ class NodeCoreGateway(
         }
         val transactionId = unsignedTransaction.txId.toByteArray()
         val signature = addressManager.signMessage(transactionId, sourceAddress)
-
-        val valid = AddressUtility.isSignatureValid(
-            transactionId, signature, addressManager.getPublicKeyForAddress(sourceAddress).encoded, sourceAddress
-        )
-
-        if (!valid) {
-            error("Transaction is not valid. TxId: ${unsignedTransaction.txId})")
-        }
 
         return VeriBlockMessages.SignedTransaction.newBuilder()
             .setPublicKey(ByteString.copyFrom(addressManager.getPublicKeyForAddress(sourceAddress).encoded))

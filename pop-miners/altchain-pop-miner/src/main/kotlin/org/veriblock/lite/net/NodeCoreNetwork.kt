@@ -15,7 +15,9 @@ import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.lite.core.Balance
+import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.EmptyEvent
+import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.BlockStoreException
@@ -30,6 +32,7 @@ private val logger = createLogger {}
 
 class NodeCoreNetwork(
     private val gateway: NodeCoreGateway,
+    private val blockChain: BlockChain,
     private val transactionMonitor: TransactionMonitor,
     private val addressManager: AddressManager
 ) {
@@ -43,7 +46,6 @@ class NodeCoreNetwork(
     val unhealthySyncEvent = EmptyEvent()
 
     val newBlockBroadcastChannel = ConflatedBroadcastChannel<VeriBlockBlock>()
-    var lastBlockHeader: VeriBlockBlock? = null
 
     fun isHealthy(): Boolean =
         healthy.get()
@@ -54,9 +56,13 @@ class NodeCoreNetwork(
     fun startAsync(): ListenableFuture<Boolean> {
         Threading.NODECORE_POLL_THREAD.scheduleWithFixedDelay({
             this.poll()
-        }, 1L, 30L, TimeUnit.SECONDS)
+        }, 1L, 1L, TimeUnit.SECONDS)
 
         return connected
+    }
+
+    fun shutdown() {
+        gateway.shutdown()
     }
 
     fun submitEndorsement(publicationData: ByteArray, feePerByte: Long, maxFee: Long): VeriBlockTransaction {
@@ -67,8 +73,8 @@ class NodeCoreNetwork(
         return transaction
     }
 
-    fun getBlock(hash: VBlakeHash): VeriBlockBlock? {
-        return gateway.getVBKBlockHeader(hash.bytes)
+    fun getBlock(hash: VBlakeHash): FullBlock? {
+        return gateway.getBlock(hash.toString())
     }
 
     private fun poll() {
@@ -111,7 +117,7 @@ class NodeCoreNetwork(
                 // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
                 // APM can continue with its work
                 val lastBlock: VeriBlockBlock = try {
-                    gateway.getLastVBKBlockHeader()
+                    gateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.error(e) { "Unable to get the last block from NodeCore" }
                     if (isHealthy()) {
@@ -121,10 +127,11 @@ class NodeCoreNetwork(
                     return
                 }
                 try {
-                    if (lastBlockHeader == null || lastBlockHeader?.hash != lastBlock.hash) {
+                    val currentChainHead = blockChain.getChainHead()
+                    if (currentChainHead == null || currentChainHead != lastBlock) {
                         logger.debug { "New chain head detected!" }
+                        reconcileBlockChain(currentChainHead, lastBlock)
                         newBlockBroadcastChannel.offer(lastBlock)
-                        lastBlockHeader = lastBlock
                     }
                 } catch (e: BlockStoreException) {
                     logger.error(e) { "VeriBlockBlock store exception" }
@@ -181,9 +188,43 @@ class NodeCoreNetwork(
         error("Unable to retrieve veriblock publications: the subscription to new blocks has been interrupted")
     }
 
+    private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
+        logger.debug { "Reconciling VBK blockchain..." }
+        try {
+            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 500
+            if (tooFarBehind) {
+                logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
+                blockChain.reset()
+            }
+            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
+                val downloaded = getBlock(latestBlock.hash)
+                if (downloaded != null) {
+                    blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
+                }
+                return
+            }
+
+            val blockChainDelta = gateway.listChangesSince(previousHead.hash.toString())
+
+            val added = ArrayList<FullBlock>(blockChainDelta.added.size)
+            for (block in blockChainDelta.added) {
+                val downloaded = gateway.getBlock(block.hash.toString())
+                    ?: throw BlockDownloadException("Unable to download VBK block " + block.hash.toString())
+
+                added.add(downloaded)
+            }
+
+            blockChain.handleNewBestChain(blockChainDelta.removed, added)
+        } catch (e: Exception) {
+            logger.warn("NodeCore Error", e)
+        }
+    }
+
     fun getBalance(): Balance =
         gateway.getBalance(addressManager.defaultAddress.hash)
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
 }
+
+class BlockDownloadException(message: String) : Exception(message)

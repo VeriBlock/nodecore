@@ -23,18 +23,17 @@ import java.io.ByteArrayOutputStream
 class WalletProtobufSerializerTest {
     private val networkParameters = NetworkParameters(NetworkConfig())
     private val context = Context(Configuration(), networkParameters)
-    private val gateway = NodeCoreGateway(networkParameters, createFullNode(networkParameters))
 
     @Test
     fun roundTrip() {
         // Given
-        val wallet = randomTransactionMonitor(context, gateway)
+        val wallet = randomTransactionMonitor(context)
         val outputStream = ByteArrayOutputStream()
         outputStream.writeTransactionMonitor(wallet)
         val inputStream = ByteArrayInputStream(outputStream.toByteArray())
 
         // When
-        val roundTrip = inputStream.readTransactionMonitor(context, gateway)
+        val roundTrip = inputStream.readTransactionMonitor(context)
 
         // Then
         wallet shouldBe roundTrip

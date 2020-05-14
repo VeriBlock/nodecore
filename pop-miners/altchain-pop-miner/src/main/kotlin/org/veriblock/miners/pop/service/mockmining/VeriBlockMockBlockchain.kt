@@ -13,6 +13,7 @@ import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.conf.VeriBlockNetworkParameters
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
@@ -23,7 +24,7 @@ import java.util.Collections
 import java.util.HashMap
 
 class VeriBlockMockBlockchain(
-    networkParameters: VeriBlockNetworkParameters?,
+    networkParameters: NetworkParameters?,
     private val store: BlockStore<StoredVeriBlockBlock, VBlakeHash>,
     bitcoinStore: BlockStore<StoredBitcoinBlock?, Sha256Hash?>?
 ) : VeriBlockBlockchain(networkParameters, store, bitcoinStore) {

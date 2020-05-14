@@ -24,7 +24,6 @@ import org.veriblock.lite.net.createFullNode
 
 class TransactionMonitorTest {
     private val networkParameters = NetworkParameters(NetworkConfig())
-    private val gateway = NodeCoreGateway(networkParameters, createFullNode(networkParameters))
     private val context = Context(Configuration(), networkParameters)
 
     @Test
@@ -33,7 +32,7 @@ class TransactionMonitorTest {
         val walletTransactions = (1..10).map { randomWalletTransaction(context) }
 
         // When
-        val transactionMonitor = randomTransactionMonitor(context, gateway, walletTransactions = walletTransactions)
+        val transactionMonitor = randomTransactionMonitor(context, walletTransactions = walletTransactions)
 
         // Then
         transactionMonitor.getTransactions() shouldContainExactlyInAnyOrder walletTransactions
@@ -43,7 +42,7 @@ class TransactionMonitorTest {
     fun commitTransaction() {
         // Given
         val transaction = randomVeriBlockTransaction(context)
-        val transactionMonitor = randomTransactionMonitor(context, gateway)
+        val transactionMonitor = randomTransactionMonitor(context)
 
         // When
         transactionMonitor.commitTransaction(transaction)

@@ -90,7 +90,7 @@ class VeriBlockPopMiner(
                 blockOfProof,
                 blockOfProofContext, ByteArray(1),
                 key.public.encoded,
-                veriBlockBlockchain.networkParameters.transactionMagicByte
+                veriBlockBlockchain.networkParameters.transactionPrefix
             ),
             key.private
         )

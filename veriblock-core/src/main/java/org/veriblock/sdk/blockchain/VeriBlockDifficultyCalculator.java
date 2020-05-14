@@ -8,7 +8,7 @@
 
 package org.veriblock.sdk.blockchain;
 
-import org.veriblock.sdk.conf.VeriBlockNetworkParameters;
+import org.veriblock.core.params.NetworkParameters;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.util.BitcoinUtils;
 
@@ -27,8 +27,11 @@ public strictfp class VeriBlockDifficultyCalculator {
             .multiply(BigInteger.valueOf(T))
             .divide(BigInteger.valueOf(2));
 
-    public static BigInteger calculate(VeriBlockNetworkParameters networkParameters,
-                                       VeriBlockBlock lastBlock, List<VeriBlockBlock> context) {
+    public static BigInteger calculate(
+        NetworkParameters networkParameters,
+        VeriBlockBlock lastBlock,
+        List<VeriBlockBlock> context
+    ) {
         if (lastBlock.getHeight() < N || networkParameters.getPowNoRetargeting()) {
             return BitcoinUtils.decodeCompactBits(lastBlock.getDifficulty());
         }

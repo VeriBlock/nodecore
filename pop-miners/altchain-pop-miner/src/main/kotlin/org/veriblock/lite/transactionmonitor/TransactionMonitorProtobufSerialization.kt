@@ -12,7 +12,6 @@ package org.veriblock.lite.transactionmonitor
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.proto.TxmonProto
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
@@ -29,9 +28,9 @@ fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor)
     write(data)
 }
 
-fun InputStream.readTransactionMonitor(context: Context, gateway: NodeCoreGateway): TransactionMonitor {
+fun InputStream.readTransactionMonitor(context: Context): TransactionMonitor {
     val data = ProtoBuf.load(TxmonProto.TransactionMonitor.serializer(), readBytes())
-    return data.toModel(context, gateway)
+    return data.toModel(context)
 }
 
 private fun TransactionMonitor.toProto() = TxmonProto.TransactionMonitor(
@@ -68,14 +67,13 @@ private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
     depth = depth
 )
 
-private fun TxmonProto.TransactionMonitor.toModel(context: Context, gateway: NodeCoreGateway): TransactionMonitor {
+private fun TxmonProto.TransactionMonitor.toModel(context: Context): TransactionMonitor {
     check(context.networkParameters.name == network) {
         "Network ${context.networkParameters.name} attempting to read ${context.vbkTokenName} wallet for $network"
     }
     return TransactionMonitor(
         context,
         Address(address),
-        gateway,
         transactions.map {
             it.toModel(context)
         }

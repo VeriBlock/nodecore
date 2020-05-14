@@ -130,10 +130,9 @@ fun randomSha256Hash(): Sha256Hash {
 
 fun randomTransactionMonitor(
     context: Context,
-    gateway: NodeCoreGateway,
     address: Address = randomAddress(),
     walletTransactions: List<WalletTransaction> = (0..randomInt(20)).map { randomWalletTransaction(context) }
-) = TransactionMonitor(context, address, gateway, walletTransactions)
+) = TransactionMonitor(context, address, walletTransactions)
 
 fun randomVeriBlockMerklePath(
     treeIndex: Int = randomInt(1, 65535),

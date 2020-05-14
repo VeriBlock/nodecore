@@ -3,6 +3,7 @@ package org.veriblock.miners.pop.service.mockmining
 import kotlinx.coroutines.runBlocking
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.defaultRegTestParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -45,7 +46,7 @@ class MockMinerService(
     private val veriBlockStore = VeriBlockStore(connection)
     private val bitcoinStore = BitcoinStore(connection)
     private val veriBlockBlockchain = VeriBlockMockBlockchain(
-        VeriBlockDefaults.networkParameters, veriBlockStore, bitcoinStore
+        defaultRegTestParameters, veriBlockStore, bitcoinStore
     )
     private val bitcoinBlockchain = BitcoinMockBlockchain(BitcoinDefaults.networkParameters, bitcoinStore)
     private val vpm = VeriBlockPopMiner(veriBlockBlockchain, bitcoinBlockchain)
@@ -183,7 +184,7 @@ class MockMinerService(
                 7,
                 publicationData, ByteArray(1),
                 key.public.encoded,
-                veriBlockBlockchain.networkParameters.transactionMagicByte
+                veriBlockBlockchain.networkParameters.transactionPrefix
             ),
             key.private
         )

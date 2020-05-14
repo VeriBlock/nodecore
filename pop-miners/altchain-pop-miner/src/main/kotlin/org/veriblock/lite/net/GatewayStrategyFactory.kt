@@ -13,7 +13,6 @@ import nodecore.api.grpc.AdminRpcConfiguration
 import nodecore.api.grpc.utilities.ChannelBuilder
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.lite.net.impl.GatewayStrategyGrpcImpl
-import org.veriblock.lite.net.impl.GatewayStrategySpvImpl
 import veriblock.SpvContext
 
 fun createFullNode(networkParameters: NetworkParameters): GatewayStrategy {
@@ -24,11 +23,7 @@ fun createFullNode(networkParameters: NetworkParameters): GatewayStrategy {
         .withMaxInboundMessageSize(20 * 1024 * 1024)
         .withMaxOutboundMessageSize(20 * 1024 * 1024)
 
-    return GatewayStrategyGrpcImpl(blockingStub, channel, networkParameters)
-}
-
-fun createSpv(spvContext: SpvContext): GatewayStrategy {
-    return GatewayStrategySpvImpl(spvContext)
+    return GatewayStrategyGrpcImpl(blockingStub, channel)
 }
 
 private fun configure(networkParameters: NetworkParameters): AdminRpcConfiguration = AdminRpcConfiguration().apply {

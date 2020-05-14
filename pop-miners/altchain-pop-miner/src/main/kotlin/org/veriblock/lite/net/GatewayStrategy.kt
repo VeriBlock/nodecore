@@ -28,13 +28,10 @@ interface GatewayStrategy {
 
     fun createAltChainEndorsement(altChainEndorsementRequest: VeriBlockMessages.CreateAltChainEndorsementRequest): VeriBlockMessages.CreateAltChainEndorsementReply
 
-    fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader
-
-    fun getVBKBlockHeader(blockHash: ByteArray): VeriBlockMessages.BlockHeader
-
-    fun getVBKBlockHeader(blockHeight: Int): VeriBlockMessages.BlockHeader
-
-    fun getTransactions(request: GetTransactionsRequest): GetTransactionsReply
-
     fun shutdown()
+
+    //TODO remove on the next step
+    fun listChangesSince(listBlocksSinceRequest: VeriBlockMessages.ListBlocksSinceRequest): VeriBlockMessages.ListBlocksSinceReply
+    fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply
+    fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply
 }

@@ -10,6 +10,9 @@ package org.veriblock.sdk.blockchain;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.crypto.Sha256Hash;
+import org.veriblock.core.params.NetworkParameters;
+import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.auditor.Change;
 import org.veriblock.sdk.blockchain.changes.AddVeriBlockBlockChange;
 import org.veriblock.sdk.blockchain.changes.SetVeriBlockHeadChange;
@@ -17,16 +20,13 @@ import org.veriblock.sdk.blockchain.changes.SetVeriBlockProofChange;
 import org.veriblock.sdk.blockchain.store.BlockStore;
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
-import org.veriblock.sdk.conf.VeriBlockNetworkParameters;
 import org.veriblock.sdk.models.BlockStoreException;
 import org.veriblock.sdk.models.Constants;
-import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.models.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VerificationException;
 import org.veriblock.sdk.services.ValidationService;
 import org.veriblock.sdk.util.BitcoinUtils;
-import org.veriblock.core.utilities.Preconditions;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -51,7 +51,7 @@ public class VeriBlockBlockchain {
     private final BlockStore<StoredVeriBlockBlock, VBlakeHash> store;
     private final BlockStore<StoredBitcoinBlock, Sha256Hash> bitcoinStore;
     private final Map<VBlakeHash, StoredVeriBlockBlock> temporalStore;
-    private final VeriBlockNetworkParameters networkParameters;
+    private final NetworkParameters networkParameters;
     private StoredVeriBlockBlock temporaryChainHead = null;
     
     private boolean skipValidateBlocksDifficulty = false; 
@@ -60,7 +60,7 @@ public class VeriBlockBlockchain {
         return temporaryChainHead != null || temporalStore.size() > 0;
     }
 
-    public VeriBlockBlockchain(VeriBlockNetworkParameters networkParameters,
+    public VeriBlockBlockchain(NetworkParameters networkParameters,
                                BlockStore<StoredVeriBlockBlock, VBlakeHash> store,
                                BlockStore<StoredBitcoinBlock, Sha256Hash> bitcoinStore) {
         Preconditions.notNull(store, "Store cannot be null");
@@ -73,7 +73,7 @@ public class VeriBlockBlockchain {
         this.temporalStore = new HashMap<>();
     }
 
-    public VeriBlockNetworkParameters getNetworkParameters() {
+    public NetworkParameters getNetworkParameters() {
         return networkParameters;
     }
 
