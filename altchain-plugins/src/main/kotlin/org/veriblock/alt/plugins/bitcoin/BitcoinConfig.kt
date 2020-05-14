@@ -13,7 +13,7 @@ class BitcoinConfig(
     override val spFinalityDelay: Int = 100,
     override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 1, 2),
     override val autoMineRounds: List<Int> = emptyList(),
-    val enableRequestLogging: Boolean = false
+    val requestLogsPath: String? = null
 ) : ChainConfig() {
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
@@ -24,6 +24,6 @@ class BitcoinConfig(
         configuration.spFinalityDelay ?: 100,
         configuration.blockRoundIndices ?: intArrayOf(4, 1, 2, 1, 2),
         configuration.autoMineRounds,
-        configuration.extraConfig["enableRequestLogging"]?.toBoolean() ?: false
+        configuration.extraConfig["requestLogsPath"]
     )
 }

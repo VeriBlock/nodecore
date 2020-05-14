@@ -8,17 +8,11 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
-import io.ktor.client.HttpClient
-import io.ktor.client.request.post
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
-import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.RpcException
-import org.veriblock.alt.plugins.util.RpcResponse
-import org.veriblock.alt.plugins.util.handle
-import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.crypto.Crypto
@@ -28,7 +22,6 @@ import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
-import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -62,8 +55,8 @@ class BitcoinFamilyChain(
 
     override val httpClient = createHttpClient(config.auth)
 
-    override val enableRequestLogging: Boolean
-        get() = config.enableRequestLogging
+    override val requestLogsPath: String?
+        get() = config.requestLogsPath
 
     init {
         config.checkValidity()
@@ -78,6 +71,10 @@ class BitcoinFamilyChain(
             } catch (e: Exception) {
                 error("Invalid segwit address: ${e.message}")
             }
+        }
+
+        if (requestLogsPath != null) {
+            File(requestLogsPath).mkdirs()
         }
     }
 
