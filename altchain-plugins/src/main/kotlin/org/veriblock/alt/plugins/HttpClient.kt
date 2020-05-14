@@ -12,8 +12,10 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.HttpResponseValidator
 import io.ktor.client.features.auth.Auth
 import io.ktor.client.features.auth.providers.basic
+import io.ktor.client.features.json.Json
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.http.ContentType
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
@@ -30,17 +32,18 @@ fun <T> String.fromJson(type: Type): T = gson.fromJson(this, type)
 fun <T> JsonElement.fromJson(type: Type): T = gson.fromJson(this, type)
 
 fun createHttpClient(authConfig: HttpAuthConfig? = null, contentTypes: List<ContentType>? = null) = HttpClient(CIO) {
-    install(JsonFeature) {
+    Json {
         if (contentTypes != null) {
             acceptContentTypes = contentTypes
         }
     }
     if (authConfig != null) {
-        install(Auth) {
+        Auth {
             basic {
                 username = authConfig.username
                 password = authConfig.password
             }
         }
     }
+    expectSuccess = false
 }

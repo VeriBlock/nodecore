@@ -169,7 +169,7 @@ class BitcoinFamilyChain(
             }.handle()
         } catch (e: RpcException) {
             if (e.errorCode == -5) {
-                // Block not found
+                // Transaction not found
                 return null
             } else {
                 throw e

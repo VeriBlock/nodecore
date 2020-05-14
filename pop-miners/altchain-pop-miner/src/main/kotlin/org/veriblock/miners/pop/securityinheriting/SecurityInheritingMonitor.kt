@@ -149,7 +149,7 @@ class SecurityInheritingMonitor(
         // Retrieve block from SI chain
         chain.getTransaction(txId)
     } catch (e: Exception) {
-        logger.warn(e) { "Error when polling for transaction $txId" }
+        logger.debugWarn(e) { "Error when polling for transaction $txId" }
         null
     }
 
