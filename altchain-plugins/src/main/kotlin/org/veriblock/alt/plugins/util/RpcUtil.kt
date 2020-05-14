@@ -40,7 +40,7 @@ class RpcException(
 
 private val gson = Gson()
 
-inline fun <reified T : Any> RpcResponse.handle(): T = try {
+inline fun <reified T> RpcResponse.handle(): T = try {
     val type: Type = object : TypeToken<T>() {}.type
     when {
         result !is JsonNull ->
@@ -55,3 +55,4 @@ inline fun <reified T : Any> RpcResponse.handle(): T = try {
 }
 
 fun JsonRpcRequestBody.toJson(): String = gson.toJson(this)
+fun RpcResponse.toJson(): String = gson.toJson(this)
