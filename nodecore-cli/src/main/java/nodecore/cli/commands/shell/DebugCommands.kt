@@ -24,6 +24,7 @@ fun CommandFactory.debugCommands() {
         description = "Collect information about the application for troubleshooting",
         parameters = listOf(
             CommandParameter(name = "dataFolder", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "nodecoreFolder", mapper = CommandParameterMappers.STRING, required = true),
             CommandParameter(name = "network", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
@@ -32,6 +33,16 @@ fun CommandFactory.debugCommands() {
         // Verify the network parameter
         if (network != "mainnet" && network != "testnet" && network != "alpha" ) {
             failure("V004", "Unknown Network", "The supplied network $network is not valid, please use mainnet, testnet or alpha.")
+        }
+        // Get the data folder provided by the user
+        val dataFolder = File(getParameter<String>("dataFolder"))
+        if (!dataFolder.exists()) {
+            failure("V004", "Unable to find the data folder", "The supplied data folder $dataFolder doesn't exists.")
+        }
+        // Get the nodecore folder provided by the user
+        val nodecoreFolder = File(getParameter<String>("nodecoreFolder"))
+        if (!nodecoreFolder.exists()) {
+            failure("V004", "Unable to find the nodecore folder", "The supplied nodecore folder $nodecoreFolder doesn't exists.")
         }
         // Get the bootstrap information
         val result = try {
@@ -60,13 +71,8 @@ fun CommandFactory.debugCommands() {
 
         val configuration = ArrayList<String>()
 
-        // Get the data folder provided by the user
-        val dataFolder = File(getParameter<String>("dataFolder"))
-        if (!dataFolder.exists()) {
-            failure("V004", "Unable to find the data folder", "The supplied data folder $dataFolder doesn't exists.")
-        }
         // Check all the files inside the data folder, and verify the file integrity
-        val fileInformation = dataFolder.walk().filter {
+        val nodecoreDataFolderInformation = dataFolder.walk().filter {
             it.absolutePath.toLowerCase().contains(network) || it.absolutePath == dataFolder.absolutePath || it.name == "nodecore.properties"
         }.map { file ->
             val calculateFileSpecifications = file.name == "nodecore.dat" || file.parentFile?.parentFile?.name == "blocks"
@@ -100,8 +106,13 @@ fun CommandFactory.debugCommands() {
                 }
             }
             FileInformation(file.name, file.absolutePath, fileSpecifications)
-        }.map {
-            it
+        }.toList()
+
+        // Check the libraries inside the nodecore folder
+        val nodecoreFolderInformation = nodecoreFolder.walk().filter {
+            it.name.toLowerCase().endsWith(".jar")
+        }.map { file ->
+            FileInformation(file.name, file.absolutePath)
         }.toList()
 
         // Verify if the common NodeCore ports are available
@@ -118,7 +129,8 @@ fun CommandFactory.debugCommands() {
         // Generate the final object with all the collected information
         val debugInformation = DebugInformation(
             diagnosticInfo,
-            fileInformation,
+            nodecoreDataFolderInformation,
+            nodecoreFolderInformation,
             nodecoreEnvironmentVariables,
             portInformation,
             configuration
@@ -138,7 +150,8 @@ fun CommandFactory.debugCommands() {
 
 class DebugInformation(
     val diagnosticInfo: DiagnosticInfo,
-    val fileInformation: List<FileInformation>,
+    val nodecoreDataFolderInformation: List<FileInformation>,
+    val nodecoreFolderInformation: List<FileInformation>,
     val nodecoreEnvironmentVariables: List<NodecoreEnvironmentVariables>?,
     val nodecorePorts: List<PortInformation>,
     val configuration: List<String>
