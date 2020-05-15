@@ -12,12 +12,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.veriblock.sdk.models.Address;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.sdk.util.KeyGenerator;
 
 import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 public class AddressTests {
@@ -89,15 +85,5 @@ public class AddressTests {
         } catch(IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().startsWith("The address"));
         }
-    }
-
-    @Test
-    public void publicKey_roundtrip() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-        KeyPair key = KeyGenerator.generate();
-
-        Address address = Address.fromPublicKey(key.getPublic().getEncoded());
-
-        Assert.assertTrue(address.isDerivedFromPublicKey(key.getPublic().getEncoded()));
-        Assert.assertFalse(address.isMultisig());
     }
 }

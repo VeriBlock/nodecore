@@ -11,7 +11,7 @@ package org.veriblock.lite.core
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.Arrays
@@ -27,7 +27,7 @@ class FullBlock(
     difficulty: Int,
     nonce: Int,
     val normalTransactions: List<VeriBlockTransaction>,
-    val popTransactions: List<VeriBlockPoPTransaction>,
+    val popTransactions: List<VeriBlockPopTransaction>,
     val metaPackage: BlockMetaPackage
 ) : VeriBlockBlock(
     height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot, timestamp, difficulty, nonce

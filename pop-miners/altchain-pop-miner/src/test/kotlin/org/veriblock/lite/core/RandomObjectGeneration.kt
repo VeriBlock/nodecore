@@ -24,7 +24,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import java.security.MessageDigest
@@ -192,7 +192,7 @@ fun randomFullBlock(
     difficulty: Int = randomInt(0, Int.MAX_VALUE),
     nonce: Int = randomInt(0, Int.MAX_VALUE),
     normalTransactions: List<VeriBlockTransaction> = (1..10).map { randomVeriBlockTransaction(context) },
-    poPTransactions: List<VeriBlockPoPTransaction> = (1..10).map { randomVeriBlockPoPTransaction(context) },
+    popTransactions: List<VeriBlockPopTransaction> = (1..10).map { randomVeriBlockPoPTransaction(context) },
     metaPackage: BlockMetaPackage = randomBlockMetaPackage()
 ): FullBlock {
     return FullBlock(
@@ -206,7 +206,7 @@ fun randomFullBlock(
         difficulty,
         nonce,
         normalTransactions,
-        poPTransactions,
+        popTransactions,
         metaPackage
     )
 }
@@ -228,8 +228,8 @@ fun randomVeriBlockPoPTransaction(
     signature: ByteArray = ByteArray(10),
     publicKey: ByteArray = ByteArray(8),
     networkByte: Byte? = context.networkParameters.transactionPrefix
-): VeriBlockPoPTransaction {
-    return VeriBlockPoPTransaction(
+): VeriBlockPopTransaction {
+    return VeriBlockPopTransaction(
         address,
         publishedBlock,
         bitcoinTransaction,

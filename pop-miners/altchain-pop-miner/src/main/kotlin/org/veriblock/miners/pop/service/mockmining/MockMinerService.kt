@@ -14,12 +14,10 @@ import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.sdk.blockchain.VeriBlockBlockchainBootstrapConfig
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -27,12 +25,16 @@ import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
-import org.veriblock.sdk.util.KeyGenerator
 import org.veriblock.sdk.util.Utils
 import java.nio.charset.StandardCharsets
+import java.security.InvalidAlgorithmParameterException
 import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.SecureRandom
+import java.security.spec.ECGenParameterSpec
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -42,9 +44,8 @@ class MockMinerService(
     private val pluginService: PluginService,
     private val securityInheritingService: SecurityInheritingService
 ) : MinerService {
-    private val bootstrap = VeriBlockBlockchainBootstrapConfig(
-        listOf(defaultRegTestParameters.genesisBlock)
-    )
+    private val bootstrap = listOf(defaultRegTestParameters.genesisBlock)
+    private val btcBootstrap = listOf(BitcoinDefaults.genesis)
     private val connection = ConnectionSelector.setConnection("mock")
     private val veriBlockStore = VeriBlockStore(connection)
     private val bitcoinStore = BitcoinStore(connection)
@@ -62,9 +63,9 @@ class MockMinerService(
 
     override fun start() {
         veriBlockBlockchain.bootstrap(bootstrap)
-        logger.info { "Mocked VeriBlock chain bootstrap: ${bootstrap.blocks.joinToString { it.raw.toHex() }}" }
-        bitcoinBlockchain.bootstrap(BitcoinDefaults.bootstrap)
-        logger.info { "Mocked Bitcoin chain bootstrap: ${BitcoinDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}" }
+        logger.info { "Mocked VeriBlock chain bootstrap: ${bootstrap.joinToString { it.raw.toHex() }}" }
+        bitcoinBlockchain.bootstrap(btcBootstrap, BitcoinDefaults.genesisHeight)
+        logger.info { "Mocked Bitcoin chain bootstrap: ${btcBootstrap.joinToString { it.raw.toHex() }}" }
     }
 
     override fun setIsShuttingDown(b: Boolean) {
@@ -97,7 +98,7 @@ class MockMinerService(
 
         operation.setMiningInstruction(miningInstruction)
 
-        val key = KeyGenerator.generate()
+        val key = generateKeyPair()
 
         val vbkTip = veriBlockBlockchain.chainHead
         val atv = mine(miningInstruction.publicationData, vbkTip, key)
@@ -227,4 +228,13 @@ class MockMinerService(
 
     override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> =
         throw NotImplementedException("Operation not supported in the Mock Miner")
+}
+
+@Throws(NoSuchAlgorithmException::class, InvalidAlgorithmParameterException::class)
+private fun generateKeyPair(): KeyPair {
+    val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+    val random = SecureRandom.getInstance("SHA1PRNG")
+    random.setSeed(1L)
+    keyPairGenerator.initialize(ECGenParameterSpec("secp256k1"), random)
+    return keyPairGenerator.generateKeyPair()
 }

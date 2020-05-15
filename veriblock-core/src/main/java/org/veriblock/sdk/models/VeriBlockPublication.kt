@@ -7,11 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-import org.veriblock.core.utilities.Preconditions
-import java.util.ArrayList
-
 class VeriBlockPublication(
-    val transaction: VeriBlockPoPTransaction,
+    val transaction: VeriBlockPopTransaction,
     val merklePath: VeriBlockMerklePath,
     val containingBlock: VeriBlockBlock,
     val context: List<VeriBlockBlock> = emptyList()

@@ -12,7 +12,7 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.Utils
@@ -44,12 +44,12 @@ class VeriBlockPopMiner(
     }
 
     @Throws(SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
-    private fun signTransaction(tx: VeriBlockPoPTransaction, privateKey: PrivateKey): VeriBlockPoPTransaction {
+    private fun signTransaction(tx: VeriBlockPopTransaction, privateKey: PrivateKey): VeriBlockPopTransaction {
         val signature = Utils.signMessageWithPrivateKey(
             SerializeDeserializeService.getId(tx).bytes,
             privateKey
         )
-        return VeriBlockPoPTransaction(
+        return VeriBlockPopTransaction(
             tx.address,
             tx.publishedBlock,
             tx.bitcoinTransaction,
@@ -82,7 +82,7 @@ class VeriBlockPopMiner(
         // create a VeriBlock PoP transaction
         val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock!!)
         val popTx = signTransaction(
-            VeriBlockPoPTransaction(
+            VeriBlockPopTransaction(
                 address,
                 blockToEndorse,
                 bitcoinProofTx,

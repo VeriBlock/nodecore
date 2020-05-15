@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class VeriBlockPoPTransaction {
+public class VeriBlockPopTransaction {
     private final Sha256Hash id;
     private final Address address;
     private final VeriBlockBlock publishedBlock;
@@ -82,7 +82,7 @@ public class VeriBlockPoPTransaction {
         return networkByte;
     }
 
-    public VeriBlockPoPTransaction(Address address,
+    public VeriBlockPopTransaction(Address address,
                                    VeriBlockBlock publishedBlock,
                                    BitcoinTransaction bitcoinTransaction,
                                    MerklePath merklePath,
@@ -118,7 +118,7 @@ public class VeriBlockPoPTransaction {
 
         if (o == null || getClass() != o.getClass()) return false;
 
-        VeriBlockPoPTransaction obj = (VeriBlockPoPTransaction)o;
+        VeriBlockPopTransaction obj = (VeriBlockPopTransaction)o;
 
         return SerializeDeserializeService.getId(this).equals(SerializeDeserializeService.getId(obj)) &&
                 Arrays.equals(publicKey, obj.publicKey) &&

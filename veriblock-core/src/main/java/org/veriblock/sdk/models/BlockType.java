@@ -8,7 +8,7 @@
 
 package org.veriblock.sdk.models;
 
-public enum  BlockType {
+public enum BlockType {
 
     VERI_BLOCK_TX((byte)0x01),
     VERI_BLOCK_POP_TX((byte)0x02);

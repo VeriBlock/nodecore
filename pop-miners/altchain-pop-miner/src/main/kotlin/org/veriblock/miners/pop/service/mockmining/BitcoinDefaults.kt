@@ -9,10 +9,8 @@ package org.veriblock.miners.pop.service.mockmining
 
 import org.veriblock.core.params.BitcoinNetworkParameters
 import org.veriblock.core.params.BitcoinRegTestParameters
-import org.veriblock.sdk.blockchain.BitcoinBlockchainBootstrapConfig
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.Utils
-import java.util.Arrays
 
 object BitcoinDefaults {
     private val regtestGenesis = Utils.decodeHex(
@@ -20,8 +18,5 @@ object BitcoinDefaults {
     )
     val genesis = SerializeDeserializeService.parseBitcoinBlock(regtestGenesis)
     const val genesisHeight = 0
-    val bootstrap = BitcoinBlockchainBootstrapConfig(
-        Arrays.asList(genesis), genesisHeight
-    )
     val networkParameters: BitcoinNetworkParameters = BitcoinRegTestParameters()
 }

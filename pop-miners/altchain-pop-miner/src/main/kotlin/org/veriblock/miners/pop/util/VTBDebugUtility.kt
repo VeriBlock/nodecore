@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.util
 
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.BitcoinBlock
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 
 /**
@@ -62,7 +62,7 @@ object VTBDebugUtility {
         }
     }
 
-    fun extractOrderedBtcBlocksFromPopTransaction(vbkPopTx: VeriBlockPoPTransaction): List<BitcoinBlock> {
+    fun extractOrderedBtcBlocksFromPopTransaction(vbkPopTx: VeriBlockPopTransaction): List<BitcoinBlock> {
         return vbkPopTx.blockOfProofContext +
             // Block of proof is after the context blocks
             vbkPopTx.blockOfProof

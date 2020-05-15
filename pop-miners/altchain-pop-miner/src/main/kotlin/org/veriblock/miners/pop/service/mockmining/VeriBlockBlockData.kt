@@ -9,7 +9,7 @@ package org.veriblock.miners.pop.service.mockmining
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockMerklePath
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.ArrayList
@@ -62,7 +62,7 @@ class VeriBlockBlockData {
         }
     }
 
-    inner class PoPSubtree : Subtree<VeriBlockPoPTransaction?>() {
+    inner class PoPSubtree : Subtree<VeriBlockPopTransaction?>() {
         override fun getSubject(index: Int): Sha256Hash {
             return SerializeDeserializeService.getId(get(index))
         }

@@ -25,7 +25,7 @@ import org.veriblock.sdk.models.PublicationData;
 import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VeriBlockMerklePath;
-import org.veriblock.sdk.models.VeriBlockPoPTransaction;
+import org.veriblock.sdk.models.VeriBlockPopTransaction;
 import org.veriblock.sdk.models.VeriBlockPublication;
 import org.veriblock.sdk.models.VeriBlockTransaction;
 import org.veriblock.sdk.util.StreamUtils;
@@ -94,7 +94,7 @@ public class SerializeDeserializeService {
 
 
 
-    public static VeriBlockPoPTransaction parseVeriBlockPoPTx(ByteBuffer buffer) {
+    public static VeriBlockPopTransaction parseVeriBlockPoPTx(ByteBuffer buffer) {
         byte[] rawTx = StreamUtils.getVariableLengthValue(buffer, 0, MAX_RAWTX_SIZE_VeriBlockPoPTransaction);
         byte[] signature = StreamUtils.getSingleByteLengthValue(buffer, 0, Constants.MAX_SIGNATURE_SIZE);
         byte[] publicKey = StreamUtils.getSingleByteLengthValue(buffer, Constants.PUBLIC_KEY_SIZE, Constants.PUBLIC_KEY_SIZE);
@@ -127,11 +127,11 @@ public class SerializeDeserializeService {
             contextBlocks.add(parseBitcoinBlockWithLength(txBuffer));
         }
 
-        return new VeriBlockPoPTransaction(address, publishedBlock, bitcoinTransaction, merklePath,
+        return new VeriBlockPopTransaction(address, publishedBlock, bitcoinTransaction, merklePath,
                 blockOfProof, contextBlocks, signature, publicKey, networkByte);
     }
 
-    public static byte[] serialize(VeriBlockPoPTransaction veriBlockPoPTransaction) {
+    public static byte[] serialize(VeriBlockPopTransaction veriBlockPoPTransaction) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
             serialize(veriBlockPoPTransaction, stream);
 
@@ -142,7 +142,7 @@ public class SerializeDeserializeService {
         return new byte[] {};
     }
 
-    public static void serialize(VeriBlockPoPTransaction veriBlockPoPTransaction, OutputStream stream) throws IOException {
+    public static void serialize(VeriBlockPopTransaction veriBlockPoPTransaction, OutputStream stream) throws IOException {
         byte[] rawTransaction = serializeTransactionEffects(veriBlockPoPTransaction);
         StreamUtils.writeVariableLengthValueToStream(stream, rawTransaction);
 
@@ -150,7 +150,7 @@ public class SerializeDeserializeService {
         StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockPoPTransaction.getPublicKey());
     }
 
-    public static byte[] serializeTransactionEffects(VeriBlockPoPTransaction veriBlockPoPTransaction) {
+    public static byte[] serializeTransactionEffects(VeriBlockPopTransaction veriBlockPoPTransaction) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
             serializeTransactionEffects(veriBlockPoPTransaction, stream);
             return stream.toByteArray();
@@ -160,7 +160,7 @@ public class SerializeDeserializeService {
         return new byte[] {};
     }
 
-    private static void serializeTransactionEffects(VeriBlockPoPTransaction tx, OutputStream stream) throws IOException {
+    private static void serializeTransactionEffects(VeriBlockPopTransaction tx, OutputStream stream) throws IOException {
         if (tx.getNetworkByte() != null) {
             // Replay protection versus mainnet network
             stream.write(tx.getNetworkByte());
@@ -191,11 +191,11 @@ public class SerializeDeserializeService {
         }
     }
 
-    public static Sha256Hash getId(VeriBlockPoPTransaction veriBlockPoPTransaction) {
+    public static Sha256Hash getId(VeriBlockPopTransaction veriBlockPoPTransaction) {
         return Sha256Hash.of(serializeTransactionEffects(veriBlockPoPTransaction));
     }
 
-    public static Sha256Hash getHash(VeriBlockPoPTransaction veriBlockPoPTransaction) {
+    public static Sha256Hash getHash(VeriBlockPopTransaction veriBlockPoPTransaction) {
         return Sha256Hash.of(serializeTransactionEffects(veriBlockPoPTransaction));
     }
 
@@ -204,7 +204,7 @@ public class SerializeDeserializeService {
 
     public static VeriBlockPublication parseVeriBlockPublication(ByteBuffer buffer) {
 
-        VeriBlockPoPTransaction transaction = parseVeriBlockPoPTx(buffer);
+        VeriBlockPopTransaction transaction = parseVeriBlockPoPTx(buffer);
         VeriBlockMerklePath merklePath = parseVeriBlockMerklePath(buffer);
         VeriBlockBlock containingBlock = parseVeriBlockBlock(buffer);
 

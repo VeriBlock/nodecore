@@ -15,7 +15,7 @@ import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Constants;
 import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.models.VeriBlockPoPTransaction;
+import org.veriblock.sdk.models.VeriBlockPopTransaction;
 import org.veriblock.sdk.models.VeriBlockPublication;
 import org.veriblock.sdk.models.VeriBlockTransaction;
 import org.veriblock.sdk.models.VerificationException;
@@ -28,14 +28,14 @@ import java.util.Locale;
 
 public class ValidationService {
 
-    public static void verify(VeriBlockPoPTransaction veriBlockPoPTransaction) throws VerificationException {
+    public static void verify(VeriBlockPopTransaction veriBlockPoPTransaction) throws VerificationException {
         checkSignature(veriBlockPoPTransaction);
         checkBitcoinTransactionForPoPData(veriBlockPoPTransaction);
         checkBitcoinMerklePath(veriBlockPoPTransaction);
         checkBitcoinBlocks(veriBlockPoPTransaction);
     }
 
-    public static void checkSignature(VeriBlockPoPTransaction tx) throws VerificationException {
+    public static void checkSignature(VeriBlockPopTransaction tx) throws VerificationException {
         if (!tx.getAddress().isDerivedFromPublicKey(tx.getPublicKey())) {
             throw new VerificationException("VeriBlock PoP Transaction contains an invalid public key");
         }
@@ -45,7 +45,7 @@ public class ValidationService {
         }
     }
 
-    public static void checkBitcoinTransactionForPoPData(VeriBlockPoPTransaction tx) throws VerificationException {
+    public static void checkBitcoinTransactionForPoPData(VeriBlockPopTransaction tx) throws VerificationException {
         ByteBuffer buffer = ByteBuffer.allocateDirect(80);
         buffer.put(SerializeDeserializeService.serializeHeaders(tx.getPublishedBlock()));
         buffer.put(tx.getAddress().getPoPBytes());
@@ -59,7 +59,7 @@ public class ValidationService {
         }
     }
 
-    public static void checkBitcoinMerklePath(VeriBlockPoPTransaction tx) throws VerificationException {
+    public static void checkBitcoinMerklePath(VeriBlockPopTransaction tx) throws VerificationException {
         if (!tx.getMerklePath().getSubject().equals(Sha256Hash.twiceOf(tx.getBitcoinTransaction().getRawBytes()))) {
             throw new VerificationException("Bitcoin transaction cannot be proven by merkle path");
         }
@@ -69,7 +69,7 @@ public class ValidationService {
         }
     }
 
-    public static void checkBitcoinBlocks(VeriBlockPoPTransaction tx) throws VerificationException {
+    public static void checkBitcoinBlocks(VeriBlockPopTransaction tx) throws VerificationException {
         Sha256Hash lastHash = null;
         for (BitcoinBlock block : tx.getBlocks()) {
             ValidationService.verify(block);
