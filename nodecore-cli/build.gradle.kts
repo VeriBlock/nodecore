@@ -39,6 +39,7 @@ dependencies {
     implementation("org.jline:jline-terminal-jansi:3.9.0")
     implementation("io.netty:netty-tcnative-boringssl-static:2.0.7.Final")
     implementation("com.opencsv:opencsv:4.3.2")
+    implementation("commons-codec:commons-codec:1.9")
 
     // Testing
     testImplementation("junit:junit:4.12")
