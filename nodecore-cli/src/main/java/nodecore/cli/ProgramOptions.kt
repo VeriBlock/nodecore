@@ -86,7 +86,7 @@ class ProgramOptions {
         _properties.remove(name)
     }
 
-    fun getProperty(name: String): String {
+    fun getProperty(name: String): String? {
         return _properties.getProperty(name)
     }
 
