@@ -8,9 +8,9 @@
 
 package org.veriblock.sdk.util;
 
+import org.veriblock.core.AddressConstants;
+import org.veriblock.core.SharedConstants;
 import org.veriblock.core.crypto.Crypto;
-import org.veriblock.sdk.transactions.SharedConstants;
-import org.veriblock.sdk.transactions.signature.AddressConstants;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;

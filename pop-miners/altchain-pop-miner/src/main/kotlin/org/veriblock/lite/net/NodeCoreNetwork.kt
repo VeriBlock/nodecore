@@ -14,8 +14,8 @@ import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
+import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.EmptyEvent
 import org.veriblock.lite.core.FullBlock
@@ -23,7 +23,7 @@ import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction

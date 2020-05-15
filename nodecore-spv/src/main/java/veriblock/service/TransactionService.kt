@@ -16,6 +16,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.sdk.models.asCoin
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.Output
 import veriblock.model.SigningResult
@@ -53,7 +54,7 @@ class TransactionService(
         for (sourceAddressesIndex in sortedAddressCoinsIndexList) {
             val fee = calculateFee(sourceAddressesIndex.address, totalOutputAmount, sortedOutputs, sourceAddressesIndex.index)
             val fulfillAndForPay = splitOutPutsAccordingBalance(
-                sortedOutputs, Coin.valueOf(sourceAddressesIndex.coins - fee)
+                sortedOutputs, (sourceAddressesIndex.coins - fee).asCoin()
             )
             sortedOutputs = fulfillAndForPay.first
             val outputsForPay = fulfillAndForPay.second

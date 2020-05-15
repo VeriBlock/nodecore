@@ -7,22 +7,24 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultRegTestParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.contracts.Balance
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.plugin.PluginService
+import org.veriblock.sdk.blockchain.VeriBlockBlockchainBootstrapConfig
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.sdk.util.KeyGenerator
@@ -40,6 +42,9 @@ class MockMinerService(
     private val pluginService: PluginService,
     private val securityInheritingService: SecurityInheritingService
 ) : MinerService {
+    private val bootstrap = VeriBlockBlockchainBootstrapConfig(
+        listOf(defaultRegTestParameters.genesisBlock)
+    )
     private val connection = ConnectionSelector.setConnection("mock")
     private val veriBlockStore = VeriBlockStore(connection)
     private val bitcoinStore = BitcoinStore(connection)
@@ -56,8 +61,8 @@ class MockMinerService(
     }
 
     override fun start() {
-        veriBlockBlockchain.bootstrap(VeriBlockDefaults.bootstrap)
-        logger.info { "Mocked VeriBlock chain bootstrap: ${VeriBlockDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}" }
+        veriBlockBlockchain.bootstrap(bootstrap)
+        logger.info { "Mocked VeriBlock chain bootstrap: ${bootstrap.blocks.joinToString { it.raw.toHex() }}" }
         bitcoinBlockchain.bootstrap(BitcoinDefaults.bootstrap)
         logger.info { "Mocked Bitcoin chain bootstrap: ${BitcoinDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}" }
     }
@@ -172,16 +177,17 @@ class MockMinerService(
         return Address(data + checksum)
     }
 
-    private fun mine(publicationData: PublicationData?, lastKnownVBKBlock: VeriBlockBlock, key: KeyPair): AltPublication {
+    private fun mine(publicationData: PublicationData, lastKnownVBKBlock: VeriBlockBlock, key: KeyPair): AltPublication {
         val address = deriveAddress(key.public)
         val endorsementTx = signTransaction(
             VeriBlockTransaction(
                 1.toByte(),
                 address,
-                Coin.valueOf(1),
+                1.asCoin(),
                 ArrayList(),
                 7,
-                publicationData, ByteArray(1),
+                publicationData,
+                ByteArray(1),
                 key.public.encoded,
                 veriBlockBlockchain.networkParameters.transactionPrefix
             ),

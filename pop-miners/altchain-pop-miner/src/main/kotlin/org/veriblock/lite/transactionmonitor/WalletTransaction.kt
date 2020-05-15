@@ -23,7 +23,7 @@ class WalletTransaction(
     sourceAmount: Coin,
     outputs: List<Output>,
     signatureIndex: Long,
-    publicationData: PublicationData?,
+    publicationData: PublicationData,
     signature: ByteArray,
     publicKey: ByteArray,
     networkByte: Byte?,
@@ -43,7 +43,7 @@ class WalletTransaction(
 
     constructor(
         id: Sha256Hash, type: Byte, sourceAddress: Address, sourceAmount: Coin, outputs: List<Output>, signatureIndex: Long,
-        publicationData: PublicationData?, signature: ByteArray, publicKey: ByteArray, networkByte: Byte?
+        publicationData: PublicationData, signature: ByteArray, publicKey: ByteArray, networkByte: Byte?
     ) : this(
         type, sourceAddress, sourceAmount, outputs, signatureIndex, publicationData, signature, publicKey, networkByte, TransactionMeta(id)
     )

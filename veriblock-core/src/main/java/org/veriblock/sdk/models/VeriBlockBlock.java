@@ -9,6 +9,7 @@
 package org.veriblock.sdk.models;
 
 import org.veriblock.core.crypto.Sha256Hash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.services.SerializeDeserializeService;
 

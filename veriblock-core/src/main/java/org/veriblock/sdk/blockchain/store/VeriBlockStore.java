@@ -11,7 +11,7 @@ package org.veriblock.sdk.blockchain.store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.sdk.models.BlockStoreException;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.sqlite.tables.KeyValueData;
 import org.veriblock.sdk.sqlite.tables.KeyValueRepository;
 import org.veriblock.sdk.sqlite.tables.VeriBlockBlockRepository;

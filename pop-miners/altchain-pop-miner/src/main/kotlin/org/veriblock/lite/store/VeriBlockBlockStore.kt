@@ -11,7 +11,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.Constants
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.util.ArrayUtils
 import org.veriblock.sdk.util.Utils
 import java.io.File

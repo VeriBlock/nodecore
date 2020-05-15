@@ -14,12 +14,12 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.contracts.Balance
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.serialization.deserialize
@@ -29,6 +29,7 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.asCoin
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
@@ -106,8 +107,8 @@ class NodeCoreGateway(
 
         if (reply.success) {
             return Balance(
-                Coin.valueOf(reply.getConfirmed(0).unlockedAmount),
-                Coin.valueOf(reply.getUnconfirmed(0).amount)
+                reply.getConfirmed(0).unlockedAmount.asCoin(),
+                reply.getUnconfirmed(0).amount.asCoin()
             )
         } else {
             error("Unable to retrieve balance from address $address")

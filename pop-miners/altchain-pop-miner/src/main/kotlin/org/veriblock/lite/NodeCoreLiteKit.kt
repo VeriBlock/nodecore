@@ -12,7 +12,7 @@ import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.DefaultAddressManager
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.contracts.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event

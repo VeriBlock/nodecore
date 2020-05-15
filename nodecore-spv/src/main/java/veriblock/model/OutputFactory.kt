@@ -8,6 +8,7 @@
 package veriblock.model
 
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.asCoin
 
 object OutputFactory {
     fun create(address: String, amount: Long): Output {
@@ -15,7 +16,7 @@ object OutputFactory {
             "Output amounts must be greater than 0 (actual amount: $amount)"
         }
         val addressObj = address.asLightAddress()
-        val amountObj = Coin.valueOf(amount)
+        val amountObj = amount.asCoin()
         return Output(addressObj, amountObj)
     }
 }

@@ -10,6 +10,7 @@ package org.veriblock.sdk.blockchain;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.core.params.NetworkParameters;
 import org.veriblock.core.utilities.Preconditions;
@@ -22,11 +23,10 @@ import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.sdk.models.BlockStoreException;
 import org.veriblock.sdk.models.Constants;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VerificationException;
 import org.veriblock.sdk.services.ValidationService;
-import org.veriblock.sdk.util.BitcoinUtils;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -136,7 +136,7 @@ public class VeriBlockBlockchain {
 
         StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(
                 block,
-                work.add(BitcoinUtils.decodeCompactBits(block.getDifficulty())),
+                work.add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())),
                 blockOfProof);
 
         List<Change> changes = new ArrayList<>();
@@ -220,7 +220,7 @@ public class VeriBlockBlockchain {
 
         StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(
                 block,
-                previous.getWork().add(BitcoinUtils.decodeCompactBits(block.getDifficulty())),
+                previous.getWork().add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())),
                 blockOfProof);
 
         ///HACK: we always cut the hash for a key to the keystone size
@@ -612,7 +612,7 @@ public class VeriBlockBlockchain {
 
         BigInteger difficulty = VeriBlockDifficultyCalculator.calculate(networkParameters, previous, context);
 
-        return OptionalInt.of((int)BitcoinUtils.encodeCompactBits(difficulty));
+        return OptionalInt.of((int)BitcoinUtilities.encodeCompactBits(difficulty));
     }
 
     public OptionalInt getNextDifficulty(VeriBlockBlock previous) throws SQLException {
@@ -664,7 +664,7 @@ public class VeriBlockBlockchain {
             }
 
             for (VeriBlockBlock block : blocks) {
-                BigInteger work = BitcoinUtils.decodeCompactBits(block.getDifficulty());
+                BigInteger work = BitcoinUtilities.decodeCompactBits(block.getDifficulty());
                 StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(
                                                         block, work, Sha256Hash.ZERO_HASH);
                 store.put(storedBlock);

@@ -18,7 +18,7 @@ import org.veriblock.core.CommunicationException
 import org.veriblock.core.MineException
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.contracts.Balance
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation

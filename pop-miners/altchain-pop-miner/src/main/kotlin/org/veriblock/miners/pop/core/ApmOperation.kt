@@ -67,7 +67,7 @@ class ApmOperation(
     override fun onStateChanged() {
         stateChangedEvent.trigger(this)
     }
-    
+
     fun setMiningInstruction(miningInstruction: ApmInstruction) {
         endorsedBlockHeight = miningInstruction.endorsedBlockHeight
         this.miningInstruction = miningInstruction

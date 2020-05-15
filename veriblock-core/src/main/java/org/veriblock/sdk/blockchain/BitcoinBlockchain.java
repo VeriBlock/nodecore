@@ -10,20 +10,20 @@ package org.veriblock.sdk.blockchain;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.crypto.Sha256Hash;
+import org.veriblock.core.params.BitcoinNetworkParameters;
 import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.auditor.Change;
 import org.veriblock.sdk.blockchain.changes.AddBitcoinBlockChange;
 import org.veriblock.sdk.blockchain.changes.SetBitcoinHeadChange;
 import org.veriblock.sdk.blockchain.store.BlockStore;
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
-import org.veriblock.sdk.conf.BitcoinNetworkParameters;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.BlockStoreException;
 import org.veriblock.sdk.models.Constants;
 import org.veriblock.sdk.models.VerificationException;
 import org.veriblock.sdk.services.ValidationService;
-import org.veriblock.sdk.util.BitcoinUtils;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -119,7 +119,7 @@ public class BitcoinBlockchain {
 
         StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(
                 block,
-                work.add(BitcoinUtils.decodeCompactBits(block.getDifficulty())),
+                work.add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())),
                 currentHeight);
 
         List<Change> changes = new ArrayList<>();
@@ -163,7 +163,7 @@ public class BitcoinBlockchain {
 
         StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(
                 block,
-                previous.getWork().add(BitcoinUtils.decodeCompactBits(block.getDifficulty())),
+                previous.getWork().add(BitcoinUtilities.decodeCompactBits(block.getDifficulty())),
                 previous.getHeight() + 1);
 
         temporalStore.put(block.getHash(), storedBlock);
@@ -343,11 +343,11 @@ public class BitcoinBlockchain {
 
             } else {
 
-                long proofOfWorkLimit = BitcoinUtils.encodeCompactBits(networkParameters.getPowLimit());
+                long proofOfWorkLimit = BitcoinUtilities.encodeCompactBits(networkParameters.getPowLimit());
 
                 // If the block's timestamp is more than 2*PowTargetSpacing minutes
                 // then allow mining of a minimum difficulty block
-                if (blockTimestamp > previous.getBlock().getTimestamp() + networkParameters.getPowTargetSpacing()*2) {
+                if (blockTimestamp > previous.getBlock().getTimestamp() + networkParameters.getPowTargetSpacing() * 2) {
                     return OptionalLong.of(proofOfWorkLimit);
 
                 } else {
@@ -424,7 +424,7 @@ public class BitcoinBlockchain {
         elapsed = Math.max(elapsed, networkParameters.getPowTargetTimespan() / 4);
         elapsed = Math.min(elapsed, networkParameters.getPowTargetTimespan() * 4);
 
-        BigInteger newTarget = BitcoinUtils.decodeCompactBits(current)
+        BigInteger newTarget = BitcoinUtilities.decodeCompactBits(current)
                                            .multiply(BigInteger.valueOf(elapsed))
                                            .divide(BigInteger.valueOf(networkParameters.getPowTargetTimespan()));
 
@@ -436,7 +436,7 @@ public class BitcoinBlockchain {
         BigInteger mask = BigInteger.valueOf(0xFFFFFFL).shiftLeft((byteLength - 3) * 8);
         newTarget = newTarget.and(mask);
 
-        return BitcoinUtils.encodeCompactBits(newTarget);
+        return BitcoinUtilities.encodeCompactBits(newTarget);
     }
 
     // Returns true if the store was empty and the bootstrap
@@ -465,7 +465,7 @@ public class BitcoinBlockchain {
 
             int blockHeight = firstBlockHeight;
             for (BitcoinBlock block : blocks) {
-                BigInteger work = BitcoinUtils.decodeCompactBits(block.getDifficulty());
+                BigInteger work = BitcoinUtilities.decodeCompactBits(block.getDifficulty());
                 StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(block, work, blockHeight);
                 blockHeight++;
                 store.put(storedBlock);

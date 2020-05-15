@@ -17,3 +17,5 @@ class StandardAddress(address: String) : AddressLight(address) {
         return Base58.decode(get())
     }
 }
+
+fun String.asStandardAddress() = StandardAddress(this)

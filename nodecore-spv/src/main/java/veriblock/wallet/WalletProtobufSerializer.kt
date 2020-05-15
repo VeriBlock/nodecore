@@ -11,6 +11,7 @@ import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.sdk.models.asCoin
 import veriblock.model.Output
 import veriblock.model.OutputFactory.create
 import veriblock.model.StandardAddress
@@ -28,7 +29,7 @@ class WalletProtobufSerializer {
 
     fun deserialize(output: VeriBlockMessages.Output): Output {
         return Output(
-            StandardAddress(output.address.toString()), Coin.valueOf(output.amount)
+            StandardAddress(output.address.toString()), output.amount.asCoin()
         )
     }
 
@@ -41,7 +42,7 @@ class WalletProtobufSerializer {
     fun deserialize(proto: Protos.Transaction): StandardTransaction {
         val tx = StandardTransaction(Sha256Hash.wrap(proto.txId.toByteArray()))
         tx.inputAddress = proto.input.address.asLightAddress()
-        tx.inputAmount = Coin.valueOf(proto.input.amount)
+        tx.inputAmount = proto.input.amount.asCoin()
         for (o in proto.outputsList) {
             tx.addOutput(create(o.address, o.amount))
         }

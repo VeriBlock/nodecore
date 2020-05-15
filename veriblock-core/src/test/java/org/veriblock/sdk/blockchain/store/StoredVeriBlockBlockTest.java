@@ -11,7 +11,7 @@ package org.veriblock.sdk.blockchain.store;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.services.SerializeDeserializeService;
 
 import java.math.BigInteger;

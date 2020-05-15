@@ -19,6 +19,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.model.StandardTransaction
 import veriblock.service.TransactionService
@@ -67,7 +68,7 @@ open class StandardTransaction : Transaction {
         this.data = data
         this.signatureIndex = signatureIndex
         addAllOutput(outputs)
-        this.inputAmount = Coin.valueOf(inputAmount)
+        this.inputAmount = inputAmount.asCoin()
         this.inputAddress = StandardAddress(inputAddress)
         transactionFee = fee
         if (txId == null) {

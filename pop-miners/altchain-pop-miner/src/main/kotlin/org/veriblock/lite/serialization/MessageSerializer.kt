@@ -20,12 +20,13 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPoPTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
@@ -83,7 +84,7 @@ fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(transacti
     return VeriBlockTransaction(
         txMessage.type.number.toByte(),
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
-        Coin.valueOf(txMessage.sourceAmount),
+        txMessage.sourceAmount.asCoin(),
         txMessage.outputsList.map { o ->
             Output.of(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address), o.amount)
         },
@@ -100,7 +101,7 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(t
     return VeriBlockTransaction(
         txMessage.type.number.toByte(),
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
-        Coin.valueOf(txMessage.sourceAmount),
+        txMessage.sourceAmount.asCoin(),
         txMessage.outputsList.map { o ->
             Output.of(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address), o.amount)
         },

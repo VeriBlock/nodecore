@@ -10,7 +10,7 @@ package org.veriblock.sdk.sqlite.tables;
 
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.core.crypto.Sha256Hash;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.services.SerializeDeserializeService;
 import org.veriblock.sdk.util.Utils;

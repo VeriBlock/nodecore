@@ -8,17 +8,17 @@
 
 package org.veriblock.sdk.services;
 
+import org.veriblock.core.bitcoinj.BitcoinUtilities;
+import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.models.AltPublication;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Constants;
-import org.veriblock.core.crypto.Sha256Hash;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VeriBlockPoPTransaction;
 import org.veriblock.sdk.models.VeriBlockPublication;
 import org.veriblock.sdk.models.VeriBlockTransaction;
 import org.veriblock.sdk.models.VerificationException;
-import org.veriblock.sdk.util.BitcoinUtils;
 import org.veriblock.sdk.util.MerklePathUtil;
 import org.veriblock.sdk.util.Utils;
 
@@ -133,7 +133,9 @@ public class ValidationService {
             throw new VerificationException("VeriBlock transaction contains an invalid public key");
         }
 
-        if (!Utils.verifySignature(SerializeDeserializeService.getId(veriBlockTransaction).getBytes(), veriBlockTransaction.getSignature(), veriBlockTransaction.getPublicKey())) {
+        if (!Utils.verifySignature(SerializeDeserializeService.getId(veriBlockTransaction).getBytes(), veriBlockTransaction.getSignature(),
+            veriBlockTransaction.getPublicKey()
+        )) {
             throw new VerificationException("VeriBlock transaction is incorrectly signed");
         }
     }
@@ -146,7 +148,7 @@ public class ValidationService {
     }
 
     public static BigInteger getEmbeddedTarget(VeriBlockBlock block) {
-        BigInteger embeddedDifficulty = BitcoinUtils.decodeCompactBits(block.getDifficulty());
+        BigInteger embeddedDifficulty = BitcoinUtilities.decodeCompactBits(block.getDifficulty());
         return Constants.MAXIMUM_DIFFICULTY.divide(embeddedDifficulty);
     }
 
@@ -180,7 +182,7 @@ public class ValidationService {
     }
 
     public static boolean isProofOfWorkValid(BitcoinBlock block) throws VerificationException {
-        BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getDifficulty());
+        BigInteger embeddedTarget = BitcoinUtilities.decodeCompactBits(block.getDifficulty());
         BigInteger hash = block.getHash().toBigInteger();
 
         return hash.compareTo(embeddedTarget) <= 0;
@@ -188,7 +190,7 @@ public class ValidationService {
 
     public static void checkProofOfWork(BitcoinBlock block) throws VerificationException {
         if (!isProofOfWorkValid(block)) {
-            BigInteger embeddedTarget = BitcoinUtils.decodeCompactBits(block.getDifficulty());
+            BigInteger embeddedTarget = BitcoinUtilities.decodeCompactBits(block.getDifficulty());
 
             throw new VerificationException(
                     String.format(Locale.US, "Block hash is higher than target: %s vs %s",

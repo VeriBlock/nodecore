@@ -8,9 +8,9 @@
 
 package org.veriblock.sdk.blockchain;
 
+import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.params.NetworkParameters;
 import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.util.BitcoinUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -33,7 +33,7 @@ public strictfp class VeriBlockDifficultyCalculator {
         List<VeriBlockBlock> context
     ) {
         if (lastBlock.getHeight() < N || networkParameters.getPowNoRetargeting()) {
-            return BitcoinUtils.decodeCompactBits(lastBlock.getDifficulty());
+            return BitcoinUtilities.decodeCompactBits(lastBlock.getDifficulty());
         }
 
         BigDecimal sumTarget = BigDecimal.valueOf(0);
@@ -55,7 +55,7 @@ public strictfp class VeriBlockDifficultyCalculator {
 
             j++;
             t += solveTime * j;
-            sumTarget = sumTarget.add(new BigDecimal(BitcoinUtils.decodeCompactBits(context.get(i).getDifficulty())));
+            sumTarget = sumTarget.add(new BigDecimal(BitcoinUtilities.decodeCompactBits(context.get(i).getDifficulty())));
         }
 
         sumTarget = sumTarget.divide(BigDecimal.valueOf(N - 1), 8, RoundingMode.HALF_UP);

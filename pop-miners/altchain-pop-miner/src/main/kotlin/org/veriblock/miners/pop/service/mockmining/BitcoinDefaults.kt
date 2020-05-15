@@ -7,9 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service.mockmining
 
+import org.veriblock.core.params.BitcoinNetworkParameters
+import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.sdk.blockchain.BitcoinBlockchainBootstrapConfig
-import org.veriblock.sdk.conf.BitcoinNetworkParameters
-import org.veriblock.sdk.conf.BitcoinRegTestParameters
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.Utils
 import java.util.Arrays

@@ -22,7 +22,7 @@ import org.veriblock.sdk.models.Constants;
 import org.veriblock.sdk.models.MerklePath;
 import org.veriblock.sdk.models.Output;
 import org.veriblock.sdk.models.PublicationData;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VeriBlockMerklePath;
 import org.veriblock.sdk.models.VeriBlockPoPTransaction;
@@ -337,10 +337,7 @@ public class SerializeDeserializeService {
     }
 
     public static Sha256Hash getId(VeriBlockTransaction veriBlockTransaction) {
-        if (veriBlockTransaction.getId() == null) {
-            veriBlockTransaction.setId(Sha256Hash.of(serializeTransactionEffects(veriBlockTransaction)));
-        }
-        return veriBlockTransaction.getId();
+        return Sha256Hash.of(serializeTransactionEffects(veriBlockTransaction));
     }
 
     public static byte[] serialize(VeriBlockTransaction veriBlockTransaction) {

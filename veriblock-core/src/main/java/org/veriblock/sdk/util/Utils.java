@@ -8,8 +8,7 @@
 
 package org.veriblock.sdk.util;
 
-import org.veriblock.core.utilities.Preconditions;
-import org.veriblock.sdk.transactions.SharedConstants;
+import org.veriblock.core.SharedConstants;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -85,22 +84,6 @@ public class Utils {
         System.arraycopy(src, 0, dest, destPos, length);
 
         return dest;
-    }
-
-    public static String leftPad(char[] initial, char pad, int length) {
-        Preconditions.argument(initial.length <= length, "Invalid pad length");
-
-        char[] chars = new char[length];
-        int offset = length - initial.length;
-        for (int i = 0; i < length; i++) {
-            if (i >= offset) {
-                chars[i] = initial[i - offset];
-            } else {
-                chars[i] = pad;
-            }
-        }
-
-        return new String(chars);
     }
 
     public static String getFileNameWithoutExtension(File file) {

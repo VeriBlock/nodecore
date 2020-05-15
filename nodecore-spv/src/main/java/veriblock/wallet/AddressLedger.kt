@@ -7,9 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.wallet
 
+import org.veriblock.core.contracts.Balance
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import veriblock.model.Balance
 import java.util.LinkedHashMap
 import java.util.Objects
 import java.util.concurrent.locks.ReadWriteLock

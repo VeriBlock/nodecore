@@ -8,22 +8,18 @@
 package veriblock.service
 
 import com.google.common.collect.EvictingQueue
-import org.slf4j.LoggerFactory
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import spark.utils.CollectionUtils
 import java.math.BigInteger
 import java.sql.SQLException
 import java.util.ArrayList
-import java.util.Collections
-import java.util.Comparator
 import java.util.HashMap
 import java.util.HashSet
-import java.util.stream.Collectors
 import kotlin.math.pow
 
 private val logger = createLogger {}

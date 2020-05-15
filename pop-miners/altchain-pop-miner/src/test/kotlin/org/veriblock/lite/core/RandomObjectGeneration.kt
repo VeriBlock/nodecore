@@ -11,7 +11,6 @@ package org.veriblock.lite.core
 import org.apache.commons.lang3.RandomStringUtils
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.wallet.AddressKeyGenerator
-import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.sdk.models.Address
@@ -22,11 +21,12 @@ import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPoPTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.asCoin
 import java.security.MessageDigest
 import kotlin.random.Random
 
@@ -53,7 +53,7 @@ fun randomByteArray(size: Int): ByteArray {
 fun randomCoin(
     amount: Long = randomLong(1, 10_000_000_000)
 ): Coin {
-    return Coin.valueOf(amount)
+    return amount.asCoin()
 }
 
 fun randomAddress(): Address {

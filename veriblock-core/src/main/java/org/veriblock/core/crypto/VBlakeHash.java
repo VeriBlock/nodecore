@@ -6,9 +6,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.sdk.models;
+package org.veriblock.core.crypto;
 
-import org.veriblock.core.crypto.VBlake;
 import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.util.Utils;
 
