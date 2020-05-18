@@ -25,7 +25,6 @@ import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.sdk.models.VeriBlockSendCoins
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -224,8 +223,8 @@ class NodeCoreNetwork(
     fun getBalance(): Balance =
         gateway.getBalance(addressManager.defaultAddress.hash)
 
-    fun sendCoins(destinationAddress: String, sourceAddress: String, atomicAmount: Long): VeriBlockSendCoins =
-        gateway.sendCoins(destinationAddress, sourceAddress, atomicAmount)
+    fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> =
+        gateway.sendCoins(destinationAddress, atomicAmount)
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)

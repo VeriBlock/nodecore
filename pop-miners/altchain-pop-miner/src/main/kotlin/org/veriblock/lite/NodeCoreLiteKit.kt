@@ -58,7 +58,7 @@ class NodeCoreLiteKit(
         blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
-            NodeCoreGateway(context.networkParameters),
+            NodeCoreGateway(context.networkParameters, addressManager),
             blockChain,
             transactionMonitor,
             addressManager

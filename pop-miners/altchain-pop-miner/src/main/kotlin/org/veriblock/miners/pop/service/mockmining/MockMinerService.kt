@@ -1,6 +1,7 @@
 package org.veriblock.miners.pop.service.mockmining
 
 import kotlinx.coroutines.runBlocking
+import org.veriblock.core.NotImplementedException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultRegTestParameters
@@ -25,7 +26,6 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.sdk.models.VeriBlockSendCoins
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.sdk.util.KeyGenerator
@@ -204,10 +204,10 @@ class MockMinerService(
     }
 
     override fun resubmit(operation: ApmOperation) =
-        error("Operation not supported in the Mock Miner")
+        throw NotImplementedException("Operation not supported in the Mock Miner")
 
     override fun cancelOperation(id: String) =
-        error("Operation not supported in the Mock Miner")
+        throw NotImplementedException("Operation not supported in the Mock Miner")
 
     override fun getOperations(): List<ApmOperation> =
         operations.values.sortedBy { it.createdAt }
@@ -221,6 +221,6 @@ class MockMinerService(
     override fun getBalance(): Balance? =
         null
 
-    override fun sendCoins(destinationAddress: String, sourceAddress: String, atomicAmount: Long): VeriBlockSendCoins? =
-        null
+    override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> =
+        throw NotImplementedException("Operation not supported in the Mock Miner")
 }

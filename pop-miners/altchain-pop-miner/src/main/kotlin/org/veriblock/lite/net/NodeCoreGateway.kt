@@ -27,7 +27,6 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.sdk.models.VeriBlockSendCoins
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
@@ -35,7 +34,8 @@ import kotlin.math.abs
 private val logger = createLogger {}
 
 class NodeCoreGateway(
-    private val params: NetworkParameters
+    private val params: NetworkParameters,
+    private val addressManager: AddressManager
 ) {
 
     private val gatewayStrategy: GatewayStrategy = createFullNode(params)
@@ -113,7 +113,8 @@ class NodeCoreGateway(
         }
     }
 
-    fun sendCoins(destinationAddress: String, sourceAddress: String, atomicAmount: Long): VeriBlockSendCoins {
+    fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> {
+        val sourceAddress = addressManager.defaultAddress.hash
         logger.debug { "Requested to send $atomicAmount coins to $destinationAddress from $sourceAddress" }
         val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
         if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
@@ -127,11 +128,9 @@ class NodeCoreGateway(
 
             val reply = gatewayStrategy.sendCoins(request.build())
             if (reply.success) {
-                return VeriBlockSendCoins(
-                    txIds = (0 until reply.txIdsCount).mapNotNull {
-                        ByteStringUtility.byteStringToHex(reply.getTxIds(it))
-                    }.toList()
-                )
+                return (0 until reply.txIdsCount).mapNotNull {
+                    ByteStringUtility.byteStringToHex(reply.getTxIds(it))
+                }.toList()
             } else {
                 for (error in reply.resultsList) {
                     logger.error { "NodeCore error: ${error.message} | ${error.details}" }
