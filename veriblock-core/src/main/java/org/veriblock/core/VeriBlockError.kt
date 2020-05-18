@@ -53,10 +53,6 @@ class TransactionSubmissionException(message: String) : VeriBlockException(VeriB
 class PopException(message: String) : VeriBlockException(VeriBlockError.POP, message)
 class PoolException(message: String) : VeriBlockException(VeriBlockError.POOL, message)
 
-class NotFoundException(message: String) : VeriBlockException(VeriBlockError.NOT_FOUND, message)
-class InternalErrorException(message: String) : VeriBlockException(VeriBlockError.INTERNAL_ERROR, message)
-class NotImplementedException(message: String) : VeriBlockException(VeriBlockError.NOT_IMPLEMENTED, message)
-
 class CommunicationException(message: String) : VeriBlockException(VeriBlockError.COMMUNICATION, message)
 class ProtocolException(message: String) : VeriBlockException(VeriBlockError.PROTOCOL, message)
 class MineException(message: String) : VeriBlockException(VeriBlockError.MINE, message)
@@ -70,3 +66,7 @@ class ExportException(message: String) : VeriBlockException(VeriBlockError.EXPOR
 class ImportException(message: String) : VeriBlockException(VeriBlockError.IMPORT, message)
 class InputException(message: String) : VeriBlockException(VeriBlockError.INPUT, message)
 class ConfigurationException(message: String) : VeriBlockException(VeriBlockError.CONFIGURATION, message)
+
+class NotFoundException(message: String) : VeriBlockException(VeriBlockError.NOT_FOUND, message)
+class InternalErrorException(message: String) : VeriBlockException(VeriBlockError.INTERNAL_ERROR, message)
+class NotImplementedException(message: String) : VeriBlockException(VeriBlockError.NOT_IMPLEMENTED, message)
