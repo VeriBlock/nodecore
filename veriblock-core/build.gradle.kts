@@ -26,7 +26,7 @@ dependencies {
     api("org.bouncycastle:bcprov-jdk15on:1.60")
 
     // Persistence (TODO: remove me)
-    api("org.xerial:sqlite-jdbc:3.23.1")
+    api("org.xerial:sqlite-jdbc:$sqliteVersion")
 
     // Logging
     api("ch.qos.logback:logback-classic:1.2.3")

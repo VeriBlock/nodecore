@@ -52,7 +52,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:0.23.1")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
     implementation("com.zaxxer:HikariCP:3.3.1")
-    implementation("org.xerial:sqlite-jdbc:3.23.1")
+    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
 
     // Dependency Injection
     implementation("org.koin:koin-core:$koinVersion")

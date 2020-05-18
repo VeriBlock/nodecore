@@ -31,7 +31,7 @@ dependencies {
     runtime("org.codehaus.groovy:groovy:2.4.12")
 
     compile("ch.qos.logback:logback-classic:1.2.3")
-    compile("org.xerial:sqlite-jdbc:3.28.0")
+    compile("org.xerial:sqlite-jdbc:$sqliteVersion")
     compile("com.sparkjava:spark-core:2.8.0")
 
     compile("com.google.protobuf:protobuf-java:3.6.1")
