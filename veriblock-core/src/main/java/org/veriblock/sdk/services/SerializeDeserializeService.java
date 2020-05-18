@@ -11,6 +11,7 @@ package org.veriblock.sdk.services;
 import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.core.bitcoinj.Base59;
 import org.veriblock.core.crypto.Sha256Hash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.core.utilities.Preconditions;
 import org.veriblock.sdk.models.Address;
 import org.veriblock.sdk.models.AltPublication;
@@ -22,7 +23,6 @@ import org.veriblock.sdk.models.Constants;
 import org.veriblock.sdk.models.MerklePath;
 import org.veriblock.sdk.models.Output;
 import org.veriblock.sdk.models.PublicationData;
-import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.models.VeriBlockMerklePath;
 import org.veriblock.sdk.models.VeriBlockPopTransaction;
@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SerializeDeserializeService {
 
@@ -92,55 +90,6 @@ public class SerializeDeserializeService {
                     5;
 
 
-
-
-    public static VeriBlockPopTransaction parseVeriBlockPoPTx(ByteBuffer buffer) {
-        byte[] rawTx = StreamUtils.getVariableLengthValue(buffer, 0, MAX_RAWTX_SIZE_VeriBlockPoPTransaction);
-        byte[] signature = StreamUtils.getSingleByteLengthValue(buffer, 0, Constants.MAX_SIGNATURE_SIZE);
-        byte[] publicKey = StreamUtils.getSingleByteLengthValue(buffer, Constants.PUBLIC_KEY_SIZE, Constants.PUBLIC_KEY_SIZE);
-
-        ByteBuffer txBuffer = ByteBuffer.wrap(rawTx);
-
-        Byte networkByte;
-        byte networkOrType = txBuffer.get();
-        if (networkOrType == BlockType.VERI_BLOCK_POP_TX.getId()) {
-            networkByte = null;
-        } else {
-            networkByte = networkOrType;
-            txBuffer.get();
-        }
-
-        Address address = parseAddress(txBuffer);
-        VeriBlockBlock publishedBlock = parseVeriBlockBlock(txBuffer);
-        BitcoinTransaction bitcoinTransaction = parseBitcoinTransaction(txBuffer);
-        MerklePath merklePath = parseMerklePath(txBuffer, Sha256Hash.twiceOf(bitcoinTransaction.getRawBytes()));
-        BitcoinBlock blockOfProof = parseBitcoinBlockWithLength(txBuffer);
-
-        int contextCount = Utils.toInt(StreamUtils.getSingleByteLengthValue(txBuffer, 0, Constants.MAX_CONTEXT_COUNT));
-        if (contextCount < 0 || contextCount > Constants.MAX_CONTEXT_COUNT) {
-            throw new IllegalArgumentException("Unexpected context count: " + contextCount
-                    + " (expected a value between 0 and " + Constants.MAX_CONTEXT_COUNT + ")");
-        }
-
-        List<BitcoinBlock> contextBlocks = new ArrayList<>(contextCount);
-        for (int i = 0; i < contextCount; i++) {
-            contextBlocks.add(parseBitcoinBlockWithLength(txBuffer));
-        }
-
-        return new VeriBlockPopTransaction(address, publishedBlock, bitcoinTransaction, merklePath,
-                blockOfProof, contextBlocks, signature, publicKey, networkByte);
-    }
-
-    public static byte[] serialize(VeriBlockPopTransaction veriBlockPoPTransaction) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serialize(veriBlockPoPTransaction, stream);
-
-            return stream.toByteArray();
-        } catch (IOException ignore) {
-            // Should not happen
-        }
-        return new byte[] {};
-    }
 
     public static void serialize(VeriBlockPopTransaction veriBlockPoPTransaction, OutputStream stream) throws IOException {
         byte[] rawTransaction = serializeTransactionEffects(veriBlockPoPTransaction);
@@ -202,32 +151,6 @@ public class SerializeDeserializeService {
 
 // ----  - - - - -- -  VeriBlockPublication - - - -- - - - --
 
-    public static VeriBlockPublication parseVeriBlockPublication(ByteBuffer buffer) {
-
-        VeriBlockPopTransaction transaction = parseVeriBlockPoPTx(buffer);
-        VeriBlockMerklePath merklePath = parseVeriBlockMerklePath(buffer);
-        VeriBlockBlock containingBlock = parseVeriBlockBlock(buffer);
-
-        int contextCount = Utils.toInt(StreamUtils.getSingleByteLengthValue(buffer, 0, 4));
-
-        if (contextCount < 0 || contextCount > Constants.MAX_CONTEXT_COUNT) {
-            throw new IllegalArgumentException("Unexpected context count: " + contextCount
-                    + " (expected a value between 0 and " + Constants.MAX_CONTEXT_COUNT + ")");
-        }
-
-        List<VeriBlockBlock> contextBlocks = new ArrayList<>(contextCount);
-        for (int i = 0; i < contextCount; i++) {
-            contextBlocks.add(parseVeriBlockBlock(buffer));
-        }
-
-        return new VeriBlockPublication(transaction, merklePath, containingBlock, contextBlocks);
-    }
-
-    public static VeriBlockPublication parseVeriBlockPublication(byte[] raw)
-    {
-        ByteBuffer buffer = ByteBuffer.wrap(raw);
-        return parseVeriBlockPublication(buffer);
-    }
 
     public static byte[] serialize(VeriBlockPublication veriBlockPublication) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
@@ -253,47 +176,6 @@ public class SerializeDeserializeService {
 
 
 //VeriBlockTransaction
-
-    public static VeriBlockTransaction parseVeriBlockTransaction(ByteBuffer buffer) {
-        byte[] rawTx = StreamUtils.getVariableLengthValue(buffer, 0, MAX_RAWTX_SIZE_VeriBlockTransaction);
-        byte[] signature = StreamUtils.getSingleByteLengthValue(buffer, 0, Constants.MAX_SIGNATURE_SIZE);
-        byte[] publicKey = StreamUtils.getSingleByteLengthValue(buffer, Constants.PUBLIC_KEY_SIZE, Constants.PUBLIC_KEY_SIZE);
-
-        ByteBuffer txBuffer = ByteBuffer.wrap(rawTx);
-
-        Byte networkByte;
-        byte typeId;
-        byte networkOrType = txBuffer.get();
-        if (networkOrType == BlockType.VERI_BLOCK_TX.getId()) {
-            networkByte = null;
-            typeId = networkOrType;
-        } else {
-            networkByte = networkOrType;
-            typeId = txBuffer.get();
-        }
-
-        Address sourceAddress = SerializeDeserializeService.parseAddress(txBuffer);
-        Coin sourceAmount = Coin.parse(txBuffer);
-
-        int outputSize = txBuffer.get();
-
-        if (outputSize < 0 || outputSize > Constants.MAX_OUTPUTS_COUNT) {
-            throw new IllegalArgumentException("Unexpected outputs count: " + outputSize
-                    + " (expected a value between 0 and " + Constants.MAX_OUTPUTS_COUNT + ")");
-        }
-
-        List<Output> outputs = new ArrayList<>(outputSize);
-        for (int i = 0; i < outputSize; i++) {
-            outputs.add(SerializeDeserializeService.parseOutput(txBuffer));
-        }
-
-        long signatureIndex = Utils.toLong(StreamUtils.getSingleByteLengthValue(txBuffer, 0, 8));
-        byte[] publicationDataBytes = StreamUtils.getVariableLengthValue(txBuffer, 0, MAX_SIZE_PUBLICATION_DATA);
-        PublicationData publicationData = SerializeDeserializeService.parsePublicationData(publicationDataBytes);
-
-        return new VeriBlockTransaction(typeId, sourceAddress, sourceAmount, outputs,
-                signatureIndex, publicationData, signature, publicKey, networkByte);
-    }
 
     public static void serialize(VeriBlockTransaction veriBlockTransaction, OutputStream stream) throws IOException {
         byte[] rawTransaction = serializeTransactionEffects(veriBlockTransaction);
@@ -338,17 +220,6 @@ public class SerializeDeserializeService {
 
     public static Sha256Hash getId(VeriBlockTransaction veriBlockTransaction) {
         return Sha256Hash.of(serializeTransactionEffects(veriBlockTransaction));
-    }
-
-    public static byte[] serialize(VeriBlockTransaction veriBlockTransaction) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serialize(veriBlockTransaction, stream);
-            return stream.toByteArray();
-        } catch (IOException ignore) {
-            // Should not happen
-            //TODO add logs
-        }
-        return new byte[] {};
     }
 
 // VeriBlockBlock
@@ -422,47 +293,6 @@ public class SerializeDeserializeService {
 
 //MerklePath
 
-    // Unfortunately, the serialized MerklePath coming from NodeCore does not contain
-    // the subject data, so it must be supplied.
-    public static MerklePath parseMerklePath(ByteBuffer buffer, Sha256Hash subject) {
-        byte[] merkleBytes = StreamUtils.getVariableLengthValue(buffer, 0, Constants.MAX_MERKLE_BYTES);
-        ByteBuffer localBuffer = ByteBuffer.wrap(merkleBytes);
-
-        int index = StreamUtils.getSingleIntValue(localBuffer);
-        int numLayers = StreamUtils.getSingleIntValue(localBuffer);
-        int sizeOfSizeBottomData = StreamUtils.getSingleIntValue(localBuffer);
-        byte[] sizeBottomData = new byte[sizeOfSizeBottomData];
-        localBuffer.get(sizeBottomData);
-
-        if (Utils.toInt(sizeBottomData) != Sha256Hash.BITCOIN_LENGTH) {
-            throw new IllegalArgumentException("Unexpected sizeBottomData: " + Utils.toInt(sizeBottomData)
-                    + " (expected value: " + Sha256Hash.BITCOIN_LENGTH + ")");
-        }
-
-        if (numLayers < 0 || numLayers > Constants.MAX_LAYER_COUNT_MERKLE) {
-            throw new IllegalArgumentException("Unexpected layer count: " + numLayers
-                    + " (expected a value between 0 and " + Constants.MAX_LAYER_COUNT_MERKLE + ")");
-        }
-
-        List<Sha256Hash> layers = new ArrayList<>(numLayers);
-        for (int i = 0; i < numLayers; i++) {
-            layers.add(Sha256Hash.wrap(StreamUtils.getSingleByteLengthValue(localBuffer, Sha256Hash.BITCOIN_LENGTH, Sha256Hash.BITCOIN_LENGTH)));
-        }
-
-        return new MerklePath(index, subject, layers);
-    }
-
-
-    public static byte[] serialize(MerklePath merklePath) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serialize(merklePath, stream);
-            return stream.toByteArray();
-        } catch (IOException ignore) {
-            // Should not happen
-        }
-        return new byte[] {};
-    }
-
     public static void serialize(MerklePath merklePath, OutputStream stream) throws IOException {
         StreamUtils.writeVariableLengthValueToStream(stream, serializeComponents(merklePath));
     }
@@ -501,18 +331,6 @@ public class SerializeDeserializeService {
 
 // VeriBlockMerklePath
 
-    public static byte[] serialize(VeriBlockMerklePath merklePath) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serialize(merklePath, stream);
-
-            return stream.toByteArray();
-        } catch (IOException ignore) {
-            // Should not happen
-        }
-
-        return new byte[] {};
-    }
-
     public static void serialize(VeriBlockMerklePath blockMerklePath, OutputStream stream) throws IOException {
     	// Tree index
         StreamUtils.writeSingleIntLengthValueToStream(stream, blockMerklePath.getTreeIndex());
@@ -532,25 +350,6 @@ public class SerializeDeserializeService {
             byte[] layer = hash.getBytes();
             StreamUtils.writeSingleByteLengthValueToStream(stream, layer);
         }
-    }
-
-    public static VeriBlockMerklePath parseVeriBlockMerklePath(ByteBuffer buffer) {
-        int treeIndex = StreamUtils.getSingleIntValue(buffer);
-        int index = StreamUtils.getSingleIntValue(buffer);
-        Sha256Hash subject = Sha256Hash.wrap(StreamUtils.getSingleByteLengthValue(buffer, Sha256Hash.BITCOIN_LENGTH, Sha256Hash.BITCOIN_LENGTH));
-        int numLayers = StreamUtils.getSingleIntValue(buffer);
-
-        if (numLayers < 0 || numLayers > Constants.MAX_LAYER_COUNT_MERKLE) {
-            throw new IllegalArgumentException("Unexpected layer count: " + numLayers
-                    + " (expected a value between 0 and " + Constants.MAX_LAYER_COUNT_MERKLE + ")");
-        }
-
-        List<Sha256Hash> layers = new ArrayList<>(numLayers);
-        for (int i = 0; i < numLayers; i++) {
-            layers.add(Sha256Hash.wrap(StreamUtils.getSingleByteLengthValue(buffer, Sha256Hash.BITCOIN_LENGTH, Sha256Hash.BITCOIN_LENGTH)));
-        }
-
-        return new VeriBlockMerklePath(treeIndex, index, subject, layers);
     }
 
 // BitcoinBlock
@@ -637,16 +436,6 @@ public class SerializeDeserializeService {
         StreamUtils.writeSingleByteLengthValueToStream(stream, bytes);
     }
 
-    public static Address parseAddress(ByteBuffer buffer) {
-        int addressType = buffer.get();
-        byte[] addressBytes = StreamUtils.getSingleByteLengthValue(buffer, 0, Constants.SIZE_ADDRESS);
-        if (addressType == 1) {
-            return new Address(Base58.encode(addressBytes));
-        } else {
-            return new Address(Base59.encode(addressBytes));
-        }
-    }
-
 // Coin
     public static byte[] serialize(Coin coin) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
@@ -663,26 +452,9 @@ public class SerializeDeserializeService {
     }
 
 // Output
-    public static byte[] serialize(Output output) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serialize(output, stream);
-            return stream.toByteArray();
-        } catch (IOException ignore) {
-            // Should not happen
-        }
-        return new byte[] {};
-    }
-
     public static void serialize(Output output, OutputStream stream) throws IOException {
         serialize(output.getAddress(), stream);
         serialize(output.getAmount(), stream);
-    }
-
-    public static Output parseOutput(ByteBuffer txBuffer) {
-        Address address = parseAddress(txBuffer);
-        Coin amount = Coin.parse(txBuffer);
-
-        return new Output(address, amount);
     }
 
 // AltPublication
@@ -707,28 +479,6 @@ public class SerializeDeserializeService {
         for (VeriBlockBlock block : altPublication.getContext()) {
             serialize(block, stream);
         }
-    }
-
-    public static AltPublication parseAltPublication(byte[] raw) {
-        ByteBuffer buffer = ByteBuffer.wrap(raw);
-
-        VeriBlockTransaction transaction = parseVeriBlockTransaction(buffer);
-        VeriBlockMerklePath merklePath = parseVeriBlockMerklePath(buffer);
-        VeriBlockBlock containingBlock = parseVeriBlockBlock(buffer);
-
-        int contextCount = Utils.toInt(StreamUtils.getSingleByteLengthValue(buffer, 0, 4));
-
-        if (contextCount < 0 || contextCount > Constants.MAX_CONTEXT_COUNT_ALT_PUBLICATION) {
-            throw new IllegalArgumentException("Unexpected context count: " + contextCount
-                    + " (expected a value between 0 and " + Constants.MAX_CONTEXT_COUNT_ALT_PUBLICATION + ")");
-        }
-
-        List<VeriBlockBlock> contextBlocks = new ArrayList<>(contextCount);
-        for (int i = 0; i < contextCount; i++) {
-            contextBlocks.add(SerializeDeserializeService.parseVeriBlockBlock(buffer));
-        }
-
-        return new AltPublication(transaction, merklePath, containingBlock, contextBlocks);
     }
 
 
@@ -766,22 +516,8 @@ public class SerializeDeserializeService {
     }
 
 // BitcoinTransaction
-    public static byte[] serialize(BitcoinTransaction bitcoinTransaction) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            serialize(bitcoinTransaction, stream);
-            return stream.toByteArray();
-        } catch (IOException ignore) {
-            // Should not happen
-        }
-        return new byte[] {};
-    }
 
     public static void serialize(BitcoinTransaction bitcoinTransaction, OutputStream stream) throws IOException {
         StreamUtils.writeVariableLengthValueToStream(stream, bitcoinTransaction.getRawBytes());
-    }
-
-    public static BitcoinTransaction parseBitcoinTransaction(ByteBuffer buffer) {
-        byte[] raw = StreamUtils.getVariableLengthValue(buffer, 0, Constants.MAX_RAWTX_SIZE);
-        return new BitcoinTransaction(raw);
     }
 }

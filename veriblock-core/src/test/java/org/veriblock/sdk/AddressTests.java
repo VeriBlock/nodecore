@@ -11,9 +11,7 @@ package org.veriblock.sdk;
 import org.junit.Assert;
 import org.junit.Test;
 import org.veriblock.sdk.models.Address;
-import org.veriblock.sdk.services.SerializeDeserializeService;
 
-import java.nio.ByteBuffer;
 import java.util.Base64;
 
 public class AddressTests {
@@ -49,30 +47,6 @@ public class AddressTests {
 
         Address test = new Address("V23Cuyc34u5rdk9psJ86aFcwhB1md0");
         Assert.assertFalse(test.isDerivedFromPublicKey(publicKey));
-    }
-
-    @Test
-    public void parse_WhenStandard() {
-        final String address = "VFFDWUMLJwLRuNzH4NX8Rm32E59n6d";
-
-        Address input = new Address(address);
-        byte[] serialized = SerializeDeserializeService.serialize(input);
-        Address deserialized = SerializeDeserializeService.parseAddress(ByteBuffer.wrap(serialized));
-
-        Assert.assertEquals(input, deserialized);
-        Assert.assertFalse(deserialized.isMultisig());
-    }
-
-    @Test
-    public void parse_WhenMultisig() {
-        final String address = "V23Cuyc34u5rdk9psJ86aFcwhB1md0";
-
-        Address input = new Address(address);
-        byte[] serialized = SerializeDeserializeService.serialize(input);
-        Address deserialized = SerializeDeserializeService.parseAddress(ByteBuffer.wrap(serialized));
-
-        Assert.assertEquals(input, deserialized);
-        Assert.assertTrue(deserialized.isMultisig());
     }
     
     @Test
