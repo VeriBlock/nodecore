@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.service
 
 import org.veriblock.lite.core.Balance
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.shell.core.Result
+import org.veriblock.sdk.models.VeriBlockSendCoins
 
 class MinerConfig(
     val feePerByte: Long = 1_000,
@@ -30,6 +30,8 @@ interface MinerService {
     fun getAddress(): String
 
     fun getBalance(): Balance?
+
+    fun sendCoins(destinationAddress: String, sourceAddress: String, atomicAmount: Long): VeriBlockSendCoins?
 
     fun mine(chainId: String, block: Int?): String
 

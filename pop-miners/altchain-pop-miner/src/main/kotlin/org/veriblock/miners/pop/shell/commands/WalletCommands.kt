@@ -8,10 +8,14 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import com.google.gson.GsonBuilder
+import org.veriblock.core.utilities.Utility
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.shell.CommandFactory
+import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
@@ -20,6 +24,8 @@ fun CommandFactory.walletCommands(
     context: Context,
     miner: MinerService
 ) {
+    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
+
     command(
         name = "Get Loaded Address",
         form = "getaddress",
@@ -45,5 +51,27 @@ fun CommandFactory.walletCommands(
         printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} ${context.vbkTokenName}")
 
         success()
+    }
+
+    command(
+        name = "Withdraw VBKs to Address",
+        form = "withdrawvbktoaddress",
+        description = "Sends a VBK amount to a given address",
+        parameters = listOf(
+            CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "destinationAddress", mapper = CommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true),
+            CommandParameter(name = "sourceAddress", mapper = CommandParameterMappers.STANDARD_ADDRESS, required = false)
+        )
+    ) {
+        val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
+        val destinationAddress = getParameter<String>("destinationAddress")
+        val sourceAddress = getParameter<String>("sourceAddress")
+        val result = miner.sendCoins(sourceAddress, destinationAddress, atomicAmount)
+        result?.let {
+            printInfo(prettyPrintGson.toJson(result))
+            success()
+        } ?: failure {
+            addMessage("v404", "Unable to send coins", "Connection to NodeCore is not healthy")
+        }
     }
 }

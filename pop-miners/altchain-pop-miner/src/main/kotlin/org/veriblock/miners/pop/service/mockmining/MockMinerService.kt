@@ -25,6 +25,7 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.VeriBlockSendCoins
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.sdk.util.KeyGenerator
@@ -218,5 +219,8 @@ class MockMinerService(
         "NO ADDRESS"
 
     override fun getBalance(): Balance? =
+        null
+
+    override fun sendCoins(destinationAddress: String, sourceAddress: String, atomicAmount: Long): VeriBlockSendCoins? =
         null
 }

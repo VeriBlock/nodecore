@@ -15,6 +15,7 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
@@ -26,6 +27,7 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.VeriBlockSendCoins
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
@@ -108,6 +110,37 @@ class NodeCoreGateway(
             )
         } else {
             error("Unable to retrieve balance from address $address")
+        }
+    }
+
+    fun sendCoins(destinationAddress: String, sourceAddress: String, atomicAmount: Long): VeriBlockSendCoins {
+        logger.debug { "Requested to send $atomicAmount coins to $destinationAddress from $sourceAddress" }
+        val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+        if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
+            request.addAmounts(VeriBlockMessages.Output.newBuilder()
+                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
+                .setAmount(atomicAmount))
+
+            if (sourceAddress != null && AddressUtility.isValidStandardAddress(sourceAddress)) {
+                request.sourceAddress = ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress)
+            }
+
+            val reply = gatewayStrategy.sendCoins(request.build())
+            if (reply.success) {
+                return VeriBlockSendCoins(
+                    txIds = (0 until reply.txIdsCount).mapNotNull {
+                        ByteStringUtility.byteStringToHex(reply.getTxIds(it))
+                    }.toList()
+                )
+            } else {
+                for (error in reply.resultsList) {
+                    logger.error { "NodeCore error: ${error.message} | ${error.details}" }
+                }
+                error("Unable to send $atomicAmount to $destinationAddress from $sourceAddress")
+            }
+        } else {
+            // Should never happen; address validity is checked by argument parser
+            error("$destinationAddress is not a valid address!")
         }
     }
 

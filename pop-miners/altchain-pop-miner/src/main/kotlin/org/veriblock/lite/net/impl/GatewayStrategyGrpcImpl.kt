@@ -25,6 +25,12 @@ class GatewayStrategyGrpcImpl(
             .getBalance(getBalanceRequest)
     }
 
+    override fun sendCoins(request: VeriBlockMessages.SendCoinsRequest): VeriBlockMessages.SendCoinsReply {
+        return blockingStub
+            .withDeadlineAfter(120, TimeUnit.SECONDS)
+            .sendCoins(request)
+    }
+
     override fun getVeriBlockPublications(getVeriBlockPublicationsRequest: VeriBlockMessages.GetVeriBlockPublicationsRequest): VeriBlockMessages.GetVeriBlockPublicationsReply {
         return blockingStub
             .withDeadlineAfter(300, TimeUnit.SECONDS)
