@@ -10,10 +10,10 @@ package org.veriblock.miners.pop.service.mockmining
 import org.veriblock.core.params.BitcoinNetworkParameters
 import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 
 object BitcoinDefaults {
-    private val regtestGenesis = Utils.decodeHex(
+    private val regtestGenesis = Utility.hexToBytes(
         "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f2002000000"
     )
     val genesis = SerializeDeserializeService.parseBitcoinBlock(regtestGenesis)

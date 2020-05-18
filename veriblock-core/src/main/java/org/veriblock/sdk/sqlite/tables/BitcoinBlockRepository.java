@@ -12,7 +12,7 @@ import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -32,15 +32,15 @@ public class BitcoinBlockRepository extends GenericBlockRepository<StoredBitcoin
 
         public void toStmt(StoredBitcoinBlock block, PreparedStatement stmt) throws SQLException {
             int i = 0;
-            stmt.setObject(++i, Utils.encodeHex(block.getHash().getBytes()));
-            stmt.setObject(++i, Utils.encodeHex(block.getBlock().getPreviousBlock().getBytes()));
+            stmt.setObject(++i, Utility.bytesToHex(block.getHash().getBytes()));
+            stmt.setObject(++i, Utility.bytesToHex(block.getBlock().getPreviousBlock().getBytes()));
             stmt.setObject(++i, block.getHeight());
             stmt.setObject(++i, block.getWork().toString());
-            stmt.setObject(++i, Utils.encodeHex(SerializeDeserializeService.serialize(block.getBlock())));
+            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.serialize(block.getBlock())));
         }
 
         public StoredBitcoinBlock fromResult(ResultSet result) throws SQLException {
-            byte[] data = Utils.decodeHex(result.getString("data"));
+            byte[] data = Utility.hexToBytes(result.getString("data"));
             BigInteger work = new BigInteger(result.getString("work"));
             int height = result.getInt("height");
 
@@ -73,7 +73,7 @@ public class BitcoinBlockRepository extends GenericBlockRepository<StoredBitcoin
         }
 
         public String idToString(Sha256Hash hash) {
-            return Utils.encodeHex(hash.getBytes());
+            return Utility.bytesToHex(hash.getBytes());
         }
     };
 

@@ -9,7 +9,7 @@
 package org.veriblock.core.crypto;
 
 import org.veriblock.core.utilities.Preconditions;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -27,7 +27,7 @@ public class VBlakeHash {
 
     private VBlakeHash(byte[] bytes, int length) {
         Preconditions.notNull(bytes, "VBlake hash cannot be null");
-        Preconditions.argument(bytes.length == length, () -> "Invalid VBlake hash: " + Utils.encodeHex(bytes));
+        Preconditions.argument(bytes.length == length, () -> "Invalid VBlake hash: " + Utility.bytesToHex(bytes));
 
         this.length = length;
         this.bytes = bytes;
@@ -56,7 +56,7 @@ public class VBlakeHash {
     }
 
     public static VBlakeHash wrap(String hexHash) {
-        return new VBlakeHash(Utils.decodeHex(hexHash), VERIBLOCK_LENGTH);
+        return new VBlakeHash(Utility.hexToBytes(hexHash), VERIBLOCK_LENGTH);
     }
 
     public static VBlakeHash wrap(byte[] bytes, int length) {
@@ -64,7 +64,7 @@ public class VBlakeHash {
     }
 
     public static VBlakeHash wrap(String hexHash, int length) {
-        return new VBlakeHash(Utils.decodeHex(hexHash), length);
+        return new VBlakeHash(Utility.hexToBytes(hexHash), length);
     }
 
     public static VBlakeHash extract(ByteBuffer buffer, int length) {
@@ -103,12 +103,12 @@ public class VBlakeHash {
     @Override
     public int hashCode() {
         int length = bytes.length;
-        return Utils.fromBytes(bytes[length - 4], bytes[length - 3], bytes[length - 2], bytes[length - 1]);
+        return Utility.fromBytes(bytes[length - 4], bytes[length - 3], bytes[length - 2], bytes[length - 1]);
     }
 
     @Override
     public String toString() {
-        return Utils.encodeHex(bytes);
+        return Utility.bytesToHex(bytes);
     }
 
     /**

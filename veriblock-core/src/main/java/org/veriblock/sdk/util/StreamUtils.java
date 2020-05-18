@@ -8,19 +8,21 @@
 
 package org.veriblock.sdk.util;
 
+import org.veriblock.core.utilities.Utility;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public class StreamUtils {
     public static void writeSingleByteLengthValueToStream(OutputStream stream, int value) throws IOException {
-        byte[] trimmed = Utils.trimmedByteArrayFromInteger(value);
+        byte[] trimmed = Utility.trimmedByteArrayFromInteger(value);
         stream.write(trimmed.length);
         stream.write(trimmed);
     }
 
     public static void writeSingleByteLengthValueToStream(OutputStream stream, long value) throws IOException {
-        byte[] trimmed = Utils.trimmedByteArrayFromLong(value);
+        byte[] trimmed = Utility.trimmedByteArrayFromLong(value);
         stream.write(trimmed.length);
         stream.write(trimmed);
     }
@@ -31,12 +33,12 @@ public class StreamUtils {
     }
     
     public static void writeSingleIntLengthValueToStream(OutputStream stream, int value) throws IOException {
-    	byte[] valueBytes = Utils.toByteArray(value);
+    	byte[] valueBytes = Utility.toByteArray(value);
         writeSingleByteLengthValueToStream(stream, valueBytes);
     }
     
     public static void writeVariableLengthValueToStream(OutputStream stream, byte[] value) throws IOException {
-        byte[] dataSize = Utils.trimmedByteArrayFromInteger(value.length);
+        byte[] dataSize = Utility.trimmedByteArrayFromInteger(value.length);
         stream.write((byte)dataSize.length);
         stream.write(dataSize);
         stream.write(value);
@@ -51,14 +53,6 @@ public class StreamUtils {
         buffer.get(value);
 
         return value;
-    }
-    
-    public static byte[] getSingleByteLengthValue(ByteBuffer buffer) {
-        return getSingleByteLengthValue(buffer, 0, 255);
-    }
-    
-    public static int getSingleIntValue(ByteBuffer buffer) {
-        return Utils.toInt(getSingleByteLengthValue(buffer, 4, 4));
     }
 
     public static byte[] getVariableLengthValue(ByteBuffer buffer, int minLength, int maxLength) {
@@ -75,10 +69,6 @@ public class StreamUtils {
         buffer.get(value);
 
         return value;
-    }
-    
-    public static byte[] getVariableLengthValue(ByteBuffer buffer) {  
-        return getVariableLengthValue(buffer, 0, Integer.MAX_VALUE);
     }
     
     private static void checkLength(int length, int minLength, int maxLength)

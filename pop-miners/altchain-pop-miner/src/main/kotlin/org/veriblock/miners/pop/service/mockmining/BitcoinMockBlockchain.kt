@@ -14,7 +14,7 @@ import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.BitcoinNetworkParameters
 import org.veriblock.sdk.services.ValidationService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.sql.SQLException
 import java.util.ArrayList
 import java.util.Collections
@@ -54,7 +54,7 @@ class BitcoinMockBlockchain(
     fun mine(blockData: BitcoinBlockData): BitcoinBlock {
         val chainHead = storedChainHead
         val timestamp = Math.max(
-            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utils.getCurrentTimestamp()
+            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utility.getCurrentTimestamp()
         )
         val difficulty = getNextDifficulty(timestamp, chainHead).asLong.toInt()
         for (nonce in 0 until Int.MAX_VALUE) {

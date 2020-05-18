@@ -9,12 +9,11 @@ package org.veriblock.sdk
 
 import org.junit.Assert
 import org.junit.Test
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Coin.Companion.parse
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.StreamUtils
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -31,7 +30,7 @@ class CoinTests {
     @Test
     @Throws(IOException::class)
     fun parseWhenInvalid() {
-        val array = Utils.fillBytes(0xFF.toByte(), 9)
+        val array = Utility.fillBytes(0xFF.toByte(), 9)
         try {
             ByteArrayOutputStream().use { stream ->
                 StreamUtils.writeSingleByteLengthValueToStream(stream, array)

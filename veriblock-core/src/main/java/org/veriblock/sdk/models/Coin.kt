@@ -8,7 +8,7 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.sdk.util.StreamUtils
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.nio.ByteBuffer
 import kotlin.math.roundToLong
 
@@ -60,7 +60,7 @@ class Coin(
 
         @JvmStatic
         fun parse(txBuffer: ByteBuffer?): Coin {
-            val atomicUnits = Utils.toLong(StreamUtils.getSingleByteLengthValue(txBuffer, 0, 8))
+            val atomicUnits = Utility.toLong(StreamUtils.getSingleByteLengthValue(txBuffer, 0, 8))
             return atomicUnits.asCoin()
         }
     }

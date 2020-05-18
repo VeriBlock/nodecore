@@ -8,11 +8,10 @@
 
 package org.veriblock.sdk.services;
 
-import org.veriblock.core.bitcoinj.Base58;
-import org.veriblock.core.bitcoinj.Base59;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.core.utilities.Preconditions;
+import org.veriblock.core.utilities.Utility;
 import org.veriblock.sdk.models.Address;
 import org.veriblock.sdk.models.AltPublication;
 import org.veriblock.sdk.models.BitcoinBlock;
@@ -28,8 +27,8 @@ import org.veriblock.sdk.models.VeriBlockMerklePath;
 import org.veriblock.sdk.models.VeriBlockPopTransaction;
 import org.veriblock.sdk.models.VeriBlockPublication;
 import org.veriblock.sdk.models.VeriBlockTransaction;
+import org.veriblock.sdk.util.BytesUtility;
 import org.veriblock.sdk.util.StreamUtils;
-import org.veriblock.sdk.util.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -231,22 +230,22 @@ public class SerializeDeserializeService {
 
     public static VeriBlockBlock parseVeriBlockBlock(byte[] raw){
         Preconditions.notNull(raw, "VeriBlock raw data cannot be null");
-        Preconditions.argument(raw.length == Constants.HEADER_SIZE_VeriBlockBlock, () -> "Invalid VeriBlock raw data: " + Utils.encodeHex(raw));
+        Preconditions.argument(raw.length == Constants.HEADER_SIZE_VeriBlockBlock, () -> "Invalid VeriBlock raw data: " + Utility.bytesToHex(raw));
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(raw.length);
 
         buffer.put(raw);
         buffer.flip();
 
-        int height = Utils.Bytes.readBEInt32(buffer);
-        short version = Utils.Bytes.readBEInt16(buffer);
+        int height = BytesUtility.readBEInt32(buffer);
+        short version = BytesUtility.readBEInt16(buffer);
         VBlakeHash previousBlock = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_BLOCK_LENGTH);
         VBlakeHash previousKeystone = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_KEYSTONE_LENGTH);
         VBlakeHash secondPreviousKeystone = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_KEYSTONE_LENGTH);
         Sha256Hash merkleRoot = Sha256Hash.extract(buffer, Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH, ByteOrder.BIG_ENDIAN);
-        int timestamp = Utils.Bytes.readBEInt32(buffer);
-        int difficulty = Utils.Bytes.readBEInt32(buffer);
-        int nonce = Utils.Bytes.readBEInt32(buffer);
+        int timestamp = BytesUtility.readBEInt32(buffer);
+        int difficulty = BytesUtility.readBEInt32(buffer);
+        int nonce = BytesUtility.readBEInt32(buffer);
 
         VeriBlockBlock veriBlockBlock = new VeriBlockBlock(
                 height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot,
@@ -273,15 +272,15 @@ public class SerializeDeserializeService {
 
     public static byte[] serializeHeaders(VeriBlockBlock veriBlockBlock) {
         ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_VeriBlockBlock);
-        Utils.Bytes.putBEInt32(buffer, veriBlockBlock.getHeight());
-        Utils.Bytes.putBEInt16(buffer, veriBlockBlock.getVersion());
-        Utils.Bytes.putBEBytes(buffer, veriBlockBlock.getPreviousBlock().getBytes());
-        Utils.Bytes.putBEBytes(buffer, veriBlockBlock.getPreviousKeystone().getBytes());
-        Utils.Bytes.putBEBytes(buffer, veriBlockBlock.getSecondPreviousKeystone().getBytes());
-        Utils.Bytes.putBEBytes(buffer, veriBlockBlock.getMerkleRoot().getBytes());
-        Utils.Bytes.putBEInt32(buffer, veriBlockBlock.getTimestamp());
-        Utils.Bytes.putBEInt32(buffer, veriBlockBlock.getDifficulty());
-        Utils.Bytes.putBEInt32(buffer, veriBlockBlock.getNonce());
+        BytesUtility.putBEInt32(buffer, veriBlockBlock.getHeight());
+        BytesUtility.putBEInt16(buffer, veriBlockBlock.getVersion());
+        BytesUtility.putBEBytes(buffer, veriBlockBlock.getPreviousBlock().getBytes());
+        BytesUtility.putBEBytes(buffer, veriBlockBlock.getPreviousKeystone().getBytes());
+        BytesUtility.putBEBytes(buffer, veriBlockBlock.getSecondPreviousKeystone().getBytes());
+        BytesUtility.putBEBytes(buffer, veriBlockBlock.getMerkleRoot().getBytes());
+        BytesUtility.putBEInt32(buffer, veriBlockBlock.getTimestamp());
+        BytesUtility.putBEInt32(buffer, veriBlockBlock.getDifficulty());
+        BytesUtility.putBEInt32(buffer, veriBlockBlock.getNonce());
 
         buffer.flip();
         byte[] bytes = new byte[Constants.HEADER_SIZE_VeriBlockBlock];
@@ -316,7 +315,7 @@ public class SerializeDeserializeService {
         // Layer size
         StreamUtils.writeSingleIntLengthValueToStream(stream, merklePath.getLayers().size());
 
-        byte[] sizeBottomData = Utils.toByteArray(merklePath.getSubject().length);
+        byte[] sizeBottomData = Utility.toByteArray(merklePath.getSubject().length);
 
         // Write size of the int describing the size of the bottom layer of data
         StreamUtils.writeSingleIntLengthValueToStream(stream, sizeBottomData.length);
@@ -360,12 +359,12 @@ public class SerializeDeserializeService {
         }
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_BitcoinBlock);
-        Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getVersion());
-        Utils.Bytes.putLEBytes(buffer, bitcoinBlock.getPreviousBlock().getBytes());
-        Utils.Bytes.putLEBytes(buffer, bitcoinBlock.getMerkleRoot().getBytes());
-        Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getTimestamp());
-        Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getDifficulty());
-        Utils.Bytes.putLEInt32(buffer, bitcoinBlock.getNonce());
+        BytesUtility.putLEInt32(buffer, bitcoinBlock.getVersion());
+        BytesUtility.putLEBytes(buffer, bitcoinBlock.getPreviousBlock().getBytes());
+        BytesUtility.putLEBytes(buffer, bitcoinBlock.getMerkleRoot().getBytes());
+        BytesUtility.putLEInt32(buffer, bitcoinBlock.getTimestamp());
+        BytesUtility.putLEInt32(buffer, bitcoinBlock.getDifficulty());
+        BytesUtility.putLEInt32(buffer, bitcoinBlock.getNonce());
 
         buffer.flip();
         byte[] bytes = new byte[Constants.HEADER_SIZE_BitcoinBlock];
@@ -395,19 +394,19 @@ public class SerializeDeserializeService {
 
     public static BitcoinBlock parseBitcoinBlock(byte[] bytes) {
         Preconditions.notNull(bytes, "Raw Bitcoin Block cannot be null");
-        Preconditions.argument(bytes.length == Constants.HEADER_SIZE_BitcoinBlock, "Invalid raw Bitcoin Block: " + Utils.encodeHex(bytes));
+        Preconditions.argument(bytes.length == Constants.HEADER_SIZE_BitcoinBlock, "Invalid raw Bitcoin Block: " + Utility.bytesToHex(bytes));
 
         ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
 
         buffer.put(bytes);
         buffer.flip();
 
-        Integer version = Utils.Bytes.readLEInt32(buffer);
+        Integer version = BytesUtility.readLEInt32(buffer);
         Sha256Hash previousBlock = Sha256Hash.extract(buffer);
         Sha256Hash merkleRoot = Sha256Hash.extract(buffer);
-        Integer timestamp = Utils.Bytes.readLEInt32(buffer);
-        Integer bits = Utils.Bytes.readLEInt32(buffer);
-        Integer nonce = Utils.Bytes.readLEInt32(buffer);
+        Integer timestamp = BytesUtility.readLEInt32(buffer);
+        Integer bits = BytesUtility.readLEInt32(buffer);
+        Integer nonce = BytesUtility.readLEInt32(buffer);
 
         BitcoinBlock bitcoinBlock = new BitcoinBlock(version,previousBlock, merkleRoot, timestamp, bits, nonce);
 
@@ -507,7 +506,7 @@ public class SerializeDeserializeService {
 
         ByteBuffer buffer = ByteBuffer.wrap(data);
         byte[] identifierBytes = StreamUtils.getSingleByteLengthValue(buffer, 0, 8);
-        long identifier = Utils.toLong(identifierBytes);
+        long identifier = Utility.toLong(identifierBytes);
         byte[] headerBytes = StreamUtils.getVariableLengthValue(buffer, 0, Constants.MAX_HEADER_SIZE_PUBLICATION_DATA);
         byte[] contextInfoBytes = StreamUtils.getVariableLengthValue(buffer, 0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA);
         byte[] payoutInfoBytes = StreamUtils.getVariableLengthValue(buffer, 0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA);

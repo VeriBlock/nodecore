@@ -25,7 +25,7 @@ import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.nio.charset.StandardCharsets
 import java.security.InvalidAlgorithmParameterException
 import java.security.KeyPair
@@ -153,7 +153,7 @@ class MockMinerService(
     }
 
     private fun signTransaction(tx: VeriBlockTransaction, privateKey: PrivateKey): VeriBlockTransaction {
-        val signature = Utils.signMessageWithPrivateKey(
+        val signature = Utility.signMessageWithPrivateKey(
             SerializeDeserializeService.getId(tx).bytes,
             privateKey
         )

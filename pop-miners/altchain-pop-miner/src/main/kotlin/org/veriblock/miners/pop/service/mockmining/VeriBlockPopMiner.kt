@@ -15,7 +15,7 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.nio.ByteBuffer
 import java.security.InvalidKeyException
 import java.security.KeyPair
@@ -45,7 +45,7 @@ class VeriBlockPopMiner(
 
     @Throws(SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
     private fun signTransaction(tx: VeriBlockPopTransaction, privateKey: PrivateKey): VeriBlockPopTransaction {
-        val signature = Utils.signMessageWithPrivateKey(
+        val signature = Utility.signMessageWithPrivateKey(
             SerializeDeserializeService.getId(tx).bytes,
             privateKey
         )

@@ -16,13 +16,16 @@ import org.veriblock.core.SharedConstants;
 import java.io.File;
 import java.io.PrintWriter;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.BitSet;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -1024,4 +1027,70 @@ public class Utility {
     public static int fromBytes(byte b1, byte b2, byte b3, byte b4) {
         return b1 << 24 | (b2 & 0xFF) << 16 | (b3 & 0xFF) << 8 | (b4 & 0xFF);
     }
+
+    public static byte[] toBytes(BigInteger value, int size) {
+        byte[] dest = new byte[size];
+        byte[] src = value.toByteArray();
+
+        int length = Math.min(src.length, size);
+        int destPos = Math.max(size - src.length, 0);
+        System.arraycopy(src, 0, dest, destPos, length);
+
+        return dest;
+    }
+
+    public static String getFileNameWithoutExtension(File file) {
+        String name = file.getName();
+        int pos = name.lastIndexOf(".");
+
+        return pos == -1 ? name : name.substring(0, pos);
+    }
+
+    public static int getCurrentTimestamp() {
+        return (int) Instant.now().getEpochSecond();
+    }
+
+    public static boolean verifySignature(byte[] payload, byte[] signatureBytes, byte[] publicKeyBytes) {
+        try {
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
+            PublicKey publicKey = KeyFactory.getInstance("EC").generatePublic(publicKeySpec);
+            Signature signature = Signature.getInstance("SHA256withECDSA");
+            signature.initVerify(publicKey);
+            signature.update(payload);
+
+            return signature.verify(signatureBytes);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static int toInt(BitSet bitset) {
+        int value = 0;
+        for (int i = 0; i < bitset.length(); i++) {
+            if (bitset.get(i)) {
+                value += 1 << i;
+            }
+        }
+        return value;
+    }
+
+    public static byte[] toByteArray(int value) {
+        return new byte[]{(byte) ((value & -16777216) >> 24), (byte) ((value & 16711680) >> 16), (byte) ((value & '\uff00') >> 8), (byte) (value & 255)};
+    }
+
+    public static long toLong(byte[] bytes) {
+        if (bytes.length > 8) throw new IllegalArgumentException();
+
+        byte[] intBytes = new byte[8];
+        System.arraycopy(bytes, 0, intBytes, 8 - bytes.length, bytes.length);
+
+        return ByteBuffer.wrap(intBytes).getLong();
+    }
+
+    public static byte[] fillBytes(byte value, int count) {
+        byte[] data = new byte[count];
+        for (int i = 0; i < count; i++) data[i] = value;
+        return data;
+    }
+
 }

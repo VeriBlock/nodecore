@@ -16,10 +16,9 @@ import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.sql.SQLException
 import java.util.ArrayList
-import java.util.Collections
 import java.util.HashMap
 
 class VeriBlockMockBlockchain(
@@ -78,7 +77,7 @@ class VeriBlockMockBlockchain(
         val previousKeystone = getPreviousKeystoneForNewBlock()
         val secondPreviousKeystone = getSecondPreviousKeystoneForNewBlock()
         val timestamp = Math.max(
-            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utils.getCurrentTimestamp()
+            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utility.getCurrentTimestamp()
         )
         val difficulty = getNextDifficulty(chainHead).asInt
         for (nonce in 0 until Int.MAX_VALUE) {

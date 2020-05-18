@@ -14,7 +14,7 @@ import org.veriblock.sdk.models.Constants;
 import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -73,7 +73,7 @@ public class StoredVeriBlockBlock {
 
     public void serialize(ByteBuffer buffer) {
         buffer.put(hash.getBytes());
-        buffer.put(Utils.toBytes(work, CHAIN_WORK_BYTES));
+        buffer.put(Utility.toBytes(work, CHAIN_WORK_BYTES));
         buffer.put(blockOfProof.getBytes());
         buffer.put(SerializeDeserializeService.serializeHeaders(block));
     }
@@ -118,7 +118,7 @@ public class StoredVeriBlockBlock {
 
     public static StoredVeriBlockBlock deserialize(byte[] bytes) {
         Preconditions.notNull(bytes, "Raw VeriBlock Block cannot be null");
-        Preconditions.argument(bytes.length >= SIZE, () -> "Invalid raw VeriBlock Block: " + Utils.encodeHex(bytes));
+        Preconditions.argument(bytes.length >= SIZE, () -> "Invalid raw VeriBlock Block: " + Utility.bytesToHex(bytes));
 
         ByteBuffer local = ByteBuffer.allocateDirect(SIZE);
         local.put(bytes, bytes.length - SIZE, SIZE);

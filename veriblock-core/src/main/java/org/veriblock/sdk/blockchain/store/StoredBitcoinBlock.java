@@ -13,7 +13,7 @@ import org.veriblock.sdk.models.Constants;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.services.SerializeDeserializeService;
 import org.veriblock.core.utilities.Preconditions;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -59,7 +59,7 @@ public class StoredBitcoinBlock {
     public void serialize(ByteBuffer buffer) {
         buffer.put(hash.getBytes());
         buffer.putInt(height);
-        buffer.put(Utils.toBytes(work, CHAIN_WORK_BYTES));
+        buffer.put(Utility.toBytes(work, CHAIN_WORK_BYTES));
         buffer.put(SerializeDeserializeService.getHeaderBytesBitcoinBlock(block));
     }
 
@@ -97,7 +97,7 @@ public class StoredBitcoinBlock {
 
     public static StoredBitcoinBlock deserialize(byte[] bytes) {
         Preconditions.notNull(bytes, "Raw Bitcoin Block cannot be null");
-        Preconditions.argument(bytes.length >= SIZE, () -> "Invalid raw Bitcoin Block: " + Utils.encodeHex(bytes));
+        Preconditions.argument(bytes.length >= SIZE, () -> "Invalid raw Bitcoin Block: " + Utility.bytesToHex(bytes));
 
         ByteBuffer local = ByteBuffer.allocateDirect(SIZE);
         local.put(bytes, bytes.length - SIZE, SIZE);

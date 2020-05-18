@@ -20,7 +20,7 @@ import org.veriblock.sdk.models.VeriBlockPublication;
 import org.veriblock.sdk.models.VeriBlockTransaction;
 import org.veriblock.sdk.models.VerificationException;
 import org.veriblock.sdk.util.MerklePathUtil;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -40,7 +40,7 @@ public class ValidationService {
             throw new VerificationException("VeriBlock PoP Transaction contains an invalid public key");
         }
 
-        if (!Utils.verifySignature(SerializeDeserializeService.getHash(tx).getBytes(), tx.getSignature(), tx.getPublicKey())) {
+        if (!Utility.verifySignature(SerializeDeserializeService.getHash(tx).getBytes(), tx.getSignature(), tx.getPublicKey())) {
             throw new VerificationException("VeriBlock PoP Transaction is incorrectly signed");
         }
     }
@@ -133,7 +133,7 @@ public class ValidationService {
             throw new VerificationException("VeriBlock transaction contains an invalid public key");
         }
 
-        if (!Utils.verifySignature(SerializeDeserializeService.getId(veriBlockTransaction).getBytes(), veriBlockTransaction.getSignature(),
+        if (!Utility.verifySignature(SerializeDeserializeService.getId(veriBlockTransaction).getBytes(), veriBlockTransaction.getSignature(),
             veriBlockTransaction.getPublicKey()
         )) {
             throw new VerificationException("VeriBlock transaction is incorrectly signed");
@@ -168,7 +168,7 @@ public class ValidationService {
     }
 
     public static void checkMaximumDrift(VeriBlockBlock veriBlockBlock) {
-        int currentTime = Utils.getCurrentTimestamp();
+        int currentTime = Utility.getCurrentTimestamp();
         if (veriBlockBlock.getTimestamp() > currentTime + Constants.ALLOWED_TIME_DRIFT) {
             throw new VerificationException("Block is too far in the future");
         }
@@ -200,7 +200,7 @@ public class ValidationService {
     }
 
     public static void checkMaximumDrift(BitcoinBlock bitcoinBlock) throws VerificationException {
-        int currentTime = Utils.getCurrentTimestamp();
+        int currentTime = Utility.getCurrentTimestamp();
         if (bitcoinBlock.getTimestamp() > currentTime + Constants.ALLOWED_TIME_DRIFT) {
             throw new VerificationException("Block is too far in the future");
         }

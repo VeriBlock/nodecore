@@ -15,7 +15,7 @@ import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.sqlite.tables.KeyValueData;
 import org.veriblock.sdk.sqlite.tables.KeyValueRepository;
 import org.veriblock.sdk.sqlite.tables.VeriBlockBlockRepository;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -57,7 +57,7 @@ public class VeriBlockStore implements BlockStore<StoredVeriBlockBlock, VBlakeHa
         String headEncoded = keyValueRepository.getValue(chainHeadRepositoryName);
         if(headEncoded == null) return null;
 
-        StoredVeriBlockBlock block = get(VBlakeHash.wrap(Utils.decodeHex(headEncoded)));
+        StoredVeriBlockBlock block = get(VBlakeHash.wrap(Utility.hexToBytes(headEncoded)));
         return block;
     }
 
@@ -69,7 +69,7 @@ public class VeriBlockStore implements BlockStore<StoredVeriBlockBlock, VBlakeHa
 
         StoredVeriBlockBlock previousBlock = getChainHead();
 
-        String headEncoded = Utils.encodeHex(chainHead.getBlock().getHash().getBytes());
+        String headEncoded = Utility.bytesToHex(chainHead.getBlock().getHash().getBytes());
         KeyValueData data = new KeyValueData();
         data.key = chainHeadRepositoryName;
         data.value = headEncoded;
@@ -98,7 +98,7 @@ public class VeriBlockStore implements BlockStore<StoredVeriBlockBlock, VBlakeHa
     public StoredVeriBlockBlock erase(VBlakeHash hash) throws BlockStoreException, SQLException {
         String headEncoded = keyValueRepository.getValue(chainHeadRepositoryName);
 
-        if (headEncoded != null && VBlakeHash.wrap(Utils.decodeHex(headEncoded)).equals(hash)) {
+        if (headEncoded != null && VBlakeHash.wrap(Utility.hexToBytes(headEncoded)).equals(hash)) {
             throw new BlockStoreException("Cannot erase the chain head block");
         }
 

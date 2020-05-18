@@ -15,7 +15,7 @@ import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.sqlite.tables.BitcoinBlockRepository;
 import org.veriblock.sdk.sqlite.tables.KeyValueData;
 import org.veriblock.sdk.sqlite.tables.KeyValueRepository;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -57,7 +57,7 @@ public class BitcoinStore implements BlockStore<StoredBitcoinBlock, Sha256Hash> 
         String headEncoded = keyValueRepository.getValue(chainHeadRepositoryName);
         if(headEncoded == null) return null;
         
-        StoredBitcoinBlock block = get(Sha256Hash.wrap(Utils.decodeHex(headEncoded)));
+        StoredBitcoinBlock block = get(Sha256Hash.wrap(Utility.hexToBytes(headEncoded)));
         return block;
     }
 
@@ -70,7 +70,7 @@ public class BitcoinStore implements BlockStore<StoredBitcoinBlock, Sha256Hash> 
         
         StoredBitcoinBlock previousBlock = getChainHead();
         
-        String headEncoded = Utils.encodeHex(chainHead.getBlock().getHash().getBytes());
+        String headEncoded = Utility.bytesToHex(chainHead.getBlock().getHash().getBytes());
         KeyValueData data = new KeyValueData();
         data.key = chainHeadRepositoryName;
         data.value = headEncoded;
@@ -98,7 +98,7 @@ public class BitcoinStore implements BlockStore<StoredBitcoinBlock, Sha256Hash> 
     public StoredBitcoinBlock erase(Sha256Hash hash) throws BlockStoreException, SQLException {
         String headEncoded = keyValueRepository.getValue(chainHeadRepositoryName);
 
-        if (headEncoded != null && Sha256Hash.wrap(Utils.decodeHex(headEncoded)).equals(hash)) {
+        if (headEncoded != null && Sha256Hash.wrap(Utility.hexToBytes(headEncoded)).equals(hash)) {
             throw new BlockStoreException("Cannot erase the chain head block");
         }
 

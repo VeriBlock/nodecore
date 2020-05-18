@@ -12,7 +12,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
@@ -45,7 +45,7 @@ class StoredVeriBlockBlock(
 
     fun serialize(buffer: ByteBuffer) {
         buffer.put(hash.bytes)
-        buffer.put(Utils.toBytes(work, CHAIN_WORK_BYTES))
+        buffer.put(Utility.toBytes(work, CHAIN_WORK_BYTES))
         buffer.put(blockOfProof.bytes)
         buffer.put(SerializeDeserializeService.serializeHeaders(block))
     }
