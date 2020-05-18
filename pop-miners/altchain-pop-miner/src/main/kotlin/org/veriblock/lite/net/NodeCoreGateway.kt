@@ -34,8 +34,7 @@ import kotlin.math.abs
 private val logger = createLogger {}
 
 class NodeCoreGateway(
-    private val params: NetworkParameters,
-    private val addressManager: AddressManager
+    private val params: NetworkParameters
 ) {
 
     private val gatewayStrategy: GatewayStrategy = createFullNode(params)
@@ -114,17 +113,12 @@ class NodeCoreGateway(
     }
 
     fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> {
-        val sourceAddress = addressManager.defaultAddress.hash
-        logger.debug { "Requested to send $atomicAmount coins to $destinationAddress from $sourceAddress" }
+        logger.debug { "Requested to send $atomicAmount coins to $destinationAddress" }
         val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
         if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
             request.addAmounts(VeriBlockMessages.Output.newBuilder()
                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
                 .setAmount(atomicAmount))
-
-            if (sourceAddress != null && AddressUtility.isValidStandardAddress(sourceAddress)) {
-                request.sourceAddress = ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress)
-            }
 
             val reply = gatewayStrategy.sendCoins(request.build())
             if (reply.success) {
@@ -135,7 +129,7 @@ class NodeCoreGateway(
                 for (error in reply.resultsList) {
                     logger.error { "NodeCore error: ${error.message} | ${error.details}" }
                 }
-                error("Unable to send $atomicAmount to $destinationAddress from $sourceAddress")
+                error("Unable to send $atomicAmount to $destinationAddress")
             }
         } else {
             // Should never happen; address validity is checked by argument parser
