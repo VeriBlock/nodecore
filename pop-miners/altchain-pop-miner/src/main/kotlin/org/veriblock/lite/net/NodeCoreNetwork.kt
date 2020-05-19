@@ -223,6 +223,9 @@ class NodeCoreNetwork(
     fun getBalance(): Balance =
         gateway.getBalance(addressManager.defaultAddress.hash)
 
+    fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> =
+        gateway.sendCoins(destinationAddress, atomicAmount)
+
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
 }

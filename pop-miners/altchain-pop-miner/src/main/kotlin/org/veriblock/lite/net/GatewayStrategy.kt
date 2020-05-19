@@ -9,12 +9,12 @@
 package org.veriblock.lite.net
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
-import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 
 interface GatewayStrategy {
 
     fun getBalance(getBalanceRequest: VeriBlockMessages.GetBalanceRequest): VeriBlockMessages.GetBalanceReply
+
+    fun sendCoins(request: VeriBlockMessages.SendCoinsRequest): VeriBlockMessages.SendCoinsReply
 
     fun getVeriBlockPublications(getVeriBlockPublicationsRequest: VeriBlockMessages.GetVeriBlockPublicationsRequest): VeriBlockMessages.GetVeriBlockPublicationsReply
 

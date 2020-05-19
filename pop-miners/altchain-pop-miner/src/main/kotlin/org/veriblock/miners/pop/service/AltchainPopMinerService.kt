@@ -28,9 +28,6 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.shell.core.Result
-import org.veriblock.shell.core.failure
-import org.veriblock.shell.core.success
 import java.io.IOException
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
@@ -159,6 +156,12 @@ class AltchainPopMinerService(
         nodeCoreLiteKit.network.getBalance()
     } else {
         null
+    }
+
+    override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> = if (nodeCoreLiteKit.network.isHealthy()) {
+        nodeCoreLiteKit.network.sendCoins(destinationAddress, atomicAmount)
+    } else {
+        throw CommunicationException("NodeCore is not healthy")
     }
 
     override fun mine(chainId: String, block: Int?): String {

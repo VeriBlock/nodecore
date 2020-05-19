@@ -8,10 +8,13 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import org.veriblock.core.utilities.Utility
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.shell.CommandFactory
+import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
@@ -44,6 +47,22 @@ fun CommandFactory.walletCommands(
         printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}")
         printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} ${context.vbkTokenName}")
 
+        success()
+    }
+
+    command(
+        name = "Withdraw VBKs to Address",
+        form = "withdrawvbktoaddress",
+        description = "Sends a VBK amount to a given address",
+        parameters = listOf(
+            CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true),
+            CommandParameter(name = "destinationAddress", mapper = CommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true)
+        )
+    ) {
+        val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
+        val destinationAddress = getParameter<String>("destinationAddress")
+        val result = miner.sendCoins(destinationAddress, atomicAmount)
+        printInfo(result.joinToString())
         success()
     }
 }

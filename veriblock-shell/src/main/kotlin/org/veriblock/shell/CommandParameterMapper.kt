@@ -65,4 +65,26 @@ object CommandParameterMappers {
             )
         }
     }
+
+    val STANDARD_OR_MULTISIG_ADDRESS: CommandParameterMapper = { suppliedParam ->
+        if (AddressUtility.isValidStandardOrMultisigAddress(suppliedParam)) {
+            suppliedParam
+        } else {
+            throw syntaxError(
+                command,
+                "parameter '${param.name}' must be a valid standard address"
+            )
+        }
+    }
+
+    val STANDARD_ADDRESS: CommandParameterMapper = { suppliedParam ->
+        if (AddressUtility.isValidStandardAddress(suppliedParam)) {
+            suppliedParam
+        } else {
+            throw syntaxError(
+                command,
+                "parameter '${param.name}' must be a valid standard address"
+            )
+        }
+    }
 }
