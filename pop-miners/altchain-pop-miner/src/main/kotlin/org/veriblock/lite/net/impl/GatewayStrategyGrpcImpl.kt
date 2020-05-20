@@ -81,7 +81,7 @@ class GatewayStrategyGrpcImpl(
 
     override fun getLastBlock(getLastBlockRequest: VeriBlockMessages.GetLastBlockRequest): VeriBlockMessages.GetLastBlockReply {
         return blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .withDeadlineAfter(120, TimeUnit.SECONDS)
             .getLastBlock(getLastBlockRequest)
     }
 

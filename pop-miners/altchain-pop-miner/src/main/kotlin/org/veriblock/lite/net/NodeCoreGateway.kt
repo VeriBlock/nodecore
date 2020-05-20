@@ -17,6 +17,7 @@ import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChainDelta
@@ -50,7 +51,7 @@ class NodeCoreGateway(
 
             lastBlock.header.deserialize()
         } catch (e: Exception) {
-            logger.warn("Unable to get last VBK block", e)
+            logger.debugWarn(e) { "Unable to get last VBK block" }
             throw e
         }
     }

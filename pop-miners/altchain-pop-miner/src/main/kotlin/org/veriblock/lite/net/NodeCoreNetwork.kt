@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.EmptyEvent
@@ -119,7 +120,7 @@ class NodeCoreNetwork(
                 val lastBlock: VeriBlockBlock = try {
                     gateway.getLastBlock()
                 } catch (e: Exception) {
-                    logger.error(e) { "Unable to get the last block from NodeCore" }
+                    logger.debugWarn(e) { "Unable to get the last block from NodeCore" }
                     if (isHealthy()) {
                         healthy.set(false)
                         unhealthyEvent.trigger()
