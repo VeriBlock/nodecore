@@ -192,7 +192,14 @@ class ApmTaskService(
             ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
 
         logger.info(operation, "Waiting for the next VBK Keystone...")
-        val keystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
+        val topBlockHeight = nodeCoreLiteKit.blockChain.getChainHead()?.height ?: 0
+        val desiredKeystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
+        val keystoneOfProofHeight = if (topBlockHeight >= desiredKeystoneOfProofHeight) {
+            topBlockHeight / 20 * 20 + 20
+        } else {
+            desiredKeystoneOfProofHeight
+        }
+
         val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
             logger.debug(operation, "Checking block ${block.hash} @ ${block.height}...")
             if (block.height > keystoneOfProofHeight) {
