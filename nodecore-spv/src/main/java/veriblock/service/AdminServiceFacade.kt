@@ -106,7 +106,7 @@ class AdminServiceFacade(private val adminApiService: AdminApiService) : AdminIm
     }
 
     override fun getStateInfo(request: GetStateInfoRequest, responseObserver: StreamObserver<GetStateInfoReply>) {
-        responseObserver.onNext(adminApiService.getStateInfo(request))
+        responseObserver.onNext(adminApiService.getStateInfo())
         responseObserver.onCompleted()
     }
 

@@ -86,7 +86,7 @@ class AdminApiService(
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val blockchain: Blockchain
 ) {
-    fun getStateInfo(request: GetStateInfoRequest?): GetStateInfoReply {
+    fun getStateInfo(): GetStateInfoReply {
         //TODO do real statuses.
         val blockchainStateValue = VeriBlockMessages.BlockchainStateInfo.State.LOADED_VALUE
         val operatingStateValue = VeriBlockMessages.OperatingStateInfo.State.STARTED_VALUE

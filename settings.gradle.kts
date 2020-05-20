@@ -18,5 +18,6 @@ include("pop-miners:altchain-pop-miner")
 
 include("altchain-plugins")
 include("nodecore-spv")
+include("nodecore-spv:nodecore-spv-standalone")
 
 rootProject.name = "nodecore-suite"
