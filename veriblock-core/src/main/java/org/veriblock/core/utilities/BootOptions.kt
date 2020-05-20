@@ -81,8 +81,8 @@ class EmptyBootOption(
     opt: String,
     longOpt: String?,
     desc: String,
-    keyMapping: String
-) : BootOption(opt, longOpt, desc, keyMapping) {
+    configMapping: String
+) : BootOption(opt, longOpt, desc, configMapping) {
     override val option: Option = Option.builder(opt).apply {
         longOpt?.let { longOpt(longOpt) }
         desc(desc)
@@ -120,8 +120,8 @@ fun bootOptions(
 ) =
     BootOptions(options, args, addConfigFileOption, addDataDirOption)
 
-fun bootOption(opt: String, longOpt: String? = null, desc: String, keyMapping: String) =
-    EmptyBootOption(opt, longOpt, desc, keyMapping)
+fun bootOption(opt: String, longOpt: String? = null, desc: String, configMapping: String) =
+    EmptyBootOption(opt, longOpt, desc, configMapping)
 
 fun bootOption(opt: String, longOpt: String? = null, desc: String, argName: String, configMapping: String) =
     ArgBootOption(opt, longOpt, desc, argName, configMapping)

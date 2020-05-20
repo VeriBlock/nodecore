@@ -17,7 +17,7 @@ fun configModule(args: Array<String>): Module {
             bootOption(
                 opt = "skipAck",
                 desc = "Bypasses acknowledgement of seed words on first run",
-                keyMapping = "vpm.skipAck"
+                configMapping = "vpm.skipAck"
             )
         ),
         args
