@@ -44,6 +44,9 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
+    // Other
+    implementation("me.tongfei:progressbar:0.8.1")
+
     testImplementation("junit:junit:4.12")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
 }
@@ -117,6 +120,9 @@ distributions {
         contents {
             from ("./src/main/resources/application-default.conf") {
                 into("bin")
+            }
+            from ("./README.md") {
+                into("README.md")
             }
             rename("application-default.conf", "application.conf")
         }

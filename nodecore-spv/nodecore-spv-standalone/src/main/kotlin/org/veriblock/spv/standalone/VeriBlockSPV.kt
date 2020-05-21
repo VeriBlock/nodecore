@@ -13,6 +13,8 @@ package org.veriblock.spv.standalone
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.tongfei.progressbar.ProgressBarBuilder
+import me.tongfei.progressbar.ProgressBarStyle
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
@@ -24,7 +26,9 @@ import org.veriblock.spv.standalone.commands.spvCommands
 import org.veriblock.spv.standalone.commands.standardCommands
 import veriblock.SpvContext
 import veriblock.model.DownloadStatus
+import veriblock.model.DownloadStatusResponse
 import veriblock.net.BootstrapPeerDiscovery
+import java.lang.Thread.sleep
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
 
@@ -54,21 +58,25 @@ private fun run(): Int {
     logger.info { "Initializing SPV Context..." }
     try {
         spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters), false)
-        GlobalScope.launch {
-            spvContext.peerTable.start()
-            do {
-                val status = spvContext.peerTable.getDownloadStatus()
-                when (status.downloadStatus) {
-                    DownloadStatus.DISCOVERING ->
-                        logger.info { "Waiting for peers response." }
-                    DownloadStatus.DOWNLOADING ->
-                        logger.info { "Blockchain is downloading. ${status.currentHeight} / ${status.bestHeight}" }
-                    DownloadStatus.READY ->
-                        logger.info { "Blockchain is ready. Current height ${status.currentHeight}" }
+        spvContext.peerTable.start()
+        ProgressBarBuilder().apply {
+            setTaskName("Loading SPV")
+            setInitialMax(1)
+            setStyle(ProgressBarStyle.COLORFUL_UNICODE_BLOCK)
+        }.build().use { progressBar ->
+            var status = spvContext.peerTable.getDownloadStatus()
+            progressBar.extraMessage = "Looking for peers..."
+            while (status.downloadStatus != DownloadStatus.READY) {
+                if (status.downloadStatus == DownloadStatus.DOWNLOADING) {
+                    progressBar.extraMessage = "Downloading blocks..."
+                    progressBar.maxHint(status.bestHeight.toLong())
+                    progressBar.stepTo(status.currentHeight.toLong())
                 }
-                delay(5000L)
-            } while (status.downloadStatus != DownloadStatus.READY)
+                sleep(1000L)
+                status = spvContext.peerTable.getDownloadStatus()
+            }
         }
+        logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
         shell.run()
     } catch (e: Exception) {
         logger.warn(e) { "Fatal error: ${e.message}" }
