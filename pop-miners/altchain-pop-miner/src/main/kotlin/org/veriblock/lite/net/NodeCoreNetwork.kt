@@ -51,7 +51,7 @@ class NodeCoreNetwork(
     fun isHealthy(): Boolean =
         healthy.get()
 
-    private fun isSynchronized(): Boolean =
+    fun isSynchronized(): Boolean =
         synchronized.get()
 
     fun startAsync(): ListenableFuture<Boolean> {
