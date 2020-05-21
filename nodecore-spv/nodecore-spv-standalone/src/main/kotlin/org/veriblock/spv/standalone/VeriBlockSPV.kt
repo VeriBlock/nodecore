@@ -10,6 +10,7 @@
 
 package org.veriblock.spv.standalone
 
+import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
@@ -30,7 +31,9 @@ private val shutdownSignal = CountDownLatch(1)
 private val config = Configuration()
 
 private val networkParameters = NetworkParameters(
-    config.extract("network") ?: NetworkConfig()
+    NetworkConfig(
+        network = config.getString("network") ?: MainNetParameters.NETWORK
+    )
 )
 
 private fun run(): Int {
@@ -44,8 +47,10 @@ private fun run(): Int {
         spvCommands(spvContext)
     })
 
+    logger.info { "Initializing SPV Context..." }
     try {
         spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters), false)
+        logger.info { "Ready!" }
         shell.run()
     } catch (e: Exception) {
         logger.warn(e) { "Fatal error: ${e.message}" }
