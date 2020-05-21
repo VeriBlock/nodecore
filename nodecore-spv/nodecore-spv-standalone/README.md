@@ -1,10 +1,10 @@
 # Table of Contents
-* [Overview](#Overview)
-* [How to Install](#How to Install)
-* [How to Run SPV](#How to Run SPV)
-* [Sample Output](#Sample Output)
-* [File Structure](#File Structure)
-* [Known Issues](#Known Issues)
+* [Overview](#overview)
+* [How to Install](#how-to-install)
+* [How to Run SPV](#how-to-run-spv)
+* [Sample Output](#sample-output)
+* [File Structure](#file-structure)
+* [Known Issues](#known-issues)
 
 # Overview
 
