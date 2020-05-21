@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
@@ -40,14 +41,15 @@ fun CommandFactory.debugCommands(
         val chainId = getParameter<String>("chain")
 
         if (nodeCoreLiteKit.network.isHealthy()) {
-            printInfo("NodeCore connection: OK")
+            printInfo("NodeCore connection: Connected")
+            if (nodeCoreLiteKit.network.isSynchronized()) {
+                printInfo("NodeCore synchronization status: Synchronized")
+            } else {
+                printInfo("NodeCore synchronization status: Not synchronized")
+            }
         } else {
             printInfo("NodeCore connection: Not connected")
-        }
-        if (nodeCoreLiteKit.network.isSynchronized()) {
-            printInfo("NodeCore Synchronization: Synchronized")
-        } else {
-            printInfo("NodeCore Synchronization: Not synchronized")
+            printInfo("Unable to determine the NodeCore synchronization status")
         }
 
         val chain = pluginService[chainId]
@@ -56,25 +58,34 @@ fun CommandFactory.debugCommands(
         } else {
             runBlocking {
                 if (chain.isConnected()) {
-                    printInfo("The miner is connected to the ${chain.name} chain")
+                    printInfo("${chain.name} connection: Connected")
+                    if (chain.isSynchronized()) {
+                        printInfo("${chain.name} synchronization status: Synchronized")
+                    } else {
+                        printInfo("${chain.name} synchronization status: Not synchronized")
+                    }
                 } else {
-                    printInfo("The miner is not connected to the ${chain.name} chain")
-                }
-                if (chain.isSynchronized()) {
-                    printInfo("The ${chain.name} chain is synchronized")
-                } else {
-                    printInfo("The ${chain.name} chain is not synchronized")
+                    printInfo("${chain.name} connection: Not connected")
+                    printInfo("Unable to determine the ${chain.name} synchronization status")
                 }
             }
         }
 
-        val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
-        if (currentBalance.atomicUnits < config.maxFee) {
-            printInfo("The PoP wallet does not contain sufficient funds")
-            printInfo("Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
-            printInfo("Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
-        } else {
-            printInfo("The PoP wallet contains sufficient funds")
+        try {
+            val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
+            if (nodeCoreLiteKit.network.isHealthy()) {
+                if (currentBalance.atomicUnits < config.maxFee) {
+                    printInfo("The PoP wallet does not contain sufficient funds")
+                    printInfo("Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
+                    printInfo("Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
+                } else {
+                    printInfo("The PoP wallet contains sufficient funds")
+                }
+            } else {
+                printInfo("Unable to determine the PoP balance.")
+            }
+        } catch(e: StatusRuntimeException) {
+            printInfo("Unable to determine the PoP balance.")
         }
 
         success()
