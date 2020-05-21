@@ -63,10 +63,10 @@ tasks.named<JavaExec>("run") {
     }
 }
 
-application.applicationName = "altchain-pop-miner"
-application.mainClassName = "org.veriblock.miners.pop.AltchainPoPMiner"
+application.applicationName = "veriblock-spv"
+application.mainClassName = "org.veriblock.spv.standalone.VeriBlockSPV"
 
-setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
+setupJar("VeriBlock SPV Wallet", "org.veriblock.spv")
 
 tasks.distZip {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")

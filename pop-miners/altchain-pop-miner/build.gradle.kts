@@ -110,7 +110,7 @@ tasks.named<JavaExec>("run") {
 application.applicationName = "altchain-pop-miner"
 application.mainClassName = "org.veriblock.miners.pop.AltchainPoPMiner"
 
-setupJar("VeriBlock Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
+setupJar("Altchain Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
 
 tasks.distZip {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
