@@ -45,18 +45,23 @@ fun CommandFactory.debugCommands(
             printInfo("FAIL - Unable to determine the NodeCore synchronization status")
         }
 
-        pluginService.getPlugins().filter { it.key != "test" }.forEach {
-            runBlocking {
-                if (it.value.isConnected()) {
-                    printInfo("SUCCESS - ${it.value.name} connection: Connected")
-                    if (it.value.isSynchronized()) {
-                        printInfo("SUCCESS - ${it.value.name} synchronization status: Synchronized")
+        val plugins = pluginService.getPlugins().filter { it.key != "test" }
+        if (plugins.isEmpty()) {
+            printInfo("FAIL - There are no plugins loaded")
+        } else {
+            pluginService.getPlugins().filter { it.key != "test" }.forEach {
+                runBlocking {
+                    if (it.value.isConnected()) {
+                        printInfo("SUCCESS - ${it.value.name} connection: Connected")
+                        if (it.value.isSynchronized()) {
+                            printInfo("SUCCESS - ${it.value.name} synchronization status: Synchronized")
+                        } else {
+                            printInfo("FAIL- ${it.value.name} synchronization status: Not synchronized")
+                        }
                     } else {
-                        printInfo("FAIL- ${it.value.name} synchronization status: Not synchronized")
+                        printInfo("FAIL - ${it.value.name} connection: Not connected")
+                        printInfo("FAIL - Unable to determine the ${it.value.name} synchronization status")
                     }
-                } else {
-                    printInfo("FAIL - ${it.value.name} connection: Not connected")
-                    printInfo("FAIL - Unable to determine the ${it.value.name} synchronization status")
                 }
             }
         }
@@ -69,13 +74,13 @@ fun CommandFactory.debugCommands(
                     printInfo("\tCurrent balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                     printInfo("\tMinimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
                 } else {
-                    printInfo("SUCCESS- The PoP wallet contains sufficient funds")
+                    printInfo("SUCCESS - The PoP wallet contains sufficient funds")
                 }
             } else {
                 printInfo("FAIL - Unable to determine the PoP balance.")
             }
         } catch(e: StatusRuntimeException) {
-            printInfo("FAIL- Unable to determine the PoP balance.")
+            printInfo("FAIL - Unable to determine the PoP balance.")
         }
 
         success()
