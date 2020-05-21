@@ -49,7 +49,7 @@ fun CommandFactory.debugCommands(
         if (plugins.isEmpty()) {
             printInfo("FAIL - There are no plugins loaded")
         } else {
-            pluginService.getPlugins().filter { it.key != "test" }.forEach {
+            plugins.forEach {
                 runBlocking {
                     if (it.value.isConnected()) {
                         printInfo("SUCCESS - ${it.value.name} connection: Connected")
@@ -71,8 +71,8 @@ fun CommandFactory.debugCommands(
             if (nodeCoreLiteKit.network.isHealthy()) {
                 if (currentBalance.atomicUnits < config.maxFee) {
                     printInfo("FAIL - The PoP wallet does not contain sufficient funds:")
-                    printInfo("\tCurrent balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
-                    printInfo("\tMinimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
+                    printInfo("FAIL - Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
+                    printInfo("FAIL - Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
                 } else {
                     printInfo("SUCCESS - The PoP wallet contains sufficient funds")
                 }
