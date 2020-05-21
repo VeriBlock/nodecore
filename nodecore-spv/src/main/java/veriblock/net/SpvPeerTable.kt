@@ -136,9 +136,9 @@ class SpvPeerTable(
         // Close peer connections
         incomingQueue.clear()
         pendingPeers.clear()
-        peers.forEachValue(
-            4
-        ) { obj: Peer? -> obj!!.closeConnection() }
+        peers.forEachValue(4) {
+            it.closeConnection()
+        }
     }
 
     fun connectTo(address: PeerAddress): Peer? {

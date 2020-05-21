@@ -10,6 +10,9 @@
 
 package org.veriblock.spv.standalone
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
@@ -20,6 +23,7 @@ import org.veriblock.shell.Shell
 import org.veriblock.spv.standalone.commands.spvCommands
 import org.veriblock.spv.standalone.commands.standardCommands
 import veriblock.SpvContext
+import veriblock.model.DownloadStatus
 import veriblock.net.BootstrapPeerDiscovery
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -50,7 +54,21 @@ private fun run(): Int {
     logger.info { "Initializing SPV Context..." }
     try {
         spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters), false)
-        logger.info { "Ready!" }
+        GlobalScope.launch {
+            spvContext.peerTable.start()
+            do {
+                val status = spvContext.peerTable.getDownloadStatus()
+                when (status.downloadStatus) {
+                    DownloadStatus.DISCOVERING ->
+                        logger.info { "Waiting for peers response." }
+                    DownloadStatus.DOWNLOADING ->
+                        logger.info { "Blockchain is downloading. ${status.currentHeight} / ${status.bestHeight}" }
+                    DownloadStatus.READY ->
+                        logger.info { "Blockchain is ready. Current height ${status.currentHeight}" }
+                }
+                delay(5000L)
+            } while (status.downloadStatus != DownloadStatus.READY)
+        }
         shell.run()
     } catch (e: Exception) {
         logger.warn(e) { "Fatal error: ${e.message}" }
