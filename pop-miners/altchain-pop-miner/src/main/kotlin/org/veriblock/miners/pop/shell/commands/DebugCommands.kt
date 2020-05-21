@@ -18,8 +18,6 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.shell.CommandFactory
-import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
 
@@ -33,40 +31,32 @@ fun CommandFactory.debugCommands(
     command(
         name = "Get Debug Information",
         form = "getdebuginfo",
-        description = "Collect information about the application for troubleshooting",
-        parameters = listOf(
-            CommandParameter(name = "chain", mapper = CommandParameterMappers.STRING, required = true)
-        )
+        description = "Collect information about the application for troubleshooting"
     ) {
-        val chainId = getParameter<String>("chain")
-
         if (nodeCoreLiteKit.network.isHealthy()) {
-            printInfo("NodeCore connection: Connected")
+            printInfo("SUCCESS - NodeCore connection: Connected")
             if (nodeCoreLiteKit.network.isSynchronized()) {
-                printInfo("NodeCore synchronization status: Synchronized")
+                printInfo("SUCCESS - NodeCore synchronization status: Synchronized")
             } else {
-                printInfo("NodeCore synchronization status: Not synchronized")
+                printInfo("FAIL - NodeCore synchronization status: Not synchronized")
             }
         } else {
-            printInfo("NodeCore connection: Not connected")
-            printInfo("Unable to determine the NodeCore synchronization status")
+            printInfo("FAIL - NodeCore connection: Not connected")
+            printInfo("FAIL - Unable to determine the NodeCore synchronization status")
         }
 
-        val chain = pluginService[chainId]
-        if (chain == null) {
-            printInfo("Unable to load plugin with the id $chainId")
-        } else {
+        pluginService.getPlugins().filter { it.key != "test" }.forEach {
             runBlocking {
-                if (chain.isConnected()) {
-                    printInfo("${chain.name} connection: Connected")
-                    if (chain.isSynchronized()) {
-                        printInfo("${chain.name} synchronization status: Synchronized")
+                if (it.value.isConnected()) {
+                    printInfo("SUCCESS - ${it.value.name} connection: Connected")
+                    if (it.value.isSynchronized()) {
+                        printInfo("SUCCESS - ${it.value.name} synchronization status: Synchronized")
                     } else {
-                        printInfo("${chain.name} synchronization status: Not synchronized")
+                        printInfo("FAIL- ${it.value.name} synchronization status: Not synchronized")
                     }
                 } else {
-                    printInfo("${chain.name} connection: Not connected")
-                    printInfo("Unable to determine the ${chain.name} synchronization status")
+                    printInfo("FAIL - ${it.value.name} connection: Not connected")
+                    printInfo("FAIL - Unable to determine the ${it.value.name} synchronization status")
                 }
             }
         }
@@ -75,17 +65,17 @@ fun CommandFactory.debugCommands(
             val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
             if (nodeCoreLiteKit.network.isHealthy()) {
                 if (currentBalance.atomicUnits < config.maxFee) {
-                    printInfo("The PoP wallet does not contain sufficient funds")
-                    printInfo("Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
-                    printInfo("Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
+                    printInfo("FAIL - The PoP wallet does not contain sufficient funds:")
+                    printInfo("\tCurrent balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
+                    printInfo("\tMinimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
                 } else {
-                    printInfo("The PoP wallet contains sufficient funds")
+                    printInfo("SUCCESS- The PoP wallet contains sufficient funds")
                 }
             } else {
-                printInfo("Unable to determine the PoP balance.")
+                printInfo("FAIL - Unable to determine the PoP balance.")
             }
         } catch(e: StatusRuntimeException) {
-            printInfo("Unable to determine the PoP balance.")
+            printInfo("FAIL- Unable to determine the PoP balance.")
         }
 
         success()
