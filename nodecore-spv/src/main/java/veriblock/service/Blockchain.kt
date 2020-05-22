@@ -33,13 +33,12 @@ class Blockchain(
         1000
     )
 
-    fun getChainHead(): VeriBlockBlock? {
+    fun getChainHead(): VeriBlockBlock {
         try {
             return blockStore.chainHead.block
         } catch (e: SQLException) {
-            logger.error("Unable to get chain head", e)
+            throw IllegalStateException("Unable to get chain head", e)
         }
-        return null
     }
 
     @Throws(SQLException::class)

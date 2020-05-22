@@ -88,23 +88,22 @@ class AdminApiService(
     private val blockchain: Blockchain
 ) {
     fun getStateInfo(): StateInfo {
-        //TODO do real states.
+        //TODO do real states
         val blockchainState = BlockchainState.LOADED
         val operatingState = OperatingState.STARTED
         val networkState = NetworkState.CONNECTED
         return StateInfo(
-            //TODO do real statuses.
             blockchainState = blockchainState,
             operatingState = operatingState,
             networkState = networkState,
             connectedPeerCount = peerTable.getAvailablePeers(),
             networkHeight = peerTable.getBestBlockHeight(),
-            localBlockchainHeight = blockchain.getChainHead()!!.height,
+            localBlockchainHeight = blockchain.getChainHead().height,
             networkVersion = spvContext.networkParameters.name,
             dataDirectory = spvContext.directory.path,
             programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",
             nodecoreStartTime = spvContext.startTime.epochSecond,
-            walletCacheSyncHeight = blockchain.getChainHead()!!.height,
+            walletCacheSyncHeight = blockchain.getChainHead().height,
             walletState = when {
                 addressManager.isEncrypted -> WalletState.DEFAULT
                 addressManager.isLocked -> WalletState.LOCKED

@@ -265,7 +265,7 @@ class SpvPeerTable(
                             val advertiseBlocks = message.message.advertiseBlocks
                             logger.info(
                                 "PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.headersList.size,
-                                blockchain.getChainHead()!!.height
+                                blockchain.getChainHead().height
                             )
                             val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
                                 MessageSerializer.deserialize(it)
@@ -453,7 +453,7 @@ class SpvPeerTable(
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus
-        val currentHeight = blockchain.getChainHead()!!.height
+        val currentHeight = blockchain.getChainHead().height
         val bestBlockHeight = if (downloadPeer == null) 0 else downloadPeer!!.bestBlockHeight
         status = if (downloadPeer == null) {
             DownloadStatus.DISCOVERING
