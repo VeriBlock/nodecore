@@ -58,8 +58,8 @@ class TransactionService(
             sortedOutputs = fulfillAndForPay.first
             val outputsForPay = fulfillAndForPay.second
             val transactionInputAmount = outputsForPay.map {
-                    it.amount.atomicUnits
-                }.sum() + fee
+                it.amount.atomicUnits
+            }.sum() + fee
             val transaction = createStandardTransaction(
                 sourceAddressesIndex.address, transactionInputAmount, outputsForPay, sourceAddressesIndex.index + 1
             )

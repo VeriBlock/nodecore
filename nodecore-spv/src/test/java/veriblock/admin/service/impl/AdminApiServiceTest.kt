@@ -5,11 +5,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.*
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.SendCoinsException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
@@ -22,9 +22,11 @@ import veriblock.SpvContext
 import veriblock.model.LedgerContext
 import veriblock.model.LedgerProofStatus
 import veriblock.model.LedgerValue
+import veriblock.model.Output
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
+import veriblock.model.asLightAddress
 import veriblock.net.LocalhostDiscovery
 import veriblock.net.SpvPeerTable
 import veriblock.service.AdminApiService
@@ -47,7 +49,7 @@ class AdminApiServiceTest {
 
     @Before
     fun setUp() {
-        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters), false)
+        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)
@@ -67,14 +69,6 @@ class AdminApiServiceTest {
             it.ledgerValue = LedgerValue(100L, 0L, 0L)
             it.ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
         }
-        val output = Output.newBuilder()
-            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
-            .setAmount(100)
-            .build()
-        val request = SendCoinsRequest.newBuilder()
-            .addAmounts(output)
-            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .build()
 
         every { peerTable.getAddressState(any()) } returns ledgerContext
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
@@ -83,116 +77,119 @@ class AdminApiServiceTest {
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
         every { peerTable.advertise(any()) } returns Unit
 
-        val reply = adminApiService.sendCoins(request)
+        val reply = adminApiService.sendCoins(
+            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+            listOf(
+                Output(
+                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                    Coin.valueOf(100)
+                )
+            )
+        )
 
         verify(exactly = 1) { transactionService.createTransactionsByOutputList(any(), any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
         verify(exactly = 1) { peerTable.advertise(any()) }
 
-        Assert.assertTrue(reply.success)
-        Assert.assertNotNull(reply.getTxIds(0))
-        Assert.assertTrue(Sha256Hash.wrap(reply.getTxIds(0).toByteArray()) == transaction.txId)
+        Assert.assertNotNull(reply.firstOrNull())
+        Assert.assertTrue(reply.first() == transaction.txId)
     }
 
-    @Test
+    @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressDoesntExist() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext().also {
             it.ledgerValue = LedgerValue(100L, 0L, 0L)
             it.ledgerProofStatus = LedgerProofStatus.ADDRESS_DOES_NOT_EXIST
         }
-        val output = Output.newBuilder()
-            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
-            .setAmount(100)
-            .build()
-        val request = SendCoinsRequest.newBuilder()
-            .addAmounts(output)
-            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .build()
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
         every { peerTable.advertise(any()) } returns Unit
-        val reply = adminApiService.sendCoins(request)
-        Assert.assertFalse(reply.success)
-        Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
+        adminApiService.sendCoins(
+            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+            listOf(
+                Output(
+                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                    Coin.valueOf(100)
+                )
+            )
+        )
+        //Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
     }
 
-    @Test
+    @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressDoesntIsInvalid() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext().also {
             it.ledgerValue = LedgerValue(100L, 0L, 0L)
             it.ledgerProofStatus = LedgerProofStatus.ADDRESS_IS_INVALID
         }
-        val output = Output.newBuilder()
-            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
-            .setAmount(100)
-            .build()
-        val request = SendCoinsRequest.newBuilder()
-            .addAmounts(output)
-            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .build()
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
         every { peerTable.advertise(any()) } returns Unit
-        val reply = adminApiService.sendCoins(request)
-        Assert.assertFalse(reply.success)
-        Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
+        adminApiService.sendCoins(
+            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+            listOf(
+                Output(
+                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                    Coin.valueOf(100)
+                )
+            )
+        )
+        //Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
     }
 
-    @Test
+    @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenBalanceIsNotEnough() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext().also {
             it.ledgerValue = LedgerValue(50L, 0L, 0L)
             it.ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
         }
-        val output = Output.newBuilder()
-            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
-            .setAmount(100)
-            .build()
-        val request = SendCoinsRequest.newBuilder()
-            .addAmounts(output)
-            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .build()
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
         every { peerTable.advertise(any()) } returns Unit
-        val reply = adminApiService.sendCoins(request)
-        Assert.assertFalse(reply.success)
-        Assert.assertTrue(reply.getResults(0).message.contains("Available balance is not enough"))
+        adminApiService.sendCoins(
+            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+            listOf(
+                Output(
+                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                    Coin.valueOf(100)
+                )
+            )
+        )
+        //Assert.assertTrue(reply.getResults(0).message.contains("Available balance is not enough"))
     }
 
-    @Test
+    @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressInfoDoentExist() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
-        val output = Output.newBuilder()
-            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"))
-            .setAmount(100)
-            .build()
-        val request = SendCoinsRequest.newBuilder()
-            .addAmounts(output)
-            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .build()
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns null
         every { peerTable.advertise(any()) } returns Unit
-        val reply = adminApiService.sendCoins(request)
-        Assert.assertFalse(reply.success)
-        Assert.assertTrue(reply.getResults(0).message.contains("Information about this address does not exist"))
+        adminApiService.sendCoins(
+            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+            listOf(
+                Output(
+                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                    Coin.valueOf(100)
+                )
+            )
+        )
+        //Assert.assertTrue(reply.getResults(0).message.contains("Information about this address does not exist"))
     }
 
     @Test
     fun unlockWalletWhenWalletIsLockThenTrue() {
-        val unlockWalletRequest = UnlockWalletRequest.newBuilder().setPassphrase("123").build()
+        val unlockWalletRequest = VeriBlockMessages.UnlockWalletRequest.newBuilder().setPassphrase("123").build()
         every { addressManager.unlock(any()) } returns true
         val reply = adminApiService.unlockWallet(unlockWalletRequest)
         verify(exactly = 1) { addressManager.unlock(any()) }
@@ -201,7 +198,7 @@ class AdminApiServiceTest {
 
     @Test
     fun unlockWalletWhenWalletIsUnlockThenFalse() {
-        val unlockWalletRequest = UnlockWalletRequest.newBuilder().setPassphrase("123").build()
+        val unlockWalletRequest = VeriBlockMessages.UnlockWalletRequest.newBuilder().setPassphrase("123").build()
         every { addressManager.unlock(any()) } returns false
         val reply = adminApiService.unlockWallet(unlockWalletRequest)
         verify(exactly = 1) { addressManager.unlock(any()) }
@@ -210,7 +207,7 @@ class AdminApiServiceTest {
 
     @Test
     fun importWalletWhenWalletIsLockThenFalse() {
-        val importWalletRequest = ImportWalletRequest.newBuilder()
+        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
             .setPassphrase("123")
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
@@ -222,7 +219,7 @@ class AdminApiServiceTest {
 
     @Test
     fun importWalletWhenWalletIsUnlockAndWithoutPassphraseAndResultFalseThenFalse() {
-        val importWalletRequest = ImportWalletRequest.newBuilder()
+        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
         every { addressManager.isLocked } returns false
@@ -238,7 +235,7 @@ class AdminApiServiceTest {
 
     @Test
     fun importWalletWhenWalletIsUnlockAndWithoutPassphraseAndResultTrueThenSuccess() {
-        val importWalletRequest = ImportWalletRequest.newBuilder()
+        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
         every { addressManager.isLocked } returns false
@@ -252,7 +249,7 @@ class AdminApiServiceTest {
 
     @Test
     fun importWalletWhenThrowExceptionThenFalse() {
-        val importWalletRequest = ImportWalletRequest.newBuilder()
+        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFromUtf8("test/source"))
             .build()
         every { addressManager.isLocked  } returns false
@@ -265,7 +262,7 @@ class AdminApiServiceTest {
 
     @Test
     fun encryptWalletWhenNoPassphraseThenFalse() {
-        val request = EncryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom(ByteArray(0)))
             .build()
         val reply = adminApiService.encryptWallet(request)
@@ -274,7 +271,7 @@ class AdminApiServiceTest {
 
     @Test
     fun encryptWalletWhenEncryptFalseThenFalse() {
-        val request = EncryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
         every { addressManager.encryptWallet(any()) } returns false
@@ -285,7 +282,7 @@ class AdminApiServiceTest {
 
     @Test
     fun encryptWalletWhenExceptionThenFalse() {
-        val request = EncryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
         every { addressManager.encryptWallet(any()) } throws IllegalStateException()
@@ -296,7 +293,7 @@ class AdminApiServiceTest {
 
     @Test
     fun encryptWalletWhenEncryptTrueThenTrue() {
-        val request = EncryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
         every { addressManager.encryptWallet(any()) } returns true
@@ -307,7 +304,7 @@ class AdminApiServiceTest {
 
     @Test
     fun decryptWalletWhenNoPassphraseThenFalse() {
-        val request = DecryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom(ByteArray(0)))
             .build()
         val reply = adminApiService.decryptWallet(request)
@@ -316,7 +313,7 @@ class AdminApiServiceTest {
 
     @Test
     fun decryptWalletWhenEncryptFalseThenFalse() {
-        val request = DecryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
         every { addressManager.decryptWallet(any()) } returns false
@@ -327,7 +324,7 @@ class AdminApiServiceTest {
 
     @Test
     fun decryptWalletWhenExceptionThenFalse() {
-        val request = DecryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
         every { addressManager.decryptWallet(any()) } throws IllegalStateException()
@@ -338,7 +335,7 @@ class AdminApiServiceTest {
 
     @Test
     fun decryptWalletWhenEncryptTrueThenTrue() {
-        val request = DecryptWalletRequest.newBuilder()
+        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
             .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
             .build()
         every { addressManager.decryptWallet(any()) } returns true
@@ -350,14 +347,14 @@ class AdminApiServiceTest {
     @Test
     fun lockWallet() {
         every { addressManager.lock() } returns Unit
-        val reply = adminApiService.lockWallet(LockWalletRequest.newBuilder().build())
+        val reply = adminApiService.lockWallet(VeriBlockMessages.LockWalletRequest.newBuilder().build())
         verify(exactly = 1) { addressManager.lock() }
         Assert.assertEquals(true, reply.success)
     }
 
     @Test
     fun backupWalletWhenSaveWalletFalseThenFalse() {
-        val request = BackupWalletRequest.newBuilder()
+        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
             .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
             .build()
         val saveWalletResult = Pair(
@@ -371,7 +368,7 @@ class AdminApiServiceTest {
 
     @Test
     fun backupWalletWhenExceptionThenFalse() {
-        val request = BackupWalletRequest.newBuilder()
+        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
             .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
             .build()
         every { addressManager.saveWalletToFile(any()) } throws RuntimeException()
@@ -382,7 +379,7 @@ class AdminApiServiceTest {
 
     @Test
     fun backupWalletWhenSaveWalletTrueThenTrue() {
-        val request = BackupWalletRequest.newBuilder()
+        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
             .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
             .build()
         val saveWalletResult = Pair(
@@ -396,7 +393,7 @@ class AdminApiServiceTest {
 
     @Test
     fun dumpPrivateKeyWhenAddressNotValidThenFalse() {
-        val request = DumpPrivateKeyRequest
+        val request = VeriBlockMessages.DumpPrivateKeyRequest
             .newBuilder()
             .setAddress(ByteString.copyFromUtf8("Not valid address"))
             .build()
@@ -409,7 +406,7 @@ class AdminApiServiceTest {
         val validAddress = "VAhGtBDm6hq3UVkTXwNgyrFhVEfR8J"
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = DumpPrivateKeyRequest
+        val request = VeriBlockMessages.DumpPrivateKeyRequest
             .newBuilder()
             .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
             .build()
@@ -426,7 +423,7 @@ class AdminApiServiceTest {
         val validAddress = "VAhGtBDm6hq3UVkTXwNgyrFhVEfR8J"
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = DumpPrivateKeyRequest
+        val request = VeriBlockMessages.DumpPrivateKeyRequest
             .newBuilder()
             .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
             .build()
@@ -443,7 +440,7 @@ class AdminApiServiceTest {
         val validAddress = "VAhGtBDm6hq3UVkTXwNgyrFhVEfR8J"
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = DumpPrivateKeyRequest
+        val request = VeriBlockMessages.DumpPrivateKeyRequest
             .newBuilder()
             .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
             .build()
@@ -457,7 +454,7 @@ class AdminApiServiceTest {
 
     @Test
     fun importPrivateKeyWhenWalletLockedThenFalse() {
-        val request = ImportPrivateKeyRequest.newBuilder().build()
+        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().build()
         every { addressManager.isLocked } returns true
         val reply = adminApiService.importPrivateKey(request)
         verify(exactly = 1) { addressManager.isLocked }
@@ -468,7 +465,7 @@ class AdminApiServiceTest {
     fun importPrivateKeyWhenAddressNullThenFalse() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
+        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
         every { addressManager.isLocked } returns false
         every { addressManager.importKeyPair(any(), any()) } returns null
         val reply = adminApiService.importPrivateKey(request)
@@ -481,7 +478,7 @@ class AdminApiServiceTest {
     fun importPrivateKeyWhen() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
+        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
         val importedAddress = Address(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public
         )
@@ -495,7 +492,7 @@ class AdminApiServiceTest {
 
     @Test
     fun newAddressWhenWalletLockedThenFalse() {
-        val request = GetNewAddressRequest.newBuilder().build()
+        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns true
         val reply = adminApiService.getNewAddress(request)
         verify(exactly = 1) { addressManager.isLocked }
@@ -504,7 +501,7 @@ class AdminApiServiceTest {
 
     @Test
     fun newAddressWhenGetNewAddressNullThenFalse() {
-        val request = GetNewAddressRequest.newBuilder().build()
+        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns null
         val reply = adminApiService.getNewAddress(request)
@@ -515,7 +512,7 @@ class AdminApiServiceTest {
 
     @Test
     fun newAddressWhenIOExceptionThenFalse() {
-        val request = GetNewAddressRequest.newBuilder().build()
+        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } throws IOException()
         val reply = adminApiService.getNewAddress(request)
@@ -526,7 +523,7 @@ class AdminApiServiceTest {
 
     @Test
     fun newAddressWhenWalletLockedExceptionThenFalse() {
-        val request = GetNewAddressRequest.newBuilder().build()
+        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } throws WalletLockedException("Exception")
         val reply = adminApiService.getNewAddress(request)
@@ -539,7 +536,7 @@ class AdminApiServiceTest {
     fun newAddressWhenSuccessThenTrue() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = GetNewAddressRequest.newBuilder().build()
+        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns address
@@ -551,10 +548,10 @@ class AdminApiServiceTest {
 
     @Test
     fun submitTransactionsWhenTxUnsignedThenFalse() {
-        val transactionUnion = TransactionUnion.newBuilder()
+        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder()
             .setUnsigned(VeriBlockMessages.Transaction.newBuilder().build())
             .build()
-        val request = SubmitTransactionsRequest.newBuilder()
+        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder()
             .addTransactions(transactionUnion)
             .build()
         val reply = adminApiService.submitTransactions(request)
@@ -563,9 +560,9 @@ class AdminApiServiceTest {
 
     @Test
     fun submitTransactionsWhenTxSignedButNotAddToContainerThenFalse() {
-        val signTx = SignedTransaction.newBuilder().build()
-        val transactionUnion = TransactionUnion.newBuilder().setSigned(signTx).build()
-        val request = SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
+        val signTx = VeriBlockMessages.SignedTransaction.newBuilder().build()
+        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder().setSigned(signTx).build()
+        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
         every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns false
         val reply = adminApiService.submitTransactions(request)
@@ -576,9 +573,9 @@ class AdminApiServiceTest {
 
     @Test
     fun submitTransactionsWhenTxSignedThenTrue() {
-        val signTx = SignedTransaction.newBuilder().build()
-        val transactionUnion = TransactionUnion.newBuilder().setSigned(signTx).build()
-        val request = SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
+        val signTx = VeriBlockMessages.SignedTransaction.newBuilder().build()
+        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder().setSigned(signTx).build()
+        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
         every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns true
         val reply = adminApiService.submitTransactions(request)
@@ -589,11 +586,11 @@ class AdminApiServiceTest {
 
     @Test
     fun submitTransactionsWhenTxMultiSigThenTrue() {
-        val signTx = SignedMultisigTransaction.newBuilder().build()
-        val transactionUnion = TransactionUnion.newBuilder()
+        val signTx = VeriBlockMessages.SignedMultisigTransaction.newBuilder().build()
+        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder()
             .setSignedMultisig(signTx)
             .build()
-        val request = SubmitTransactionsRequest.newBuilder()
+        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder()
             .addTransactions(transactionUnion)
             .build()
 
@@ -609,7 +606,7 @@ class AdminApiServiceTest {
 
     @Test
     fun signatureIndexWhenSuccess() {
-        val request = GetSignatureIndexRequest.newBuilder().build()
+        val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder().build()
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
@@ -628,7 +625,7 @@ class AdminApiServiceTest {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
-        val request = GetSignatureIndexRequest.newBuilder()
+        val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder()
             .addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
             .build()
         every { peerTable.getSignatureIndex(any()) } returns 1L
@@ -647,7 +644,7 @@ class AdminApiServiceTest {
             it.data = ByteArray(12)
         }
 
-        val request = CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
+        val request = VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
             ByteString.copyFrom(ByteArray(12))
         ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .setFeePerByte(10000L).setMaxFee(1000L).build()
@@ -668,7 +665,7 @@ class AdminApiServiceTest {
             it.data = ByteArray(12)
         }
 
-        val request = CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
+        val request = VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
             ByteString.copyFrom(ByteArray(12))
         ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .setFeePerByte(10000L).setMaxFee(100000000L).build()
@@ -688,7 +685,7 @@ class AdminApiServiceTest {
             it.inputAmount = Coin.ONE
             it.data = ByteArray(12)
         }
-        val request = CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
+        val request = VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
             ByteString.copyFrom(ByteArray(12))
         ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
             .setFeePerByte(10000L).setMaxFee(100000000L).build()

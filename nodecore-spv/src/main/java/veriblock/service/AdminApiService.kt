@@ -26,7 +26,6 @@ import nodecore.api.grpc.VeriBlockMessages.GetNewAddressRequest
 import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexReply
 import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexRequest
 import nodecore.api.grpc.VeriBlockMessages.GetStateInfoReply
-import nodecore.api.grpc.VeriBlockMessages.GetStateInfoRequest
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
@@ -46,6 +45,9 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.p2p.Constants
 import org.slf4j.LoggerFactory
+import org.veriblock.core.NotFoundException
+import org.veriblock.core.SendCoinsException
+import org.veriblock.core.VeriBlockError
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
@@ -59,6 +61,7 @@ import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
+import veriblock.model.AddressLight
 import veriblock.model.LedgerContext
 import veriblock.model.Output
 import veriblock.model.StandardAddress
@@ -71,11 +74,8 @@ import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.security.PrivateKey
-import java.sql.SQLException
 import java.util.ArrayList
-import java.util.concurrent.ExecutionException
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 class AdminApiService(
     private val spvContext: SpvContext,
@@ -86,52 +86,38 @@ class AdminApiService(
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val blockchain: Blockchain
 ) {
-    fun getStateInfo(request: GetStateInfoRequest?): GetStateInfoReply {
-        //TODO do real statuses.
-        val blockchainStateValue = VeriBlockMessages.BlockchainStateInfo.State.LOADED_VALUE
-        val operatingStateValue = VeriBlockMessages.OperatingStateInfo.State.STARTED_VALUE
-        val networkStateValue = VeriBlockMessages.NetworkStateInfo.State.CONNECTED_VALUE
-        val replyBuilder = GetStateInfoReply.newBuilder()
-        replyBuilder.setBlockchainState(VeriBlockMessages.BlockchainStateInfo.newBuilder().setStateValue(blockchainStateValue))
-        replyBuilder.setOperatingState(VeriBlockMessages.OperatingStateInfo.newBuilder().setStateValue(operatingStateValue))
-        replyBuilder.setNetworkState(VeriBlockMessages.NetworkStateInfo.newBuilder().setStateValue(networkStateValue))
-        replyBuilder.connectedPeerCount = peerTable.getAvailablePeers()
-        replyBuilder.networkHeight = peerTable.getBestBlockHeight()
-        replyBuilder.localBlockchainHeight = blockchain.getChainHead()!!.height
-        replyBuilder.networkVersion = spvContext.networkParameters.name
-        replyBuilder.dataDirectory = spvContext.directory.path
-        replyBuilder.programVersion = if (Constants.PROGRAM_VERSION == null) "UNKNOWN" else Constants.PROGRAM_VERSION
-        replyBuilder.nodecoreStarttime = spvContext.startTime.epochSecond
-        //TODO does it need for spv?
-        replyBuilder.walletCacheSyncHeight = blockchain.getChainHead()!!.height
-        if (!addressManager.isEncrypted) {
-            replyBuilder.walletState = GetStateInfoReply.WalletState.DEFAULT
-        } else {
-            if (addressManager.isLocked) {
-                replyBuilder.walletState = GetStateInfoReply.WalletState.LOCKED
-            } else {
-                replyBuilder.walletState = GetStateInfoReply.WalletState.UNLOCKED
+    fun getStateInfo(): StateInfo {
+        //TODO do real states.
+        val blockchainState = BlockchainState.LOADED
+        val operatingState = OperatingState.STARTED
+        val networkState = NetworkState.CONNECTED
+        return StateInfo(
+            //TODO do real statuses.
+            blockchainState = blockchainState,
+            operatingState = operatingState,
+            networkState = networkState,
+            connectedPeerCount = peerTable.getAvailablePeers(),
+            networkHeight = peerTable.getBestBlockHeight(),
+            localBlockchainHeight = blockchain.getChainHead()!!.height,
+            networkVersion = spvContext.networkParameters.name,
+            dataDirectory = spvContext.directory.path,
+            programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",
+            nodecoreStartTime = spvContext.startTime.epochSecond,
+            walletCacheSyncHeight = blockchain.getChainHead()!!.height,
+            walletState = when {
+                addressManager.isEncrypted -> WalletState.DEFAULT
+                addressManager.isLocked -> WalletState.LOCKED
+                else -> WalletState.UNLOCKED
             }
-        }
-        replyBuilder.success = true
-        return replyBuilder.build()
+        )
     }
 
-    fun sendCoins(request: SendCoinsRequest): SendCoinsReply {
-        val replyBuilder = SendCoinsReply.newBuilder()
-        val sourceAddress = request.sourceAddress
+    fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {
         val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
-        val outputList = ArrayList<Output>()
-        for (output in request.amountsList) {
-            val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.address)
-            outputList.add(
-                Output(StandardAddress(address), Coin.valueOf(output.amount))
-            )
-        }
-        val totalOutputAmount = outputList.map {
+        val totalOutputAmount = outputs.map {
             it.amount.atomicUnits
         }.sum()
-        if (sourceAddress.isEmpty) {
+        if (sourceAddress == null) {
             for (availableAddress in getAvailableAddresses(totalOutputAmount)) {
                 addressCoinsIndexList.add(
                     AddressCoinsIndex(
@@ -141,22 +127,12 @@ class AdminApiService(
                 )
             }
         } else {
-            val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.sourceAddress)
+            val address = sourceAddress.get()
             val ledgerContext = peerTable.getAddressState(address)
             if (ledgerContext == null) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V008", "Information about this address does not exist.",
-                        "Perhaps your node is waiting for this information. Try to do it later.", true
-                    )
-                )
-                return replyBuilder.build()
+                throw SendCoinsException("Information about this address does not exist. Perhaps your node is waiting for this information. Try to do it later.")
             } else if (!ledgerContext.ledgerProofStatus!!.exists()) {
-                replyBuilder.success = false
-                replyBuilder
-                    .addResults(makeResult("V008", "Address doesn't exist or invalid.", "Check your address that you use for this operation.", true))
-                return replyBuilder.build()
+                throw SendCoinsException("Address doesn't exist or is invalid. Check the address you used for this operation.")
             }
             addressCoinsIndexList.add(
                 AddressCoinsIndex(
@@ -167,29 +143,17 @@ class AdminApiService(
         }
         val totalAvailableBalance = addressCoinsIndexList.map(AddressCoinsIndex::coins).sum()
         if (totalOutputAmount > totalAvailableBalance) {
-            replyBuilder.success = false
-            replyBuilder
-                .addResults(makeResult("V008", "Available balance is not enough.", "Check your address that you use for this operation.", true))
-            return replyBuilder.build()
+            throw SendCoinsException("Available balance is not enough. Check your address that you use for this operation.")
         }
         val transactions = transactionService.createTransactionsByOutputList(
-            addressCoinsIndexList, outputList
+            addressCoinsIndexList, outputs
         )
-        if (transactions.isEmpty()) {
-            replyBuilder.success = false
-            replyBuilder
-                .addResults(
-                    makeResult("V008", "Transaction has not been created, there is an exception.", "Check your address balance and try later.", true)
-                )
-            return replyBuilder.build()
-        }
-        for (transaction in transactions) {
-            pendingTransactionContainer.addTransaction(transaction)
-            peerTable.advertise(transaction)
-            replyBuilder.addTxIds(ByteStringUtility.hexToByteString(transaction.txId.toString()))
-        }
-        replyBuilder.success = true
-        return replyBuilder.build()
+        return transactions.asSequence().onEach {
+            pendingTransactionContainer.addTransaction(it)
+            peerTable.advertise(it)
+        }.map {
+            it.txId
+        }.toList()
     }
 
     fun getSignatureIndex(request: GetSignatureIndexRequest): GetSignatureIndexReply {

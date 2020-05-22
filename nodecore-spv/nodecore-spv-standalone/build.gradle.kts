@@ -17,7 +17,6 @@ plugins {
     kotlin("jvm")
     idea
     application
-    kotlin("plugin.serialization") version kotlinVersion
     id("nebula.ospackage")
 }
 
@@ -35,61 +34,21 @@ dependencies {
     implementation(project(":veriblock-core"))
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-grpc"))
-    implementation(project(":altchain-sdk"))
     implementation(project(":nodecore-spv"))
-    implementation(project(":pop-miners:pop-miners-common"))
-    runtimeOnly(project(":altchain-plugins"))
-
-    // Dependency Injection
-    implementation("org.koin:koin-core:$koinVersion")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
-    // HTTP API
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-locations:$ktorVersion")
-    implementation("io.ktor:ktor-gson:$ktorVersion")
-    // Serialization
-    implementation("io.ktor:ktor-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8")
-    // Metrics
-    implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
-    // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:reworked-model-SNAPSHOT")
-
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
-    implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5")
-    implementation("ch.qos.logback.contrib:logback-jackson:0.1.5")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
 
-    // Protobuf Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
-
-    implementation("commons-cli:commons-cli:1.4")
-    implementation("com.google.code.gson:gson:2.8.2")
-    implementation("com.google.guava:guava:26.0-jre")
-    implementation("com.diogonunes:JCDP:2.0.3.1")
-
-    // Database
-    implementation("org.jetbrains.exposed:exposed-core:0.23.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
-    implementation("com.zaxxer:HikariCP:3.3.1")
-    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
+    // Other
+    implementation("me.tongfei:progressbar:0.8.1")
 
     testImplementation("junit:junit:4.12")
-    testImplementation("org.apache.commons:commons-lang3:3.8.1")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
-
-    // Integration tests
-    testImplementation("org.testcontainers:testcontainers:1.14.1")
-    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
-    testImplementation("io.ktor:ktor-client-gson:$ktorVersion")
 }
 
 tasks.test {
@@ -107,10 +66,10 @@ tasks.named<JavaExec>("run") {
     }
 }
 
-application.applicationName = "altchain-pop-miner"
-application.mainClassName = "org.veriblock.miners.pop.AltchainPoPMiner"
+application.applicationName = "veriblock-spv"
+application.mainClassName = "org.veriblock.spv.standalone.VeriBlockSPV"
 
-setupJar("Altchain Proof-of-Proof (PoP) Miner", "veriblock.miners.pop")
+setupJar("VeriBlock SPV Wallet", "org.veriblock.spv")
 
 tasks.distZip {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.zip")
@@ -129,7 +88,7 @@ apply(plugin = "nebula.ospackage")
 tasks.register<Deb>("createDeb") {
     dependsOn("installDist")
     packageName = application.applicationName
-    packageDescription = "VeriBlock Proof-of-Proof (PoP) Miner"
+    packageDescription = "VeriBlock SPV Wallet"
     archStr = "amd64"
     distribution = "bionic"
     url = "https://github.com/VeriBlock/nodecore"
@@ -163,8 +122,7 @@ distributions {
                 into("bin")
             }
             rename("application-default.conf", "application.conf")
+            from ("./README.md")
         }
     }
 }
-
-customTests("integration")

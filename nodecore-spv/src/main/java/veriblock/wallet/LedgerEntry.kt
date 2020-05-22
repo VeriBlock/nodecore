@@ -11,7 +11,7 @@ import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.services.SerializeDeserializeService
-import veriblock.model.AddressFactory.create
+import veriblock.model.asLightAddress
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
@@ -46,13 +46,13 @@ class LedgerEntry(
 
     companion object {
         fun generateKey(
-            address: String?,
+            address: String,
             txId: Sha256Hash,
             debitAmount: Coin?,
             creditAmount: Coin?,
             positionIndex: Int?
         ): Sha256Hash {
-            val a = create(address!!)
+            val a = address.asLightAddress()
             try {
                 ByteArrayOutputStream().use { stream ->
                     a.serializeToStream(stream)

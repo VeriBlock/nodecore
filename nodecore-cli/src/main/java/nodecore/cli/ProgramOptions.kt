@@ -19,11 +19,8 @@ import java.util.Properties
 class ProgramOptions {
     var configPath: String? = null
         private set
-    private val _scripts: List<String> = ArrayList()
     private var _properties = Properties()
     var connect: String? = null
-        private set
-    var spvNetworkParameters: NetworkParameters? = null
         private set
 
     fun parse(args: Array<String>): Boolean {
@@ -48,26 +45,18 @@ class ProgramOptions {
             .desc("Specify a node to connect to on startup")
             .longOpt("connect")
             .build()
-        val startSPV = Option.builder("startspv")
-            .argName("net")
-            .hasArg()
-            .required(false)
-            .desc("Specify a node to connect to on startup")
-            .longOpt("startspv")
-            .build()
         val options = Options()
         options.addOption(configFileOption)
         options.addOption(paramOption)
         options.addOption(connectOption)
-        options.addOption(startSPV)
         val parser: CommandLineParser = DefaultParser()
         return try {
             val commandLine = parser.parse(options, args)
             _properties = commandLine.getOptionProperties("D")
-            if (commandLine.hasOption("c")) configPath = commandLine.getOptionValue('c')
-            if (commandLine.hasOption("startspv")) {
-                spvNetworkParameters = getDefaultNetworkParameters(commandLine.getOptionValue("startspv"))
-            } else if (commandLine.hasOption("connect")) {
+            if (commandLine.hasOption("c")) {
+                configPath = commandLine.getOptionValue('c')
+            }
+            if (commandLine.hasOption("connect")) {
                 connect = commandLine.getOptionValue("connect")
             }
             true

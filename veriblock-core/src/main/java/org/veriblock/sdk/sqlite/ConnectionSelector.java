@@ -24,10 +24,6 @@ public class ConnectionSelector {
     public static final String defaultDatabaseName = "database.sqlite";
     public static final String testDatabaseName = "database-test.sqlite";
 
-    public interface Factory {
-        Connection createConnection() throws SQLException;
-    }
-
     static {
         try {
             DriverManager.registerDriver(new JDBC());
@@ -44,7 +40,7 @@ public class ConnectionSelector {
             return setConnectionInMemory();
         }
 
-        logger.info("SqlLite path: '{}'", databasePath);
+        logger.debug("SQLite path: '{}'", databasePath);
 
         String url = String.format("jdbc:sqlite:%s", databasePath);
         return DriverManager.getConnection(url);

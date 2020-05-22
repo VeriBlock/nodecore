@@ -7,21 +7,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.wallet
 
-import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import org.slf4j.LoggerFactory
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VBlakeHash
-import veriblock.model.AddressFactory.create
 import veriblock.model.Output
 import veriblock.model.OutputFactory.create
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.TransactionMeta
 import veriblock.model.TransactionMeta.MetaState.Companion.forNumber
-import java.util.function.Consumer
-import java.util.stream.Collectors
+import veriblock.model.asLightAddress
 
 class WalletProtobufSerializer {
     fun deserializeOutputs(output: List<VeriBlockMessages.Output>): List<Output> {
@@ -44,7 +40,7 @@ class WalletProtobufSerializer {
 
     fun deserialize(proto: Protos.Transaction): StandardTransaction {
         val tx = StandardTransaction(Sha256Hash.wrap(proto.txId.toByteArray()))
-        tx.inputAddress = create(proto.input.address)
+        tx.inputAddress = proto.input.address.asLightAddress()
         tx.inputAmount = Coin.valueOf(proto.input.amount)
         for (o in proto.outputsList) {
             tx.addOutput(create(o.address, o.amount))

@@ -137,11 +137,11 @@ class NodeCoreLiteKit(
         throw IOException("Unable to load the address manager", e)
     }
 
-    private fun initSpvContest(networkParameters: NetworkParameters, addresses: Collection<org.veriblock.core.wallet.Address>): SpvContext {
+    private fun initSpvContext(networkParameters: NetworkParameters, addresses: Collection<org.veriblock.core.wallet.Address>): SpvContext {
         val spvContext = SpvContext()
         spvContext.init(
             networkParameters,
-            LocalhostDiscovery(networkParameters), false
+            LocalhostDiscovery(networkParameters)
         )
         spvContext.peerTable.start()
 
