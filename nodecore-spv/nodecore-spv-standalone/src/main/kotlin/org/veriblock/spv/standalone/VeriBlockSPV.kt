@@ -75,10 +75,8 @@ private fun run(): Int {
                 sleep(1000L)
                 status = spvContext.peerTable.getDownloadStatus()
             }
-            // DownloadStatus is READY when the difference between the currentHeight and bestHeight is smaller than 50
-            if (status.downloadStatus == DownloadStatus.READY) {
-                progressBar.stepTo(status.bestHeight.toLong())
-            }
+            progressBar.maxHint(status.bestHeight.toLong())
+            progressBar.stepTo(status.bestHeight.toLong())
         }
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
         shell.run()

@@ -121,10 +121,8 @@ distributions {
             from ("./src/main/resources/application-default.conf") {
                 into("bin")
             }
-            from ("./README.md") {
-                into("README.md")
-            }
             rename("application-default.conf", "application.conf")
+            from ("./README.md")
         }
     }
 }
