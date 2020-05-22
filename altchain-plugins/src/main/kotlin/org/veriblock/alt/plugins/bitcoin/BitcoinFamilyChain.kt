@@ -238,7 +238,7 @@ class BitcoinFamilyChain(
         val response: BtcSyncStatus = try {
             rpcRequest("getblockchaininfo")
         } catch (e: Exception) {
-            logger.info { "Unable to perform the 'getblockchaininfo' rpc call: ${e.message}" }
+            logger.debug { "Unable to perform the 'getblockchaininfo' rpc call: ${e.message}" }
             return false
         }
         val blockDifference = response.headers - response.blocks
