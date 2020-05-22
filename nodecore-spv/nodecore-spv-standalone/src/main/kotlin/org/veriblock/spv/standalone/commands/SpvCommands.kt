@@ -12,6 +12,7 @@ import org.veriblock.core.InvalidAddressException
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.shell.CommandContext
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -76,7 +77,7 @@ fun CommandFactory.spvCommands(
             outputs = listOf(
                 Output(
                     destinationAddress.asLightAddress(),
-                    Coin.valueOf(atomicAmount)
+                    atomicAmount.asCoin()
                 )
             )
         )

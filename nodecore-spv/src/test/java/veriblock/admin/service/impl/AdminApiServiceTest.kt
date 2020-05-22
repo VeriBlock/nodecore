@@ -18,6 +18,7 @@ import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultTestNetParameters
+import org.veriblock.sdk.models.asCoin
 import veriblock.SpvContext
 import veriblock.model.LedgerContext
 import veriblock.model.LedgerProofStatus
@@ -82,7 +83,7 @@ class AdminApiServiceTest {
             listOf(
                 Output(
                     "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    Coin.valueOf(100)
+                    100.asCoin()
                 )
             )
         )
@@ -112,7 +113,7 @@ class AdminApiServiceTest {
             listOf(
                 Output(
                     "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    Coin.valueOf(100)
+                    100.asCoin()
                 )
             )
         )
@@ -136,7 +137,7 @@ class AdminApiServiceTest {
             listOf(
                 Output(
                     "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    Coin.valueOf(100)
+                    100.asCoin()
                 )
             )
         )
@@ -160,7 +161,7 @@ class AdminApiServiceTest {
             listOf(
                 Output(
                     "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    Coin.valueOf(100)
+                    100.asCoin()
                 )
             )
         )
@@ -180,7 +181,7 @@ class AdminApiServiceTest {
             listOf(
                 Output(
                     "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    Coin.valueOf(100)
+                    100.asCoin()
                 )
             )
         )

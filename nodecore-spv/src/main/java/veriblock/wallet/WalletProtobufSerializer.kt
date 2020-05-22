@@ -8,9 +8,8 @@
 package veriblock.wallet
 
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.asCoin
 import veriblock.model.Output
 import veriblock.model.OutputFactory.create
