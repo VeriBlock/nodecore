@@ -46,11 +46,9 @@ fun CommandFactory.debugCommands(
         }
 
         val plugins = pluginService.getPlugins().filter { it.key != "test" }
-        if (plugins.isEmpty()) {
-            printInfo("FAIL - There are no plugins loaded")
-        } else {
-            plugins.forEach {
-                runBlocking {
+        if (plugins.isNotEmpty()) {
+            runBlocking {
+                plugins.forEach {
                     if (it.value.isConnected()) {
                         printInfo("SUCCESS - ${it.value.name} connection: Connected")
                         if (it.value.isSynchronized()) {
@@ -64,17 +62,19 @@ fun CommandFactory.debugCommands(
                     }
                 }
             }
+        } else {
+            printInfo("FAIL - There are no plugins loaded")
         }
 
         try {
             val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
             if (nodeCoreLiteKit.network.isHealthy()) {
-                if (currentBalance.atomicUnits < config.maxFee) {
+                if (currentBalance.atomicUnits > config.maxFee) {
+                    printInfo("SUCCESS - The PoP wallet contains sufficient funds")
+                } else {
                     printInfo("FAIL - The PoP wallet does not contain sufficient funds:")
                     printInfo("FAIL - Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                     printInfo("FAIL - Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
-                } else {
-                    printInfo("SUCCESS - The PoP wallet contains sufficient funds")
                 }
             } else {
                 printInfo("FAIL - Unable to determine the PoP balance.")
