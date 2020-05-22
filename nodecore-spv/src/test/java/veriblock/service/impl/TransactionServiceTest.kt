@@ -17,7 +17,7 @@ class TransactionServiceTest : TestCase() {
     private val spvContext = SpvContext()
 
     public override fun setUp() {
-        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters), false)
+        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
     }
 
     @Test

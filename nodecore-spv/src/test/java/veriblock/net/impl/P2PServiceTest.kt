@@ -25,7 +25,7 @@ class P2PServiceTest {
 
     @Before
     fun setUp() {
-        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters), false)
+        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
         pendingTransactionContainer = mockk(relaxed = true)
         peer = mockk(relaxed = true)
         p2PService = P2PService(pendingTransactionContainer, spvContext.networkParameters)

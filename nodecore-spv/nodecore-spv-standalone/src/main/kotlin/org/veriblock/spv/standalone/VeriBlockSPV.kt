@@ -57,7 +57,7 @@ private fun run(): Int {
 
     logger.info { "Initializing SPV Context..." }
     try {
-        spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters), false)
+        spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters))
         spvContext.peerTable.start()
         ProgressBarBuilder().apply {
             setTaskName("Loading SPV")

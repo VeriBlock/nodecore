@@ -18,7 +18,7 @@ class StandardTransactionTest {
 
     @Before
     fun setUp() {
-        spvContext.init(defaultMainNetParameters, LocalhostDiscovery(defaultMainNetParameters), false)
+        spvContext.init(defaultMainNetParameters, LocalhostDiscovery(defaultMainNetParameters))
     }
 
     @Test
