@@ -2,15 +2,14 @@ package veriblock.model.mapper
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
+import org.veriblock.core.bitcoinj.Base58
+import org.veriblock.sdk.models.Address
 import veriblock.exception.SpvProcessException
 import veriblock.model.BlockHeader
 import veriblock.model.LedgerContext
 import veriblock.model.LedgerProofStatus
 import veriblock.model.LedgerValue
-import veriblock.util.AddressFactory
 import java.util.ArrayList
-import java.util.function.Function
-import java.util.stream.Collectors
 
 object LedgerProofReplyMapper {
     fun map(ledgerProofResults: List<LedgerProofResult>): List<LedgerContext> {
@@ -23,8 +22,8 @@ object LedgerProofReplyMapper {
 
     fun map(ledgerProofResult: LedgerProofResult): LedgerContext {
         val ledgerContext = LedgerContext()
-        val address = AddressFactory.build(ledgerProofResult.address.toByteArray())
-        val status: LedgerProofStatus = LedgerProofStatus.Companion.getByOrdinal(
+        val address = Address(Base58.encode(ledgerProofResult.address.toByteArray()))
+        val status: LedgerProofStatus = LedgerProofStatus.getByOrdinal(
             ledgerProofResult.result.number
         )
         val blockHeaderVB = ledgerProofResult.ledgerProofWithContext.blockHeader

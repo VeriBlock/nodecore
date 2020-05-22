@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.model
 
+import org.veriblock.core.utilities.AddressUtility
 import java.io.IOException
 import java.io.OutputStream
 
@@ -39,4 +40,14 @@ abstract class AddressLight protected constructor(
     override fun equals(other: Any?): Boolean {
         return address == other
     }
+}
+
+fun String.asLightAddress(): AddressLight {
+    if (AddressUtility.isValidStandardAddress(this)) {
+        return StandardAddress(this)
+    }
+    if (AddressUtility.isValidMultisigAddress(this)) {
+        return MultisigAddress(this)
+    }
+    throw IllegalArgumentException("$this is not a valid address")
 }

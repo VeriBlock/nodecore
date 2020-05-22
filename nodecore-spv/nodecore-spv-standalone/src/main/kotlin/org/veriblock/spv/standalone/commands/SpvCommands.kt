@@ -1,5 +1,6 @@
 package org.veriblock.spv.standalone.commands
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.protobuf.ByteString
 import com.google.protobuf.Message
@@ -7,8 +8,10 @@ import com.google.protobuf.util.JsonFormat
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.jline.utils.AttributedStyle
+import org.veriblock.core.InvalidAddressException
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.Coin
 import org.veriblock.shell.CommandContext
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -17,6 +20,8 @@ import org.veriblock.shell.command
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 import veriblock.SpvContext
+import veriblock.model.Output
+import veriblock.model.asLightAddress
 
 fun CommandFactory.spvCommands(
     context: SpvContext
@@ -47,7 +52,7 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("getbalance") }
     ) {
         val result = context.adminApiService.getStateInfo()
-        prepareResult(result.success, result.resultsList, result)
+        displayResult(result)
     }
 
     command(
@@ -66,24 +71,17 @@ fun CommandFactory.spvCommands(
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
 
-        val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+        val result = context.adminApiService.sendCoins(
+            sourceAddress = sourceAddress?.asLightAddress(),
+            outputs = listOf(
+                Output(
+                    destinationAddress.asLightAddress(),
+                    Coin.valueOf(atomicAmount)
+                )
+            )
+        )
 
-        if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
-            request.addAmounts(VeriBlockMessages.Output.newBuilder()
-                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
-                .setAmount(atomicAmount))
-
-            if (sourceAddress != null && AddressUtility.isValidStandardAddress(sourceAddress)) {
-                request.sourceAddress = ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress)
-            }
-
-            val result = context.adminApiService.sendCoins(request.build())
-
-            prepareResult(result.success, result.resultsList, result)
-        } else {
-            // Should never happen; address validity is checked by argument parser
-            failure()
-        }
+        displayResult(result)
     }
 
     command(
@@ -244,6 +242,16 @@ fun CommandContext.prepareResult(
         )
         success(results)
     }
+}
+
+fun CommandContext.displayResult(
+    result: Any
+): Result {
+    shell.printStyled(
+        Gson().toJson(result) + "\n",
+        AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+    )
+    return org.veriblock.shell.core.success()
 }
 
 fun failure(results: List<VeriBlockMessages.Result>) = failure {

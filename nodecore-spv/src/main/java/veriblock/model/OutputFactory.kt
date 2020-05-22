@@ -14,7 +14,7 @@ object OutputFactory {
         require(amount >= 1) {
             "Output amounts must be greater than 0 (actual amount: $amount)"
         }
-        val addressObj = AddressFactory.create(address)
+        val addressObj = address.asLightAddress()
         val amountObj = Coin.valueOf(amount)
         return Output(addressObj, amountObj)
     }
