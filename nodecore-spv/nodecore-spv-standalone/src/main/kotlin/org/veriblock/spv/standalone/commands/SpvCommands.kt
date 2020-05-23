@@ -103,12 +103,10 @@ fun CommandFactory.spvCommands(
         description = "Temporarily unlocks the NodeCore wallet",
         suggestedCommands = { listOf("lockwallet") }
     ) {
-        val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val request = VeriBlockMessages.UnlockWalletRequest.newBuilder()
-            .setPassphrase(passphrase).build()
-        val result = context.adminApiService.unlockWallet(request)
+        val passphrase = shell.passwordPrompt("Enter passphrase: ")!!
+        val result = context.adminApiService.unlockWallet(passphrase)
 
-        prepareResult(result.success, result.resultsList, result)
+        displayResult(result)
     }
 
     command(

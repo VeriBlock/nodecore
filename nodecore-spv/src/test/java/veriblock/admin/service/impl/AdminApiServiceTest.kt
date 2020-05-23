@@ -190,20 +190,16 @@ class AdminApiServiceTest {
 
     @Test
     fun unlockWalletWhenWalletIsLockThenTrue() {
-        val unlockWalletRequest = VeriBlockMessages.UnlockWalletRequest.newBuilder().setPassphrase("123").build()
         every { addressManager.unlock(any()) } returns true
-        val reply = adminApiService.unlockWallet(unlockWalletRequest)
+        adminApiService.unlockWallet("123")
         verify(exactly = 1) { addressManager.unlock(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun unlockWalletWhenWalletIsUnlockThenFalse() {
-        val unlockWalletRequest = VeriBlockMessages.UnlockWalletRequest.newBuilder().setPassphrase("123").build()
         every { addressManager.unlock(any()) } returns false
-        val reply = adminApiService.unlockWallet(unlockWalletRequest)
+        adminApiService.unlockWallet("123")
         verify(exactly = 1) { addressManager.unlock(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
     @Test

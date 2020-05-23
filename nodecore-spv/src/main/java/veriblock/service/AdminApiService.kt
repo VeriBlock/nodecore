@@ -315,38 +315,15 @@ class AdminApiService(
         return replyBuilder.build()
     }
 
-    fun unlockWallet(request: UnlockWalletRequest): ProtocolReply {
-        val replyBuilder = ProtocolReply.newBuilder()
-        if (request.passphraseBytes.size() <= 0) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V041", "Invalid passphrase",
-                    "Passphrase is invalid for unlocking this wallet", true
-                )
-            )
+    fun unlockWallet(passphrase: String) {
+        if (passphrase.isEmpty()) {
+            throw WalletException("Passphrase is invalid for unlocking this wallet")
         } else {
-            val passphrase = request.passphrase.toCharArray()
-            val result = addressManager.unlock(passphrase)
-            if (result) {
-                replyBuilder.success = true
-                replyBuilder.addResults(
-                    makeResult(
-                        "V200", "Success",
-                        "Wallet has been unlocked", false
-                    )
-                )
-            } else {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V041", "Invalid passphrase",
-                        "Passphrase is invalid for unlocking this wallet", true
-                    )
-                )
+            val result = addressManager.unlock(passphrase.toCharArray())
+            if (!result) {
+                throw WalletException("Passphrase is invalid for unlocking this wallet")
             }
         }
-        return replyBuilder.build()
     }
 
     fun lockWallet(request: LockWalletRequest?): ProtocolReply {
