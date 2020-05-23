@@ -343,10 +343,8 @@ class AdminApiServiceTest {
 
     @Test
     fun lockWallet() {
-        every { addressManager.lock() } returns Unit
-        val reply = adminApiService.lockWallet(VeriBlockMessages.LockWalletRequest.newBuilder().build())
+        adminApiService.lockWallet()
         verify(exactly = 1) { addressManager.lock() }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test

@@ -326,17 +326,8 @@ class AdminApiService(
         }
     }
 
-    fun lockWallet(request: LockWalletRequest?): ProtocolReply {
-        val replyBuilder = ProtocolReply.newBuilder()
+    fun lockWallet() {
         addressManager.lock()
-        replyBuilder.success = true
-        replyBuilder.addResults(
-            makeResult(
-                "V200", "Success",
-                "Wallet has been locked", false
-            )
-        )
-        return replyBuilder.build()
     }
 
     fun backupWallet(request: BackupWalletRequest): BackupWalletReply {
