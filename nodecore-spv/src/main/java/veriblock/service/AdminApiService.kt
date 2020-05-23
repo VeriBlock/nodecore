@@ -45,6 +45,7 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.p2p.Constants
 import org.slf4j.LoggerFactory
+import org.veriblock.core.ImportException
 import org.veriblock.core.NotFoundException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
@@ -61,6 +62,7 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
@@ -211,34 +213,18 @@ class AdminApiService(
         return fullBytes
     }
 
-    fun importPrivateKey(request: ImportPrivateKeyRequest): ImportPrivateKeyReply {
-        val replyBuilder = ImportPrivateKeyReply.newBuilder()
+    fun importPrivateKey(privateKey: ByteArray): Address {
         if (addressManager.isLocked) {
-            replyBuilder.success = false
-            replyBuilder.addResults(makeResult("V045", "Import Failed", "Wallet must be unlocked before importing a key", true))
-            return replyBuilder.build()
+            throw ImportException("Wallet must be unlocked before importing a key")
         }
 
         // The "Private" key is really the public and private key together encoded
-        val fullBytes = request.privateKey.toByteArray()
-        val privateKeyBytes = ByteArray(fullBytes[0].toInt())
-        val publicKeyBytes = ByteArray(fullBytes.size - fullBytes[0] - 1)
-        System.arraycopy(fullBytes, 1, privateKeyBytes, 0, privateKeyBytes.size)
-        System.arraycopy(fullBytes, privateKeyBytes.size + 1, publicKeyBytes, 0, publicKeyBytes.size)
+        val privateKeyLength = privateKey[0].toInt()
+        val privateKeyBytes = privateKey.copyOfRange(1, privateKeyLength + 1)
+        val publicKeyBytes = privateKey.copyOfRange(privateKeyLength + 1, privateKey.size)
         val importedAddress = addressManager.importKeyPair(publicKeyBytes, privateKeyBytes)
-        if (importedAddress == null) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V008", "The provided private key was invalid or corrupted!",
-                    Utility.bytesToHex(fullBytes) + " is  not a valid private key!", true
-                )
-            )
-            return replyBuilder.build()
-        }
-        replyBuilder.resultantAddress = ByteStringAddressUtility.createProperByteStringAutomatically(importedAddress.hash)
-        replyBuilder.success = true
-        return replyBuilder.build()
+            ?: throw ImportException("The private key ${privateKey.toHex()} is invalid or corrupted!")
+        return importedAddress
     }
 
     fun encryptWallet(request: EncryptWalletRequest): ProtocolReply {

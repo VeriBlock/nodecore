@@ -9,6 +9,7 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
@@ -427,42 +428,37 @@ class AdminApiServiceTest {
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
 
-    @Test
+    @Test(expected = ImportException::class)
     fun importPrivateKeyWhenWalletLockedThenFalse() {
         val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().build()
         every { addressManager.isLocked } returns true
-        val reply = adminApiService.importPrivateKey(request)
+        adminApiService.importPrivateKey(byteArrayOf())
         verify(exactly = 1) { addressManager.isLocked }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = ImportException::class)
     fun importPrivateKeyWhenAddressNullThenFalse() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
         every { addressManager.isLocked } returns false
         every { addressManager.importKeyPair(any(), any()) } returns null
-        val reply = adminApiService.importPrivateKey(request)
+        adminApiService.importPrivateKey(keyPair.private.encoded)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
     @Test
     fun importPrivateKeyWhen() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().setPrivateKey(ByteString.copyFrom(keyPair.private.encoded)).build()
         val importedAddress = Address(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public
         )
         every { addressManager.isLocked } returns false
         every { addressManager.importKeyPair(any(), any()) } returns importedAddress
-        val reply = adminApiService.importPrivateKey(request)
+        val reply = adminApiService.importPrivateKey(keyPair.private.encoded)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test
