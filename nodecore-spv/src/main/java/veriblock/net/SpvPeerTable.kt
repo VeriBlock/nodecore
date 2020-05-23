@@ -444,12 +444,14 @@ class SpvPeerTable(
     }
 
     fun getSignatureIndex(address: String): Long? {
-        return if (addressesState[address]!!.ledgerValue != null) addressesState[address]!!.ledgerValue!!.signatureIndex else null
+        return addressesState[address]?.ledgerValue?.signatureIndex
     }
 
     fun getAvailablePeers(): Int = peers.size
 
-    fun getBestBlockHeight(): Int = peers.values.map { it.bestBlockHeight }.max() ?: 0
+    fun getBestBlockHeight(): Int = peers.values.map {
+        it.bestBlockHeight
+    }.max() ?: 0
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus

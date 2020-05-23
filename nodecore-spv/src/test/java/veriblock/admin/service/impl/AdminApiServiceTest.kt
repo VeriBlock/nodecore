@@ -614,11 +614,10 @@ class AdminApiServiceTest {
         every { addressManager.defaultAddress } returns address
         every { peerTable.getSignatureIndex(any()) } returns 1L
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        val reply = adminApiService.getSignatureIndex(request)
+        adminApiService.getSignatureIndex(emptyList())
         verify(exactly = 1) { addressManager.defaultAddress }
         verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test
@@ -626,15 +625,11 @@ class AdminApiServiceTest {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
-        val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder()
-            .addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
-            .build()
         every { peerTable.getSignatureIndex(any()) } returns 1L
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        val reply = adminApiService.getSignatureIndex(request)
+        adminApiService.getSignatureIndex(listOf(address.hash.asLightAddress()))
         verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test

@@ -50,15 +50,4 @@ public class UtilityTests {
         Assert.assertEquals(20, Utility.toInt(bitSet.get(offset + 36, offset + 42)));
         Assert.assertEquals(36, Utility.toInt(bitSet.get(offset + 42, bitSet.length())));
     }
-
-
-    @Test
-    public void hexWithOddLength() {
-        //With Odd length
-        String expectedValue = "1";
-        byte[] hex = Utility.hexToBytes(expectedValue);
-        String actualValue = Utility.bytesToHex(hex);
-
-        Assert.assertTrue("01".equals(actualValue));
-    }
 }

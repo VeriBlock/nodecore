@@ -67,6 +67,7 @@ import veriblock.model.LedgerContext
 import veriblock.model.Output
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
+import veriblock.model.asLightAddress
 import veriblock.net.SpvPeerTable
 import veriblock.service.TransactionService.Companion.getRegularTransactionMessageBuilder
 import veriblock.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
@@ -156,35 +157,18 @@ class AdminApiService(
         }.toList()
     }
 
-    fun getSignatureIndex(request: GetSignatureIndexRequest): GetSignatureIndexReply {
-        val replyBuilder = GetSignatureIndexReply.newBuilder()
-        replyBuilder.success = true
-        val addresses = ArrayList<String>()
-        if (request.addressesCount > 0) {
-            for (value in request.addressesList) {
-                addresses.add(ByteStringAddressUtility.parseProperAddressTypeAutomatically(value))
-            }
+    fun getSignatureIndex(addresses: List<AddressLight>): List<AddressSignatureIndex> {
+        return if (addresses.isNotEmpty()) {
+            addresses
         } else {
-            addresses.add(addressManager.defaultAddress.hash)
-        }
-        for (address in addresses) {
-            var addressBytes: ByteArray?
-            addressBytes = if (AddressUtility.isValidMultisigAddress(address)) {
-                Utility.base59ToBytes(address)
-            } else {
-                Utility.base58ToBytes(address)
-            }
-            val blockchainLastSignatureIndex = peerTable.getSignatureIndex(address)!!
-            val poolLastSignatureIndex = getSignatureIndex(address)
-            replyBuilder.addIndexes(
-                VeriBlockMessages.AddressSignatureIndexes
-                    .newBuilder()
-                    .setAddress(ByteString.copyFrom(addressBytes))
-                    .setBlockchainIndex(blockchainLastSignatureIndex)
-                    .setPoolIndex(poolLastSignatureIndex)
+            listOf(addressManager.defaultAddress.hash.asLightAddress())
+        }.map { address ->
+            AddressSignatureIndex(
+                address = address,
+                poolIndex = getSignatureIndex(address.get()),
+                blockchainIndex = peerTable.getSignatureIndex(address.get())!!
             )
         }
-        return replyBuilder.build()
     }
 
     fun submitTransactions(request: SubmitTransactionsRequest): ProtocolReply {
@@ -775,8 +759,8 @@ class AdminApiService(
         )
     }
 
-    private fun getSignatureIndex(address: String?): Long {
-        return pendingTransactionContainer.getPendingSignatureIndexForAddress(address!!)
+    private fun getSignatureIndex(address: String): Long {
+        return pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
             ?: return peerTable.getSignatureIndex(address)!!
     }
 

@@ -1,5 +1,7 @@
 package veriblock.service
 
+import veriblock.model.AddressLight
+
 enum class BlockchainState {
     LOADING,
     NORMAL,
@@ -39,4 +41,10 @@ data class StateInfo(
     val nodecoreStartTime: Long,
     val walletCacheSyncHeight: Int,
     val walletState: WalletState
+)
+
+data class AddressSignatureIndex(
+    val address: AddressLight,
+    val poolIndex: Long,
+    val blockchainIndex: Long
 )
