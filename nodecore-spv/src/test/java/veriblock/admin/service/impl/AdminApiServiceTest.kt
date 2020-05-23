@@ -10,6 +10,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.SendCoinsException
+import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
@@ -33,7 +34,6 @@ import veriblock.net.SpvPeerTable
 import veriblock.service.AdminApiService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
-import veriblock.service.TransactionFactory
 import veriblock.service.TransactionService
 import java.io.IOException
 import java.security.KeyPairGenerator
@@ -44,7 +44,6 @@ class AdminApiServiceTest {
     private lateinit var addressManager: AddressManager
     private lateinit var peerTable: SpvPeerTable
     private lateinit var adminApiService: AdminApiService
-    private lateinit var transactionFactory: TransactionFactory
     private lateinit var transactionContainer: PendingTransactionContainer
     private lateinit var blockchain: Blockchain
 
@@ -54,11 +53,10 @@ class AdminApiServiceTest {
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)
-        transactionFactory = mockk(relaxed = true)
         transactionContainer = mockk(relaxed = true)
         blockchain = mockk(relaxed = true)
         adminApiService = AdminApiService(
-            spvContext, peerTable, transactionService, addressManager, transactionFactory, transactionContainer, blockchain
+            spvContext, peerTable, transactionService, addressManager, transactionContainer, blockchain
         )
     }
 
@@ -547,62 +545,20 @@ class AdminApiServiceTest {
         Assert.assertEquals(true, reply.success)
     }
 
-    @Test
-    fun submitTransactionsWhenTxUnsignedThenFalse() {
-        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder()
-            .setUnsigned(VeriBlockMessages.Transaction.newBuilder().build())
-            .build()
-        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder()
-            .addTransactions(transactionUnion)
-            .build()
-        val reply = adminApiService.submitTransactions(request)
-        Assert.assertEquals(false, reply.success)
-    }
-
-    @Test
+    @Test(expected = TransactionSubmissionException::class)
     fun submitTransactionsWhenTxSignedButNotAddToContainerThenFalse() {
-        val signTx = VeriBlockMessages.SignedTransaction.newBuilder().build()
-        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder().setSigned(signTx).build()
-        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
-        every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns false
-        val reply = adminApiService.submitTransactions(request)
-        verify(exactly = 1) { transactionFactory.create(signTx) }
-        verify(exactly = 1) { transactionContainer.addTransaction(any()) }
-        Assert.assertEquals(false, reply.success)
+        adminApiService.submitTransactions(listOf(transaction))
+        verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
     }
 
     @Test
     fun submitTransactionsWhenTxSignedThenTrue() {
-        val signTx = VeriBlockMessages.SignedTransaction.newBuilder().build()
-        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder().setSigned(signTx).build()
-        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder().addTransactions(transactionUnion).build()
-        every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns true
-        val reply = adminApiService.submitTransactions(request)
-        verify(exactly = 1) { transactionFactory.create(signTx) }
-        verify(exactly = 1) { transactionContainer.addTransaction(any()) }
-        Assert.assertEquals(true, reply.success)
-    }
-
-    @Test
-    fun submitTransactionsWhenTxMultiSigThenTrue() {
-        val signTx = VeriBlockMessages.SignedMultisigTransaction.newBuilder().build()
-        val transactionUnion = VeriBlockMessages.TransactionUnion.newBuilder()
-            .setSignedMultisig(signTx)
-            .build()
-        val request = VeriBlockMessages.SubmitTransactionsRequest.newBuilder()
-            .addTransactions(transactionUnion)
-            .build()
-
-        every { transactionFactory.create(transactionUnion) } returns StandardTransaction(Sha256Hash.ZERO_HASH)
-        every { transactionContainer.addTransaction(any()) } returns true
-
-        val reply = adminApiService.submitTransactions(request)
-        verify(exactly = 1) { transactionFactory.create(signTx) }
-        verify(exactly = 1) { transactionContainer.addTransaction(any()) }
-
-        Assert.assertEquals(true, reply.success)
+        val reply = adminApiService.submitTransactions(listOf(transaction))
+        verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
     }
 
     @Test

@@ -47,6 +47,7 @@ import nodecore.p2p.Constants
 import org.slf4j.LoggerFactory
 import org.veriblock.core.NotFoundException
 import org.veriblock.core.SendCoinsException
+import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.VeriBlockError
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
@@ -58,6 +59,7 @@ import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
@@ -67,6 +69,7 @@ import veriblock.model.LedgerContext
 import veriblock.model.Output
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
+import veriblock.model.Transaction
 import veriblock.model.asLightAddress
 import veriblock.net.SpvPeerTable
 import veriblock.service.TransactionService.Companion.getRegularTransactionMessageBuilder
@@ -79,12 +82,13 @@ import java.security.PrivateKey
 import java.util.ArrayList
 import java.util.function.Consumer
 
+private val logger = createLogger {}
+
 class AdminApiService(
     private val spvContext: SpvContext,
     private val peerTable: SpvPeerTable,
     private val transactionService: TransactionService,
     private val addressManager: AddressManager,
-    private val transactionFactory: TransactionFactory,
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val blockchain: Blockchain
 ) {
@@ -171,58 +175,14 @@ class AdminApiService(
         }
     }
 
-    fun submitTransactions(request: SubmitTransactionsRequest): ProtocolReply {
-        val replyBuilder = ProtocolReply.newBuilder()
-        replyBuilder.success = true
-        for (union in request.transactionsList) {
-            var added = false
-            when (union.transactionCase) {
-                TransactionUnion.TransactionCase.UNSIGNED -> {
-                    replyBuilder.success = false
-                    replyBuilder.addResults(
-                        makeResult(
-                            "V008",
-                            "Transaction is unsigned!",
-                            "Unsigned transactions cannot be submitted to the network without signing first",
-                            true
-                        )
-                    )
-                }
-                TransactionUnion.TransactionCase.SIGNED -> {
-                    val t = transactionFactory.create(union.signed)
-                    peerTable.advertise(t)
-                    added = pendingTransactionContainer.addTransaction(t)
-                }
-                TransactionUnion.TransactionCase.SIGNED_MULTISIG -> {
-                    val multisigTransaction = transactionFactory.create(union.signedMultisig)
-                    peerTable.advertise(multisigTransaction)
-                    added = pendingTransactionContainer.addTransaction(multisigTransaction)
-                }
-                TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> {
-                    replyBuilder.success = false
-                    replyBuilder.addResults(
-                        makeResult(
-                            "V008",
-                            "Invalid transaction type",
-                            "Either a signed or unsigned transaction should be passed",
-                            true
-                        )
-                    )
-                }
-            }
+    fun submitTransactions(transactions: List<Transaction>) {
+        for (transaction in transactions) {
+            peerTable.advertise(transaction)
+            val added = pendingTransactionContainer.addTransaction(transaction)
             if (!added) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V008",
-                        "Submit transaction error",
-                        "The transaction was not added to the pool",
-                        true
-                    )
-                )
+                throw TransactionSubmissionException("The transaction was not added to the pool")
             }
         }
-        return replyBuilder.build()
     }
 
     fun dumpPrivateKey(request: DumpPrivateKeyRequest): DumpPrivateKeyReply {
@@ -778,9 +738,4 @@ class AdminApiService(
             .setError(error)
             .build()
     }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AdminApiService::class.java)
-    }
-
 }

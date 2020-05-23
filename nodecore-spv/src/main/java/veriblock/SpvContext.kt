@@ -26,7 +26,6 @@ import veriblock.net.SpvPeerTable
 import veriblock.service.AdminApiService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
-import veriblock.service.TransactionFactory
 import veriblock.service.TransactionService
 import veriblock.wallet.PendingTransactionDownloadedListenerImpl
 import java.io.File
@@ -112,7 +111,7 @@ class SpvContext {
             peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
             transactionService = TransactionService(addressManager, networkParameters)
             adminApiService = AdminApiService(
-                this, peerTable, transactionService, addressManager, TransactionFactory(networkParameters),
+                this, peerTable, transactionService, addressManager,
                 pendingTransactionContainer, blockchain
             )
         } catch (e: Exception) {
