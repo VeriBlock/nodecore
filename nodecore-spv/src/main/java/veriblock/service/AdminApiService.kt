@@ -49,6 +49,7 @@ import org.veriblock.core.NotFoundException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.VeriBlockError
+import org.veriblock.core.WalletException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
@@ -185,49 +186,29 @@ class AdminApiService(
         }
     }
 
-    fun dumpPrivateKey(request: DumpPrivateKeyRequest): DumpPrivateKeyReply {
-        val replyBuilder = DumpPrivateKeyReply.newBuilder()
-        if (!ByteStringAddressUtility.isByteStringValidAddress(request.address)) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V008", "Invalid Address",
-                    "The provided address is not a valid address", true
-                )
-            )
-            return replyBuilder.build()
-        }
-        val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.address)
-        val publicKey = addressManager.getPublicKeyForAddress(address)
-        val privateKey: PrivateKey?
-        try {
-            privateKey = addressManager.getPrivateKeyForAddress(address)
-        } catch (e: IllegalStateException) {
-            replyBuilder.success = false
-            replyBuilder.addResults(makeResult("V008", "Wallet Locked", e.message, true))
-            return replyBuilder.build()
+    fun dumpPrivateKey(address: AddressLight): ByteArray {
+        val publicKey = addressManager.getPublicKeyForAddress(address.get())
+        val privateKey = try {
+            addressManager.getPrivateKeyForAddress(address.get())
+        } catch (e: WalletLockedException) {
+            throw WalletException("Wallet is Locked")
         }
         if (privateKey == null || publicKey == null) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V008",
-                    "The provided address is not an address in this wallet!",
-                    "$address is not a valid address!", true
-                )
-            )
-            return replyBuilder.build()
+            throw WalletException("The address '$address' is not an address in this wallet!")
         }
         val privateKeyBytes = privateKey.encoded
         val publicKeyBytes = publicKey.encoded
         val fullBytes = ByteArray(privateKeyBytes.size + publicKeyBytes.size + 1)
         fullBytes[0] = privateKeyBytes.size.toByte()
-        System.arraycopy(privateKeyBytes, 0, fullBytes, 1, privateKeyBytes.size)
-        System.arraycopy(publicKeyBytes, 0, fullBytes, 1 + privateKeyBytes.size, publicKeyBytes.size)
-        replyBuilder.address = ByteString.copyFrom(Base58.decode(address))
-        replyBuilder.privateKey = ByteString.copyFrom(fullBytes)
-        replyBuilder.success = true
-        return replyBuilder.build()
+        privateKeyBytes.copyInto(
+            destination = fullBytes,
+            destinationOffset = 1
+        )
+        publicKeyBytes.copyInto(
+            destination = fullBytes,
+            destinationOffset = 1 + privateKeyBytes.size
+        )
+        return fullBytes
     }
 
     fun importPrivateKey(request: ImportPrivateKeyRequest): ImportPrivateKeyReply {

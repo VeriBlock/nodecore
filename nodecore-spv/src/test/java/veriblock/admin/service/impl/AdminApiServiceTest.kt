@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
+import org.veriblock.core.WalletException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
@@ -390,48 +391,28 @@ class AdminApiServiceTest {
         Assert.assertEquals(true, reply.success)
     }
 
-    @Test
-    fun dumpPrivateKeyWhenAddressNotValidThenFalse() {
-        val request = VeriBlockMessages.DumpPrivateKeyRequest
-            .newBuilder()
-            .setAddress(ByteString.copyFromUtf8("Not valid address"))
-            .build()
-        val reply = adminApiService.dumpPrivateKey(request)
-        Assert.assertEquals(false, reply.success)
-    }
-
-    @Test
+    @Test(expected = WalletException::class)
     fun dumpPrivateKeyWhenPublicKeyNullThenFalse() {
         val validAddress = "VAhGtBDm6hq3UVkTXwNgyrFhVEfR8J"
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = VeriBlockMessages.DumpPrivateKeyRequest
-            .newBuilder()
-            .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
-            .build()
         every { addressManager.getPublicKeyForAddress(any()) } returns null
         every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
-        val reply = adminApiService.dumpPrivateKey(request)
+        val reply = adminApiService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun dumpPrivateKeyWhenPrivateKeyNullThenFalse() {
         val validAddress = "VAhGtBDm6hq3UVkTXwNgyrFhVEfR8J"
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = VeriBlockMessages.DumpPrivateKeyRequest
-            .newBuilder()
-            .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
-            .build()
         every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
         every { addressManager.getPrivateKeyForAddress(any()) } returns null
-        val reply = adminApiService.dumpPrivateKey(request)
+        val reply = adminApiService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
-        Assert.assertEquals(false, reply.success)
     }
 
     @Test
@@ -439,16 +420,11 @@ class AdminApiServiceTest {
         val validAddress = "VAhGtBDm6hq3UVkTXwNgyrFhVEfR8J"
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = VeriBlockMessages.DumpPrivateKeyRequest
-            .newBuilder()
-            .setAddress(ByteString.copyFrom(Base58.decode(validAddress)))
-            .build()
         every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
         every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
-        val reply = adminApiService.dumpPrivateKey(request)
+        val reply = adminApiService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test
