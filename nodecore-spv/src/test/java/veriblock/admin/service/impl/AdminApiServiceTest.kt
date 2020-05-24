@@ -13,14 +13,13 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
-import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.Address
 import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
-import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
 import veriblock.SpvContext
 import veriblock.model.LedgerContext
@@ -257,46 +256,30 @@ class AdminApiServiceTest {
         Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun encryptWalletWhenNoPassphraseThenFalse() {
-        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom(ByteArray(0)))
-            .build()
-        val reply = adminApiService.encryptWallet(request)
-        Assert.assertEquals(false, reply.success)
+        val reply = adminApiService.encryptWallet("")
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun encryptWalletWhenEncryptFalseThenFalse() {
-        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
-            .build()
         every { addressManager.encryptWallet(any()) } returns false
-        val reply = adminApiService.encryptWallet(request)
+        val reply = adminApiService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun encryptWalletWhenExceptionThenFalse() {
-        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
-            .build()
         every { addressManager.encryptWallet(any()) } throws IllegalStateException()
-        val reply = adminApiService.encryptWallet(request)
+        val reply = adminApiService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = Test.None::class)
     fun encryptWalletWhenEncryptTrueThenTrue() {
-        val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
-            .build()
         every { addressManager.encryptWallet(any()) } returns true
-        val reply = adminApiService.encryptWallet(request)
+        val reply = adminApiService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test
@@ -347,43 +330,31 @@ class AdminApiServiceTest {
         verify(exactly = 1) { addressManager.lock() }
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun backupWalletWhenSaveWalletFalseThenFalse() {
-        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
-            .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
-            .build()
         val saveWalletResult = Pair(
             false, "Result"
         )
         every { addressManager.saveWalletToFile(any()) } returns saveWalletResult
-        val reply = adminApiService.backupWallet(request)
+        adminApiService.backupWallet("target/location/path")
         verify { addressManager.saveWalletToFile(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun backupWalletWhenExceptionThenFalse() {
-        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
-            .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
-            .build()
         every { addressManager.saveWalletToFile(any()) } throws RuntimeException()
-        val reply = adminApiService.backupWallet(request)
+        adminApiService.backupWallet("target/location/path")
         verify(exactly = 1) { addressManager.saveWalletToFile(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = Test.None::class) // That would be like shouldNotThrow WalletException on that case
     fun backupWalletWhenSaveWalletTrueThenTrue() {
-        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
-            .setTargetLocation(ByteString.copyFromUtf8("target/location/path"))
-            .build()
         val saveWalletResult = Pair(
             true, "Result"
         )
         every { addressManager.saveWalletToFile(any()) } returns saveWalletResult
-        val reply = adminApiService.backupWallet(request)
+        adminApiService.backupWallet("target/location/path")
         verify(exactly = 1) { addressManager.saveWalletToFile(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test(expected = WalletException::class)

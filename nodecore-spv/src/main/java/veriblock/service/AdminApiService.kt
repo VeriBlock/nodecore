@@ -227,7 +227,22 @@ class AdminApiService(
         return importedAddress
     }
 
-    fun encryptWallet(request: EncryptWalletRequest): ProtocolReply {
+    fun encryptWallet(passphrase: String) {
+        if (passphrase.isEmpty()) {
+            throw WalletException("A blank passphrase is invalid for encrypting a wallet")
+        } else {
+            try {
+                val result = addressManager.encryptWallet(passphrase.toCharArray())
+                if (!result) {
+                    throw WalletException("Unable to encrypt wallet, see NodeCore logs")
+                }
+            } catch (e: IllegalStateException) {
+                throw WalletException("Wallet is already encrypted and must be decrypted first")
+            }
+        }
+    }
+
+    /*fun encryptWallet(request: EncryptWalletRequest): ProtocolReply {
         val replyBuilder = ProtocolReply.newBuilder()
         if (request.passphraseBytes.size() <= 0) {
             replyBuilder.success = false
@@ -269,7 +284,7 @@ class AdminApiService(
             }
         }
         return replyBuilder.build()
-    }
+    }*/
 
     fun decryptWallet(request: DecryptWalletRequest): ProtocolReply {
         val replyBuilder = ProtocolReply.newBuilder()
@@ -330,37 +345,16 @@ class AdminApiService(
         addressManager.lock()
     }
 
-    fun backupWallet(request: BackupWalletRequest): BackupWalletReply {
-        val replyBuilder = BackupWalletReply.newBuilder()
+    fun backupWallet(targetLocation: String) {
         try {
-            val backupLocation = String(request.targetLocation.toByteArray())
-            val saveWalletResult = addressManager.saveWalletToFile(backupLocation)
+            val saveWalletResult = addressManager.saveWalletToFile(targetLocation)
             val success = saveWalletResult.first
             if (!success) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V008",
-                        "Unable to save backup wallet file!",
-                        saveWalletResult.second,
-                        true
-                    )
-                )
-            } else {
-                replyBuilder.success = true
+                throw WalletException("Unable to save backup wallet file")
             }
         } catch (e: Exception) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V008",
-                    "Writing wallet backup failed!",
-                    "The following error occurred while writing the backup files: " + e.message + ".",
-                    true
-                )
-            )
+            throw WalletException("Writing wallet backup failed")
         }
-        return replyBuilder.build()
     }
 
     fun importWallet(request: ImportWalletRequest): ImportWalletReply {

@@ -9,6 +9,7 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.InvalidAddressException
+import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
@@ -133,13 +134,11 @@ fun CommandFactory.spvCommands(
         } else {
             val confirmation = shell.passwordPrompt("Confirm passphrase: ")
             if (passphrase == confirmation) {
-                val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
-                    .setPassphrase(passphrase).build()
-                val result = context.adminApiService.encryptWallet(request)
-
-                prepareResult(result.success, result.resultsList, result)
+                val result = context.adminApiService.encryptWallet(passphrase)
+                printInfo("Wallet has been encrypted with supplied passphrase")
+                displayResult(result)
             } else {
-                failure("V060", "Invalid Passphrase", "Passphrase and confirmation do not match")
+                throw WalletException("Passphrase and confirmation do not match")
             }
         }
     }
@@ -177,14 +176,10 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("importwallet", "importprivatekey") }
     ) {
         val targetLocation: String = getParameter("targetLocation")
-        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
-            .setTargetLocation(ByteString.copyFrom(targetLocation.toByteArray()))
-            .build()
-        val result = context.adminApiService.backupWallet(request)
-
+        val result = context.adminApiService.backupWallet(targetLocation)
         printInfo("Note: The backed-up wallet file is saved on the computer where NodeCore is running.")
         printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
-        prepareResult(result.success, result.resultsList, result)
+        displayResult(result)
     }
 
     command(
