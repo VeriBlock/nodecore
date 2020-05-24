@@ -41,6 +41,7 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.AddressLight
+import veriblock.model.BlockHeader
 import veriblock.model.LedgerContext
 import veriblock.model.Output
 import veriblock.model.StandardTransaction
@@ -261,7 +262,7 @@ class AdminApiService(
             throw WalletException("Wallet must be unlocked before importing another wallet")
         }
         try {
-            val result: Pair<Boolean, String> = if (passphrase != null && passphrase.isNotEmpty()) {
+            val result: Pair<Boolean, String> = if (!passphrase.isNullOrEmpty()) {
                 addressManager.importEncryptedWallet(File(sourceLocation), passphrase.toCharArray())
             } else {
                 addressManager.importWallet(File(sourceLocation))
@@ -407,27 +408,27 @@ class AdminApiService(
         return replyBuilder.build()
     }
 
-    fun getLastVBKBlockHeader(): BlockHeaderInfo {
+    fun getLastVBKBlockHeader(): BlockHeader {
         val lastBlock = blockchain.blockStore.chainHead
         val block = lastBlock.block
-        return BlockHeaderInfo(
+        return BlockHeader(
             block.hash.bytes,
             SerializeDeserializeService.serializeHeaders(block)
         )
     }
 
-    fun getVbkBlockHeader(hash: ByteString): BlockHeaderInfo {
+    fun getVbkBlockHeader(hash: ByteString): BlockHeader {
         val block = blockchain[VBlakeHash.wrap(hash.toByteArray())]
-        return BlockHeaderInfo(
+        return BlockHeader(
             block.hash.bytes,
             SerializeDeserializeService.serializeHeaders(block.block)
         )
     }
 
-    fun getVbkBlockHeader(height: Int): BlockHeaderInfo? {
+    fun getVbkBlockHeader(height: Int): BlockHeader? {
         val block = blockchain.getBlockByHeight(height)
             ?: return null
-        return BlockHeaderInfo(
+        return BlockHeader(
             block.hash.bytes,
             SerializeDeserializeService.serializeHeaders(block.block)
         )
