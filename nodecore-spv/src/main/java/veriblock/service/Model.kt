@@ -48,3 +48,18 @@ data class AddressSignatureIndex(
     val poolIndex: Long,
     val blockchainIndex: Long
 )
+
+/*
+fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
+        val lastBlock = blockchain.blockStore.chainHead
+        val block = lastBlock.block
+        return VeriBlockMessages.BlockHeader.newBuilder()
+            .setHash(ByteString.copyFrom(block.hash.bytes))
+            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
+            .build()
+    }
+ */
+data class BlockHeaderInfo(
+    val hash: ByteArray,
+    val header: ByteArray
+)

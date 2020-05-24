@@ -1,18 +1,14 @@
 package org.veriblock.spv.standalone.commands
 
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.protobuf.ByteString
 import com.google.protobuf.Message
 import com.google.protobuf.util.JsonFormat
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.jline.utils.AttributedStyle
-import org.veriblock.core.InvalidAddressException
 import org.veriblock.core.WalletException
-import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.shell.CommandContext
 import org.veriblock.shell.CommandFactory
@@ -114,12 +110,9 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("encryptwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
-            .setPassphrase(passphrase)
-            .build()
-        val result = context.adminApiService.decryptWallet(request)
-
-        prepareResult(result.success, result.resultsList, result)
+        val result = context.adminApiService.decryptWallet(passphrase)
+        printInfo("Wallet has been decrypted")
+        displayResult(result)
     }
 
     command(
@@ -154,16 +147,8 @@ fun CommandFactory.spvCommands(
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
         val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
-        val request = VeriBlockMessages.ImportWalletRequest.newBuilder()
-            .setSourceLocation(ByteString.copyFrom(sourceLocation.toByteArray()))
-
-        if (!passphrase.isNullOrEmpty()) {
-            request.passphrase = passphrase
-        }
-
-        val result = context.adminApiService.importWallet(request.build())
-
-        prepareResult(result.success, result.resultsList, result)
+        val result = context.adminApiService.importWallet(sourceLocation, passphrase)
+        displayResult(result)
     }
 
     command(

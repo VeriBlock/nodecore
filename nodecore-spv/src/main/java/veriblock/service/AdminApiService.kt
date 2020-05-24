@@ -9,68 +9,40 @@ package veriblock.service
 
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.BackupWalletReply
-import nodecore.api.grpc.VeriBlockMessages.BackupWalletRequest
 import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementReply
 import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementRequest
-import nodecore.api.grpc.VeriBlockMessages.DecryptWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyReply
-import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyRequest
-import nodecore.api.grpc.VeriBlockMessages.EncryptWalletRequest
 import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
 import nodecore.api.grpc.VeriBlockMessages.GetBalanceRequest
-import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockReply
-import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockRequest
 import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
 import nodecore.api.grpc.VeriBlockMessages.GetNewAddressRequest
-import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexReply
-import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexRequest
-import nodecore.api.grpc.VeriBlockMessages.GetStateInfoReply
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
-import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyReply
-import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyRequest
 import nodecore.api.grpc.VeriBlockMessages.ImportWalletReply
 import nodecore.api.grpc.VeriBlockMessages.ImportWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.LockWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.ProtocolReply
-import nodecore.api.grpc.VeriBlockMessages.SendCoinsReply
-import nodecore.api.grpc.VeriBlockMessages.SendCoinsRequest
-import nodecore.api.grpc.VeriBlockMessages.SubmitTransactionsRequest
-import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
-import nodecore.api.grpc.VeriBlockMessages.UnlockWalletRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.p2p.Constants
-import org.slf4j.LoggerFactory
 import org.veriblock.core.ImportException
-import org.veriblock.core.NotFoundException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
-import org.veriblock.core.VeriBlockError
 import org.veriblock.core.WalletException
-import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
-import org.veriblock.core.utilities.AddressUtility
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.wallet.Address
 import org.veriblock.core.wallet.WalletLockedException
-import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.AddressLight
 import veriblock.model.LedgerContext
 import veriblock.model.Output
-import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
 import veriblock.model.asLightAddress
@@ -242,92 +214,19 @@ class AdminApiService(
         }
     }
 
-    /*fun encryptWallet(request: EncryptWalletRequest): ProtocolReply {
-        val replyBuilder = ProtocolReply.newBuilder()
-        if (request.passphraseBytes.size() <= 0) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V041", "Invalid passphrase",
-                    "A blank passphrase is invalid for encrypting a wallet", true
-                )
-            )
+    fun decryptWallet(passphrase: String?) {
+        if (passphrase.isNullOrEmpty()) {
+            throw WalletException("A blank passphrase is invalid for decrypting a wallet")
         } else {
-            val passphrase = request.passphrase.toCharArray()
             try {
-                val result = addressManager.encryptWallet(passphrase)
-                if (result) {
-                    replyBuilder.success = true
-                    replyBuilder.addResults(
-                        makeResult(
-                            "V200", "Success",
-                            "Wallet has been encrypted with supplied passphrase", false
-                        )
-                    )
-                } else {
-                    replyBuilder.success = false
-                    replyBuilder.addResults(
-                        makeResult(
-                            "V043", "Encryption Failed",
-                            "Unable to encrypt wallet, see NodeCore logs", true
-                        )
-                    )
+                val result = addressManager.decryptWallet(passphrase.toCharArray())
+                if (!result) {
+                    throw WalletException("Unable to decrypt wallet, see NodeCore logs")
                 }
             } catch (e: IllegalStateException) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V042", "Wallet already encrypted",
-                        "Wallet is already encrypted and must be decrypted first", true
-                    )
-                )
+                throw WalletException("Wallet is already encrypted and must be decrypted first")
             }
         }
-        return replyBuilder.build()
-    }*/
-
-    fun decryptWallet(request: DecryptWalletRequest): ProtocolReply {
-        val replyBuilder = ProtocolReply.newBuilder()
-        if (request.passphraseBytes.size() <= 0) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V041", "Invalid passphrase",
-                    "A blank passphrase is invalid for decrypting a wallet", true
-                )
-            )
-        } else {
-            val passphrase = request.passphrase.toCharArray()
-            try {
-                val result = addressManager.decryptWallet(passphrase)
-                if (result) {
-                    replyBuilder.success = true
-                    replyBuilder.addResults(
-                        makeResult(
-                            "V200", "Success",
-                            "Wallet has been decrypted", false
-                        )
-                    )
-                } else {
-                    replyBuilder.success = false
-                    replyBuilder.addResults(
-                        makeResult(
-                            "V044", "Decryption Failed",
-                            "Unable to decrypt wallet, see NodeCore logs", true
-                        )
-                    )
-                }
-            } catch (e: IllegalStateException) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V042", "Wallet already encrypted",
-                        "Wallet is already encrypted and must be decrypted first", true
-                    )
-                )
-            }
-        }
-        return replyBuilder.build()
     }
 
     fun unlockWallet(passphrase: String) {
@@ -357,54 +256,24 @@ class AdminApiService(
         }
     }
 
-    fun importWallet(request: ImportWalletRequest): ImportWalletReply {
-        val replyBuilder = ImportWalletReply.newBuilder()
+    fun importWallet(sourceLocation: String, passphrase: String?) {
         if (addressManager.isLocked) {
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V045", "Import Failed",
-                    "Wallet must be unlocked before importing another wallet", true
-                )
-            )
-            return replyBuilder.build()
+            throw WalletException("Wallet must be unlocked before importing another wallet")
         }
         try {
-            val importFromLocation = String(request.sourceLocation.toByteArray(), StandardCharsets.UTF_8)
-            val passphrase = request.passphrase
-            val result: Pair<Boolean, String>
-            result = if (passphrase != null && passphrase.length > 0) {
-                addressManager.importEncryptedWallet(File(importFromLocation), passphrase.toCharArray())
+            val result: Pair<Boolean, String> = if (passphrase != null && passphrase.isNotEmpty()) {
+                addressManager.importEncryptedWallet(File(sourceLocation), passphrase.toCharArray())
             } else {
-                addressManager.importWallet(File(importFromLocation))
+                addressManager.importWallet(File(sourceLocation))
             }
             val success = result.first
             if (!success) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V008",
-                        "Unable to load/import wallet file!",
-                        result.second,
-                        true
-                    )
-                )
-            } else {
-                replyBuilder.success = true
+                throw WalletException("Unable to load/import wallet file!")
             }
         } catch (e: Exception) {
-            logger.error(e.message, e)
-            replyBuilder.success = false
-            replyBuilder.addResults(
-                makeResult(
-                    "V008",
-                    "Reading wallet file failed!",
-                    "The following error occurred while reading the wallet file: " + e.message + ".",
-                    true
-                )
-            )
+            logger.debugInfo(e) { "${e.message}" }
+            throw WalletException("Reading wallet file failed")
         }
-        return replyBuilder.build()
     }
 
     fun getNewAddress(request: GetNewAddressRequest): GetNewAddressReply {
@@ -538,41 +407,33 @@ class AdminApiService(
         return replyBuilder.build()
     }
 
-    fun getLastVBKBlockHeader(): VeriBlockMessages.BlockHeader {
+    fun getLastVBKBlockHeader(): BlockHeaderInfo {
         val lastBlock = blockchain.blockStore.chainHead
         val block = lastBlock.block
-        return VeriBlockMessages.BlockHeader.newBuilder()
-            .setHash(ByteString.copyFrom(block.hash.bytes))
-            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
-            .build()
+        return BlockHeaderInfo(
+            block.hash.bytes,
+            SerializeDeserializeService.serializeHeaders(block)
+        )
     }
 
-    fun getVbkBlockHeader(hash: ByteString): VeriBlockMessages.BlockHeader {
+    fun getVbkBlockHeader(hash: ByteString): BlockHeaderInfo {
         val block = blockchain[VBlakeHash.wrap(hash.toByteArray())]
-        return VeriBlockMessages.BlockHeader.newBuilder()
-            .setHash(ByteString.copyFrom(block.hash.bytes))
-            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.block)))
-            .build()
+        return BlockHeaderInfo(
+            block.hash.bytes,
+            SerializeDeserializeService.serializeHeaders(block.block)
+        )
     }
 
-    fun getVbkBlockHeader(height: Int): VeriBlockMessages.BlockHeader? {
+    fun getVbkBlockHeader(height: Int): BlockHeaderInfo? {
         val block = blockchain.getBlockByHeight(height)
             ?: return null
-        return VeriBlockMessages.BlockHeader.newBuilder()
-            .setHash(ByteString.copyFrom(block.hash.bytes))
-            .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block.block)))
-            .build()
+        return BlockHeaderInfo(
+            block.hash.bytes,
+            SerializeDeserializeService.serializeHeaders(block.block)
+        )
     }
 
-    fun getLastBitcoinBlock(request: GetLastBitcoinBlockRequest): GetLastBitcoinBlockReply {
-        val replyBuilder = GetLastBitcoinBlockReply.newBuilder()
-        replyBuilder.success = true
-
-        //Mock todo SPV-111
-        val block = spvContext.networkParameters.bitcoinOriginBlock
-        replyBuilder.hash = ByteString.copyFrom(block.hash.bytes)
-        return replyBuilder.build()
-    }
+    fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
     fun getTransactions(request: GetTransactionsRequest): GetTransactionsReply {
         val ids = request.idsList.map {

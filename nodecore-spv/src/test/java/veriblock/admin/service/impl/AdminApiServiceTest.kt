@@ -38,6 +38,7 @@ import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
 import java.io.IOException
 import java.security.KeyPairGenerator
+import kotlin.math.exp
 
 class AdminApiServiceTest {
     private val spvContext = SpvContext()
@@ -201,127 +202,94 @@ class AdminApiServiceTest {
         verify(exactly = 1) { addressManager.unlock(any()) }
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun importWalletWhenWalletIsLockThenFalse() {
-        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
-            .setPassphrase("123")
-            .setSourceLocation(ByteString.copyFromUtf8("test/source"))
-            .build()
         every { addressManager.isLocked } returns true
-        val reply = adminApiService.importWallet(importWalletRequest)
+        adminApiService.importWallet("test/source", "123")
         verify(exactly = 1) { addressManager.isLocked }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun importWalletWhenWalletIsUnlockAndWithoutPassphraseAndResultFalseThenFalse() {
-        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
-            .setSourceLocation(ByteString.copyFromUtf8("test/source"))
-            .build()
         every { addressManager.isLocked } returns false
         val result = Pair(
             false, "test_string"
         )
         every { addressManager.importWallet(any()) } returns result
-        val reply = adminApiService.importWallet(importWalletRequest)
+        adminApiService.importWallet("test/source", null)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = Test.None::class)
     fun importWalletWhenWalletIsUnlockAndWithoutPassphraseAndResultTrueThenSuccess() {
-        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
-            .setSourceLocation(ByteString.copyFromUtf8("test/source"))
-            .build()
         every { addressManager.isLocked } returns false
         val result = Pair(true, "test_string")
         every { addressManager.importWallet(any()) } returns result
-        val reply = adminApiService.importWallet(importWalletRequest)
+        adminApiService.importWallet("test/source", null)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun importWalletWhenThrowExceptionThenFalse() {
-        val importWalletRequest = VeriBlockMessages.ImportWalletRequest.newBuilder()
-            .setSourceLocation(ByteString.copyFromUtf8("test/source"))
-            .build()
         every { addressManager.isLocked  } returns false
         every { addressManager.importWallet(any()) } throws RuntimeException()
-        val reply = adminApiService.importWallet(importWalletRequest)
+        adminApiService.importWallet("test/source", null)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
     @Test(expected = WalletException::class)
     fun encryptWalletWhenNoPassphraseThenFalse() {
-        val reply = adminApiService.encryptWallet("")
+        adminApiService.encryptWallet("")
     }
 
     @Test(expected = WalletException::class)
     fun encryptWalletWhenEncryptFalseThenFalse() {
         every { addressManager.encryptWallet(any()) } returns false
-        val reply = adminApiService.encryptWallet("passphrase")
+        adminApiService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun encryptWalletWhenExceptionThenFalse() {
         every { addressManager.encryptWallet(any()) } throws IllegalStateException()
-        val reply = adminApiService.encryptWallet("passphrase")
+        adminApiService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
     }
 
     @Test(expected = Test.None::class)
     fun encryptWalletWhenEncryptTrueThenTrue() {
         every { addressManager.encryptWallet(any()) } returns true
-        val reply = adminApiService.encryptWallet("passphrase")
+        adminApiService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun decryptWalletWhenNoPassphraseThenFalse() {
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom(ByteArray(0)))
-            .build()
-        val reply = adminApiService.decryptWallet(request)
-        Assert.assertEquals(false, reply.success)
+        adminApiService.decryptWallet("")
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun decryptWalletWhenEncryptFalseThenFalse() {
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
-            .build()
         every { addressManager.decryptWallet(any()) } returns false
-        val reply = adminApiService.decryptWallet(request)
+        adminApiService.decryptWallet("passphrase")
         verify(exactly = 1) { addressManager.decryptWallet(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = WalletException::class)
     fun decryptWalletWhenExceptionThenFalse() {
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
-            .build()
         every { addressManager.decryptWallet(any()) } throws IllegalStateException()
-        val reply = adminApiService.decryptWallet(request)
+        adminApiService.decryptWallet("passphrase")
         verify(exactly = 1) { addressManager.decryptWallet(any()) }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = Test.None::class)
     fun decryptWalletWhenEncryptTrueThenTrue() {
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
-            .setPassphraseBytes(ByteString.copyFrom("passphrase".toByteArray()))
-            .build()
         every { addressManager.decryptWallet(any()) } returns true
-        val reply = adminApiService.decryptWallet(request)
+        adminApiService.decryptWallet("passphrase")
         verify(exactly = 1) { addressManager.decryptWallet(any()) }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test
@@ -364,7 +332,7 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.getPublicKeyForAddress(any()) } returns null
         every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
-        val reply = adminApiService.dumpPrivateKey(validAddress.asLightAddress())
+        adminApiService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
@@ -376,7 +344,7 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
         every { addressManager.getPrivateKeyForAddress(any()) } returns null
-        val reply = adminApiService.dumpPrivateKey(validAddress.asLightAddress())
+        adminApiService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
@@ -388,14 +356,13 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
         every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
-        val reply = adminApiService.dumpPrivateKey(validAddress.asLightAddress())
+        adminApiService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
 
     @Test(expected = ImportException::class)
     fun importPrivateKeyWhenWalletLockedThenFalse() {
-        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder().build()
         every { addressManager.isLocked } returns true
         adminApiService.importPrivateKey(byteArrayOf())
         verify(exactly = 1) { addressManager.isLocked }
@@ -421,7 +388,7 @@ class AdminApiServiceTest {
         )
         every { addressManager.isLocked } returns false
         every { addressManager.importKeyPair(any(), any()) } returns importedAddress
-        val reply = adminApiService.importPrivateKey(keyPair.private.encoded)
+        adminApiService.importPrivateKey(keyPair.private.encoded)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
     }
@@ -494,13 +461,12 @@ class AdminApiServiceTest {
     fun submitTransactionsWhenTxSignedThenTrue() {
         val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns true
-        val reply = adminApiService.submitTransactions(listOf(transaction))
+        adminApiService.submitTransactions(listOf(transaction))
         verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
     }
 
     @Test
     fun signatureIndexWhenSuccess() {
-        val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder().build()
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
