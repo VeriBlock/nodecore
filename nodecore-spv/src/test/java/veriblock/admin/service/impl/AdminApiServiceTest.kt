@@ -9,6 +9,7 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.AddressCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
@@ -388,60 +389,50 @@ class AdminApiServiceTest {
         verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
     }
 
-    @Test
+    @Test(expected = AddressCreationException::class)
     fun newAddressWhenWalletLockedThenFalse() {
-        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns true
-        val reply = adminApiService.getNewAddress(request)
+        adminApiService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = AddressCreationException::class)
     fun newAddressWhenGetNewAddressNullThenFalse() {
-        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns null
-        val reply = adminApiService.getNewAddress(request)
+        adminApiService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = AddressCreationException::class)
     fun newAddressWhenIOExceptionThenFalse() {
-        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } throws IOException()
-        val reply = adminApiService.getNewAddress(request)
+        adminApiService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
-        Assert.assertEquals(false, reply.success)
     }
 
-    @Test
+    @Test(expected = AddressCreationException::class)
     fun newAddressWhenWalletLockedExceptionThenFalse() {
-        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } throws WalletLockedException("Exception")
-        val reply = adminApiService.getNewAddress(request)
+        adminApiService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
-        Assert.assertEquals(false, reply.success)
     }
 
     @Test
     fun newAddressWhenSuccessThenTrue() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val request = VeriBlockMessages.GetNewAddressRequest.newBuilder().build()
         val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns address
-        val reply = adminApiService.getNewAddress(request)
+        adminApiService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
-        Assert.assertEquals(true, reply.success)
     }
 
     @Test(expected = TransactionSubmissionException::class)

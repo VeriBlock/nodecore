@@ -154,7 +154,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Backup Wallet",
         form = "backupwallet",
-        description = "Backup the wallet of a NodeCore instance",
+        description = "Backup the SPV wallet",
         parameters = listOf(
             CommandParameter(name = "targetLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
@@ -176,31 +176,11 @@ fun CommandFactory.spvCommands(
         ),
         suggestedCommands = { listOf("backupwallet", "getbalance") }
     ) {
-        val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
+        val count = getOptionalParameter<Int>("count")?.coerceAtLeast(1) ?: 1
 
-        val result = context.adminApiService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
-            .setCount(count)
-            .build()
-        )
-        prepareResult(result.success, result.resultsList, result)
-    }
-
-    command(
-        name = "Get New Address",
-        form = "getnewaddress",
-        description = "Gets {count} new address from the wallet (default: 1)",
-        parameters = listOf(
-            CommandParameter(name = "count", mapper = CommandParameterMappers.INTEGER, required = false)
-        ),
-        suggestedCommands = { listOf("backupwallet", "getbalance") }
-    ) {
-        val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
-
-        val result = context.adminApiService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
-            .setCount(count)
-            .build()
-        )
-        prepareResult(result.success, result.resultsList, result)
+        val result = context.adminApiService.getNewAddress(count)
+        printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
+        displayResult(result.map { it.hash })
     }
 }
 

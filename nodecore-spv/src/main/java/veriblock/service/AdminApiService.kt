@@ -21,6 +21,7 @@ import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.p2p.Constants
+import org.veriblock.core.AddressCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
@@ -32,7 +33,9 @@ import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
@@ -272,62 +275,30 @@ class AdminApiService(
         }
     }
 
-    fun getNewAddress(request: GetNewAddressRequest): GetNewAddressReply {
-        val replyBuilder = GetNewAddressReply.newBuilder()
-        replyBuilder.success = true
-        if (addressManager.isLocked) {
-            replyBuilder.success = false
-            replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Wallet must be unlocked before creating a new address", true))
-        } else {
-            try {
-                var count = request.count
-                if (count < 1) {
-                    count = 1
-                }
-                var success = true
-                val addresses: MutableList<Address> = ArrayList(count)
-                for (i in 0 until count) {
-                    val address = addressManager.getNewAddress()
-                    if (address != null) {
-                        addresses.add(address)
-                        logger.info("New address: {}", address.hash)
-                    } else {
-                        success = false
-                        replyBuilder.success = false
-                        replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Unable to generate new address", true))
-                        break
-                    }
-                }
-                if (success) {
-                    if (addresses.size > 0) {
-                        // New addresses from the normal address manager will always be standard addresses
-                        replyBuilder.address = ByteStringUtility.base58ToByteString(addresses[0].hash)
-                    }
-                    if (addresses.size > 1) {
-                        addresses.subList(1, addresses.size)
-                            .forEach(
-                                Consumer { a: Address ->
-                                    replyBuilder.addAdditionalAddresses(
-                                        ByteStringUtility.base58ToByteString(a.hash)
-                                    )
-                                }
-                            )
-                    }
-                    replyBuilder.addResults(
-                        makeResult("V200", "Wallet Updated", "The wallet has been modified. Please make a backup of the wallet data file.", false)
-                    )
-                }
-            } catch (e: IOException) {
-                logger.error(e.message, e)
-                replyBuilder.success = false
-                replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Unable to generate new address", true))
-            } catch (e: WalletLockedException) {
-                logger.warn(e.message)
-                replyBuilder.success = false
-                replyBuilder.addResults(makeResult("V008", "Address Creation Failed", "Wallet must be unlocked before creating a new address", true))
-            }
+    fun getNewAddress(count: Int = 1): List<Address> {
+        require(count >= 1) {
+            "Invalid count of addresses to create: $count"
         }
-        return replyBuilder.build()
+        if (addressManager.isLocked) {
+            throw AddressCreationException("Wallet must be unlocked before creating a new address")
+        }
+        try {
+            return (1..count).map {
+                val address = addressManager.getNewAddress()
+                if (address != null) {
+                    logger.info("New address: {}", address.hash)
+                    address
+                } else {
+                    throw AddressCreationException("Unable to generate new address")
+                }
+            }
+        } catch (e: IOException) {
+            logger.debugError(e) { e.toString() }
+            throw AddressCreationException("Unable to generate new address")
+        } catch (e: WalletLockedException) {
+            logger.debugWarn(e) { e.toString() }
+            throw AddressCreationException("Wallet must be unlocked before creating a new address")
+        }
     }
 
     fun getBalance(addresses: List<AddressLight>): WalletBalance {
