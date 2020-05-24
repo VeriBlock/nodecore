@@ -1,6 +1,7 @@
 package org.veriblock.spv.standalone.commands
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.protobuf.ByteString
 import com.google.protobuf.Message
 import com.google.protobuf.util.JsonFormat
@@ -34,13 +35,12 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("getnewaddress") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
-        if (address != null) {
-            request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
-        }
-        val result = context.adminApiService.getBalance(request.build())
+        val addresses = address?.let {
+            listOf(address.asLightAddress())
+        } ?: emptyList()
+        val result = context.adminApiService.getBalance(addresses)
 
-        prepareResult(result.success, result.resultsList, result)
+        displayResult(result)
     }
 
     command(
@@ -220,11 +220,13 @@ fun CommandContext.prepareResult(
     }
 }
 
+private val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
+
 fun CommandContext.displayResult(
     result: Any
 ): Result {
     shell.printStyled(
-        Gson().toJson(result) + "\n",
+        prettyPrintGson.toJson(result) + "\n",
         AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
     )
     return org.veriblock.shell.core.success()

@@ -1,6 +1,7 @@
 package veriblock.service
 
 import veriblock.model.AddressLight
+import veriblock.model.Output
 
 enum class BlockchainState {
     LOADING,
@@ -47,4 +48,16 @@ data class AddressSignatureIndex(
     val address: AddressLight,
     val poolIndex: Long,
     val blockchainIndex: Long
+)
+
+data class AddressBalance(
+    val address: AddressLight,
+    val unlockedAmount: Long,
+    val lockedAmount: Long,
+    val totalAmount: Long
+)
+
+data class WalletBalance(
+    val confirmed: List<AddressBalance>,
+    val unconfirmed: List<Output>
 )

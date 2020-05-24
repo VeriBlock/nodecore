@@ -12,15 +12,12 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementReply
 import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementRequest
 import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceRequest
 import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
 import nodecore.api.grpc.VeriBlockMessages.GetNewAddressRequest
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
-import nodecore.api.grpc.VeriBlockMessages.ImportWalletReply
-import nodecore.api.grpc.VeriBlockMessages.ImportWalletRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.p2p.Constants
@@ -53,8 +50,6 @@ import veriblock.service.TransactionService.Companion.predictAltChainEndorsement
 import veriblock.util.MessageIdGenerator.next
 import java.io.File
 import java.io.IOException
-import java.nio.charset.StandardCharsets
-import java.security.PrivateKey
 import java.util.ArrayList
 import java.util.function.Consumer
 
@@ -290,11 +285,9 @@ class AdminApiService(
                     count = 1
                 }
                 var success = true
-                val addresses: MutableList<Address> = ArrayList(
-                    count
-                )
+                val addresses: MutableList<Address> = ArrayList(count)
                 for (i in 0 until count) {
-                    val address = addressManager.newAddress
+                    val address = addressManager.getNewAddress()
                     if (address != null) {
                         addresses.add(address)
                         logger.info("New address: {}", address.hash)
@@ -337,42 +330,32 @@ class AdminApiService(
         return replyBuilder.build()
     }
 
-    fun getBalance(request: GetBalanceRequest): GetBalanceReply {
-        val replyBuilder = GetBalanceReply.newBuilder()
+    fun getBalance(addresses: List<AddressLight>): WalletBalance {
         // All of the addresses from the normal address manager will be standard
         val addressLedgerContext = peerTable.getAddressesState()
-        if (request.addressesCount == 0) {
-            for (address in addressLedgerContext.keys) {
-                val ledgerContext = addressLedgerContext[address]
-                formGetBalanceReply(address, ledgerContext, replyBuilder)
-            }
+        if (addresses.isEmpty()) {
+            return WalletBalance(
+                confirmed = addressLedgerContext.keys.map { address ->
+                    val ledgerContext = addressLedgerContext[address]
+                    getAddressBalance(address.asLightAddress(), ledgerContext)
+                },
+                unconfirmed = emptyList()
+            )
         } else {
-            for (address in request.addressesList) {
-                val addressString = ByteStringAddressUtility.parseProperAddressTypeAutomatically(address)
-                val ledgerContext = addressLedgerContext[addressString]
-                if (ledgerContext != null) {
-                    formGetBalanceReply(addressString, ledgerContext, replyBuilder)
-                } else {
-                    addressManager.monitor(Address(addressString, null))
-                    replyBuilder.addConfirmed(
-                        VeriBlockMessages.AddressBalance
-                            .newBuilder()
-                            .setAddress(address)
-                            .setLockedAmount(0L)
-                            .setUnlockedAmount(0L)
-                            .setTotalAmount(0L)
-                    )
-                    replyBuilder.addUnconfirmed(
-                        VeriBlockMessages.Output
-                            .newBuilder()
-                            .setAddress(address)
-                            .setAmount(0L)
-                    )
-                }
-            }
+            return WalletBalance(
+                confirmed = addresses.map { address ->
+                    val ledgerContext = addressLedgerContext[address.get()]
+                    if (ledgerContext != null) {
+                        getAddressBalance(address, ledgerContext)
+                    } else {
+                        addressManager.monitor(Address(address.get(), null))
+
+                        AddressBalance(address, 0L, 0L, 0L)
+                    }
+                },
+                unconfirmed = emptyList()
+            )
         }
-        replyBuilder.success = true
-        return replyBuilder.build()
     }
 
     fun createAltChainEndorsement(request: CreateAltChainEndorsementRequest): CreateAltChainEndorsementReply {
@@ -487,26 +470,14 @@ class AdminApiService(
         }
     }
 
-    private fun formGetBalanceReply(address: String, ledgerContext: LedgerContext?, replyBuilder: GetBalanceReply.Builder) {
-        var balance = 0L
-        var lockedCoins = 0L
-        if (ledgerContext != null && ledgerContext.ledgerValue != null) {
-            balance = ledgerContext.ledgerValue!!.availableAtomicUnits
-            lockedCoins = ledgerContext.ledgerValue!!.frozenAtomicUnits
-        }
-        replyBuilder.addConfirmed(
-            VeriBlockMessages.AddressBalance
-                .newBuilder()
-                .setAddress(ByteStringUtility.base58ToByteString(address))
-                .setLockedAmount(lockedCoins)
-                .setUnlockedAmount(balance - lockedCoins)
-                .setTotalAmount(balance)
-        )
-        replyBuilder.addUnconfirmed(
-            VeriBlockMessages.Output
-                .newBuilder()
-                .setAddress(ByteStringUtility.base58ToByteString(address))
-                .setAmount(0L)
+    private fun getAddressBalance(address: AddressLight, ledgerContext: LedgerContext?): AddressBalance {
+        val balance = ledgerContext?.ledgerValue?.availableAtomicUnits ?: 0L
+        val lockedCoins = ledgerContext?.ledgerValue?.frozenAtomicUnits ?: 0L
+        return AddressBalance(
+            address = address,
+            unlockedAmount = balance - lockedCoins,
+            lockedAmount = lockedCoins,
+            totalAmount = balance
         )
     }
 
