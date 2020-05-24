@@ -98,7 +98,7 @@ fun CommandFactory.spvCommands(
         description = "Temporarily unlocks the NodeCore wallet",
         suggestedCommands = { listOf("lockwallet") }
     ) {
-        val passphrase = shell.passwordPrompt("Enter passphrase: ")!!
+        val passphrase = shell.passwordPrompt("Enter passphrase: ")
         val result = context.adminApiService.unlockWallet(passphrase)
         displayResult(result)
     }
@@ -162,7 +162,7 @@ fun CommandFactory.spvCommands(
     ) {
         val targetLocation: String = getParameter("targetLocation")
         val result = context.adminApiService.backupWallet(targetLocation)
-        printInfo("Note: The backed-up wallet file is saved on the computer where NodeCore is running.")
+        printInfo("Note: The backed-up wallet file is saved on the computer where SPV is running.")
         printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
         displayResult(result)
     }

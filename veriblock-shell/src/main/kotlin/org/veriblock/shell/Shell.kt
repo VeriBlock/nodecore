@@ -73,7 +73,7 @@ open class Shell(
         .append(" > ")
         .toAnsi(terminal)
 
-    fun readLine(): String? = try {
+    private fun readLine(): String? = try {
         val read = reader.readLine(getPrompt())
         println(read)
         printLogger.info(read)
@@ -84,7 +84,8 @@ open class Shell(
         null
     }
 
-    fun passwordPrompt(prompt: String): String? = reader.readLine(prompt, '*')
+    fun prompt(prompt: String): String = reader.readLine(prompt)
+    fun passwordPrompt(prompt: String): String = reader.readLine(prompt, '*')
 
     private fun startRunning() {
         running = true

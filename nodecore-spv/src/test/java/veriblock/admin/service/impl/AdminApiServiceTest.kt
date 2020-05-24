@@ -76,7 +76,6 @@ class AdminApiServiceTest {
         every { transactionService.createTransactionsByOutputList(any(), any()) } returns transactions
         every { transactionContainer.getPendingSignatureIndexForAddress(any())}
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
-        every { peerTable.advertise(any()) } returns Unit
 
         val reply = adminApiService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
@@ -107,7 +106,6 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        every { peerTable.advertise(any()) } returns Unit
         adminApiService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
@@ -131,7 +129,6 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        every { peerTable.advertise(any()) } returns Unit
         adminApiService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
@@ -155,7 +152,6 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        every { peerTable.advertise(any()) } returns Unit
         adminApiService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
@@ -175,7 +171,6 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns null
-        every { peerTable.advertise(any()) } returns Unit
         adminApiService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
