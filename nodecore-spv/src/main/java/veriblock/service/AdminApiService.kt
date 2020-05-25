@@ -245,12 +245,12 @@ class AdminApiService(
         }
     }
 
-    fun importWallet(sourceLocation: String, passphrase: String) {
+    fun importWallet(sourceLocation: String, passphrase: String? = null) {
         if (addressManager.isLocked) {
             throw WalletException("Wallet must be unlocked before importing another wallet")
         }
         try {
-            val result: Pair<Boolean, String> = if (passphrase.isNotEmpty()) {
+            val result: Pair<Boolean, String> = if (!passphrase.isNullOrEmpty()) {
                 addressManager.importEncryptedWallet(File(sourceLocation), passphrase.toCharArray())
             } else {
                 addressManager.importWallet(File(sourceLocation))
@@ -277,6 +277,7 @@ class AdminApiService(
                 val address = addressManager.getNewAddress()
                 if (address != null) {
                     logger.info("New address: {}", address.hash)
+                    peerTable.acknowledgeAddress(address.hash)
                     address
                 } else {
                     throw AddressCreationException("Unable to generate new address")

@@ -71,12 +71,13 @@ private fun run(): Int {
             setStyle(ProgressBarStyle.COLORFUL_UNICODE_BLOCK)
         }.build().use { progressBar ->
             var status = spvContext.peerTable.getDownloadStatus()
+            val initialHeight = status.currentHeight
             progressBar.extraMessage = "Looking for peers..."
             while (status.downloadStatus != DownloadStatus.READY) {
                 if (status.downloadStatus == DownloadStatus.DOWNLOADING) {
                     progressBar.extraMessage = "Downloading blocks..."
-                    progressBar.maxHint(status.bestHeight.toLong())
-                    progressBar.stepTo(status.currentHeight.toLong())
+                    progressBar.maxHint(status.bestHeight.toLong() - initialHeight)
+                    progressBar.stepTo(status.currentHeight.toLong() - initialHeight)
                 }
                 sleep(1000L)
                 status = spvContext.peerTable.getDownloadStatus()

@@ -23,6 +23,7 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.wallet.Address
 import org.veriblock.sdk.models.VeriBlockBlock
 import spark.utils.CollectionUtils
 import veriblock.SpvContext
@@ -189,16 +190,18 @@ class SpvPeerTable(
         }
     }
 
+    fun acknowledgeAddress(address: String) {
+        addressesState.putIfAbsent(address, LedgerContext())
+    }
+
     private fun requestAddressState() {
-        val addresses = spvContext.addressManager.all
-        if (CollectionUtils.isEmpty(addresses)) {
+        val addresses = spvContext.addressManager.getAll()
+        if (addresses.isEmpty()) {
             return
         }
         val ledgerProof = LedgerProofRequest.newBuilder()
         for (address in addresses) {
-            if (!addressesState.containsKey(address!!.hash)) {
-                addressesState[address.hash] = LedgerContext()
-            }
+            acknowledgeAddress(address.hash)
             ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
         }
         val request = VeriBlockMessages.Event.newBuilder()
