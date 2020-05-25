@@ -15,8 +15,10 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofRequest
+import nodecore.api.grpc.VeriBlockMessages.Transaction.Type.STANDARD
 import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
@@ -32,6 +34,7 @@ import veriblock.model.LedgerContext
 import veriblock.model.ListenerRegistration
 import veriblock.model.NetworkMessage
 import veriblock.model.NodeMetadata
+import veriblock.model.Output
 import veriblock.model.PeerAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
@@ -40,7 +43,11 @@ import veriblock.model.mapper.LedgerProofReplyMapper
 import veriblock.serialization.MessageSerializer
 import veriblock.serialization.MessageSerializer.deserializeNormalTransaction
 import veriblock.service.Blockchain
+import veriblock.service.OutputData
 import veriblock.service.PendingTransactionContainer
+import veriblock.service.TransactionData
+import veriblock.service.TransactionInfo
+import veriblock.service.TransactionType
 import veriblock.util.MessageIdGenerator.next
 import veriblock.util.Threading
 import veriblock.util.Threading.shutdown
@@ -61,8 +68,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Predicate
-import java.util.stream.Collectors
 
 private val logger = createLogger {}
 
@@ -303,8 +308,7 @@ class SpvPeerTable(
                             updateAddressState(ledgerContexts)
                         }
                         ResultsCase.TRANSACTION_REPLY -> if (message.message.transactionReply.success) {
-                            // TODO updateTransactionInfo(message.message.transactionReply.transaction.toTransactionInfo())
-                            //pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction)
+                            pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction.toModel())
                         }
                         ResultsCase.DEBUG_VTB_REPLY -> {
                         }
@@ -490,3 +494,38 @@ class SpvPeerTable(
         return pendingPeers.size
     }
 }
+
+private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
+    confirmations = confirmations,
+    transaction = transaction.toModel(),
+    blockNumber = blockNumber,
+    timestamp = timestamp,
+    endorsedBlockHash = endorsedBlockHash.toHex(),
+    bitcoinBlockHash = bitcoinBlockHash.toHex(),
+    bitcoinTxId = bitcoinTxId.toHex(),
+    bitcoinConfiormations = bitcoinConfirmations,
+    blockHash = blockHash.toHex(),
+    merklePath = merklePath
+)
+
+private fun VeriBlockMessages.Transaction.toModel() = TransactionData(
+    type = TransactionType.valueOf(type.name),
+    sourceAddress = sourceAddress.toHex(),
+    sourceAmount = sourceAmount,
+    outputs = outputsList.map { it.toModel() },
+    transactionFee = transactionFee,
+    data = data.toHex(),
+    bitcoinTransaction = bitcoinTransaction.toHex(),
+    endorsedBlockHeader = endorsedBlockHeader.toHex(),
+    bitcoinBlockHeaderOfProof = "",
+    merklePath = merklePath,
+    contextBitcoinBlockHeaders = listOf(),
+    timestamp = timestamp,
+    size = size,
+    txId = Sha256Hash.wrap(txId.toHex())
+)
+
+private fun VeriBlockMessages.Output.toModel() = OutputData(
+    address = address.toHex(),
+    amount = amount
+)

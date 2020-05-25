@@ -1,6 +1,5 @@
 package veriblock.service
 
-import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.crypto.Sha256Hash
 import spark.utils.CollectionUtils
 import veriblock.model.Transaction
@@ -21,24 +20,23 @@ class PendingTransactionContainer {
         return allPendingTx
     }
 
-    fun getTransactionInfo(txId: Sha256Hash): TransactionInfo {
+    fun getTransactionInfo(txId: Sha256Hash): TransactionInfo? {
         confirmedTxIdTransactionReply[txId]?.let {
             return it
         }
         if (!pendingTxIdTransaction.containsKey(txId)) {
             transactionsForMonitoring.add(txId)
         }
-        return TransactionInfo()
+        return null
     }
 
     fun updateTransactionInfo(transactionInfo: TransactionInfo) {
-        transactionInfo.transaction?.let { transaction ->
-            if (pendingTxIdTransaction.containsKey(transaction.txId)) {
-                confirmedTxIdTransactionReply[transaction.txId] = transactionInfo
-                if (transactionInfo.confirmations > 0) {
-                    pendingTxIdTransaction.remove(transaction.txId)
-                    transactionsForMonitoring.remove(transaction.txId)
-                }
+        val transaction = transactionInfo.transaction
+        if (pendingTxIdTransaction.containsKey(transaction.txId)) {
+            confirmedTxIdTransactionReply[transaction.txId] = transactionInfo
+            if (transactionInfo.confirmations > 0) {
+                pendingTxIdTransaction.remove(transaction.txId)
+                transactionsForMonitoring.remove(transaction.txId)
             }
         }
     }

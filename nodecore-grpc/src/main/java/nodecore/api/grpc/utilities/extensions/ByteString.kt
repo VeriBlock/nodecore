@@ -1,7 +1,6 @@
 package nodecore.api.grpc.utilities.extensions
 
 import com.google.protobuf.ByteString
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.asBase58Bytes
 import org.veriblock.core.utilities.extensions.asBase59Bytes
 import org.veriblock.core.utilities.extensions.asBase64Bytes

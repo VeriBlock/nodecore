@@ -9,8 +9,6 @@ package veriblock.service
 
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
-import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
 import nodecore.p2p.Constants
@@ -366,7 +364,7 @@ class AdminApiService(
 
     fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
-    fun getTransactions(ids: List<Sha256Hash>) = ids.map {
+    fun getTransactions(ids: List<Sha256Hash>) = ids.mapNotNull {
         pendingTransactionContainer.getTransactionInfo(it)
     }
 
