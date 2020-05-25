@@ -9,19 +9,13 @@ package veriblock.service
 
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementReply
-import nodecore.api.grpc.VeriBlockMessages.CreateAltChainEndorsementRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
-import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
-import nodecore.api.grpc.VeriBlockMessages.GetNewAddressRequest
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
 import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.p2p.Constants
 import org.veriblock.core.AddressCreationException
+import org.veriblock.core.EndorsementCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
@@ -48,13 +42,11 @@ import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
 import veriblock.model.asLightAddress
 import veriblock.net.SpvPeerTable
-import veriblock.service.TransactionService.Companion.getRegularTransactionMessageBuilder
 import veriblock.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
 import veriblock.util.MessageIdGenerator.next
 import java.io.File
 import java.io.IOException
 import java.util.ArrayList
-import java.util.function.Consumer
 
 private val logger = createLogger {}
 
@@ -329,37 +321,21 @@ class AdminApiService(
         }
     }
 
-    fun createAltChainEndorsement(request: CreateAltChainEndorsementRequest): CreateAltChainEndorsementReply {
-        val replyBuilder = CreateAltChainEndorsementReply.newBuilder()
+    fun createAltChainEndorsement(publicationData: ByteArray, sourceAddress: String, feePerByte: Long, maxFee: Long): AltChainEndorsement {
         try {
-            val publicationData = request.publicationData.toByteArray()
-            val sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(request.sourceAddress)
             val signatureIndex = getSignatureIndex(sourceAddress) + 1
-            val fee = request.feePerByte * predictAltChainEndorsementTransactionSize(
-                publicationData.size, signatureIndex
-            )
-            if (fee > request.maxFee) {
-                replyBuilder.success = false
-                replyBuilder.addResults(
-                    makeResult(
-                        "V008", "Create Alt Endorsement Error",
-                        "Calcualated fee (" + fee + ") was above the maximum configured amount (" + request.maxFee + ").", true
-                    )
-                )
-                return replyBuilder.build()
+            val fee = feePerByte * predictAltChainEndorsementTransactionSize(publicationData.size, signatureIndex)
+            if (fee > maxFee) {
+                throw EndorsementCreationException("Calculated fee $fee was above the maximum configured amount $maxFee")
             }
             val tx = transactionService.createUnsignedAltChainEndorsementTransaction(
                 sourceAddress, fee, publicationData, signatureIndex
             )
-            replyBuilder.success = true
-            replyBuilder.setTransaction(getRegularTransactionMessageBuilder((tx as StandardTransaction)))
-            replyBuilder.signatureIndex = signatureIndex
+            return AltChainEndorsement((tx as StandardTransaction), signatureIndex)
         } catch (e: Exception) {
-            logger.error("Unable to create alt chain endorsement", e)
-            replyBuilder.success = false
-            replyBuilder.addResults(makeResult("V008", "Create Alt Endorsement Error", "An error occurred processing request", true))
+            logger.debugWarn(e) { "Failed to create alt chain endorsement" }
+            throw EndorsementCreationException("Failed to create alt chain endorsement")
         }
-        return replyBuilder.build()
     }
 
     fun getLastVBKBlockHeader(): BlockHeader {

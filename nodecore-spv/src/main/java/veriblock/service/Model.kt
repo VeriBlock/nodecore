@@ -2,6 +2,7 @@ package veriblock.service
 
 import veriblock.model.AddressLight
 import veriblock.model.Output
+import veriblock.model.Transaction
 
 enum class BlockchainState {
     LOADING,
@@ -60,4 +61,10 @@ data class AddressBalance(
 data class WalletBalance(
     val confirmed: List<AddressBalance>,
     val unconfirmed: List<Output>
+)
+
+data class AltChainEndorsement(
+    val transaction: Transaction,
+    val signatureIndex: Long
+
 )

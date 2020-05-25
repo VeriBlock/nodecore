@@ -1,15 +1,13 @@
 package veriblock.admin.service.impl
 
-import com.google.protobuf.ByteString
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.AddressCreationException
+import org.veriblock.core.EndorsementCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
@@ -39,7 +37,6 @@ import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
 import java.io.IOException
 import java.security.KeyPairGenerator
-import kotlin.math.exp
 
 class AdminApiServiceTest {
     private val spvContext = SpvContext()
@@ -477,7 +474,7 @@ class AdminApiServiceTest {
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
     }
 
-    @Test
+    @Test(expected = EndorsementCreationException::class)
     fun createAltChainEndorsementWhenMaxFeeLess() {
         val transaction = StandardTransaction(Sha256Hash.ZERO_HASH).also {
             it.inputAddress = StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS")
@@ -485,56 +482,30 @@ class AdminApiServiceTest {
             it.data = ByteArray(12)
         }
 
-        val request = VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
-            ByteString.copyFrom(ByteArray(12))
-        ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .setFeePerByte(10000L).setMaxFee(1000L).build()
-
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = adminApiService.createAltChainEndorsement(request)
+        val reply = adminApiService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 1000L)
         Assert.assertNotNull(reply)
-        Assert.assertFalse(reply.success)
-        Assert.assertFalse(reply.getResults(0).message.contains("Calcualated fee"))
     }
 
-    @Test
+    @Test(expected = EndorsementCreationException::class)
     fun createAltChainEndorsementWhenThrowException() {
-        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH).also {
-            it.inputAddress = StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS")
-            it.inputAmount = Coin.ONE
-            it.data = ByteArray(12)
-        }
-
-        val request = VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
-            ByteString.copyFrom(ByteArray(12))
-        ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .setFeePerByte(10000L).setMaxFee(100000000L).build()
-
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } throws RuntimeException()
 
-        val reply = adminApiService.createAltChainEndorsement(request)
+        val reply = adminApiService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
         Assert.assertNotNull(reply)
-        Assert.assertFalse(reply.success)
-        Assert.assertFalse(reply.getResults(0).message.contains("An error occurred processing"))
     }
 
-    @Test
+    @Test(expected = Test.None::class)
     fun createAltChainEndorsement() {
         val transaction = StandardTransaction(Sha256Hash.ZERO_HASH).also {
             it.inputAddress = StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS")
             it.inputAmount = Coin.ONE
             it.data = ByteArray(12)
         }
-        val request = VeriBlockMessages.CreateAltChainEndorsementRequest.newBuilder().setPublicationData(
-            ByteString.copyFrom(ByteArray(12))
-        ).setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically("VcspPDtJNpNmLV8qFTqb2F5157JNHS"))
-            .setFeePerByte(10000L).setMaxFee(100000000L).build()
-
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = adminApiService.createAltChainEndorsement(request)
+        val reply = adminApiService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
         Assert.assertNotNull(reply)
-        Assert.assertTrue(reply.success)
     }
 }
