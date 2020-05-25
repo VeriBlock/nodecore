@@ -8,5 +8,5 @@
 package veriblock.net
 
 interface PeerConnectedEventListener {
-    fun onPeerConnected(peer: Peer?)
+    fun onPeerConnected(peer: Peer)
 }

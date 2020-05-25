@@ -120,7 +120,7 @@ sealed class NetworkParametersTemplate {
 
 object MainNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "mainnet"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
+    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900_000_000_000L)
 
     override val name = NETWORK
     override val rpcPort = 10500
@@ -136,7 +136,7 @@ object MainNetParameters : NetworkParametersTemplate() {
         VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
         Sha256Hash.wrap("A7E5F2B7EC94291767B4D67B4A33682D", VERIBLOCK_MERKLE_ROOT_LENGTH),
         1553497611,
-        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1_000_000_000_000L)).toInt(),
         289244493
     )
     override val bitcoinOriginBlockHeight = 568690

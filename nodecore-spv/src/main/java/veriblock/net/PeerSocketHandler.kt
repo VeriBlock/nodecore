@@ -122,7 +122,7 @@ class PeerSocketHandler(
         }
     }
 
-    fun runInput() {
+    private fun runInput() {
         while (isRunning()) {
             try {
                 val sizeBuffer = ByteArray(4)

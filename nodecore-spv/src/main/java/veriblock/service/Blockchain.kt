@@ -70,7 +70,7 @@ class Blockchain(
     @Throws(SQLException::class)
     fun addAll(blocks: List<VeriBlockBlock>) {
         val sortedBlock = blocks.sortedBy { it.height }
-        logger.info(
+        logger.debug(
             "Add blocks {} blocks, height {} - {}", sortedBlock.size, sortedBlock.first().height,
             sortedBlock.last().height
         )

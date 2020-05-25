@@ -134,4 +134,8 @@ public class VeriBlockBlock{
 
     }
 
+    @Override
+    public String toString() {
+        return "VeriBlockBlock(" + hash + " @ " + height + ')';
+    }
 }

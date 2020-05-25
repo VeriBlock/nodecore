@@ -28,6 +28,7 @@ import veriblock.SpvContext
 import veriblock.model.DownloadStatus
 import veriblock.model.DownloadStatusResponse
 import veriblock.net.BootstrapPeerDiscovery
+import veriblock.net.LocalhostDiscovery
 import java.lang.Thread.sleep
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -43,6 +44,11 @@ private val networkParameters = NetworkParameters(
         network = config.getString("network") ?: MainNetParameters.NETWORK
     )
 )
+private val peerDiscovery = if (config.getBoolean("useLocalNode") == true) {
+    LocalhostDiscovery(networkParameters)
+} else {
+    BootstrapPeerDiscovery(networkParameters)
+}
 
 private fun run(): Int {
     Runtime.getRuntime().addShutdownHook(Thread {
@@ -57,7 +63,7 @@ private fun run(): Int {
 
     logger.info { "Initializing SPV Context..." }
     try {
-        spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters))
+        spvContext.init(networkParameters, peerDiscovery)
         spvContext.peerTable.start()
         ProgressBarBuilder().apply {
             setTaskName("Loading SPV")

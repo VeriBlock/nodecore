@@ -80,7 +80,7 @@ class SpvPeerTable(
 ) : PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
-    val discovery: PeerDiscovery
+    private val discovery: PeerDiscovery
     private val blockchain: Blockchain
     private val executor: ListeningScheduledExecutorService
     private val messageExecutor: ScheduledExecutorService
@@ -141,9 +141,9 @@ class SpvPeerTable(
         }
     }
 
-    fun connectTo(address: PeerAddress): Peer? {
-        if (peers.containsKey(address.address)) {
-            return peers[address.address]
+    fun connectTo(address: PeerAddress): Peer {
+        peers[address.address]?.let {
+            return it
         }
         val peer = createPeer(address)
         peer.addConnectedEventListener(Threading.LISTENER_THREAD, this)
@@ -155,7 +155,7 @@ class SpvPeerTable(
             peer
         } catch (e: IOException) {
             logger.error("Unable to open connection", e)
-            null
+            throw e
         } finally {
             lock.unlock()
         }
@@ -173,7 +173,7 @@ class SpvPeerTable(
     }
 
     fun startBlockchainDownload(peer: Peer) {
-        logger.info("Beginning blockchain download")
+        logger.debug("Beginning blockchain download")
         try {
             downloadPeer = peer
             peer.startBlockchainDownload()
@@ -201,7 +201,7 @@ class SpvPeerTable(
             .setAcknowledge(false)
             .setLedgerProofRequest(ledgerProof.build())
             .build()
-        logger.info("Request address state.")
+        logger.debug("Request address state.")
         for (peer in peers.values) {
             peer.sendMessage(request)
         }
@@ -237,9 +237,9 @@ class SpvPeerTable(
                 if (peers.containsKey(address.address) || pendingPeers.containsKey(address.address)) {
                     continue
                 }
-                logger.info("Attempting connection to {}:{}", address.address, address.port)
+                logger.debug("Attempting connection to {}:{}", address.address, address.port)
                 val peer = connectTo(address)
-                logger.info("Discovered peer connected {}:{}", peer!!.address, peer.port)
+                logger.debug("Discovered peer connected {}:{}", peer.address, peer.port)
             }
         }
     }
@@ -249,7 +249,7 @@ class SpvPeerTable(
             while (running.get()) {
                 try {
                     val message = incomingQueue.take()
-                    logger.info("{} message from {}", message.message.resultsCase.name, message.sender.address)
+                    logger.debug("{} message from {}", message.message.resultsCase.name, message.sender.address)
                     when (message.message.resultsCase) {
                         ResultsCase.HEARTBEAT -> {
                             val heartbeat = message.message.heartbeat
@@ -263,7 +263,7 @@ class SpvPeerTable(
                         }
                         ResultsCase.ADVERTISE_BLOCKS -> {
                             val advertiseBlocks = message.message.advertiseBlocks
-                            logger.info(
+                            logger.debug(
                                 "PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.headersList.size,
                                 blockchain.getChainHead().height
                             )
@@ -310,6 +310,9 @@ class SpvPeerTable(
                         ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> if (futureEventReplyList.containsKey(message.message.requestId)) {
                             futureEventReplyList[message.message.requestId]!!.response(message.message)
                         }
+                        else -> {
+                            // Ignore the other message types as they are irrelevant for SPV
+                        }
                     }
                 } catch (e: InterruptedException) {
                     break
@@ -355,10 +358,10 @@ class SpvPeerTable(
         }
     }
 
-    override fun onPeerConnected(peer: Peer?) {
+    override fun onPeerConnected(peer: Peer) {
         lock.lock()
         try {
-            logger.info("Peer {} connected", peer!!.address)
+            logger.debug("Peer {} connected", peer.address)
             pendingPeers.remove(peer.address)
             peers[peer.address] = peer
 
@@ -387,7 +390,7 @@ class SpvPeerTable(
 
     override fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
         try {
-            logger.info("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
+            logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.put(NetworkMessage(sender, message))
         } catch (e: InterruptedException) {
             logger.error("onMessageReceived interrupted", e)
