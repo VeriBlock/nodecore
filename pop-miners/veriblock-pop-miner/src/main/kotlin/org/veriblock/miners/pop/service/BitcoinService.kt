@@ -145,6 +145,7 @@ class BitcoinService(
             context, Script.ScriptType.P2WPKH, null, File("."), filePrefix
         ) {
             override fun provideBlockStore(file: File): BlockStore {
+                checkpoints = this::class.java.classLoader.getResourceAsStream("checkpoints-${configuration.network.name.toLowerCase()}.txt")
                 return SPVBlockStore(context.params, file, configuration.blockStoreCapacity, true)
             }
 
