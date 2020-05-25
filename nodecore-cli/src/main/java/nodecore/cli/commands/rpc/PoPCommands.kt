@@ -4,6 +4,8 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
+import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
@@ -124,10 +126,10 @@ fun CommandFactory.popCommands() {
         //TODO: Add context Bitcoin block header parameters
 
         val request = VeriBlockMessages.SubmitPopRequest.newBuilder().apply {
-            this.endorsedBlockHeader = ByteString.copyFrom(Utility.hexToBytes(endorsedBlockHeader))
-            this.bitcoinTransaction = ByteString.copyFrom(Utility.hexToBytes(bitcoinTransaction))
-            this.bitcoinMerklePathToRoot = ByteString.copyFrom(bitcoinMerklePathToRoot.toByteArray())
-            this.bitcoinBlockHeaderOfProof = VeriBlockMessages.BitcoinBlockHeader.newBuilder().setHeader(ByteString.copyFrom(Utility.hexToBytes(bitcoinBlockHeader)))
+            this.endorsedBlockHeader = endorsedBlockHeader.asHexByteString()
+            this.bitcoinTransaction = bitcoinTransaction.asHexByteString()
+            this.bitcoinMerklePathToRoot = bitcoinMerklePathToRoot.toByteArray().toByteString()
+            this.bitcoinBlockHeaderOfProof = VeriBlockMessages.BitcoinBlockHeader.newBuilder().setHeader(bitcoinBlockHeader.asHexByteString())
                 .build()
         }
         if (address != null) {
@@ -151,7 +153,7 @@ fun CommandFactory.popCommands() {
         val hash: String = getParameter("blockhash")
         val searchLength: Int? = getOptionalParameter("searchLength")
         val request = VeriBlockMessages.GetProtectingParentsRequest.newBuilder()
-            .setVeriblockBlockHash(ByteStringUtility.hexToByteString(hash))
+            .setVeriblockBlockHash(hash.asHexByteString())
 
         if (searchLength != null) {
             request.searchLength = searchLength
@@ -179,7 +181,7 @@ fun CommandFactory.popCommands() {
         val hash: String = getParameter("blockhash")
         val searchLength: Int? = getOptionalParameter("searchLength")
         val request = VeriBlockMessages.GetProtectedChildrenRequest.newBuilder()
-            .setVeriblockBlockHash(ByteStringUtility.hexToByteString(hash))
+            .setVeriblockBlockHash(hash.asHexByteString())
 
         if (searchLength != null) {
             request.searchLength = searchLength

@@ -11,11 +11,10 @@ import org.veriblock.core.params.BitcoinNetworkParameters
 import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.asHexBytes
 
 object BitcoinDefaults {
-    private val regtestGenesis = Utility.hexToBytes(
-        "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f2002000000"
-    )
+    private val regtestGenesis = "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f2002000000".asHexBytes()
     val genesis = SerializeDeserializeService.parseBitcoinBlock(regtestGenesis)
     const val genesisHeight = 0
     val networkParameters: BitcoinNetworkParameters = BitcoinRegTestParameters()

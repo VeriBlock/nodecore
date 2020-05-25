@@ -11,6 +11,7 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
 import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
@@ -99,7 +100,7 @@ open class StandardTransaction : Transaction {
         val builder = VeriBlockMessages.Transaction.newBuilder()
         builder.timestamp = Utility.getCurrentTimeSeconds()
         builder.transactionFee = transactionFee
-        builder.txId = ByteStringUtility.hexToByteString(txId.toString())
+        builder.txId = txId.toString().asHexByteString()
         if (transactionTypeIdentifier == TransactionTypeIdentifier.STANDARD) {
             builder.type = VeriBlockMessages.Transaction.Type.STANDARD
         } else if (transactionTypeIdentifier == TransactionTypeIdentifier.MULTISIG) {

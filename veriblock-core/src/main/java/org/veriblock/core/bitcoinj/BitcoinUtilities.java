@@ -7,13 +7,11 @@
 
 package org.veriblock.core.bitcoinj;
 
-import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.TransactionEmbeddedDataUtility;
 import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 /**
  * <p>
@@ -148,17 +146,5 @@ public class BitcoinUtilities {
         System.arraycopy(Utility.flip(Utility.longToByteArray(nonce)), 0, header, 76, 4);
 
         return header;
-    }
-
-    // use this method to get the PoW for the block higher than any possible block hash
-    // this bits value is equal to very low difficulty for the block mining
-    public static int bitcoinVeryHighPowEncodeToBits() {
-        // prepare a very big hex encoded number
-        char[] charArray = new char[Sha256Hash.BITCOIN_LENGTH * 2 + 2];
-        Arrays.fill(charArray, 'F');
-        String veryBigNumberStringHex = new String(charArray);
-
-        long bits = encodeCompactBits(new BigInteger(veryBigNumberStringHex, 16));
-        return (int) bits;
     }
 }
