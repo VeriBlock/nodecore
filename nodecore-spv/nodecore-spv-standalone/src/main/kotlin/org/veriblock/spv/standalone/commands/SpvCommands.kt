@@ -18,6 +18,7 @@ import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
+import org.veriblock.shell.core.success
 import veriblock.SpvContext
 import veriblock.model.Output
 import veriblock.model.asLightAddress
@@ -41,6 +42,7 @@ fun CommandFactory.spvCommands(
         val result = context.adminApiService.getBalance(addresses)
 
         displayResult(result)
+        success()
     }
 
     command(
@@ -51,6 +53,7 @@ fun CommandFactory.spvCommands(
     ) {
         val result = context.adminApiService.getStateInfo()
         displayResult(result)
+        success()
     }
 
     command(
@@ -80,6 +83,7 @@ fun CommandFactory.spvCommands(
         )
 
         displayResult(result)
+        success()
     }
 
     command(
@@ -88,8 +92,8 @@ fun CommandFactory.spvCommands(
         description = "Disables the temporary unlock on the NodeCore wallet",
         suggestedCommands = { listOf("unlockwallet") }
     ) {
-        val result = context.adminApiService.lockWallet()
-        displayResult(result)
+        context.adminApiService.lockWallet()
+        success()
     }
 
     command(
@@ -99,8 +103,8 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val result = context.adminApiService.unlockWallet(passphrase)
-        displayResult(result)
+        context.adminApiService.unlockWallet(passphrase)
+        success()
     }
 
     command(
@@ -110,9 +114,9 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("encryptwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val result = context.adminApiService.decryptWallet(passphrase)
+        context.adminApiService.decryptWallet(passphrase)
         printInfo("Wallet has been decrypted")
-        displayResult(result)
+        success()
     }
 
     command(
@@ -122,14 +126,14 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("decryptwallet", "unlockwallet", "lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        if (passphrase.isNullOrEmpty()) {
+        if (passphrase.isEmpty()) {
             failure("V060", "Invalid Passphrase", "Passphrase cannot be empty")
         } else {
             val confirmation = shell.passwordPrompt("Confirm passphrase: ")
             if (passphrase == confirmation) {
-                val result = context.adminApiService.encryptWallet(passphrase)
+                context.adminApiService.encryptWallet(passphrase)
                 printInfo("Wallet has been encrypted with supplied passphrase")
-                displayResult(result)
+                success()
             } else {
                 throw WalletException("Passphrase and confirmation do not match")
             }
@@ -147,8 +151,8 @@ fun CommandFactory.spvCommands(
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
         val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
-        val result = context.adminApiService.importWallet(sourceLocation, passphrase)
-        displayResult(result)
+        context.adminApiService.importWallet(sourceLocation, passphrase)
+        success()
     }
 
     command(
@@ -164,7 +168,7 @@ fun CommandFactory.spvCommands(
         val result = context.adminApiService.backupWallet(targetLocation)
         printInfo("Note: The backed-up wallet file is saved on the computer where SPV is running.")
         printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
-        displayResult(result)
+        success()
     }
 
     command(
@@ -181,22 +185,7 @@ fun CommandFactory.spvCommands(
         val result = context.adminApiService.getNewAddress(count)
         printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
         displayResult(result.map { it.hash })
-    }
-}
-
-fun CommandContext.prepareResult(
-    success: Boolean,
-    results: List<VeriBlockMessages.Result>,
-    payload: Message
-): Result {
-    return if (!success) {
-        failure(results)
-    } else {
-        shell.printStyled(
-            JsonFormat.printer().print(payload) + "\n",
-            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
-        )
-        success(results)
+        success()
     }
 }
 
@@ -204,22 +193,9 @@ private val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
 
 fun CommandContext.displayResult(
     result: Any
-): Result {
+) {
     shell.printStyled(
         prettyPrintGson.toJson(result) + "\n",
         AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
     )
-    return org.veriblock.shell.core.success()
-}
-
-fun failure(results: List<VeriBlockMessages.Result>) = failure {
-    for (r in results) {
-        addMessage(r.code, r.message, r.details, r.error)
-    }
-}
-
-fun success(results: List<VeriBlockMessages.Result>) = org.veriblock.shell.core.success {
-    for (r in results) {
-        addMessage(r.code, r.message, r.details, r.error)
-    }
 }

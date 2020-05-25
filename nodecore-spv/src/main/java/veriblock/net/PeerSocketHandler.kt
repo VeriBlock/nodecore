@@ -16,6 +16,7 @@ import veriblock.util.Threading
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.lang.Thread.sleep
 import java.net.Socket
 import java.net.SocketException
 import java.util.concurrent.BlockingQueue
@@ -119,6 +120,7 @@ class PeerSocketHandler(
                 logger.error("Error in output stream thread!", e)
                 break
             }
+            sleep(10)
         }
     }
 
@@ -144,6 +146,7 @@ class PeerSocketHandler(
                 logger.error("Socket error: ", e)
                 break
             }
+            sleep(10)
         }
     }
 }

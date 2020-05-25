@@ -459,13 +459,14 @@ class SpvPeerTable(
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus
         val currentHeight = blockchain.getChainHead().height
-        val bestBlockHeight = if (downloadPeer == null) 0 else downloadPeer!!.bestBlockHeight
-        status = if (downloadPeer == null) {
-            DownloadStatus.DISCOVERING
-        } else if (bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING) {
-            DownloadStatus.READY
-        } else {
-            DownloadStatus.DOWNLOADING
+        val bestBlockHeight = downloadPeer?.bestBlockHeight ?: 0
+        status = when {
+            downloadPeer == null ->
+                DownloadStatus.DISCOVERING
+            bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
+                DownloadStatus.READY
+            else ->
+                DownloadStatus.DOWNLOADING
         }
         return DownloadStatusResponse(status, currentHeight, bestBlockHeight)
     }

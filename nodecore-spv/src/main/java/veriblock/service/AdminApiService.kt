@@ -205,8 +205,8 @@ class AdminApiService(
         }
     }
 
-    fun decryptWallet(passphrase: String?) {
-        if (passphrase.isNullOrEmpty()) {
+    fun decryptWallet(passphrase: String) {
+        if (passphrase.isEmpty()) {
             throw WalletException("A blank passphrase is invalid for decrypting a wallet")
         } else {
             try {
@@ -247,12 +247,12 @@ class AdminApiService(
         }
     }
 
-    fun importWallet(sourceLocation: String, passphrase: String?) {
+    fun importWallet(sourceLocation: String, passphrase: String) {
         if (addressManager.isLocked) {
             throw WalletException("Wallet must be unlocked before importing another wallet")
         }
         try {
-            val result: Pair<Boolean, String> = if (!passphrase.isNullOrEmpty()) {
+            val result: Pair<Boolean, String> = if (passphrase.isNotEmpty()) {
                 addressManager.importEncryptedWallet(File(sourceLocation), passphrase.toCharArray())
             } else {
                 addressManager.importWallet(File(sourceLocation))
