@@ -209,7 +209,7 @@ class AdminApiServiceTest {
             false, "test_string"
         )
         every { addressManager.importWallet(any()) } returns result
-        adminApiService.importWallet("test/source", null)
+        adminApiService.importWallet("test/source", "")
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
     }
@@ -219,7 +219,7 @@ class AdminApiServiceTest {
         every { addressManager.isLocked } returns false
         val result = Pair(true, "test_string")
         every { addressManager.importWallet(any()) } returns result
-        adminApiService.importWallet("test/source", null)
+        adminApiService.importWallet("test/source", "")
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
     }
@@ -228,7 +228,7 @@ class AdminApiServiceTest {
     fun importWalletWhenThrowExceptionThenFalse() {
         every { addressManager.isLocked  } returns false
         every { addressManager.importWallet(any()) } throws RuntimeException()
-        adminApiService.importWallet("test/source", null)
+        adminApiService.importWallet("test/source", "")
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
     }

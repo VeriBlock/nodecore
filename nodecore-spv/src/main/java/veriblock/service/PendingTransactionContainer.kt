@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 class PendingTransactionContainer {
     private val pendingAddressTransaction: MutableMap<String, ArrayList<Transaction?>> = ConcurrentHashMap()
     private val pendingTxIdTransaction: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
-    private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, VeriBlockMessages.TransactionInfo> = ConcurrentHashMap()
+    private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
     private val transactionsForMonitoring: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
 
     fun getPendingTransactionsId(): Set<Sha256Hash> {
@@ -21,27 +21,24 @@ class PendingTransactionContainer {
         return allPendingTx
     }
 
-    fun getTransactionInfo(txId: Sha256Hash): VeriBlockMessages.TransactionInfo {
+    fun getTransactionInfo(txId: Sha256Hash): TransactionInfo {
         confirmedTxIdTransactionReply[txId]?.let {
             return it
         }
         if (!pendingTxIdTransaction.containsKey(txId)) {
             transactionsForMonitoring.add(txId)
         }
-        return VeriBlockMessages.TransactionInfo.newBuilder()
-            .setConfirmations(0)
-            .build()
+        return TransactionInfo()
     }
 
-    fun updateTransactionInfo(transactionInfo: VeriBlockMessages.TransactionInfo) {
-        val txId = Sha256Hash.wrap(
-            transactionInfo.transaction.txId.toByteArray()
-        )
-        if (pendingTxIdTransaction.containsKey(txId)) {
-            confirmedTxIdTransactionReply[txId] = transactionInfo
-            if (transactionInfo.confirmations > 0) {
-                pendingTxIdTransaction.remove(txId)
-                transactionsForMonitoring.remove(txId)
+    fun updateTransactionInfo(transactionInfo: TransactionInfo) {
+        transactionInfo.transaction?.let { transaction ->
+            if (pendingTxIdTransaction.containsKey(transaction.txId)) {
+                confirmedTxIdTransactionReply[transaction.txId] = transactionInfo
+                if (transactionInfo.confirmations > 0) {
+                    pendingTxIdTransaction.remove(transaction.txId)
+                    transactionsForMonitoring.remove(transaction.txId)
+                }
             }
         }
     }

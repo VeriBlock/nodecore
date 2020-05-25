@@ -68,3 +68,16 @@ data class AltChainEndorsement(
     val signatureIndex: Long
 
 )
+
+data class TransactionInfo(
+    val confirmations: Int = 0,
+    val transaction: Transaction? = null,
+    val blockNumber: Int = 0,
+    val timestamp: Int = 0,
+    val endorsedBlock: String = "",
+    val bitcoinBlockHash: String = "",
+    val bitcoinTxId: String = "",
+    val bitcoinConfiormations: Int = 0,
+    val blockHash: String = "",
+    val merklePath: String = ""
+)

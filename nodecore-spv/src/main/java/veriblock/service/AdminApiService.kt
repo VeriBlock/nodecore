@@ -366,16 +366,8 @@ class AdminApiService(
 
     fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
-    fun getTransactions(request: GetTransactionsRequest): GetTransactionsReply {
-        val ids = request.idsList.map {
-            Sha256Hash.wrap(it.toByteArray())
-        }
-        val replyList: List<VeriBlockMessages.TransactionInfo> = ids.map {
-            pendingTransactionContainer.getTransactionInfo(it)
-        }
-        return GetTransactionsReply.newBuilder()
-            .addAllTransactions(replyList)
-            .build()
+    fun getTransactions(ids: List<Sha256Hash>) = ids.map {
+        pendingTransactionContainer.getTransactionInfo(it)
     }
 
     fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest?): GetVeriBlockPublicationsReply {

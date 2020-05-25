@@ -303,7 +303,8 @@ class SpvPeerTable(
                             updateAddressState(ledgerContexts)
                         }
                         ResultsCase.TRANSACTION_REPLY -> if (message.message.transactionReply.success) {
-                            pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction)
+                            // TODO updateTransactionInfo(message.message.transactionReply.transaction.toTransactionInfo())
+                            //pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction)
                         }
                         ResultsCase.DEBUG_VTB_REPLY -> {
                         }
