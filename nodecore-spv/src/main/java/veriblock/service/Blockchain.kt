@@ -136,16 +136,15 @@ class Blockchain(
         return storedBlocks
     }
 
-    //                for (int i = 0; i < 16; i++) {
-    //                TODO 16 is too much for bigDb with current approach. It take a lot of time. Try to get amount of blocks by height and process in memory.
     fun getPeerQuery(): List<VeriBlockBlock> {
         val blocks: MutableList<VeriBlockBlock> = ArrayList(16)
         try {
             var cursor = blockStore.chainHead
             if (cursor != null) {
                 blocks.add(cursor.block)
-                outer@ //                for (int i = 0; i < 16; i++) {
-                //                TODO 16 is too much for bigDb with current approach. It take a lot of time. Try to get amount of blocks by height and process in memory.
+                // TODO 16 is too much for bigDb with current approach. It take a lot of time. Try to get amount of blocks by height and process in memory.
+                // for (int i = 0; i < 16; i++) {
+                outer@
                 for (i in 0..4) {
                     val seek = cursor.block.height - 2.0.pow(i.toDouble()).toInt()
                     if (seek < 0) {
