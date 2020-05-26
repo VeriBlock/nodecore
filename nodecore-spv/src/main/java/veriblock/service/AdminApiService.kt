@@ -29,6 +29,7 @@ import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
@@ -316,7 +317,7 @@ class AdminApiService(
                     } else {
                         addressManager.monitor(Address(address.get(), null))
 
-                        AddressBalance(address, 0L, 0L, 0L)
+                        AddressBalance(address, "0", "0", "0")
                     }
                 },
                 unconfirmed = emptyList()
@@ -417,9 +418,9 @@ class AdminApiService(
         val lockedCoins = ledgerContext?.ledgerValue?.frozenAtomicUnits ?: 0L
         return AddressBalance(
             address = address,
-            unlockedAmount = balance - lockedCoins,
-            lockedAmount = lockedCoins,
-            totalAmount = balance
+            unlockedAmount = (balance - lockedCoins).asCoin().toString(),
+            lockedAmount = lockedCoins.asCoin().toString(),
+            totalAmount = balance.asCoin().toString()
         )
     }
 

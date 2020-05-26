@@ -61,9 +61,9 @@ data class AddressSignatureIndex(
 
 data class AddressBalance(
     val address: AddressLight,
-    val unlockedAmount: Long,
-    val lockedAmount: Long,
-    val totalAmount: Long
+    val unlockedAmount: String,
+    val lockedAmount: String,
+    val totalAmount: String
 )
 
 data class WalletBalance(
