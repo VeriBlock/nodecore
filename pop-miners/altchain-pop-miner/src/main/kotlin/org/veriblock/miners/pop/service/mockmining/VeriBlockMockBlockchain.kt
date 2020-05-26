@@ -37,7 +37,7 @@ class VeriBlockMockBlockchain(
             0 -> keystoneBlocksAgo = 20
             1 -> keystoneBlocksAgo = 21
         }
-        val context = store[chainHead.hash, keystoneBlocksAgo]
+        val context = store.get(chainHead.hash, keystoneBlocksAgo)
         return if (context.size == keystoneBlocksAgo) context[keystoneBlocksAgo - 1].block.hash.trimToPreviousKeystoneSize() else VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
     }
 
@@ -51,7 +51,7 @@ class VeriBlockMockBlockchain(
             1 -> keystoneBlocksAgo = 21
         }
         keystoneBlocksAgo += 20
-        val context = store[chainHead.hash, keystoneBlocksAgo]
+        val context = store.get(chainHead.hash, keystoneBlocksAgo)
         return if (context.size == keystoneBlocksAgo) context[keystoneBlocksAgo - 1].block.hash.trimToPreviousKeystoneSize() else VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
     }
 

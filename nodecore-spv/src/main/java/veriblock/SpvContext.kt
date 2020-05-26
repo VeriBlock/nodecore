@@ -138,13 +138,13 @@ class SpvContext {
 
     private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters?) {
         try {
-            if (veriBlockStore.chainHead == null) {
+            if (veriBlockStore.getChainHead() == null) {
                 val genesis = params!!.genesisBlock
                 val storedBlock = StoredVeriBlockBlock(
                     genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong())
                 )
                 veriBlockStore.put(storedBlock)
-                veriBlockStore.chainHead = storedBlock
+                veriBlockStore.setChainHead(storedBlock)
             }
         } catch (e: SQLException) {
             logger.error(e.message, e)
@@ -153,11 +153,11 @@ class SpvContext {
 
     private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters?) {
         try {
-            if (bitcoinStore.chainHead == null) {
+            if (bitcoinStore.getChainHead() == null) {
                 val origin = params!!.bitcoinOriginBlock
                 val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.difficulty.toLong()), 0)
                 bitcoinStore.put(storedBlock)
-                bitcoinStore.chainHead = storedBlock
+                bitcoinStore.setChainHead(storedBlock)
             }
         } catch (e: SQLException) {
             logger.error(e.message, e)

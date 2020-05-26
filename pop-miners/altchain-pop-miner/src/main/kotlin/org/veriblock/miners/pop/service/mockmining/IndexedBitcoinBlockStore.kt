@@ -35,8 +35,8 @@ class IndexedBitcoinBlockStore(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override fun getChainHead(): StoredBitcoinBlock {
-        return store.chainHead
+    override fun getChainHead(): StoredBitcoinBlock? {
+        return store.getChainHead()
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
@@ -52,7 +52,7 @@ class IndexedBitcoinBlockStore(
 
     @Throws(BlockStoreException::class, SQLException::class)
     override operator fun get(hash: Sha256Hash): StoredBitcoinBlock {
-        return store[hash]
+        return store.get(hash)
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
@@ -76,7 +76,7 @@ class IndexedBitcoinBlockStore(
 
     @Throws(BlockStoreException::class, SQLException::class)
     override operator fun get(hash: Sha256Hash, count: Int): List<StoredBitcoinBlock> {
-        return store[hash, count]
+        return store.get(hash, count)
     }
 
     @Throws(BlockStoreException::class, SQLException::class)

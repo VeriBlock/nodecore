@@ -35,7 +35,7 @@ class Blockchain(
 
     fun getChainHead(): VeriBlockBlock {
         try {
-            return blockStore.chainHead.block
+            return blockStore.getChainHead()!!.block
         } catch (e: SQLException) {
             throw IllegalStateException("Unable to get chain head", e)
         }
@@ -60,8 +60,8 @@ class Blockchain(
         blocksCache.add(storedBlock)
 
         // TODO: PoP fork resolution additional
-        if (storedBlock.work.compareTo(blockStore.chainHead.work) > 0) {
-            blockStore.chainHead = storedBlock
+        if (storedBlock.work.compareTo(blockStore.getChainHead()!!.work) > 0) {
+            blockStore.setChainHead(storedBlock)
         }
 
         // TODO: Broadcast events: new best block, reorganize, new block
@@ -89,8 +89,8 @@ class Blockchain(
         blocksCache.addAll(storedBlocks)
 
         // TODO: PoP fork resolution additional
-        if (storedBlocks[storedBlocks.size - 1].work.compareTo(blockStore.chainHead.work) > 0) {
-            blockStore.chainHead = storedBlocks[storedBlocks.size - 1]
+        if (storedBlocks[storedBlocks.size - 1].work > blockStore.getChainHead()!!.work) {
+            blockStore.setChainHead(storedBlocks[storedBlocks.size - 1])
         }
     }
 
@@ -139,25 +139,24 @@ class Blockchain(
     fun getPeerQuery(): List<VeriBlockBlock> {
         val blocks: MutableList<VeriBlockBlock> = ArrayList(16)
         try {
-            var cursor = blockStore.chainHead
-            if (cursor != null) {
-                blocks.add(cursor.block)
-                // TODO 16 is too much for bigDb with current approach. It take a lot of time. Try to get amount of blocks by height and process in memory.
-                // for (int i = 0; i < 16; i++) {
-                outer@
-                for (i in 0..4) {
-                    val seek = cursor.block.height - 2.0.pow(i.toDouble()).toInt()
-                    if (seek < 0) {
-                        break
-                    }
-                    while (seek != cursor.block.height) {
-                        cursor = blockStore[cursor.block.previousBlock]
-                        if (cursor == null) {
-                            break@outer
-                        }
-                    }
-                    blocks.add(cursor.block)
+            var cursor = blockStore.getChainHead()
+                ?: return listOf(genesisBlock)
+
+            blocks.add(cursor.block)
+            // TODO 16 is too much for bigDb with current approach. It take a lot of time. Try to get amount of blocks by height and process in memory.
+            // for (int i = 0; i < 16; i++) {
+            outer@
+            for (i in 0..4) {
+                val seek = cursor.block.height - 2.0.pow(i.toDouble()).toInt()
+                if (seek < 0) {
+                    break
                 }
+
+                while (cursor.block.height != seek) {
+                    cursor = blockStore[cursor.block.previousBlock]
+                        ?: break@outer
+                }
+                blocks.add(cursor.block)
             }
         } catch (e: Exception) {
             logger.error("Unable to build peer query", e)

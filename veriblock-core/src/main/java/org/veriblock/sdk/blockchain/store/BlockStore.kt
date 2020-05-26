@@ -5,33 +5,32 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.sdk.blockchain.store
 
-package org.veriblock.sdk.blockchain.store;
+import org.veriblock.sdk.models.BlockStoreException
+import java.sql.SQLException
 
-import org.veriblock.sdk.models.BlockStoreException;
-
-import java.sql.SQLException;
-import java.util.List;
-
-public interface BlockStore<Block, Id> {
+interface BlockStore<Block, Id> {
     /**
      * Shut down the store and release resources
      */
-    void shutdown();
+    fun shutdown()
 
     /**
      * Delete all blocks from the store
      * @throws SQLException
      */
-    void clear() throws SQLException;
-    
+    @Throws(SQLException::class)
+    fun clear()
+
     /**
      * Get the chain head(the tip of the current best chain)
      * @return the current chain head block or null if not set
      * @throws BlockStoreException
      * @throws SQLException
      */
-    Block getChainHead() throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun getChainHead(): Block?
 
     /**
      * Set the chain head(the tip of the current best chain)
@@ -40,16 +39,18 @@ public interface BlockStore<Block, Id> {
      * @throws BlockStoreException if the chain head block is not in the store
      * @throws SQLException
      */
-    Block setChainHead(Block chainHead) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun setChainHead(chainHead: Block): Block
 
     /**
      * Put the given block into the store
      * @param block the block to put into the store
      * @throws BlockStoreException if the block with the same
-     *                             or similar id is already in the store
+     * or similar id is already in the store
      * @throws SQLException
      */
-    void put(Block block) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun put(block: Block)
 
     /**
      * Retrieve the block with the given block id
@@ -58,30 +59,33 @@ public interface BlockStore<Block, Id> {
      * @throws BlockStoreException
      * @throws SQLException
      */
-    Block get(Id id) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun get(id: Id): Block
 
     /**
      * Delete the block with the given block id
      * @param id the block id(hash)
      * @return the deleted block or null if the store has no matching blocks
      * @throws BlockStoreException if the block is referenced by
-     *                             any data structures(blocks, chain head)
+     * any data structures(blocks, chain head)
      * @throws SQLException
      */
-    Block erase(Id id) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun erase(id: Id): Block
 
     /**
      * Replace the block with the given block id with the updated version
      * @param id the block id(hash)
      * @param block the updated block
      * @return the old version of the block or
-     *         null if the store has no matching blocks
+     * null if the store has no matching blocks
      * @throws BlockStoreException if the given block does not match the given id
      * @throws BlockStoreException if the given block is null
-     *                             -- use erase() to delete a block
+     * -- use erase() to delete a block
      * @throws SQLException
      */
-    Block replace(Id id, Block block) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun replace(id: Id, block: Block): Block
 
     /**
      * Retrieve a chain of up to the given number of blocks
@@ -89,34 +93,37 @@ public interface BlockStore<Block, Id> {
      * @param id the starting block id(hash)
      * @param count the maximum number of blocks to retrieve
      * @return the list of blocks in the chain,
-     *         starting with the block that matches the given id
+     * starting with the block that matches the given id
      * @throws BlockStoreException
      * @throws SQLException
      */
-    List<Block> get(Id id, int count) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun get(id: Id, count: Int): List<Block>
 
     /**
      * Retrieve the block that is the given number of blocks
      * before the block with the given id
      * @param id the block id(hash)
      * @param blocksAgo the number of blocks to skip,
-     *                  zero value turns the call into a regular get(id)
+     * zero value turns the call into a regular get(id)
      * @return the block with the given id or
-     *         null if there is no matching block
+     * null if there is no matching block
      * @throws BlockStoreException
      * @throws SQLException
      */
-    Block getFromChain(Id id, int blocksAgo) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun getFromChain(id: Id, blocksAgo: Int): Block
 
     /**
      * Retrieve the block with the given id searching
      * only the chain that starts from the chain head
      * @param id the block id(hash)
      * @return the block with the given id or null if
-     *         there is no matching block in the chain
-     *         pointed to by the chain head
+     * there is no matching block in the chain
+     * pointed to by the chain head
      * @throws BlockStoreException
      * @throws SQLException
      */
-    Block scanBestChain(Id id) throws BlockStoreException, SQLException;
+    @Throws(BlockStoreException::class, SQLException::class)
+    fun scanBestChain(id: Id): Block
 }

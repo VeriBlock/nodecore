@@ -7,7 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service.mockmining
 
-import org.veriblock.sdk.blockchain.BitcoinBlockchain
 import org.veriblock.sdk.blockchain.store.BlockStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.models.BitcoinBlock
@@ -15,6 +14,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.BitcoinNetworkParameters
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.blockchain.store.BitcoinBlockchain
 import java.sql.SQLException
 import java.util.ArrayList
 import java.util.Collections
@@ -41,7 +41,7 @@ class BitcoinMockBlockchain(
     @Throws(SQLException::class)
     fun getContext(lastKnownBlock: BitcoinBlock): List<BitcoinBlock?> {
         val context: MutableList<BitcoinBlock?> = ArrayList()
-        var prevBlock = get(chainHead.previousBlock)
+        var prevBlock = get(getChainHead()!!.previousBlock)
         while (prevBlock != null && prevBlock != lastKnownBlock) {
             context.add(prevBlock)
             prevBlock = get(prevBlock.previousBlock)
@@ -52,7 +52,7 @@ class BitcoinMockBlockchain(
 
     @Throws(SQLException::class)
     fun mine(blockData: BitcoinBlockData): BitcoinBlock {
-        val chainHead = storedChainHead
+        val chainHead = getStoredChainHead()!!
         val timestamp = Math.max(
             getNextEarliestTimestamp(chainHead.hash).orElse(0), Utility.getCurrentTimestamp()
         )

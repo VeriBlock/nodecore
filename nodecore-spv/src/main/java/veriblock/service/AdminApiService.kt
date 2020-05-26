@@ -338,7 +338,7 @@ class AdminApiService(
     }
 
     fun getLastVBKBlockHeader(): BlockHeader {
-        val lastBlock = blockchain.blockStore.chainHead
+        val lastBlock = blockchain.blockStore.getChainHead()!!
         val block = lastBlock.block
         return BlockHeader(
             block.hash.bytes,
