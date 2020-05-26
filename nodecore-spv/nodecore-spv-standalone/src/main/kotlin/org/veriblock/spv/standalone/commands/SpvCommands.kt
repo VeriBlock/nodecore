@@ -1,12 +1,6 @@
 package org.veriblock.spv.standalone.commands
 
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.protobuf.ByteString
-import com.google.protobuf.Message
-import com.google.protobuf.util.JsonFormat
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.Utility
@@ -16,7 +10,6 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
-import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import veriblock.SpvContext
@@ -147,7 +140,7 @@ fun CommandFactory.spvCommands(
         parameters = listOf(
             CommandParameter(name = "sourceLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
-        suggestedCommands = { listOf("importprivatekey", "backupwallet") }
+        suggestedCommands = { listOf("backupwallet") }
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
         val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
@@ -162,10 +155,10 @@ fun CommandFactory.spvCommands(
         parameters = listOf(
             CommandParameter(name = "targetLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
-        suggestedCommands = { listOf("importwallet", "importprivatekey") }
+        suggestedCommands = { listOf("importwallet") }
     ) {
         val targetLocation: String = getParameter("targetLocation")
-        val result = context.adminApiService.backupWallet(targetLocation)
+        context.adminApiService.backupWallet(targetLocation)
         printInfo("Note: The backed-up wallet file is saved on the computer where SPV is running.")
         printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
         success()

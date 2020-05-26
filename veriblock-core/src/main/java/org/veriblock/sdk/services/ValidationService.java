@@ -9,136 +9,16 @@
 package org.veriblock.sdk.services;
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
-import org.veriblock.core.crypto.Sha256Hash;
-import org.veriblock.sdk.models.AltPublication;
+import org.veriblock.core.utilities.Utility;
 import org.veriblock.sdk.models.BitcoinBlock;
 import org.veriblock.sdk.models.Constants;
-import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
-import org.veriblock.sdk.models.VeriBlockPopTransaction;
-import org.veriblock.sdk.models.VeriBlockPublication;
-import org.veriblock.sdk.models.VeriBlockTransaction;
 import org.veriblock.sdk.models.VerificationException;
-import org.veriblock.sdk.util.MerklePathUtil;
-import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.Locale;
 
 public class ValidationService {
-
-    public static void verify(VeriBlockPopTransaction veriBlockPoPTransaction) throws VerificationException {
-        checkSignature(veriBlockPoPTransaction);
-        checkBitcoinTransactionForPoPData(veriBlockPoPTransaction);
-        checkBitcoinMerklePath(veriBlockPoPTransaction);
-        checkBitcoinBlocks(veriBlockPoPTransaction);
-    }
-
-    public static void checkSignature(VeriBlockPopTransaction tx) throws VerificationException {
-        if (!tx.getAddress().isDerivedFromPublicKey(tx.getPublicKey())) {
-            throw new VerificationException("VeriBlock PoP Transaction contains an invalid public key");
-        }
-
-        if (!Utility.verifySignature(SerializeDeserializeService.getHash(tx).getBytes(), tx.getSignature(), tx.getPublicKey())) {
-            throw new VerificationException("VeriBlock PoP Transaction is incorrectly signed");
-        }
-    }
-
-    public static void checkBitcoinTransactionForPoPData(VeriBlockPopTransaction tx) throws VerificationException {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(80);
-        buffer.put(SerializeDeserializeService.serializeHeaders(tx.getPublishedBlock()));
-        buffer.put(tx.getAddress().getPoPBytes());
-        buffer.flip();
-
-        byte[] publicationData = new byte[80];
-        buffer.get(publicationData);
-
-        if (!tx.getBitcoinTransaction().contains(publicationData)) {
-            throw new VerificationException("Bitcoin transaction does not contain PoP publication data");
-        }
-    }
-
-    public static void checkBitcoinMerklePath(VeriBlockPopTransaction tx) throws VerificationException {
-        if (!tx.getMerklePath().getSubject().equals(Sha256Hash.twiceOf(tx.getBitcoinTransaction().getRawBytes()))) {
-            throw new VerificationException("Bitcoin transaction cannot be proven by merkle path");
-        }
-
-        if (!MerklePathUtil.calculateMerkleRoot(tx.getMerklePath()).equals(tx.getBlockOfProof().getMerkleRootReversed())) {
-            throw new VerificationException("Bitcoin transaction does not belong to block of proof");
-        }
-    }
-
-    public static void checkBitcoinBlocks(VeriBlockPopTransaction tx) throws VerificationException {
-        Sha256Hash lastHash = null;
-        for (BitcoinBlock block : tx.getBlocks()) {
-            ValidationService.verify(block);
-
-            if (lastHash != null) {
-                // Check that it's the next height and affirms the previous hash
-                if (!block.getPreviousBlock().equals(lastHash)) {
-                    throw new VerificationException("Blocks are not contiguous");
-                }
-            }
-            lastHash = block.getHash();
-        }
-    }
-
-
-    // VeriBlockPublication
-
-    public static void verify(VeriBlockPublication veriBlockPublication) throws VerificationException {
-        ValidationService.verify(veriBlockPublication.getTransaction());
-        checkMerklePath(veriBlockPublication);
-        checkBlocks(veriBlockPublication);
-    }
-
-
-    public static void checkBlocks(VeriBlockPublication veriBlockPublication) throws VerificationException {
-        Integer lastHeight = null;
-        VBlakeHash lastHash = null;
-        for (VeriBlockBlock block : veriBlockPublication.getBlocks()) {
-            ValidationService.verify(block);
-
-            if (lastHeight != null && lastHash != null) {
-                // Check that it's the next height and affirms the previous hash
-                if (block.getHeight() != lastHeight + 1 ||
-                        !block.getPreviousBlock().equals(lastHash.trimToPreviousBlockSize())) {
-                    throw new VerificationException("Blocks are not contiguous");
-                }
-            }
-            lastHeight = block.getHeight();
-            lastHash = block.getHash();
-        }
-    }
-
-    public static void checkMerklePath(VeriBlockPublication veriBlockPublication) throws VerificationException {
-        if (!veriBlockPublication.getMerklePath().getSubject().equals(SerializeDeserializeService.getId(veriBlockPublication.getTransaction()))) {
-            throw new VerificationException("VeriBlock PoP Transaction cannot be proven by merkle path");
-        }
-
-        if (!MerklePathUtil.calculateVeriMerkleRoot(veriBlockPublication.getMerklePath()).trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH).equals(veriBlockPublication.getContainingBlock().getMerkleRoot())) {
-            throw new VerificationException("VeriBlock PoP transaction does not belong to containing block");
-        }
-    }
-
-    // VeriBlockTransaction
-
-    public static void verify(VeriBlockTransaction veriBlockTransaction) {
-        checkSignature(veriBlockTransaction);
-    }
-
-    public static void checkSignature(VeriBlockTransaction veriBlockTransaction) throws VerificationException {
-        if (!veriBlockTransaction.getSourceAddress().isDerivedFromPublicKey(veriBlockTransaction.getPublicKey())) {
-            throw new VerificationException("VeriBlock transaction contains an invalid public key");
-        }
-
-        if (!Utility.verifySignature(SerializeDeserializeService.getId(veriBlockTransaction).getBytes(), veriBlockTransaction.getSignature(),
-            veriBlockTransaction.getPublicKey()
-        )) {
-            throw new VerificationException("VeriBlock transaction is incorrectly signed");
-        }
-    }
 
 // VeriBlockBlock
 
@@ -203,42 +83,6 @@ public class ValidationService {
         int currentTime = Utility.getCurrentTimestamp();
         if (bitcoinBlock.getTimestamp() > currentTime + Constants.ALLOWED_TIME_DRIFT) {
             throw new VerificationException("Block is too far in the future");
-        }
-    }
-
-// AltPublication
-
-    public static void verify(AltPublication altPublication) throws VerificationException {
-        ValidationService.verify(altPublication.getTransaction());
-        checkMerklePath(altPublication);
-        checkBlocks(altPublication);
-    }
-
-    public static void checkMerklePath(AltPublication altPublication) throws VerificationException {
-        if (!altPublication.getMerklePath().getSubject().equals(SerializeDeserializeService.getId(altPublication.getTransaction()))) {
-            throw new VerificationException("VeriBlock transaction cannot be proven by merkle path");
-        }
-
-        if (!MerklePathUtil.calculateVeriMerkleRoot(altPublication.getMerklePath()).trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH).equals(altPublication.getContainingBlock().getMerkleRoot())) {
-            throw new VerificationException("VeriBlock transaction does not belong to containing block");
-        }
-    }
-
-    public static void checkBlocks(AltPublication altPublication) throws VerificationException {
-        Integer lastHeight = null;
-        VBlakeHash lastHash = null;
-        for (VeriBlockBlock block : altPublication.getBlocks()) {
-            ValidationService.verify(block);
-
-            if (lastHeight != null && lastHash != null) {
-                // Check that it's the next height and affirms the previous hash
-                if (block.getHeight() != lastHeight + 1 ||
-                        !block.getPreviousBlock().equals(lastHash.trimToPreviousBlockSize())) {
-                    throw new VerificationException("Blocks are not contiguous");
-                }
-            }
-            lastHeight = block.getHeight();
-            lastHash = block.getHash();
         }
     }
 }

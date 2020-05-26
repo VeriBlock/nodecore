@@ -38,58 +38,6 @@ import java.nio.ByteOrder;
 
 public class SerializeDeserializeService {
 
-    public static final int MAX_SIZE_PUBLICATION_DATA =
-                    // identifier.size, identifier
-                    9 +
-                    // header.size.size, header.size, header
-                    5 + Constants.MAX_HEADER_SIZE_PUBLICATION_DATA +
-                    // payoutInfo.size.size, payoutInfo.size, payoutInfo
-                    5 + Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA +
-                    // contextInfo.size.size, contextInfo.size, contextInfo
-                    5 + Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA;
-
-    public static final int MAX_RAWTX_SIZE_VeriBlockPoPTransaction =
-                    // network byte, type
-                    1 + 1 +
-                    // address.size, address
-                    1 + Address.SIZE +
-                    // publishedBlock.size, publishedBlock
-                    1 + Constants.HEADER_SIZE_VeriBlockBlock +
-                    // bitcoinTransaction.size.size, bitcoinTransaction.size, bitcoinTransaction
-                    5 + Constants.MAX_RAWTX_SIZE + Constants.MAX_MERKLE_BYTES +
-                    // blockOfProof.size, blockOfProof
-                    1 + Constants.HEADER_SIZE_BitcoinBlock +
-                    // blockOfProofContext.size.size, blockOfProofContext.size, blockOfProofContext
-                    5 + (Constants.HEADER_SIZE_BitcoinBlock + 1) * Constants.MAX_CONTEXT_COUNT +
-                    // signature.size, signature
-                    1 + Constants.MAX_SIGNATURE_SIZE +
-                    // publicKey.size, publicKey
-                    1 + Constants.PUBLIC_KEY_SIZE +
-                    // raw.size.size, raw.size
-                    5;
-
-    public static final int MAX_RAWTX_SIZE_VeriBlockTransaction =
-                    // network byte, type
-                    1 + 1 +
-                    // sourceAddress.size, sourceAddress
-                    1 + Address.SIZE +
-                    // sourceAmount.size, sourceAmount
-                    1 + 8 +
-                    // outputs.size, outputs.size * (output.address.size + output.address + output.amount.size + output.amount)
-                    1 + Constants.MAX_OUTPUTS_COUNT * (1 + Address.SIZE + 1 + 8) +
-                    // signatureIndex.size, signatureIndex
-                    1 + 8 +
-                    // data.size.size, data.size, data
-                    5 + MAX_SIZE_PUBLICATION_DATA +
-                    // signature.size, signature
-                    1 + Constants.MAX_SIGNATURE_SIZE +
-                    // publicKey.size, publicKey
-                    1 + Constants.PUBLIC_KEY_SIZE +
-                    // raw.size.size, raw.size
-                    5;
-
-
-
     public static void serialize(VeriBlockPopTransaction veriBlockPoPTransaction, OutputStream stream) throws IOException {
         byte[] rawTransaction = serializeTransactionEffects(veriBlockPoPTransaction);
         StreamUtils.writeVariableLengthValueToStream(stream, rawTransaction);
@@ -147,10 +95,7 @@ public class SerializeDeserializeService {
         return Sha256Hash.of(serializeTransactionEffects(veriBlockPoPTransaction));
     }
 
-
-// ----  - - - - -- -  VeriBlockPublication - - - -- - - - --
-
-
+// VeriBlockPublication
     public static byte[] serialize(VeriBlockPublication veriBlockPublication) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
             serialize(veriBlockPublication, stream);
@@ -173,9 +118,7 @@ public class SerializeDeserializeService {
         }
     }
 
-
-//VeriBlockTransaction
-
+// VeriBlockTransaction
     public static void serialize(VeriBlockTransaction veriBlockTransaction, OutputStream stream) throws IOException {
         byte[] rawTransaction = serializeTransactionEffects(veriBlockTransaction);
         StreamUtils.writeVariableLengthValueToStream(stream, rawTransaction);
@@ -222,7 +165,6 @@ public class SerializeDeserializeService {
     }
 
 // VeriBlockBlock
-
     public static VeriBlockBlock parseVeriBlockBlock(ByteBuffer buffer) {
         byte[] raw = StreamUtils.getSingleByteLengthValue(buffer, Constants.HEADER_SIZE_VeriBlockBlock, Constants.HEADER_SIZE_VeriBlockBlock);
         return parseVeriBlockBlock(raw);
@@ -289,9 +231,7 @@ public class SerializeDeserializeService {
         return bytes;
     }
 
-
 //MerklePath
-
     public static void serialize(MerklePath merklePath, OutputStream stream) throws IOException {
         StreamUtils.writeVariableLengthValueToStream(stream, serializeComponents(merklePath));
     }
@@ -329,7 +269,6 @@ public class SerializeDeserializeService {
     }
 
 // VeriBlockMerklePath
-
     public static void serialize(VeriBlockMerklePath blockMerklePath, OutputStream stream) throws IOException {
     	// Tree index
         StreamUtils.writeSingleIntLengthValueToStream(stream, blockMerklePath.getTreeIndex());
@@ -352,7 +291,6 @@ public class SerializeDeserializeService {
     }
 
 // BitcoinBlock
-
     public static byte[] getHeaderBytesBitcoinBlock(BitcoinBlock bitcoinBlock) {
         if (bitcoinBlock.getRaw() != null && bitcoinBlock.getRaw().length == Constants.HEADER_SIZE_BitcoinBlock){
             return bitcoinBlock.getRaw();
@@ -457,7 +395,6 @@ public class SerializeDeserializeService {
     }
 
 // AltPublication
-
     public static byte[] serialize(AltPublication altPublication) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
             serialize(altPublication, stream);
