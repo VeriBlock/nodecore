@@ -78,16 +78,16 @@ class NxtFamilyChain(
     }
 
     override fun getPayoutInterval(): Int {
-        TODO("TBD")
+        return config.payoutInterval
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         val payoutAddress = config.payoutAddress
-                ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
+            ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
 
         val actualBlockHeight = blockHeight
         // Retrieve top block height from API if not supplied
-                ?: getBestBlockHeight()
+            ?: getBestBlockHeight()
 
         logger.info { "Retrieving mining instruction at height $actualBlockHeight from $key daemon at ${config.host}..." }
 

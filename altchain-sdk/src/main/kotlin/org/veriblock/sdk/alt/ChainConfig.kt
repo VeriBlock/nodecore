@@ -9,6 +9,7 @@ abstract class ChainConfig {
     abstract val neededConfirmations: Int
     abstract val spFinalityDelay: Int
     abstract val payoutAddress: String?
+    abstract val payoutInterval: Int
     abstract val blockRoundIndices: IntArray
     open val autoMineRounds: List<Int> = emptyList()
 

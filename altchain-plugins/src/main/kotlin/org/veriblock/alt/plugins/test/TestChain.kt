@@ -110,7 +110,7 @@ class TestChain(
     }
 
     override fun getPayoutInterval(): Int {
-        return 100
+        return config.payoutInterval
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
