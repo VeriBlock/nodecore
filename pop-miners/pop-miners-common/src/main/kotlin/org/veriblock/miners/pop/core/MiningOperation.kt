@@ -184,38 +184,7 @@ abstract class MiningOperation<
         }
     }
 
-    fun getDetailedInfo(): Map<String, String> {
-        val result = LinkedHashMap<String, String>()
-        miningInstruction?.let {
-            result.putAll(it.detailedInfo)
-        }
-        endorsementTransaction?.let {
-            result["endorsementTransactionId"] = it.txId
-            result["endorsementTransactionFee"] = it.fee.formatAtomicLongWithDecimal()
-        }
-        blockOfProof?.let {
-            result["blockOfProof"] = it.hash
-        }
-        merklePath?.let {
-            result["merklePath"] = it.compactFormat
-        }
-        context?.let {
-            result.putAll(it.detailedInfo)
-        }
-        proofOfProofId?.let {
-            result["proofOfProofId"] = it
-        }
-        payoutBlockHash?.let {
-            result["payoutBlockHash"] = it
-        }
-        payoutAmount?.let {
-            result["payoutAmount"] = it.toString()
-        }
-        failureReason?.let {
-            result["failureReason"] = it
-        }
-        return result
-    }
+    abstract fun getDetailedInfo(): Map<String, String>
 
     override fun toString(): String {
         return "MiningOperation(id='$id', state='${state.description}')"

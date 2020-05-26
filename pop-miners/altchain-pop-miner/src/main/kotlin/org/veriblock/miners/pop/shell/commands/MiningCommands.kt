@@ -119,27 +119,6 @@ fun CommandFactory.miningCommands(miner: MinerService) {
     }
 
     command(
-        name = "Get Operation VTB",
-        form = "getoperationvtb",
-        description = "Gets the VTB details of the supplied operation",
-        parameters = listOf(
-            CommandParameter("id", CommandParameterMappers.STRING)
-        )
-    ) {
-        val id: String = getParameter("id")
-        val process = miner.getOperation(id)
-        if (process == null) {
-            printInfo("Operation $id not found")
-        } else {
-            process.context?.let {
-                printInfo(prettyPrintGson.toJson(it.detailedInfo))
-            } ?: printInfo("Operation $id has no VTBs yet")
-        }
-
-        success()
-    }
-
-    command(
         name = "Cancel Operation",
         form = "canceloperation",
         description = "Cancels the operations",
