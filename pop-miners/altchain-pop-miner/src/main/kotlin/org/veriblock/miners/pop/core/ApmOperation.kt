@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.core
 
 import org.veriblock.core.contracts.WithDetailedInfo
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.transactionmonitor.WalletTransaction
@@ -41,6 +42,39 @@ class ApmOperation(
 
     override fun onStateChanged() {
         stateChangedEvent.trigger(this)
+    }
+
+    override fun getDetailedInfo(): Map<String, String> {
+        val result = LinkedHashMap<String, String>()
+        miningInstruction?.let {
+            result.putAll(it.detailedInfo)
+        }
+        endorsementTransaction?.let {
+            result["vbkEndorsementTxId"] = it.txId
+            result["vbkEndorsementTxFee"] = it.fee.formatAtomicLongWithDecimal()
+        }
+        blockOfProof?.let {
+            result["vbkBlockOfProof"] = it.hash
+        }
+        merklePath?.let {
+            result["merklePath"] = it.compactFormat
+        }
+        context?.let {
+            result.putAll(it.detailedInfo)
+        }
+        proofOfProofId?.let {
+            result["proofOfProofId"] = it
+        }
+        payoutBlockHash?.let {
+            result["payoutBlockHash"] = it
+        }
+        payoutAmount?.let {
+            result["payoutAmount"] = it.toString()
+        }
+        failureReason?.let {
+            result["failureReason"] = it
+        }
+        return result
     }
 }
 

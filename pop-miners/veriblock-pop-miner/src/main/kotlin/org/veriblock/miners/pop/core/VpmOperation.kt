@@ -13,6 +13,7 @@ import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.bitcoinj.core.TransactionConfidence
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.model.PopMiningInstruction
@@ -59,5 +60,38 @@ class VpmOperation(
 
     override fun onFailed() {
         EventBus.popMiningOperationFinishedEvent.trigger(this)
+    }
+
+    override fun getDetailedInfo(): Map<String, String> {
+        val result = LinkedHashMap<String, String>()
+        miningInstruction?.let {
+            result.putAll(it.detailedInfo)
+        }
+        endorsementTransaction?.let {
+            result["endorsementTransactionId"] = it.txId
+            result["endorsementTransactionFee"] = it.fee.formatAtomicLongWithDecimal()
+        }
+        blockOfProof?.let {
+            result["blockOfProof"] = it.hash
+        }
+        merklePath?.let {
+            result["merklePath"] = it.compactFormat
+        }
+        context?.let {
+            result.putAll(it.detailedInfo)
+        }
+        proofOfProofId?.let {
+            result["proofOfProofId"] = it
+        }
+        payoutBlockHash?.let {
+            result["payoutBlockHash"] = it
+        }
+        payoutAmount?.let {
+            result["payoutAmount"] = it.toString()
+        }
+        failureReason?.let {
+            result["failureReason"] = it
+        }
+        return result
     }
 }
