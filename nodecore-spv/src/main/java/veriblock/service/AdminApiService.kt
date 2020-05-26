@@ -258,6 +258,10 @@ class AdminApiService(
             val success = result.first
             if (!success) {
                 throw WalletException("Unable to load/import wallet file!")
+            } else {
+                spvContext.addressManager.getAll().forEach {
+                    peerTable.acknowledgeAddress(it.hash)
+                }
             }
         } catch (e: Exception) {
             logger.debugInfo(e) { "${e.message}" }

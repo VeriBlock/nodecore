@@ -46,7 +46,7 @@ class Coin(
     }
 
     override fun toString(): String {
-        return atomicUnits.toString()
+        return Utility.formatAtomicLongWithDecimal(atomicUnits)
     }
 
     override fun compareTo(other: Coin): Int {
