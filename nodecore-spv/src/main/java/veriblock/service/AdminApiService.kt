@@ -242,7 +242,8 @@ class AdminApiService(
                 throw WalletException("Unable to save backup wallet file")
             }
         } catch (e: Exception) {
-            throw WalletException("Writing wallet backup failed")
+            logger.debug(e) { "Writing wallet backup failed" }
+            throw WalletException("Writing wallet backup failed: ${e.message}")
         }
     }
 
