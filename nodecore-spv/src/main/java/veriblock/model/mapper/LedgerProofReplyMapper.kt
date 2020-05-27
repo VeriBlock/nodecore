@@ -21,15 +21,13 @@ object LedgerProofReplyMapper {
     }
 
     fun map(ledgerProofResult: LedgerProofResult): LedgerContext {
-        val ledgerContext = LedgerContext()
         val address = Address(Base58.encode(ledgerProofResult.address.toByteArray()))
-        val status: LedgerProofStatus = LedgerProofStatus.getByOrdinal(
-            ledgerProofResult.result.number
-        )
+        val status: LedgerProofStatus = LedgerProofStatus.getByOrdinal(ledgerProofResult.result.number)
         val blockHeaderVB = ledgerProofResult.ledgerProofWithContext.blockHeader
         val blockHeader = BlockHeader(
             blockHeaderVB.header.toByteArray(), blockHeaderVB.hash.toByteArray()
         )
+        var ledgerValue: LedgerValue? = null
         if (status.exists()) {
             val ledgerValues: List<LedgerValue> = ledgerProofResult.ledgerProofWithContext.ledgerProof.proofOfExistence.verticalProofLayersList.map {
                 map(it.ledgerValue)
@@ -37,12 +35,14 @@ object LedgerProofReplyMapper {
             if (ledgerValues.isEmpty()) {
                 throw SpvProcessException("Ledger proof reply doesn't have ledger value.")
             }
-            ledgerContext.ledgerValue = ledgerValues[0]
+            ledgerValue = ledgerValues[0]
         }
-        ledgerContext.address = address
-        ledgerContext.ledgerProofStatus = status
-        ledgerContext.blockHeader = blockHeader
-        return ledgerContext
+        return LedgerContext(
+            address = address,
+            ledgerValue = ledgerValue,
+            ledgerProofStatus = status,
+            blockHeader = blockHeader
+        )
     }
 
     private fun map(ledgerProofReply: VeriBlockMessages.LedgerValue): LedgerValue {

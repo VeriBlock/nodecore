@@ -56,13 +56,13 @@ class VeriBlockBlockData {
         }
     }
 
-    inner class RegularSubtree : Subtree<VeriBlockTransaction?>() {
+    inner class RegularSubtree : Subtree<VeriBlockTransaction>() {
         override fun getSubject(index: Int): Sha256Hash {
             return SerializeDeserializeService.getId(get(index))
         }
     }
 
-    inner class PoPSubtree : Subtree<VeriBlockPopTransaction?>() {
+    inner class PoPSubtree : Subtree<VeriBlockPopTransaction>() {
         override fun getSubject(index: Int): Sha256Hash {
             return SerializeDeserializeService.getId(get(index))
         }

@@ -42,13 +42,13 @@ class Blockchain(
     }
 
     @Throws(SQLException::class)
-    operator fun get(hash: VBlakeHash?): StoredVeriBlockBlock {
-        return blockStore[hash]
+    fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
+        return blockStore.get(hash)
     }
 
     @Throws(SQLException::class)
     fun add(block: VeriBlockBlock) {
-        val previous = blockStore[block.previousBlock]
+        val previous = blockStore.get(block.previousBlock)
             ?: // Nothing to build on
             return
         val storedBlock = StoredVeriBlockBlock(
@@ -103,7 +103,7 @@ class Blockchain(
     @Throws(SQLException::class)
     private fun listToStore(veriBlockBlocks: List<VeriBlockBlock>): List<VeriBlockBlock> {
         for (i in veriBlockBlocks.indices) {
-            val previous = blockStore[veriBlockBlocks[i].previousBlock]
+            val previous = blockStore.get(veriBlockBlocks[i].previousBlock)
             if (previous != null) {
                 return veriBlockBlocks.subList(i, veriBlockBlocks.size)
             }
@@ -115,18 +115,18 @@ class Blockchain(
     private fun convertToStoreVeriBlocks(veriBlockBlocks: List<VeriBlockBlock>): List<StoredVeriBlockBlock> {
         val blockWorks: MutableMap<String, BigInteger> = HashMap()
         val storedBlocks: MutableList<StoredVeriBlockBlock> = ArrayList()
-        val commonBlock = blockStore[veriBlockBlocks[0].previousBlock]
+        val commonBlock = blockStore.get(veriBlockBlocks[0].previousBlock)!!
         blockWorks[commonBlock.hash.toString().substring(24)] = commonBlock.work
         for (veriBlockBlock in veriBlockBlocks) {
             var work = blockWorks[veriBlockBlock.previousBlock.toString()]
             //This block is from fork, our Blockchain doesn't have this previousBlock.
             if (work == null) {
-                val storedVeriBlockBlock = blockStore[veriBlockBlock.previousBlock]
+                val storedVeriBlockBlock = blockStore.get(veriBlockBlock.previousBlock)
                     ?: //There is no such block.
                     continue
                 work = storedVeriBlockBlock.work
             }
-            val workOfCurrentBlock = work!!.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.difficulty.toLong()))
+            val workOfCurrentBlock = work.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.difficulty.toLong()))
             blockWorks[veriBlockBlock.hash.toString().substring(24)] = workOfCurrentBlock
             val block = StoredVeriBlockBlock(
                 veriBlockBlock, workOfCurrentBlock
@@ -153,7 +153,7 @@ class Blockchain(
                 }
 
                 while (cursor.block.height != seek) {
-                    cursor = blockStore[cursor.block.previousBlock]
+                    cursor = blockStore.get(cursor.block.previousBlock)
                         ?: break@outer
                 }
                 blocks.add(cursor.block)

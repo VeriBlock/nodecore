@@ -38,7 +38,7 @@ public class VeriBlockBlockRepository extends GenericBlockRepository<StoredVeriB
             stmt.setObject(++i, block.getHeight());
             stmt.setObject(++i, block.getWork().toString());
             stmt.setObject(++i, Utility.bytesToHex(block.getBlockOfProof().getBytes()));
-            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.serialize(block.getBlock())));
+            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.INSTANCE.serialize(block.getBlock())));
         }
 
         public StoredVeriBlockBlock fromResult(ResultSet result) throws SQLException {
@@ -46,7 +46,7 @@ public class VeriBlockBlockRepository extends GenericBlockRepository<StoredVeriB
             BigInteger work = new BigInteger(result.getString("work"));
             Sha256Hash blockOfProof = Sha256Hash.wrap(Utility.hexToBytes(result.getString("blockOfProof")));
 
-            VeriBlockBlock block = SerializeDeserializeService.parseVeriBlockBlock(ByteBuffer.wrap(data));
+            VeriBlockBlock block = SerializeDeserializeService.INSTANCE.parseVeriBlockBlock(ByteBuffer.wrap(data));
             StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(block, work, blockOfProof);
             return storedBlock;
         }

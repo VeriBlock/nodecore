@@ -15,8 +15,8 @@ import java.util.stream.Collectors
 
 class MerkleBranch(
     index: Int,
-    subject: Sha256Hash?,
-    merklePathHashes: List<Sha256Hash?>?,
+    subject: Sha256Hash,
+    merklePathHashes: List<Sha256Hash>,
     val isRegular: Boolean
 ) {
     private val merklePath: MerklePath = MerklePath(index, subject, merklePathHashes)

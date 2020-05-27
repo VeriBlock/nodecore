@@ -262,7 +262,7 @@ class AdminApiService(
                 throw WalletException("Unable to load/import wallet file!")
             } else {
                 spvContext.addressManager.getAll().forEach {
-                    peerTable.acknowledgeAddress(it.hash)
+                    peerTable.acknowledgeAddress(it)
                 }
             }
         } catch (e: Exception) {
@@ -283,7 +283,7 @@ class AdminApiService(
                 val address = addressManager.getNewAddress()
                 if (address != null) {
                     logger.info("New address: {}", address.hash)
-                    peerTable.acknowledgeAddress(address.hash)
+                    peerTable.acknowledgeAddress(address)
                     address
                 } else {
                     throw AddressCreationException("Unable to generate new address")
@@ -303,8 +303,7 @@ class AdminApiService(
         val addressLedgerContext = peerTable.getAddressesState()
         if (addresses.isEmpty()) {
             return WalletBalance(
-                confirmed = addressLedgerContext.keys.map { address ->
-                    val ledgerContext = addressLedgerContext[address]
+                confirmed = addressLedgerContext.map { (address, ledgerContext) ->
                     getAddressBalance(address.asLightAddress(), ledgerContext)
                 },
                 unconfirmed = emptyList()
@@ -352,8 +351,9 @@ class AdminApiService(
         )
     }
 
-    fun getVbkBlockHeader(hash: ByteString): BlockHeader {
-        val block = blockchain[VBlakeHash.wrap(hash.toByteArray())]
+    fun getVbkBlockHeader(hash: ByteString): BlockHeader? {
+        val block = blockchain.get(VBlakeHash.wrap(hash.toByteArray()))
+            ?: return null
         return BlockHeader(
             block.hash.bytes,
             SerializeDeserializeService.serializeHeaders(block.block)
@@ -386,25 +386,21 @@ class AdminApiService(
     }
 
     private fun getAvailableAddresses(totalOutputAmount: Long): List<Pair<String, Long>> {
-        val addressCoinsForPayment: MutableList<Pair<String, Long>> = ArrayList()
-
         //Use default address if there balance is enough.
         val ledgerContext = peerTable.getAddressState(addressManager.defaultAddress.hash)!!
         if (ledgerContext.ledgerValue!!.availableAtomicUnits > totalOutputAmount) {
             return listOf(
-                Pair(ledgerContext.address!!.address, ledgerContext.ledgerValue!!.availableAtomicUnits)
+                Pair(ledgerContext.address!!.address, ledgerContext.ledgerValue.availableAtomicUnits)
             )
         }
         val addressBalanceList: MutableList<Pair<String, Long>> = ArrayList()
         val ledgerContextMap = peerTable.getAddressesState()
         for (address in addressManager.all) {
-            if (ledgerContextMap.containsKey(address.hash) && ledgerContextMap[address.hash]!!.ledgerValue != null) {
-                addressBalanceList
-                    .add(
-                        Pair(
-                            address.hash, ledgerContextMap[address.hash]!!.ledgerValue!!.availableAtomicUnits
-                        )
-                    )
+            val lc = ledgerContextMap.getValue(address.hash)
+            if (ledgerContextMap.containsKey(address.hash) && lc.ledgerValue != null) {
+                addressBalanceList.add(
+                    Pair(address.hash, lc.ledgerValue.availableAtomicUnits)
+                )
             }
         }
         return addressBalanceList.filter {
@@ -414,9 +410,9 @@ class AdminApiService(
         }
     }
 
-    private fun getAddressBalance(address: AddressLight, ledgerContext: LedgerContext?): AddressBalance {
-        val balance = ledgerContext?.ledgerValue?.availableAtomicUnits ?: 0L
-        val lockedCoins = ledgerContext?.ledgerValue?.frozenAtomicUnits ?: 0L
+    private fun getAddressBalance(address: AddressLight, ledgerContext: LedgerContext): AddressBalance {
+        val balance = ledgerContext.ledgerValue?.availableAtomicUnits ?: 0L
+        val lockedCoins = ledgerContext.ledgerValue?.frozenAtomicUnits ?: 0L
         return AddressBalance(
             address = address,
             unlockedAmount = (balance - lockedCoins).asCoin().toString(),

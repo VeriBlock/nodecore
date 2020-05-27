@@ -67,8 +67,8 @@ class VeriBlockPopMiner(
     )
     fun mine(
         blockToEndorse: VeriBlockBlock,
-        lastKnownVBKBlock: VeriBlockBlock?,
-        lastKnownBTCBlock: BitcoinBlock?,
+        lastKnownVBKBlock: VeriBlockBlock,
+        lastKnownBTCBlock: BitcoinBlock,
         key: KeyPair
     ): VeriBlockPublication {
         log.debug("Mining")
@@ -80,7 +80,7 @@ class VeriBlockPopMiner(
         val blockOfProof = bitcoinBlockchain.mine(btcBlockData)
 
         // create a VeriBlock PoP transaction
-        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock!!)
+        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock)
         val popTx = signTransaction(
             VeriBlockPopTransaction(
                 address,
@@ -88,7 +88,8 @@ class VeriBlockPopMiner(
                 bitcoinProofTx,
                 btcBlockData.getMerklePath(0),
                 blockOfProof,
-                blockOfProofContext, ByteArray(1),
+                blockOfProofContext,
+                ByteArray(1),
                 key.public.encoded,
                 veriBlockBlockchain.networkParameters.transactionPrefix
             ),

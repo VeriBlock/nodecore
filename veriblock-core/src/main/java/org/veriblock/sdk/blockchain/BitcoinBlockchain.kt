@@ -5,7 +5,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package org.veriblock.sdk.blockchain.store
+package org.veriblock.sdk.blockchain
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.Sha256Hash
@@ -14,8 +14,6 @@ import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.auditor.Change
 import org.veriblock.sdk.auditor.Operation
-import org.veriblock.sdk.blockchain.changes.AddBitcoinBlockChange
-import org.veriblock.sdk.blockchain.changes.SetBitcoinHeadChange
 import org.veriblock.sdk.blockchain.store.BlockStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.models.BitcoinBlock
@@ -26,10 +24,7 @@ import org.veriblock.sdk.services.ValidationService
 import java.math.BigInteger
 import java.sql.SQLException
 import java.util.ArrayList
-import java.util.Comparator
 import java.util.HashMap
-import java.util.OptionalInt
-import java.util.OptionalLong
 import java.util.function.Consumer
 
 private const val MINIMUM_TIMESTAMP_BLOCK_COUNT = 11
@@ -55,7 +50,7 @@ open class BitcoinBlockchain(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    operator fun get(hash: Sha256Hash): BitcoinBlock? {
+    fun get(hash: Sha256Hash): BitcoinBlock? {
         val storedBlock = getInternal(hash)
         return storedBlock?.block
     }
@@ -73,7 +68,7 @@ open class BitcoinBlockchain(
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
-    fun add(block: BitcoinBlock): List<Change> {
+    fun add(block: BitcoinBlock) {
         Preconditions.state(!hasTemporaryModifications(), "Cannot add a block while having temporary modifications")
 
         // Lightweight verification of the header
@@ -83,11 +78,11 @@ open class BitcoinBlockchain(
         var currentHeight = 0
         if (getChainHeadInternal() != null) {
             // Further verification requiring context
-            val previous = checkConnectivity(block)
+            val previous = checkConnectivity(block)!!
             if (!verifyBlock(block, previous)) {
-                return emptyList()
+                return
             }
-            work = work.add(previous!!.work)
+            work = work.add(previous.work)
             currentHeight = previous.height + 1
         }
         val storedBlock = StoredBitcoinBlock(
@@ -95,34 +90,15 @@ open class BitcoinBlockchain(
             work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())),
             currentHeight
         )
-        val changes: MutableList<Change> = ArrayList()
         store.put(storedBlock)
-        changes.add(AddBitcoinBlockChange(null, storedBlock))
-        val chainHead = store.getChainHead()
-        if (chainHead == null || storedBlock.work.compareTo(chainHead.work) > 0) {
-            var priorHead = store.setChainHead(storedBlock)
-            ///HACK: this is a dummy block that represents a change from null to genesis block
-            if (priorHead == null) {
-                val emptyBlock = BitcoinBlock(
-                    0, Sha256Hash.ZERO_HASH, Sha256Hash.ZERO_HASH, 0, 1, 0
-                )
-                priorHead = StoredBitcoinBlock(emptyBlock, BigInteger.ONE, 0)
-            }
-            changes.add(SetBitcoinHeadChange(priorHead, storedBlock))
-        }
-        return changes
     }
 
-    @Throws(
-        VerificationException::class, BlockStoreException::class, SQLException::class
-    )
-    fun addAll(blocks: List<BitcoinBlock>): List<Change> {
+    @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
+    fun addAll(blocks: List<BitcoinBlock>) {
         Preconditions.state(!hasTemporaryModifications(), "Cannot add blocks whle having temporary modifications")
-        val changes: MutableList<Change> = ArrayList()
         for (block in blocks) {
-            changes.addAll(add(block))
+            add(block)
         }
-        return changes
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
@@ -131,13 +107,13 @@ open class BitcoinBlockchain(
         ValidationService.verify(block)
 
         // Further verification requiring context
-        val previous = checkConnectivity(block)
+        val previous = checkConnectivity(block)!!
         if (!verifyBlock(block, previous)) {
             return
         }
         val storedBlock = StoredBitcoinBlock(
             block,
-            previous!!.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())),
+            previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())),
             previous.height + 1
         )
         temporalStore[block.hash] = storedBlock
@@ -215,21 +191,25 @@ open class BitcoinBlockchain(
     private fun getChainHeadInternal(): StoredBitcoinBlock? =
         if (temporaryChainHead != null) temporaryChainHead else store.getChainHead()
 
-    private fun getTemporaryBlocks(hash: Sha256Hash, count: Int): MutableList<StoredBitcoinBlock?> {
-        val blocks: MutableList<StoredBitcoinBlock?> = ArrayList()
+    private fun getTemporaryBlocks(hash: Sha256Hash, count: Int): MutableList<StoredBitcoinBlock> {
+        val blocks: MutableList<StoredBitcoinBlock> = ArrayList()
         var cursor = Sha256Hash.wrap(hash.bytes)
         while (temporalStore.containsKey(cursor)) {
-            val tempBlock = temporalStore[cursor]
+            val tempBlock = temporalStore[cursor]!!
             blocks.add(tempBlock)
-            if (blocks.size >= count) break
-            cursor = tempBlock!!.block.previousBlock
+            if (blocks.size >= count) {
+                break
+            }
+            cursor = tempBlock.block.previousBlock
         }
         return blocks
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
-    private fun verifyBlock(block: BitcoinBlock, previous: StoredBitcoinBlock?): Boolean {
-        if (!checkDuplicate(block)) return false
+    private fun verifyBlock(block: BitcoinBlock, previous: StoredBitcoinBlock): Boolean {
+        if (!checkDuplicate(block)) {
+            return false
+        }
         checkTimestamp(block)
         checkDifficulty(block, previous)
         return true
@@ -262,29 +242,31 @@ open class BitcoinBlockchain(
 
     // return the earliest valid timestamp for a block that follows the blockHash block
     @Throws(BlockStoreException::class, SQLException::class)
-    fun getNextEarliestTimestamp(blockHash: Sha256Hash): OptionalInt {
+    fun getNextEarliestTimestamp(blockHash: Sha256Hash): Int? {
         // Checks the temporary blocks first
         val context = getTemporaryBlocks(
             blockHash, MINIMUM_TIMESTAMP_BLOCK_COUNT
         )
         if (context.size > 0) {
             val last = context[context.size - 1]
-            context.addAll(store.get(last!!.block.previousBlock, MINIMUM_TIMESTAMP_BLOCK_COUNT - context.size))
+            context.addAll(store.get(last.block.previousBlock, MINIMUM_TIMESTAMP_BLOCK_COUNT - context.size))
         } else {
             context.addAll(store.get(blockHash, MINIMUM_TIMESTAMP_BLOCK_COUNT))
         }
         if (context.size < MINIMUM_TIMESTAMP_BLOCK_COUNT) {
-            return OptionalInt.empty()
+            return null
         }
-        val median = context.stream().sorted(
-                Comparator.comparingInt { obj: StoredBitcoinBlock -> obj.height }.reversed()
-            )
-            .limit(MINIMUM_TIMESTAMP_BLOCK_COUNT.toLong())
-            .map { b: StoredBitcoinBlock? -> b!!.block.timestamp }
+        val median = context.asSequence().sortedByDescending { it.height }
+            .take(MINIMUM_TIMESTAMP_BLOCK_COUNT)
+            .map { it.block.timestamp }
             .sorted()
-            .skip(MINIMUM_TIMESTAMP_BLOCK_COUNT / 2.toLong())
-            .findFirst()
-        return if (median.isPresent) OptionalInt.of(median.get() + 1) else OptionalInt.empty()
+            .drop(MINIMUM_TIMESTAMP_BLOCK_COUNT / 2)
+            .firstOrNull()
+        return if (median != null) {
+            median + 1
+        } else {
+            null
+        }
     }
 
     @Throws(
@@ -292,8 +274,8 @@ open class BitcoinBlockchain(
     )
     private fun checkTimestamp(block: BitcoinBlock) {
         val timestamp = getNextEarliestTimestamp(block.previousBlock)
-        if (timestamp.isPresent) {
-            if (block.timestamp < timestamp.asInt) {
+        if (timestamp != null) {
+            if (block.timestamp < timestamp) {
                 throw VerificationException("Block is too far in the past")
             }
         } else {
@@ -302,39 +284,39 @@ open class BitcoinBlockchain(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    fun getNextDifficulty(blockTimestamp: Int, previous: StoredBitcoinBlock?): OptionalLong {
-        var previous = previous
-        val difficultyAdjustmentInterval = (networkParameters.powTargetTimespan
-            / networkParameters.powTargetSpacing)
+    fun getNextDifficulty(blockTimestamp: Int, previous: StoredBitcoinBlock): Long? {
+        val difficultyAdjustmentInterval = networkParameters.powTargetTimespan / networkParameters.powTargetSpacing
 
         // Special rule for the regtest: all blocks are minimum difficulty
-        if (networkParameters.powNoRetargeting) return OptionalLong.of(previous!!.block.difficulty.toLong())
+        if (networkParameters.powNoRetargeting) {
+            return previous.block.difficulty.toLong()
+        }
 
         // Previous + 1 = height of block
-        return if ((previous!!.height + 1) % difficultyAdjustmentInterval > 0) {
+        return if ((previous.height + 1) % difficultyAdjustmentInterval > 0) {
 
             // Unless minimum difficulty blocks are allowed(special difficulty rule for the testnet),
             // the difficulty should be same as previous
             if (!networkParameters.allowMinDifficultyBlocks) {
-                OptionalLong.of(previous.block.difficulty.toLong())
+                previous.block.difficulty.toLong()
             } else {
                 val proofOfWorkLimit = BitcoinUtilities.encodeCompactBits(networkParameters.powLimit)
 
                 // If the block's timestamp is more than 2*PowTargetSpacing minutes
                 // then allow mining of a minimum difficulty block
                 if (blockTimestamp > previous.block.timestamp + networkParameters.powTargetSpacing * 2) {
-                    OptionalLong.of(proofOfWorkLimit)
+                    proofOfWorkLimit
                 } else {
-
                     // Find the last non-minimum difficulty block
-                    while (previous != null && previous.block.previousBlock != null && previous.height % difficultyAdjustmentInterval != 0 && previous.block.difficulty.toLong() == proofOfWorkLimit
+                    var prev: StoredBitcoinBlock? = previous
+                    while (prev != null && prev.height % difficultyAdjustmentInterval != 0 && prev.block.difficulty.toLong() == proofOfWorkLimit
                     ) {
-                        previous = getInternal(previous.block.previousBlock)
+                        prev = getInternal(previous.block.previousBlock)
                     }
 
                     // Corner case: we're less than difficultyAdjustmentInterval
                     // from the bootstrap and all blocks are minimum difficulty
-                    if (previous == null) OptionalLong.empty() else OptionalLong.of(previous.block.difficulty.toLong())
+                    prev?.block?.difficulty?.toLong()
 
                     // Difficulty matches the closest non-minimum difficulty block
                 }
@@ -342,38 +324,38 @@ open class BitcoinBlockchain(
         } else {
 
             // Difficulty needs to adjust
-            val tempBlocks: List<StoredBitcoinBlock?> = getTemporaryBlocks(previous.hash, difficultyAdjustmentInterval)
+            val tempBlocks: List<StoredBitcoinBlock> = getTemporaryBlocks(previous.hash, difficultyAdjustmentInterval)
             val cycleStart: StoredBitcoinBlock?
             cycleStart = if (tempBlocks.size == difficultyAdjustmentInterval) {
                 tempBlocks[tempBlocks.size - 1]
             } else if (tempBlocks.size > 0) {
                 val last = tempBlocks[tempBlocks.size - 1]
-                store.getFromChain(last!!.block.previousBlock, difficultyAdjustmentInterval - tempBlocks.size)
+                store.getFromChain(last.block.previousBlock, difficultyAdjustmentInterval - tempBlocks.size)
             } else {
                 store.getFromChain(previous.hash, difficultyAdjustmentInterval - 1)
             }
             if (cycleStart == null) {
                 // Because there will just be some Bitcoin block from whence accounting begins, it's likely
                 // that the first adjustment period will not have sufficient blocks to compute correctly
-                return OptionalLong.empty()
+                return null
             }
             val newTarget = calculateNewTarget(
                 previous.block.difficulty.toLong(),
                 cycleStart.block.timestamp,
                 previous.block.timestamp
             )
-            OptionalLong.of(newTarget)
+            newTarget
         }
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
-    private fun checkDifficulty(block: BitcoinBlock, previous: StoredBitcoinBlock?) {
+    private fun checkDifficulty(block: BitcoinBlock, previous: StoredBitcoinBlock) {
         if (!isValidateBlocksDifficulty) {
             return
         }
         val difficulty = getNextDifficulty(block.timestamp, previous)
-        if (difficulty.isPresent) {
-            if (block.difficulty.toLong() != difficulty.asLong) {
+        if (difficulty != null) {
+            if (block.difficulty.toLong() != difficulty) {
                 throw VerificationException("Block does not match computed difficulty adjustment")
             }
         } else {

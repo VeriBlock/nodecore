@@ -100,7 +100,7 @@ class MockMinerService(
 
         val key = generateKeyPair()
 
-        val vbkTip = veriBlockBlockchain.chainHead
+        val vbkTip = veriBlockBlockchain.getChainHead()!!
         val atv = mine(miningInstruction.publicationData, vbkTip, key)
 
         // Update operation state
@@ -111,8 +111,8 @@ class MockMinerService(
 
         val lastKnownBtcBlockHash = miningInstruction.btcContext.last()
         val lastKnownVbkBlockHash = miningInstruction.context.last()
-        val lastKnownBtcBlock = bitcoinBlockchain[Sha256Hash.wrap(lastKnownBtcBlockHash)]
-        val lastKnownVbkBlock = veriBlockBlockchain[VBlakeHash.wrap(lastKnownVbkBlockHash)]
+        val lastKnownBtcBlock = bitcoinBlockchain.get(Sha256Hash.wrap(lastKnownBtcBlockHash))!!
+        val lastKnownVbkBlock = veriBlockBlockchain.get(VBlakeHash.wrap(lastKnownVbkBlockHash))!!
 
         val vtb = vpm.mine(
             vbkTip,
@@ -143,10 +143,10 @@ class MockMinerService(
     private fun createVeriBlockContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock> {
         // Retrieve the blocks between lastKnownBlock and getChainHead()
         val context: MutableList<VeriBlockBlock> = ArrayList()
-        var prevBlock = veriBlockBlockchain[veriBlockBlockchain.chainHead.previousBlock]
+        var prevBlock = veriBlockBlockchain.get(veriBlockBlockchain.getChainHead()!!.previousBlock)
         while (prevBlock != null && prevBlock != lastKnownBlock) {
             context.add(prevBlock)
-            prevBlock = veriBlockBlockchain[prevBlock.previousBlock]
+            prevBlock = veriBlockBlockchain.get(prevBlock.previousBlock)
         }
         context.reverse()
         return context

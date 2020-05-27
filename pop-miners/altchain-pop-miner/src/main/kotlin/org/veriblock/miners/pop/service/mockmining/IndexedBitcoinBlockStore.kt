@@ -40,7 +40,7 @@ class IndexedBitcoinBlockStore(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override fun setChainHead(chainHead: StoredBitcoinBlock): StoredBitcoinBlock {
+    override fun setChainHead(chainHead: StoredBitcoinBlock): StoredBitcoinBlock? {
         return store.setChainHead(chainHead)
     }
 
@@ -51,7 +51,7 @@ class IndexedBitcoinBlockStore(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override operator fun get(hash: Sha256Hash): StoredBitcoinBlock {
+    override operator fun get(hash: Sha256Hash): StoredBitcoinBlock? {
         return store.get(hash)
     }
 
@@ -61,7 +61,7 @@ class IndexedBitcoinBlockStore(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override fun erase(hash: Sha256Hash): StoredBitcoinBlock {
+    override fun erase(hash: Sha256Hash): StoredBitcoinBlock? {
         val erased = store.erase(hash)
         if (erased != null) {
             blockByHeightIndex.remove(erased.height)
@@ -70,7 +70,7 @@ class IndexedBitcoinBlockStore(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override fun replace(hash: Sha256Hash, block: StoredBitcoinBlock): StoredBitcoinBlock {
+    override fun replace(hash: Sha256Hash, block: StoredBitcoinBlock): StoredBitcoinBlock? {
         return store.replace(hash, block)
     }
 
@@ -80,12 +80,12 @@ class IndexedBitcoinBlockStore(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override fun getFromChain(hash: Sha256Hash, blocksAgo: Int): StoredBitcoinBlock {
+    override fun getFromChain(hash: Sha256Hash, blocksAgo: Int): StoredBitcoinBlock? {
         return store.getFromChain(hash, blocksAgo)
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    override fun scanBestChain(hash: Sha256Hash): StoredBitcoinBlock {
+    override fun scanBestChain(hash: Sha256Hash): StoredBitcoinBlock? {
         return store.scanBestChain(hash)
     }
 

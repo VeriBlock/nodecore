@@ -64,10 +64,10 @@ class AdminApiServiceTest {
     fun sendCoins() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val transactions = listOf(transaction)
-        val ledgerContext = LedgerContext().also {
-            it.ledgerValue = LedgerValue(100L, 0L, 0L)
-            it.ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
-        }
+        val ledgerContext = LedgerContext(
+            ledgerValue = LedgerValue(100L, 0L, 0L),
+            ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
+        )
 
         every { peerTable.getAddressState(any()) } returns ledgerContext
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
@@ -96,10 +96,10 @@ class AdminApiServiceTest {
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressDoesntExist() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
-        val ledgerContext = LedgerContext().also {
-            it.ledgerValue = LedgerValue(100L, 0L, 0L)
-            it.ledgerProofStatus = LedgerProofStatus.ADDRESS_DOES_NOT_EXIST
-        }
+        val ledgerContext = LedgerContext(
+            ledgerValue = LedgerValue(100L, 0L, 0L),
+            ledgerProofStatus = LedgerProofStatus.ADDRESS_DOES_NOT_EXIST
+        )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
@@ -119,10 +119,10 @@ class AdminApiServiceTest {
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressDoesntIsInvalid() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
-        val ledgerContext = LedgerContext().also {
-            it.ledgerValue = LedgerValue(100L, 0L, 0L)
-            it.ledgerProofStatus = LedgerProofStatus.ADDRESS_IS_INVALID
-        }
+        val ledgerContext = LedgerContext(
+            ledgerValue = LedgerValue(100L, 0L, 0L),
+            ledgerProofStatus = LedgerProofStatus.ADDRESS_IS_INVALID
+        )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
@@ -142,10 +142,10 @@ class AdminApiServiceTest {
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenBalanceIsNotEnough() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
-        val ledgerContext = LedgerContext().also {
-            it.ledgerValue = LedgerValue(50L, 0L, 0L)
-            it.ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
-        }
+        val ledgerContext = LedgerContext(
+            ledgerValue = LedgerValue(50L, 0L, 0L),
+            ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
+        )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L

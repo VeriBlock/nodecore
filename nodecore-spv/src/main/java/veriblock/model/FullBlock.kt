@@ -14,10 +14,10 @@ import org.veriblock.sdk.models.VeriBlockBlock
 class FullBlock(
     height: Int,
     version: Short,
-    previousBlock: VBlakeHash?,
-    previousKeystone: VBlakeHash?,
-    secondPreviousKeystone: VBlakeHash?,
-    merkleRoot: Sha256Hash?,
+    previousBlock: VBlakeHash,
+    previousKeystone: VBlakeHash,
+    secondPreviousKeystone: VBlakeHash,
+    merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
     nonce: Int

@@ -29,7 +29,11 @@ class BitcoinBlock(
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass && Arrays.equals(
             SerializeDeserializeService.getHeaderBytesBitcoinBlock(this), SerializeDeserializeService
-            .getHeaderBytesBitcoinBlock(other as BitcoinBlock?)
+            .getHeaderBytesBitcoinBlock(other as BitcoinBlock)
         )
+    }
+
+    override fun hashCode(): Int {
+        return SerializeDeserializeService.getHeaderBytesBitcoinBlock(this).contentHashCode()
     }
 }

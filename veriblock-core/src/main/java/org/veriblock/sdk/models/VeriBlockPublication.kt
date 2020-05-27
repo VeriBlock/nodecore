@@ -23,7 +23,7 @@ class VeriBlockPublication(
     }
 
     fun getFirstBitcoinBlock(): BitcoinBlock? {
-        val blocks = transaction.blocks
+        val blocks = transaction.getBlocks()
         return blocks.firstOrNull()
     }
 

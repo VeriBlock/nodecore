@@ -10,7 +10,7 @@ package org.veriblock.sdk.blockchain.store
 import org.veriblock.sdk.models.BlockStoreException
 import java.sql.SQLException
 
-interface BlockStore<Block, Id> {
+interface BlockStore<Block, Hash> {
     /**
      * Shut down the store and release resources
      */
@@ -40,7 +40,7 @@ interface BlockStore<Block, Id> {
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun setChainHead(chainHead: Block): Block
+    fun setChainHead(chainHead: Block): Block?
 
     /**
      * Put the given block into the store
@@ -54,28 +54,28 @@ interface BlockStore<Block, Id> {
 
     /**
      * Retrieve the block with the given block id
-     * @param id the block id(hash)
+     * @param hash the block id(hash)
      * @return the block with the given id or null
      * @throws BlockStoreException
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun get(id: Id): Block
+    fun get(hash: Hash): Block?
 
     /**
      * Delete the block with the given block id
-     * @param id the block id(hash)
+     * @param hash the block id(hash)
      * @return the deleted block or null if the store has no matching blocks
      * @throws BlockStoreException if the block is referenced by
      * any data structures(blocks, chain head)
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun erase(id: Id): Block
+    fun erase(hash: Hash): Block?
 
     /**
      * Replace the block with the given block id with the updated version
-     * @param id the block id(hash)
+     * @param hash the block id(hash)
      * @param block the updated block
      * @return the old version of the block or
      * null if the store has no matching blocks
@@ -85,12 +85,12 @@ interface BlockStore<Block, Id> {
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun replace(id: Id, block: Block): Block
+    fun replace(hash: Hash, block: Block): Block?
 
     /**
      * Retrieve a chain of up to the given number of blocks
      * that ends at the block that matches the given id
-     * @param id the starting block id(hash)
+     * @param hash the starting block id(hash)
      * @param count the maximum number of blocks to retrieve
      * @return the list of blocks in the chain,
      * starting with the block that matches the given id
@@ -98,7 +98,7 @@ interface BlockStore<Block, Id> {
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun get(id: Id, count: Int): List<Block>
+    fun get(hash: Hash, count: Int): List<Block>
 
     /**
      * Retrieve the block that is the given number of blocks
@@ -112,7 +112,7 @@ interface BlockStore<Block, Id> {
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun getFromChain(id: Id, blocksAgo: Int): Block
+    fun getFromChain(hash: Hash, blocksAgo: Int): Block?
 
     /**
      * Retrieve the block with the given id searching
@@ -125,5 +125,5 @@ interface BlockStore<Block, Id> {
      * @throws SQLException
      */
     @Throws(BlockStoreException::class, SQLException::class)
-    fun scanBestChain(id: Id): Block
+    fun scanBestChain(hash: Hash): Block?
 }

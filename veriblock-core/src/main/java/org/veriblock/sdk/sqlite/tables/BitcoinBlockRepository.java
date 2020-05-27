@@ -36,7 +36,7 @@ public class BitcoinBlockRepository extends GenericBlockRepository<StoredBitcoin
             stmt.setObject(++i, Utility.bytesToHex(block.getBlock().getPreviousBlock().getBytes()));
             stmt.setObject(++i, block.getHeight());
             stmt.setObject(++i, block.getWork().toString());
-            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.serialize(block.getBlock())));
+            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.INSTANCE.serialize(block.getBlock())));
         }
 
         public StoredBitcoinBlock fromResult(ResultSet result) throws SQLException {

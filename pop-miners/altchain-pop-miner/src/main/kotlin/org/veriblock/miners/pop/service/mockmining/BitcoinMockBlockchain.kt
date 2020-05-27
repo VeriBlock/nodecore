@@ -14,7 +14,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.BitcoinNetworkParameters
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.blockchain.store.BitcoinBlockchain
+import org.veriblock.sdk.blockchain.BitcoinBlockchain
 import java.sql.SQLException
 import java.util.ArrayList
 import java.util.Collections
@@ -39,8 +39,8 @@ class BitcoinMockBlockchain(
 
     // retrieve the blocks between lastKnownBlock and getChainHead()
     @Throws(SQLException::class)
-    fun getContext(lastKnownBlock: BitcoinBlock): List<BitcoinBlock?> {
-        val context: MutableList<BitcoinBlock?> = ArrayList()
+    fun getContext(lastKnownBlock: BitcoinBlock): List<BitcoinBlock> {
+        val context: MutableList<BitcoinBlock> = ArrayList()
         var prevBlock = get(getChainHead()!!.previousBlock)
         while (prevBlock != null && prevBlock != lastKnownBlock) {
             context.add(prevBlock)
@@ -53,10 +53,10 @@ class BitcoinMockBlockchain(
     @Throws(SQLException::class)
     fun mine(blockData: BitcoinBlockData): BitcoinBlock {
         val chainHead = getStoredChainHead()!!
-        val timestamp = Math.max(
-            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utility.getCurrentTimestamp()
+        val timestamp = Utility.getCurrentTimestamp().coerceAtLeast(
+            getNextEarliestTimestamp(chainHead.hash) ?: 0
         )
-        val difficulty = getNextDifficulty(timestamp, chainHead).asLong.toInt()
+        val difficulty = getNextDifficulty(timestamp, chainHead)!!.toInt()
         for (nonce in 0 until Int.MAX_VALUE) {
             val newBlock = BitcoinBlock(
                 chainHead.block.version,

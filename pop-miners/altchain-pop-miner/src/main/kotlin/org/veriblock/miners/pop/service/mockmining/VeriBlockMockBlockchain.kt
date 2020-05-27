@@ -22,15 +22,15 @@ import java.util.ArrayList
 import java.util.HashMap
 
 class VeriBlockMockBlockchain(
-    networkParameters: NetworkParameters?,
+    networkParameters: NetworkParameters,
     private val store: BlockStore<StoredVeriBlockBlock, VBlakeHash>,
-    bitcoinStore: BlockStore<StoredBitcoinBlock?, Sha256Hash?>?
+    bitcoinStore: BlockStore<StoredBitcoinBlock, Sha256Hash>
 ) : VeriBlockBlockchain(networkParameters, store, bitcoinStore) {
     private val blockDataStore: MutableMap<VBlakeHash, VeriBlockBlockData> = HashMap()
 
     @Throws(SQLException::class)
     private fun getPreviousKeystoneForNewBlock(): VBlakeHash {
-        val chainHead = chainHead
+        val chainHead = getChainHead()!!
         val blockHeight = chainHead.height + 1
         var keystoneBlocksAgo = blockHeight % 20
         when (keystoneBlocksAgo) {
@@ -43,7 +43,7 @@ class VeriBlockMockBlockchain(
 
     @Throws(SQLException::class)
     private fun getSecondPreviousKeystoneForNewBlock(): VBlakeHash {
-        val chainHead = chainHead
+        val chainHead = getChainHead()!!
         val blockHeight = chainHead.height + 1
         var keystoneBlocksAgo = blockHeight % 20
         when (keystoneBlocksAgo) {
@@ -61,7 +61,7 @@ class VeriBlockMockBlockchain(
         val context: MutableList<VeriBlockBlock> = ArrayList()
 
         // FIXME: using scanBestChain as a workaround as it should be faster in cached stores than a plain get
-        var prevBlock = store.scanBestChain(chainHead.previousBlock)
+        var prevBlock = store.scanBestChain(getChainHead()!!.previousBlock)
         while (prevBlock != null && prevBlock.block != lastKnownBlock) {
             context.add(prevBlock.block)
             prevBlock = store.scanBestChain(prevBlock.block.previousBlock)
@@ -72,7 +72,7 @@ class VeriBlockMockBlockchain(
 
     @Throws(SQLException::class)
     fun mine(blockData: VeriBlockBlockData): VeriBlockBlock {
-        val chainHead = chainHead
+        val chainHead = getChainHead()!!
         val blockHeight = chainHead.height + 1
         val previousKeystone = getPreviousKeystoneForNewBlock()
         val secondPreviousKeystone = getSecondPreviousKeystoneForNewBlock()
@@ -100,5 +100,4 @@ class VeriBlockMockBlockchain(
         }
         throw RuntimeException("Failed to mine the block due to too high difficulty")
     }
-
 }

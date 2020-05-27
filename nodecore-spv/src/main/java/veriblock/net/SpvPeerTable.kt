@@ -190,8 +190,10 @@ class SpvPeerTable(
         }
     }
 
-    fun acknowledgeAddress(address: String) {
-        addressesState.putIfAbsent(address, LedgerContext())
+    fun acknowledgeAddress(address: Address) {
+        addressesState.putIfAbsent(address.hash, LedgerContext(
+            null, null, null, null
+        ))
     }
 
     private fun requestAddressState() {
@@ -201,7 +203,7 @@ class SpvPeerTable(
         }
         val ledgerProof = LedgerProofRequest.newBuilder()
         for (address in addresses) {
-            acknowledgeAddress(address.hash)
+            acknowledgeAddress(address)
             ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
         }
         val request = VeriBlockMessages.Event.newBuilder()
@@ -228,7 +230,7 @@ class SpvPeerTable(
                 )
                 .build()
             for (peer in peers.values) {
-                peer!!.sendMessage(request)
+                peer.sendMessage(request)
             }
         }
     }
@@ -345,8 +347,8 @@ class SpvPeerTable(
 
     private fun updateAddressState(ledgerContexts: List<LedgerContext>) {
         for (ledgerContext in ledgerContexts) {
-            if (addressesState[ledgerContext.address!!.address]!!.compareTo(ledgerContext) > 0) {
-                addressesState.replace(ledgerContext.address!!.address, ledgerContext)
+            if (addressesState.getValue(ledgerContext.address!!.address) > ledgerContext) {
+                addressesState.replace(ledgerContext.address.address, ledgerContext)
             }
         }
     }
@@ -424,7 +426,7 @@ class SpvPeerTable(
             .build()
         for (peer in peers.values) {
             try {
-                peer!!.sendMessage(advertise)
+                peer.sendMessage(advertise)
             } catch (ex: Exception) {
                 logger.error(ex.message, ex)
             }

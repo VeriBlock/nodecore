@@ -57,12 +57,14 @@ object MessageSerializer {
     fun deserializePopTransaction(transactionUnionMessage: TransactionUnion): PopTransactionLight {
         val signed = transactionUnionMessage.signed
         val txMessage = signed.transaction
-        val tx = PopTransactionLight(Sha256Hash.wrap(txMessage.txId.toByteArray()))
+        val tx = PopTransactionLight(
+            txId = Sha256Hash.wrap(txMessage.txId.toByteArray()),
+            endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray()),
+            bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray()),
+            bitcoinMerklePath = MerklePath(txMessage.merklePath),
+            blockOfProof = SerializeDeserializeService.parseBitcoinBlock(txMessage.bitcoinBlockHeaderOfProof.header.toByteArray())
+        )
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
-        tx.endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray())
-        tx.bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray())
-        tx.bitcoinMerklePath = MerklePath(txMessage.merklePath)
-        tx.blockOfProof = SerializeDeserializeService.parseBitcoinBlock(txMessage.bitcoinBlockHeaderOfProof.header.toByteArray())
         txMessage.contextBitcoinBlockHeadersList.map {
             SerializeDeserializeService.parseBitcoinBlock(it.header.toByteArray())
         }.forEach {

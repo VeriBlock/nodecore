@@ -56,7 +56,7 @@ public class PublicationDataTests {
         byte[] contextInfo = Utility.fillBytes((byte) 0, 1);
         PublicationData data = new PublicationData(identifier, header, payoutInfo, contextInfo);
         
-        byte[] serialized = SerializeDeserializeService.serialize(data);
+        byte[] serialized = SerializeDeserializeService.INSTANCE.serialize(data);
         
         try {
             SerializeDeserializeService.parsePublicationData(serialized);
@@ -70,7 +70,7 @@ public class PublicationDataTests {
         contextInfo = Utility.fillBytes((byte) 0, 1);
         data = new PublicationData(identifier, header, payoutInfo, contextInfo);
         
-        serialized = SerializeDeserializeService.serialize(data);
+        serialized = SerializeDeserializeService.INSTANCE.serialize(data);
         
         try {
             SerializeDeserializeService.parsePublicationData(serialized);
@@ -84,7 +84,7 @@ public class PublicationDataTests {
         contextInfo = Utility.fillBytes((byte) 0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA + 1);
         data = new PublicationData(identifier, header, payoutInfo, contextInfo);
         
-        serialized = SerializeDeserializeService.serialize(data);
+        serialized = SerializeDeserializeService.INSTANCE.serialize(data);
         
         try {
             SerializeDeserializeService.parsePublicationData(serialized);

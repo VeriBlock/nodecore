@@ -52,7 +52,7 @@ public class AltPublicationRepository {
         String sql = " REPLACE INTO " + tableName + " ('" + altPublicationHash + "' , '" + altPublicationDataColumnName + "') " +
                 "VALUES(?, ?) ";
         try(PreparedStatement stmt = connectionSource.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-            byte[] bytes = SerializeDeserializeService.serialize(publication);
+            byte[] bytes = SerializeDeserializeService.INSTANCE.serialize(publication);
             hash = Utility.bytesToHex(Sha256Hash.hash(bytes));
             stmt.setString(1, hash);
             stmt.setBytes(2, bytes);
