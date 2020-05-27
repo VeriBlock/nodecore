@@ -47,9 +47,9 @@ class NetworkParameters(
     val p2pPort: Int
 
     val bootstrapDns: String?
-    val fileTag: String?
+    private val fileTag: String?
     val genesisBlock: VeriBlockBlock
-    val bitcoinOriginBlockHeight: Int
+    private val bitcoinOriginBlockHeight: Int
     val bitcoinOriginBlock: BitcoinBlock
     val protocolVersion: Int
 
@@ -120,14 +120,14 @@ sealed class NetworkParametersTemplate {
 
 object MainNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "mainnet"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900_000_000_000L)
+    private val MINIMUM_POW_DIFFICULTY = 900_000_000_000L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10500
     override val p2pPort = 7500
 
     override val bootstrapDns = "seed.veriblock.org"
-    override val fileTag = null
+    override val fileTag: String? = null
     override val genesisBlock = VeriBlockBlock(
         0,
         2.toShort(),
@@ -150,14 +150,14 @@ object MainNetParameters : NetworkParametersTemplate() {
     )
     override val protocolVersion: Int = 3
 
-    override val transactionPrefix = null
+    override val transactionPrefix: Byte? = null
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 }
 
 object TestNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "testnet"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L)
+    private val MINIMUM_POW_DIFFICULTY = 100_000_000L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10501
@@ -194,13 +194,13 @@ object TestNetParameters : NetworkParametersTemplate() {
 
 object AlphaNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "alpha"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(9_999_872L)
+    private val MINIMUM_POW_DIFFICULTY = 9_999_872L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10502
     override val p2pPort = 7502
 
-    override val bootstrapDns = null
+    override val bootstrapDns: String? = null
     override val fileTag = "alpha"
     override val genesisBlock = VeriBlockBlock(
         0,
@@ -231,13 +231,13 @@ object AlphaNetParameters : NetworkParametersTemplate() {
 
 object RegTestParameters : NetworkParametersTemplate() {
     const val NETWORK = "regtest"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.ONE
+    private val MINIMUM_POW_DIFFICULTY: BigInteger = BigInteger.ONE
 
     override val name = NETWORK
     override val rpcPort = 10503
     override val p2pPort = 7503
 
-    override val bootstrapDns = null
+    override val bootstrapDns: String? = null
     override val fileTag = "regtest"
     override val genesisBlock = VeriBlockBlock(
         0,
@@ -266,13 +266,9 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = true
 }
 
-@JvmField
 val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters.NETWORK))
-@JvmField
 val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
-@JvmField
 val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
-@JvmField
 val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
 
 fun getDefaultNetworkParameters(name: String) = when (name) {
