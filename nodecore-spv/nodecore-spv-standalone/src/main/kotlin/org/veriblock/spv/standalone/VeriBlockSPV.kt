@@ -10,15 +10,15 @@
 
 package org.veriblock.spv.standalone
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.google.gson.GsonBuilder
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
+import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
+import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
@@ -26,7 +26,6 @@ import org.veriblock.spv.standalone.commands.spvCommands
 import org.veriblock.spv.standalone.commands.standardCommands
 import veriblock.SpvContext
 import veriblock.model.DownloadStatus
-import veriblock.model.DownloadStatusResponse
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
 import java.lang.Thread.sleep
@@ -60,6 +59,11 @@ private fun run(): Int {
         standardCommands()
         spvCommands(spvContext)
     })
+
+    print(SharedConstants.LICENSE)
+    val objDiagnostics = DiagnosticUtility.getDiagnosticInfo()
+    val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
+    logger.info(strDiagnostics)
 
     logger.info { "Initializing SPV Context..." }
     try {
