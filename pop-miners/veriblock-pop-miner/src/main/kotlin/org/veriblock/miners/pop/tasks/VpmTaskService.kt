@@ -269,7 +269,7 @@ class VpmTaskService(
             logger.error("NodeCore rejected PoP submission")
             failTask("NodeCore rejected PoP submission. Check NodeCore logs for detail.")
         } catch (e: StatusRuntimeException) {
-            logger.error("Failed to submit PoP transaction to NodeCore: {}", e.status)
+            logger.error("Failed to submit PoP transaction to NodeCore: {}", e.status.code)
             failTask(
                 "Unable to submit PoP transaction to NodeCore. Check that NodeCore RPC is available and resubmit operation."
             )
