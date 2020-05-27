@@ -12,6 +12,7 @@ import ch.qos.logback.contrib.jackson.JacksonJsonFormatter
 import ch.qos.logback.contrib.json.classic.JsonLayout
 import ch.qos.logback.core.spi.FilterReply
 import org.veriblock.shell.LoggingLineAppender
+import org.veriblock.core.utilities.LogLevelColorsConverter
 
 def logRootPath = System.getProperty("logging.path", System.getenv('APM_LOG_PATH')) ?: 'logs'
 def logLevel = System.getProperty("logging.level", System.getenv('APM_LOG_LEVEL')) ?: ''
@@ -24,8 +25,9 @@ appender("TERMINAL", LoggingLineAppender) {
     filter(ThresholdFilter) {
         level = toLevel(consoleLogLevel, INFO)
     }
+    conversionRule("highlightex", LogLevelColorsConverter)
     encoder(PatternLayoutEncoder) {
-        pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlight(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} %boldWhite(%-10.-10thread) %highlightex(%-5level) %gray(%-25.-25logger{0}) - %msg%n"
     }
 }
 
