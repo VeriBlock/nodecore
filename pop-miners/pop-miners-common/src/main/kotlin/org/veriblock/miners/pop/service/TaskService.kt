@@ -7,7 +7,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.yield
 import org.veriblock.core.contracts.MiningInstruction
-import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.core.MerklePath
 import org.veriblock.miners.pop.core.MiningOperation
@@ -28,7 +27,7 @@ abstract class TaskService<
         out SpTransaction,
         out SpBlock,
         out MerklePath,
-        out WithDetailedInfo
+        out Any
     >
 > {
     suspend fun runTasks(operation: MO) {

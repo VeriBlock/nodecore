@@ -26,13 +26,4 @@ class PopMiningInstruction(
     val endorsedBlockHash: String = Crypto().vBlakeReturnHex(endorsedBlockHeader)
 
     val minerAddress: String = minerAddressBytes.toBase58()
-
-    override val detailedInfo: Map<String, String>
-        get() = mapOf(
-            "publicationData" to publicationData.toHex(),
-            "endorsedBlockHeader" to endorsedBlockHeader.toHex(),
-            "lastBitcoinBlock" to lastBitcoinBlock.toHex(),
-            "minerAddressBytes" to minerAddressBytes.toHex()
-            //"endorsedBlockContextHeaders" to endorsedBlockContextHeaders.joinToString { it.toHex() }
-        )
 }
