@@ -47,9 +47,9 @@ class NetworkParameters(
     val p2pPort: Int
 
     val bootstrapDns: String?
-    private val fileTag: String?
+    val fileTag: String?
     val genesisBlock: VeriBlockBlock
-    private val bitcoinOriginBlockHeight: Int
+    val bitcoinOriginBlockHeight: Int
     val bitcoinOriginBlock: BitcoinBlock
     val protocolVersion: Int
 
@@ -268,6 +268,7 @@ object RegTestParameters : NetworkParametersTemplate() {
 
 val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters.NETWORK))
 val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
+@JvmField
 val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
 val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
 

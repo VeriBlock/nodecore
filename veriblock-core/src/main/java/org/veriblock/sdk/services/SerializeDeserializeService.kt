@@ -288,22 +288,6 @@ object SerializeDeserializeService {
     }
 
     // BitcoinBlock
-    fun getHeaderBytesBitcoinBlock(bitcoinBlock: BitcoinBlock): ByteArray {
-        if (bitcoinBlock.raw.size == Constants.HEADER_SIZE_BitcoinBlock) {
-            return bitcoinBlock.raw
-        }
-        val buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_BitcoinBlock)
-        BytesUtility.putLEInt32(buffer, bitcoinBlock.version)
-        BytesUtility.putLEBytes(buffer, bitcoinBlock.previousBlock.bytes)
-        BytesUtility.putLEBytes(buffer, bitcoinBlock.merkleRoot.bytes)
-        BytesUtility.putLEInt32(buffer, bitcoinBlock.timestamp)
-        BytesUtility.putLEInt32(buffer, bitcoinBlock.difficulty)
-        BytesUtility.putLEInt32(buffer, bitcoinBlock.nonce)
-        buffer.flip()
-        val bytes = ByteArray(Constants.HEADER_SIZE_BitcoinBlock)
-        buffer[bytes]
-        return bytes
-    }
 
     fun serialize(bitcoinBlock: BitcoinBlock): ByteArray {
         try {
@@ -320,7 +304,7 @@ object SerializeDeserializeService {
     @Throws(IOException::class)
     fun serialize(bitcoinBlock: BitcoinBlock, stream: OutputStream) {
         StreamUtils.writeSingleByteLengthValueToStream(
-            stream, getHeaderBytesBitcoinBlock(bitcoinBlock)
+            stream, bitcoinBlock.raw
         )
     }
 

@@ -37,7 +37,7 @@ class StoredBitcoinBlock(
         buffer.put(hash.bytes)
         buffer.putInt(height)
         buffer.put(Utility.toBytes(work, CHAIN_WORK_BYTES))
-        buffer.put(SerializeDeserializeService.getHeaderBytesBitcoinBlock(block))
+        buffer.put(block.raw)
     }
 
     fun serialize(): ByteArray {
