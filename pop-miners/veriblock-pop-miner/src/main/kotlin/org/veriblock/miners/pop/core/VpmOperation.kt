@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.model.PopMiningInstruction
@@ -65,20 +66,24 @@ class VpmOperation(
     override fun getDetailedInfo(): Map<String, String> {
         val result = LinkedHashMap<String, String>()
         miningInstruction?.let {
-            result.putAll(it.detailedInfo)
+            result["publicationData"] = it.publicationData.toHex()
+            result["endorsedBlockHeader"] = it.endorsedBlockHeader.toHex()
+            result["lastBitcoinBlock"] = it.lastBitcoinBlock.toHex()
+            result["minerAddressBytes"] = it.minerAddressBytes.toHex()
+            result["vbkEndorsedBlockContextHeaders"] = it.endorsedBlockContextHeaders.joinToString { it.toHex() }
         }
         endorsementTransaction?.let {
-            result["endorsementTransactionId"] = it.txId
-            result["endorsementTransactionFee"] = it.fee.formatAtomicLongWithDecimal()
+            result["btcEndorsementTransactionId"] = it.txId
+            result["btcEndorsementTransactionFee"] = it.fee.formatAtomicLongWithDecimal()
         }
         blockOfProof?.let {
-            result["blockOfProof"] = it.hash
+            result["btcBlockOfProof"] = it.hash
         }
         merklePath?.let {
             result["merklePath"] = it.compactFormat
         }
         context?.let {
-            result.putAll(it.detailedInfo)
+            result["btcContextBlocks"] = it.blocks.joinToString { it.hashAsString }
         }
         proofOfProofId?.let {
             result["proofOfProofId"] = it

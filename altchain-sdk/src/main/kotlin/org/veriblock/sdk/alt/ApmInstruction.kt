@@ -18,14 +18,4 @@ class ApmInstruction(
     val publicationData: PublicationData,
     val context: List<ByteArray>,
     val btcContext: List<ByteArray>
-) : MiningInstruction {
-    override val detailedInfo: Map<String, String>
-        get() = mapOf(
-            "chainIdentifier" to publicationData.identifier.toString(),
-            "publicationDataHeader" to publicationData.header.toHex(),
-            "publicationDataContextInfo" to publicationData.contextInfo.toHex(),
-            "publicationDataPayoutInfo" to publicationData.payoutInfo.toHex(),
-            "vbkContextBlockHashes" to context.joinToString { it.toHex() },
-            "btcContextBlockHashes" to btcContext.joinToString { it.toHex() }
-        )
-}
+) : MiningInstruction

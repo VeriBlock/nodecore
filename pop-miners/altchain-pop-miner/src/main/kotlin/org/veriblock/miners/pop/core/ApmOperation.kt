@@ -8,7 +8,6 @@
 
 package org.veriblock.miners.pop.core
 
-import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.AsyncEvent
@@ -46,8 +45,13 @@ class ApmOperation(
 
     override fun getDetailedInfo(): Map<String, String> {
         val result = LinkedHashMap<String, String>()
-        miningInstruction?.let {
-            result.putAll(it.detailedInfo)
+        miningInstruction?.let { instruction ->
+            result["chainIdentifier"] = instruction.publicationData.identifier.toString()
+            result["publicationDataHeader"] = instruction.publicationData.header.toHex()
+            result["publicationDataContextInfo"] = instruction.publicationData.contextInfo.toHex()
+            result["publicationDataPayoutInfo"] = instruction.publicationData.payoutInfo.toHex()
+            result["vbkContextBlockHashes"] = instruction.context.joinToString { it.toHex() }
+            result["btcContextBlockHashes"] = instruction.btcContext.joinToString { it.toHex() }
         }
         endorsementTransaction?.let {
             result["vbkEndorsementTxId"] = it.txId
@@ -59,8 +63,9 @@ class ApmOperation(
         merklePath?.let {
             result["merklePath"] = it.compactFormat
         }
-        context?.let {
-            result.putAll(it.detailedInfo)
+        context?.let { context ->
+            result["vtbTransactions"] = context.publications.joinToString { it.transaction.id.bytes.toHex() }
+            result["vtbBtcBlocks"] = context.publications.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
         }
         proofOfProofId?.let {
             result["proofOfProofId"] = it
@@ -106,10 +111,4 @@ class ApmMerklePath(
 
 class ApmContext(
     val publications: List<VeriBlockPublication>
-) : WithDetailedInfo {
-    override val detailedInfo: Map<String, String>
-        get() = mapOf(
-            "vtbTransactions" to publications.joinToString { it.transaction.id.bytes.toHex() },
-            "vtbBtcBlocks" to publications.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
-        )
-}
+)

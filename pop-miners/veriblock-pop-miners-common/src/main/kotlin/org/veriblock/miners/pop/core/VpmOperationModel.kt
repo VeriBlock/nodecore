@@ -10,8 +10,6 @@ package org.veriblock.miners.pop.core
 
 import org.bitcoinj.core.Block
 import org.bitcoinj.core.Transaction
-import org.veriblock.core.contracts.WithDetailedInfo
-import org.veriblock.miners.pop.common.formatBTCFriendlyString
 
 class VpmSpTransaction(
     val transaction: Transaction,
@@ -33,9 +31,4 @@ class VpmMerklePath(
 
 class VpmContext(
     val blocks: List<Block> = emptyList()
-) : WithDetailedInfo {
-    override val detailedInfo: Map<String, String>
-        get() = mapOf(
-            "btcContextBlocks" to blocks.joinToString { it.hashAsString }
-        )
-}
+)

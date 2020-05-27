@@ -3,9 +3,7 @@ package org.veriblock.miners.pop.core
 import ch.qos.logback.classic.Level
 import kotlinx.coroutines.Job
 import org.veriblock.core.contracts.MiningInstruction
-import org.veriblock.core.contracts.WithDetailedInfo
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
 import java.util.concurrent.CopyOnWriteArrayList
@@ -17,7 +15,7 @@ abstract class MiningOperation<
     SPT : SpTransaction,
     SPB : SpBlock,
     MP : MerklePath,
-    CD : WithDetailedInfo
+    CD
 >(
     val id: String,
     var endorsedBlockHeight: Int?,
