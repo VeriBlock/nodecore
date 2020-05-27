@@ -10,22 +10,34 @@ package org.veriblock.sdk.models
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.util.MerklePathUtil
 
-class VeriBlockMerklePath : MerklePath {
+class VeriBlockMerklePath {
     val treeIndex: Int
+    private val compactFormat: String
+    val layers: List<Sha256Hash>
+    val subject: Sha256Hash
+    val index: Int
+
+    /**
+     * The Merkle root produced by following the layers up to the top of the tree.
+     */
+    var merkleRoot: Sha256Hash
 
     constructor(
         treeIndex: Int,
         index: Int,
         subject: Sha256Hash,
         layers: MutableList<Sha256Hash>
-    ) : super(index, subject, layers) {
+    ) {
         this.treeIndex = treeIndex
+        this.index = index
+        this.subject = subject
+        this.layers = layers
         val layerStrings = layers.map { it.toString() }
         compactFormat = String.format("%d:%d:%s:%s", treeIndex, index, subject.toString(), layerStrings.joinToString(":"))
         merkleRoot = MerklePathUtil.calculateVeriMerkleRoot(this)
     }
 
-    constructor(compactFormat: String) : super(compactFormat) {
+    constructor(compactFormat: String) {
         val parts = compactFormat.split(":".toRegex()).toTypedArray()
         require(parts.size > 3 && parts[0].toInt() >= 0 && parts[1].toInt() >= 0) {
             "Invalid merkle path compact format: $compactFormat"
@@ -38,6 +50,10 @@ class VeriBlockMerklePath : MerklePath {
         }
         this.compactFormat = compactFormat
         merkleRoot = MerklePathUtil.calculateVeriMerkleRoot(this)
+    }
+
+    fun toCompactString(): String {
+        return compactFormat
     }
 
     override fun equals(other: Any?): Boolean {

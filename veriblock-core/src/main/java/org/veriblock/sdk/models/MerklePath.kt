@@ -10,16 +10,14 @@ package org.veriblock.sdk.models
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.util.MerklePathUtil
 
-open class MerklePath {
-    protected var compactFormat: String
-    var layers: List<Sha256Hash>
-    var subject: Sha256Hash
-    var index: Int
+class MerklePath {
+    private val compactFormat: String
+    val layers: List<Sha256Hash>
+    val subject: Sha256Hash
+    val index: Int
 
     /**
-     * Returns the Merkle root produced by following the layers up to the top of the tree.
-     *
-     * @return The Merkle root produced by following the path up to the top of the transaction tree, encoded in hexadecimal
+     * The Merkle root produced by following the layers up to the top of the tree.
      */
     var merkleRoot: Sha256Hash
 
@@ -50,7 +48,7 @@ open class MerklePath {
         this.compactFormat = compactFormat
     }
 
-    open fun toCompactString(): String {
+    fun toCompactString(): String {
         return compactFormat
     }
 

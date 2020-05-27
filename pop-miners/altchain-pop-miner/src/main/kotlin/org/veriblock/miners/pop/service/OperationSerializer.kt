@@ -151,15 +151,13 @@ class OperationSerializer(
 
     private fun serialize(tx: VeriBlockPopTransaction): OperationProto.PopTransaction {
         return OperationProto.PopTransaction(
-            txId = tx.id?.toString() ?: "",
-            address = tx.address?.toString() ?: "",
+            txId = tx.id.toString(),
+            address = tx.address.toString(),
             publishedBlock = SerializeDeserializeService.serializeHeaders(tx.publishedBlock),
             bitcoinTx = tx.bitcoinTransaction.rawBytes,
             merklePath = tx.merklePath.toCompactString(),
-            blockOfProof = SerializeDeserializeService.getHeaderBytesBitcoinBlock(tx.blockOfProof),
-            bitcoinContext = tx.blockOfProofContext.map {
-                SerializeDeserializeService.getHeaderBytesBitcoinBlock(it)
-            },
+            blockOfProof = tx.blockOfProof.raw,
+            bitcoinContext = tx.blockOfProofContext.map { it.raw },
             signature = tx.signature,
             publicKey = tx.publicKey,
             networkByte = tx.networkByte?.toInt() ?: 0
