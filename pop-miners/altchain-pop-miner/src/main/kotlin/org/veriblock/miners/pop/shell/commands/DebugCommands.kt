@@ -8,17 +8,22 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.MiningOperationMapperService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.shell.CommandFactory
+import org.veriblock.shell.CommandParameter
+import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
+import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.debugCommands(
@@ -26,8 +31,30 @@ fun CommandFactory.debugCommands(
     context: Context,
     minerService: MinerService,
     pluginService: PluginService,
-    nodeCoreLiteKit: NodeCoreLiteKit
+    nodeCoreLiteKit: NodeCoreLiteKit,
+    miningOperationMapperService: MiningOperationMapperService
 ) {
+    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
+
+    command(
+        name = "Get Operation",
+        form = "getoperationdebug",
+        description = "Gets the debug details of the supplied operation",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING)
+        )
+    ) {
+        val id: String = getParameter("id")
+        val operation = minerService.getOperation(id)
+        if (operation != null) {
+            printInfo(prettyPrintGson.toJson(miningOperationMapperService.getOperationData(operation)))
+            success()
+        } else {
+            printInfo("Operation $id not found")
+            failure()
+        }
+    }
+
     command(
         name = "Get Debug Information",
         form = "getdebuginfo",
