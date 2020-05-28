@@ -8,7 +8,7 @@ import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 
 class PendingTransactionContainer {
-    private val pendingAddressTransaction: MutableMap<String, ArrayList<Transaction?>> = ConcurrentHashMap()
+    private val pendingAddressTransaction: MutableMap<String, ArrayList<Transaction>> = ConcurrentHashMap()
     private val pendingTxIdTransaction: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
     private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
     private val transactionsForMonitoring: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
@@ -47,7 +47,7 @@ class PendingTransactionContainer {
             transactions.add(transaction)
             pendingTxIdTransaction[transaction.txId] = transaction
         } else {
-            val newList = ArrayList<Transaction?>()
+            val newList = ArrayList<Transaction>()
             newList.add(transaction)
             pendingTxIdTransaction[transaction.txId] = transaction
             pendingAddressTransaction[transaction.inputAddress.toString()] = newList
@@ -55,14 +55,14 @@ class PendingTransactionContainer {
         return true
     }
 
-    fun getTransaction(txId: Sha256Hash?): Transaction? {
+    fun getTransaction(txId: Sha256Hash): Transaction? {
         return pendingTxIdTransaction[txId]
     }
 
     fun getPendingSignatureIndexForAddress(address: String): Long? {
-        val transactions = pendingAddressTransaction[address]!!
+        val transactions = pendingAddressTransaction[address]
         return if (CollectionUtils.isNotEmpty(transactions)) {
-            transactions[transactions.size - 1]!!.getSignatureIndex()
+            transactions!![transactions.size - 1].getSignatureIndex()
         } else null
     }
 }
