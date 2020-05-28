@@ -47,7 +47,14 @@ fun CommandFactory.debugCommands(
         val id: String = getParameter("id")
         val operation = minerService.getOperation(id)
         if (operation != null) {
-            printInfo(prettyPrintGson.toJson(miningOperationMapperService.getOperationData(operation)))
+            val operationDetails = miningOperationMapperService.getOperationData(operation)
+
+            val tableFormat = "|%1$-8s|%2$-26s|%3$-18s"
+            printInfo (String.format(tableFormat, "Status", "Step", "Details"))
+
+            operationDetails.forEach {
+                printInfo(String.format(tableFormat, "${it.status}", "${it.operationState.id + 1}.${it.operationState.name}", "${it.extraInformation.joinToString(" ")}"))
+            }
             success()
         } else {
             printInfo("Operation $id not found")

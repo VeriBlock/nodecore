@@ -50,9 +50,9 @@ class MiningOperationMapperService(
             listOf("")
         }
         OperationState.PROVEN -> {
-            val merklePath = operation.merklePath
-                ?: listOf("Unable to acquire the merkle path from the operation")
-            listOf("Merkle path: $merklePath. Waiting for the keystone of proof.")
+            operation.merklePath?.let { merklePath ->
+                listOf("Merkle path: ${merklePath.compactFormat}. Waiting for the keystone of proof.")
+            } ?: listOf("Unable to acquire the merkle path from the operation")
         }
         OperationState.CONTEXT -> {
             listOf("")
