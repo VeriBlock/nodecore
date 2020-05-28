@@ -8,6 +8,7 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
+import io.ktor.http.ContentType
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
@@ -53,7 +54,10 @@ class BitcoinFamilyChain(
 
     private val payoutAddressScript: ByteArray
 
-    override val httpClient = createHttpClient(config.auth)
+    override val httpClient = createHttpClient(
+        authConfig = config.auth,
+        contentTypes = listOf(ContentType.Application.Json, ContentType.Text.Any)
+    )
 
     override val requestLogsPath: String?
         get() = config.requestLogsPath

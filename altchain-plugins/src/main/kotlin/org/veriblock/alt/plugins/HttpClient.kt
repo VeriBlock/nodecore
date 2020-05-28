@@ -11,7 +11,7 @@ package org.veriblock.alt.plugins
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.HttpResponseValidator
 import io.ktor.client.features.auth.Auth
 import io.ktor.client.features.auth.providers.basic
@@ -31,7 +31,7 @@ private val gson = Gson()
 fun <T> String.fromJson(type: Type): T = gson.fromJson(this, type)
 fun <T> JsonElement.fromJson(type: Type): T = gson.fromJson(this, type)
 
-fun createHttpClient(authConfig: HttpAuthConfig? = null, contentTypes: List<ContentType>? = null) = HttpClient(CIO) {
+fun createHttpClient(authConfig: HttpAuthConfig? = null, contentTypes: List<ContentType>? = null) = HttpClient(Apache) {
     Json {
         if (contentTypes != null) {
             acceptContentTypes = contentTypes
