@@ -42,9 +42,9 @@ class PendingTransactionContainer {
     }
 
     fun addTransaction(transaction: Transaction): Boolean {
-        val transactions = pendingAddressTransaction[transaction.inputAddress.toString()]!!
+        val transactions = pendingAddressTransaction[transaction.inputAddress.toString()]
         if (CollectionUtils.isNotEmpty(transactions)) {
-            transactions.add(transaction)
+            transactions!!.add(transaction)
             pendingTxIdTransaction[transaction.txId] = transaction
         } else {
             val newList = ArrayList<Transaction>()
