@@ -13,6 +13,7 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.MiningOperationMapperService
 import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.debugCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
@@ -27,10 +28,11 @@ fun CommandFactory.configure(
     context: Context,
     miner: MinerService,
     pluginService: PluginService,
-    nodeCoreLiteKit: NodeCoreLiteKit
+    nodeCoreLiteKit: NodeCoreLiteKit,
+    miningOperationMapperService: MiningOperationMapperService
 ) {
     standardCommands()
-    debugCommands(minerConfig, context, miner, pluginService, nodeCoreLiteKit)
+    debugCommands(minerConfig, context, miner, pluginService, nodeCoreLiteKit, miningOperationMapperService)
     configCommands(configuration)
     miningCommands(miner)
     walletCommands(context, miner)
