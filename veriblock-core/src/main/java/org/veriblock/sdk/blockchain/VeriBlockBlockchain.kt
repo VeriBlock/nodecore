@@ -244,35 +244,35 @@ open class VeriBlockBlockchain(
 
     // return the earliest valid timestamp for a block that follows the blockHash block
     @Throws(SQLException::class)
-    fun getNextEarliestTimestamp(blockHash: VBlakeHash): OptionalInt {
+    fun getNextEarliestTimestamp(blockHash: VBlakeHash): Int? {
         val context = getChainInternal(
             blockHash, DIFFICULTY_ADJUST_BLOCK_COUNT
         )
         return getNextEarliestTimestamp(context)
     }
 
-    fun getNextEarliestTimestamp(context: List<StoredVeriBlockBlock?>): OptionalInt {
+    fun getNextEarliestTimestamp(context: List<StoredVeriBlockBlock>): Int? {
         if (context.size < MINIMUM_TIMESTAMP_BLOCK_COUNT) {
-            return OptionalInt.empty()
+            return null
         }
-        val median = context.stream()
-            .sorted(Comparator.comparingInt(StoredVeriBlockBlock::height).reversed())
-            .limit(MINIMUM_TIMESTAMP_BLOCK_COUNT.toLong())
-            .map { b: StoredVeriBlockBlock? -> b!!.block.timestamp }
+        val median = context.asSequence()
+            .sortedByDescending { it.height }
+            .take(MINIMUM_TIMESTAMP_BLOCK_COUNT)
+            .map { it.block.timestamp }
             .sorted()
-            .skip(MINIMUM_TIMESTAMP_BLOCK_COUNT / 2 - 1.toLong())
-            .findFirst()
-        return if (median.isPresent) OptionalInt.of(median.get() + 1) else OptionalInt.empty()
+            .drop(MINIMUM_TIMESTAMP_BLOCK_COUNT / 2 - 1)
+            .firstOrNull()
+        return if (median != null) median + 1 else null
     }
 
     @Throws(VerificationException::class)
     private fun checkTimestamp(
         block: VeriBlockBlock,
-        context: List<StoredVeriBlockBlock?>
+        context: List<StoredVeriBlockBlock>
     ) {
         val timestamp = getNextEarliestTimestamp(context)
-        if (timestamp.isPresent) {
-            if (block.timestamp < timestamp.asInt) {
+        if (timestamp != null) {
+            if (block.timestamp < timestamp) {
                 throw VerificationException("Block is too far in the past")
             }
         } else {

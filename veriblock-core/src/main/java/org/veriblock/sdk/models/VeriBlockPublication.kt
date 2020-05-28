@@ -13,7 +13,7 @@ class VeriBlockPublication(
     val containingBlock: VeriBlockBlock,
     val context: List<VeriBlockBlock> = emptyList()
 ) {
-    fun getBlocks(): List<VeriBlockBlock?> {
+    fun getBlocks(): List<VeriBlockBlock> {
         return context + containingBlock
     }
 

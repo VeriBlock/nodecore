@@ -1,7 +1,6 @@
 package veriblock.service
 
 import org.veriblock.core.crypto.Sha256Hash
-import spark.utils.CollectionUtils
 import veriblock.model.Transaction
 import java.util.ArrayList
 import java.util.HashSet
@@ -43,8 +42,8 @@ class PendingTransactionContainer {
 
     fun addTransaction(transaction: Transaction): Boolean {
         val transactions = pendingAddressTransaction[transaction.inputAddress.toString()]
-        if (CollectionUtils.isNotEmpty(transactions)) {
-            transactions!!.add(transaction)
+        if (!transactions.isNullOrEmpty()) {
+            transactions.add(transaction)
             pendingTxIdTransaction[transaction.txId] = transaction
         } else {
             val newList = ArrayList<Transaction>()
@@ -61,8 +60,10 @@ class PendingTransactionContainer {
 
     fun getPendingSignatureIndexForAddress(address: String): Long? {
         val transactions = pendingAddressTransaction[address]
-        return if (CollectionUtils.isNotEmpty(transactions)) {
-            transactions!![transactions.size - 1].getSignatureIndex()
-        } else null
+        return if (!transactions.isNullOrEmpty()) {
+            transactions[transactions.size - 1].getSignatureIndex()
+        } else {
+            null
+        }
     }
 }

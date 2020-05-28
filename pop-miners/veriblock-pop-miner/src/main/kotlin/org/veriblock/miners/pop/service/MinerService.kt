@@ -258,7 +258,7 @@ class MinerService(
         )
     }
 
-    fun importWallet(seedWords: List<String?>?, creationDate: Long?): Boolean {
+    fun importWallet(seedWords: List<String>, creationDate: Long?): Boolean {
         return bitcoinService.importWallet(StringUtils.join(seedWords, " "), creationDate)
     }
 

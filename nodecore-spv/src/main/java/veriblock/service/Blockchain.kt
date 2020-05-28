@@ -173,14 +173,14 @@ class Blockchain(
         }
     }
 
-    private fun areBlocksSequentially(blocks: List<VeriBlockBlock?>): Boolean {
+    private fun areBlocksSequentially(blocks: List<VeriBlockBlock>): Boolean {
         val hashes: MutableSet<String> = HashSet()
         if (CollectionUtils.isEmpty(blocks)) {
             return false
         }
-        val firstHeight = blocks[0]!!.height
+        val firstHeight = blocks[0].height
         for (veriBlockBlock in blocks) {
-            if (firstHeight < veriBlockBlock!!.height) {
+            if (firstHeight < veriBlockBlock.height) {
                 if (!hashes.contains(veriBlockBlock.previousBlock.toString())) {
                     return false
                 }

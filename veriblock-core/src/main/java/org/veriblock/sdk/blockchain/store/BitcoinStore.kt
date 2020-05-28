@@ -73,7 +73,7 @@ class BitcoinStore(// underlying database
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    fun putAll(storedBlocks: List<StoredBitcoinBlock?>) {
+    fun putAll(storedBlocks: List<StoredBitcoinBlock>) {
         bitcoinRepository.saveAll(storedBlocks)
     }
 

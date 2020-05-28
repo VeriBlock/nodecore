@@ -45,7 +45,7 @@ class PopShell(
 
     fun runOnce() {
         if (mustAcceptWalletSeed) {
-            val walletSeed: List<String?>? = minerService.getWalletSeed()
+            val walletSeed: List<String>? = minerService.getWalletSeed()
             if (walletSeed != null) {
                 printInfo(
                     "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below."
