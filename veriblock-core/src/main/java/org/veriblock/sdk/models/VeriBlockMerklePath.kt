@@ -8,7 +8,6 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.util.MerklePathUtil
 
 class VeriBlockMerklePath {
     val treeIndex: Int
@@ -34,7 +33,7 @@ class VeriBlockMerklePath {
         this.layers = layers
         val layerStrings = layers.map { it.toString() }
         compactFormat = String.format("%d:%d:%s:%s", treeIndex, index, subject.toString(), layerStrings.joinToString(":"))
-        merkleRoot = MerklePathUtil.calculateVeriMerkleRoot(this)
+        merkleRoot = calculateVeriMerkleRoot()
     }
 
     constructor(compactFormat: String) {
@@ -49,7 +48,33 @@ class VeriBlockMerklePath {
             Sha256Hash.wrap(parts[it])
         }
         this.compactFormat = compactFormat
-        merkleRoot = MerklePathUtil.calculateVeriMerkleRoot(this)
+        merkleRoot = calculateVeriMerkleRoot()
+    }
+
+    private fun calculateVeriMerkleRoot(): Sha256Hash {
+        var cursor = subject
+        var layerIndex = index
+        for (i in layers.indices) {
+            // Because a layer has processed but the index (i) hasn't progressed, these values are offset by 1
+            if (i == layers.size - 1) {
+                // The last layer is the BlockContentMetapackage hash and will always be the "left" side,
+                // so set the layerIndex to 1
+                layerIndex = 1
+            } else if (i == layers.size - 2) {
+                // The second to last layer is the joining with the opposite transaction type group (normal vs pop),
+                // so use the tree index specified in the compact format
+                layerIndex = treeIndex
+            }
+
+            // Climb one layer up the tree by concatenating the current state with the next layer in the right order
+            val first = if (layerIndex % 2 == 0) cursor.bytes else layers[i].bytes
+            val second = if (layerIndex % 2 == 0) layers[i].bytes else cursor.bytes
+            cursor = Sha256Hash.of(first, second)
+
+            // The position above on the tree will be floor(currentIndex / 2)
+            layerIndex /= 2
+        }
+        return cursor
     }
 
     fun toCompactString(): String {

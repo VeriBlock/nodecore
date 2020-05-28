@@ -63,7 +63,7 @@ private fun run(): Int {
     print(SharedConstants.LICENSE)
     val objDiagnostics = DiagnosticUtility.getDiagnosticInfo()
     val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
-    logger.info(strDiagnostics)
+    logger.debug(strDiagnostics)
 
     logger.info { "Initializing SPV Context..." }
     try {
