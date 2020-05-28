@@ -119,7 +119,10 @@ class AltchainPopMinerService(
 
     private fun ReadyCondition.getNotReadyMessage() = when (this) {
         ReadyCondition.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
-        ReadyCondition.SYNCHRONIZED_NODECORE -> "Waiting for NodeCore to synchronize"
+        ReadyCondition.SYNCHRONIZED_NODECORE -> {
+           val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
+            "Waiting for NodeCore to synchronize. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})"
+        }
         ReadyCondition.SUFFICIENT_FUNDS -> {
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
             """

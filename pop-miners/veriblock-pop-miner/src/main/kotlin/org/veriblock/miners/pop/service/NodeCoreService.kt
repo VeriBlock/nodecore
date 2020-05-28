@@ -61,8 +61,9 @@ class NodeCoreService(
 
     private fun poll() {
         try {
+            var nodeCoreSyncStatus: NodeCoreSyncStatus = nodeCoreGateway.getNodeCoreSyncStatus()
             if (isHealthy() && isSynchronized()) {
-                if (!nodeCoreGateway.isNodeCoreSynchronized()) {
+                if (!nodeCoreSyncStatus.isSynchronized) {
                     synchronized.set(false)
                     logger.info("The connected node is not synchronized")
                     EventBus.nodeCoreDesynchronizedEvent.trigger()
@@ -88,7 +89,7 @@ class NodeCoreService(
                         EventBus.nodeCoreHealthyEvent.trigger()
                     }
                     healthy.set(true)
-                    if (nodeCoreGateway.isNodeCoreSynchronized()) {
+                    if (nodeCoreSyncStatus.isSynchronized) {
                         if (!isSynchronized()) {
                             logger.info("The connected node is synchronized")
                             EventBus.nodeCoreSynchronizedEvent.trigger()

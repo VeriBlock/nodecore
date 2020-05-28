@@ -78,6 +78,8 @@ class NodeCoreNetwork(
         return gateway.getBlock(hash.toString())
     }
 
+    fun getNodeCoreSyncStatus() = gateway.getNodeCoreSyncStatus()
+
     private fun poll() {
         try {
             var nodeCoreSyncStatus: NodeCoreSyncStatus? = null

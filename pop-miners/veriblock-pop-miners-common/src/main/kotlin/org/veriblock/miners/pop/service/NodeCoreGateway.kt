@@ -69,22 +69,26 @@ class NodeCoreGateway(
      * Verify if the connected NodeCore is synchronized with the network (the block difference between the networkHeight and the localBlockchainHeight
      * should be smaller than 4 blocks)
      *
-     * This function might return false (StatusRuntimeException) if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
+     * This function will return an empty NodeCoreSyncStatus if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
      */
-    fun isNodeCoreSynchronized(): Boolean {
-        return if (!::blockingStub.isInitialized) {
-            false
-        } else try {
+    fun getNodeCoreSyncStatus(): NodeCoreSyncStatus {
+        return try {
             val request = checkGrpcError {
                 blockingStub
                     .withDeadlineAfter(5L, TimeUnit.SECONDS)
                     .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
             }
+
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
-            request.networkHeight > 0 && blockDifference < 4
+            NodeCoreSyncStatus(
+                request.networkHeight,
+                request.localBlockchainHeight,
+                blockDifference,
+                request.networkHeight > 0 && blockDifference < 4
+            )
         } catch (e: StatusRuntimeException) {
-            logger.warn("Unable to perform GetStateInfoRequest to NodeCore")
-            false
+            logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
+            NodeCoreSyncStatus(0, 0, 0, false)
         }
     }
 
@@ -314,3 +318,10 @@ class PopSubmitRejected : RuntimeException("PoP submission rejected")
 class TimeoutError(
     override val message: String
 ) : RuntimeException()
+
+data class NodeCoreSyncStatus(
+    val networkHeight: Int,
+    val localBlockchainHeight: Int,
+    val blockDifference: Int,
+    val isSynchronized: Boolean
+)

@@ -408,7 +408,10 @@ class MinerService(
                     bitcoinService.currentReceiveAddress()
             }
             PopMinerDependencies.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
-            PopMinerDependencies.SYNCHRONIZED_NODECORE -> "Waiting for NodeCore to synchronize"
+            PopMinerDependencies.SYNCHRONIZED_NODECORE -> {
+                val nodeCoreSyncStatus = nodeCoreGateway.getNodeCoreSyncStatus()
+                "Waiting for NodeCore to synchronize. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})"
+            }
             PopMinerDependencies.BITCOIN_SERVICE_READY -> "Bitcoin service is not ready"
         }
     }

@@ -38,7 +38,8 @@ fun CommandFactory.debugCommands(
             if (nodeCoreLiteKit.network.isSynchronized()) {
                 printInfo("SUCCESS - NodeCore synchronization status: Synchronized")
             } else {
-                printInfo("FAIL - NodeCore synchronization status: Not synchronized")
+                val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
+                printInfo("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
             }
         } else {
             printInfo("FAIL - NodeCore connection: Not connected")
