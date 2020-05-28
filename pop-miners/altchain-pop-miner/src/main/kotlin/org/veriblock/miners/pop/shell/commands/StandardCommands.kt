@@ -46,6 +46,7 @@ fun CommandFactory.standardCommands() {
         val command: String? = getOptionalParameter("command")
 
         val result = if (command == null) {
+            printInfo("See https://wiki.veriblock.org/index.php/Altchain_PoP_Miner for more details.")
             printInfo("Commands:")
             for ((alias, definition) in shell.getCommandsByAlias()) {
                 printInfo("    $alias ${definition.parameters.format()}")
