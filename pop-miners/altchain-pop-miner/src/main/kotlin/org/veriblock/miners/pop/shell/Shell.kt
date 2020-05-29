@@ -32,8 +32,8 @@ fun CommandFactory.configure(
     miningOperationMapperService: MiningOperationMapperService
 ) {
     standardCommands()
-    debugCommands(minerConfig, context, miner, pluginService, nodeCoreLiteKit, miningOperationMapperService)
+    debugCommands(minerConfig, context, miner, pluginService, nodeCoreLiteKit)
     configCommands(configuration)
-    miningCommands(miner)
+    miningCommands(miner, miningOperationMapperService)
     walletCommands(context, miner)
 }

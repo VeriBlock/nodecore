@@ -10,6 +10,10 @@ class MiningOperationMapperService(
     val context: Context
 ) {
     fun getOperationData(operation: ApmOperation): List<OperationStage> {
+        // TODO: Explain failed ops down to the state at which they failed
+        if (operation.isFailed()) {
+            return listOf(OperationStage(OperationState.FAILED, CURRENT, listOf(operation.failureReason ?: "mine")))
+        }
         val currentState = operation.state
         return OperationState.values().filter {
             it != OperationState.FAILED
@@ -18,7 +22,7 @@ class MiningOperationMapperService(
             OperationStage(
                 operationState = operationState,
                 status = status,
-                extraInformation = if (status == DONE) operationState.getExtraInformation(operation) else emptyList()
+                extraInformation = if (status != PENDING) operationState.getExtraInformation(operation) else emptyList()
             )
         }
     }
@@ -29,7 +33,7 @@ class MiningOperationMapperService(
         else -> PENDING
     }
 
-    fun OperationState.getExtraInformation(operation: ApmOperation) = when (this) {
+    private fun OperationState.getExtraInformation(operation: ApmOperation) = when (this) {
         OperationState.INITIAL -> {
             listOf("Assigned id: ${operation.id}")
         }
@@ -37,31 +41,34 @@ class MiningOperationMapperService(
             listOf("Endorsed ${operation.chain.name} block height: ${operation.endorsedBlockHeight}")
         }
         OperationState.ENDORSEMENT_TRANSACTION -> {
-            operation.endorsementTransaction?.let { transaction ->
-                listOf("Endorsed ${operation.chain.name} block: ${operation.endorsedBlockHeight} at ${transaction.txId}. Fee: ${transaction.fee.formatAtomicLongWithDecimal()}")
-            } ?: listOf("Unable to acquire the endorsement transaction from the operation")
+            val transaction = operation.endorsementTransaction
+            listOf(
+                "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId}",
+                "${context.vbkTokenName} endorsement transaction fee: ${transaction?.fee?.formatAtomicLongWithDecimal()}"
+            )
         }
         OperationState.CONFIRMED -> {
-            operation.blockOfProof?.let {blockOfProof ->
-                listOf("Endorsement transaction has been confirmed in ${context.vbkTokenName} block ${blockOfProof.block.hash} @ ${blockOfProof.block.height}")
-            } ?: listOf("Unable to acquire the block of proof from the operation")
+            listOf("${context.vbkTokenName} endorsement transaction has been confirmed")
         }
         OperationState.BLOCK_OF_PROOF -> {
-            listOf("")
+            val blockOfProof = operation.blockOfProof
+            listOf("${context.vbkTokenName} block of proof: ${blockOfProof?.block?.hash} @ ${blockOfProof?.block?.height}")
         }
         OperationState.PROVEN -> {
-            operation.merklePath?.let { merklePath ->
-                listOf("Merkle path: ${merklePath.compactFormat}. Waiting for the keystone of proof.")
-            } ?: listOf("Unable to acquire the merkle path from the operation")
+            listOf("Merkle path: ${operation.merklePath?.compactFormat}. Waiting for the keystone of proof")
         }
         OperationState.CONTEXT -> {
             listOf("")
         }
         OperationState.SUBMITTED_POP_DATA -> {
-            listOf("VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}")
+            val payoutBlockHeight = (operation.miningInstruction?.endorsedBlockHeight ?: 0) + operation.chain.getPayoutInterval()
+            listOf(
+                "VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}",
+                "Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address ${operation.miningInstruction?.publicationData?.payoutInfo}"
+            )
         }
         OperationState.COMPLETED -> {
-            listOf("To be paid in ${operation.chain.name} block $operation to ${operation.chain.name} address ${operation.payoutAmount}")
+            listOf("Payout detected in ${operation.chain.name} block ${operation.payoutBlockHash}! Amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}")
         }
         else -> listOf("FAILED")
     }

@@ -16,6 +16,7 @@ import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.MiningOperationMapperService
+import org.veriblock.miners.pop.service.MiningOperationMapperService.OperationStatus.PENDING
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
@@ -31,37 +32,8 @@ fun CommandFactory.debugCommands(
     context: Context,
     minerService: MinerService,
     pluginService: PluginService,
-    nodeCoreLiteKit: NodeCoreLiteKit,
-    miningOperationMapperService: MiningOperationMapperService
+    nodeCoreLiteKit: NodeCoreLiteKit
 ) {
-    val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
-
-    command(
-        name = "Get Operation",
-        form = "getoperationdebug",
-        description = "Gets the debug details of the supplied operation",
-        parameters = listOf(
-            CommandParameter("id", CommandParameterMappers.STRING)
-        )
-    ) {
-        val id: String = getParameter("id")
-        val operation = minerService.getOperation(id)
-        if (operation != null) {
-            val operationDetails = miningOperationMapperService.getOperationData(operation)
-
-            val tableFormat = "|%1$-8s|%2$-26s|%3$-18s"
-            printInfo (String.format(tableFormat, "Status", "Step", "Details"))
-
-            operationDetails.forEach {
-                printInfo(String.format(tableFormat, "${it.status}", "${it.operationState.id + 1}.${it.operationState.name}", "${it.extraInformation.joinToString(" ")}"))
-            }
-            success()
-        } else {
-            printInfo("Operation $id not found")
-            failure()
-        }
-    }
-
     command(
         name = "Get Debug Information",
         form = "getdebuginfo",

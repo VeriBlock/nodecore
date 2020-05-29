@@ -99,7 +99,7 @@ class SecurityInheritingMonitor(
                 val bestBlockHeight: Int = try {
                     chain.getBestBlockHeight()
                 } catch (e: Exception) {
-                    logger.debugWarn(e) { "Error while retrieving ${chain.name} tip height: $e" }
+                    logger.debugWarn(e) { "Error while retrieving ${chain.name} tip height" }
                     healthy.set(false)
                     return
                 }

@@ -11,8 +11,8 @@ package org.veriblock.miners.pop.shell.commands
 import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.OperationState
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.MiningOperationMapperService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -20,8 +20,10 @@ import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
-fun CommandFactory.miningCommands(miner: MinerService) {
-
+fun CommandFactory.miningCommands(
+    minerService: MinerService,
+    miningOperationMapperService: MiningOperationMapperService
+) {
     val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
 
     command(
@@ -36,7 +38,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         val chain: String = getParameter("chain")
         val block: Int? = getOptionalParameter("block")
 
-        val operationId = miner.mine(chain, block)
+        val operationId = minerService.mine(chain, block)
         success {
             addMessage("v200", "Mining operation started", "Operation id: $operationId")
         }
@@ -51,12 +53,12 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         )
     ) {
         val id: String = getParameter("id")
-        val operation = miner.getOperation(id)
+        val operation = minerService.getOperation(id)
         if (operation == null) {
             printInfo("Operation $id not found")
             failure()
         } else {
-            miner.resubmit(operation)
+            minerService.resubmit(operation)
             success()
         }
     }
@@ -66,7 +68,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         form = "listoperations",
         description = "Lists the current running operations"
     ) {
-        val operations = miner.getOperations().map {
+        val operations = minerService.getOperations().map {
             "${it.id}: ${it.chain.name} (${it.endorsedBlockHeight}) | ${it.state} | ${it.getStateDescription()}"
         }
 
@@ -86,9 +88,41 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         )
     ) {
         val id: String = getParameter("id")
-        val operation = miner.getOperation(id)
+        val operation = minerService.getOperation(id)
         if (operation != null) {
             printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
+            success()
+        } else {
+            printInfo("Operation $id not found")
+            failure()
+        }
+    }
+    command(
+        name = "Explain Operation",
+        form = "explainoperation",
+        description = "Gets the debug details of the supplied operation",
+        parameters = listOf(
+            CommandParameter("id", CommandParameterMappers.STRING)
+        )
+    ) {
+        val id: String = getParameter("id")
+        val operation = minerService.getOperation(id)
+        if (operation != null) {
+            val operationDetails = miningOperationMapperService.getOperationData(operation)
+
+            val tableFormat = "%1$-8s %2$-26s %3\$s"
+            //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
+            operationDetails.forEach { stage ->
+                printInfo(String.format(
+                    tableFormat,
+                    if (stage.status != MiningOperationMapperService.OperationStatus.PENDING) stage.status else "",
+                    "${stage.operationState.id + 1}.${stage.operationState.name}",
+                    stage.extraInformation.firstOrNull() ?: ""
+                ))
+                stage.extraInformation.drop(1).forEach { extraInformation ->
+                    printInfo(String.format(tableFormat, "", "", extraInformation))
+                }
+            }
             success()
         } else {
             printInfo("Operation $id not found")
@@ -108,7 +142,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         val id: String = getParameter("id")
         val levelString: String? = getOptionalParameter("level")
         val level: Level = Level.toLevel(levelString, Level.INFO)
-        val operation = miner.getOperation(id)
+        val operation = minerService.getOperation(id)
         if (operation != null) {
             printInfo(operation.getLogs(level).joinToString("\n"))
             success()
@@ -127,7 +161,7 @@ fun CommandFactory.miningCommands(miner: MinerService) {
         )
     ) {
         val id: String = getParameter("id")
-        miner.cancelOperation(id)
+        minerService.cancelOperation(id)
         success("V200", "Success", "The operation '$id' has been cancelled")
     }
 }
