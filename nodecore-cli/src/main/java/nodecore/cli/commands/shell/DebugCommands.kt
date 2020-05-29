@@ -16,6 +16,7 @@ import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
 import java.net.URL
+import java.nio.file.Paths
 
 fun CommandFactory.debugCommands() {
     cliCommand(
@@ -23,27 +24,37 @@ fun CommandFactory.debugCommands() {
         form = "getdebuginfo",
         description = "Collect information about the application for troubleshooting",
         parameters = listOf(
-            CommandParameter(name = "dataFolder", mapper = CommandParameterMappers.STRING, required = true),
-            CommandParameter(name = "nodecoreFolder", mapper = CommandParameterMappers.STRING, required = true),
-            CommandParameter(name = "network", mapper = CommandParameterMappers.STRING, required = true)
+            CommandParameter(name = "network", mapper = CommandParameterMappers.STRING, required = false),
+            CommandParameter(name = "networkDataFolder", mapper = CommandParameterMappers.STRING, required = false), // NodeCore network data folder
+            CommandParameter(name = "nodecoreFolder", mapper = CommandParameterMappers.STRING, required = false) // NodeCore root folder
         )
     ) {
-        // Get the supplied network parameter
-        val network = getParameter<String>("network").toLowerCase()
+        printInfo("Running several checks, this may take a few moments...")
+
+        // Get the network
+        val network = getOptionalParameter<String>("network")?.toLowerCase() ?: "mainnet"
         // Verify the network parameter
         if (network != "mainnet" && network != "testnet" && network != "alpha" ) {
             return@cliCommand failure("V004", "Unknown Network", "The supplied network $network is not valid, please use mainnet, testnet or alpha.")
         }
-        // Get the data folder provided by the user
-        val dataFolder = File(getParameter<String>("dataFolder"))
-        if (!dataFolder.exists()) {
-            return@cliCommand failure("V004", "Unable to find the data folder", "The supplied data folder $dataFolder doesn't exists.")
-        }
-        // Get the nodecore folder provided by the user
-        val nodecoreFolder = File(getParameter<String>("nodecoreFolder"))
+        printInfo("Detected network: $network")
+
+        // Get the NodeCore folder
+        val providedNodeCoreFolder = getOptionalParameter<String>("nodecoreFolder") ?: getDefaultNodeCoreFolder()
+        val nodecoreFolder = File(providedNodeCoreFolder)
         if (!nodecoreFolder.exists()) {
-            return@cliCommand failure("V004", "Unable to find the nodecore folder", "The supplied nodecore folder $nodecoreFolder doesn't exists.")
+            return@cliCommand failure("V004", "Unable to find the NodeCore folder", "The NodeCore folder $nodecoreFolder doesn't exists.")
         }
+        printInfo("Detected NodeCore folder: $providedNodeCoreFolder")
+
+        // Get the data folder
+        val providedNetworkDataFolder = getOptionalParameter<String>("dataFolder") ?: Paths.get(providedNodeCoreFolder, "bin", network).toString()
+        val networkDataFolder = File(providedNetworkDataFolder)
+        if (!networkDataFolder.exists()) {
+            return@cliCommand failure("V004", "Unable to find the network data folder", "The network data folder $networkDataFolder doesn't exists.")
+        }
+        printInfo("Detected NodeCore data folder: $providedNetworkDataFolder")
+
         // Get the bootstrap information
         val result = try {
             URL("https://mirror.veriblock.org/bootstrap/$network/blockFiles.json").readText()
@@ -72,8 +83,8 @@ fun CommandFactory.debugCommands() {
         val configuration = ArrayList<String>()
 
         // Check all the files inside the data folder, and verify the file integrity
-        val nodecoreDataInformation = dataFolder.walk().filter {
-            it.absolutePath.toLowerCase().contains(network) || it.absolutePath == dataFolder.absolutePath || it.name == "nodecore.properties"
+        val nodecoreDataInformation = networkDataFolder.walk().filter {
+            it.absolutePath.toLowerCase().contains(network) || it.absolutePath == networkDataFolder.absolutePath || it.name == "nodecore.properties"
         }.map { file ->
             val calculateFileSpecifications = file.name == "nodecore.dat" || file.parentFile?.parentFile?.name == "blocks"
             val fileSpecifications = if (calculateFileSpecifications) {
@@ -139,13 +150,24 @@ fun CommandFactory.debugCommands() {
         // Display all the information to the user
         shell.printInfo(jsonDebugInformation)
         // Store the output into a file
-        val outputFile = File("${dataFolder.toPath()}/getdebuginfo.json")
+        val outputFile = File("${networkDataFolder.toPath()}/getdebuginfo.json")
         outputFile.writeText(
             jsonDebugInformation
         )
         shell.printInfo("The output file has been stored at: ${outputFile.toPath()}")
         success()
     }
+}
+
+fun getDefaultNodeCoreFolder(): String {
+    // Get the root folder from the package
+    val packageParentFolder = Paths.get("").toAbsolutePath()?.parent?.parent
+        ?: error("Unable to find the default root NodeCore folder, please specify it as a parameter.")
+    // Search the NodeCore folder inside the package
+    val nodeCoreFolder = packageParentFolder.toFile().listFiles().find {
+        it.name.startsWith("nodecore-0") // nodecore-0.x.x...
+    } ?: error("Unable to find the default root NodeCore folder, please specify it as a parameter.")
+    return nodeCoreFolder.toString()
 }
 
 data class DebugInformation(
