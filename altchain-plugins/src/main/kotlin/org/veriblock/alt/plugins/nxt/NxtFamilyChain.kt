@@ -26,6 +26,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 
@@ -150,7 +151,7 @@ class NxtFamilyChain(
 
     override suspend fun isConnected(): Boolean = TODO()
 
-    override suspend fun isSynchronized(): Boolean = TODO()
+    override suspend fun getSynchronizedStatus(): SyncStatus = TODO()
     
     private fun Any.toJson() = Gson().toJson(this)
 }

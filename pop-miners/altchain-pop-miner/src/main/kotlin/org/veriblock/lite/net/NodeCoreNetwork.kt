@@ -21,6 +21,7 @@ import org.veriblock.lite.core.EmptyEvent
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
+import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -82,7 +83,7 @@ class NodeCoreNetwork(
 
     private fun poll() {
         try {
-            var nodeCoreSyncStatus: NodeCoreSyncStatus? = null
+            var nodeCoreSyncStatus: SyncStatus? = null
             // Verify if we can make a connection with the remote NodeCore
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine

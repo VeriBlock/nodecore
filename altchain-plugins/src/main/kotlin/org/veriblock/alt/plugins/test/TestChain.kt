@@ -30,6 +30,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.TreeMap
@@ -235,7 +236,7 @@ class TestChain(
         }
     }
 
-    override suspend fun isSynchronized(): Boolean = true
+    override suspend fun getSynchronizedStatus(): SyncStatus = SyncStatus(50, 50, 0, true)
 }
 
 

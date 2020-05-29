@@ -33,6 +33,7 @@ fun CommandFactory.debugCommands(
         form = "getdebuginfo",
         description = "Collect information about the application for troubleshooting"
     ) {
+        printInfo("Running several checks, this may take a few moments...")
         if (nodeCoreLiteKit.network.isHealthy()) {
             printInfo("SUCCESS - NodeCore connection: Connected")
             if (nodeCoreLiteKit.network.isSynchronized()) {
@@ -52,10 +53,11 @@ fun CommandFactory.debugCommands(
                 plugins.forEach {
                     if (it.value.isConnected()) {
                         printInfo("SUCCESS - ${it.value.name} connection: Connected")
-                        if (it.value.isSynchronized()) {
+                        val chainSyncStatus = it.value.getSynchronizedStatus()
+                        if (chainSyncStatus.isSynchronized) {
                             printInfo("SUCCESS - ${it.value.name} synchronization status: Synchronized")
                         } else {
-                            printInfo("FAIL- ${it.value.name} synchronization status: Not synchronized")
+                            printInfo("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
                         }
                     } else {
                         printInfo("FAIL - ${it.value.name} connection: Not connected")
@@ -73,9 +75,7 @@ fun CommandFactory.debugCommands(
                 if (currentBalance.atomicUnits > config.maxFee) {
                     printInfo("SUCCESS - The PoP wallet contains sufficient funds")
                 } else {
-                    printInfo("FAIL - The PoP wallet does not contain sufficient funds:")
-                    printInfo("FAIL - Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
-                    printInfo("FAIL - Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more")
+                    printInfo("FAIL - The VBK PoP wallet does not contain sufficient funds: current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}, minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more. See: https://wiki.veriblock.org/index.php/Get_VBK")
                 }
             } else {
                 printInfo("FAIL - Unable to determine the PoP balance.")

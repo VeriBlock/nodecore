@@ -11,6 +11,7 @@
 package org.veriblock.miners.pop
 
 import org.koin.core.context.startKoin
+import org.veriblock.core.SharedConstants
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
@@ -29,6 +30,8 @@ private fun run(): Int {
     Runtime.getRuntime().addShutdownHook(Thread {
         shutdownSignal.countDown()
     })
+
+    print(SharedConstants.LICENSE)
 
     logger.info { "Starting dependency injection" }
     val koin = startKoin {
