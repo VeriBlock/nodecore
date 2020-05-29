@@ -8,23 +8,17 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
-import org.veriblock.miners.pop.service.MiningOperationMapperService
-import org.veriblock.miners.pop.service.MiningOperationMapperService.OperationStatus.PENDING
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.shell.CommandFactory
-import org.veriblock.shell.CommandParameter
-import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
-import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.debugCommands(

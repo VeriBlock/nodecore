@@ -18,6 +18,7 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.model.PopMiningInstruction
+import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
 
 class VpmOperation(
@@ -26,9 +27,22 @@ class VpmOperation(
     createdAt: LocalDateTime = LocalDateTime.now(),
     logs: List<OperationLog> = emptyList(),
     reconstituting: Boolean = false
-) : MiningOperation<PopMiningInstruction, VpmSpTransaction, VpmSpBlock, VpmMerklePath, VpmContext>(
+) : MiningOperation(
     id, endorsedBlockHeight, createdAt, logs, reconstituting
 ) {
+    var miningInstruction: PopMiningInstruction? = null
+        private set
+    var endorsementTransaction: VpmSpTransaction? = null
+        private set
+    var blockOfProof: VpmSpBlock? = null
+        private set
+    var merklePath: VpmMerklePath? = null
+        private set
+    var context: VpmContext? = null
+        private set
+    var proofOfProofId: String? = null
+        private set
+
     val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 
     val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
@@ -40,8 +54,20 @@ class VpmOperation(
     override fun onStateChanged() {
         EventBus.popMiningOperationStateChangedEvent.trigger(this)
     }
+    
+    fun setMiningInstruction(miningInstruction: PopMiningInstruction) {
+        endorsedBlockHeight = miningInstruction.endorsedBlockHeight
+        this.miningInstruction = miningInstruction
+        setState(OperationState.INSTRUCTION)
+    }
 
-    override fun onTransactionSet(transaction: VpmSpTransaction) {
+    fun setTransaction(transaction: VpmSpTransaction) {
+        if (state != OperationState.INSTRUCTION) {
+            error("Trying to set transaction without having the mining instruction")
+        }
+        endorsementTransaction = transaction
+        setState(OperationState.ENDORSEMENT_TRANSACTION)
+
         transaction.transaction.confidence.addEventListener(transactionListener)
         GlobalScope.launch {
             for (confidenceType in transactionConfidenceEventChannel.openSubscription()) {
@@ -52,6 +78,49 @@ class VpmOperation(
                 }
             }
         }
+    }
+
+    fun setConfirmed() {
+        if (state != OperationState.ENDORSEMENT_TRANSACTION) {
+            error("Trying to set as transaction confirmed without such transaction")
+        }
+        setState(OperationState.CONFIRMED)
+
+        endorsementTransaction?.let {
+            Metrics.spentFeesCounter.increment(it.fee.toDouble())
+        }
+    }
+
+    fun setBlockOfProof(blockOfProof: VpmSpBlock) {
+        if (state != OperationState.CONFIRMED) {
+            error("Trying to set block of proof without having confirmed the transaction")
+        }
+        this.blockOfProof = blockOfProof
+        setState(OperationState.BLOCK_OF_PROOF)
+    }
+
+    fun setMerklePath(merklePath: VpmMerklePath) {
+        if (state != OperationState.BLOCK_OF_PROOF) {
+            error("Trying to set merkle path without the block of proof")
+        }
+        this.merklePath = merklePath
+        setState(OperationState.PROVEN)
+    }
+
+    fun setContext(context: VpmContext) {
+        if (state != OperationState.PROVEN) {
+            error("Trying to set context without the merkle path")
+        }
+        this.context = context
+        setState(OperationState.CONTEXT)
+    }
+
+    fun setProofOfProofId(proofOfProofId: String) {
+        if (state != OperationState.CONTEXT) {
+            error("Trying to set Proof of Proof id without having the context")
+        }
+        this.proofOfProofId = proofOfProofId
+        setState(OperationState.SUBMITTED_POP_DATA)
     }
 
     override fun onCompleted() {

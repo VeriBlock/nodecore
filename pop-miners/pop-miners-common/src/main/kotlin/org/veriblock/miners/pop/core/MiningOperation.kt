@@ -10,13 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 private val logger = createLogger {}
 
-abstract class MiningOperation<
-    MI : MiningInstruction,
-    SPT : SpTransaction,
-    SPB : SpBlock,
-    MP : MerklePath,
-    CD
->(
+abstract class MiningOperation(
     val id: String,
     var endorsedBlockHeight: Int?,
     val createdAt: LocalDateTime,
@@ -28,22 +22,11 @@ abstract class MiningOperation<
 
     var job: Job? = null
 
-    var miningInstruction: MI? = null
-        private set
-    var endorsementTransaction: SPT? = null
-        private set
-    var blockOfProof: SPB? = null
-        private set
-    var merklePath: MP? = null
-        private set
-    var context: CD? = null
-        private set
-    var proofOfProofId: String? = null
-        private set
     var payoutBlockHash: String? = null
         private set
     var payoutAmount: Long? = null
         private set
+
     var failureReason: String? = null
         private set
 
@@ -67,67 +50,6 @@ abstract class MiningOperation<
     }
 
     open fun onStateChanged() {
-    }
-
-    fun setMiningInstruction(miningInstruction: MI) {
-        endorsedBlockHeight = miningInstruction.endorsedBlockHeight
-        this.miningInstruction = miningInstruction
-        setState(OperationState.INSTRUCTION)
-    }
-
-    fun setTransaction(transaction: SPT) {
-        if (state != OperationState.INSTRUCTION) {
-            error("Trying to set transaction without having the mining instruction")
-        }
-        endorsementTransaction = transaction
-        setState(OperationState.ENDORSEMENT_TRANSACTION)
-        onTransactionSet(transaction)
-    }
-
-    open fun onTransactionSet(transaction: SPT) {
-    }
-
-    fun setConfirmed() {
-        if (state != OperationState.ENDORSEMENT_TRANSACTION) {
-            error("Trying to set as transaction confirmed without such transaction")
-        }
-        setState(OperationState.CONFIRMED)
-
-        endorsementTransaction?.let {
-            Metrics.spentFeesCounter.increment(it.fee.toDouble())
-        }
-    }
-
-    fun setBlockOfProof(blockOfProof: SPB) {
-        if (state != OperationState.CONFIRMED) {
-            error("Trying to set block of proof without having confirmed the transaction")
-        }
-        this.blockOfProof = blockOfProof
-        setState(OperationState.BLOCK_OF_PROOF)
-    }
-
-    fun setMerklePath(merklePath: MP) {
-        if (state != OperationState.BLOCK_OF_PROOF) {
-            error("Trying to set merkle path without the block of proof")
-        }
-        this.merklePath = merklePath
-        setState(OperationState.PROVEN)
-    }
-
-    fun setContext(context: CD) {
-        if (state != OperationState.PROVEN) {
-            error("Trying to set context without the merkle path")
-        }
-        this.context = context
-        setState(OperationState.CONTEXT)
-    }
-
-    fun setProofOfProofId(proofOfProofId: String) {
-        if (state != OperationState.CONTEXT) {
-            error("Trying to set Proof of Proof id without having the context")
-        }
-        this.proofOfProofId = proofOfProofId
-        setState(OperationState.SUBMITTED_POP_DATA)
     }
 
     fun complete(payoutBlockHash: String, payoutAmount: Long) {
@@ -187,17 +109,4 @@ abstract class MiningOperation<
     override fun toString(): String {
         return "MiningOperation(id='$id', state='${state.description}')"
     }
-}
-
-interface SpTransaction {
-    val txId: String
-    val fee: Long
-}
-
-interface MerklePath {
-    val compactFormat: String
-}
-
-interface SpBlock {
-    val hash: String
 }

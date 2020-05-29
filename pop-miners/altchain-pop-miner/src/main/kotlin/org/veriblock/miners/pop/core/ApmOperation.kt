@@ -14,6 +14,7 @@ import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
+import org.veriblock.miners.pop.service.Metrics
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.Coin
@@ -31,16 +32,84 @@ class ApmOperation(
     createdAt: LocalDateTime = LocalDateTime.now(),
     logs: List<OperationLog> = emptyList(),
     reconstituting: Boolean = false
-) : MiningOperation<ApmInstruction, ApmSpTransaction, ApmSpBlock, ApmMerklePath, ApmContext>(
+) : MiningOperation(
     id ?: chain.key + UUID.randomUUID().toString().substring(0, 8),
     endorsedBlockHeight,
     createdAt,
     logs, reconstituting
 ) {
+    var miningInstruction: ApmInstruction? = null
+        private set
+    var endorsementTransaction: ApmSpTransaction? = null
+        private set
+    var blockOfProof: ApmSpBlock? = null
+        private set
+    var merklePath: ApmMerklePath? = null
+        private set
+    var context: ApmContext? = null
+        private set
+    var proofOfProofId: String? = null
+        private set
     val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
 
     override fun onStateChanged() {
         stateChangedEvent.trigger(this)
+    }
+    
+    fun setMiningInstruction(miningInstruction: ApmInstruction) {
+        endorsedBlockHeight = miningInstruction.endorsedBlockHeight
+        this.miningInstruction = miningInstruction
+        setState(OperationState.INSTRUCTION)
+    }
+
+    fun setTransaction(transaction: ApmSpTransaction) {
+        if (state != OperationState.INSTRUCTION) {
+            error("Trying to set transaction without having the mining instruction")
+        }
+        endorsementTransaction = transaction
+        setState(OperationState.ENDORSEMENT_TRANSACTION)
+    }
+    fun setConfirmed() {
+        if (state != OperationState.ENDORSEMENT_TRANSACTION) {
+            error("Trying to set as transaction confirmed without such transaction")
+        }
+        setState(OperationState.CONFIRMED)
+
+        endorsementTransaction?.let {
+            Metrics.spentFeesCounter.increment(it.fee.toDouble())
+        }
+    }
+
+    fun setBlockOfProof(blockOfProof: ApmSpBlock) {
+        if (state != OperationState.CONFIRMED) {
+            error("Trying to set block of proof without having confirmed the transaction")
+        }
+        this.blockOfProof = blockOfProof
+        setState(OperationState.BLOCK_OF_PROOF)
+    }
+
+    fun setMerklePath(merklePath: ApmMerklePath) {
+        if (state != OperationState.BLOCK_OF_PROOF) {
+            error("Trying to set merkle path without the block of proof")
+        }
+        this.merklePath = merklePath
+        setState(OperationState.PROVEN)
+    }
+
+    fun setContext(context: ApmContext) {
+        if (state != OperationState.PROVEN) {
+            error("Trying to set context without the merkle path")
+        }
+        this.context = context
+        setState(OperationState.CONTEXT)
+    }
+
+    fun setProofOfProofId(proofOfProofId: String) {
+        if (state != OperationState.CONTEXT) {
+            error("Trying to set Proof of Proof id without having the context")
+        }
+        this.proofOfProofId = proofOfProofId
+        setState(OperationState.SUBMITTED_POP_DATA)
     }
 
     override fun getDetailedInfo(): Map<String, String> {
@@ -85,10 +154,10 @@ class ApmOperation(
 
 class ApmSpTransaction(
     val transaction: WalletTransaction
-) : SpTransaction {
-    override val txId: String get() = transaction.id.bytes.toHex()
+) {
+    val txId: String get() = transaction.id.bytes.toHex()
     // sourceAmount - sum(outputs)
-    override val fee: Long get() = transaction.sourceAmount.subtract(
+    val fee: Long get() = transaction.sourceAmount.subtract(
         transaction.outputs.asSequence().map {
             it.amount
         }.fold(Coin.ZERO) { total, out ->
@@ -99,14 +168,14 @@ class ApmSpTransaction(
 
 class ApmSpBlock(
     val block: VeriBlockBlock
-) : SpBlock {
-    override val hash: String get() = block.hash.bytes.toHex()
+) {
+    val hash: String get() = block.hash.bytes.toHex()
 }
 
 class ApmMerklePath(
     val merklePath: VeriBlockMerklePath
-) : MerklePath {
-    override val compactFormat: String get() = merklePath.toCompactString()
+) {
+    val compactFormat: String get() = merklePath.toCompactString()
 }
 
 class ApmContext(

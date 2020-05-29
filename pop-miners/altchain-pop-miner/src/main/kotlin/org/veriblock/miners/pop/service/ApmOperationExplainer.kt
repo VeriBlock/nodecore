@@ -4,12 +4,12 @@ import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.OperationState
-import org.veriblock.miners.pop.service.MiningOperationMapperService.OperationStatus.*
+import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
 
-class MiningOperationMapperService(
+class ApmOperationExplainer(
     val context: Context
 ) {
-    fun getOperationData(operation: ApmOperation): List<OperationStage> {
+    fun exlainOperation(operation: ApmOperation): List<OperationStage> {
         // TODO: Explain failed ops down to the state at which they failed
         if (operation.isFailed()) {
             return listOf(OperationStage(OperationState.FAILED, CURRENT, listOf(operation.failureReason ?: "mine")))
