@@ -25,14 +25,7 @@ abstract class TaskService<MO : MiningOperation> {
         }
 
         try {
-            retrieveMiningInstruction(operation)
-            createEndorsementTransaction(operation)
-            confirmEndorsementTransaction(operation)
-            determineBlockOfProof(operation)
-            proveEndorsementTransaction(operation)
-            buildPublicationContext(operation)
-            submitPopEndorsement(operation)
-            confirmPayout(operation)
+            runTasksInternal(operation)
         } catch (e: CancellationException) {
             logger.info(operation, "Job was cancelled")
         } catch (e: OperationException) {
@@ -43,14 +36,7 @@ abstract class TaskService<MO : MiningOperation> {
         }
     }
 
-    abstract suspend fun retrieveMiningInstruction(operation: MO)
-    abstract suspend fun createEndorsementTransaction(operation: MO)
-    abstract suspend fun confirmEndorsementTransaction(operation: MO)
-    abstract suspend fun determineBlockOfProof(operation: MO)
-    abstract suspend fun proveEndorsementTransaction(operation: MO)
-    abstract suspend fun buildPublicationContext(operation: MO)
-    abstract suspend fun submitPopEndorsement(operation: MO)
-    abstract suspend fun confirmPayout(operation: MO)
+    protected abstract suspend fun runTasksInternal(operation: MO)
 
     protected suspend fun MO.runTask(
         taskName: String,
