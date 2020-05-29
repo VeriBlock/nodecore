@@ -2,7 +2,6 @@ package org.veriblock.miners.pop.core
 
 import ch.qos.logback.classic.Level
 import kotlinx.coroutines.Job
-import org.veriblock.core.contracts.MiningInstruction
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
@@ -17,15 +16,10 @@ abstract class MiningOperation(
     logs: List<OperationLog>,
     var reconstituting: Boolean
 ) {
-    var state: OperationState = OperationState.INITIAL
+    lateinit var state: MiningOperationState
         private set
 
     var job: Job? = null
-
-    var payoutBlockHash: String? = null
-        private set
-    var payoutAmount: Long? = null
-        private set
 
     var failureReason: String? = null
         private set
@@ -38,10 +32,7 @@ abstract class MiningOperation(
         }
     }
 
-    protected fun setState(state: OperationState) {
-        if (state.id > 0 && this.state.id != state.id - 1) {
-            error("Trying to set state from ${this.state} directly to $state")
-        }
+    protected fun setState(state: MiningOperationState) {
         this.state = state
         if (!reconstituting) {
             logger.debug(this, "New state: $state")
@@ -52,25 +43,20 @@ abstract class MiningOperation(
     open fun onStateChanged() {
     }
 
-    fun complete(payoutBlockHash: String, payoutAmount: Long) {
-        if (state != OperationState.SUBMITTED_POP_DATA) {
-            error("Trying to mark the process as complete without having submitted the PoP data")
-        }
-        this.payoutBlockHash = payoutBlockHash
-        this.payoutAmount = payoutAmount
-        setState(OperationState.COMPLETED)
+    fun complete() {
+        setState(MiningOperationState.COMPLETED)
 
         onCompleted()
         Metrics.completedOperationsCounter.increment()
-        Metrics.miningRewardCounter.increment(payoutAmount.toDouble())
     }
 
-    open fun onCompleted() {}
+    open fun onCompleted() {
+    }
 
     fun fail(reason: String) {
         logger.warn(this, "Failed: $reason")
         failureReason = reason
-        setState(OperationState.FAILED)
+        setState(MiningOperationState.FAILED)
 
         onFailed()
         cancelJob()
@@ -79,7 +65,7 @@ abstract class MiningOperation(
 
     open fun onFailed() {}
 
-    fun isFailed() = state == OperationState.FAILED
+    fun isFailed() = failureReason != null
 
     fun cancelJob() {
         job?.cancel()
@@ -89,7 +75,7 @@ abstract class MiningOperation(
     fun getStateDescription() = if (isFailed()) {
         "Failed: $failureReason"
     } else {
-        state.description
+        state.taskName
     }
 
     open fun isLoggingEnabled(level: Level): Boolean = true
@@ -107,6 +93,6 @@ abstract class MiningOperation(
     abstract fun getDetailedInfo(): Map<String, String>
 
     override fun toString(): String {
-        return "MiningOperation(id='$id', state='${state.description}')"
+        return "MiningOperation(id='$id', state='${state.name}')"
     }
 }

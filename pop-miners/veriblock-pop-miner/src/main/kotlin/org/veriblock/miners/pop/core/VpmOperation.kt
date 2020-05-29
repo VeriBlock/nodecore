@@ -42,6 +42,14 @@ class VpmOperation(
         private set
     var proofOfProofId: String? = null
         private set
+    var payoutBlockHash: String? = null
+        private set
+    var payoutAmount: Long? = null
+        private set
+
+    init {
+        setState(VpmOperationState.INITIAL)
+    }
 
     val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
 
@@ -58,15 +66,15 @@ class VpmOperation(
     fun setMiningInstruction(miningInstruction: PopMiningInstruction) {
         endorsedBlockHeight = miningInstruction.endorsedBlockHeight
         this.miningInstruction = miningInstruction
-        setState(OperationState.INSTRUCTION)
+        setState(VpmOperationState.INSTRUCTION)
     }
 
     fun setTransaction(transaction: VpmSpTransaction) {
-        if (state != OperationState.INSTRUCTION) {
+        if (state != VpmOperationState.INSTRUCTION) {
             error("Trying to set transaction without having the mining instruction")
         }
         endorsementTransaction = transaction
-        setState(OperationState.ENDORSEMENT_TRANSACTION)
+        setState(VpmOperationState.ENDORSEMENT_TRANSACTION)
 
         transaction.transaction.confidence.addEventListener(transactionListener)
         GlobalScope.launch {
@@ -74,17 +82,17 @@ class VpmOperation(
                 if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
                     EventBus.transactionSufferedReorgEvent.trigger(this@VpmOperation)
                     // Reset the state to the endorsement transaction pending for confirmation
-                    setState(OperationState.ENDORSEMENT_TRANSACTION)
+                    setState(VpmOperationState.ENDORSEMENT_TRANSACTION)
                 }
             }
         }
     }
 
     fun setConfirmed() {
-        if (state != OperationState.ENDORSEMENT_TRANSACTION) {
+        if (state != VpmOperationState.ENDORSEMENT_TRANSACTION) {
             error("Trying to set as transaction confirmed without such transaction")
         }
-        setState(OperationState.CONFIRMED)
+        setState(VpmOperationState.CONFIRMED)
 
         endorsementTransaction?.let {
             Metrics.spentFeesCounter.increment(it.fee.toDouble())
@@ -92,35 +100,46 @@ class VpmOperation(
     }
 
     fun setBlockOfProof(blockOfProof: VpmSpBlock) {
-        if (state != OperationState.CONFIRMED) {
+        if (state != VpmOperationState.CONFIRMED) {
             error("Trying to set block of proof without having confirmed the transaction")
         }
         this.blockOfProof = blockOfProof
-        setState(OperationState.BLOCK_OF_PROOF)
+        setState(VpmOperationState.BLOCK_OF_PROOF)
     }
 
     fun setMerklePath(merklePath: VpmMerklePath) {
-        if (state != OperationState.BLOCK_OF_PROOF) {
+        if (state != VpmOperationState.BLOCK_OF_PROOF) {
             error("Trying to set merkle path without the block of proof")
         }
         this.merklePath = merklePath
-        setState(OperationState.PROVEN)
+        setState(VpmOperationState.PROVEN)
     }
 
     fun setContext(context: VpmContext) {
-        if (state != OperationState.PROVEN) {
+        if (state != VpmOperationState.PROVEN) {
             error("Trying to set context without the merkle path")
         }
         this.context = context
-        setState(OperationState.CONTEXT)
+        setState(VpmOperationState.CONTEXT)
     }
 
     fun setProofOfProofId(proofOfProofId: String) {
-        if (state != OperationState.CONTEXT) {
+        if (state != VpmOperationState.CONTEXT) {
             error("Trying to set Proof of Proof id without having the context")
         }
         this.proofOfProofId = proofOfProofId
-        setState(OperationState.SUBMITTED_POP_DATA)
+        setState(VpmOperationState.SUBMITTED_POP_DATA)
+    }
+
+    fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
+        if (state != VpmOperationState.SUBMITTED_POP_DATA) {
+            error("Trying to set Payout Data without having the Proof of Proof id")
+        }
+        this.payoutBlockHash = payoutBlockHash
+        this.payoutAmount = payoutAmount
+        setState(VpmOperationState.PAYOUT_DETECTED)
+
+        Metrics.miningRewardCounter.increment(payoutAmount.toDouble())
     }
 
     override fun onCompleted() {

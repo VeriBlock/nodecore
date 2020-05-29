@@ -21,8 +21,9 @@ import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.common.amountToCoin
 import org.veriblock.miners.pop.common.formatBTCFriendlyString
 import org.veriblock.miners.pop.common.generateOperationId
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.VpmOperation
+import org.veriblock.miners.pop.core.VpmOperationState
 import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import org.veriblock.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
@@ -140,7 +141,7 @@ class MinerService(
 
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
         // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be necessary.
-        val count = operations.values.count { OperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
+        val count = operations.values.count { VpmOperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
             result.fail()
             result.addMessage(
@@ -529,7 +530,7 @@ class MinerService(
             val operationState = operation?.state
             val blockHeight = operation?.endorsedBlockHeight ?: -1
             if (
-                operationState != null && !operation.isFailed() && !(operationState hasType OperationState.CONFIRMED) &&
+                operationState != null && !operation.isFailed() && !(operationState hasType VpmOperationState.CONFIRMED) &&
                 blockHeight < event.block.getHeight() - Constants.POP_SETTLEMENT_INTERVAL
             ) {
                 operation.fail("Endorsement of block $blockHeight is no longer relevant")

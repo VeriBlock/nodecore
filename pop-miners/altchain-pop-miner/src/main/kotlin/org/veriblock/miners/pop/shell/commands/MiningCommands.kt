@@ -108,15 +108,16 @@ fun CommandFactory.miningCommands(
         val id: String = getParameter("id")
         val operation = minerService.getOperation(id)
         if (operation != null) {
-            val operationDetails = apmOperationExplainer.exlainOperation(operation)
+            val operationDetails = apmOperationExplainer.explainOperation(operation)
 
-            val tableFormat = "%1$-8s %2$-26s %3\$s"
+            val tableFormat = "%1$-8s %2$-33s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
             operationDetails.forEach { stage ->
+                val taskName = (stage.operationState.previousState?.taskName ?: "Start").toUpperCase().replace(' ', '_')
                 printInfo(String.format(
                     tableFormat,
                     if (stage.status != ApmOperationExplainer.OperationStatus.PENDING) stage.status else "",
-                    "${stage.operationState.id + 1}.${stage.operationState.name}",
+                    "${stage.operationState.id + 1}.${taskName}",
                     stage.extraInformation.firstOrNull() ?: ""
                 ))
                 stage.extraInformation.drop(1).forEach { extraInformation ->
@@ -169,9 +170,9 @@ fun CommandFactory.miningCommands(
 data class WorkflowProcessInfo(
     val operationId: String,
     val chain: String,
-    val status: String,
-    val blockHeight: Int?,
     val state: String,
+    val blockHeight: Int?,
+    val task: String,
     val stateDetail: Map<String, String>
 ) {
     constructor(operation: ApmOperation) : this(
@@ -179,7 +180,7 @@ data class WorkflowProcessInfo(
         operation.chain.name,
         operation.state.name,
         operation.endorsedBlockHeight,
-        operation.state.description,
+        operation.state.taskName,
         operation.getDetailedInfo()
     )
 }

@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.OperationLog
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -120,10 +120,11 @@ class OperationSerializer(
             }
 
             if (serialized.payoutBlockHash.isNotEmpty()) {
-                complete(serialized.payoutBlockHash, serialized.payoutAmount)
+                setPayoutData(serialized.payoutBlockHash, serialized.payoutAmount)
+                complete()
             }
 
-            if (state == OperationState.FAILED) {
+            if (state == MiningOperationState.FAILED) {
                 fail("Loaded as failed")
             }
 

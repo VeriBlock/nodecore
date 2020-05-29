@@ -8,7 +8,7 @@ import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.yield
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.core.MiningOperation
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
 import java.time.Duration
@@ -19,7 +19,7 @@ const val MAX_TASK_RETRIES = 10
 
 abstract class TaskService<MO : MiningOperation> {
     suspend fun runTasks(operation: MO) {
-        if (operation.state == OperationState.FAILED) {
+        if (operation.state == MiningOperationState.FAILED) {
             logger.warn(operation, "Attempted to run tasks for a failed operation!")
             return
         }
@@ -40,7 +40,7 @@ abstract class TaskService<MO : MiningOperation> {
 
     protected suspend fun MO.runTask(
         taskName: String,
-        targetState: OperationState,
+        targetState: MiningOperationState,
         timeout: Duration,
         block: suspend () -> Unit
     ) {
@@ -49,7 +49,7 @@ abstract class TaskService<MO : MiningOperation> {
             return
         }
 
-        val timer = Metrics.operationStateTimersByTargetState.getValue(targetState)
+        val timer = Metrics.getOperationStateTimerByState(targetState.previousState!!)
 
         var success = false
         var attempts = 1

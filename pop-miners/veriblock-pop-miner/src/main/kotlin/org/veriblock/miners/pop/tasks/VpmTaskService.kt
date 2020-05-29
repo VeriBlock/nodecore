@@ -9,10 +9,11 @@ import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.common.serializeHeader
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.VpmContext
 import org.veriblock.miners.pop.core.VpmMerklePath
 import org.veriblock.miners.pop.core.VpmOperation
+import org.veriblock.miners.pop.core.VpmOperationState
 import org.veriblock.miners.pop.core.VpmSpBlock
 import org.veriblock.miners.pop.core.VpmSpTransaction
 import org.veriblock.miners.pop.core.debug
@@ -45,7 +46,7 @@ class VpmTaskService(
     override suspend fun runTasksInternal(operation: VpmOperation) {
         operation.runTask(
             taskName = "Retrieve Mining Instruction from NodeCore",
-            targetState = OperationState.INSTRUCTION,
+            targetState = VpmOperationState.INSTRUCTION,
             timeout = 10.sec
         ) {
             // Get the PoPMiningInstruction, consisting of the 80 bytes of data that VeriBlock will pay the PoP miner
@@ -61,7 +62,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Create Bitcoin Endorsement Transaction",
-            targetState = OperationState.ENDORSEMENT_TRANSACTION,
+            targetState = VpmOperationState.ENDORSEMENT_TRANSACTION,
             timeout = 15.min
         ) {
             val miningInstruction = operation.miningInstruction
@@ -97,7 +98,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Confirm Bitcoin Endorsement Transaction",
-            targetState = OperationState.CONFIRMED,
+            targetState = VpmOperationState.CONFIRMED,
             //timeout = 2.hr
             timeout = 100_000.hr // Very long timeout to make sure we never leave a dangling transaction
         ) {
@@ -125,7 +126,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Determine Block of Proof",
-            targetState = OperationState.BLOCK_OF_PROOF,
+            targetState = VpmOperationState.BLOCK_OF_PROOF,
             timeout = 90.sec
         ) {
             val endorsementTransaction = operation.endorsementTransaction
@@ -147,7 +148,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Prove Transaction",
-            targetState = OperationState.PROVEN,
+            targetState = VpmOperationState.PROVEN,
             timeout = 90.sec
         ) {
             val endorsementTransaction = operation.endorsementTransaction
@@ -210,7 +211,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Build Publication Context",
-            targetState = OperationState.CONTEXT,
+            targetState = VpmOperationState.CONTEXT,
             timeout = 2.min
         ) {
             val miningInstruction = operation.miningInstruction
@@ -242,7 +243,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Submit PoP Endorsement",
-            targetState = OperationState.SUBMITTED_POP_DATA,
+            targetState = VpmOperationState.SUBMITTED_POP_DATA,
             timeout = 30.sec
         ) {
             val miningInstruction = operation.miningInstruction
@@ -279,7 +280,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Confirm Payout",
-            targetState = OperationState.COMPLETED,
+            targetState = MiningOperationState.COMPLETED,
             timeout = 20.hr
         ) {
             val miningInstruction = operation.miningInstruction
@@ -327,8 +328,10 @@ class VpmTaskService(
                 "Could not find PoP endorsement reward in the payout block $payoutBlockHash @ $payoutBlockHeight!"
             )
 
-            operation.complete(payoutBlockHash, endorsementInfo.reward)
+            operation.setPayoutData(payoutBlockHash, endorsementInfo.reward)
             logger.info(operation, "Operation has completed! Payout: ${endorsementInfo.reward.formatAtomicLongWithDecimal()} VBK")
         }
+
+        operation.complete()
     }
 }

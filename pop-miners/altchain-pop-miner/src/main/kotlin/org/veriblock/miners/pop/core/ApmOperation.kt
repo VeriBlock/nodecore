@@ -50,7 +50,16 @@ class ApmOperation(
         private set
     var proofOfProofId: String? = null
         private set
+    var payoutBlockHash: String? = null
+        private set
+    var payoutAmount: Long? = null
+        private set
+
     val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
+
+    init {
+        setState(ApmOperationState.INITIAL)
+    }
 
     override fun onStateChanged() {
         stateChangedEvent.trigger(this)
@@ -59,21 +68,21 @@ class ApmOperation(
     fun setMiningInstruction(miningInstruction: ApmInstruction) {
         endorsedBlockHeight = miningInstruction.endorsedBlockHeight
         this.miningInstruction = miningInstruction
-        setState(OperationState.INSTRUCTION)
+        setState(ApmOperationState.INSTRUCTION)
     }
 
     fun setTransaction(transaction: ApmSpTransaction) {
-        if (state != OperationState.INSTRUCTION) {
+        if (state != ApmOperationState.INSTRUCTION) {
             error("Trying to set transaction without having the mining instruction")
         }
         endorsementTransaction = transaction
-        setState(OperationState.ENDORSEMENT_TRANSACTION)
+        setState(ApmOperationState.ENDORSEMENT_TRANSACTION)
     }
     fun setConfirmed() {
-        if (state != OperationState.ENDORSEMENT_TRANSACTION) {
+        if (state != ApmOperationState.ENDORSEMENT_TRANSACTION) {
             error("Trying to set as transaction confirmed without such transaction")
         }
-        setState(OperationState.CONFIRMED)
+        setState(ApmOperationState.CONFIRMED)
 
         endorsementTransaction?.let {
             Metrics.spentFeesCounter.increment(it.fee.toDouble())
@@ -81,35 +90,46 @@ class ApmOperation(
     }
 
     fun setBlockOfProof(blockOfProof: ApmSpBlock) {
-        if (state != OperationState.CONFIRMED) {
+        if (state != ApmOperationState.CONFIRMED) {
             error("Trying to set block of proof without having confirmed the transaction")
         }
         this.blockOfProof = blockOfProof
-        setState(OperationState.BLOCK_OF_PROOF)
+        setState(ApmOperationState.BLOCK_OF_PROOF)
     }
 
     fun setMerklePath(merklePath: ApmMerklePath) {
-        if (state != OperationState.BLOCK_OF_PROOF) {
+        if (state != ApmOperationState.BLOCK_OF_PROOF) {
             error("Trying to set merkle path without the block of proof")
         }
         this.merklePath = merklePath
-        setState(OperationState.PROVEN)
+        setState(ApmOperationState.PROVEN)
     }
 
     fun setContext(context: ApmContext) {
-        if (state != OperationState.PROVEN) {
+        if (state != ApmOperationState.PROVEN) {
             error("Trying to set context without the merkle path")
         }
         this.context = context
-        setState(OperationState.CONTEXT)
+        setState(ApmOperationState.CONTEXT)
     }
 
     fun setProofOfProofId(proofOfProofId: String) {
-        if (state != OperationState.CONTEXT) {
+        if (state != ApmOperationState.CONTEXT) {
             error("Trying to set Proof of Proof id without having the context")
         }
         this.proofOfProofId = proofOfProofId
-        setState(OperationState.SUBMITTED_POP_DATA)
+        setState(ApmOperationState.SUBMITTED_POP_DATA)
+    }
+
+    fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
+        if (state != ApmOperationState.SUBMITTED_POP_DATA) {
+            error("Trying to set Payout Data without having the Proof of Proof id")
+        }
+        this.payoutBlockHash = payoutBlockHash
+        this.payoutAmount = payoutAmount
+        setState(ApmOperationState.PAYOUT_DETECTED)
+
+        Metrics.miningRewardCounter.increment(payoutAmount.toDouble())
     }
 
     override fun getDetailedInfo(): Map<String, String> {

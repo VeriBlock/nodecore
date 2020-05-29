@@ -11,7 +11,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.core.instrument.binder.system.UptimeMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 
 object Metrics {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
@@ -49,16 +49,11 @@ object Metrics {
         .description("Total amount of mining rewards")
         .register(registry)
 
-    val operationStateTimersByTargetState = mapOf(
-        OperationState.INSTRUCTION to createOperationStateTimer("retrieveMiningInstruction"),
-        OperationState.ENDORSEMENT_TRANSACTION to createOperationStateTimer("createEndorsementTransaction"),
-        OperationState.CONFIRMED to createOperationStateTimer("confirmEndorsementTransaction"),
-        OperationState.BLOCK_OF_PROOF to createOperationStateTimer("determineBlockOfProof"),
-        OperationState.PROVEN to createOperationStateTimer("proveEndorsementTransaction"),
-        OperationState.CONTEXT to createOperationStateTimer("buildPublicationContext"),
-        OperationState.SUBMITTED_POP_DATA to createOperationStateTimer("submitPopEndorsement"),
-        OperationState.COMPLETED to createOperationStateTimer("confirmPayout")
-    )
+    private val operationStateTimersByTargetState = mutableMapOf<MiningOperationState, Timer>()
+
+    fun getOperationStateTimerByState(state: MiningOperationState) = operationStateTimersByTargetState.getOrPut(state) {
+        createOperationStateTimer(state.taskName.toLowerCase().replace(' ', '_'))
+    }
 
     private fun createOperationStateTimer(taskName: String) = Timer.builder("pop_miner.operations_timer")
         .description("Total time spent in the $taskName task")

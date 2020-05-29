@@ -10,7 +10,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.bitcoinj.core.Transaction
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.VpmContext
 import org.veriblock.miners.pop.core.VpmMerklePath
 import org.veriblock.miners.pop.core.VpmOperation
@@ -72,7 +72,7 @@ class PopStateService(
         val protoData = OperationProto.Operation(
             id = operation.id,
             state = operation.state.name,
-            action = operation.state.description,
+            action = operation.state.taskName,
             endorsedBlockNumber = operation.endorsedBlockHeight ?: -1,
             miningInstruction = operation.miningInstruction?.let {
                 OperationProto.MiningInstruction(
@@ -104,7 +104,6 @@ class PopStateService(
         )
         val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), record.state)
         logger.debug("Reconstituting operation {}", protoData.id)
-        val state = OperationState.valueOf(protoData.state)
         if (protoData.endorsedBlockNumber >= 0) {
             operation.endorsedBlockHeight = protoData.endorsedBlockNumber
         }
@@ -146,9 +145,10 @@ class PopStateService(
             operation.setProofOfProofId(protoData.popTxId)
         }
         if (protoData.payoutBlockHash.isNotEmpty()) {
-            operation.complete(protoData.payoutBlockHash, protoData.payoutAmount)
+            operation.setPayoutData(protoData.payoutBlockHash, protoData.payoutAmount)
+            operation.complete()
         }
-        if (state == OperationState.FAILED) {
+        if (protoData.state == "FAILED") {
             operation.fail("Loaded as failed")
         }
         operation.reconstituting = false

@@ -10,7 +10,6 @@ package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.time.delay
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
@@ -27,7 +26,7 @@ import org.veriblock.miners.pop.core.ApmMerklePath
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.util.VTBDebugUtility
@@ -37,6 +36,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -50,7 +50,7 @@ class ApmTaskService(
     override suspend fun runTasksInternal(operation: ApmOperation) {
         operation.runTask(
             taskName = "Retrieve Mining Instruction from ${operation.chain.name}",
-            targetState = OperationState.INSTRUCTION,
+            targetState = ApmOperationState.INSTRUCTION,
             timeout = 90.sec
         ) {
             logger.info(operation, "Getting the mining instruction...")
@@ -70,7 +70,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Create Endorsement Transaction",
-            targetState = OperationState.ENDORSEMENT_TRANSACTION,
+            targetState = ApmOperationState.ENDORSEMENT_TRANSACTION,
             timeout = 90.sec
         ) {
             val miningInstruction = operation.miningInstruction
@@ -107,7 +107,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Confirm transaction",
-            targetState = OperationState.CONFIRMED,
+            targetState = ApmOperationState.CONFIRMED,
             timeout = 1.hr
         ) {
             val endorsementTransaction = operation.endorsementTransaction
@@ -131,7 +131,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Determine Block of Proof",
-            targetState = OperationState.BLOCK_OF_PROOF,
+            targetState = ApmOperationState.BLOCK_OF_PROOF,
             timeout = 20.sec
         ) {
             val transaction = operation.endorsementTransaction?.transaction
@@ -152,7 +152,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Prove Transaction",
-            targetState = OperationState.PROVEN,
+            targetState = ApmOperationState.PROVEN,
             timeout = 20.sec
         ) {
             val endorsementTransaction = operation.endorsementTransaction
@@ -182,7 +182,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Wait for next VeriBlock Keystone",
-            targetState = OperationState.CONTEXT,
+            targetState = ApmOperationState.CONTEXT,
             timeout = 2.hr
         ) {
             val blockOfProof = operation.blockOfProof?.block
@@ -219,7 +219,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Submit Proof of Proof",
-            targetState = OperationState.SUBMITTED_POP_DATA,
+            targetState = ApmOperationState.SUBMITTED_POP_DATA,
             timeout = 240.hr
         ) {
             val miningInstruction = operation.miningInstruction
@@ -257,7 +257,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Payout Detection",
-            targetState = OperationState.COMPLETED,
+            targetState = MiningOperationState.COMPLETED,
             timeout = 10.days
         ) {
             val miningInstruction = operation.miningInstruction
@@ -318,7 +318,7 @@ class ApmTaskService(
                     "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} ${operation.chain.key.toUpperCase()}"
                 )
                 logger.info(operation, "Completed!")
-                operation.complete(payoutBlock.hash, rewardVout.value)
+                operation.setPayoutData(payoutBlock.hash, rewardVout.value)
             } else {
                 failOperation(
                     "Unable to find ${operation.chain.name} PoP payout transaction in the expected block's coinbase!" +
@@ -326,6 +326,7 @@ class ApmTaskService(
                 )
             }
         }
+        operation.complete()
     }
 
     private fun verifyPublications(
