@@ -46,7 +46,7 @@ class ApmOperation(
         private set
     var merklePath: VeriBlockMerklePath? = null
         private set
-    var context: List<VeriBlockPublication>? = null
+    var publicationData: List<VeriBlockPublication>? = null
         private set
     var proofOfProofId: String? = null
         private set
@@ -109,7 +109,7 @@ class ApmOperation(
         if (state != ApmOperationState.PROVEN) {
             error("Trying to set context without the merkle path")
         }
-        this.context = context
+        this.publicationData = context
         setState(ApmOperationState.CONTEXT)
     }
 
@@ -152,7 +152,7 @@ class ApmOperation(
         merklePath?.let {
             result["merklePath"] = it.toCompactString()
         }
-        context?.let { context ->
+        publicationData?.let { context ->
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
             result["vtbBtcBlocks"] = context.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
         }

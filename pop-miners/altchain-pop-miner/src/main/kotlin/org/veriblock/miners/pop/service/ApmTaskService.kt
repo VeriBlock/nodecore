@@ -227,7 +227,7 @@ class ApmTaskService(
                 ?: failTask("SubmitProofOfProofTask called without block of proof!")
             val merklePath = operation.merklePath
                 ?: failTask("SubmitProofOfProofTask called without merkle path!")
-            val veriBlockPublications = operation.context
+            val veriBlockPublications = operation.publicationData
                 ?: failTask("SubmitProofOfProofTask called without VeriBlock publications!")
 
             try {

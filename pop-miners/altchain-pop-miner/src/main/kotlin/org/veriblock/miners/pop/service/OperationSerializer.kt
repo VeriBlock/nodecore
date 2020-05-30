@@ -50,7 +50,7 @@ class OperationSerializer(
                 SerializeDeserializeService.serializeHeaders(it)
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.toCompactString() ?: "",
-            veriblockPublications = operation.context?.map {
+            veriblockPublications = operation.publicationData?.map {
                 serialize(it)
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",

@@ -5,7 +5,6 @@ import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationState
-import org.veriblock.miners.pop.core.nextState
 import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
 
 class ApmOperationExplainer(
@@ -16,7 +15,11 @@ class ApmOperationExplainer(
         if (operation.isFailed()) {
             return listOf(OperationStage(MiningOperationState.FAILED, CURRENT, listOf(operation.failureReason ?: "mine")))
         }
-        val currentState = operation.state
+        val currentState = if (!operation.isFailed()) {
+            operation.state
+        } else {
+            getStateFromFailedOperation(operation)
+        }
         return ApmOperationState.ALL.map { operationState ->
             val status = operationState.getOperationStatus(currentState)
             OperationStage(
@@ -24,6 +27,18 @@ class ApmOperationExplainer(
                 status = status,
                 extraInformation = if (status == DONE) operationState.getExtraInformation(operation) else emptyList()
             )
+        }
+    }
+
+    private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
+        return when {
+            operation.miningInstruction != null -> ApmOperationState.INSTRUCTION
+            operation.endorsementTransaction != null -> ApmOperationState.ENDORSEMENT_TRANSACTION
+            operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
+            operation.merklePath != null -> ApmOperationState.PROVEN
+            operation.publicationData != null -> ApmOperationState.CONTEXT
+            operation.proofOfProofId != null -> ApmOperationState.SUBMITTED_POP_DATA
+            else -> ApmOperationState.INITIAL
         }
     }
 

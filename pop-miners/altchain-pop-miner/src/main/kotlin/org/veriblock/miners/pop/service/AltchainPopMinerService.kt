@@ -210,7 +210,7 @@ class AltchainPopMinerService(
     }
 
     override fun resubmit(operation: ApmOperation) {
-        if (operation.context == null) {
+        if (operation.publicationData == null) {
             error("The operation [${operation.id}] has no context to be resubmitted!")
         }
 
@@ -228,7 +228,7 @@ class AltchainPopMinerService(
         newOperation.setConfirmed()
         newOperation.setBlockOfProof(operation.blockOfProof!!)
         newOperation.setMerklePath(operation.merklePath!!)
-        newOperation.setContext(operation.context!!)
+        newOperation.setContext(operation.publicationData!!)
         newOperation.reconstituting = false
 
         registerToStateChangedEvent(newOperation)
