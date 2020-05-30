@@ -42,11 +42,11 @@ class ApmOperation(
         private set
     var endorsementTransaction: ApmSpTransaction? = null
         private set
-    var blockOfProof: ApmSpBlock? = null
+    var blockOfProof: VeriBlockBlock? = null
         private set
-    var merklePath: ApmMerklePath? = null
+    var merklePath: VeriBlockMerklePath? = null
         private set
-    var context: ApmContext? = null
+    var context: List<VeriBlockPublication>? = null
         private set
     var proofOfProofId: String? = null
         private set
@@ -89,7 +89,7 @@ class ApmOperation(
         }
     }
 
-    fun setBlockOfProof(blockOfProof: ApmSpBlock) {
+    fun setBlockOfProof(blockOfProof: VeriBlockBlock) {
         if (state != ApmOperationState.CONFIRMED) {
             error("Trying to set block of proof without having confirmed the transaction")
         }
@@ -97,7 +97,7 @@ class ApmOperation(
         setState(ApmOperationState.BLOCK_OF_PROOF)
     }
 
-    fun setMerklePath(merklePath: ApmMerklePath) {
+    fun setMerklePath(merklePath: VeriBlockMerklePath) {
         if (state != ApmOperationState.BLOCK_OF_PROOF) {
             error("Trying to set merkle path without the block of proof")
         }
@@ -105,7 +105,7 @@ class ApmOperation(
         setState(ApmOperationState.PROVEN)
     }
 
-    fun setContext(context: ApmContext) {
+    fun setContext(context: List<VeriBlockPublication>) {
         if (state != ApmOperationState.PROVEN) {
             error("Trying to set context without the merkle path")
         }
@@ -147,14 +147,14 @@ class ApmOperation(
             result["vbkEndorsementTxFee"] = it.fee.formatAtomicLongWithDecimal()
         }
         blockOfProof?.let {
-            result["vbkBlockOfProof"] = it.hash
+            result["vbkBlockOfProof"] = it.hash.toString()
         }
         merklePath?.let {
-            result["merklePath"] = it.compactFormat
+            result["merklePath"] = it.toCompactString()
         }
         context?.let { context ->
-            result["vtbTransactions"] = context.publications.joinToString { it.transaction.id.bytes.toHex() }
-            result["vtbBtcBlocks"] = context.publications.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
+            result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
+            result["vtbBtcBlocks"] = context.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
         }
         proofOfProofId?.let {
             result["proofOfProofId"] = it
@@ -185,19 +185,3 @@ class ApmSpTransaction(
         }
     ).atomicUnits
 }
-
-class ApmSpBlock(
-    val block: VeriBlockBlock
-) {
-    val hash: String get() = block.hash.bytes.toHex()
-}
-
-class ApmMerklePath(
-    val merklePath: VeriBlockMerklePath
-) {
-    val compactFormat: String get() = merklePath.toCompactString()
-}
-
-class ApmContext(
-    val publications: List<VeriBlockPublication>
-)

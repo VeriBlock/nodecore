@@ -21,10 +21,7 @@ import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.core.ApmMerklePath
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.debug
@@ -143,7 +140,7 @@ class ApmTaskService(
             try {
                 val block = nodeCoreLiteKit.blockChain.get(blockHash)
                     ?: failTask("Unable to retrieve VBK block $blockHash")
-                operation.setBlockOfProof(ApmSpBlock(block))
+                operation.setBlockOfProof(block)
             } catch (e: BlockStoreException) {
                 failTask("Error when retrieving VBK block $blockHash")
             }
@@ -168,15 +165,15 @@ class ApmTaskService(
             logger.info(operation, "Successfully retrieved the merkle path for the transaction: ${walletTransaction.id}!")
 
             val vbkMerkleRoot = merklePath.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
-            val verified = vbkMerkleRoot == blockOfProof.block.merkleRoot
+            val verified = vbkMerkleRoot == blockOfProof.merkleRoot
             if (!verified) {
                 failOperation(
                     "Unable to verify merkle path! VBK Transaction's merkle root: $vbkMerkleRoot;" +
-                        " Block of proof's merkle root: ${blockOfProof.block.merkleRoot}"
+                        " Block of proof's merkle root: ${blockOfProof.merkleRoot}"
                 )
             }
 
-            operation.setMerklePath(ApmMerklePath(merklePath))
+            operation.setMerklePath(merklePath)
             logger.info(operation, "Successfully added the verified merkle path!")
         }
 
@@ -185,7 +182,7 @@ class ApmTaskService(
             targetState = ApmOperationState.CONTEXT,
             timeout = 2.hr
         ) {
-            val blockOfProof = operation.blockOfProof?.block
+            val blockOfProof = operation.blockOfProof
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without block of proof!")
             val miningInstruction = operation.miningInstruction
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
@@ -211,7 +208,7 @@ class ApmTaskService(
                 miningInstruction.context[0].toHex(),
                 miningInstruction.btcContext[0].toHex()
             )
-            operation.setContext(ApmContext(publications))
+            operation.setContext(publications)
 
             // Verify context
             verifyPublications(miningInstruction, publications)
@@ -226,11 +223,11 @@ class ApmTaskService(
                 ?: failTask("SubmitProofOfProofTask called without mining instruction!")
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("SubmitProofOfProofTask called without endorsement transaction!")
-            val blockOfProof = operation.blockOfProof?.block
+            val blockOfProof = operation.blockOfProof
                 ?: failTask("SubmitProofOfProofTask called without block of proof!")
-            val merklePath = operation.merklePath?.merklePath
+            val merklePath = operation.merklePath
                 ?: failTask("SubmitProofOfProofTask called without merkle path!")
-            val veriBlockPublications = operation.context?.publications
+            val veriBlockPublications = operation.context
                 ?: failTask("SubmitProofOfProofTask called without VeriBlock publications!")
 
             try {

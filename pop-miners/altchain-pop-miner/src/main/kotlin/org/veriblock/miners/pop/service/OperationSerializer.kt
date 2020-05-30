@@ -10,10 +10,7 @@ package org.veriblock.miners.pop.service
 
 import org.veriblock.lite.proto.OperationProto
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.core.ApmMerklePath
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.OperationLog
 import org.veriblock.miners.pop.core.MiningOperationState
@@ -50,10 +47,10 @@ class OperationSerializer(
             publicationBtcContext = operation.miningInstruction?.btcContext ?: emptyList(),
             txId = operation.endorsementTransaction?.txId ?: "",
             blockOfProof = operation.blockOfProof?.let {
-                SerializeDeserializeService.serializeHeaders(it.block)
+                SerializeDeserializeService.serializeHeaders(it)
             } ?: ByteArray(0),
-            merklePath = operation.merklePath?.compactFormat ?: "",
-            veriblockPublications = operation.context?.publications?.map {
+            merklePath = operation.merklePath?.toCompactString() ?: "",
+            veriblockPublications = operation.context?.map {
                 serialize(it)
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",
@@ -102,17 +99,17 @@ class OperationSerializer(
 
             if (serialized.blockOfProof.isNotEmpty()) {
                 setConfirmed()
-                setBlockOfProof(ApmSpBlock(SerializeDeserializeService.parseVeriBlockBlock(serialized.blockOfProof)))
+                setBlockOfProof(SerializeDeserializeService.parseVeriBlockBlock(serialized.blockOfProof))
             }
 
             if (serialized.merklePath.isNotEmpty()) {
-                setMerklePath(ApmMerklePath(VeriBlockMerklePath(serialized.merklePath)))
+                setMerklePath(VeriBlockMerklePath(serialized.merklePath))
             }
 
             if (serialized.veriblockPublications.isNotEmpty()) {
-                setContext(ApmContext(serialized.veriblockPublications.map {
+                setContext(serialized.veriblockPublications.map {
                     deserialize(it)
-                }))
+                })
             }
 
             if (serialized.proofOfProofId.isNotEmpty()) {

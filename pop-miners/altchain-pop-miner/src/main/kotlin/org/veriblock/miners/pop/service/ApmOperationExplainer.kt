@@ -52,11 +52,11 @@ class ApmOperationExplainer(
         }
         ApmOperationState.BLOCK_OF_PROOF -> {
             val blockOfProof = operation.blockOfProof
-            listOf("${context.vbkTokenName} block of proof: ${blockOfProof?.block?.hash} @ ${blockOfProof?.block?.height}")
+            listOf("${context.vbkTokenName} block of proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}")
         }
         ApmOperationState.PROVEN -> {
             listOf(
-                "Merkle path: ${operation.merklePath?.compactFormat}",
+                "Merkle path: ${operation.merklePath?.toCompactString()}",
                 "Waiting for the keystone of proof"
             )
         }
