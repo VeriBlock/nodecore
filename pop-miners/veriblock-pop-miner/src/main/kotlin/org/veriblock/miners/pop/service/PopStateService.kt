@@ -83,11 +83,11 @@ class PopStateService(
                     it.endorsedBlockContextHeaders
                 )
             } ?: OperationProto.MiningInstruction(),
-            transaction = operation.endorsementTransaction?.transactionBytes ?: ByteArray(0),
-            bitcoinTxId = operation.endorsementTransaction?.txId ?: "",
-            blockOfProof = operation.blockOfProof?.block?.bitcoinSerialize() ?: ByteArray(0),
-            merklePath = operation.merklePath?.compactFormat ?: "",
-            bitcoinContext = operation.context?.blocks?.map { it.bitcoinSerialize() } ?: emptyList(),
+            transaction = operation.endorsementTransactionBytes ?: ByteArray(0),
+            bitcoinTxId = operation.endorsementTransaction?.txId?.toString() ?: "",
+            blockOfProof = operation.blockOfProof?.bitcoinSerialize() ?: ByteArray(0),
+            merklePath = operation.merklePath ?: "",
+            bitcoinContext = operation.context?.map { it.bitcoinSerialize() } ?: emptyList(),
             popTxId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
             payoutAmount = operation.payoutAmount ?: 0L
@@ -120,26 +120,26 @@ class PopStateService(
         if (protoData.transaction.isNotEmpty()) {
             logger.debug(operation, "Rebuilding transaction")
             val transaction: Transaction = bitcoinService.makeTransaction(protoData.transaction)
-            operation.setTransaction(VpmSpTransaction(transaction, protoData.transaction))
+            operation.setTransaction(transaction, protoData.transaction)
             logger.debug(operation, "Rebuilt transaction ${transaction.txId}")
         }
         if (protoData.blockOfProof.isNotEmpty()) {
             operation.setConfirmed()
             logger.debug(operation, "Rebuilding block of proof")
             val block = bitcoinService.makeBlock(protoData.blockOfProof)
-            operation.setBlockOfProof(VpmSpBlock(block))
+            operation.setBlockOfProof(block)
             logger.debug(operation, "Reattached block of proof ${block.hashAsString}")
         }
         if (protoData.merklePath.isNotEmpty()) {
-            operation.setMerklePath(VpmMerklePath(protoData.merklePath))
+            operation.setMerklePath(protoData.merklePath)
         }
         if (protoData.bitcoinContext.isNotEmpty()) {
             logger.debug(operation, "Rebuilding context blocks")
             val contextBytes = protoData.bitcoinContext
             val blocks = bitcoinService.makeBlocks(contextBytes)
-            operation.setContext(VpmContext(ArrayList(blocks)))
+            operation.setContext(ArrayList(blocks))
         } else if (protoData.popTxId.isNotEmpty()) {
-            operation.setContext(VpmContext())
+            operation.setContext(emptyList())
         }
         if (protoData.popTxId.isNotEmpty()) {
             operation.setProofOfProofId(protoData.popTxId)

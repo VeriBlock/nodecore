@@ -14,8 +14,6 @@ import org.veriblock.miners.pop.core.VpmContext
 import org.veriblock.miners.pop.core.VpmMerklePath
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.core.VpmOperationState
-import org.veriblock.miners.pop.core.VpmSpBlock
-import org.veriblock.miners.pop.core.VpmSpTransaction
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.trace
@@ -87,7 +85,7 @@ class VpmTaskService(
                         transaction.unsafeBitcoinSerialize()
                     )
 
-                    operation.setTransaction(VpmSpTransaction(transaction, exposedTransaction.getFilteredTransaction()))
+                    operation.setTransaction(transaction, exposedTransaction.getFilteredTransaction())
                 } else {
                     failOperation("Create Bitcoin transaction returned no transaction")
                 }
@@ -105,11 +103,11 @@ class VpmTaskService(
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("The operation has no transaction set!")
 
-            if (endorsementTransaction.transaction.confidence.confidenceType == TransactionConfidence.ConfidenceType.DEAD) {
+            if (endorsementTransaction.confidence.confidenceType == TransactionConfidence.ConfidenceType.DEAD) {
                 failOperation("The transaction ${endorsementTransaction.txId} couldn't be confirmed")
             }
 
-            if (endorsementTransaction.transaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
+            if (endorsementTransaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
                 // Wait for the transaction to be ready
                 operation.transactionConfidenceEventChannel.asFlow().onEach {
                     if (it == TransactionConfidence.ConfidenceType.DEAD) {
@@ -132,7 +130,7 @@ class VpmTaskService(
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("The operation has no transaction set!")
 
-            val blockAppearances = endorsementTransaction.transaction.appearsInHashes
+            val blockAppearances = endorsementTransaction.appearsInHashes
                 ?: failTask("The transaction does not appear in any hashes!")
 
             val bestBlock = bitcoinService.getBestBlock(blockAppearances.keys)
@@ -143,7 +141,7 @@ class VpmTaskService(
             // Wait for the actual block appearing in the blockchain (it should already be there given the transaction is confirmed)
             bitcoinService.getFilteredBlock(bestBlock.hash)
 
-            operation.setBlockOfProof(VpmSpBlock(bestBlock))
+            operation.setBlockOfProof(bestBlock)
         }
 
         operation.runTask(
@@ -156,32 +154,31 @@ class VpmTaskService(
             val blockOfProof = operation.blockOfProof
                 ?: failTask("Trying to prove transaction without block of proof!")
 
-            val block = blockOfProof.block
-            val partialMerkleTree = bitcoinService.getPartialMerkleTree(block.hash)
+            val partialMerkleTree = bitcoinService.getPartialMerkleTree(blockOfProof.hash)
             val failureReason = if (partialMerkleTree != null) {
                 val proof = MerkleProof.parse(partialMerkleTree)
                 if (proof != null) {
-                    val path = proof.getCompactPath(endorsementTransaction.transaction.txId)
+                    val path = proof.getCompactPath(endorsementTransaction.txId)
                     logger.debug(operation, "Merkle Proof Compact Path: $path")
-                    logger.debug(operation, "Merkle Root: ${block.merkleRoot}")
+                    logger.debug(operation, "Merkle Root: ${blockOfProof.merkleRoot}")
                     try {
                         val merklePath = BitcoinMerklePath(path)
                         logger.debug(operation, "Computed Merkle Root: ${merklePath.getMerkleRoot()}")
-                        if (merklePath.getMerkleRoot().equals(block.merkleRoot.toString(), ignoreCase = true)) {
-                            operation.setMerklePath(VpmMerklePath(merklePath.getCompactFormat()))
+                        if (merklePath.getMerkleRoot().equals(blockOfProof.merkleRoot.toString(), ignoreCase = true)) {
+                            operation.setMerklePath(merklePath.getCompactFormat())
                             return@runTask
                         } else {
                             "Block Merkle root does not match computed Merkle root"
                         }
                     } catch (e: Exception) {
                         logger.error("Unable to validate Merkle path for transaction", e)
-                        "Unable to prove transaction ${endorsementTransaction.txId} in block ${block.hashAsString}"
+                        "Unable to prove transaction ${endorsementTransaction.txId} in block ${blockOfProof.hashAsString}"
                     }
                 } else {
-                    "Unable to construct Merkle proof for block ${block.hashAsString}"
+                    "Unable to construct Merkle proof for block ${blockOfProof.hashAsString}"
                 }
             } else {
-                "Unable to retrieve the Merkle tree from the block ${block.hashAsString}"
+                "Unable to retrieve the Merkle tree from the block ${blockOfProof.hashAsString}"
             }
 
             // Retrieving the Merkle path from the PartialMerkleTree failed, try creating manually from the whole block
@@ -190,7 +187,7 @@ class VpmTaskService(
                 "Unable to calculate the correct Merkle path for transaction ${endorsementTransaction.txId} in " +
                     "block ${blockOfProof.hash} from a FilteredBlock, trying a fully downloaded block!"
             )
-            val fullBlock = bitcoinService.downloadBlock(blockOfProof.block.hash)
+            val fullBlock = bitcoinService.downloadBlock(blockOfProof.hash)
             val allTransactions = fullBlock!!.transactions
             val txids: MutableList<String> = ArrayList()
             for (i in allTransactions!!.indices) {
@@ -198,12 +195,12 @@ class VpmTaskService(
             }
             val bmt = BitcoinMerkleTree(true, txids)
             val merklePath = bmt.getPathFromTxID(endorsementTransaction.txId.toString())!!
-            if (merklePath.getMerkleRoot().equals(blockOfProof.block.merkleRoot.toString(), ignoreCase = true)) {
-                operation.setMerklePath(VpmMerklePath(merklePath.getCompactFormat()))
+            if (merklePath.getMerkleRoot().equals(blockOfProof.merkleRoot.toString(), ignoreCase = true)) {
+                operation.setMerklePath(merklePath.getCompactFormat())
             } else {
                 logger.error(
                     "Unable to calculate the correct Merkle path for transaction ${endorsementTransaction.txId}" +
-                        " in block ${blockOfProof.block.hashAsString} from a FilteredBlock or a fully downloaded block!"
+                        " in block ${blockOfProof.hashAsString} from a FilteredBlock or a fully downloaded block!"
                 )
                 failOperation(failureReason)
             }
@@ -221,7 +218,7 @@ class VpmTaskService(
 
             val contextChainProvided = miningInstruction.endorsedBlockContextHeaders.isNotEmpty()
             // Get all the previous blocks until we find
-            val context = generateSequence(blockOfProof.block) { block ->
+            val context = generateSequence(blockOfProof) { block ->
                 bitcoinService.getBlock(block.prevBlockHash)
                     ?: failOperation("Could not retrieve block '${block.prevBlockHash}'")
             }.drop(1).takeWhile { block ->
@@ -238,7 +235,7 @@ class VpmTaskService(
                 logger.trace(operation, "$prefix block ${block.hashAsString} in $where")
                 !found
             }.toList().reversed()
-            operation.setContext(VpmContext(context))
+            operation.setContext(context)
         }
 
         operation.runTask(
@@ -248,10 +245,8 @@ class VpmTaskService(
         ) {
             val miningInstruction = operation.miningInstruction
                 ?: failOperation("Trying to submit PoP endorsement without the mining instruction!")
-            val endorsementTransaction = operation.endorsementTransaction
-                ?: failOperation(
-                    "Trying to submit PoP endorsement without the endorsement transaction!"
-                )
+            val endorsementTransactionBytes = operation.endorsementTransactionBytes
+                ?: failOperation("Trying to submit PoP endorsement without the endorsement transaction!")
             val blockOfProof = operation.blockOfProof
                 ?: failOperation("Trying to submit PoP endorsement without the block of proof!")
             val merklePath = operation.merklePath
@@ -261,8 +256,8 @@ class VpmTaskService(
 
             try {
                 val popMiningTransaction = PopMiningTransaction(
-                    miningInstruction, endorsementTransaction.transactionBytes, merklePath.compactFormat,
-                    blockOfProof.block, context.blocks
+                    miningInstruction, endorsementTransactionBytes, merklePath,
+                    blockOfProof, context
                 )
                 val popTxId = nodeCoreGateway.submitPop(popMiningTransaction)
                 logger.info(operation, "PoP endorsement submitted! PoP transaction id: $popTxId")
@@ -286,7 +281,7 @@ class VpmTaskService(
             val miningInstruction = operation.miningInstruction
                 ?: failOperation("Trying to confirm Payout without the mining instruction!")
 
-            val bitcoinTransactionId = operation.endorsementTransaction?.txId
+            val bitcoinTransactionId = operation.endorsementTransaction?.txId?.toString()
                 ?: failOperation("Trying to confirm Payout without the endorsement transaction!")
 
             val endorsedBlockHeight = operation.endorsedBlockHeight

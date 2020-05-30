@@ -12,6 +12,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import org.bitcoinj.core.Block
+import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
@@ -32,13 +34,15 @@ class VpmOperation(
 ) {
     var miningInstruction: PopMiningInstruction? = null
         private set
-    var endorsementTransaction: VpmSpTransaction? = null
+    var endorsementTransaction: Transaction? = null
         private set
-    var blockOfProof: VpmSpBlock? = null
+    var endorsementTransactionBytes: ByteArray? = null
         private set
-    var merklePath: VpmMerklePath? = null
+    var blockOfProof: Block? = null
         private set
-    var context: VpmContext? = null
+    var merklePath: String? = null
+        private set
+    var context: List<Block>? = null
         private set
     var proofOfProofId: String? = null
         private set
@@ -69,14 +73,15 @@ class VpmOperation(
         setState(VpmOperationState.INSTRUCTION)
     }
 
-    fun setTransaction(transaction: VpmSpTransaction) {
+    fun setTransaction(transaction: Transaction, transactionBytes: ByteArray) {
         if (state != VpmOperationState.INSTRUCTION) {
             error("Trying to set transaction without having the mining instruction")
         }
         endorsementTransaction = transaction
+        endorsementTransactionBytes = transactionBytes
         setState(VpmOperationState.ENDORSEMENT_TRANSACTION)
 
-        transaction.transaction.confidence.addEventListener(transactionListener)
+        transaction.confidence.addEventListener(transactionListener)
         GlobalScope.launch {
             for (confidenceType in transactionConfidenceEventChannel.openSubscription()) {
                 if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
@@ -95,11 +100,11 @@ class VpmOperation(
         setState(VpmOperationState.CONFIRMED)
 
         endorsementTransaction?.let {
-            Metrics.spentFeesCounter.increment(it.fee.toDouble())
+            Metrics.spentFeesCounter.increment(it.fee.value.toDouble())
         }
     }
 
-    fun setBlockOfProof(blockOfProof: VpmSpBlock) {
+    fun setBlockOfProof(blockOfProof: Block) {
         if (state != VpmOperationState.CONFIRMED) {
             error("Trying to set block of proof without having confirmed the transaction")
         }
@@ -107,7 +112,7 @@ class VpmOperation(
         setState(VpmOperationState.BLOCK_OF_PROOF)
     }
 
-    fun setMerklePath(merklePath: VpmMerklePath) {
+    fun setMerklePath(merklePath: String) {
         if (state != VpmOperationState.BLOCK_OF_PROOF) {
             error("Trying to set merkle path without the block of proof")
         }
@@ -115,7 +120,7 @@ class VpmOperation(
         setState(VpmOperationState.PROVEN)
     }
 
-    fun setContext(context: VpmContext) {
+    fun setContext(context: List<Block>) {
         if (state != VpmOperationState.PROVEN) {
             error("Trying to set context without the merkle path")
         }
@@ -161,17 +166,17 @@ class VpmOperation(
             result["vbkEndorsedBlockContextHeaders"] = it.endorsedBlockContextHeaders.joinToString { it.toHex() }
         }
         endorsementTransaction?.let {
-            result["btcEndorsementTransactionId"] = it.txId
-            result["btcEndorsementTransactionFee"] = it.fee.formatAtomicLongWithDecimal()
+            result["btcEndorsementTransactionId"] = it.txId.toString()
+            result["btcEndorsementTransactionFee"] = it.fee.toFriendlyString()
         }
         blockOfProof?.let {
-            result["btcBlockOfProof"] = it.hash
+            result["btcBlockOfProof"] = it.hashAsString
         }
         merklePath?.let {
-            result["merklePath"] = it.compactFormat
+            result["merklePath"] = it
         }
         context?.let {
-            result["btcContextBlocks"] = it.blocks.joinToString { it.hashAsString }
+            result["btcContextBlocks"] = it.joinToString { it.hashAsString }
         }
         proofOfProofId?.let {
             result["proofOfProofId"] = it

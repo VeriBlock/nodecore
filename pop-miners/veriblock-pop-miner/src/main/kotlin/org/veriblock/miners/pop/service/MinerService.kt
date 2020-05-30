@@ -193,7 +193,7 @@ class MinerService(
             newOperation.setMiningInstruction(it)
         }
         operation.endorsementTransaction?.let {
-            newOperation.setTransaction(it)
+            newOperation.setTransaction(it, operation.endorsementTransactionBytes!!)
             newOperation.setConfirmed()
         }
         operation.blockOfProof?.let {
