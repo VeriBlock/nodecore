@@ -16,7 +16,7 @@ import org.veriblock.miners.pop.model.result.ResultMessage
 fun VpmOperation.toResponse() = OperationDetailResponse(
     operationId = id,
     status = state.name,
-    currentAction = state.description,
+    currentAction = state.taskName,
     detail = getDetailedInfo()
 )
 

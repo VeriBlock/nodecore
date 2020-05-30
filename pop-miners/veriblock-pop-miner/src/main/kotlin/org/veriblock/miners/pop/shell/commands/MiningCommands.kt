@@ -153,16 +153,16 @@ fun CommandFactory.miningCommands(
 
 class OperationInfo(
     val operationId: String,
-    val status: String,
-    val endorsedBlockHeight: Int?,
     val state: String,
+    val endorsedBlockHeight: Int?,
+    val task: String,
     val stateDetail: Map<String, String>
 ) {
     constructor(operation: VpmOperation) : this(
         operation.id,
         operation.state.name,
         operation.endorsedBlockHeight,
-        operation.state.description,
+        operation.state.taskName,
         operation.getDetailedInfo()
     )
 }

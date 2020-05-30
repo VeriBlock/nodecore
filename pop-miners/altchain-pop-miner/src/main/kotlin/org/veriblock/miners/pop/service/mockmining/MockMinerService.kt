@@ -9,10 +9,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.core.ApmMerklePath
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.ApmSpBlock
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.MinerService
@@ -103,8 +100,8 @@ class MockMinerService(
         // Update operation state
         operation.setTransaction(ApmSpTransaction(WalletTransaction.wrap(atv.transaction)))
         operation.setConfirmed()
-        operation.setBlockOfProof(ApmSpBlock(atv.containingBlock))
-        operation.setMerklePath(ApmMerklePath(atv.merklePath))
+        operation.setBlockOfProof(atv.containingBlock)
+        operation.setMerklePath(atv.merklePath)
 
         val lastKnownBtcBlockHash = miningInstruction.btcContext.last()
         val lastKnownVbkBlockHash = miningInstruction.context.last()
@@ -118,7 +115,7 @@ class MockMinerService(
             key
         )
         val vtbs = listOf(vtb)
-        operation.setContext(ApmContext(vtbs))
+        operation.setContext(vtbs)
 
         val submissionResult = try {
             runBlocking {
@@ -132,7 +129,8 @@ class MockMinerService(
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
-        operation.complete("", 0)
+        operation.setPayoutData("", 0)
+        operation.complete()
         return operation.id
     }
 

@@ -10,7 +10,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.bitcoinj.core.Transaction
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.VpmContext
 import org.veriblock.miners.pop.core.VpmMerklePath
 import org.veriblock.miners.pop.core.VpmOperation
@@ -72,7 +72,7 @@ class PopStateService(
         val protoData = OperationProto.Operation(
             id = operation.id,
             state = operation.state.name,
-            action = operation.state.description,
+            action = operation.state.taskName,
             endorsedBlockNumber = operation.endorsedBlockHeight ?: -1,
             miningInstruction = operation.miningInstruction?.let {
                 OperationProto.MiningInstruction(
@@ -83,11 +83,11 @@ class PopStateService(
                     it.endorsedBlockContextHeaders
                 )
             } ?: OperationProto.MiningInstruction(),
-            transaction = operation.endorsementTransaction?.transactionBytes ?: ByteArray(0),
-            bitcoinTxId = operation.endorsementTransaction?.txId ?: "",
-            blockOfProof = operation.blockOfProof?.block?.bitcoinSerialize() ?: ByteArray(0),
-            merklePath = operation.merklePath?.compactFormat ?: "",
-            bitcoinContext = operation.context?.blocks?.map { it.bitcoinSerialize() } ?: emptyList(),
+            transaction = operation.endorsementTransactionBytes ?: ByteArray(0),
+            bitcoinTxId = operation.endorsementTransaction?.txId?.toString() ?: "",
+            blockOfProof = operation.blockOfProof?.bitcoinSerialize() ?: ByteArray(0),
+            merklePath = operation.merklePath ?: "",
+            bitcoinContext = operation.context?.map { it.bitcoinSerialize() } ?: emptyList(),
             popTxId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
             payoutAmount = operation.payoutAmount ?: 0L
@@ -104,7 +104,6 @@ class PopStateService(
         )
         val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), record.state)
         logger.debug("Reconstituting operation {}", protoData.id)
-        val state = OperationState.valueOf(protoData.state)
         if (protoData.endorsedBlockNumber >= 0) {
             operation.endorsedBlockHeight = protoData.endorsedBlockNumber
         }
@@ -121,34 +120,35 @@ class PopStateService(
         if (protoData.transaction.isNotEmpty()) {
             logger.debug(operation, "Rebuilding transaction")
             val transaction: Transaction = bitcoinService.makeTransaction(protoData.transaction)
-            operation.setTransaction(VpmSpTransaction(transaction, protoData.transaction))
+            operation.setTransaction(transaction, protoData.transaction)
             logger.debug(operation, "Rebuilt transaction ${transaction.txId}")
         }
         if (protoData.blockOfProof.isNotEmpty()) {
             operation.setConfirmed()
             logger.debug(operation, "Rebuilding block of proof")
             val block = bitcoinService.makeBlock(protoData.blockOfProof)
-            operation.setBlockOfProof(VpmSpBlock(block))
+            operation.setBlockOfProof(block)
             logger.debug(operation, "Reattached block of proof ${block.hashAsString}")
         }
         if (protoData.merklePath.isNotEmpty()) {
-            operation.setMerklePath(VpmMerklePath(protoData.merklePath))
+            operation.setMerklePath(protoData.merklePath)
         }
         if (protoData.bitcoinContext.isNotEmpty()) {
             logger.debug(operation, "Rebuilding context blocks")
             val contextBytes = protoData.bitcoinContext
             val blocks = bitcoinService.makeBlocks(contextBytes)
-            operation.setContext(VpmContext(ArrayList(blocks)))
+            operation.setContext(ArrayList(blocks))
         } else if (protoData.popTxId.isNotEmpty()) {
-            operation.setContext(VpmContext())
+            operation.setContext(emptyList())
         }
         if (protoData.popTxId.isNotEmpty()) {
             operation.setProofOfProofId(protoData.popTxId)
         }
         if (protoData.payoutBlockHash.isNotEmpty()) {
-            operation.complete(protoData.payoutBlockHash, protoData.payoutAmount)
+            operation.setPayoutData(protoData.payoutBlockHash, protoData.payoutAmount)
+            operation.complete()
         }
-        if (state == OperationState.FAILED) {
+        if (protoData.state == "FAILED") {
             operation.fail("Loaded as failed")
         }
         operation.reconstituting = false

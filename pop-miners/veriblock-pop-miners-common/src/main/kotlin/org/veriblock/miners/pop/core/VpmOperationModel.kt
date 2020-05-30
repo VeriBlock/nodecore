@@ -14,20 +14,20 @@ import org.bitcoinj.core.Transaction
 class VpmSpTransaction(
     val transaction: Transaction,
     val transactionBytes: ByteArray
-) : SpTransaction {
-    override val txId: String get() = transaction.txId.toString()
-    override val fee: Long get() = transaction.fee?.value ?: 0L
+) {
+    val txId: String get() = transaction.txId.toString()
+    val fee: Long get() = transaction.fee?.value ?: 0L
 }
 
 class VpmSpBlock(
     val block: Block
-) : SpBlock {
-    override val hash: String get() = block.hashAsString
+) {
+    val hash: String get() = block.hashAsString
 }
 
 class VpmMerklePath(
-    override val compactFormat: String
-) : MerklePath
+    val compactFormat: String
+)
 
 class VpmContext(
     val blocks: List<Block> = emptyList()

@@ -31,7 +31,11 @@ private val gson = Gson()
 fun <T> String.fromJson(type: Type): T = gson.fromJson(this, type)
 fun <T> JsonElement.fromJson(type: Type): T = gson.fromJson(this, type)
 
-fun createHttpClient(authConfig: HttpAuthConfig? = null, contentTypes: List<ContentType>? = null) = HttpClient(Apache) {
+fun createHttpClient(
+    authConfig: HttpAuthConfig? = null,
+    contentTypes: List<ContentType>? = null,
+    connectionTimeout: Int = 5_000
+) = HttpClient(Apache) {
     Json {
         if (contentTypes != null) {
             acceptContentTypes = contentTypes
@@ -44,6 +48,11 @@ fun createHttpClient(authConfig: HttpAuthConfig? = null, contentTypes: List<Cont
                 password = authConfig.password
             }
         }
+    }
+    engine {
+        socketTimeout = connectionTimeout
+        connectTimeout = connectionTimeout
+        connectionRequestTimeout = connectionTimeout * 2
     }
     // We will handle error responses manually as we'll be calling a RPC service's API
     expectSuccess = false

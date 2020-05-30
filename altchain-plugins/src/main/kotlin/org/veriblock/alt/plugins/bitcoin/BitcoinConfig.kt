@@ -14,7 +14,8 @@ class BitcoinConfig(
     override val payoutInterval: Int = 501,
     override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 1, 2),
     override val autoMineRounds: List<Int> = emptyList(),
-    val requestLogsPath: String? = null
+    val requestLogsPath: String? = null,
+    val daemonConnectionTimeout: Int = 5000
 ) : ChainConfig() {
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
@@ -26,6 +27,7 @@ class BitcoinConfig(
         configuration.payoutInterval ?: 501,
         configuration.blockRoundIndices ?: intArrayOf(4, 1, 2, 1, 2),
         configuration.autoMineRounds,
-        configuration.extraConfig["requestLogsPath"]
+        configuration.extraConfig["requestLogsPath"],
+        configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 5000
     )
 }

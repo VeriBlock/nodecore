@@ -200,6 +200,7 @@ class AltchainPopMinerService(
 
         registerToStateChangedEvent(operation)
 
+        operation.state
         submit(operation)
         operations[operation.id] = operation
 

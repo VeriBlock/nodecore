@@ -24,9 +24,9 @@ and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).
 #### FAQ
 
 1. IDEA can't see class VeriBlockMessages (class is too large). 
-    Step 1 Open the menu item: «Help» → «Edit Custom Properties» 
-    Step 2 Set the parameter: 
-        idea.max.intellisense.filesize=999999 
+    * Step 1: Open the menu item: «Help» → «Edit Custom Properties» 
+    * Step 2: Set the parameters: 
+        idea.max.intellisense.filesize=999999
         idea.max.content.load.filesize=200000
-    Step 3 Restart IntelliJ IDEA.
+    * Step 3: Restart IntelliJ IDEA.
 
