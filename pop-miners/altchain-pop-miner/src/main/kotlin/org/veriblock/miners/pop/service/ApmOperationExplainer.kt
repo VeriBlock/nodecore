@@ -64,14 +64,14 @@ class ApmOperationExplainer(
             )
         }
         ApmOperationState.CONFIRMED -> {
-            listOf("${context.vbkTokenName} endorsement transaction has been confirmed")
+            listOf("")
         }
         ApmOperationState.BLOCK_OF_PROOF -> {
             val blockOfProof = operation.blockOfProof
             listOf("${context.vbkTokenName} block of proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}")
         }
         ApmOperationState.PROVEN -> {
-            listOf("Merkle path: ${operation.merklePath?.toCompactString()}")
+            listOf("Merkle path has been verified")
         }
         ApmOperationState.KEYSTONE_OF_PROOF -> {
             listOf("Keystone of Proof: ${operation.keystoneOfProof?.hash}")
