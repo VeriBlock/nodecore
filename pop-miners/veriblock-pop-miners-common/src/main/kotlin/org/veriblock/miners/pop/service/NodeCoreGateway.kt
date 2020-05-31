@@ -23,6 +23,7 @@ import org.veriblock.miners.pop.model.PopMiningInstruction
 import org.veriblock.miners.pop.model.PopMiningTransaction
 import org.veriblock.miners.pop.model.VeriBlockHeader
 import org.veriblock.miners.pop.model.result.Result
+import org.veriblock.sdk.models.SyncStatus
 import java.util.Arrays
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
@@ -71,7 +72,7 @@ class NodeCoreGateway(
      *
      * This function will return an empty NodeCoreSyncStatus if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
      */
-    fun getNodeCoreSyncStatus(): NodeCoreSyncStatus {
+    fun getNodeCoreSyncStatus(): SyncStatus {
         return try {
             val request = checkGrpcError {
                 blockingStub
@@ -80,7 +81,7 @@ class NodeCoreGateway(
             }
 
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
-            NodeCoreSyncStatus(
+            SyncStatus(
                 request.networkHeight,
                 request.localBlockchainHeight,
                 blockDifference,
@@ -88,7 +89,7 @@ class NodeCoreGateway(
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
-            NodeCoreSyncStatus(0, 0, 0, false)
+            SyncStatus(0, 0, 0, false)
         }
     }
 
@@ -318,10 +319,3 @@ class PopSubmitRejected : RuntimeException("PoP submission rejected")
 class TimeoutError(
     override val message: String
 ) : RuntimeException()
-
-data class NodeCoreSyncStatus(
-    val networkHeight: Int,
-    val localBlockchainHeight: Int,
-    val blockDifference: Int,
-    val isSynchronized: Boolean
-)

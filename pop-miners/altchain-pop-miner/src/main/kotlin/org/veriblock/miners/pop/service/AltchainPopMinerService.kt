@@ -169,10 +169,7 @@ class AltchainPopMinerService(
 
     override fun mine(chainId: String, block: Int?): String {
         val chain = pluginService[chainId]
-        if (chain == null) {
-            error("Unable to load plugin $chainId")
-        }
-
+            ?: throw MineException("Unable to load plugin $chainId")
         if (!isReady()) {
             throw MineException("Miner is not ready: ${listNotReadyConditions()}")
         }
@@ -186,8 +183,9 @@ class AltchainPopMinerService(
             if (!chain.isConnected()) {
                 throw MineException("The miner is not connected to the ${chain.name} chain")
             }
-            if (!chain.isSynchronized()) {
-                throw MineException("The chain ${chain.name} is not synchronized")
+            val chainSyncStatus = chain.getSynchronizedStatus()
+            if (!chainSyncStatus.isSynchronized) {
+                throw MineException("The chain ${chain.name} is not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
             }
         }
 

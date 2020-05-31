@@ -30,10 +30,12 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
+import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
 import java.nio.ByteBuffer
+import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private val logger = createLogger {}
@@ -238,15 +240,20 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun isSynchronized(): Boolean {
-        val response: BtcSyncStatus = try {
-            rpcRequest("getblockchaininfo")
+    override suspend fun getSynchronizedStatus(): SyncStatus {
+        return try {
+            val response: BtcSyncStatus = rpcRequest("getblockchaininfo")
+            val blockDifference = abs(response.headers - response.blocks)
+            SyncStatus(
+                response.headers,
+                response.blocks,
+                blockDifference,
+                response.headers > 0 && blockDifference < 4
+            )
         } catch (e: Exception) {
-            logger.debug { "Unable to perform the 'getblockchaininfo' rpc call: ${e.message}" }
-            return false
+            logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
+            SyncStatus(0, 0, 0, false)
         }
-        val blockDifference = response.headers - response.blocks
-        return blockDifference < 4
     }
 }
 

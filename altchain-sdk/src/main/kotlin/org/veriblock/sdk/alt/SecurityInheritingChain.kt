@@ -13,6 +13,7 @@ import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
+import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.VeriBlockPublication
 
 interface SecurityInheritingChain {
@@ -105,7 +106,7 @@ interface SecurityInheritingChain {
     suspend fun isConnected(): Boolean
 
     /**
-     * @return true if the chain is synchronized
+     * @return the Synchronization status
      */
-    suspend fun isSynchronized(): Boolean
+    suspend fun getSynchronizedStatus(): SyncStatus
 }
