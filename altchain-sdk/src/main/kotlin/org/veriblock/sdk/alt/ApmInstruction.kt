@@ -9,6 +9,7 @@
 package org.veriblock.sdk.alt
 
 import org.veriblock.core.contracts.MiningInstruction
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.models.PublicationData
 
@@ -17,14 +18,4 @@ class ApmInstruction(
     val publicationData: PublicationData,
     val context: List<ByteArray>,
     val btcContext: List<ByteArray>
-) : MiningInstruction {
-    override val detailedInfo: Map<String, String>
-        get() = mapOf(
-            "chainIdentifier" to publicationData.identifier.toString(),
-            "publicationDataHeader" to publicationData.header.toHex(),
-            "publicationDataContextInfo" to publicationData.contextInfo.toHex(),
-            "publicationData PayoutInfo" to publicationData.payoutInfo.toHex(),
-            "vbkContextBlockHashes" to context.joinToString { it.toHex() },
-            "btcContextBlockHashes" to btcContext.joinToString { it.toHex() }
-        )
-}
+) : MiningInstruction

@@ -115,7 +115,7 @@ class BitcoinService(
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
         EventBus.popMiningOperationFinishedEvent.register(this) {
             contextCoroutineScope.launch {
-                it.endorsementTransaction?.transaction?.confidence?.removeEventListener(it.transactionListener)
+                it.endorsementTransaction?.confidence?.removeEventListener(it.transactionListener)
             }
         }
         logger.info("BitcoinService constructor finished")

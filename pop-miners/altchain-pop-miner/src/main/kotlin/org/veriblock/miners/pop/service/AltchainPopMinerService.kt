@@ -150,7 +150,10 @@ class AltchainPopMinerService(
     override fun getOperations() = operations.values.sortedBy { it.createdAt }
 
     override fun getOperation(id: String): ApmOperation? {
-        return operations[id]
+        return operations[id] ?: operationService.getOperation(id) { txId ->
+            val hash = Sha256Hash.wrap(txId)
+            nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
+        }
     }
 
     override fun getAddress(): String = nodeCoreLiteKit.getAddress()
@@ -169,7 +172,8 @@ class AltchainPopMinerService(
 
     override fun mine(chainId: String, block: Int?): String {
         val chain = pluginService[chainId]
-            ?: throw MineException("Unable to load plugin $chainId")
+            ?: throw MineException("Unable to find altchain plugin '$chainId'")
+
         if (!isReady()) {
             throw MineException("Miner is not ready: ${listNotReadyConditions()}")
         }
@@ -200,6 +204,7 @@ class AltchainPopMinerService(
 
         registerToStateChangedEvent(operation)
 
+        operation.state
         submit(operation)
         operations[operation.id] = operation
 
@@ -209,7 +214,7 @@ class AltchainPopMinerService(
     }
 
     override fun resubmit(operation: ApmOperation) {
-        if (operation.context == null) {
+        if (operation.publicationData == null) {
             error("The operation [${operation.id}] has no context to be resubmitted!")
         }
 
@@ -227,7 +232,7 @@ class AltchainPopMinerService(
         newOperation.setConfirmed()
         newOperation.setBlockOfProof(operation.blockOfProof!!)
         newOperation.setMerklePath(operation.merklePath!!)
-        newOperation.setContext(operation.context!!)
+        newOperation.setContext(operation.publicationData!!)
         newOperation.reconstituting = false
 
         registerToStateChangedEvent(newOperation)

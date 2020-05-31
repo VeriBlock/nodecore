@@ -12,7 +12,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import mu.KLogger
 import org.veriblock.core.contracts.MiningInstruction
-import org.veriblock.core.contracts.WithDetailedInfo
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -35,8 +34,8 @@ private val logSerializer = ListSerializer(OperationLog.serializer())
 fun List<OperationLog>.toJson() = jsonSerialization.stringify(logSerializer, this)
 fun String.parseOperationLogs() = jsonSerialization.parse(logSerializer, this)
 
-private fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.log(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>,
+private fun KLogger.log(
+    operation: MiningOperation,
     level: Level,
     msg: String,
     t: Throwable? = null
@@ -56,26 +55,26 @@ private fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : Me
 }
 
 // Utility functions for logging on an operation
-fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.trace(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>, msg: String
+fun KLogger.trace(
+    operation: MiningOperation, msg: String
 ) = log(operation, TRACE, msg)
 
-fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.debug(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>, msg: String
+fun KLogger.debug(
+    operation: MiningOperation, msg: String
 ) = log(operation, DEBUG, msg)
 
-fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.info(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>, msg: String
+fun KLogger.info(
+    operation: MiningOperation, msg: String
 ) = log(operation, INFO, msg)
 
-fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.warn(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>, msg: String
+fun KLogger.warn(
+    operation: MiningOperation, msg: String
 ) = log(operation, WARN, msg)
 
-fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.error(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>, msg: String
+fun KLogger.error(
+    operation: MiningOperation, msg: String
 ) = log(operation, ERROR, msg)
 
-fun <MI : MiningInstruction, SPT : SpTransaction, SPB : SpBlock, MP : MerklePath, CD : WithDetailedInfo> KLogger.error(
-    operation: MiningOperation<MI, SPT, SPB, MP, CD>, t: Throwable, msg: String
+fun KLogger.error(
+    operation: MiningOperation, t: Throwable, msg: String
 ) = log(operation, TRACE, msg, t)

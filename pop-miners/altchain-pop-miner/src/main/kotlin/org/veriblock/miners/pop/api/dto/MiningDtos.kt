@@ -49,9 +49,9 @@ fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
 data class OperationDetailResponse(
     val operationId: String,
     val chain: String,
-    val status: String,
-    val blockHeight: Int?,
     val state: String,
+    val blockHeight: Int?,
+    val task: String,
     val stateDetail: Map<String, String>
 )
 
@@ -60,6 +60,6 @@ fun ApmOperation.toDetailedResponse() = OperationDetailResponse(
     chain.name,
     state.name,
     endorsedBlockHeight,
-    state.description,
+    state.taskName,
     getDetailedInfo()
 )

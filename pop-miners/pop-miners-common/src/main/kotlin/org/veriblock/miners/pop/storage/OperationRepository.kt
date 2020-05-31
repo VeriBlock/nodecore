@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 
 open class OperationRepository(
     protected val database: Database
@@ -21,8 +21,8 @@ open class OperationRepository(
 
     fun getActiveOperations(): List<OperationStateRecord> = transaction(database) {
         OperationStateTable.select {
-            (OperationStateTable.status greaterEq OperationState.INITIAL.id) and
-                (OperationStateTable.status less OperationState.COMPLETED.id)
+            (OperationStateTable.status greaterEq MiningOperationState.INITIAL_ID) and
+                (OperationStateTable.status less MiningOperationState.COMPLETED_ID)
         }.map {
             it.toOperationStateRecord()
         }.toList()

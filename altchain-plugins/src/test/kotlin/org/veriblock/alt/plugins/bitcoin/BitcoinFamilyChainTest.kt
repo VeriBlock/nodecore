@@ -64,6 +64,6 @@ class BitcoinFamilyChainTest {
     @Test
     fun getPublicationData() = runBlocking {
         val data = chain.getMiningInstruction(null)
-        println(data.detailedInfo)
+        println(data)
     }
 }

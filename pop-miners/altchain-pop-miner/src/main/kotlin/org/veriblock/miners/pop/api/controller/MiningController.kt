@@ -24,7 +24,7 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
-import org.veriblock.miners.pop.core.OperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.MinerService
 
 class MiningController(
@@ -36,7 +36,6 @@ class MiningController(
 
     @Path("operations")
     class MinerOperationsPath(
-        @QueryParam("Status filter (optional)") val status: String?,
         @QueryParam("Pagination limit (optional)") val limit: Int?,
         @QueryParam("Pagination offset (optional)") val offset: Int?
     )
@@ -86,25 +85,12 @@ class MiningController(
         ) { location ->
             // Get all the operations
             val allOperations = miner.getOperations()
-            // Get the given status filter
-            val filteredOperations = if (location.status != null) {
-                val operationState = try {
-                    OperationState.valueOf(location.status)
-                } catch (e: Exception) {
-                    throw BadRequestException("Invalid operation status: ${location.status}")
-                }
-                allOperations.filter {
-                    it.state === operationState
-                }
-            } else {
-                allOperations
-            }
             // Get the given offset filter
             val offset = location.offset ?: 0
             // Get the given limit filter
-            val limit = location.limit ?: filteredOperations.size
+            val limit = location.limit ?: allOperations.size
             // Paginate and map operations
-            val result = filteredOperations.asSequence().drop(offset).take(limit).map {
+            val result = allOperations.asSequence().drop(offset).take(limit).map {
                 it.toSummaryResponse()
             }.toList()
             respond(OperationSummaryListResponse(result))

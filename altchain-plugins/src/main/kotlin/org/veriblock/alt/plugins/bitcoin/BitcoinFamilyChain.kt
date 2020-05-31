@@ -58,7 +58,8 @@ class BitcoinFamilyChain(
 
     override val httpClient = createHttpClient(
         authConfig = config.auth,
-        contentTypes = listOf(ContentType.Application.Json, ContentType.Text.Any)
+        contentTypes = listOf(ContentType.Application.Json, ContentType.Text.Any),
+        connectionTimeout = config.daemonConnectionTimeout
     )
 
     override val requestLogsPath: String?

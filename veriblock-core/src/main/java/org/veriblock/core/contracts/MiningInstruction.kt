@@ -1,5 +1,5 @@
 package org.veriblock.core.contracts
 
-interface MiningInstruction : WithDetailedInfo {
+interface MiningInstruction {
     val endorsedBlockHeight: Int
 }

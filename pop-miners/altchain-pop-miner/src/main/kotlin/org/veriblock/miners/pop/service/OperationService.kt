@@ -21,6 +21,13 @@ class OperationService(
     private val repository: OperationRepository,
     private val operationSerializer: OperationSerializer
 ) {
+    fun getOperation(id: String, txFactory: (String) -> WalletTransaction): ApmOperation? {
+        val operation = repository.getOperation(id)
+            ?: return null
+        val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), operation.state)
+        return operationSerializer.deserialize(protoData, operation.createdAt, operation.logs.parseOperationLogs(), txFactory)
+    }
+
     fun getActiveOperations(txFactory: (String) -> WalletTransaction): List<ApmOperation> {
         val activeOperations = repository.getActiveOperations()
         return activeOperations.map {

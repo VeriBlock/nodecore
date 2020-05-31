@@ -28,6 +28,7 @@ object OperationProto {
         @ProtoId(10) val merklePath: String,
         @ProtoId(11) val popTxId: String,
         @ProtoId(12) val payoutBlockHash: String,
-        @ProtoId(13) val payoutAmount: Long
+        @ProtoId(13) val payoutAmount: Long,
+        @ProtoId(14) val failureReason: String
     )
 }
