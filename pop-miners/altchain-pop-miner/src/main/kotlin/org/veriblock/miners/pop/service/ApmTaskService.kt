@@ -179,16 +179,20 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Wait for next VeriBlock Keystone",
-            targetState = ApmOperationState.CONTEXT,
-            timeout = 2.hr
+            targetState = ApmOperationState.KEYSTONE_OF_PROOF,
+            timeout = 1.hr
         ) {
             val blockOfProof = operation.blockOfProof
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without block of proof!")
-            val miningInstruction = operation.miningInstruction
-                ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
 
             logger.info(operation, "Waiting for the next VBK Keystone...")
-            val keystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
+            val topBlockHeight = nodeCoreLiteKit.blockChain.getChainHead()?.height ?: 0
+            val desiredKeystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
+            val keystoneOfProofHeight = if (topBlockHeight >= desiredKeystoneOfProofHeight) {
+                topBlockHeight / 20 * 20 + 20
+            } else {
+                desiredKeystoneOfProofHeight
+            }
             val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
                 logger.debug(operation, "Checking block ${block.hash} @ ${block.height}...")
                 if (block.height > keystoneOfProofHeight) {
@@ -199,7 +203,18 @@ class ApmTaskService(
                 }
                 block.height == keystoneOfProofHeight
             }
+            operation.setKeystoneOfProof(keystoneOfProof)
             logger.info(operation, "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}")
+        }
+        operation.runTask(
+            taskName = "Retrieve VeriBlock Publication data",
+            targetState = ApmOperationState.CONTEXT,
+            timeout = 1.hr
+        ) {
+            val miningInstruction = operation.miningInstruction
+                ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
+            val keystoneOfProof = operation.keystoneOfProof
+                ?: failTask("RegisterVeriBlockPublicationPollingTask called without keystone of proof!")
 
             // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
             val publications = nodeCoreLiteKit.network.getVeriBlockPublications(

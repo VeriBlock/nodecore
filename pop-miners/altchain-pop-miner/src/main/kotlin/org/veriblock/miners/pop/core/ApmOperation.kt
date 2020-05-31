@@ -11,6 +11,7 @@ package org.veriblock.miners.pop.core
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.AsyncEvent
+import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
@@ -46,6 +47,8 @@ class ApmOperation(
         private set
     var merklePath: VeriBlockMerklePath? = null
         private set
+    var keystoneOfProof: FullBlock? = null
+        private set
     var publicationData: List<VeriBlockPublication>? = null
         private set
     var proofOfProofId: String? = null
@@ -78,6 +81,7 @@ class ApmOperation(
         endorsementTransaction = transaction
         setState(ApmOperationState.ENDORSEMENT_TRANSACTION)
     }
+
     fun setConfirmed() {
         if (state != ApmOperationState.ENDORSEMENT_TRANSACTION) {
             error("Trying to set as transaction confirmed without such transaction")
@@ -103,6 +107,14 @@ class ApmOperation(
         }
         this.merklePath = merklePath
         setState(ApmOperationState.PROVEN)
+    }
+
+    fun setKeystoneOfProof(keystoneOfProof: FullBlock) {
+        if (state != ApmOperationState.PROVEN) {
+            error("Trying to set keystone of proof without having proven the transaction")
+        }
+        this.keystoneOfProof = keystoneOfProof
+        setState(ApmOperationState.KEYSTONE_OF_PROOF)
     }
 
     fun setContext(context: List<VeriBlockPublication>) {

@@ -1,6 +1,7 @@
 package org.veriblock.miners.pop.service
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmOperationState
@@ -25,7 +26,11 @@ class ApmOperationExplainer(
             OperationStage(
                 operationState = operationState,
                 status = status,
-                extraInformation = if (status == DONE) operationState.getExtraInformation(operation) else emptyList()
+                extraInformation = when (status) {
+                    DONE -> operationState.getExtraInformation(operation)
+                    CURRENT -> operationState.getCurrentHint(operation)
+                    else -> emptyList()
+                }
             )
         }
     }
@@ -70,25 +75,42 @@ class ApmOperationExplainer(
             listOf("${context.vbkTokenName} block of proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}")
         }
         ApmOperationState.PROVEN -> {
-            listOf(
-                "Merkle path: ${operation.merklePath?.toCompactString()}",
-                "Waiting for the keystone of proof"
-            )
+            listOf("Merkle path: ${operation.merklePath?.toCompactString()}")
+        }
+        ApmOperationState.KEYSTONE_OF_PROOF -> {
+            listOf("Keystone of Proof: ${operation.keystoneOfProof?.hash}")
         }
         ApmOperationState.CONTEXT -> {
-            listOf("")
+            listOf("VTB Transactions: ${operation.publicationData?.joinToString { it.transaction.id.bytes.toHex() }}")
+            listOf("VTB BTC Blocks: ${operation.publicationData?.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }}")
         }
         ApmOperationState.SUBMITTED_POP_DATA -> {
-            val payoutBlockHeight = (operation.miningInstruction?.endorsedBlockHeight ?: 0) + operation.chain.getPayoutInterval()
-            listOf(
-                "VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}",
-                "Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address ${operation.miningInstruction?.publicationData?.payoutInfo}"
-            )
+            listOf("VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}")
         }
         ApmOperationState.PAYOUT_DETECTED -> {
             listOf("Payout detected in ${operation.chain.name} block ${operation.payoutBlockHash}! Amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}")
         }
         else -> listOf("FAILED")
+    }
+
+    private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = when (this) {
+        ApmOperationState.CONFIRMED -> {
+            listOf("Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block")
+        }
+        ApmOperationState.KEYSTONE_OF_PROOF -> {
+            listOf("Waiting for next ${context.vbkTokenName} keystone")
+        }
+        ApmOperationState.CONTEXT -> {
+            listOf("Waiting for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}")
+        }
+        ApmOperationState.SUBMITTED_POP_DATA -> {
+            listOf("Submitting PoP Data to ${operation.chain.name}")
+        }
+        ApmOperationState.PAYOUT_DETECTED -> {
+            val payoutBlockHeight = (operation.miningInstruction?.endorsedBlockHeight ?: 0) + operation.chain.getPayoutInterval()
+            listOf("Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address ${operation.miningInstruction?.publicationData?.payoutInfo}")
+        }
+        else -> listOf("")
     }
 
     data class OperationStage (

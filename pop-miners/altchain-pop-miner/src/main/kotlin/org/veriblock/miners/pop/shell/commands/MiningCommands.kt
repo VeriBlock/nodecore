@@ -81,26 +81,8 @@ fun CommandFactory.miningCommands(
 
     command(
         name = "Get Operation",
-        form = "getoperation",
+        form = "getoperation|get",
         description = "Gets the details of the supplied operation",
-        parameters = listOf(
-            CommandParameter("id", CommandParameterMappers.STRING)
-        )
-    ) {
-        val id: String = getParameter("id")
-        val operation = minerService.getOperation(id)
-        if (operation != null) {
-            printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
-            success()
-        } else {
-            printInfo("Operation $id not found")
-            failure()
-        }
-    }
-    command(
-        name = "Explain Operation",
-        form = "explainoperation",
-        description = "Gets the debug details of the supplied operation",
         parameters = listOf(
             CommandParameter("id", CommandParameterMappers.STRING)
         )
@@ -110,6 +92,9 @@ fun CommandFactory.miningCommands(
         if (operation != null) {
             val operationDetails = apmOperationExplainer.explainOperation(operation)
 
+            printInfo("Operation data:")
+            printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
+            printInfo("Operation workflow:")
             val tableFormat = "%1$-8s %2$-33s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
             operationDetails.forEach { stage ->
