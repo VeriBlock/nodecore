@@ -49,6 +49,7 @@ object OperationProto {
         @ProtoId(11) val veriblockPublications: List<VeriBlockPublication> = emptyList(),
         @ProtoId(12) val proofOfProofId: String,
         @ProtoId(13) val payoutBlockHash: String,
-        @ProtoId(14) val payoutAmount: Long
+        @ProtoId(14) val payoutAmount: Long,
+        @ProtoId(15) val failureReason: String
     )
 }

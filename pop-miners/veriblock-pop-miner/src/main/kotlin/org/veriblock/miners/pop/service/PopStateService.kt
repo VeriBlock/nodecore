@@ -90,7 +90,8 @@ class PopStateService(
             bitcoinContext = operation.context?.map { it.bitcoinSerialize() } ?: emptyList(),
             popTxId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
-            payoutAmount = operation.payoutAmount ?: 0L
+            payoutAmount = operation.payoutAmount ?: 0L,
+            failureReason = operation.failureReason ?: ""
         )
         return ProtoBuf.dump(OperationProto.Operation.serializer(), protoData)
     }
@@ -149,7 +150,7 @@ class PopStateService(
             operation.complete()
         }
         if (protoData.state == "FAILED") {
-            operation.fail("Loaded as failed")
+            operation.fail(protoData.failureReason)
         }
         operation.reconstituting = false
         return operation

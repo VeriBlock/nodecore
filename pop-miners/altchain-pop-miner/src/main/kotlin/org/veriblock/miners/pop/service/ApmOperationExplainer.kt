@@ -12,10 +12,6 @@ class ApmOperationExplainer(
     val context: Context
 ) {
     fun explainOperation(operation: ApmOperation): List<OperationStage> {
-        // TODO: Explain failed ops down to the state at which they failed
-        if (operation.isFailed()) {
-            return listOf(OperationStage(MiningOperationState.FAILED, CURRENT, listOf(operation.failureReason ?: "mine")))
-        }
         val currentState = if (!operation.isFailed()) {
             operation.state
         } else {
@@ -37,12 +33,12 @@ class ApmOperationExplainer(
 
     private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
         return when {
-            operation.miningInstruction != null -> ApmOperationState.INSTRUCTION
-            operation.endorsementTransaction != null -> ApmOperationState.ENDORSEMENT_TRANSACTION
-            operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
-            operation.merklePath != null -> ApmOperationState.PROVEN
-            operation.publicationData != null -> ApmOperationState.CONTEXT
             operation.proofOfProofId != null -> ApmOperationState.SUBMITTED_POP_DATA
+            operation.publicationData != null -> ApmOperationState.CONTEXT
+            operation.merklePath != null -> ApmOperationState.PROVEN
+            operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
+            operation.endorsementTransaction != null -> ApmOperationState.ENDORSEMENT_TRANSACTION
+            operation.miningInstruction != null -> ApmOperationState.INSTRUCTION
             else -> ApmOperationState.INITIAL
         }
     }

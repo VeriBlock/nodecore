@@ -55,7 +55,8 @@ class OperationSerializer(
             } ?: emptyList(),
             proofOfProofId = operation.proofOfProofId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
-            payoutAmount = operation.payoutAmount ?: 0L
+            payoutAmount = operation.payoutAmount ?: 0L,
+            failureReason = operation.failureReason ?: ""
         )
         return protoData
     }
@@ -121,8 +122,8 @@ class OperationSerializer(
                 complete()
             }
 
-            if (state == MiningOperationState.FAILED) {
-                fail("Loaded as failed")
+            if (serialized.state == MiningOperationState.FAILED.id) {
+                fail(serialized.failureReason)
             }
 
             reconstituting = false

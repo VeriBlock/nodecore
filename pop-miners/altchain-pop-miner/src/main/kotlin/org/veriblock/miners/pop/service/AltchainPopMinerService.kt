@@ -150,7 +150,10 @@ class AltchainPopMinerService(
     override fun getOperations() = operations.values.sortedBy { it.createdAt }
 
     override fun getOperation(id: String): ApmOperation? {
-        return operations[id]
+        return operations[id] ?: operationService.getOperation(id) { txId ->
+            val hash = Sha256Hash.wrap(txId)
+            nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
+        }
     }
 
     override fun getAddress(): String = nodeCoreLiteKit.getAddress()
@@ -169,7 +172,8 @@ class AltchainPopMinerService(
 
     override fun mine(chainId: String, block: Int?): String {
         val chain = pluginService[chainId]
-            ?: throw MineException("Unable to load plugin $chainId")
+            ?: throw MineException("Unable to find altchain plugin '$chainId'")
+
         if (!isReady()) {
             throw MineException("Miner is not ready: ${listNotReadyConditions()}")
         }
