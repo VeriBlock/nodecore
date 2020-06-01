@@ -25,7 +25,6 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.wallet.Address
 import org.veriblock.sdk.models.VeriBlockBlock
-import spark.utils.CollectionUtils
 import veriblock.SpvContext
 import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.DownloadStatus

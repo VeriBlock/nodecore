@@ -166,7 +166,7 @@ class ApmOperation(
         }
         publicationData?.let { context ->
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
-            result["vtbBtcBlocks"] = context.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
+            result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
         }
         proofOfProofId?.let {
             result["proofOfProofId"] = it

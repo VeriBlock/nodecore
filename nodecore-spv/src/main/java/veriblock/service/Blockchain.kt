@@ -14,7 +14,6 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
-import spark.utils.CollectionUtils
 import java.math.BigInteger
 import java.sql.SQLException
 import java.util.ArrayList
@@ -79,7 +78,7 @@ class Blockchain(
             return
         }
         val listToStore = listToStore(sortedBlock)
-        if (CollectionUtils.isEmpty(listToStore)) {
+        if (listToStore.isEmpty()) {
             // todo throw Exception
             // Nothing to build on
             return
@@ -174,10 +173,10 @@ class Blockchain(
     }
 
     private fun areBlocksSequentially(blocks: List<VeriBlockBlock>): Boolean {
-        val hashes: MutableSet<String> = HashSet()
-        if (CollectionUtils.isEmpty(blocks)) {
+        if (blocks.isEmpty()) {
             return false
         }
+        val hashes: MutableSet<String> = HashSet()
         val firstHeight = blocks[0].height
         for (veriBlockBlock in blocks) {
             if (firstHeight < veriBlockBlock.height) {

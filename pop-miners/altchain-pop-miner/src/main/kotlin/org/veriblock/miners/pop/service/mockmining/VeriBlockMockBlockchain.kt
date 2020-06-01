@@ -76,9 +76,7 @@ class VeriBlockMockBlockchain(
         val blockHeight = chainHead.height + 1
         val previousKeystone = getPreviousKeystoneForNewBlock()
         val secondPreviousKeystone = getSecondPreviousKeystoneForNewBlock()
-        val timestamp = Math.max(
-            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utility.getCurrentTimestamp()
-        )
+        val timestamp = (getNextEarliestTimestamp(chainHead.hash) ?: 0).coerceAtLeast(Utility.getCurrentTimestamp())
         val difficulty = getNextDifficulty(chainHead).asInt
         for (nonce in 0 until Int.MAX_VALUE) {
             val newBlock = VeriBlockBlock(
