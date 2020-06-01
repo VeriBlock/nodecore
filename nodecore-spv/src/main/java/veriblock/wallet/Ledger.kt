@@ -24,8 +24,8 @@ class Ledger {
         )
     }
 
-    operator fun get(address: String): AddressLedger? {
-        return entries[address]
+    operator fun get(address: String): AddressLedger {
+        return entries.getValue(address)
     }
 
     fun list(): Collection<AddressLedger> {
@@ -42,7 +42,7 @@ class Ledger {
     fun record(tx: StandardTransaction) {
         val ledgerEntries = createLedgerEntriesFrom(tx)
         ledgerEntries.forEach {
-            get(it.address)!!.add(it)
+            get(it.address).add(it)
         }
     }
 

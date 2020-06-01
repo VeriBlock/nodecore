@@ -29,7 +29,7 @@ class TransactionService(
     private val networkParameters: NetworkParameters
 ) {
     fun calculateFee(
-        requestedSourceAddress: String?,
+        requestedSourceAddress: String,
         totalOutputAmount: Long,
         outputList: List<Output>,
         signatureIndex: Long
@@ -113,35 +113,31 @@ class TransactionService(
      * @return A StandardTransaction object
      */
     fun createStandardTransaction(
-        inputAddress: String?,
+        inputAddress: String,
         inputAmount: Long,
         outputs: List<Output>,
-        signatureIndex: Long?
+        signatureIndex: Long
     ): Transaction {
-        requireNotNull(inputAddress) { "createStandardTransaction cannot be called with a null inputAddress!" }
-        require(
-            AddressUtility.isValidStandardAddress(inputAddress)
-        ) { "createStandardTransaction cannot be called with an invalid inputAddress ($inputAddress)!" }
+        require(AddressUtility.isValidStandardAddress(inputAddress)) {
+            "createStandardTransaction cannot be called with an invalid inputAddress ($inputAddress)!"
+        }
         require(Utility.isPositive(inputAmount)) {
-            "createStandardTransaction cannot be called with a non-positive" +
-                "inputAmount (" + inputAmount + ")!"
+            "createStandardTransaction cannot be called with a non-positive inputAmount ($inputAmount)!"
         }
         var outputTotal = 0L
         for (outputCount in outputs.indices) {
             val output = outputs[outputCount]
             val outputAmount = output.amount.atomicUnits
             require(Utility.isPositive(outputAmount)) {
-                "createStandardTransaction cannot be called with an output " +
-                    "(at index " + outputCount + ") with a non-positive output amount!"
+                "createStandardTransaction cannot be called with an output (at index $outputCount) with a non-positive output amount!"
             }
             outputTotal += outputAmount
         }
         require(outputTotal <= inputAmount) {
-            "createStandardTransaction cannot be called with an output total " +
-                "which is larger than the inputAmount (outputTotal = " + outputTotal + ", inputAmount = " +
-                inputAmount + ")!"
+            "createStandardTransaction cannot be called with an output total which is larger than the inputAmount" +
+                " (outputTotal = $outputTotal, inputAmount = $inputAmount)!"
         }
-        val transaction: Transaction = StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex!!, networkParameters)
+        val transaction: Transaction = StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex, networkParameters)
         val signingResult = signTransaction(transaction.txId, inputAddress)
         if (signingResult.succeeded()) {
             transaction.addSignature(signingResult.signature, signingResult.publicKey)
@@ -150,13 +146,14 @@ class TransactionService(
     }
 
     fun createUnsignedAltChainEndorsementTransaction(
-        inputAddress: String?, fee: Long, publicationData: ByteArray?, signatureIndex: Long
+        inputAddress: String, fee: Long, publicationData: ByteArray?, signatureIndex: Long
     ): Transaction {
-        requireNotNull(inputAddress) { "createAltChainEndorsementTransaction cannot be called with a null inputAddress!" }
-        require(
-            AddressUtility.isValidStandardAddress(inputAddress)
-        ) { "createAltChainEndorsementTransaction cannot be called with an invalid inputAddress ($inputAddress)!" }
-        require(Utility.isPositive(fee)) { "createAltChainEndorsementTransaction cannot be called with a non-positiveinputAmount ($fee)!" }
+        require(AddressUtility.isValidStandardAddress(inputAddress)) {
+            "createAltChainEndorsementTransaction cannot be called with an invalid inputAddress ($inputAddress)!"
+        }
+        require(Utility.isPositive(fee)) {
+            "createAltChainEndorsementTransaction cannot be called with a non-positiveinputAmount ($fee)!"
+        }
         return StandardTransaction(null, inputAddress, fee, emptyList(), signatureIndex, publicationData, networkParameters)
     }
 
@@ -209,13 +206,12 @@ class TransactionService(
 
             // Using an estimated total fee of 1 VBK
             val inputAmount = 100000000L
-            var inputAmountLength = 0L
             totalSize += 1 // Transaction Version
             totalSize += 1 // Type of Input Address
             totalSize += 1 // Standard Input Address Length Byte
             totalSize += 22 // Standard Input Address Length
             val inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount)
-            inputAmountLength = inputAmountBytes.size.toLong()
+            val inputAmountLength = inputAmountBytes.size.toLong()
             totalSize += 1 // Input Amount Length Byte
             totalSize += inputAmountLength.toInt() // Input Amount Length
             totalSize += 1 // Number of Outputs, will be 0

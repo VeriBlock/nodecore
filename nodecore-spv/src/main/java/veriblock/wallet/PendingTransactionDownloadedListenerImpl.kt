@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock
 class PendingTransactionDownloadedListenerImpl(
     private val spvContext: SpvContext
 ) : PendingTransactionDownloadedListener {
-    private val transactions: MutableMap<Sha256Hash?, StandardTransaction>? = null
+    private val transactions: MutableMap<Sha256Hash, StandardTransaction> = mutableMapOf()
     private val ledger = Ledger()
     private val keyRing = KeyRing()
     private val lock = ReentrantLock(true)
@@ -20,7 +20,7 @@ class PendingTransactionDownloadedListenerImpl(
 
     fun loadTransactions(toLoad: List<StandardTransaction>) {
         for (tx in toLoad) {
-            transactions!![tx.txId] = tx
+            transactions[tx.txId] = tx
             spvContext.transactionPool.insert(tx.transactionMeta!!)
         }
     }
@@ -28,7 +28,7 @@ class PendingTransactionDownloadedListenerImpl(
     fun commitTx(tx: StandardTransaction) {
         lock.lock()
         try {
-            if (transactions!!.containsKey(tx.txId)) {
+            if (transactions.containsKey(tx.txId)) {
                 return
             }
             tx.transactionMeta!!.setState(TransactionMeta.MetaState.PENDING)
@@ -40,14 +40,14 @@ class PendingTransactionDownloadedListenerImpl(
     }
 
     fun getStandardTransaction(txId: Sha256Hash?): StandardTransaction? {
-        return transactions!![txId]
+        return transactions[txId]
     }
 
     fun getStandardTransactions(): Collection<StandardTransaction> =
-        Collections.unmodifiableCollection(transactions!!.values)
+        Collections.unmodifiableCollection(transactions.values)
 
     private fun isTransactionRelevant(tx: StandardTransaction): Boolean {
-        if (transactions!!.containsKey(tx.txId)) {
+        if (transactions.containsKey(tx.txId)) {
             return true
         }
         return if (keyRing.contains(tx.inputAddress!!.get())) {
@@ -62,7 +62,7 @@ class PendingTransactionDownloadedListenerImpl(
     private fun addTransaction(tx: StandardTransaction) {
         lock.lock()
         try {
-            transactions!!.putIfAbsent(tx.txId, tx)
+            transactions.putIfAbsent(tx.txId, tx)
             ledger.record(tx)
             //save();
         } finally {

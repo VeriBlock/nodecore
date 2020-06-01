@@ -91,7 +91,7 @@ class AdminApiService(
             for (availableAddress in getAvailableAddresses(totalOutputAmount)) {
                 addressCoinsIndexList.add(
                     AddressCoinsIndex(
-                        availableAddress.first!!, availableAddress.second!!,
+                        availableAddress.first, availableAddress.second,
                         getSignatureIndex(availableAddress.first)
                     )
                 )

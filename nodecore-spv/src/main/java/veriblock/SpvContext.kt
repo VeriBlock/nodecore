@@ -136,10 +136,10 @@ class SpvContext {
         peerTable.shutdown()
     }
 
-    private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters?) {
+    private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters) {
         try {
             if (veriBlockStore.getChainHead() == null) {
-                val genesis = params!!.genesisBlock
+                val genesis = params.genesisBlock
                 val storedBlock = StoredVeriBlockBlock(
                     genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong())
                 )
@@ -151,10 +151,10 @@ class SpvContext {
         }
     }
 
-    private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters?) {
+    private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters) {
         try {
             if (bitcoinStore.getChainHead() == null) {
-                val origin = params!!.bitcoinOriginBlock
+                val origin = params.bitcoinOriginBlock
                 val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.difficulty.toLong()), 0)
                 bitcoinStore.put(storedBlock)
                 bitcoinStore.setChainHead(storedBlock)

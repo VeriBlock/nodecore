@@ -353,11 +353,11 @@ class SpvPeerTable(
     }
 
     fun addPendingTransactionDownloadedEventListeners(
-        executor: Executor?,
+        executor: Executor,
         listener: PendingTransactionDownloadedListener
     ) {
         pendingTransactionDownloadedEventListeners.add(
-            ListenerRegistration(listener, executor!!)
+            ListenerRegistration(listener, executor)
         )
     }
 

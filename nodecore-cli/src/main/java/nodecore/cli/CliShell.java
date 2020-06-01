@@ -13,7 +13,6 @@ import nodecore.cli.contracts.AdminService;
 import nodecore.cli.contracts.ConnectionFailedException;
 import nodecore.cli.contracts.ProtocolEndpoint;
 import nodecore.cli.contracts.ProtocolEndpointType;
-import nodecore.cli.models.ModeType;
 import nodecore.cli.services.AdminServiceClient;
 import org.jetbrains.annotations.NotNull;
 import org.jline.reader.LineReader;
@@ -43,8 +42,6 @@ public class CliShell extends Shell {
     private AdminServiceClient _adminServiceClient;
     private Configuration _configuration;
     private Runnable disconnectCallBack;
-
-    private ModeType modeType = ModeType.STANDARD;
 
     public void onStop() {
         disconnect();
@@ -242,9 +239,6 @@ public class CliShell extends Shell {
     @Override
     protected boolean shouldAutoComplete(@NotNull Command command) {
         String extraData = command.getExtraData();
-        if (getModeType() == ModeType.SPV) {
-            return getCommandsSpv().contains(command.getForm().split("\\|")[0]);
-        }
         return (_endpointContainer != null && _endpointContainer.getProtocolEndpoint() != null) || (
             extraData != null && extraData.equals(CommandServiceType.SHELL.name())
         );
@@ -291,7 +285,7 @@ public class CliShell extends Shell {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (!connected.get() && ModeType.SPV != getModeType()) {
+                while (!connected.get()) {
                     for (int i = 10500 ; i <= 10502; i++) {
                         if (bound(i)) {
                             String msg = new AttributedStringBuilder()
@@ -518,13 +512,5 @@ public class CliShell extends Shell {
 
     public SpvContext getSpvContext() {
         return spvContext;
-    }
-
-    public ModeType getModeType() {
-        return modeType;
-    }
-
-    public void setModeType(ModeType modeType) {
-        this.modeType = modeType;
     }
 }
