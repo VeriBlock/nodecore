@@ -118,8 +118,8 @@ class ApmOperation(
     }
 
     fun setContext(context: List<VeriBlockPublication>) {
-        if (state != ApmOperationState.PROVEN) {
-            error("Trying to set context without the merkle path")
+        if (state != ApmOperationState.KEYSTONE_OF_PROOF) {
+            error("Trying to set context without the keystone of proof")
         }
         this.publicationData = context
         setState(ApmOperationState.CONTEXT)
