@@ -53,7 +53,7 @@ class OperationSerializer(
             veriblockPublications = operation.publicationData?.map {
                 serialize(it)
             } ?: emptyList(),
-            proofOfProofId = operation.proofOfProofId ?: "",
+            proofOfProofId = operation.vbkPopTransactionId ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
             payoutAmount = operation.payoutAmount ?: 0L,
             failureReason = operation.failureReason ?: ""

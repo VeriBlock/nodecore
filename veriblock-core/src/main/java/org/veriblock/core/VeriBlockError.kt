@@ -29,6 +29,8 @@ enum class VeriBlockError(
     CONFIGURATION               (22, "Failed to set config"),
     COMMUNICATION               (23, "Nodecore communication error"),
     ENDORSEMENT_CREATION        (24, "Endorsement creation failed"),
+    WALLET_LOCKED               (25, "Wallet is locked"),
+    WALLET_UNREADABLE           (26, "Unable to parse wallet file"),
     // HTTP codes
     NOT_FOUND                   (404, "Not found"),
     INTERNAL_ERROR              (500, "Internal error"),
@@ -52,7 +54,6 @@ class SignMessageException(message: String) : VeriBlockException(VeriBlockError.
 class TransactionSubmissionException(message: String) : VeriBlockException(VeriBlockError.TRANSACTION_SUBMISSION, message)
 class PopException(message: String) : VeriBlockException(VeriBlockError.POP, message)
 class PoolException(message: String) : VeriBlockException(VeriBlockError.POOL, message)
-
 class CommunicationException(message: String) : VeriBlockException(VeriBlockError.COMMUNICATION, message)
 class ProtocolException(message: String) : VeriBlockException(VeriBlockError.PROTOCOL, message)
 class MineException(message: String) : VeriBlockException(VeriBlockError.MINE, message)
@@ -66,6 +67,8 @@ class ExportException(message: String) : VeriBlockException(VeriBlockError.EXPOR
 class ImportException(message: String) : VeriBlockException(VeriBlockError.IMPORT, message)
 class InputException(message: String) : VeriBlockException(VeriBlockError.INPUT, message)
 class ConfigurationException(message: String) : VeriBlockException(VeriBlockError.CONFIGURATION, message)
+class WalletLockedException(message: String) : VeriBlockException(VeriBlockError.WALLET_LOCKED, message)
+class WalletUnreadableException(message: String) : VeriBlockException(VeriBlockError.WALLET_UNREADABLE, message)
 
 class NotFoundException(message: String) : VeriBlockException(VeriBlockError.NOT_FOUND, message)
 class InternalErrorException(message: String) : VeriBlockException(VeriBlockError.INTERNAL_ERROR, message)

@@ -274,7 +274,7 @@ class ApmTaskService(
         ) {
             val miningInstruction = operation.miningInstruction
                 ?: failTask("PayoutDetectionTask called without mining instruction!")
-            val endorsementTransactionId = operation.proofOfProofId
+            val endorsementTransactionId = operation.vbkPopTransactionId
                 ?: failTask("PayoutDetectionTask called without proof of proof txId!")
 
             val chainName = operation.chain.name

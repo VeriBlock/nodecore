@@ -12,12 +12,12 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
+import org.veriblock.core.WalletLockedException
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
-import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import veriblock.SpvContext

@@ -23,8 +23,9 @@ class LedgerContext(
         }
         if (ledgerValue!!.signatureIndex < other.ledgerValue!!.signatureIndex) {
             return 1
-        } else if (ledgerValue.signatureIndex == other.ledgerValue.signatureIndex
-            && ledgerValue.availableAtomicUnits < other.ledgerValue.availableAtomicUnits
+        } else if (
+            ledgerValue.signatureIndex == other.ledgerValue.signatureIndex &&
+            ledgerValue.availableAtomicUnits < other.ledgerValue.availableAtomicUnits
         ) {
             return 1
         }

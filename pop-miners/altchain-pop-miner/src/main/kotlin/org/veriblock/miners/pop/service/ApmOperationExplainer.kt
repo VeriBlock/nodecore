@@ -33,7 +33,7 @@ class ApmOperationExplainer(
 
     private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
         return when {
-            operation.proofOfProofId != null -> ApmOperationState.SUBMITTED_POP_DATA
+            operation.vbkPopTransactionId != null -> ApmOperationState.SUBMITTED_POP_DATA
             operation.publicationData != null -> ApmOperationState.CONTEXT
             operation.merklePath != null -> ApmOperationState.PROVEN
             operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
@@ -81,7 +81,7 @@ class ApmOperationExplainer(
             listOf("VTB BTC Blocks: ${operation.publicationData?.mapNotNull { it.getFirstBitcoinBlock() }?.joinToString { it.hash.bytes.toHex() }}")
         }
         ApmOperationState.SUBMITTED_POP_DATA -> {
-            listOf("VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}")
+            listOf("VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.vbkPopTransactionId}")
         }
         ApmOperationState.PAYOUT_DETECTED -> {
             listOf("Payout detected in ${operation.chain.name} block ${operation.payoutBlockHash}! Amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}")

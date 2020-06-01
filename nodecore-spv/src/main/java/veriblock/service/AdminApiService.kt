@@ -18,9 +18,9 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
+import org.veriblock.core.WalletLockedException
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressPubKey
-import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.createLogger

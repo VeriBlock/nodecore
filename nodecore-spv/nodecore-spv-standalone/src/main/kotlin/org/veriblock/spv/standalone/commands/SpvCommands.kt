@@ -75,7 +75,8 @@ fun CommandFactory.spvCommands(
             )
         )
 
-        displayResult(result)
+        printInfo("Transaction ids:")
+        displayResult(result.map { it.toString() })
         success()
     }
 

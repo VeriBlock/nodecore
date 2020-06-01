@@ -51,7 +51,7 @@ class ApmOperation(
         private set
     var publicationData: List<VeriBlockPublication>? = null
         private set
-    var proofOfProofId: String? = null
+    var vbkPopTransactionId: String? = null
         private set
     var payoutBlockHash: String? = null
         private set
@@ -129,7 +129,7 @@ class ApmOperation(
         if (state != ApmOperationState.CONTEXT) {
             error("Trying to set Proof of Proof id without having the context")
         }
-        this.proofOfProofId = proofOfProofId
+        this.vbkPopTransactionId = proofOfProofId
         setState(ApmOperationState.SUBMITTED_POP_DATA)
     }
 
@@ -168,8 +168,8 @@ class ApmOperation(
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
             result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
         }
-        proofOfProofId?.let {
-            result["proofOfProofId"] = it
+        vbkPopTransactionId?.let {
+            result["vbkPopTransactionId"] = it
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it

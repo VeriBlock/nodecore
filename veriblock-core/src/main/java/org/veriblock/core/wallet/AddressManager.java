@@ -9,6 +9,9 @@ package org.veriblock.core.wallet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.ImportException;
+import org.veriblock.core.WalletLockedException;
+import org.veriblock.core.WalletUnreadableException;
 import org.veriblock.core.types.Pair;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
@@ -598,7 +601,7 @@ public class AddressManager {
         }
     }
 
-    private void importWallet(StoredWallet imported) throws WalletImportException {
+    private void importWallet(StoredWallet imported) throws ImportException {
         if (imported != null && imported.addresses != null) {
             try {
                 lock.lock();
@@ -625,7 +628,7 @@ public class AddressManager {
                     }
                 }
             } catch (Exception e) {
-                throw new WalletImportException("Unable to import wallet", e);
+                throw new ImportException("Unable to import wallet: " + e.toString());
             } finally {
                 lock.unlock();
             }
