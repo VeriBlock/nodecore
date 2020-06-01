@@ -90,6 +90,7 @@ private fun run(): Int {
             progressBar.stepTo(status.bestHeight.toLong())
         }
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
+        logger.info { """Type "help" to display a list of available commands""" }
         shell.run()
     } catch (e: Exception) {
         logger.warn(e) { "Fatal error: ${e.message}" }

@@ -10,10 +10,6 @@
 
 NodeCore SPV (Simple Payment Verification) is a light wallet that allows a user to see their balance and send VBK without downloading, syncing, and running a full node.
 
-SPV can run as a separate process, and the NC_CLI can connect to an SPV node.
-
-For convenience, a separate package is created by modifying the NC_CLI package that allows one to directly run the SPV.
-
 # How to Install
 
 Download BETA from here:
