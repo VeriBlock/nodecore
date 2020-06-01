@@ -13,13 +13,13 @@ import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.serialization.deserialize

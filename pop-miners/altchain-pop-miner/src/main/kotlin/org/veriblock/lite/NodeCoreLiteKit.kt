@@ -8,11 +8,11 @@
 
 package org.veriblock.lite
 
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.wallet.DefaultAddressManager
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.contracts.Balance
+import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.Event
@@ -126,7 +126,7 @@ class NodeCoreLiteKit(
     }
 
     private fun loadAddressManager(): AddressManager = try {
-        val addressManager = DefaultAddressManager()
+        val addressManager = AddressManager()
         val file = File(context.directory, context.filePrefix + WALLET_FILE_EXTENSION)
         addressManager.load(file)
         if (!file.exists()) {
@@ -137,7 +137,7 @@ class NodeCoreLiteKit(
         throw IOException("Unable to load the address manager", e)
     }
 
-    private fun initSpvContext(networkParameters: NetworkParameters, addresses: Collection<org.veriblock.core.wallet.Address>): SpvContext {
+    private fun initSpvContext(networkParameters: NetworkParameters, addresses: Collection<AddressPubKey>): SpvContext {
         val spvContext = SpvContext()
         spvContext.init(
             networkParameters,

@@ -9,7 +9,6 @@ package org.veriblock.core.wallet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.veriblock.core.contracts.AddressManager;
 import org.veriblock.core.types.Pair;
 import org.veriblock.core.utilities.AddressUtility;
 import org.veriblock.core.utilities.Utility;
@@ -38,8 +37,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>
  * Effectively, this represents "the wallet" in pure terms.
  */
-public class DefaultAddressManager implements AddressManager {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultAddressManager.class);
+public class AddressManager {
+    private static final Logger logger = LoggerFactory.getLogger(AddressManager.class);
 
     private static final int WALLET_VERSION = 0x02;
     private static final int KEY_TYPE = 0x01;
@@ -48,32 +47,29 @@ public class DefaultAddressManager implements AddressManager {
     private boolean loaded = false;
 
     private final StoredWallet wallet = new StoredWallet();
-    private final HashMap<String, Address> addresses = new HashMap<>();
+    private final HashMap<String, AddressPubKey> addresses = new HashMap<>();
     private final HashMap<String, PrivateKey> privateKeys = new HashMap<>();
 
-    private Address defaultAddress;
+    private AddressPubKey defaultAddress;
     private File walletFile;
 
     private boolean unlocked = false;
     private char[] key;
 
-    @Override
     public boolean isEncrypted() {
         return wallet.locked;
     }
 
-    @Override
     public boolean isLocked() {
         return isEncrypted() && !unlocked;
     }
 
-    public DefaultAddressManager() {
+    public AddressManager() {
         wallet.version = WALLET_VERSION;
         wallet.keyType = KEY_TYPE;
         wallet.addresses = new ArrayList<>();
     }
 
-    @Override
     public void load(File walletFile) throws IOException {
         if (walletFile == null) {
             throw new IllegalArgumentException("walletFile cannot be null");
@@ -112,7 +108,7 @@ public class DefaultAddressManager implements AddressManager {
                 save();
             }
         } else {
-            Address firstAddress = getNewAddress();
+            AddressPubKey firstAddress = getNewAddress();
             setDefaultAddress(firstAddress.getHash());
         }
 
@@ -123,12 +119,11 @@ public class DefaultAddressManager implements AddressManager {
      * Set the default (primary) address from this wallet.
      *
      */
-    @Override
     public void setDefaultAddress(String address) {
         if (!AddressUtility.isValidStandardAddress(address))
             return;
 
-        Address a = addresses.get(address);
+        AddressPubKey a = addresses.get(address);
         if (a != null) {
             defaultAddress = a;
 
@@ -149,15 +144,14 @@ public class DefaultAddressManager implements AddressManager {
      *
      * @return The default (primary) address from this wallet.
      */
-    @Override
-    public Address getDefaultAddress() {
+    public AddressPubKey getDefaultAddress() {
         if (defaultAddress == null) {
             String address = wallet.defaultAddress;
             if (address == null) {
                 return null;
             }
 
-            Address a = addresses.get(address);
+            AddressPubKey a = addresses.get(address);
             if (a != null) {
                 defaultAddress = a;
             }
@@ -171,7 +165,6 @@ public class DefaultAddressManager implements AddressManager {
      * wallet backup files, etc.
      *
      */
-    @Override
     public void save() throws IllegalStateException, IOException {
         if (walletFile == null) throw new IllegalStateException("A wallet file has not been loaded");
 
@@ -185,7 +178,6 @@ public class DefaultAddressManager implements AddressManager {
         }
     }
 
-    @Override
     public Pair<Boolean, String> saveWalletToFile(String filePathToSave) {
         File path = new File(filePathToSave);
 
@@ -232,7 +224,6 @@ public class DefaultAddressManager implements AddressManager {
         }
     }
 
-    @Override
     public Pair<Boolean, String> importWallet(File toImport) throws WalletUnreadableException {
         if (wallet.locked && !unlocked) {
             throw new WalletLockedException("Wallet must be unlocked before importing another wallet");
@@ -285,7 +276,6 @@ public class DefaultAddressManager implements AddressManager {
         }
     }
 
-    @Override
     public Pair<Boolean, String> importEncryptedWallet(File toImport, char[] passphrase) throws WalletUnreadableException {
         if (wallet.locked && !unlocked) {
             throw new WalletLockedException("Wallet must be unlocked before importing another wallet");
@@ -329,7 +319,6 @@ public class DefaultAddressManager implements AddressManager {
         }
     }
 
-    @Override
     public boolean encryptWallet(char[] passphrase) {
         if (wallet.locked) throw new IllegalStateException("Wallet is already encrypted");
         try {
@@ -354,7 +343,6 @@ public class DefaultAddressManager implements AddressManager {
         return false;
     }
 
-    @Override
     public boolean decryptWallet(char[] passphrase) {
         if (!wallet.locked) return true;
 
@@ -386,8 +374,7 @@ public class DefaultAddressManager implements AddressManager {
     /**
      * Imports the provided private key into the wallet
      */
-    @Override
-    public Address importKeyPair(byte[] publicKey, byte[] privateKey) {
+    public AddressPubKey importKeyPair(byte[] publicKey, byte[] privateKey) {
         if (wallet.locked && !unlocked) {
             throw new WalletLockedException("Wallet must be unlocked before importing keys");
         }
@@ -415,8 +402,7 @@ public class DefaultAddressManager implements AddressManager {
      *
      * @return A pair associating the address along with its public/private keypair.
      */
-    @Override
-    public Address getNewAddress() throws IOException, WalletLockedException {
+    public AddressPubKey getNewAddress() throws IOException, WalletLockedException {
         if (wallet.locked && !unlocked) {
             throw new WalletLockedException("Wallet must be unlocked before creating a new address");
         }
@@ -437,7 +423,6 @@ public class DefaultAddressManager implements AddressManager {
      * @param address The address to look up the private key for
      * @return The private key corresponding to the address, or null if the private key of the address is unknown
      */
-    @Override
     public PrivateKey getPrivateKeyForAddress(String address) {
         if (wallet.locked && !unlocked) {
             throw new WalletLockedException("Wallet must be unlocked before retrieving private key");
@@ -455,9 +440,8 @@ public class DefaultAddressManager implements AddressManager {
      * @param address The address to look up the public key for
      * @return The public key corresponding to the address, or null if the public key of the address is unknown
      */
-    @Override
     public PublicKey getPublicKeyForAddress(String address) {
-        Address loadedAddress = addresses.get(address);
+        AddressPubKey loadedAddress = addresses.get(address);
         if (loadedAddress == null) return null;
 
         return loadedAddress.getPublicKey();
@@ -473,7 +457,6 @@ public class DefaultAddressManager implements AddressManager {
      * @param address The address to sign the message with the corresponding private key of
      * @return A byte[] containing the signature of the corresponding private key to the provided address and the provided message
      */
-    @Override
     public byte[] signMessage(byte[] message, String address) {
         PrivateKey privateKey = getPrivateKeyForAddress(address);
 
@@ -485,7 +468,6 @@ public class DefaultAddressManager implements AddressManager {
      *
      * @return The number of addresses stored by this AddressManager.
      */
-    @Override
     public int getNumAddresses() {
         return addresses.size();
     }
@@ -495,14 +477,13 @@ public class DefaultAddressManager implements AddressManager {
      *
      * @return All of the addresses, stored as Base58 strings in a List, which exist in this wallet
      */
-    @Override
-    public List<Address> getAll() {
-        ArrayList<Address> result = new ArrayList<>();
+    public List<AddressPubKey> getAll() {
+        ArrayList<AddressPubKey> result = new ArrayList<>();
 
         try {
             lock.lock();
 
-            Address defaultAddress = getDefaultAddress();
+            AddressPubKey defaultAddress = getDefaultAddress();
             for (String key : addresses.keySet()) {
                 if (key.equals(defaultAddress.getHash())) {
                     result.add(0, defaultAddress);
@@ -518,12 +499,10 @@ public class DefaultAddressManager implements AddressManager {
         return result;
     }
 
-    @Override
-    public Address get(String address) {
+    public AddressPubKey get(String address) {
         return addresses.get(address);
     }
 
-    @Override
     public void lock() {
         if (!wallet.locked) return;
 
@@ -538,7 +517,6 @@ public class DefaultAddressManager implements AddressManager {
         }
     }
 
-    @Override
     public boolean unlock(char[] passphrase) {
         if (!wallet.locked) return true;
 
@@ -565,12 +543,11 @@ public class DefaultAddressManager implements AddressManager {
         }
     }
 
-    @Override
-    public void monitor(Address address) {
+    public void monitor(AddressPubKey address) {
         addresses.put(address.getHash(), address);
     }
 
-    private Address add(KeyPair pair, StoredAddress storedAddress) throws IOException {
+    private AddressPubKey add(KeyPair pair, StoredAddress storedAddress) throws IOException {
         try {
             lock.lock();
 
@@ -578,7 +555,7 @@ public class DefaultAddressManager implements AddressManager {
                 wallet.addresses.add(storedAddress);
                 save();
 
-                addresses.put(storedAddress.address, new Address(storedAddress.address, pair.getPublic()));
+                addresses.put(storedAddress.address, new AddressPubKey(storedAddress.address, pair.getPublic()));
                 privateKeys.put(storedAddress.address, pair.getPrivate());
             }
 
@@ -605,7 +582,7 @@ public class DefaultAddressManager implements AddressManager {
                         a.address = address;
 
                         if (!addresses.containsKey(address)) {
-                            addresses.put(address, new Address(address, publicKey));
+                            addresses.put(address, new AddressPubKey(address, publicKey));
                             wallet.addresses.add(a);
                             if (wallet.defaultAddress == null) {
                                 wallet.defaultAddress = address;
@@ -641,7 +618,7 @@ public class DefaultAddressManager implements AddressManager {
                             }
                         }
 
-                        Address added = add(new KeyPair(publicKey, privateKey), a);
+                        AddressPubKey added = add(new KeyPair(publicKey, privateKey), a);
                         logger.info("Imported address {} from wallet", added.getHash());
                     } catch (InvalidKeySpecException e) {
                         logger.error(e.getMessage(), e);

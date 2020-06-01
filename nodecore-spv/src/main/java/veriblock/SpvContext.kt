@@ -8,10 +8,9 @@
 package veriblock
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.wallet.DefaultAddressManager
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
@@ -104,7 +103,7 @@ class SpvContext {
             blockchain = Blockchain(networkParameters.genesisBlock, veriBlockStore)
             pendingTransactionContainer = PendingTransactionContainer()
             p2PService = P2PService(pendingTransactionContainer, networkParameters)
-            addressManager = DefaultAddressManager()
+            addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListenerImpl(this)

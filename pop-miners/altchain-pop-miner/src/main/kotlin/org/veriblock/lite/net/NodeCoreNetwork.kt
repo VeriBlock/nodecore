@@ -11,7 +11,6 @@ package org.veriblock.lite.net
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
@@ -24,6 +23,7 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction

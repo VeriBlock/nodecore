@@ -9,11 +9,11 @@ package org.veriblock.core.wallet;
 
 import java.security.PublicKey;
 
-public class Address {
+public class AddressPubKey {
     private final String hash;
     private final PublicKey publicKey;
 
-    public Address(String hash, PublicKey publicKey) {
+    public AddressPubKey(String hash, PublicKey publicKey) {
         this.hash = hash;
         this.publicKey = publicKey;
     }

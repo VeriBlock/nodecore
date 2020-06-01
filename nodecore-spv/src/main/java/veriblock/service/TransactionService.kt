@@ -9,13 +9,13 @@ package veriblock.service
 
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.models.asCoin
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.Output
@@ -190,7 +190,7 @@ class TransactionService(
         return totalSize
     }
 
-    fun signTransaction(txId: Sha256Hash, address: String?): SigningResult {
+    fun signTransaction(txId: Sha256Hash, address: String): SigningResult {
         val signature = addressManager.signMessage(txId.bytes, address)
             ?: return SigningResult(false, null, null)
         val publicKey = addressManager.getPublicKeyForAddress(address)

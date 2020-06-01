@@ -50,7 +50,7 @@ public class DefaultAddressManagerTests {
             File walletFile = tempFolder.newFile();
             walletFile.delete();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             Assert.assertEquals(1, addressManager.getNumAddresses());
@@ -65,11 +65,11 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV1WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             Assert.assertEquals(1, addressManager.getNumAddresses());
-            Address address = addressManager.get(ADDRESS);
+            AddressPubKey address = addressManager.get(ADDRESS);
 
             Assert.assertEquals(address, addressManager.getDefaultAddress());
 
@@ -88,11 +88,11 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             Assert.assertEquals(1, addressManager.getNumAddresses());
-            Address address = addressManager.get("V6dYV2P3sd8ALsgyrnDc7QToW7unHA");
+            AddressPubKey address = addressManager.get("V6dYV2P3sd8ALsgyrnDc7QToW7unHA");
 
             Assert.assertEquals(address, addressManager.getDefaultAddress());
         } catch (IOException e) {
@@ -106,7 +106,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV2WalletFile();
             File toImport = generateV1WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             Pair<Boolean, String> result = addressManager.importWallet(toImport);
@@ -127,7 +127,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV1WalletFile();
             File toImport = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             Pair<Boolean, String> result = addressManager.importWallet(toImport);
@@ -148,7 +148,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV1WalletFile();
             File toImport = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             addressManager.encryptWallet(PASSWORD);
@@ -173,7 +173,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV1WalletFile();
             File toImport = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(toImport);
             addressManager.encryptWallet("Temporary".toCharArray());
 
@@ -195,7 +195,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV1WalletFile();
             File toImport = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(toImport);
             addressManager.encryptWallet("Temporary".toCharArray());
 
@@ -218,7 +218,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV1WalletFile();
             File toImport = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(toImport);
             addressManager.encryptWallet("Temporary".toCharArray());
 
@@ -245,7 +245,7 @@ public class DefaultAddressManagerTests {
             File walletFile = generateV1WalletFile();
             File toImport = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(toImport);
             addressManager.encryptWallet("Temporary".toCharArray());
 
@@ -263,7 +263,7 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             PrivateKey expectedKey = addressManager.getPrivateKeyForAddress("V6dYV2P3sd8ALsgyrnDc7QToW7unHA");
@@ -287,7 +287,7 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             addressManager.importKeyPair(Base64.getDecoder().decode(PUBLIC_KEY), Base64.getDecoder().decode(PRIVATE_KEY));
@@ -304,7 +304,7 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             addressManager.encryptWallet(PASSWORD);
@@ -325,7 +325,7 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             PrivateKey expectedKey = addressManager.getPrivateKeyForAddress("V6dYV2P3sd8ALsgyrnDc7QToW7unHA");
@@ -353,7 +353,7 @@ public class DefaultAddressManagerTests {
         try {
             File walletFile = generateV2WalletFile();
 
-            DefaultAddressManager addressManager = new DefaultAddressManager();
+            AddressManager addressManager = new AddressManager();
             addressManager.load(walletFile);
 
             addressManager.encryptWallet(PASSWORD);

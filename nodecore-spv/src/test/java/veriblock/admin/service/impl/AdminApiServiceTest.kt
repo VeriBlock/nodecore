@@ -12,11 +12,11 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
-import org.veriblock.core.wallet.Address
+import org.veriblock.core.wallet.AddressManager
+import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
@@ -376,7 +376,7 @@ class AdminApiServiceTest {
     fun importPrivateKeyWhen() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val importedAddress = Address(
+        val importedAddress = AddressPubKey(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public
         )
         every { addressManager.isLocked } returns false
@@ -424,7 +424,7 @@ class AdminApiServiceTest {
     fun newAddressWhenSuccessThenTrue() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
+        val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns address
         adminApiService.getNewAddress()
@@ -452,7 +452,7 @@ class AdminApiServiceTest {
     fun signatureIndexWhenSuccess() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
+        val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.defaultAddress } returns address
         every { peerTable.getSignatureIndex(any()) } returns 1L
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
@@ -466,7 +466,7 @@ class AdminApiServiceTest {
     fun signatureIndexWhenReqHasAddressSuccess() {
         val kpg = KeyPairGenerator.getInstance("RSA")
         val keyPair = kpg.generateKeyPair()
-        val address = Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
+        val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { peerTable.getSignatureIndex(any()) } returns 1L
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
         adminApiService.getSignatureIndex(listOf(address.hash.asLightAddress()))

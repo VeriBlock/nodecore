@@ -18,9 +18,8 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.types.Pair
-import org.veriblock.core.wallet.Address
+import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.core.wallet.WalletLockedException
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
@@ -29,6 +28,7 @@ import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
@@ -175,7 +175,7 @@ class AdminApiService(
         return fullBytes
     }
 
-    fun importPrivateKey(privateKey: ByteArray): Address {
+    fun importPrivateKey(privateKey: ByteArray): AddressPubKey {
         if (addressManager.isLocked) {
             throw ImportException("Wallet must be unlocked before importing a key")
         }
@@ -271,7 +271,7 @@ class AdminApiService(
         }
     }
 
-    fun getNewAddress(count: Int = 1): List<Address> {
+    fun getNewAddress(count: Int = 1): List<AddressPubKey> {
         require(count >= 1) {
             "Invalid count of addresses to create: $count"
         }
@@ -315,7 +315,7 @@ class AdminApiService(
                     if (ledgerContext != null) {
                         getAddressBalance(address, ledgerContext)
                     } else {
-                        addressManager.monitor(Address(address.get(), null))
+                        addressManager.monitor(AddressPubKey(address.get(), null))
 
                         AddressBalance(address, "0", "0", "0")
                     }

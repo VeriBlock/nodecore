@@ -15,7 +15,6 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofRequest
-import nodecore.api.grpc.VeriBlockMessages.Transaction.Type.STANDARD
 import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.toHex
@@ -23,7 +22,7 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.wallet.Address
+import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
 import veriblock.SpvContext
 import veriblock.listeners.PendingTransactionDownloadedListener
@@ -34,7 +33,6 @@ import veriblock.model.LedgerContext
 import veriblock.model.ListenerRegistration
 import veriblock.model.NetworkMessage
 import veriblock.model.NodeMetadata
-import veriblock.model.Output
 import veriblock.model.PeerAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
@@ -189,7 +187,7 @@ class SpvPeerTable(
         }
     }
 
-    fun acknowledgeAddress(address: Address) {
+    fun acknowledgeAddress(address: AddressPubKey) {
         addressesState.putIfAbsent(address.hash, LedgerContext(
             null, null, null, null
         ))

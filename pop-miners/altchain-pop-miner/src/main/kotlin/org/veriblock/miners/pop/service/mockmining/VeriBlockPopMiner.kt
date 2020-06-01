@@ -62,9 +62,7 @@ class VeriBlockPopMiner(
         )
     }
 
-    @Throws(
-        SQLException::class, SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class
-    )
+    @Throws(SQLException::class, SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
     fun mine(
         blockToEndorse: VeriBlockBlock,
         lastKnownVBKBlock: VeriBlockBlock,
