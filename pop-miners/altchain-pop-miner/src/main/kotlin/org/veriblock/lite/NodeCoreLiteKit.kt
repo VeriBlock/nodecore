@@ -91,7 +91,12 @@ class NodeCoreLiteKit(
         beforeNetworkStart()
         network.startAsync().addListener(Runnable {
             if (network.isHealthy()) {
-                balanceChangedEvent.trigger(network.getBalance())
+                val balance = try {
+                    network.getBalance()
+                } catch (ignored: Exception) {
+                    return@Runnable
+                }
+                balanceChangedEvent.trigger(balance)
             }
         }, Threading.LISTENER_THREAD)
     }

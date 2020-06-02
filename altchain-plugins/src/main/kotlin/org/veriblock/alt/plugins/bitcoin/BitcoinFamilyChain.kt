@@ -220,7 +220,8 @@ class BitcoinFamilyChain(
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
-        TODO("Not yet implemented")
+        // TODO: extract correctly from param, use BitcoinJ maybe?
+        return config.payoutAddress ?: "UNKNOWN_ADDRESS"
     }
 
     private val crypto = Crypto()

@@ -21,7 +21,7 @@ class GatewayStrategyGrpcImpl(
 
     override fun getBalance(getBalanceRequest: VeriBlockMessages.GetBalanceRequest): VeriBlockMessages.GetBalanceReply {
         return blockingStub
-            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .withDeadlineAfter(120, TimeUnit.SECONDS)
             .getBalance(getBalanceRequest)
     }
 

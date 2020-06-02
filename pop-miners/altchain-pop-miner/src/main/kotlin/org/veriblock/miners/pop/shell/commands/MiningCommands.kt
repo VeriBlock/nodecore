@@ -66,10 +66,13 @@ fun CommandFactory.miningCommands(
     command(
         name = "List Operations",
         form = "listoperations",
-        description = "Lists the current running operations"
+        description = "Lists the currently running operations since the PoP miner started"
     ) {
         val operations = minerService.getOperations().map {
-            "${it.id}: ${it.chain.name} (${it.endorsedBlockHeight}) | ${it.state} | ${it.getStateDescription()}"
+            val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
+                " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutInterval()})"
+            } ?: ""
+            "${it.id}: ${it.chain.name}$heightString | ${it.state} | ${it.getStateDescription()}"
         }
 
         for (operation in operations) {
@@ -95,7 +98,7 @@ fun CommandFactory.miningCommands(
             printInfo("Operation data:")
             printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
             printInfo("Operation workflow:")
-            val tableFormat = "%1$-8s %2$-33s %3\$s"
+            val tableFormat = "%1$-8s %2$-35s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
             operationDetails.forEach { stage ->
                 printInfo(String.format(
