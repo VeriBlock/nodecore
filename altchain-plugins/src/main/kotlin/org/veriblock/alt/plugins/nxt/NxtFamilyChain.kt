@@ -147,6 +147,8 @@ class NxtFamilyChain(
             ?: error("Unable to retrieve $key's submission response data")
     }
 
+    override fun extractAddressDisplay(addressData: ByteArray): String = TODO()
+
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
 
     override suspend fun isConnected(): Boolean = TODO()

@@ -152,6 +152,10 @@ class TestChain(
         return block.data.coinbaseTransactionId
     }
 
+    override fun extractAddressDisplay(addressData: ByteArray): String {
+        return String(addressData)
+    }
+
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
         val context = altchainPopEndorsement.getContextInfo()
         val hash = context.copyOfRange(0, 4)

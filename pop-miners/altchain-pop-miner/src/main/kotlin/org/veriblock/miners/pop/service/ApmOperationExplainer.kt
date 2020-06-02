@@ -116,7 +116,8 @@ class ApmOperationExplainer(
         }
         ApmOperationState.PAYOUT_DETECTED -> {
             val payoutBlockHeight = (operation.miningInstruction?.endorsedBlockHeight ?: 0) + operation.chain.getPayoutInterval()
-            listOf("Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address ${operation.miningInstruction?.publicationData?.payoutInfo}")
+            val address = operation.miningInstruction?.publicationData?.payoutInfo
+            listOf("Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address")
         }
         else -> listOf("")
     }

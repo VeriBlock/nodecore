@@ -219,6 +219,10 @@ class BitcoinFamilyChain(
         ))
     }
 
+    override fun extractAddressDisplay(addressData: ByteArray): String {
+        TODO("Not yet implemented")
+    }
+
     private val crypto = Crypto()
 
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
