@@ -32,8 +32,6 @@ class PopShell(
     }
 
     override fun initialize() {
-        printInfo("===[ " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===\n")
-        printInfo("https://www.veriblock.org/\n\n")
         val objDiagnostics: Any? = DiagnosticUtility.getDiagnosticInfo()
         val strDiagnostics: String? = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
         logger.info(strDiagnostics)

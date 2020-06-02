@@ -32,6 +32,11 @@ private fun run(): Int {
     })
 
     print(SharedConstants.LICENSE)
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
+    println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
+    println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
+    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Altchain_PoP_Miner")}\n")
+    println("${SharedConstants.TYPE_HELP}\n")
 
     logger.info { "Starting dependency injection" }
     val koin = startKoin {

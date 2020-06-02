@@ -21,6 +21,7 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.SharedConstants;
 import org.veriblock.shell.Command;
 import org.veriblock.shell.CommandContext;
 import org.veriblock.shell.CommandFactory;
@@ -336,11 +337,11 @@ public class CliShell extends Shell {
 
     private void printIntroStandard() {
         printStyled(
-            "===[ VeriBlock " + Constants.FULL_APPLICATION_NAME_VERSION + " ]===",
+            SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", Constants.FULL_APPLICATION_NAME_VERSION),
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
         );
         printStyled(
-            "\t\thttps://www.veriblock.org/\n",
+            "\t\t"+SharedConstants.VERIBLOCK_WEBSITE+"\n",
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
         );
         printStyled(

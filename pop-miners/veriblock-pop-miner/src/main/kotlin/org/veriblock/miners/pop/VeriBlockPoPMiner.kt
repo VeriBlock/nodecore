@@ -38,6 +38,12 @@ fun run(args: Array<String>): Int {
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
 
     print(SharedConstants.LICENSE)
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
+    println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
+    println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
+    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/HowTo_run_PoP_Miner_0.4.9")}\n")
+    println("${SharedConstants.TYPE_HELP}\n")
+
     Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdownSignal.countDown() }))
     val startupInjector = startKoin {
         modules(
