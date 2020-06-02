@@ -63,6 +63,10 @@ fun KLogger.debug(
     operation: MiningOperation, msg: String
 ) = log(operation, DEBUG, msg)
 
+fun KLogger.debug(
+    operation: MiningOperation, t: Throwable, msg: String
+) = log(operation, DEBUG, msg, t)
+
 fun KLogger.info(
     operation: MiningOperation, msg: String
 ) = log(operation, INFO, msg)

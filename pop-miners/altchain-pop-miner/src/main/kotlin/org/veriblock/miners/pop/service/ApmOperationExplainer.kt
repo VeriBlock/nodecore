@@ -19,16 +19,27 @@ class ApmOperationExplainer(
         }
         return ApmOperationState.ALL.map { operationState ->
             val status = operationState.getOperationStatus(currentState)
+            val currentFailed = operation.isFailed() && status == CURRENT
+            val statusDisplay = if (status != PENDING) {
+                if (!currentFailed) status.toString() else "FAILED"
+            } else {
+                ""
+            }
+            val taskName = (operationState.previousState?.taskName ?: "Start").toUpperCase().replace(' ', '_')
             OperationStage(
-                operationState = operationState,
-                status = status,
+                status = statusDisplay,
+                taskName = "${operationState.id + 1}.${taskName}",
                 extraInformation = when (status) {
                     DONE -> operationState.getExtraInformation(operation)
                     CURRENT -> operationState.getCurrentHint(operation)
                     else -> emptyList()
                 }
             )
-        }
+        } + OperationStage(
+            if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
+            "11.COMPLETED",
+            listOf("")
+        )
     }
 
     private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
@@ -89,7 +100,9 @@ class ApmOperationExplainer(
         else -> listOf("FAILED")
     }
 
-    private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = when (this) {
+    private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = operation.failureReason?.let { failureReason ->
+        listOf(failureReason)
+    } ?: when (this) {
         ApmOperationState.CONFIRMED -> {
             listOf("Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block")
         }
@@ -110,8 +123,8 @@ class ApmOperationExplainer(
     }
 
     data class OperationStage (
-        val operationState: MiningOperationState,
-        val status: OperationStatus,
+        val status: String,
+        val taskName: String,
         val extraInformation: List<String>
     )
 

@@ -269,7 +269,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Payout Detection",
-            targetState = MiningOperationState.COMPLETED,
+            targetState = ApmOperationState.PAYOUT_DETECTED,
             timeout = 10.days
         ) {
             val miningInstruction = operation.miningInstruction

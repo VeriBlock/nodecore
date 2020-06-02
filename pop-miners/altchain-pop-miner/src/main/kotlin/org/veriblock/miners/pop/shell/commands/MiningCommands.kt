@@ -98,18 +98,11 @@ fun CommandFactory.miningCommands(
             val tableFormat = "%1$-8s %2$-33s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
             operationDetails.forEach { stage ->
-                val currentFailed = operation.isFailed() && stage.status == ApmOperationExplainer.OperationStatus.CURRENT
-                val status = if (stage.status != ApmOperationExplainer.OperationStatus.PENDING) {
-                    if (!currentFailed) stage.status else "FAILED"
-                } else {
-                    ""
-                }
-                val taskName = (stage.operationState.previousState?.taskName ?: "Start").toUpperCase().replace(' ', '_')
                 printInfo(String.format(
                     tableFormat,
-                    status,
-                    "${stage.operationState.id + 1}.${taskName}",
-                    if (!currentFailed) stage.extraInformation.firstOrNull() ?: "" else operation.failureReason
+                    stage.status,
+                    stage.taskName,
+                    stage.extraInformation.firstOrNull() ?: ""
                 ))
                 stage.extraInformation.drop(1).forEach { extraInformation ->
                     printInfo(String.format(tableFormat, "", "", extraInformation))

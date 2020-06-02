@@ -50,6 +50,9 @@ class OperationSerializer(
                 SerializeDeserializeService.serializeHeaders(it)
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.toCompactString() ?: "",
+            keystoneOfProof = operation.keystoneOfProof?.let {
+                SerializeDeserializeService.serializeHeaders(it)
+            } ?: ByteArray(0),
             veriblockPublications = operation.publicationData?.map {
                 serialize(it)
             } ?: emptyList(),
@@ -87,7 +90,8 @@ class OperationSerializer(
                         deserialize(serialized.publicationData),
                         serialized.publicationContext,
                         serialized.publicationBtcContext
-                    ))
+                    )
+                )
             }
 
             if (serialized.txId.isNotEmpty()) {
@@ -105,6 +109,10 @@ class OperationSerializer(
 
             if (serialized.merklePath.isNotEmpty()) {
                 setMerklePath(VeriBlockMerklePath(serialized.merklePath))
+            }
+
+            if (serialized.keystoneOfProof.isNotEmpty()) {
+                setKeystoneOfProof(SerializeDeserializeService.parseVeriBlockBlock(serialized.keystoneOfProof))
             }
 
             if (serialized.veriblockPublications.isNotEmpty()) {

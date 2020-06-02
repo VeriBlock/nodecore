@@ -47,7 +47,7 @@ class ApmOperation(
         private set
     var merklePath: VeriBlockMerklePath? = null
         private set
-    var keystoneOfProof: FullBlock? = null
+    var keystoneOfProof: VeriBlockBlock? = null
         private set
     var publicationData: List<VeriBlockPublication>? = null
         private set
@@ -109,7 +109,7 @@ class ApmOperation(
         setState(ApmOperationState.PROVEN)
     }
 
-    fun setKeystoneOfProof(keystoneOfProof: FullBlock) {
+    fun setKeystoneOfProof(keystoneOfProof: VeriBlockBlock) {
         if (state != ApmOperationState.PROVEN) {
             error("Trying to set keystone of proof without having proven the transaction")
         }

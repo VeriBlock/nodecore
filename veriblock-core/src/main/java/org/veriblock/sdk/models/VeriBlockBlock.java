@@ -72,15 +72,17 @@ public class VeriBlockBlock{
         return this.hash;
     }
 
-    public VeriBlockBlock(int height,
-                          short version,
-                          VBlakeHash previousBlock,
-                          VBlakeHash previousKeystone,
-                          VBlakeHash secondPreviousKeystone,
-                          Sha256Hash merkleRoot,
-                          int timestamp,
-                          int difficulty,
-                          int nonce) {
+    public VeriBlockBlock(
+        int height,
+        short version,
+        VBlakeHash previousBlock,
+        VBlakeHash previousKeystone,
+        VBlakeHash secondPreviousKeystone,
+        Sha256Hash merkleRoot,
+        int timestamp,
+        int difficulty,
+        int nonce
+    ) {
         Preconditions.argument(previousBlock != null,
             "Previous block cannot be null");
         Preconditions.argument(previousBlock.length >= VBlakeHash.PREVIOUS_BLOCK_LENGTH,
