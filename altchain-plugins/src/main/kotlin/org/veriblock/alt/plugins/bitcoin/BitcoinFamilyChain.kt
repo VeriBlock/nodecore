@@ -183,7 +183,7 @@ class BitcoinFamilyChain(
     }
 
     override fun getPayoutInterval(): Int {
-        return 501
+        return config.payoutInterval
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
