@@ -30,6 +30,11 @@ public final class SharedConstants {
             "All rights reserved." + System.lineSeparator() +
             "Distributed under the MIT software license, see the accompanying" + System.lineSeparator() +
             "file LICENSE or http://www.opensource.org/licenses/mit-license.php." + System.lineSeparator() + System.lineSeparator();
+    public static final String VERIBLOCK_APPLICATION_NAME = "===[ VeriBlock $1 ]===";
+    public static final String VERIBLOCK_WEBSITE = "https://www.veriblock.org/";
+    public static final String VERIBLOCK_EXPLORER = "VeriBlock Explorer: https://explore.veriblock.org";
+    public static final String VERIBLOCK_PRODUCT_WIKI_URL = "See $1 for more details.";
+    public static final String TYPE_HELP = "Type \"help\" to display a list of available commands";
 
     public static final byte STANDARD_ADDRESS_ID           = (byte)0x01;
     public static final byte MULTISIG_ADDRESS_ID           = (byte)0x03;
