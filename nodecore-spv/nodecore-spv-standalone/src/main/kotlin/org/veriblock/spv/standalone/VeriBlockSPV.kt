@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
+import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
@@ -54,6 +55,13 @@ private fun run(): Int {
         standardCommands()
         spvCommands(spvContext)
     })
+
+    print(SharedConstants.LICENSE)
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
+    println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
+    println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
+    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
+    println("${SharedConstants.TYPE_HELP}\n")
 
     logger.info { "Initializing SPV Context..." }
     try {
