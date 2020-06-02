@@ -55,6 +55,7 @@ private fun run(): Int {
         standardCommands()
         spvCommands(spvContext)
     })
+    shell.initialize()
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))

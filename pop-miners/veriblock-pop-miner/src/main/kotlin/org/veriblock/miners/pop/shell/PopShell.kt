@@ -32,9 +32,8 @@ class PopShell(
     }
 
     override fun initialize() {
-        val objDiagnostics: Any? = DiagnosticUtility.getDiagnosticInfo()
-        val strDiagnostics: String? = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
-        logger.info(strDiagnostics)
+        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
+        logger.debug(GsonBuilder().setPrettyPrinting().create().toJson(diagnosticInfo))
         printWarning(
             "WARNING: This miner maintains a lightweight BTC wallet for the purpose of creating PoP transactions only. " +
                 "Please deposit minimal amounts of BTC sufficient for mining.\n\n"
