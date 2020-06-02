@@ -88,11 +88,10 @@ class ApmOperationExplainer(
             listOf("Keystone of Proof: ${operation.keystoneOfProof?.hash}")
         }
         ApmOperationState.CONTEXT -> {
-            listOf("VTB Transactions: ${operation.publicationData?.joinToString { it.transaction.id.bytes.toHex() }}")
-            listOf("VTB BTC Blocks: ${operation.publicationData?.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }}")
+            listOf("Retrieved ${operation.publicationData?.size} VTBs")
         }
         ApmOperationState.SUBMITTED_POP_DATA -> {
-            listOf("VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}")
+            listOf("VTBs submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}")
         }
         ApmOperationState.PAYOUT_DETECTED -> {
             listOf("Payout detected in ${operation.chain.name} block ${operation.payoutBlockHash}! Amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}")
