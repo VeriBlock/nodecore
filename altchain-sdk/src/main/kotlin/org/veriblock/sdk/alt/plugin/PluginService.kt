@@ -19,6 +19,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.net.MalformedURLException
 import java.net.URL
 
@@ -55,6 +56,9 @@ class PluginService(
                 ?: return@mapNotNull null
             val plugin = try {
                 pluginSupplier(key, config)
+            } catch (e: InvocationTargetException) {
+                logger.debugWarn(e.targetException) { "Unable to load plugin $key ($pluginKey impl) from config" }
+                return@mapNotNull null
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Unable to load plugin $key ($pluginKey impl) from config" }
                 return@mapNotNull null
