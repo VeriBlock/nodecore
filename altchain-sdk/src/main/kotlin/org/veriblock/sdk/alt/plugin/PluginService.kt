@@ -49,7 +49,7 @@ class PluginService(
         logger.info { "Loaded plugin implementations: ${plugins.keys.joinToString()}" }
 
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
-            val pluginKey = config.pluginKey ?: key
+            val pluginKey = config.pluginKey?.toLowerCase() ?: key.toLowerCase()
             val pluginSupplier = plugins[pluginKey]
                 ?: return@mapNotNull null
             val plugin = pluginSupplier(key, config)

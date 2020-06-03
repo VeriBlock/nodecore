@@ -35,7 +35,7 @@ fun CommandFactory.miningCommands(
             CommandParameter("block", CommandParameterMappers.INTEGER, false)
         )
     ) {
-        val chain: String = getParameter("chain")
+        val chain = getParameter<String>("chain").toLowerCase()
         val block: Int? = getOptionalParameter("block")
 
         val operationId = minerService.mine(chain, block)
