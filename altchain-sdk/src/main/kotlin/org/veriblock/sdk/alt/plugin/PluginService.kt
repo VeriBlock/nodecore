@@ -16,6 +16,7 @@ import org.reflections.util.ConfigurationBuilder
 import org.reflections.util.FilterBuilder
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import java.io.File
 import java.net.MalformedURLException
@@ -52,7 +53,12 @@ class PluginService(
             val pluginKey = config.pluginKey ?: key
             val pluginSupplier = plugins[pluginKey]
                 ?: return@mapNotNull null
-            val plugin = pluginSupplier(key, config)
+            val plugin = try {
+                pluginSupplier(key, config)
+            } catch (e: Exception) {
+                logger.debugWarn(e) { "Unable to load plugin $key ($pluginKey impl) from config" }
+                return@mapNotNull null
+            }
             logger.info { "Loaded plugin $key ($pluginKey impl) from config" }
             key to plugin
         }.associate {
