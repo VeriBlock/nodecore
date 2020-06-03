@@ -46,11 +46,12 @@ public class VeriBlockPoWMiner {
 
     public static void main(String... args) {
         System.out.print(SharedConstants.LICENSE);
+        System.out.println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_PROGRAM_NAME_VERSION));
+        System.out.println("\t\t"+SharedConstants.VERIBLOCK_WEBSITE);
+        System.out.println("\t\t"+SharedConstants.VERIBLOCK_EXPLORER+"\n");
+        System.out.println(SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/HowTo_run_PoW_CPU_Miner")+"\n");
 
         Scanner scan = new Scanner(System.in);
-
-        System.out.println("===[ VeriBlock Proof-of-Work (PoW) CPU Miner ]===");
-        System.out.println("https://www.veriblock.org/");
         System.out.println("Please ensure that you have the credentials for a pool to connect to, or a local NodeCore instance is running.");
         System.out.println("If running a local NodeCore instance, then use the NodeCore CLI to run the command: startpool");
 
