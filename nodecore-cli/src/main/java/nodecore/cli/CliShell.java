@@ -341,7 +341,11 @@ public class CliShell extends Shell {
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
         );
         printStyled(
-            "\t\t"+SharedConstants.VERIBLOCK_WEBSITE+"\n",
+            "\t\t"+SharedConstants.VERIBLOCK_WEBSITE+"\n\n",
+            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
+        );
+        printStyled(
+            SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore_CommandLine") + "\n\n",
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
         );
         printStyled(
