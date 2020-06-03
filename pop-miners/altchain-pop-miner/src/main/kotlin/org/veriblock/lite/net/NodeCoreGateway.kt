@@ -38,7 +38,6 @@ private val logger = createLogger {}
 class NodeCoreGateway(
     private val params: NetworkParameters
 ) {
-
     private val gatewayStrategy: GatewayStrategy = createFullNode(params)
 
     @Throws(InterruptedException::class)
