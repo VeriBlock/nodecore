@@ -64,7 +64,7 @@ class ApmOperationExplainer(
 
     private fun MiningOperationState.getExtraInformation(operation: ApmOperation) = when (this) {
         ApmOperationState.INITIAL -> {
-            listOf("")
+            listOf("Created APM operation Id: ${operation.id}")
         }
         ApmOperationState.INSTRUCTION -> {
             listOf("Endorsed ${operation.chain.name} block height: ${operation.endorsedBlockHeight}")

@@ -25,15 +25,6 @@ class SegwitAddressUtilityTest {
         // When
         val payoutScript = SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(address)
 
-        /*val x = SegwitAddress.fromString(RegTestParams.get(), address) as SegwitAddress
-        val y = SegwitAddress.fromHash(RegTestParams.get(), payoutScript.copyOfRange(2, payoutScript.size))
-        println(payoutScript.toHex())
-        println(x.toBech32())
-        println(x.witnessProgram.toHex())
-
-        println(x.toString())
-        println(Bech32.encode("bcrt", payoutScript.copyOfRange(2, payoutScript.size)))*/
-
         // Then
         payoutScript.toHex() shouldBe "0014668625289436C6C54D5636D22F4B6DE17ADB5764"
     }
