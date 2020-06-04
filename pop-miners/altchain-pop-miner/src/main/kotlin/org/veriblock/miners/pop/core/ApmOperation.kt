@@ -172,7 +172,7 @@ class ApmOperation(
             result["vtbBtcBlocks"] = context.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
         }
         proofOfProofId?.let {
-            result["proofOfProofId"] = it
+            result["altProofOfProofTxId"] = it
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it

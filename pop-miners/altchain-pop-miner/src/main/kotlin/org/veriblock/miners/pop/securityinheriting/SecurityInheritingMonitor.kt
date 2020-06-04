@@ -175,7 +175,7 @@ class SecurityInheritingMonitor(
         }
     }
 
-    suspend fun getBlockAtHeight(height: Int, predicate: (SecurityInheritingBlock) -> Boolean): SecurityInheritingBlock {
+    suspend fun getBlockAtHeight(height: Int, predicate: (SecurityInheritingBlock) -> Boolean = { true }): SecurityInheritingBlock {
         // Check if we can skip the subscription
         val block = getBlockAtHeight(height)
         if (block != null && predicate(block)) {
@@ -188,7 +188,7 @@ class SecurityInheritingMonitor(
         }
     }
 
-    suspend fun getTransaction(txId: String, predicate: (SecurityInheritingTransaction) -> Boolean): SecurityInheritingTransaction {
+    suspend fun getTransaction(txId: String, predicate: (SecurityInheritingTransaction) -> Boolean = { true }): SecurityInheritingTransaction {
         // Check if we can skip the subscription
         val transaction = getTransaction(txId)
         if (transaction != null && predicate(transaction)) {

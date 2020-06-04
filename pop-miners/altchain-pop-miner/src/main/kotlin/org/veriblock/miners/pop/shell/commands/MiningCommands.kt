@@ -101,15 +101,7 @@ fun CommandFactory.miningCommands(
             val tableFormat = "%1$-8s %2$-35s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
             operationDetails.forEach { stage ->
-                printInfo(String.format(
-                    tableFormat,
-                    stage.status,
-                    stage.taskName,
-                    stage.extraInformation.firstOrNull() ?: ""
-                ))
-                stage.extraInformation.drop(1).forEach { extraInformation ->
-                    printInfo(String.format(tableFormat, "", "", extraInformation))
-                }
+                printInfo(String.format(tableFormat, stage.status, stage.taskName, stage.extraInformation))
             }
             success()
         } else {

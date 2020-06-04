@@ -293,9 +293,7 @@ class ApmTaskService(
 
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
             logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
-            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
-                block.confirmations >= operation.chain.config.neededConfirmations
-            }
+            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight)
 
             val endorsedBlockHeader = miningInstruction.publicationData.header
             val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
@@ -387,7 +385,7 @@ class ApmTaskService(
                 val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
                 val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
 
-                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i-1) else ArrayList<VeriBlockPublication>()))) {
+                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
                     logger.warn {
                         """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:

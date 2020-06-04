@@ -47,8 +47,6 @@ class NodeCoreNetwork(
     val healthySyncEvent = EmptyEvent()
     val unhealthySyncEvent = EmptyEvent()
 
-    val newBlockBroadcastChannel = ConflatedBroadcastChannel<VeriBlockBlock>()
-
     fun isHealthy(): Boolean =
         healthy.get()
 
@@ -135,7 +133,6 @@ class NodeCoreNetwork(
                     if (currentChainHead == null || currentChainHead != lastBlock) {
                         logger.debug { "New chain head detected!" }
                         reconcileBlockChain(currentChainHead, lastBlock)
-                        newBlockBroadcastChannel.offer(lastBlock)
                     }
                 } catch (e: BlockStoreException) {
                     logger.error(e) { "VeriBlockBlock store exception" }
@@ -169,7 +166,7 @@ class NodeCoreNetwork(
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
-        val newBlockChannel = newBlockBroadcastChannel.openSubscription()
+        val newBlockChannel = blockChain.newBestBlockChannel.openSubscription()
         logger.info {
             """[$operationId] Successfully subscribed to VTB retrieval event!
                 |   - Keystone Hash: $keystoneHash
