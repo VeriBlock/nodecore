@@ -116,7 +116,8 @@ fun CommandFactory.transactionCommands() {
         parameters = listOf(
             CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true),
             CommandParameter(name = "destinationAddress", mapper = ShellCommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true),
-            CommandParameter(name = "sourceAddress", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
+            CommandParameter(name = "sourceAddress", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false),
+            CommandParameter(name = "takeFeeFromOutputs", mapper = CommandParameterMappers.BOOLEAN, required = false)
         ),
         suggestedCommands = { listOf("gethistory", "getbalance") }
     ) {
@@ -124,6 +125,7 @@ fun CommandFactory.transactionCommands() {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(amount)
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
+        val takeFeeFromOutputs: Boolean? = getOptionalParameter("takeFeeFromOutputs")
 
         val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
 
@@ -134,6 +136,9 @@ fun CommandFactory.transactionCommands() {
 
             if (sourceAddress != null && AddressUtility.isValidStandardAddress(sourceAddress)) {
                 request.sourceAddress = ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress)
+            }
+            if (takeFeeFromOutputs != null) {
+                request.takeFeeFromOutputs = takeFeeFromOutputs
             }
 
             val result = cliShell.adminService.sendCoins(request.build())
