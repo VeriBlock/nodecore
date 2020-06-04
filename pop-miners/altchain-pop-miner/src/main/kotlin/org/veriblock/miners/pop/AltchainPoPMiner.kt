@@ -49,6 +49,7 @@ private fun run(): Int {
     val apiServer: ApiServer = koin.get()
     val shell: Shell = koin.get()
 
+    var errored = false
     try {
         shell.initialize()
         pluginService.loadPlugins()
@@ -58,6 +59,7 @@ private fun run(): Int {
         apiServer.start()
         shell.run()
     } catch (e: Exception) {
+        errored = true
         logger.warn(e) { "Fatal error: ${e.message}" }
     } finally {
         if (!shell.running) {
@@ -81,7 +83,7 @@ private fun run(): Int {
         return 1
     }
 
-    return 0
+    return if (!errored) 0 else 1
 }
 
 fun main() {

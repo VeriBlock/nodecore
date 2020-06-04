@@ -64,6 +64,7 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
+    var errored = false
     logger.info { "Initializing SPV Context..." }
     try {
         spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters))
@@ -90,6 +91,7 @@ private fun run(): Int {
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
         shell.run()
     } catch (e: Exception) {
+        errored = true
         logger.warn(e) { "Fatal error: ${e.message}" }
     } finally {
         if (!shell.running) {
@@ -108,7 +110,7 @@ private fun run(): Int {
         return 1
     }
 
-    return 0
+    return if (!errored) 0 else 1
 }
 
 fun main() {

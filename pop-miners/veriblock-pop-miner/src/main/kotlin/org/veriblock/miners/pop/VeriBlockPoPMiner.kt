@@ -70,6 +70,8 @@ fun run(args: Array<String>): Int {
     val apiServer: ApiServer = startupInjector.get()
     shell = startupInjector.get()
     shell.initialize()
+
+    var errored = false
     try {
         popMinerService.run()
         shell.runOnce()
@@ -78,6 +80,7 @@ fun run(args: Array<String>): Int {
         apiServer.start()
         shell.run()
     } catch (e: Exception) {
+        errored = true
         shell.renderFromThrowable(e)
     } finally {
         shutdownSignal.countDown()
@@ -100,7 +103,7 @@ fun run(args: Array<String>): Int {
         logger.error("Could not shut down services cleanly", e)
         return 1
     }
-    return 0
+    return if (!errored) 0 else 1
 }
 
 private fun onShellCompleted() {
