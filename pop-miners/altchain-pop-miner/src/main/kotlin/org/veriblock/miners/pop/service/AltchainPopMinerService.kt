@@ -28,6 +28,7 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.debugError
 import java.io.IOException
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
@@ -271,7 +272,7 @@ class AltchainPopMinerService(
             }
             logger.info("Loaded ${activeOperations.size} suspended operations")
         } catch (e: Exception) {
-            logger.error("Unable to load suspended operations", e)
+            logger.debugError(e) {"Unable to load suspended operations" }
         }
     }
 
@@ -290,7 +291,7 @@ class AltchainPopMinerService(
                 }
             }
         } catch (e: Exception) {
-            logger.error("Unable to resume suspended operations", e)
+            logger.debugError(e) { "Unable to resume suspended operations" }
         }
 
         operationsSubmitted = true

@@ -13,6 +13,8 @@ package org.veriblock.miners.pop
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
@@ -60,7 +62,7 @@ private fun run(): Int {
         shell.run()
     } catch (e: Exception) {
         errored = true
-        logger.warn(e) { "Fatal error: ${e.message}" }
+        logger.debugWarn(e) { "Fatal error: ${e.message}" }
     } finally {
         if (!shell.running) {
             shutdownSignal.countDown()
@@ -76,10 +78,10 @@ private fun run(): Int {
 
         logger.info("Application exit")
     } catch (e: InterruptedException) {
-        logger.error("Shutdown signal was interrupted", e)
+        logger.debugError(e) { "Shutdown signal was interrupted" }
         return 1
     } catch (e: Exception) {
-        logger.error("Could not shut down services cleanly", e)
+        logger.debugError(e) { "Could not shut down services cleanly" }
         return 1
     }
 
