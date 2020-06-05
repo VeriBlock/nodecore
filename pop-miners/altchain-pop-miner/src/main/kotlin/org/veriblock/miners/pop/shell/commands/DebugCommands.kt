@@ -36,10 +36,10 @@ fun CommandFactory.debugCommands(
         printInfo("Running several checks, this may take a few moments...")
         if (nodeCoreLiteKit.network.isHealthy()) {
             printInfo("SUCCESS - NodeCore connection: Connected")
+            val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
             if (nodeCoreLiteKit.network.isSynchronized()) {
-                printInfo("SUCCESS - NodeCore synchronization status: Synchronized")
+                printInfo("SUCCESS - NodeCore synchronization status: Synchronized (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
             } else {
-                val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
                 printInfo("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
             }
         } else {
@@ -55,7 +55,7 @@ fun CommandFactory.debugCommands(
                         printInfo("SUCCESS - ${it.value.name} connection: Connected")
                         val chainSyncStatus = it.value.getSynchronizedStatus()
                         if (chainSyncStatus.isSynchronized) {
-                            printInfo("SUCCESS - ${it.value.name} synchronization status: Synchronized")
+                            printInfo("SUCCESS - ${it.value.name} synchronization status: Synchronized (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
                         } else {
                             printInfo("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
                         }
@@ -73,7 +73,7 @@ fun CommandFactory.debugCommands(
             val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
             if (nodeCoreLiteKit.network.isHealthy()) {
                 if (currentBalance.atomicUnits > config.maxFee) {
-                    printInfo("SUCCESS - The PoP wallet contains sufficient funds")
+                    printInfo("SUCCESS - The PoP wallet contains sufficient funds, current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                 } else {
                     printInfo("FAIL - The VBK PoP wallet does not contain sufficient funds: current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}, minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more. See: https://wiki.veriblock.org/index.php/Get_VBK")
                 }
