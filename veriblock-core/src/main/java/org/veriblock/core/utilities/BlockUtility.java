@@ -384,7 +384,7 @@ public final class BlockUtility {
 
         if (Context.get().getNetworkParameters().equals("mainnet")) {
             ProgPoWForkHeight = Integer.MAX_VALUE; // No scheduled height yet
-        } else if (Context.get().getNetworkParameters().getNetworkName().equals("testnet")) {
+        } else if (Context.get().getNetworkParameters().getName().equals("testnet")) {
             ProgPoWForkHeight = 435000; // For testing purposes only, subject to change!
         } else {
             ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
