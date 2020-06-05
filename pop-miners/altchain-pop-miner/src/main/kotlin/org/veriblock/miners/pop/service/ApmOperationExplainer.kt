@@ -40,7 +40,7 @@ class ApmOperationExplainer(
         } + OperationStage(
             if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
             "11. COMPLETED",
-            ""
+            if (operation.state == MiningOperationState.COMPLETED) "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}" else ""
         )
     }
 
@@ -93,8 +93,6 @@ class ApmOperationExplainer(
                 "Payout detected in ${operation.chain.name} block ${payoutBlockHeight} to ${operation.chain.name} address $address!"
             } ?: "Payout detected in ${operation.chain.name}!"
         }
-        MiningOperationState.COMPLETED ->
-            "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}"
         else ->
             ""
     }
