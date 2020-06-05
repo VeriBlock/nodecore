@@ -134,7 +134,7 @@ fun CommandFactory.miningCommands(
             printInfo("Operation workflow:")
             val tableFormat = "%1$-8s %2$-35s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
-            operationDetails.forEach { stage ->
+            operationDetails.stages.forEach { stage ->
                 printInfo(String.format(tableFormat, stage.status, stage.taskName, stage.extraInformation))
             }
             success()

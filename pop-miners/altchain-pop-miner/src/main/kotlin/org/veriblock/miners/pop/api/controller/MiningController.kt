@@ -22,13 +22,16 @@ import org.veriblock.miners.pop.api.dto.MinerInfoResponse
 import org.veriblock.miners.pop.api.dto.OperationDetailResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
+import org.veriblock.miners.pop.api.dto.OperationWorkflow
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationState
+import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.MinerService
 
 class MiningController(
-    private val miner: MinerService
+    private val miner: MinerService,
+    private val operationExplainer: ApmOperationExplainer
 ) : ApiController {
 
     @Path("mine")
@@ -47,6 +50,11 @@ class MiningController(
 
     @Path("operations/{id}/cancel")
     class CancelOperationPath(
+        @PathParam("Operation ID") val id: String
+    )
+
+    @Path("operations/{id}/workflow")
+    class MinerOperationWorkflowPath(
         @PathParam("Operation ID") val id: String
     )
 
@@ -121,6 +129,17 @@ class MiningController(
 
             val responseModel = operation.getLogs(level).map { it.toString() }
             respond(responseModel)
+        }
+        get<MinerOperationWorkflowPath, OperationWorkflow>(
+            info("Get operation workflow")
+        ) { location ->
+            val id = location.id
+
+            val operation = miner.getOperation(id)
+                ?: throw NotFoundException("Operation $id not found")
+
+            val workflow = operationExplainer.explainOperation(operation)
+            respond(workflow)
         }
     }
 }
