@@ -10,9 +10,11 @@ package org.veriblock.miners.pop.shell.commands
 
 import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
+import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
+import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -22,6 +24,7 @@ import org.veriblock.shell.core.success
 
 fun CommandFactory.miningCommands(
     minerService: MinerService,
+    pluginService: PluginService,
     apmOperationExplainer: ApmOperationExplainer
 ) {
     val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
@@ -31,12 +34,23 @@ fun CommandFactory.miningCommands(
         form = "mine",
         description = "Begins a proof of proof mining operation",
         parameters = listOf(
-            CommandParameter("chain", CommandParameterMappers.STRING),
+            CommandParameter("chain", CommandParameterMappers.STRING, false),
             CommandParameter("block", CommandParameterMappers.INTEGER, false)
         )
     ) {
-        val chain = getParameter<String>("chain").toLowerCase()
+        var chain = getOptionalParameter<String>("chain")?.toLowerCase()
         val block: Int? = getOptionalParameter("block")
+
+        if (chain == null) {
+            val plugins = pluginService.getPlugins().keys.filter { it != "test" }
+            if (plugins.isEmpty()) {
+                throw MineException("There are no SI chains configured.")
+            }
+            if (plugins.size > 1) {
+                throw MineException("There are more than one SI chain configured, please specify at which SI chain do you want to perform the mine action.")
+            }
+            chain = plugins.first()
+        }
 
         val operationId = minerService.mine(chain, block)
         success {
