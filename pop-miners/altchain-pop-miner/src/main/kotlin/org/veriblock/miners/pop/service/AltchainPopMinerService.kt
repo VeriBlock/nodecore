@@ -199,7 +199,7 @@ class AltchainPopMinerService(
             it.chain.id == chain.id && it.state.id > MiningOperationState.FAILED.id && it.state.id < ApmOperationState.SUBMITTED_POP_DATA.id
         }.count()
 
-        if (currentOperations == 20) {
+        if (currentOperations >= 20) {
             throw MineException("Only 20 open operations allowed, cannot mine until other operations are complete")
         }
 
