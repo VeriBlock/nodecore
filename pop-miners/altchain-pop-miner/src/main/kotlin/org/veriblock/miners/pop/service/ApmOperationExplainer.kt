@@ -18,7 +18,7 @@ class ApmOperationExplainer(
         } else {
             getStateFromFailedOperation(operation)
         }
-        return OperationWorkflow(ApmOperationState.ALL.map { operationState ->
+        return OperationWorkflow(operation.id, ApmOperationState.ALL.map { operationState ->
             val status = operationState.getOperationStatus(currentState)
             val currentFailed = operation.isFailed() && status == CURRENT
             val statusDisplay = if (status != PENDING) {

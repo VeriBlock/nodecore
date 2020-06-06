@@ -18,6 +18,7 @@ plugins {
     idea
     application
     kotlin("plugin.serialization") version kotlinVersion
+    id("com.github.node-gradle.node") version "2.0.0"
     id("nebula.ospackage")
 }
 
@@ -154,6 +155,30 @@ tasks.register<Deb>("createDeb") {
 }
 
 setupJacoco()
+
+val spaClientDir = "$projectDir/src/main/spa-client"
+
+node {
+    version = "12.18.0"
+    npmVersion = "6.12.0"
+    yarnVersion = "1.19.1"
+
+    download = true
+
+    nodeModulesDir = File(spaClientDir)
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs("$spaClientDir/dist", "$projectDir/src/main/resources")
+        }
+    }
+}
+
+tasks.named("processResources") {
+    dependsOn("npm_run_build")
+}
 
 distributions {
     main {
