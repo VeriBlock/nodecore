@@ -42,6 +42,7 @@ local.properties
 build/
 alpha/
 testnet/
+testnet_progpow/
 unit-tests/
 
 *.dat

@@ -72,6 +72,7 @@ class NetworkParameters(
         val template = when (config.network.toLowerCase()) {
             "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
+            "testnet_progpow" -> TestNetProgPoWParameters
             "alpha" -> AlphaNetParameters
             "regtest" -> RegTestParameters
             else -> error("Invalid network")
@@ -192,6 +193,35 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = false
 }
 
+object TestNetProgPoWParameters : NetworkParametersTemplate() {
+    const val NETWORK = "testnet_progpow"
+    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000L)
+
+    override val name = NETWORK
+    override val rpcPort = 10501
+    override val p2pPort = 7502
+
+    override val bootstrapDns = "seedtestnetprogpow.veriblock.org"
+    override val fileTag = "test-progpow"
+    override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
+        "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ=="
+    ))
+    override val bitcoinOriginBlockHeight = 1747807
+    override val bitcoinOriginBlock = BitcoinBlock(
+        536870912,
+        Sha256Hash.wrap("000000004E645B8245259DE1D79BC06276018429D41D03CB55E0F212F130E271"),
+        Sha256Hash.wrap("6E9197243C835E33033C4A321C9BEDA8F2302FA43D73BD636025CD843A4799F6"),
+        1591397408,
+        486604799,
+        862190375
+    )
+    override val protocolVersion: Int = 2
+
+    override val transactionPrefix = 0xAB.toByte()
+    override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
+    override val powNoRetargeting = false
+}
+
 object AlphaNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "alpha"
     private val MINIMUM_POW_DIFFICULTY = 9_999_872L.toBigInteger()
@@ -271,6 +301,8 @@ val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters
 @JvmField
 val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
 @JvmField
+val defaultTestNetProgPoWParameters = NetworkParameters(NetworkConfig(TestNetProgPoWParameters.NETWORK))
+@JvmField
 val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
 @JvmField
 val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
@@ -278,6 +310,7 @@ val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters
 fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
+    TestNetProgPoWParameters.NETWORK -> defaultTestNetProgPoWParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
     RegTestParameters.NETWORK -> defaultRegTestParameters
     else -> error("Unknown VBK network: $name")

@@ -150,6 +150,41 @@ public final class BlockUtility {
             return false;
         }
 
+        int height = extractBlockHeightFromBlockHeader(blockHeader);
+
+        if (height < 0) {
+            // Cannot have height below 0!
+            return false;
+        }
+
+        if (height > 0) {
+            // Check if embedded block height is reasonable considering its timestamp.
+            // This avoids checking ProgPoW hash for a block hash which is obviously contextually invalid.
+            // TODO: Update with new parameters on fork.
+
+            // VeriBlock block time is 30 seconds
+            // TODO: Move 30-second blocktime to network parameters
+            int blocktimeSeconds = 30;
+            long startTimeEpoch = 1591485154;
+
+            int timestamp = extractTimestampFromBlockHeader(blockHeader);
+
+            if (timestamp < startTimeEpoch) {
+                // Timestamp is before starting timestamp, invalid
+                return false;
+            }
+
+            if (startTimeEpoch + (blocktimeSeconds * height * 10) < timestamp) {
+                // Timestamp is more than 10x higher than expected, invalid TODO: tighten
+                return false;
+            }
+
+            if ((startTimeEpoch) + (blocktimeSeconds * height) / 10 < timestamp) {
+                // Timestamp is less than 10% of expected, invalid TODO: tighten
+                return false;
+            }
+        }
+
         return isMinerHashBelowTarget(blockHeader);
     }
 
@@ -386,6 +421,8 @@ public final class BlockUtility {
             ProgPoWForkHeight = Integer.MAX_VALUE; // No scheduled height yet
         } else if (Context.get().getNetworkParameters().getName().equals("testnet")) {
             ProgPoWForkHeight = 435000; // For testing purposes only, subject to change!
+        } else if (Context.get().getNetworkParameters().getName().equals("testnet_progpow")) {
+            ProgPoWForkHeight = 1; // Only genesis block doesn't use ProgPoW
         } else {
             ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
         }
