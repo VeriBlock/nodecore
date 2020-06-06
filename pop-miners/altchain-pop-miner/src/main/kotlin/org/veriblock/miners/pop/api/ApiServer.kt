@@ -26,6 +26,9 @@ import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
+import io.ktor.http.content.defaultResource
+import io.ktor.http.content.resources
+import io.ktor.http.content.static
 import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
 import io.ktor.metrics.micrometer.MicrometerMetrics
@@ -125,6 +128,10 @@ class ApiServer(
                 get("metrics") {
                     call.respond(Metrics.registry.scrape())
                 }
+                static {
+                    resources("/spa-client")
+                    defaultResource("/spa-client/index.html")
+                }
             }
             apiRouting {
                 route("api") {
@@ -136,6 +143,8 @@ class ApiServer(
                 }
             }
         }.start()
+
+        logger.info { "NEW: Check out the experimental user interface at http://localhost:$port" }
     }
 
     fun shutdown() {

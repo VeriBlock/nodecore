@@ -19,18 +19,18 @@ export class ApiService {
 	}
 
   getOperations(): Observable<OperationSummaryList> {
-    return this.http.get<OperationSummaryList>(`http://localhost:8081/api/miner/operations`);
+    return this.http.get<OperationSummaryList>(`http://localhost:8080/api/miner/operations`);
   }
 
   getOperation(id: string): Observable<Operation> {
-    return this.http.get<Operation>(`http://localhost:8081/api/miner/operations/${id}`);
+    return this.http.get<Operation>(`http://localhost:8080/api/miner/operations/${id}`);
   }
 
   getOperationWorkflow(id: string): Observable<OperationWorkflow> {
-    return this.http.get<OperationWorkflow>(`http://localhost:8081/api/miner/operations/${id}/workflow`);
+    return this.http.get<OperationWorkflow>(`http://localhost:8080/api/miner/operations/${id}/workflow`);
   }
 
   mine(request: MineRequest): Observable<Operation> {
-    return this.http.post<Operation>(`http://localhost:8081/api/miner/mine`, request);
+    return this.http.post<Operation>(`http://localhost:8080/api/miner/mine`, request);
   }
 }
