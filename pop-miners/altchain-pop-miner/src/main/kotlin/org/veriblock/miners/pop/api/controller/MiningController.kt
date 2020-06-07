@@ -17,6 +17,8 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
+import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
 import org.veriblock.miners.pop.api.dto.MinerInfoResponse
 import org.veriblock.miners.pop.api.dto.OperationDetailResponse
@@ -25,13 +27,14 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.OperationWorkflow
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.sdk.alt.plugin.PluginService
 
 class MiningController(
     private val miner: MinerService,
-    private val operationExplainer: ApmOperationExplainer
+    private val operationExplainer: ApmOperationExplainer,
+    private val pluginService: PluginService
 ) : ApiController {
 
     @Path("mine")
@@ -63,6 +66,9 @@ class MiningController(
         @PathParam("Operation ID") val id: String,
         @QueryParam("Log level (optional, INFO by default)") val level: String?
     )
+
+    @Path("configured-altchains")
+    class MinerConfiguredAltchainsPath
 
     override fun NormalOpenAPIRoute.registerApi() = route("miner") {
         get<Unit, MinerInfoResponse>(
@@ -140,6 +146,19 @@ class MiningController(
 
             val workflow = operationExplainer.explainOperation(operation)
             respond(workflow)
+        }
+        get<MinerConfiguredAltchainsPath, ConfiguredAltchainList>(
+            info("Get configured altchains")
+        ) {
+            val altchains = pluginService.getPlugins().values.map {
+                ConfiguredAltchain(
+                    it.id,
+                    it.key,
+                    it.name,
+                    it.getPayoutInterval()
+                )
+            }
+            respond(ConfiguredAltchainList(altchains))
         }
     }
 }

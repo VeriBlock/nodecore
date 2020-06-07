@@ -1,5 +1,5 @@
 
-export class MinerInfoResponse {
+export class MinerInfo {
   vbkAddress: string
   vbkBalance: number
 }

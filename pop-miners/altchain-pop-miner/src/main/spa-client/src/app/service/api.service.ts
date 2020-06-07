@@ -4,7 +4,9 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {OperationSummaryList, OperationWorkflow} from "../model/operation";
 import {Operation} from "../model/operation";
-import {MineRequest} from "../model/miner";
+import {MineRequest, MinerInfo} from "../model/miner";
+import {environment} from "../../environments/environment";
+import {ConfiguredAltchainList} from "../model/configured-altchain";
 
 /*
  * @author Pere
@@ -18,19 +20,27 @@ export class ApiService {
 	) {
 	}
 
+  getMinerInfo(): Observable<MinerInfo> {
+    return this.http.get<MinerInfo>(`${environment.apiUrl}/miner`);
+  }
+
   getOperations(): Observable<OperationSummaryList> {
-    return this.http.get<OperationSummaryList>(`http://localhost:8080/api/miner/operations`);
+    return this.http.get<OperationSummaryList>(`${environment.apiUrl}/miner/operations`);
   }
 
   getOperation(id: string): Observable<Operation> {
-    return this.http.get<Operation>(`http://localhost:8080/api/miner/operations/${id}`);
+    return this.http.get<Operation>(`${environment.apiUrl}/miner/operations/${id}`);
   }
 
   getOperationWorkflow(id: string): Observable<OperationWorkflow> {
-    return this.http.get<OperationWorkflow>(`http://localhost:8080/api/miner/operations/${id}/workflow`);
+    return this.http.get<OperationWorkflow>(`${environment.apiUrl}/miner/operations/${id}/workflow`);
   }
 
   mine(request: MineRequest): Observable<Operation> {
-    return this.http.post<Operation>(`http://localhost:8080/api/miner/mine`, request);
+    return this.http.post<Operation>(`${environment.apiUrl}/miner/mine`, request);
+  }
+
+  getConfiguredAltchains(): Observable<ConfiguredAltchainList> {
+    return this.http.get<ConfiguredAltchainList>(`${environment.apiUrl}/miner/configured-altchains`);
   }
 }

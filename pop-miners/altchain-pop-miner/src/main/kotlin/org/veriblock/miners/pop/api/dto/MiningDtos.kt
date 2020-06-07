@@ -45,7 +45,7 @@ data class OperationSummaryResponse(
 
 fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
     id,
-    chain.name,
+    chain.key,
     endorsedBlockHeight,
     state.toString(),
     getStateDescription()
@@ -63,7 +63,7 @@ data class OperationDetailResponse(
 
 fun ApmOperation.toDetailedResponse() = OperationDetailResponse(
     id,
-    chain.name,
+    chain.key,
     endorsedBlockHeight,
     state.name,
     state.taskName,
@@ -81,4 +81,17 @@ data class OperationWorkflowStage(
     val status: String,
     val taskName: String,
     val extraInformation: String
+)
+
+@Response("Miner's configured chains")
+data class ConfiguredAltchainList(
+    val altchains: List<ConfiguredAltchain>
+)
+
+@Response("Miner's configured chain")
+data class ConfiguredAltchain(
+    val id: Long,
+    val key: String,
+    val name: String,
+    val payoutDelay: Int
 )

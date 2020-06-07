@@ -3,8 +3,7 @@
 	<form [formGroup]="formGroup">
 			<mat-form-field>
         <mat-select formControlName="chainSymbol" placeholder="Chain symbol">
-          <mat-option value="test">Test</mat-option>
-          <mat-option value="vbtc">vBitcoin</mat-option>
+          <mat-option *ngFor="let altchain of configuredAltchains" [value]="altchain.key">{{altchain.name}}</mat-option>
         </mat-select>
 			</mat-form-field>
 			<button mat-raised-button class="background-primary-color" (click)="mine()">Mine</button>

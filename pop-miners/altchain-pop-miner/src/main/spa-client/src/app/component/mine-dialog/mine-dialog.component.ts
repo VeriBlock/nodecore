@@ -1,11 +1,12 @@
 
-import {Component, OnInit} from '@angular/core';
+import {Component, Inject, OnInit} from '@angular/core';
 import {FormControl, FormGroup} from '@angular/forms';
 import {HttpEventType, HttpResponse} from '@angular/common/http';
-import {MatDialogRef} from "@angular/material/dialog";
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {MineRequest} from "../../model/miner";
 import {Operation} from "../../model/operation";
 import {ApiService} from "../../service/api.service";
+import {ConfiguredAltchain} from "../../model/configured-altchain";
 
 @Component({
 	selector: 'mine-dialog',
@@ -14,14 +15,16 @@ import {ApiService} from "../../service/api.service";
 })
 export class MineDialogComponent {
 
-  formGroup = new FormGroup({
-    chainSymbol: new FormControl('test', [])
-  });
+  formGroup: FormGroup
 
 	constructor(
 		public dialogRef: MatDialogRef<Operation>,
-		private apiService: ApiService
+		private apiService: ApiService,
+    @Inject(MAT_DIALOG_DATA) public configuredAltchains: ConfiguredAltchain[]
 	) {
+    this.formGroup = new FormGroup({
+      chainSymbol: new FormControl(configuredAltchains[0].key, [])
+    });
 	}
 
 	mine(): void {

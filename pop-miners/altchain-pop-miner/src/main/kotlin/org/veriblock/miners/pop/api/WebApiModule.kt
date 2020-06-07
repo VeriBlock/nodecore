@@ -7,7 +7,7 @@ import org.veriblock.miners.pop.api.controller.MiningController
 import org.veriblock.miners.pop.api.controller.QuitController
 
 val webApiModule = module {
-    single { MiningController(get(), get()) }
+    single { MiningController(get(), get(), get()) }
     single { DiagnosticController(get()) }
     single { ConfigurationController(get(), get(), get()) }
     single { QuitController() }

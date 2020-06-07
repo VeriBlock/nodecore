@@ -20,7 +20,11 @@ export class ErrorInterceptor implements HttpInterceptor {
           errorMessage = `Error: ${error.error.message}`;
         } else {
           // Server-side errors
-          errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+          if (error.error != null) {
+            errorMessage = `Error Code: ${error.status}\nMessage: ${error.error.message}`;
+          } else {
+            errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+          }
         }
         this.snackBar.open(errorMessage, "", {
           duration: 8000,
