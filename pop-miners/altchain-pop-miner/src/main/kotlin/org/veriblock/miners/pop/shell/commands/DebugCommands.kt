@@ -36,8 +36,6 @@ fun CommandFactory.debugCommands(
         description = "Collect information about the application for troubleshooting"
     ) {
         printInfo("Running several checks, this may take a few moments...")
-        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
-        printInfo("Run Diagnostic Info: ${GsonBuilder().setPrettyPrinting().create().toJson(diagnosticInfo)}")
         if (nodeCoreLiteKit.network.isHealthy()) {
             printInfo("SUCCESS - NodeCore connection: Connected")
             val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
@@ -87,6 +85,9 @@ fun CommandFactory.debugCommands(
         } catch(e: StatusRuntimeException) {
             printInfo("FAIL - Unable to determine the PoP balance.")
         }
+
+        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
+        printInfo("Run Diagnostic Info: ${GsonBuilder().setPrettyPrinting().create().toJson(diagnosticInfo)}")
 
         success()
     }
