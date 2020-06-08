@@ -21,6 +21,7 @@ import {MineDialogComponent} from "./component/mine-dialog/mine-dialog.component
 import {ReactiveFormsModule} from "@angular/forms";
 import {MatSelectModule} from "@angular/material/select";
 import {MatListModule} from "@angular/material/list";
+import {MatToolbarModule} from '@angular/material/toolbar';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import {MatListModule} from "@angular/material/list";
     MatIconModule,
     ReactiveFormsModule,
     MatSelectModule,
-    MatListModule
+    MatListModule,
+    MatToolbarModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
