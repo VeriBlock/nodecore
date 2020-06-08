@@ -195,12 +195,12 @@ class AltchainPopMinerService(
             }
         }
 
-        val currentOperations = getOperations().filter {
+        val currentOperations = getOperations().count {
             it.chain.id == chain.id && it.state.id > MiningOperationState.FAILED.id && it.state.id < ApmOperationState.SUBMITTED_POP_DATA.id
-        }.count()
+        }
 
         if (currentOperations >= 20) {
-            throw MineException("Only 20 open operations allowed, cannot mine until other operations are complete")
+            throw MineException("There are 20 other operations in progress! Please, wait for at least one of them to submit the PoP transaction.")
         }
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
