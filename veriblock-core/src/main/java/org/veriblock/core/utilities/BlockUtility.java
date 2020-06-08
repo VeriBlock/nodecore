@@ -170,7 +170,8 @@ public final class BlockUtility {
             ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
         }
 
-        if (height > 0 && height >= ProgPoWForkHeight) {
+        // 20M block limit
+        if (height > 0 && height >= ProgPoWForkHeight && height <= 20000000) {
             // Check if embedded block height is reasonable considering its timestamp.
             // This avoids checking ProgPoW hash for a block hash which is obviously contextually invalid.
             // TODO: Update with new parameters on fork.
@@ -178,7 +179,8 @@ public final class BlockUtility {
             // VeriBlock block time is 30 seconds
             // TODO: Move 30-second blocktime to network parameters
             int blocktimeSeconds = 30;
-            long startTimeEpoch = 1591485154;
+            long startTimeEpoch = 1591656086;
+            int gracePeriodDays = 5;
 
             int timestamp = extractTimestampFromBlockHeader(blockHeader);
 
@@ -187,13 +189,20 @@ public final class BlockUtility {
                 return false;
             }
 
-            if (startTimeEpoch + (blocktimeSeconds * height * 10) < timestamp) {
-                // Timestamp is more than 10x higher than expected, invalid TODO: tighten
+            long upperBound = startTimeEpoch + (blocktimeSeconds * height * 3) + (86400 * gracePeriodDays);
+            long lowerBound = (startTimeEpoch) + (blocktimeSeconds * height) / 3;
+            lowerBound -= (86400 * gracePeriodDays);
+            if (lowerBound < startTimeEpoch) {
+                lowerBound = startTimeEpoch;
+            }
+
+            if (timestamp > upperBound) {
+                // Timestamp is more than 3x higher than expected (+ grace period), invalid
                 return false;
             }
 
-            if ((startTimeEpoch) + (blocktimeSeconds * height) / 10 < timestamp) {
-                // Timestamp is less than 10% of expected, invalid TODO: tighten
+            if (timestamp < lowerBound) {
+                // Timestamp is less than 33.33% of expected (- grace period), invalid
                 return false;
             }
         }
