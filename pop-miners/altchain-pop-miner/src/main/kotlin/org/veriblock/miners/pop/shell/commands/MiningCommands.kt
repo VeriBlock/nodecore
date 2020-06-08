@@ -47,7 +47,7 @@ fun CommandFactory.miningCommands(
                 throw MineException("There are no SI chains configured.")
             }
             if (plugins.size > 1) {
-                throw MineException("There are more than one SI chain configured, please specify at which SI chain do you want to perform the mine action.")
+                throw MineException("There are more than one altchains configured: ${plugins.joinToString { it }}. Please, specify which of them you are going to PoP mine.")
             }
             chain = plugins.first()
         }
