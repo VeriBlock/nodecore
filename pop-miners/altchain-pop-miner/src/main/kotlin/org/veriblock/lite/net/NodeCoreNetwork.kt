@@ -10,7 +10,6 @@ package org.veriblock.lite.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -135,7 +134,7 @@ class NodeCoreNetwork(
                         reconcileBlockChain(currentChainHead, lastBlock)
                     }
                 } catch (e: BlockStoreException) {
-                    logger.error(e) { "VeriBlockBlock store exception" }
+                    logger.debugError(e) { "VeriBlockBlock store exception" }
                 }
             } else {
                 if (!isHealthy()) {
@@ -217,7 +216,7 @@ class NodeCoreNetwork(
 
             blockChain.handleNewBestChain(blockChainDelta.removed, added)
         } catch (e: Exception) {
-            logger.warn("NodeCore Error", e)
+            logger.debugWarn(e) { "NodeCore Error" }
         }
     }
 

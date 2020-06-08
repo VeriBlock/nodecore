@@ -24,7 +24,6 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.service.MinerService
-import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -138,7 +137,7 @@ class SecurityInheritingMonitor(
             // Retrieve block from SI chain
             chain.getBlock(height)
         } catch (e: Exception) {
-            logger.warn(e) { "Error when polling for block $height" }
+            logger.debugWarn(e) { "Error when polling for block $height" }
             null
         }
         // The best block should never be null if the chain's integrity is not compromised

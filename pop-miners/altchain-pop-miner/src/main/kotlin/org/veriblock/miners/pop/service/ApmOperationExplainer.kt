@@ -1,7 +1,6 @@
 package org.veriblock.miners.pop.service
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmOperationState
@@ -76,12 +75,12 @@ class ApmOperationExplainer(
             ""
         ApmOperationState.BLOCK_OF_PROOF -> {
             val blockOfProof = operation.blockOfProof
-            "${context.vbkTokenName} block of proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}"
+            "${context.vbkTokenName} Block of Proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}"
         }
         ApmOperationState.PROVEN ->
             "Merkle path has been verified"
         ApmOperationState.KEYSTONE_OF_PROOF ->
-            "Keystone of Proof: ${operation.keystoneOfProof?.hash}"
+            "${context.vbkTokenName} Keystone of Proof: ${operation.keystoneOfProof?.hash}"
         ApmOperationState.CONTEXT ->
             "Retrieved ${operation.publicationData?.size} VTBs"
         ApmOperationState.SUBMITTED_POP_DATA ->
@@ -90,7 +89,7 @@ class ApmOperationExplainer(
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
                 val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                "Payout detected in ${operation.chain.name} block ${payoutBlockHeight} to ${operation.chain.name} address $address!"
+                "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address!"
             } ?: "Payout detected in ${operation.chain.name}!"
         }
         else ->

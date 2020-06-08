@@ -131,7 +131,7 @@ class OperationSerializer(
             }
 
             if (serialized.state == MiningOperationState.FAILED.id) {
-                fail(serialized.failureReason)
+                failureReason = serialized.failureReason
             }
 
             reconstituting = false
