@@ -292,7 +292,9 @@ class ApmTaskService(
 
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
             logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
-            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight)
+            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) /*{ block ->
+                block.confirmations >= operation.chain.config.neededConfirmations
+            }*/
 
             val endorsedBlockHeader = miningInstruction.publicationData.header
             val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
