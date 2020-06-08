@@ -34,6 +34,6 @@ fun CommandFactory.configure(
     standardCommands()
     debugCommands(minerConfig, context, miner, pluginService, nodeCoreLiteKit)
     configCommands(configuration)
-    miningCommands(miner, apmOperationExplainer)
+    miningCommands(miner, pluginService, apmOperationExplainer)
     walletCommands(context, miner)
 }
