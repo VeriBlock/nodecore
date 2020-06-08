@@ -157,6 +157,8 @@ class MiningController(
                     it.name,
                     it.getPayoutInterval()
                 )
+            }.sortedBy {
+                it.key
             }
             respond(ConfiguredAltchainList(altchains))
         }
