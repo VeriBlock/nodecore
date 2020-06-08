@@ -23,7 +23,6 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpTransaction
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.util.VTBDebugUtility
@@ -398,7 +397,7 @@ class ApmTaskService(
                 }
             }
         } catch (e: Exception) {
-            logger.error("An error occurred checking VTB connection and continuity!", e)
+            logger.debugError(e) { "An error occurred checking VTB connection and continuity!" }
         }
     }
 }

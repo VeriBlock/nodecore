@@ -10,14 +10,13 @@ package org.veriblock.lite.transactionmonitor
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
 import java.io.FileInputStream
@@ -57,7 +56,7 @@ class TransactionMonitor(
                     stream.writeTransactionMonitor(this@TransactionMonitor)
                 }
             } catch (e: IOException) {
-                logger.error("Unable to save VBK wallet to disk", e)
+                logger.debugError(e) { "Unable to save VBK wallet to disk" }
             }
         }
     }
