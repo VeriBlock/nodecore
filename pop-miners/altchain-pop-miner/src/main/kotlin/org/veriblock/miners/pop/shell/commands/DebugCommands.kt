@@ -8,8 +8,10 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
+import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerConfig
@@ -34,6 +36,8 @@ fun CommandFactory.debugCommands(
         description = "Collect information about the application for troubleshooting"
     ) {
         printInfo("Running several checks, this may take a few moments...")
+        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
+        printInfo("Run Diagnostic Info: ${GsonBuilder().setPrettyPrinting().create().toJson(diagnosticInfo)}")
         if (nodeCoreLiteKit.network.isHealthy()) {
             printInfo("SUCCESS - NodeCore connection: Connected")
             val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
