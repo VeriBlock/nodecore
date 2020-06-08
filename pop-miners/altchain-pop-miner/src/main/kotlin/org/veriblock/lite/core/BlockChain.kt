@@ -12,7 +12,7 @@ import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugWarn
+import org.veriblock.core.utilities.debugError
 import org.veriblock.lite.store.StoredVeriBlockBlock
 import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.util.Threading
@@ -78,7 +78,7 @@ class BlockChain(
                 try {
                     add(block)
                 } catch (e: BlockStoreException) {
-                    logger.debugWarn(e){"VeriBlockBlock store exception"}
+                    logger.debugError(e) { "VeriBlockBlock store exception" }
                     break
                 }
 
