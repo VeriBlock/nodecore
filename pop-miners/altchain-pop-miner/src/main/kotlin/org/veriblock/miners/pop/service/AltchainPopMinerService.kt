@@ -28,6 +28,8 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.miners.pop.core.ApmOperationState
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.core.utilities.debugError
 import java.io.IOException
 import java.util.EnumSet
@@ -192,6 +194,14 @@ class AltchainPopMinerService(
             if (!chainSyncStatus.isSynchronized) {
                 throw MineException("The chain ${chain.name} is not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
             }
+        }
+
+        val currentOperations = getOperations().count {
+            it.chain.id == chain.id && it.state.id > MiningOperationState.FAILED.id && it.state.id < ApmOperationState.SUBMITTED_POP_DATA.id
+        }
+
+        if (currentOperations >= 20) {
+            throw MineException("There are 20 other operations in progress! Please, wait for at least one of them to submit the PoP transaction.")
         }
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
