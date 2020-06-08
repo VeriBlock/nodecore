@@ -22,7 +22,6 @@ abstract class MiningOperation(
     var job: Job? = null
 
     var failureReason: String? = null
-        private set
 
     private val logs: MutableList<OperationLog> = CopyOnWriteArrayList(logs)
 

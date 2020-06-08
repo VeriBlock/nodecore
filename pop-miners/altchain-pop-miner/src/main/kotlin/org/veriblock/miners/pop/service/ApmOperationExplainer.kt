@@ -76,12 +76,12 @@ class ApmOperationExplainer(
             ""
         ApmOperationState.BLOCK_OF_PROOF -> {
             val blockOfProof = operation.blockOfProof
-            "${context.vbkTokenName} block of proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}"
+            "${context.vbkTokenName} Block of Proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}"
         }
         ApmOperationState.PROVEN ->
             "Merkle path has been verified"
         ApmOperationState.KEYSTONE_OF_PROOF ->
-            "Keystone of Proof: ${operation.keystoneOfProof?.hash}"
+            "${context.vbkTokenName} Keystone of Proof: ${operation.keystoneOfProof?.hash}"
         ApmOperationState.CONTEXT ->
             "Retrieved ${operation.publicationData?.size} VTBs"
         ApmOperationState.SUBMITTED_POP_DATA ->
