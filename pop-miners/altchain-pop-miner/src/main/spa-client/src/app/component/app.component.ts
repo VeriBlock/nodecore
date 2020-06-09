@@ -4,6 +4,7 @@ import {Operation} from "../model/operation";
 import {EMPTY, empty, interval} from "rxjs";
 import {startWith, switchMap} from "rxjs/operators";
 import {MineDialogComponent} from "./mine-dialog/mine-dialog.component";
+import {LogsDialogComponent} from "./logs-dialog/logs-dialog.component";
 import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {ConfiguredAltchain} from "../model/configured-altchain";
@@ -87,4 +88,14 @@ export class AppComponent implements OnInit {
     dialogConfig.data = this.configuredAltchains
     this.dialog.open(MineDialogComponent, dialogConfig)
   }
+
+  openLogsDialog(level: string) {
+    this.apiService.getOperationLogs(this.selectedOperationId, level).subscribe(logs => {
+      const dialogConfig = new MatDialogConfig()
+      dialogConfig.data = logs
+      this.dialog.open(LogsDialogComponent, dialogConfig)
+    })
+  }
 }
+
+

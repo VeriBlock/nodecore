@@ -18,6 +18,7 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MineDialogComponent} from "./component/mine-dialog/mine-dialog.component";
+import {LogsDialogComponent} from "./component/logs-dialog/logs-dialog.component";
 import {ReactiveFormsModule} from "@angular/forms";
 import {MatSelectModule} from "@angular/material/select";
 import {MatListModule} from "@angular/material/list";
@@ -26,7 +27,8 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 @NgModule({
   declarations: [
     AppComponent,
-    MineDialogComponent
+    MineDialogComponent,
+    LogsDialogComponent
   ],
   imports: [
     BrowserModule,

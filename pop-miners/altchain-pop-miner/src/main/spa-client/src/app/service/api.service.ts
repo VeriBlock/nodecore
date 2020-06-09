@@ -36,6 +36,10 @@ export class ApiService {
     return this.http.get<OperationWorkflow>(`${environment.apiUrl}/miner/operations/${id}/workflow`);
   }
 
+  getOperationLogs(id: string, level: string): Observable<string[]> {
+    return this.http.get<string[]>(`${environment.apiUrl}/miner/operations/${id}/logs?level=${level}`);
+  }
+
   mine(request: MineRequest): Observable<Operation> {
     return this.http.post<Operation>(`${environment.apiUrl}/miner/mine`, request);
   }
