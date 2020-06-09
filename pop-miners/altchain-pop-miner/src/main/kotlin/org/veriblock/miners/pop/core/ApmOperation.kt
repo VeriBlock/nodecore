@@ -10,10 +10,7 @@ package org.veriblock.miners.pop.core
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.core.AsyncEvent
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.service.Metrics
@@ -65,6 +62,14 @@ class ApmOperation(
 
     override fun onStateChanged() {
         EventBus.operationStateChangedEvent.trigger(this)
+    }
+
+    override fun onCompleted() {
+        EventBus.operationFinishedEvent.trigger(this)
+    }
+
+    override fun onFailed() {
+        EventBus.operationFinishedEvent.trigger(this)
     }
     
     fun setMiningInstruction(miningInstruction: ApmInstruction) {

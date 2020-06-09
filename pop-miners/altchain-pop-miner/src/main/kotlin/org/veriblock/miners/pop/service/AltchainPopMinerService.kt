@@ -95,6 +95,12 @@ class AltchainPopMinerService(
                 removeReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
             }
         }
+        EventBus.operationStateChangedEvent.register(this) {
+            operationService.storeOperation(it)
+        }
+        EventBus.operationFinishedEvent.register(this) {
+            operations.remove(it.id)
+        }
     }
 
     private fun isReady(): Boolean {
@@ -214,8 +220,6 @@ class AltchainPopMinerService(
             chainMonitor = chainMonitor
         )
 
-        registerToStateChangedEvent(operation)
-
         operation.state
         submit(operation)
         operations[operation.id] = operation
@@ -247,8 +251,6 @@ class AltchainPopMinerService(
         newOperation.setContext(operation.publicationData!!)
         newOperation.reconstituting = false
 
-        registerToStateChangedEvent(newOperation)
-
         // Submit new operation
         submit(newOperation)
         operations[newOperation.id] = newOperation
@@ -278,7 +280,6 @@ class AltchainPopMinerService(
             }
 
             for (state in activeOperations) {
-                registerToStateChangedEvent(state)
                 operations[state.id] = state
             }
             logger.info("Loaded ${activeOperations.size} suspended operations")
@@ -306,12 +307,6 @@ class AltchainPopMinerService(
         }
 
         operationsSubmitted = true
-    }
-
-    private fun registerToStateChangedEvent(operation: ApmOperation) {
-        EventBus.operationStateChangedEvent.register(operationService) {
-            operationService.storeOperation(operation)
-        }
     }
 
     private fun submit(operation: ApmOperation) {
