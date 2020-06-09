@@ -31,6 +31,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.core.utilities.debugError
+import org.veriblock.miners.pop.EventBus
 import java.io.IOException
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
@@ -68,22 +69,22 @@ class AltchainPopMinerService(
         // Restore operations (including re-attach listeners) before the network starts
         this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
 
-        nodeCoreLiteKit.network.healthyEvent.register(this) {
+        EventBus.nodeCoreHealthyEvent.register(this) {
             logger.info { "Successfully connected to NodeCore, waiting for the sync status..." }
             addReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
-        nodeCoreLiteKit.network.unhealthyEvent.register(this) {
+        EventBus.nodeCoreUnhealthyEvent.register(this) {
             logger.info { "Unable to connect to NodeCore at this time, trying to reconnect..." }
             removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
-        nodeCoreLiteKit.network.healthySyncEvent.register(this) {
+        EventBus.nodeCoreHealthySyncEvent.register(this) {
             logger.info { "The connected NodeCore is synchronized" }
             addReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
-        nodeCoreLiteKit.network.unhealthySyncEvent.register(this) {
+        EventBus.nodeCoreUnhealthySyncEvent.register(this) {
             removeReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
-        nodeCoreLiteKit.balanceChangedEvent.register(this) {
+        EventBus.balanceChangedEvent.register(this) {
             if (lastConfirmedBalance != it.confirmedBalance) {
                 lastConfirmedBalance = it.confirmedBalance
                 logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
@@ -308,7 +309,7 @@ class AltchainPopMinerService(
     }
 
     private fun registerToStateChangedEvent(operation: ApmOperation) {
-        operation.stateChangedEvent.register(operationService) {
+        EventBus.operationStateChangedEvent.register(operationService) {
             operationService.storeOperation(operation)
         }
     }

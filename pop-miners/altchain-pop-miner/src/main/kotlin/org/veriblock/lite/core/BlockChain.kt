@@ -16,6 +16,7 @@ import org.veriblock.core.utilities.debugError
 import org.veriblock.lite.store.StoredVeriBlockBlock
 import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.VBlakeHash
@@ -34,11 +35,6 @@ class BlockChain(
     private val params: NetworkParameters,
     private val veriBlockStore: VeriBlockBlockStore
 ) {
-    val newBestBlockEvent = AsyncEvent<FullBlock>(Threading.LISTENER_THREAD)
-    val newBestBlockChannel = BroadcastChannel<FullBlock>(CONFLATED)
-
-    val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>(Threading.LISTENER_THREAD)
-
     fun getChainHead(): VeriBlockBlock? = veriBlockStore.getChainHead()?.block
 
     fun get(hash: VBlakeHash): VeriBlockBlock? = veriBlockStore.get(hash)?.block
@@ -89,18 +85,18 @@ class BlockChain(
             }
 
             if (reorganizing) {
-                blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks, newBlocks))
+                EventBus.blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks, newBlocks))
             }
         }
     }
 
     private fun informListenersNewBestBlock(block: FullBlock) {
-        newBestBlockEvent.trigger(block)
-        newBestBlockChannel.offer(block)
+        EventBus.newBestBlockEvent.trigger(block)
+        EventBus.newBestBlockChannel.offer(block)
     }
 
     private fun informListenersBlockChainReorganized(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {
-        blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks, newBlocks))
+        EventBus.blockChainReorganizedEvent.trigger(BlockChainReorganizedEventData(oldBlocks, newBlocks))
     }
 
     private fun verifyBlock(block: VeriBlockBlock, previous: StoredVeriBlockBlock): Boolean {

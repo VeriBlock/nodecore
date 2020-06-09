@@ -25,6 +25,10 @@ dependencies {
     // Crypto
     api("org.bouncycastle:bcprov-jdk15on:1.60")
 
+    // Coroutines
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
+
     // Persistence (TODO: remove me)
     api("org.xerial:sqlite-jdbc:$sqliteVersion")
 
