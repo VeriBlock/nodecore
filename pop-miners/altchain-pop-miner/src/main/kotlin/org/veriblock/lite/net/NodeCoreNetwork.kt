@@ -16,10 +16,10 @@ import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
-import org.veriblock.lite.core.EmptyEvent
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.SyncStatus
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.VBlakeHash
@@ -40,11 +40,6 @@ class NodeCoreNetwork(
     private val healthy = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
-
-    val healthyEvent = EmptyEvent()
-    val unhealthyEvent = EmptyEvent()
-    val healthySyncEvent = EmptyEvent()
-    val unhealthySyncEvent = EmptyEvent()
 
     fun isHealthy(): Boolean =
         healthy.get()
@@ -86,7 +81,7 @@ class NodeCoreNetwork(
                 // At this point the APM<->NodeCore connection is fine
                 if (!isHealthy()) {
                     healthy.set(true)
-                    healthyEvent.trigger()
+                    EventBus.nodeCoreHealthyEvent.trigger()
                 }
                 connected.set(true)
                 // Verify the remote NodeCore sync status
@@ -94,12 +89,12 @@ class NodeCoreNetwork(
                 if (nodeCoreSyncStatus.isSynchronized) {
                     if (!isSynchronized()) {
                         synchronized.set(true)
-                        healthySyncEvent.trigger()
+                        EventBus.nodeCoreHealthySyncEvent.trigger()
                     }
                 } else {
                     if (isSynchronized()) {
                         synchronized.set(false)
-                        unhealthySyncEvent.trigger()
+                        EventBus.nodeCoreUnhealthySyncEvent.trigger()
                         logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}, waiting until it synchronizes..." }
                     }
                 }
@@ -107,11 +102,11 @@ class NodeCoreNetwork(
                 // At this point the APM<->NodeCore can't be established
                 if (isHealthy()) {
                     healthy.set(false)
-                    unhealthyEvent.trigger()
+                    EventBus.nodeCoreUnhealthyEvent.trigger()
                 }
                 if (isSynchronized()) {
                     synchronized.set(false)
-                    unhealthySyncEvent.trigger()
+                    EventBus.nodeCoreUnhealthySyncEvent.trigger()
                 }
             }
             if (isHealthy() && isSynchronized()) {
@@ -123,7 +118,7 @@ class NodeCoreNetwork(
                     logger.debugWarn(e) { "Unable to get the last block from NodeCore" }
                     if (isHealthy()) {
                         healthy.set(false)
-                        unhealthyEvent.trigger()
+                        EventBus.nodeCoreUnhealthyEvent.trigger()
                     }
                     return
                 }
@@ -165,7 +160,7 @@ class NodeCoreNetwork(
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
-        val newBlockChannel = blockChain.newBestBlockChannel.openSubscription()
+        val newBlockChannel = EventBus.newBestBlockChannel.openSubscription()
         logger.info {
             """[$operationId] Successfully subscribed to VTB retrieval event!
                 |   - Keystone Hash: $keystoneHash

@@ -32,6 +32,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.sdk.models.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -192,7 +193,7 @@ class ApmTaskService(
             } else {
                 desiredKeystoneOfProofHeight
             }
-            val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
+            val keystoneOfProof = EventBus.newBestBlockChannel.asFlow().first { block ->
                 logger.debug(operation, "Checking block ${block.hash} @ ${block.height}...")
                 if (block.height > keystoneOfProofHeight) {
                     failOperation(

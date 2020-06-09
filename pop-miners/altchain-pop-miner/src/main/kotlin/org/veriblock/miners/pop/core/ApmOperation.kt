@@ -14,6 +14,7 @@ import org.veriblock.lite.core.AsyncEvent
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.service.Metrics
 import org.veriblock.sdk.alt.ApmInstruction
@@ -58,14 +59,12 @@ class ApmOperation(
     var payoutAmount: Long? = null
         private set
 
-    val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
-
     init {
         setState(ApmOperationState.INITIAL)
     }
 
     override fun onStateChanged() {
-        stateChangedEvent.trigger(this)
+        EventBus.operationStateChangedEvent.trigger(this)
     }
     
     fun setMiningInstruction(miningInstruction: ApmInstruction) {
