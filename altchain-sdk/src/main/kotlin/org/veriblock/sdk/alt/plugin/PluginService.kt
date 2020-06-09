@@ -76,6 +76,9 @@ class PluginService(
     fun getPlugins(): Map<String, SecurityInheritingChain> =
         loadedPlugins.toMap()
 
+    fun getConfiguredPlugins(): Map<String, PluginConfig> =
+        configuredPlugins.toMap()
+
     operator fun get(key: String): SecurityInheritingChain? {
         return loadedPlugins[key]
     }

@@ -68,7 +68,23 @@ fun CommandFactory.debugCommands(
                 }
             }
         } else {
-            printInfo("FAIL - There are no plugins loaded")
+            printInfo("FAIL - There are no SI chains loaded")
+        }
+
+        // Verify the payoutAddress for the SI chains
+        val configuredPlugins = pluginService.getConfiguredPlugins().filter { it.key != "test" }
+        if (configuredPlugins.isNotEmpty()) {
+            configuredPlugins.forEach {
+                val loadedPayoutAddress = plugins[it.key]?.config?.payoutAddress ?: null
+                val configuredPayoutAddress = it.value.payoutAddress
+                if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress != loadedPayoutAddress) {
+                    printInfo("FAIL - The configured payoutAddress '$configuredPayoutAddress' for ${it.value.name} is not valid.")
+                } else {
+                    printInfo("SUCCESS - The configured payoutAddress '$configuredPayoutAddress' for ${it.value.name} is valid.")
+                }
+            }
+        } else {
+            printInfo("FAIL - There are no SI chains configured")
         }
 
         try {
