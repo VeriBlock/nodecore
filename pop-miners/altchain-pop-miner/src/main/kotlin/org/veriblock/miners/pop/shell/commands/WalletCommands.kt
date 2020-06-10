@@ -29,6 +29,7 @@ fun CommandFactory.walletCommands(
         description = "Gets the currently loaded VeriBlock address"
     ) {
         val address = miner.getAddress()
+        printInfo("${context.vbkTokenName} address")
         printInfo(address)
 
         success()
