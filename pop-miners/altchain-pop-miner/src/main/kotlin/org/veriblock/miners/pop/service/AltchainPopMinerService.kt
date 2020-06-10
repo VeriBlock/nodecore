@@ -33,6 +33,7 @@ import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
 import java.io.IOException
+import java.time.LocalDateTime
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
 
@@ -203,12 +204,11 @@ class AltchainPopMinerService(
             }
         }
 
-        val currentOperations = getOperations().count {
-            it.chain.id == chain.id && it.state.id > MiningOperationState.FAILED.id && it.state.id < ApmOperationState.SUBMITTED_POP_DATA.id
-        }
+        val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
+        val currentTime = LocalDateTime.now()
 
-        if (currentOperations >= 20) {
-            throw MineException("There are 20 other operations in progress! Please, wait for at least one of them to submit the PoP transaction.")
+        if (lastOperationTime != null && lastOperationTime.plusSeconds(1).isAfter(currentTime)) {
+            throw MineException("You're starting operations too fast, wait at least 1 second(s) to start a new operation.")
         }
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
