@@ -293,9 +293,9 @@ class ApmTaskService(
 
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
             logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
-            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) /*{ block ->
+            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
                 block.confirmations >= operation.chain.config.neededConfirmations
-            }*/
+            }
 
             val endorsedBlockHeader = miningInstruction.publicationData.header
             val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
@@ -313,12 +313,12 @@ class ApmTaskService(
                 "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
             )
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight) to be confirmed...")
-            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
+            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) /*{ block ->
                 if (block.confirmations < 0) {
                     throw AltchainBlockReorgException(block)
                 }
                 block.confirmations >= operation.chain.config.neededConfirmations
-            }
+            }*/
             val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId)
                 ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
             val rewardVout = coinbaseTransaction.vout.find {
