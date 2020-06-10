@@ -78,9 +78,9 @@ fun CommandFactory.debugCommands(
                 val loadedPayoutAddress = plugins[it.key]?.config?.payoutAddress ?: null
                 val configuredPayoutAddress = it.value.payoutAddress
                 if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress != loadedPayoutAddress) {
-                    printInfo("FAIL - The configured payoutAddress '$configuredPayoutAddress' for ${it.value.name} is not valid.")
+                    printInfo("FAIL - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is not valid.")
                 } else {
-                    printInfo("SUCCESS - The configured payoutAddress '$configuredPayoutAddress' for ${it.value.name} is valid.")
+                    printInfo("SUCCESS - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is valid.")
                 }
             }
         } else {
