@@ -29,7 +29,7 @@ class ApmOperationExplainer(
             val taskIdString = if (taskId / 10 > 0) "$taskId." else " $taskId."
             OperationStage(
                 status = statusDisplay,
-                taskName = "$taskIdString ${taskName}",
+                taskName = "$taskIdString $taskName",
                 extraInformation = when (status) {
                     DONE -> operationState.getExtraInformation(operation)
                     CURRENT -> operationState.getCurrentHint(operation)
@@ -45,7 +45,7 @@ class ApmOperationExplainer(
 
     private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
         return when {
-            operation.proofOfProofId != null -> ApmOperationState.SUBMITTED_POP_DATA
+            operation.popTxId != null -> ApmOperationState.SUBMITTED_POP_DATA
             operation.publicationData != null -> ApmOperationState.CONTEXT
             operation.merklePath != null -> ApmOperationState.PROVEN
             operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
@@ -71,7 +71,7 @@ class ApmOperationExplainer(
             val transaction = operation.endorsementTransaction
             "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId} (fee: ${transaction?.fee?.formatAtomicLongWithDecimal()})"
         }
-        ApmOperationState.CONFIRMED ->
+        ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
             ""
         ApmOperationState.BLOCK_OF_PROOF -> {
             val blockOfProof = operation.blockOfProof
@@ -84,7 +84,9 @@ class ApmOperationExplainer(
         ApmOperationState.CONTEXT ->
             "Retrieved ${operation.publicationData?.size} VTBs"
         ApmOperationState.SUBMITTED_POP_DATA ->
-            "VTBs submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.proofOfProofId}"
+            "VTBs submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.popTxId}"
+        ApmOperationState.POP_TX_CONFIRMED ->
+            "PoP Tx confirmed in ${operation.chain.name} block ${operation.popTxBlockHash}"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
@@ -97,7 +99,7 @@ class ApmOperationExplainer(
     }
 
     private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = operation.failureReason ?: when (this) {
-        ApmOperationState.CONFIRMED ->
+        ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
             "Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block"
         ApmOperationState.KEYSTONE_OF_PROOF ->
             "Waiting for the next ${context.vbkTokenName} keystone"
@@ -105,6 +107,8 @@ class ApmOperationExplainer(
             "Waiting for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}"
         ApmOperationState.SUBMITTED_POP_DATA ->
             "Submitting PoP Data to ${operation.chain.name}"
+        ApmOperationState.POP_TX_CONFIRMED ->
+            "Waiting for the ${operation.chain.name} PoP Tx ${operation.popTxId} to be confirmed"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
@@ -118,7 +122,7 @@ class ApmOperationExplainer(
 
     private fun MiningOperationState.getPendingHint(operation: ApmOperation) = if (!operation.isFailed()) {
         when (this) {
-            ApmOperationState.CONFIRMED ->
+            ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
                 "Will wait for ${context.vbkTokenName} endorsement transaction to appear in a block"
             ApmOperationState.KEYSTONE_OF_PROOF ->
                 "Will wait for the next ${context.vbkTokenName} keystone after the endorsement transaction's block"
@@ -126,6 +130,8 @@ class ApmOperationExplainer(
                 "Will wait for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}"
             ApmOperationState.SUBMITTED_POP_DATA ->
                 "Will submit PoP Data to ${operation.chain.name}"
+            ApmOperationState.POP_TX_CONFIRMED ->
+                "Will wait for the ${operation.chain.name} PoP Tx ${operation.popTxId} to be confirmed"
             ApmOperationState.PAYOUT_DETECTED -> {
                 operation.miningInstruction?.let { miningInstruction ->
                     val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()

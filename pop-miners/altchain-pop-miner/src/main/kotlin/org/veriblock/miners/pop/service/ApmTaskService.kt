@@ -104,7 +104,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Confirm transaction",
-            targetState = ApmOperationState.CONFIRMED,
+            targetState = ApmOperationState.ENDORSEMENT_TX_CONFIRMED,
             timeout = 1.hr
         ) {
             val endorsementTransaction = operation.endorsementTransaction
@@ -260,7 +260,7 @@ class ApmTaskService(
                 val chainName = operation.chain.name
                 logger.info(operation, "VTB submitted to $chainName! $chainName PoP TxId: $siTxId")
 
-                operation.setProofOfProofId(siTxId)
+                operation.setPopTxId(siTxId)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error submitting proof of proof" }
                 failTask("Error submitting proof of proof")
@@ -268,14 +268,12 @@ class ApmTaskService(
         }
 
         operation.runTask(
-            taskName = "Payout Detection",
-            targetState = ApmOperationState.PAYOUT_DETECTED,
-            timeout = 10.days
+            taskName = "Confirm PoP Transaction",
+            targetState = ApmOperationState.POP_TX_CONFIRMED,
+            timeout = 2.hr
         ) {
-            val miningInstruction = operation.miningInstruction
-                ?: failTask("PayoutDetectionTask called without mining instruction!")
-            val endorsementTransactionId = operation.proofOfProofId
-                ?: failTask("PayoutDetectionTask called without proof of proof txId!")
+            val endorsementTransactionId = operation.popTxId
+                ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
 
             val chainName = operation.chain.name
             logger.info(operation, "Waiting for $chainName Endorsement Transaction ($endorsementTransactionId) to be confirmed...")
@@ -291,11 +289,23 @@ class ApmTaskService(
                     " Confirmations: ${endorsementTransaction.confirmations}"
             )
 
+            operation.setPopTxBlockHash(endorsementTransaction.blockhash) // TODO
+        }
+
+        operation.runTask(
+            taskName = "Payout Detection",
+            targetState = ApmOperationState.PAYOUT_DETECTED,
+            timeout = 10.days
+        ) {
+            val miningInstruction = operation.miningInstruction
+                ?: failTask("PayoutDetectionTask called without mining instruction!")
+
+            val chainName = operation.chain.name
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
             logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
-            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) /*{ block ->
+            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
                 block.confirmations >= operation.chain.config.neededConfirmations
-            }*/
+            }
 
             val endorsedBlockHeader = miningInstruction.publicationData.header
             val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
@@ -313,12 +323,12 @@ class ApmTaskService(
                 "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
             )
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight) to be confirmed...")
-            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
+            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) /*{ block ->
                 if (block.confirmations < 0) {
                     throw AltchainBlockReorgException(block)
                 }
                 block.confirmations >= operation.chain.config.neededConfirmations
-            }
+            }*/
             val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId)
                 ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
             val rewardVout = coinbaseTransaction.vout.find {

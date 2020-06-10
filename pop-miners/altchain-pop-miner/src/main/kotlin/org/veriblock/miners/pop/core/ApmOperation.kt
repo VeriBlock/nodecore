@@ -49,7 +49,9 @@ class ApmOperation(
         private set
     var publicationData: List<VeriBlockPublication>? = null
         private set
-    var proofOfProofId: String? = null
+    var popTxId: String? = null
+        private set
+    var popTxBlockHash: String? = null
         private set
     var payoutBlockHash: String? = null
         private set
@@ -90,7 +92,7 @@ class ApmOperation(
         if (state != ApmOperationState.ENDORSEMENT_TRANSACTION) {
             error("Trying to set as transaction confirmed without such transaction")
         }
-        setState(ApmOperationState.CONFIRMED)
+        setState(ApmOperationState.ENDORSEMENT_TX_CONFIRMED)
 
         endorsementTransaction?.let {
             Metrics.spentFeesCounter.increment(it.fee.toDouble())
@@ -98,7 +100,7 @@ class ApmOperation(
     }
 
     fun setBlockOfProof(blockOfProof: VeriBlockBlock) {
-        if (state != ApmOperationState.CONFIRMED) {
+        if (state != ApmOperationState.ENDORSEMENT_TX_CONFIRMED) {
             error("Trying to set block of proof without having confirmed the transaction")
         }
         this.blockOfProof = blockOfProof
@@ -129,16 +131,24 @@ class ApmOperation(
         setState(ApmOperationState.CONTEXT)
     }
 
-    fun setProofOfProofId(proofOfProofId: String) {
+    fun setPopTxId(popTxId: String) {
         if (state != ApmOperationState.CONTEXT) {
-            error("Trying to set Proof of Proof id without having the context")
+            error("Trying to set PoP transaction id without having the context")
         }
-        this.proofOfProofId = proofOfProofId
+        this.popTxId = popTxId
         setState(ApmOperationState.SUBMITTED_POP_DATA)
     }
 
-    fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
+    fun setPopTxBlockHash(popTxBlockHash: String) {
         if (state != ApmOperationState.SUBMITTED_POP_DATA) {
+            error("Trying to set PoP transaction's block hash without having the PoP transaction id")
+        }
+        this.popTxBlockHash = popTxBlockHash
+        setState(ApmOperationState.POP_TX_CONFIRMED)
+    }
+
+    fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
+        if (state != ApmOperationState.POP_TX_CONFIRMED) {
             error("Trying to set Payout Data without having the Proof of Proof id")
         }
         this.payoutBlockHash = payoutBlockHash
@@ -175,7 +185,7 @@ class ApmOperation(
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
             result["vtbBtcBlocks"] = context.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
         }
-        proofOfProofId?.let {
+        popTxId?.let {
             result["altProofOfProofTxId"] = it
         }
         payoutBlockHash?.let {
