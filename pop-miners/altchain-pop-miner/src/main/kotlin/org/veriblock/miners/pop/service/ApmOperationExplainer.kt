@@ -89,8 +89,8 @@ class ApmOperationExplainer(
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
                 val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address!"
-            } ?: "Payout detected in ${operation.chain.name}!"
+                "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address"
+            } ?: "Payout detected in ${operation.chain.name}"
         }
         else ->
             ""
