@@ -15,7 +15,6 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.model.BlockStore
-import org.veriblock.sdk.models.SyncStatus
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
@@ -49,10 +48,10 @@ class NodeCoreService(
         }
     }
 
-    private fun isHealthy(): Boolean =
+    fun isHealthy(): Boolean =
         healthy.get()
 
-    private fun isSynchronized(): Boolean =
+    fun isSynchronized(): Boolean =
         synchronized.get()
 
     fun shutdown() {
