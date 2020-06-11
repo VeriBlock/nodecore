@@ -270,14 +270,14 @@ class ApmTaskService(
         operation.runTask(
             taskName = "Confirm PoP Transaction",
             targetState = ApmOperationState.POP_TX_CONFIRMED,
-            timeout = 2.hr
+            timeout = 5.hr
         ) {
             val endorsementTransactionId = operation.popTxId
                 ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
 
             val chainName = operation.chain.name
-            logger.info(operation, "Waiting for $chainName Endorsement Transaction ($endorsementTransactionId) to be confirmed...")
-            val endorsementTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
+            logger.info(operation, "Waiting for $chainName PoP Transaction ($endorsementTransactionId) to be confirmed...")
+            val popTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
                 if (transaction.confirmations < 0) {
                     throw AltchainTransactionReorgException(transaction)
                 }
@@ -285,11 +285,14 @@ class ApmTaskService(
             }
             logger.info(
                 operation,
-                "Successfully confirmed $chainName endorsement transaction ${endorsementTransaction.txId}!" +
-                    " Confirmations: ${endorsementTransaction.confirmations}"
+                "Successfully confirmed $chainName PoP transaction ${popTransaction.txId}!" +
+                    " Confirmations: ${popTransaction.confirmations}"
             )
 
-            operation.setPopTxBlockHash(endorsementTransaction.blockhash) // TODO
+            val txBlockHash = popTransaction.blockHash
+                ?: error("The  $chainName PoP transaction ${popTransaction.txId} has no block hash despite having been confirmed!")
+
+            operation.setPopTxBlockHash(txBlockHash)
         }
 
         operation.runTask(

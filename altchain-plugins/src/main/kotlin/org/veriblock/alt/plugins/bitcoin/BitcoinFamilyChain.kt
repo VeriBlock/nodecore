@@ -178,7 +178,8 @@ class BitcoinFamilyChain(
                     (it.value * 100000000).roundToLong(),
                     it.scriptPubKey.hex
                 )
-            }
+            },
+            btcTransaction.blockhash
         )
     }
 
@@ -292,7 +293,8 @@ private data class BtcBlock(
 private data class BtcTransaction(
     val txid: String,
     val confirmations: Int,
-    val vout: List<BtcTransactionVout>
+    val vout: List<BtcTransactionVout>,
+    val blockhash: String?
 )
 
 private data class BtcTransactionVout(

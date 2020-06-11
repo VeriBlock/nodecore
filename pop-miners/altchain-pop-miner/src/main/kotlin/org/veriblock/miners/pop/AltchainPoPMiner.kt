@@ -62,7 +62,7 @@ private fun run(): Int {
         shell.run()
     } catch (e: Exception) {
         errored = true
-        logger.debugWarn(e) { "Fatal error: ${e.message}" }
+        logger.debugWarn(e) { "Fatal error" }
     } finally {
         if (!shell.running) {
             shutdownSignal.countDown()
