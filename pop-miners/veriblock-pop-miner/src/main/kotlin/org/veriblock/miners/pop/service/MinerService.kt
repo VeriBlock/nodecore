@@ -296,7 +296,7 @@ class MinerService(
             )
             result.fail()
         } catch (e: Exception) {
-            result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true)
+            result.addMessage("V500", "Send Failed", "Unable to send coins: " + e.message, true)
             result.fail()
         }
         return result
