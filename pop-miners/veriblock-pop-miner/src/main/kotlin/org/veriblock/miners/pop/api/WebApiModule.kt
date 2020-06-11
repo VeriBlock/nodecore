@@ -2,6 +2,7 @@ package org.veriblock.miners.pop.api
 
 import org.koin.dsl.module
 import org.veriblock.miners.pop.api.controller.ConfigurationController
+import org.veriblock.miners.pop.api.controller.DiagnosticController
 import org.veriblock.miners.pop.api.controller.LastBitcoinBlockController
 import org.veriblock.miners.pop.api.controller.MiningController
 import org.veriblock.miners.pop.api.controller.QuitController
@@ -14,6 +15,7 @@ val webApiModule = module {
     single { WalletController(get()) }
     single { LastBitcoinBlockController(get()) }
     single { QuitController() }
+    single { DiagnosticController(get()) }
 
     single {
         ApiServer(
@@ -23,7 +25,8 @@ val webApiModule = module {
                 get<MiningController>(),
                 get<WalletController>(),
                 get<LastBitcoinBlockController>(),
-                get<QuitController>()
+                get<QuitController>(),
+                get<DiagnosticController>()
             )
         )
     }

@@ -8,11 +8,13 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Utils
 import org.veriblock.core.utilities.extensions.toHex
+import org.veriblock.miners.pop.service.DiagnosticService
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.command
@@ -20,7 +22,10 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream
 
-fun CommandFactory.diagnosticCommands(minerService: MinerService) {
+fun CommandFactory.diagnosticCommands(
+    minerService: MinerService,
+    diagnosticService: DiagnosticService
+) {
     command(
         name = "Show Last Bitcoin Block",
         form = "showlastbitcoinblock",
@@ -73,5 +78,16 @@ fun CommandFactory.diagnosticCommands(minerService: MinerService) {
                 addMessage("V500", "Error", e.message!!)
             }
         }
+    }
+
+    command(
+        name = "Get Debug Information",
+        form = "getdebuginfo",
+        description = "Collect information about the application for troubleshooting"
+    ) {
+        printInfo("Running several checks, this may take a few moments...")
+        val debugInformation = diagnosticService.collectDiagnosticInformation()
+        printInfo(GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(debugInformation))
+        success()
     }
 }

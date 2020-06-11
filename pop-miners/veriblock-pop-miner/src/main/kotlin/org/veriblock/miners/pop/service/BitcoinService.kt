@@ -42,7 +42,6 @@ import org.bitcoinj.store.SPVBlockStore
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
@@ -95,6 +94,9 @@ class BitcoinService(
     }
 
     private val bitcoinNetwork = this.configuration.network
+
+    var blockchainDownloadBlocksToGo = 0
+    var blockchainDownloadPercent = 0
 
     private var isBlockchainDownloaded = false
     private var isServiceReady = false
@@ -199,6 +201,9 @@ class BitcoinService(
 
             override fun progress(pct: Double, blocksSoFar: Int, date: Date) {
                 super.progress(pct, blocksSoFar, date)
+
+                blockchainDownloadPercent = pct.toInt()
+                blockchainDownloadBlocksToGo = blocksSoFar
 
                 // Don't report progress at the end, doneDownload() will handle that
                 if (blocksSoFar < 10) {
