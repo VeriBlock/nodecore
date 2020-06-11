@@ -28,11 +28,10 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.miners.pop.core.ApmOperationState
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
 import java.io.IOException
+import java.time.LocalDateTime
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
 
@@ -203,12 +202,11 @@ class AltchainPopMinerService(
             }
         }
 
-        val currentOperations = getOperations().count {
-            it.chain.id == chain.id && it.state.id > MiningOperationState.FAILED.id && it.state.id < ApmOperationState.SUBMITTED_POP_DATA.id
-        }
+        val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
+        val currentTime = LocalDateTime.now()
 
-        if (currentOperations >= 20) {
-            throw MineException("There are 20 other operations in progress! Please, wait for at least one of them to submit the PoP transaction.")
+        if (lastOperationTime != null && currentTime < lastOperationTime.plusSeconds(1)) {
+            throw MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation.")
         }
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
