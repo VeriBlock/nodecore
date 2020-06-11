@@ -125,7 +125,7 @@ class MockMinerService(
             operation.fail(e.message ?: "Unknown reason")
             throw e
         }
-        operation.setProofOfProofId(submissionResult)
+        operation.setPopTxId(submissionResult)
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class

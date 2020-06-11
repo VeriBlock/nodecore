@@ -170,7 +170,7 @@ class TestChain(
 
     private fun createBlock(height: Int): TestBlock {
         val hash = Utility.intToByteArray(height).toHex()
-        val coinbase = createTransaction(config.payoutAddress)
+        val coinbase = createTransaction(hash, config.payoutAddress)
         val previousBlockHeight = height - 1
         val previousBlock = if (previousBlockHeight > startingHeight) {
             blocks[previousBlockHeight] ?: createBlock(previousBlockHeight)
@@ -218,6 +218,7 @@ class TestChain(
     }
 
     private fun createTransaction(
+        blockHash: String,
         receiver: String
     ): SecurityInheritingTransaction {
         val transaction = SecurityInheritingTransaction(
@@ -225,7 +226,8 @@ class TestChain(
             100,
             listOf(
                 SecurityInheritingTransactionVout(20__000_000_00, receiver)
-            )
+            ),
+            blockHash
         )
         transactions[transaction.txId] = transaction
         return transaction
