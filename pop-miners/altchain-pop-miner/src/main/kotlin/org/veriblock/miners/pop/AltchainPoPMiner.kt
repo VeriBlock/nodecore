@@ -28,7 +28,7 @@ private val logger = createLogger {}
 
 private val shutdownSignal: CountDownLatch = CountDownLatch(1)
 private lateinit var shell: Shell
-private lateinit var popMinerService: MinerService
+private lateinit var minerService: MinerService
 private val eventRegistrar = Any()
 var externalQuit = false
 
@@ -50,7 +50,7 @@ private fun run(): Int {
         modules(listOf(minerModule, webApiModule))
     }.koin
 
-    popMinerService = koin.get()
+    minerService = koin.get()
     val pluginService: PluginService = koin.get()
     val securityInheritingService: SecurityInheritingService = koin.get()
     val apiServer: ApiServer = koin.get()
@@ -60,9 +60,9 @@ private fun run(): Int {
     try {
         shell.initialize()
         pluginService.loadPlugins()
-        popMinerService.initialize()
-        popMinerService.start()
-        securityInheritingService.start(popMinerService)
+        minerService.initialize()
+        minerService.start()
+        securityInheritingService.start(minerService)
         apiServer.start()
         shell.run()
     } catch (e: Exception) {
@@ -78,10 +78,10 @@ private fun run(): Int {
         EventBus.shellCompletedEvent.unregister(eventRegistrar)
         EventBus.programQuitEvent.unregister(eventRegistrar)
 
-        popMinerService.setIsShuttingDown(true)
+        minerService.setIsShuttingDown(true)
         apiServer.shutdown()
         securityInheritingService.stop()
-        popMinerService.shutdown()
+        minerService.shutdown()
 
         logger.info("Application exit")
     } catch (e: InterruptedException) {
@@ -107,7 +107,7 @@ private fun onProgramQuit(quitReason: Int) {
     if (quitReason == 1) {
         externalQuit = true
     }
-    popMinerService.setIsShuttingDown(true)
+    minerService.setIsShuttingDown(true)
     shell.interrupt()
 }
 
