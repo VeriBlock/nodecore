@@ -26,12 +26,15 @@ import kotlin.system.exitProcess
 
 private val logger = createLogger {}
 
-private val shutdownSignal = CountDownLatch(1)
+private val shutdownSignal: CountDownLatch = CountDownLatch(1)
+private lateinit var shell: Shell
+private lateinit var popMinerService: MinerService
+private val eventRegistrar = Any()
+var externalQuit = false
 
 private fun run(): Int {
-    Runtime.getRuntime().addShutdownHook(Thread {
-        shutdownSignal.countDown()
-    })
+    EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
+    EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
@@ -40,41 +43,45 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Altchain_PoP_Miner")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
+    Runtime.getRuntime().addShutdownHook(Thread { shutdownSignal.countDown() })
+
     logger.info { "Starting dependency injection" }
     val koin = startKoin {
         modules(listOf(minerModule, webApiModule))
     }.koin
 
-    val miner: MinerService = koin.get()
+    popMinerService = koin.get()
     val pluginService: PluginService = koin.get()
     val securityInheritingService: SecurityInheritingService = koin.get()
     val apiServer: ApiServer = koin.get()
-    val shell: Shell = koin.get()
+    shell = koin.get()
 
     var errored = false
     try {
         shell.initialize()
         pluginService.loadPlugins()
-        miner.initialize()
-        miner.start()
-        securityInheritingService.start(miner)
+        popMinerService.initialize()
+        popMinerService.start()
+        securityInheritingService.start(popMinerService)
         apiServer.start()
         shell.run()
     } catch (e: Exception) {
         errored = true
         logger.debugWarn(e) { "Fatal error" }
     } finally {
-        if (!shell.running) {
-            shutdownSignal.countDown()
-        }
+        shutdownSignal.countDown()
     }
 
     try {
         shutdownSignal.await()
-        miner.setIsShuttingDown(true)
+
+        EventBus.shellCompletedEvent.unregister(eventRegistrar)
+        EventBus.programQuitEvent.unregister(eventRegistrar)
+
+        popMinerService.setIsShuttingDown(true)
         apiServer.shutdown()
         securityInheritingService.stop()
-        miner.shutdown()
+        popMinerService.shutdown()
 
         logger.info("Application exit")
     } catch (e: InterruptedException) {
@@ -88,6 +95,27 @@ private fun run(): Int {
     return if (!errored) 0 else 1
 }
 
+private fun onShellCompleted() {
+    try {
+        shutdownSignal.countDown()
+    } catch (e: Exception) {
+        logger.error(e.message, e)
+    }
+}
+
+private fun onProgramQuit(quitReason: Int) {
+    if (quitReason == 1) {
+        externalQuit = true
+    }
+    popMinerService.setIsShuttingDown(true)
+    shell.interrupt()
+}
+
 fun main() {
-    exitProcess(run())
+    val programExitResult = run()
+    if (externalQuit) {
+        exitProcess(2)
+    } else {
+        exitProcess(programExitResult)
+    }
 }
