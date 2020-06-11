@@ -28,8 +28,6 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.miners.pop.core.ApmOperationState
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
 import java.io.IOException
@@ -207,8 +205,8 @@ class AltchainPopMinerService(
         val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
         val currentTime = LocalDateTime.now()
 
-        if (lastOperationTime != null && lastOperationTime.plusSeconds(1).isAfter(currentTime)) {
-            throw MineException("You're starting operations too fast, wait at least 1 second(s) to start a new operation.")
+        if (lastOperationTime != null && currentTime < lastOperationTime.plusSeconds(1)) {
+            throw MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation.")
         }
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
