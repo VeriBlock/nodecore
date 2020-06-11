@@ -387,10 +387,14 @@ class AdminApiService(
 
     private fun getAvailableAddresses(totalOutputAmount: Long): List<Pair<String, Long>> {
         //Use default address if there balance is enough.
-        val ledgerContext = peerTable.getAddressState(addressManager.defaultAddress.hash)!!
-        if (ledgerContext.ledgerValue!!.availableAtomicUnits > totalOutputAmount) {
+        val ledgerContext = peerTable.getAddressState(addressManager.defaultAddress.hash)
+            ?: throw WalletException("Could not find default address' state")
+        if (ledgerContext.ledgerValue == null || ledgerContext.address == null) {
+            throw WalletException("Default address' state's ledger value is unknown! Ledger proof status: ${ledgerContext.ledgerProofStatus}")
+        }
+        if (ledgerContext.ledgerValue.availableAtomicUnits > totalOutputAmount) {
             return listOf(
-                Pair(ledgerContext.address!!.address, ledgerContext.ledgerValue.availableAtomicUnits)
+                Pair(ledgerContext.address.address, ledgerContext.ledgerValue.availableAtomicUnits)
             )
         }
         val addressBalanceList: MutableList<Pair<String, Long>> = ArrayList()

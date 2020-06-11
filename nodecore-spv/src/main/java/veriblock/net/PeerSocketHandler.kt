@@ -13,6 +13,7 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import veriblock.serialization.MessageSerializer.deserialize
 import veriblock.util.Threading
+import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
@@ -127,9 +128,7 @@ class PeerSocketHandler(
     private fun runInput() {
         while (isRunning()) {
             try {
-                val sizeBuffer = ByteArray(4)
-                inputStream.readFully(sizeBuffer)
-                val nextMessageSize = Utility.byteArrayToInt(sizeBuffer)
+                val nextMessageSize = inputStream.readInt()
                 val raw = ByteArray(nextMessageSize)
                 inputStream.readFully(raw)
                 val message = deserialize(raw)
