@@ -1,8 +1,9 @@
 package org.veriblock.sdk.models
 
 data class SyncStatus(
-    val networkHeight: Int,
-    val localBlockchainHeight: Int,
-    val blockDifference: Int,
-    val isSynchronized: Boolean
+    val networkHeight: Int = 0,
+    val localBlockchainHeight: Int = 0,
+    val blockDifference: Int = 0,
+    val isSynchronized: Boolean = false,
+    val initialblockdownload: Boolean = false
 )

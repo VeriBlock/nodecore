@@ -44,9 +44,9 @@ class DiagnosticService(
                         information.add("SUCCESS - ${it.value.name} connection: Connected")
                         val chainSyncStatus = it.value.getSynchronizedStatus()
                         if (chainSyncStatus.isSynchronized) {
-                            information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
+                            information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight} InitialBlockDownload=${chainSyncStatus.initialblockdownload})")
                         } else {
-                            information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
+                            information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight} InitialBlockDownload=${chainSyncStatus.initialblockdownload})")
                         }
                     } else {
                         information.add("FAIL - ${it.value.name} connection: Not connected")

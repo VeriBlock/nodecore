@@ -255,11 +255,12 @@ class BitcoinFamilyChain(
                 response.headers,
                 response.blocks,
                 blockDifference,
-                response.headers > 0 && blockDifference < 4
+                (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
+                response.initialblockdownload
             )
         } catch (e: Exception) {
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
-            SyncStatus(0, 0, 0, false)
+            SyncStatus()
         }
     }
 }
@@ -311,5 +312,6 @@ private data class BtcScriptPubKey(
 
 private data class BtcSyncStatus(
     val blocks: Int,
-    val headers: Int
+    val headers: Int,
+    val initialblockdownload: Boolean
 )

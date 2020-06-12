@@ -216,7 +216,7 @@ class NodeCoreGateway(
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
-            SyncStatus(0, 0, 0, false)
+            SyncStatus()
         }
     }
 

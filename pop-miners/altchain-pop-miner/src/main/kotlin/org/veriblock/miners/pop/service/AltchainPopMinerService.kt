@@ -198,7 +198,7 @@ class AltchainPopMinerService(
             }
             val chainSyncStatus = chain.getSynchronizedStatus()
             if (!chainSyncStatus.isSynchronized) {
-                throw MineException("The chain ${chain.name} is not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
+                throw MineException("The chain ${chain.name} is not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight} InitialBlockDownload=${chainSyncStatus.initialblockdownload})")
             }
         }
 
