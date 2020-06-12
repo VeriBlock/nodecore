@@ -2,6 +2,7 @@ package veriblock.model.mapper
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
+import org.veriblock.core.InvalidAddressException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.sdk.models.Address
 import veriblock.exception.SpvProcessException
@@ -27,15 +28,16 @@ object LedgerProofReplyMapper {
         val blockHeader = BlockHeader(
             blockHeaderVB.header.toByteArray(), blockHeaderVB.hash.toByteArray()
         )
-        var ledgerValue: LedgerValue? = null
-        if (status.exists()) {
-            val ledgerValues: List<LedgerValue> = ledgerProofResult.ledgerProofWithContext.ledgerProof.proofOfExistence.verticalProofLayersList.map {
-                map(it.ledgerValue)
+        val ledgerValue: LedgerValue = when (status) {
+            LedgerProofStatus.ADDRESS_EXISTS -> {
+                val ledgerProofNode = ledgerProofResult.ledgerProofWithContext.ledgerProof.proofOfExistence.verticalProofLayersList.firstOrNull()
+                    ?: throw SpvProcessException("Ledger proof reply doesn't have ledger value.")
+                ledgerProofNode.ledgerValue.map()
             }
-            if (ledgerValues.isEmpty()) {
-                throw SpvProcessException("Ledger proof reply doesn't have ledger value.")
-            }
-            ledgerValue = ledgerValues[0]
+            LedgerProofStatus.ADDRESS_DOES_NOT_EXIST ->
+                LedgerValue(0, 0, -1)
+            else ->
+                throw InvalidAddressException("Address (${address.address}) status is set to $status")
         }
         return LedgerContext(
             address = address,
@@ -45,10 +47,10 @@ object LedgerProofReplyMapper {
         )
     }
 
-    private fun map(ledgerProofReply: VeriBlockMessages.LedgerValue): LedgerValue {
+    private fun VeriBlockMessages.LedgerValue.map(): LedgerValue {
         return LedgerValue(
-            ledgerProofReply.availableAtomicUnits, ledgerProofReply.frozenAtomicUnits,
-            ledgerProofReply.signatureIndex
+            availableAtomicUnits, frozenAtomicUnits,
+            signatureIndex
         )
     }
 }
