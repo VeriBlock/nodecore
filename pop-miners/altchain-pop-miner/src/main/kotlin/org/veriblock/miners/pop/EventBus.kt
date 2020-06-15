@@ -26,4 +26,7 @@ object EventBus {
 
     val operationStateChangedEvent = AsyncEvent<ApmOperation>("Operation State Changed", Threading.MINER_THREAD)
     val operationFinishedEvent = AsyncEvent<ApmOperation>("Operation Finished", Threading.MINER_THREAD)
+
+    val programQuitEvent = Event<Int>("Program Quit")
+    val shellCompletedEvent = EmptyEvent("Shell Completed")
 }
