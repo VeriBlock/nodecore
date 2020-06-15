@@ -15,6 +15,7 @@ import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
+import org.jline.reader.impl.DefaultParser
 import org.jline.reader.impl.LineReaderImpl
 import org.jline.reader.impl.completer.StringsCompleter
 import org.jline.terminal.Terminal
@@ -60,7 +61,10 @@ open class Shell(
         .build()
 
     init {
+        // Set the current shell for the LoggingLineAppender
         currentShell = this
+        // Disable escape chars
+        (reader.parser as DefaultParser).escapeChars = CharArray(0)
     }
 
     fun refreshCompleter() {
@@ -73,7 +77,7 @@ open class Shell(
         .append(" > ")
         .toAnsi(terminal)
 
-    fun readLine(): String? = try {
+    private fun readLine(): String? = try {
         val read = reader.readLine(getPrompt())
         println(read)
         printLogger.info(read)
@@ -84,7 +88,8 @@ open class Shell(
         null
     }
 
-    fun passwordPrompt(prompt: String): String? = reader.readLine(prompt, '*')
+    fun prompt(prompt: String): String = reader.readLine(prompt)
+    fun passwordPrompt(prompt: String): String = reader.readLine(prompt, '*')
 
     private fun startRunning() {
         running = true
@@ -226,7 +231,7 @@ open class Shell(
         }
     }
 
-    protected fun printResultWithFormat(result: Result) {
+    private fun printResultWithFormat(result: Result) {
         val formatted = ArrayList<ShellMessage>()
         for (msg in result.getMessages()) {
             formatted.add(

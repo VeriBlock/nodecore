@@ -8,10 +8,12 @@ import org.junit.Test
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultTestNetParameters
+import org.veriblock.sdk.models.asCoin
 import veriblock.SpvContext
 import veriblock.model.Output
 import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
+import veriblock.model.asStandardAddress
 import veriblock.net.LocalhostDiscovery
 import veriblock.net.P2PService
 import veriblock.net.Peer
@@ -48,7 +50,7 @@ class P2PServiceTest {
     fun onTransactionRequestWhenFindTx() {
         val txIds = listOf(Sha256Hash.ZERO_HASH)
         val outputs = listOf(
-            Output(StandardAddress("V7GghFKRA6BKqtHD7LTdT2ao93DRNA"), Coin.valueOf(3499999999L))
+            Output("V7GghFKRA6BKqtHD7LTdT2ao93DRNA".asStandardAddress(), 3499999999L.asCoin())
         )
         val standardTransaction = StandardTransaction(
             "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.networkParameters

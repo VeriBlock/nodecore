@@ -8,7 +8,7 @@
 package veriblock.model
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import veriblock.listeners.TransactionStateChangedListener
 import java.util.ArrayList
 import java.util.HashSet

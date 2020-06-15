@@ -24,7 +24,7 @@ import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.time.LocalDateTime
@@ -100,6 +100,7 @@ class OperationSerializer(
                     setTransaction(ApmSpTransaction(txFactory(serialized.txId)))
                 } catch (e: IllegalStateException) {
                     fail(e.message ?: "Unable to load VBK transaction ${serialized.txId}")
+                    throw e
                 }
             }
 
@@ -161,24 +162,22 @@ class OperationSerializer(
         )
     }
 
-    private fun serialize(tx: VeriBlockPoPTransaction): OperationProto.PopTransaction {
+    private fun serialize(tx: VeriBlockPopTransaction): OperationProto.PopTransaction {
         return OperationProto.PopTransaction(
-            txId = tx.id?.toString() ?: "",
-            address = tx.address?.toString() ?: "",
+            txId = tx.id.toString(),
+            address = tx.address.toString(),
             publishedBlock = SerializeDeserializeService.serializeHeaders(tx.publishedBlock),
             bitcoinTx = tx.bitcoinTransaction.rawBytes,
             merklePath = tx.merklePath.toCompactString(),
-            blockOfProof = SerializeDeserializeService.getHeaderBytesBitcoinBlock(tx.blockOfProof),
-            bitcoinContext = tx.blockOfProofContext.map {
-                SerializeDeserializeService.getHeaderBytesBitcoinBlock(it)
-            },
+            blockOfProof = tx.blockOfProof.raw,
+            bitcoinContext = tx.blockOfProofContext.map { it.raw },
             signature = tx.signature,
             publicKey = tx.publicKey,
             networkByte = tx.networkByte?.toInt() ?: 0
         )
     }
 
-    private fun deserialize(serialized: OperationProto.PopTransaction): VeriBlockPoPTransaction {
+    private fun deserialize(serialized: OperationProto.PopTransaction): VeriBlockPopTransaction {
         val context = ArrayList<BitcoinBlock>(serialized.bitcoinContext.size)
         for (raw in serialized.bitcoinContext) {
             context.add(SerializeDeserializeService.parseBitcoinBlock(raw))
@@ -189,7 +188,7 @@ class OperationSerializer(
             networkByte = serialized.networkByte.toByte()
         }
 
-        return VeriBlockPoPTransaction(
+        return VeriBlockPopTransaction(
             Address(serialized.address),
             SerializeDeserializeService.parseVeriBlockBlock(serialized.publishedBlock),
             BitcoinTransaction(serialized.bitcoinTx),

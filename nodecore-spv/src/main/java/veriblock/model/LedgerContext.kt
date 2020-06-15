@@ -2,11 +2,12 @@ package veriblock.model
 
 import org.veriblock.sdk.models.Address
 
-class LedgerContext : Comparable<LedgerContext> {
-    var address: Address? = null
-    var ledgerValue: LedgerValue? = null
-    var ledgerProofStatus: LedgerProofStatus? = null
-    var blockHeader: BlockHeader? = null
+class LedgerContext(
+    val address: Address? = null,
+    val ledgerValue: LedgerValue? = null,
+    val ledgerProofStatus: LedgerProofStatus? = null,
+    val blockHeader: BlockHeader? = null
+) : Comparable<LedgerContext> {
 
     override fun compareTo(other: LedgerContext): Int {
         if (ledgerProofStatus == null) {
@@ -22,8 +23,9 @@ class LedgerContext : Comparable<LedgerContext> {
         }
         if (ledgerValue!!.signatureIndex < other.ledgerValue!!.signatureIndex) {
             return 1
-        } else if (ledgerValue!!.signatureIndex == other.ledgerValue!!.signatureIndex
-            && ledgerValue!!.availableAtomicUnits < other.ledgerValue!!.availableAtomicUnits
+        } else if (
+            ledgerValue.signatureIndex == other.ledgerValue.signatureIndex &&
+            ledgerValue.availableAtomicUnits < other.ledgerValue.availableAtomicUnits
         ) {
             return 1
         }

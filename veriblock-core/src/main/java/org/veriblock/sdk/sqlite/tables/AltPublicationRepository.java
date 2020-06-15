@@ -12,7 +12,7 @@ package org.veriblock.sdk.sqlite.tables;
 import org.veriblock.sdk.models.AltPublication;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -52,8 +52,8 @@ public class AltPublicationRepository {
         String sql = " REPLACE INTO " + tableName + " ('" + altPublicationHash + "' , '" + altPublicationDataColumnName + "') " +
                 "VALUES(?, ?) ";
         try(PreparedStatement stmt = connectionSource.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-            byte[] bytes = SerializeDeserializeService.serialize(publication);
-            hash = Utils.encodeHex(Sha256Hash.hash(bytes));
+            byte[] bytes = SerializeDeserializeService.INSTANCE.serialize(publication);
+            hash = Utility.bytesToHex(Sha256Hash.hash(bytes));
             stmt.setString(1, hash);
             stmt.setBytes(2, bytes);
             stmt.executeUpdate();

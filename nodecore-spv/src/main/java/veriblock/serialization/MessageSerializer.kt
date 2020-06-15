@@ -19,8 +19,9 @@ import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.model.BlockMetaPackage
 import veriblock.model.FullBlock
@@ -28,6 +29,7 @@ import veriblock.model.MultisigTransaction
 import veriblock.model.OutputFactory.create
 import veriblock.model.PopTransactionLight
 import veriblock.model.StandardTransaction
+import veriblock.model.asLightAddress
 import veriblock.model.asLightAddress
 
 private val logger = createLogger {}
@@ -55,12 +57,14 @@ object MessageSerializer {
     fun deserializePopTransaction(transactionUnionMessage: TransactionUnion): PopTransactionLight {
         val signed = transactionUnionMessage.signed
         val txMessage = signed.transaction
-        val tx = PopTransactionLight(Sha256Hash.wrap(txMessage.txId.toByteArray()))
+        val tx = PopTransactionLight(
+            txId = Sha256Hash.wrap(txMessage.txId.toByteArray()),
+            endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray()),
+            bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray()),
+            bitcoinMerklePath = MerklePath(txMessage.merklePath),
+            blockOfProof = SerializeDeserializeService.parseBitcoinBlock(txMessage.bitcoinBlockHeaderOfProof.header.toByteArray())
+        )
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
-        tx.endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray())
-        tx.bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray())
-        tx.bitcoinMerklePath = MerklePath(txMessage.merklePath)
-        tx.blockOfProof = SerializeDeserializeService.parseBitcoinBlock(txMessage.bitcoinBlockHeaderOfProof.header.toByteArray())
         txMessage.contextBitcoinBlockHeadersList.map {
             SerializeDeserializeService.parseBitcoinBlock(it.header.toByteArray())
         }.forEach {
@@ -97,7 +101,7 @@ object MessageSerializer {
         val txMessage = signedTransaction.transaction
         val tx = StandardTransaction(Sha256Hash.wrap(txMessage.txId.toByteArray()))
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
-        tx.inputAmount = Coin.valueOf(txMessage.sourceAmount)
+        tx.inputAmount = txMessage.sourceAmount.asCoin()
         txMessage.outputsList.map {
             create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(it.address), it.amount)
         }.forEach {
@@ -112,7 +116,7 @@ object MessageSerializer {
         val txMessage = signedTransaction.transaction
         val tx: StandardTransaction = MultisigTransaction(Sha256Hash.wrap(txMessage.txId.toByteArray()))
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
-        tx.inputAmount = Coin.valueOf(txMessage.sourceAmount)
+        tx.inputAmount = txMessage.sourceAmount.asCoin()
         txMessage.outputsList.map {
             create(ByteStringAddressUtility.parseProperAddressTypeAutomatically(it.address), it.amount)
         }.forEach {

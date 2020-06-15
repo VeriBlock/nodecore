@@ -2,6 +2,7 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
@@ -45,7 +46,7 @@ fun CommandFactory.blockCommands() {
         val hash: String = getParameter("blockHash")
         val request = VeriBlockMessages.GetBlocksRequest
             .newBuilder().addFilters(
-                VeriBlockMessages.BlockFilter.newBuilder().setHash(ByteStringUtility.hexToByteString(hash))
+                VeriBlockMessages.BlockFilter.newBuilder().setHash(hash.asHexByteString())
             ).build()
         val result = cliShell.adminService.getBlocks(request)
 

@@ -19,7 +19,7 @@ class P2PService(
         for (txId in txIds) {
             val transaction = pendingTransactionContainer.getTransaction(txId)
             if (transaction != null) {
-                logger.info("Found a transaction for the given transaction id: $txId")
+                logger.debug("Found a transaction for the given transaction id: $txId")
                 val builder = VeriBlockMessages.Event.newBuilder()
                     .setId(next())
                     .setAcknowledge(false)
@@ -39,7 +39,7 @@ class P2PService(
                     return
                 }
             } else {
-                logger.info("Couldn't find a transaction for the given id $txId")
+                logger.debug("Couldn't find a transaction for the given id $txId")
                 val builder = VeriBlockMessages.Event.newBuilder()
                     .setId(next())
                     .setAcknowledge(false)

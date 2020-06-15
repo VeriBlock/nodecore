@@ -7,21 +7,15 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service.mockmining
 
-import org.veriblock.sdk.blockchain.BitcoinBlockchainBootstrapConfig
-import org.veriblock.sdk.conf.BitcoinNetworkParameters
-import org.veriblock.sdk.conf.BitcoinRegTestParameters
+import org.veriblock.core.params.BitcoinNetworkParameters
+import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Utils
-import java.util.Arrays
+import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.asHexBytes
 
 object BitcoinDefaults {
-    private val regtestGenesis = Utils.decodeHex(
-        "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f2002000000"
-    )
+    private val regtestGenesis = "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f2002000000".asHexBytes()
     val genesis = SerializeDeserializeService.parseBitcoinBlock(regtestGenesis)
     const val genesisHeight = 0
-    val bootstrap = BitcoinBlockchainBootstrapConfig(
-        Arrays.asList(genesis), genesisHeight
-    )
     val networkParameters: BitcoinNetworkParameters = BitcoinRegTestParameters()
 }

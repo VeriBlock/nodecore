@@ -7,7 +7,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultRegTestParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.contracts.Balance
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpTransaction
@@ -18,19 +18,23 @@ import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
-import org.veriblock.sdk.util.KeyGenerator
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.nio.charset.StandardCharsets
+import java.security.InvalidAlgorithmParameterException
 import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.NoSuchAlgorithmException
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.SecureRandom
+import java.security.spec.ECGenParameterSpec
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -40,6 +44,8 @@ class MockMinerService(
     private val pluginService: PluginService,
     private val securityInheritingService: SecurityInheritingService
 ) : MinerService {
+    private val bootstrap = listOf(defaultRegTestParameters.genesisBlock)
+    private val btcBootstrap = listOf(BitcoinDefaults.genesis)
     private val connection = ConnectionSelector.setConnection("mock")
     private val veriBlockStore = VeriBlockStore(connection)
     private val bitcoinStore = BitcoinStore(connection)
@@ -56,10 +62,10 @@ class MockMinerService(
     }
 
     override fun start() {
-        veriBlockBlockchain.bootstrap(VeriBlockDefaults.bootstrap)
-        logger.info { "Mocked VeriBlock chain bootstrap: ${VeriBlockDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}" }
-        bitcoinBlockchain.bootstrap(BitcoinDefaults.bootstrap)
-        logger.info { "Mocked Bitcoin chain bootstrap: ${BitcoinDefaults.bootstrap.blocks.joinToString { it.raw.toHex() }}" }
+        veriBlockBlockchain.bootstrap(bootstrap)
+        logger.info { "Mocked VeriBlock chain bootstrap: ${bootstrap.joinToString { it.raw.toHex() }}" }
+        bitcoinBlockchain.bootstrap(btcBootstrap, BitcoinDefaults.genesisHeight)
+        logger.info { "Mocked Bitcoin chain bootstrap: ${btcBootstrap.joinToString { it.raw.toHex() }}" }
     }
 
     override fun setIsShuttingDown(b: Boolean) {
@@ -92,9 +98,9 @@ class MockMinerService(
 
         operation.setMiningInstruction(miningInstruction)
 
-        val key = KeyGenerator.generate()
+        val key = generateKeyPair()
 
-        val vbkTip = veriBlockBlockchain.chainHead
+        val vbkTip = veriBlockBlockchain.getChainHead()!!
         val atv = mine(miningInstruction.publicationData, vbkTip, key)
 
         // Update operation state
@@ -105,8 +111,8 @@ class MockMinerService(
 
         val lastKnownBtcBlockHash = miningInstruction.btcContext.last()
         val lastKnownVbkBlockHash = miningInstruction.context.last()
-        val lastKnownBtcBlock = bitcoinBlockchain[Sha256Hash.wrap(lastKnownBtcBlockHash)]
-        val lastKnownVbkBlock = veriBlockBlockchain[VBlakeHash.wrap(lastKnownVbkBlockHash)]
+        val lastKnownBtcBlock = bitcoinBlockchain.get(Sha256Hash.wrap(lastKnownBtcBlockHash))!!
+        val lastKnownVbkBlock = veriBlockBlockchain.get(VBlakeHash.wrap(lastKnownVbkBlockHash))!!
 
         val vtb = vpm.mine(
             vbkTip,
@@ -137,17 +143,17 @@ class MockMinerService(
     private fun createVeriBlockContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock> {
         // Retrieve the blocks between lastKnownBlock and getChainHead()
         val context: MutableList<VeriBlockBlock> = ArrayList()
-        var prevBlock = veriBlockBlockchain[veriBlockBlockchain.chainHead.previousBlock]
+        var prevBlock = veriBlockBlockchain.get(veriBlockBlockchain.getChainHead()!!.previousBlock)
         while (prevBlock != null && prevBlock != lastKnownBlock) {
             context.add(prevBlock)
-            prevBlock = veriBlockBlockchain[prevBlock.previousBlock]
+            prevBlock = veriBlockBlockchain.get(prevBlock.previousBlock)
         }
         context.reverse()
         return context
     }
 
     private fun signTransaction(tx: VeriBlockTransaction, privateKey: PrivateKey): VeriBlockTransaction {
-        val signature = Utils.signMessageWithPrivateKey(
+        val signature = Utility.signMessageWithPrivateKey(
             SerializeDeserializeService.getId(tx).bytes,
             privateKey
         )
@@ -172,16 +178,17 @@ class MockMinerService(
         return Address(data + checksum)
     }
 
-    private fun mine(publicationData: PublicationData?, lastKnownVBKBlock: VeriBlockBlock, key: KeyPair): AltPublication {
+    private fun mine(publicationData: PublicationData, lastKnownVBKBlock: VeriBlockBlock, key: KeyPair): AltPublication {
         val address = deriveAddress(key.public)
         val endorsementTx = signTransaction(
             VeriBlockTransaction(
                 1.toByte(),
                 address,
-                Coin.valueOf(1),
+                1.asCoin(),
                 ArrayList(),
                 7,
-                publicationData, ByteArray(1),
+                publicationData,
+                ByteArray(1),
                 key.public.encoded,
                 veriBlockBlockchain.networkParameters.transactionPrefix
             ),
@@ -221,4 +228,13 @@ class MockMinerService(
 
     override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> =
         throw NotImplementedException("Operation not supported in the Mock Miner")
+}
+
+@Throws(NoSuchAlgorithmException::class, InvalidAlgorithmParameterException::class)
+private fun generateKeyPair(): KeyPair {
+    val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+    val random = SecureRandom.getInstance("SHA1PRNG")
+    random.setSeed(1L)
+    keyPairGenerator.initialize(ECGenParameterSpec("secp256k1"), random)
+    return keyPairGenerator.generateKeyPair()
 }

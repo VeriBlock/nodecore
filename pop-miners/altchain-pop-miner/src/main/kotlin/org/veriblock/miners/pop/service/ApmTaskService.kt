@@ -34,7 +34,7 @@ import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 

@@ -21,11 +21,13 @@ import java.io.IOException
 import java.io.OutputStream
 import java.util.ArrayList
 
-class PopTransactionLight(txId: Sha256Hash) : StandardTransaction(txId) {
-    var endorsedBlock: VeriBlockBlock? = null
-    var bitcoinTx: BitcoinTransaction? = null
-    var bitcoinMerklePath: MerklePath? = null
-    var blockOfProof: BitcoinBlock? = null
+class PopTransactionLight(
+    txId: Sha256Hash,
+    val endorsedBlock: VeriBlockBlock,
+    val bitcoinTx: BitcoinTransaction,
+    val bitcoinMerklePath: MerklePath,
+    val blockOfProof: BitcoinBlock
+) : StandardTransaction(txId) {
     private val blockOfProofContext: MutableList<BitcoinBlock> = ArrayList()
 
     fun getContextBitcoinBlocks(): List<BitcoinBlock> =

@@ -8,10 +8,9 @@
 package veriblock
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.wallet.DefaultAddressManager
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
@@ -26,7 +25,6 @@ import veriblock.net.SpvPeerTable
 import veriblock.service.AdminApiService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
-import veriblock.service.TransactionFactory
 import veriblock.service.TransactionService
 import veriblock.wallet.PendingTransactionDownloadedListenerImpl
 import java.io.File
@@ -105,14 +103,14 @@ class SpvContext {
             blockchain = Blockchain(networkParameters.genesisBlock, veriBlockStore)
             pendingTransactionContainer = PendingTransactionContainer()
             p2PService = P2PService(pendingTransactionContainer, networkParameters)
-            addressManager = DefaultAddressManager()
+            addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListenerImpl(this)
             peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
             transactionService = TransactionService(addressManager, networkParameters)
             adminApiService = AdminApiService(
-                this, peerTable, transactionService, addressManager, TransactionFactory(networkParameters),
+                this, peerTable, transactionService, addressManager,
                 pendingTransactionContainer, blockchain
             )
         } catch (e: Exception) {
@@ -137,28 +135,28 @@ class SpvContext {
         peerTable.shutdown()
     }
 
-    private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters?) {
+    private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters) {
         try {
-            if (veriBlockStore.chainHead == null) {
-                val genesis = params!!.genesisBlock
+            if (veriBlockStore.getChainHead() == null) {
+                val genesis = params.genesisBlock
                 val storedBlock = StoredVeriBlockBlock(
                     genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong())
                 )
                 veriBlockStore.put(storedBlock)
-                veriBlockStore.chainHead = storedBlock
+                veriBlockStore.setChainHead(storedBlock)
             }
         } catch (e: SQLException) {
             logger.error(e.message, e)
         }
     }
 
-    private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters?) {
+    private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters) {
         try {
-            if (bitcoinStore.chainHead == null) {
-                val origin = params!!.bitcoinOriginBlock
+            if (bitcoinStore.getChainHead() == null) {
+                val origin = params.bitcoinOriginBlock
                 val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.difficulty.toLong()), 0)
                 bitcoinStore.put(storedBlock)
-                bitcoinStore.chainHead = storedBlock
+                bitcoinStore.setChainHead(storedBlock)
             }
         } catch (e: SQLException) {
             logger.error(e.message, e)

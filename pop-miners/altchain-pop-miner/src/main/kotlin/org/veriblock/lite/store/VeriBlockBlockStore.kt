@@ -7,14 +7,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.lite.store
 
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.Constants
-import org.veriblock.sdk.models.VBlakeHash
-import org.veriblock.sdk.util.ArrayUtils
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.utilities.Utility
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -244,38 +242,6 @@ class VeriBlockBlockStore(
     }
 
     @Throws(BlockStoreException::class)
-    fun replace(hash: VBlakeHash, storedBlock: StoredVeriBlockBlock): StoredVeriBlockBlock? {
-        val buffer = safeBuffer
-
-        return lock.withLock {
-            var cursor = getRingCursor(buffer)
-            val startingPoint = cursor
-            val fileSize = getFileSize()
-            val targeVBlakeHashBytes = hash.bytes
-            val scratch = ByteArray(targeVBlakeHashBytes.size)
-            do {
-                cursor -= RECORD_SIZE
-                if (cursor < FILE_PROLOGUE_BYTES) {
-                    // We hit the start, so wrap around.
-                    cursor = fileSize - RECORD_SIZE
-                }
-                // Cursor is now at the start of the next record to check, so read the hash and compare it.
-                buffer.position(cursor)
-                buffer.get(scratch)
-                if (Arrays.equals(scratch, targeVBlakeHashBytes)) {
-                    // Found the target.
-                    val replaced = StoredVeriBlockBlock.deserialize(buffer)
-                    buffer.position(cursor)
-                    storedBlock.serialize(buffer)
-                    return@withLock replaced
-                }
-            } while (cursor != startingPoint)
-
-            return@withLock null
-        }
-    }
-
-    @Throws(BlockStoreException::class)
     fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
         val buffer = safeBuffer
 
@@ -375,95 +341,6 @@ class VeriBlockBlockStore(
         }
     }
 
-    fun getFromChain(hash: VBlakeHash, blocksAgo: Int): StoredVeriBlockBlock? {
-        val buffer = safeBuffer
-
-        return lock.withLock {
-            if (notFoundCache[hash] != null) {
-                return@withLock null
-            }
-
-            // Starting from the current tip of the ring work backwards until we have either found the block or
-            // wrapped around.
-            var cursor = getRingCursor(buffer)
-            val startingPoint = cursor
-            val fileSize = getFileSize()
-            var targeVBlakeHashBytes = hash.bytes
-            var scratch = ByteArray(targeVBlakeHashBytes.size)
-            var counter = 0
-            do {
-                cursor -= RECORD_SIZE
-                if (cursor < FILE_PROLOGUE_BYTES) {
-                    // We hit the start, so wrap around.
-                    cursor = fileSize - RECORD_SIZE
-                }
-                // Cursor is now at the start of the next record to check, so read the hash and compare it.
-                buffer.position(cursor)
-                buffer.get(scratch)
-                if (Arrays.equals(scratch, targeVBlakeHashBytes)) {
-                    // Found the target.
-                    counter++
-
-                    if (counter == blocksAgo) {
-                        return@withLock StoredVeriBlockBlock.deserialize(buffer)
-                    }
-
-                    // Update the intermediate target with the previous block
-                    buffer.position(cursor + 74)
-                    targeVBlakeHashBytes = ByteArray(VBlakeHash.PREVIOUS_BLOCK_LENGTH)
-                    buffer.get(targeVBlakeHashBytes)
-
-                    if (scratch.size != targeVBlakeHashBytes.size) {
-                        scratch = ByteArray(targeVBlakeHashBytes.size)
-                    }
-                }
-            } while (cursor != startingPoint)
-
-            null
-        }
-    }
-
-    fun scanBestChain(hash: VBlakeHash): StoredVeriBlockBlock? {
-        val buffer = safeBuffer
-
-        return lock.withLock {
-            // Starting from the current tip of the ring work backwards until we have either found the block or
-            // wrapped around.
-            var cursor = getRingCursor(buffer)
-            val startingPoint = cursor
-            val fileSize = getFileSize()
-            val targeVBlakeHashBytes = hash.bytes
-
-            // A VeriBlock block contains partial hashes for previous blocks
-            var intermediateTarget = getChainHead()!!.hash.trimToPreviousBlockSize().bytes
-            val offset = VBlakeHash.VERIBLOCK_LENGTH - intermediateTarget.size
-            val scratch = ByteArray(intermediateTarget.size)
-            do {
-                cursor -= RECORD_SIZE
-                if (cursor < FILE_PROLOGUE_BYTES) {
-                    if (startingPoint == fileSize) break
-                    // We hit the start, so wrap around.
-                    cursor = fileSize - RECORD_SIZE
-                }
-                // Cursor is now at the start of the next record to check, so read the hash and compare it.
-                buffer.position(cursor + offset)
-                buffer.get(scratch)
-                if (Arrays.equals(scratch, intermediateTarget)) {
-                    if (ArrayUtils.matches(intermediateTarget, targeVBlakeHashBytes)) {
-                        // Found the ACTUAL target.
-                        return@withLock StoredVeriBlockBlock.deserialize(buffer)
-                    }
-                    // Update the intermediate target with the previous block
-                    buffer.position(cursor + 42)
-                    intermediateTarget = ByteArray(VBlakeHash.PREVIOUS_BLOCK_LENGTH)
-                    buffer.get(intermediateTarget)
-                }
-            } while (cursor != startingPoint)
-
-            null
-        }
-    }
-
     @Throws(BlockStoreException::class)
     fun close() {
         try {
@@ -478,7 +355,7 @@ class VeriBlockBlockStore(
 
     protected fun archive() {
         val seriesNumber = getFileSeriesNumber()
-        val fileName = Utils.getFileNameWithoutExtension(workingStoreFile)
+        val fileName = Utility.getFileNameWithoutExtension(workingStoreFile)
         val fileSeries = Utility.leftPad(Integer.toHexString(seriesNumber).toCharArray(), '0', 8)
         val archiveName = "$fileName-$fileSeries.spv"
 

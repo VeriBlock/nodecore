@@ -128,7 +128,7 @@ public class BitcoinBlockRepositoryTest {
 
     @Test
     public void getAllTest() throws SQLException, IOException {
-        Comparator<StoredBitcoinBlock> comparator = (b1, b2) -> b1.getHash().toString().compareTo(b2.getHash().toString());
+        Comparator<StoredBitcoinBlock> comparator = Comparator.comparing(b -> b.getHash().toString());
 
         repo.save(newBlock);
         repo.save(newBlock2);

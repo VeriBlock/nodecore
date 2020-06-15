@@ -477,7 +477,7 @@ class BitcoinService(
         return emptyList()
     }
 
-    fun importWallet(seedWords: String?, creationTime: Long?): Boolean {
+    fun importWallet(seedWords: String, creationTime: Long?): Boolean {
         val finalCreationTime = creationTime
             ?: Constants.DEFAULT_WALLET_CREATION_DATE
         return try {

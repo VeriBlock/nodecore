@@ -10,7 +10,7 @@ package veriblock.lite.core
 import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 
 class VBlakeHashTests {
 

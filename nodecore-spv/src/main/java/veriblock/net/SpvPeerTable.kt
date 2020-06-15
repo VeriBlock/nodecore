@@ -17,12 +17,13 @@ import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofRequest
 import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
-import spark.utils.CollectionUtils
 import veriblock.SpvContext
 import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.DownloadStatus
@@ -40,7 +41,11 @@ import veriblock.model.mapper.LedgerProofReplyMapper
 import veriblock.serialization.MessageSerializer
 import veriblock.serialization.MessageSerializer.deserializeNormalTransaction
 import veriblock.service.Blockchain
+import veriblock.service.OutputData
 import veriblock.service.PendingTransactionContainer
+import veriblock.service.TransactionData
+import veriblock.service.TransactionInfo
+import veriblock.service.TransactionType
 import veriblock.util.MessageIdGenerator.next
 import veriblock.util.Threading
 import veriblock.util.Threading.shutdown
@@ -61,8 +66,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Predicate
-import java.util.stream.Collectors
 
 private val logger = createLogger {}
 
@@ -80,7 +83,7 @@ class SpvPeerTable(
 ) : PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
-    val discovery: PeerDiscovery
+    private val discovery: PeerDiscovery
     private val blockchain: Blockchain
     private val executor: ListeningScheduledExecutorService
     private val messageExecutor: ScheduledExecutorService
@@ -141,9 +144,9 @@ class SpvPeerTable(
         }
     }
 
-    fun connectTo(address: PeerAddress): Peer? {
-        if (peers.containsKey(address.address)) {
-            return peers[address.address]
+    fun connectTo(address: PeerAddress): Peer {
+        peers[address.address]?.let {
+            return it
         }
         val peer = createPeer(address)
         peer.addConnectedEventListener(Threading.LISTENER_THREAD, this)
@@ -155,7 +158,7 @@ class SpvPeerTable(
             peer
         } catch (e: IOException) {
             logger.error("Unable to open connection", e)
-            null
+            throw e
         } finally {
             lock.unlock()
         }
@@ -173,7 +176,7 @@ class SpvPeerTable(
     }
 
     fun startBlockchainDownload(peer: Peer) {
-        logger.info("Beginning blockchain download")
+        logger.debug("Beginning blockchain download")
         try {
             downloadPeer = peer
             peer.startBlockchainDownload()
@@ -184,16 +187,20 @@ class SpvPeerTable(
         }
     }
 
+    fun acknowledgeAddress(address: AddressPubKey) {
+        addressesState.putIfAbsent(address.hash, LedgerContext(
+            null, null, null, null
+        ))
+    }
+
     private fun requestAddressState() {
-        val addresses = spvContext.addressManager.all
-        if (CollectionUtils.isEmpty(addresses)) {
+        val addresses = spvContext.addressManager.getAll()
+        if (addresses.isEmpty()) {
             return
         }
         val ledgerProof = LedgerProofRequest.newBuilder()
         for (address in addresses) {
-            if (!addressesState.containsKey(address!!.hash)) {
-                addressesState[address.hash] = LedgerContext()
-            }
+            acknowledgeAddress(address)
             ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
         }
         val request = VeriBlockMessages.Event.newBuilder()
@@ -201,7 +208,7 @@ class SpvPeerTable(
             .setAcknowledge(false)
             .setLedgerProofRequest(ledgerProof.build())
             .build()
-        logger.info("Request address state.")
+        logger.debug("Request address state.")
         for (peer in peers.values) {
             peer.sendMessage(request)
         }
@@ -220,7 +227,7 @@ class SpvPeerTable(
                 )
                 .build()
             for (peer in peers.values) {
-                peer!!.sendMessage(request)
+                peer.sendMessage(request)
             }
         }
     }
@@ -237,9 +244,9 @@ class SpvPeerTable(
                 if (peers.containsKey(address.address) || pendingPeers.containsKey(address.address)) {
                     continue
                 }
-                logger.info("Attempting connection to {}:{}", address.address, address.port)
+                logger.debug("Attempting connection to {}:{}", address.address, address.port)
                 val peer = connectTo(address)
-                logger.info("Discovered peer connected {}:{}", peer!!.address, peer.port)
+                logger.debug("Discovered peer connected {}:{}", peer.address, peer.port)
             }
         }
     }
@@ -249,7 +256,7 @@ class SpvPeerTable(
             while (running.get()) {
                 try {
                     val message = incomingQueue.take()
-                    logger.info("{} message from {}", message.message.resultsCase.name, message.sender.address)
+                    logger.debug("{} message from {}", message.message.resultsCase.name, message.sender.address)
                     when (message.message.resultsCase) {
                         ResultsCase.HEARTBEAT -> {
                             val heartbeat = message.message.heartbeat
@@ -263,9 +270,9 @@ class SpvPeerTable(
                         }
                         ResultsCase.ADVERTISE_BLOCKS -> {
                             val advertiseBlocks = message.message.advertiseBlocks
-                            logger.info(
+                            logger.debug(
                                 "PeerTable Received advertisement of {} blocks, height {}", advertiseBlocks.headersList.size,
-                                blockchain.getChainHead()!!.height
+                                blockchain.getChainHead().height
                             )
                             val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
                                 MessageSerializer.deserialize(it)
@@ -303,12 +310,15 @@ class SpvPeerTable(
                             updateAddressState(ledgerContexts)
                         }
                         ResultsCase.TRANSACTION_REPLY -> if (message.message.transactionReply.success) {
-                            pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction)
+                            pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction.toModel())
                         }
                         ResultsCase.DEBUG_VTB_REPLY -> {
                         }
                         ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> if (futureEventReplyList.containsKey(message.message.requestId)) {
                             futureEventReplyList[message.message.requestId]!!.response(message.message)
+                        }
+                        else -> {
+                            // Ignore the other message types as they are irrelevant for SPV
                         }
                     }
                 } catch (e: InterruptedException) {
@@ -334,18 +344,18 @@ class SpvPeerTable(
 
     private fun updateAddressState(ledgerContexts: List<LedgerContext>) {
         for (ledgerContext in ledgerContexts) {
-            if (addressesState[ledgerContext.address!!.address]!!.compareTo(ledgerContext) > 0) {
-                addressesState.replace(ledgerContext.address!!.address, ledgerContext)
+            if (addressesState.getValue(ledgerContext.address!!.address) > ledgerContext) {
+                addressesState.replace(ledgerContext.address.address, ledgerContext)
             }
         }
     }
 
     fun addPendingTransactionDownloadedEventListeners(
-        executor: Executor?,
+        executor: Executor,
         listener: PendingTransactionDownloadedListener
     ) {
         pendingTransactionDownloadedEventListeners.add(
-            ListenerRegistration(listener, executor!!)
+            ListenerRegistration(listener, executor)
         )
     }
 
@@ -355,10 +365,10 @@ class SpvPeerTable(
         }
     }
 
-    override fun onPeerConnected(peer: Peer?) {
+    override fun onPeerConnected(peer: Peer) {
         lock.lock()
         try {
-            logger.info("Peer {} connected", peer!!.address)
+            logger.debug("Peer {} connected", peer.address)
             pendingPeers.remove(peer.address)
             peers[peer.address] = peer
 
@@ -387,7 +397,7 @@ class SpvPeerTable(
 
     override fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
         try {
-            logger.info("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
+            logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.put(NetworkMessage(sender, message))
         } catch (e: InterruptedException) {
             logger.error("onMessageReceived interrupted", e)
@@ -413,7 +423,7 @@ class SpvPeerTable(
             .build()
         for (peer in peers.values) {
             try {
-                peer!!.sendMessage(advertise)
+                peer.sendMessage(advertise)
             } catch (ex: Exception) {
                 logger.error(ex.message, ex)
             }
@@ -444,23 +454,26 @@ class SpvPeerTable(
     }
 
     fun getSignatureIndex(address: String): Long? {
-        return if (addressesState[address]!!.ledgerValue != null) addressesState[address]!!.ledgerValue!!.signatureIndex else null
+        return addressesState[address]?.ledgerValue?.signatureIndex
     }
 
     fun getAvailablePeers(): Int = peers.size
 
-    fun getBestBlockHeight(): Int = peers.values.map { it.bestBlockHeight }.max() ?: 0
+    fun getBestBlockHeight(): Int = peers.values.map {
+        it.bestBlockHeight
+    }.max() ?: 0
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus
-        val currentHeight = blockchain.getChainHead()!!.height
-        val bestBlockHeight = if (downloadPeer == null) 0 else downloadPeer!!.bestBlockHeight
-        status = if (downloadPeer == null) {
-            DownloadStatus.DISCOVERING
-        } else if (bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING) {
-            DownloadStatus.READY
-        } else {
-            DownloadStatus.DOWNLOADING
+        val currentHeight = blockchain.getChainHead().height
+        val bestBlockHeight = downloadPeer?.bestBlockHeight ?: 0
+        status = when {
+            downloadPeer == null ->
+                DownloadStatus.DISCOVERING
+            bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
+                DownloadStatus.READY
+            else ->
+                DownloadStatus.DOWNLOADING
         }
         return DownloadStatusResponse(status, currentHeight, bestBlockHeight)
     }
@@ -483,3 +496,38 @@ class SpvPeerTable(
         return pendingPeers.size
     }
 }
+
+private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
+    confirmations = confirmations,
+    transaction = transaction.toModel(),
+    blockNumber = blockNumber,
+    timestamp = timestamp,
+    endorsedBlockHash = endorsedBlockHash.toHex(),
+    bitcoinBlockHash = bitcoinBlockHash.toHex(),
+    bitcoinTxId = bitcoinTxId.toHex(),
+    bitcoinConfiormations = bitcoinConfirmations,
+    blockHash = blockHash.toHex(),
+    merklePath = merklePath
+)
+
+private fun VeriBlockMessages.Transaction.toModel() = TransactionData(
+    type = TransactionType.valueOf(type.name),
+    sourceAddress = sourceAddress.toHex(),
+    sourceAmount = sourceAmount,
+    outputs = outputsList.map { it.toModel() },
+    transactionFee = transactionFee,
+    data = data.toHex(),
+    bitcoinTransaction = bitcoinTransaction.toHex(),
+    endorsedBlockHeader = endorsedBlockHeader.toHex(),
+    bitcoinBlockHeaderOfProof = "",
+    merklePath = merklePath,
+    contextBitcoinBlockHeaders = listOf(),
+    timestamp = timestamp,
+    size = size,
+    txId = Sha256Hash.wrap(txId.toHex())
+)
+
+private fun VeriBlockMessages.Output.toModel() = OutputData(
+    address = address.toHex(),
+    amount = amount
+)

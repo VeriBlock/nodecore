@@ -9,7 +9,7 @@
 package org.veriblock.sdk.models;
 
 import org.veriblock.core.utilities.Preconditions;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -134,20 +134,20 @@ public class BitcoinTransaction {
 
                 byte[] chunkDescriptorBytes = new byte[chunkDescriptorBytesLength];
                 buffer.get(chunkDescriptorBytes);
-                BitSet chunkDescriptor = BitSet.valueOf(Utils.reverseBytes(chunkDescriptorBytes));
+                BitSet chunkDescriptor = BitSet.valueOf(org.veriblock.core.utilities.Utility.flip(chunkDescriptorBytes));
 
                 int totalBytesRead = 0;
                 byte[] extracted = new byte[LENGTH];
                 buffer.position(0);
                 for (int i = chunks - 1; i >= 0; i--) {
                     int chunkOffset = waste + (i * (offsetLength + sectionLength));
-                    int sectionOffsetValue = Utils.toInt(chunkDescriptor.get(chunkOffset, Math.min(chunkDescriptor.length(), chunkOffset + offsetLength)));
+                    int sectionOffsetValue = Utility.toInt(chunkDescriptor.get(chunkOffset, Math.min(chunkDescriptor.length(), chunkOffset + offsetLength)));
 
                     int sectionLengthValue;
                     if (i == 0) {
                         sectionLengthValue = LENGTH - totalBytesRead;
                     } else {
-                        sectionLengthValue = Utils.toInt(chunkDescriptor.get(chunkOffset - sectionLength, chunkOffset));
+                        sectionLengthValue = Utility.toInt(chunkDescriptor.get(chunkOffset - sectionLength, chunkOffset));
                     }
                     buffer.position(buffer.position() + sectionOffsetValue);
                     buffer.get(extracted, totalBytesRead, sectionLengthValue);

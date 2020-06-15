@@ -73,7 +73,7 @@ class ApmOperation(
     override fun onFailed() {
         EventBus.operationFinishedEvent.trigger(this)
     }
-    
+
     fun setMiningInstruction(miningInstruction: ApmInstruction) {
         endorsedBlockHeight = miningInstruction.endorsedBlockHeight
         this.miningInstruction = miningInstruction
@@ -183,7 +183,7 @@ class ApmOperation(
         }
         publicationData?.let { context ->
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
-            result["vtbBtcBlocks"] = context.joinToString { it.firstBitcoinBlock.hash.bytes.toHex() }
+            result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
         }
         popTxId?.let {
             result["altProofOfProofTxId"] = it

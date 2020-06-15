@@ -68,7 +68,7 @@ fun String.isHex(): Boolean = length % 2 == 0 && toUpperCase().toCharArray().all
 /**
  * Encodes the provided byte array into a base-58 string.
  *
- * @param this@bytesToBase58 The byte array to encode
+ * @param this@toBase58 The byte array to encode
  * @return A String of the base-58 representation of the provided byte array
  */
 fun ByteArray.toBase58(): String {
@@ -78,7 +78,7 @@ fun ByteArray.toBase58(): String {
 /**
  * Encodes the provided byte array into a base-59 string.
  *
- * @param this@bytesToBase59 The byte array to encode
+ * @param this@toBase59 The byte array to encode
  * @return A String of the base-59 representation of the provided byte array
  */
 fun ByteArray.toBase59(): String {

@@ -11,7 +11,7 @@ import org.veriblock.core.utilities.AddressUtility
 import java.io.IOException
 import java.io.OutputStream
 
-abstract class AddressLight protected constructor(
+abstract class AddressLight(
     private val address: String
 ) {
     fun get(): String {

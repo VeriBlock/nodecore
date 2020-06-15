@@ -18,7 +18,7 @@ import java.nio.channels.SocketChannel
 
 class NIOClientTest {
 
-    private var client: SocketChannel? = null
+    private lateinit var client: SocketChannel
 
     @Before
     fun setUp() {
@@ -35,9 +35,9 @@ class NIOClientTest {
         val buffer = ByteBuffer.wrap("Test message".toByteArray())
         var response: String? = null
         try {
-            client!!.write(buffer)
+            client.write(buffer)
             buffer.clear()
-            client!!.read(buffer)
+            client.read(buffer)
             response = String(buffer.array()).trim { it <= ' ' }
             println("response=$response")
             buffer.clear()

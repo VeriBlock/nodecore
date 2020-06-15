@@ -83,7 +83,7 @@ class Peer(
                 notifyPeerConnected()
             ResultsCase.ADVERTISE_BLOCKS -> {
                 if (message.advertiseBlocks.headersCount >= 1000) {
-                    logger.info("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
+                    logger.debug("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence().map {
@@ -175,7 +175,7 @@ class Peer(
                     .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
             )
         }
-        logger.info("Sending keystone query, last block @ {}", keystones[0].height)
+        logger.debug("Sending keystone query, last block @ {}", keystones[0].height)
         sendMessage(
             VeriBlockMessages.Event.newBuilder()
                 .setId(next())

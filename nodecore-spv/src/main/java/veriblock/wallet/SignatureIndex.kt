@@ -8,12 +8,6 @@
 package veriblock.wallet
 
 class SignatureIndex(
-    var value: Long
-) {
-    var pending: Long = value
-        get() = if (field > value) {
-            field
-        } else {
-            value
-        }
-}
+    val value: Long,
+    val pending: Long
+)

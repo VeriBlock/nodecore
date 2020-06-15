@@ -9,6 +9,8 @@ package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.util.BytesUtility
+import java.nio.ByteBuffer
 import java.util.Arrays
 
 class BitcoinBlock(
@@ -19,7 +21,19 @@ class BitcoinBlock(
     val difficulty: Int,
     val nonce: Int
 ) {
-    val raw: ByteArray = SerializeDeserializeService.getHeaderBytesBitcoinBlock(this)
+    val raw: ByteArray = run {
+        val buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_BitcoinBlock)
+        BytesUtility.putLEInt32(buffer, version)
+        BytesUtility.putLEBytes(buffer, previousBlock.bytes)
+        BytesUtility.putLEBytes(buffer, merkleRoot.bytes)
+        BytesUtility.putLEInt32(buffer, timestamp)
+        BytesUtility.putLEInt32(buffer, difficulty)
+        BytesUtility.putLEInt32(buffer, nonce)
+        buffer.flip()
+        val bytes = ByteArray(Constants.HEADER_SIZE_BitcoinBlock)
+        buffer[bytes]
+        bytes
+    }
 
     val hash: Sha256Hash = Sha256Hash.wrapReversed(Sha256Hash.hashTwice(raw))
 
@@ -28,8 +42,11 @@ class BitcoinBlock(
 
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass && Arrays.equals(
-            SerializeDeserializeService.getHeaderBytesBitcoinBlock(this), SerializeDeserializeService
-            .getHeaderBytesBitcoinBlock(other as BitcoinBlock?)
+            raw, (other as BitcoinBlock).raw
         )
+    }
+
+    override fun hashCode(): Int {
+        return raw.contentHashCode()
     }
 }
