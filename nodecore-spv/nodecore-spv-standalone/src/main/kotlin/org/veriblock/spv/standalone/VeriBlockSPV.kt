@@ -69,6 +69,7 @@ private fun run(): Int {
     println("${SharedConstants.TYPE_HELP}\n")
 
     logger.info { "Initializing SPV Context..." }
+    var errored = false
     try {
         spvContext.init(networkParameters, peerDiscovery)
         spvContext.peerTable.start()
