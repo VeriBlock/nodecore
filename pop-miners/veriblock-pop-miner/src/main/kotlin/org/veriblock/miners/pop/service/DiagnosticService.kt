@@ -16,11 +16,11 @@ class DiagnosticService(
         // Check the NodeCore status
         if (nodeCoreService.isHealthy()) {
             information.add("SUCCESS - NodeCore connection: Connected")
-            val nodeCoreSyncStatus = nodeCoreGateway.getNodeCoreSyncStatus()
+            val nodeCoreStateInfo = nodeCoreGateway.getNodeCoreStateInfo()
             if (nodeCoreService.isSynchronized()) {
-                information.add("SUCCESS - NodeCore synchronization status: Synchronized (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
+                information.add("SUCCESS - NodeCore synchronization status: Synchronized (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})")
             } else {
-                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
+                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})")
             }
         } else {
             information.add("FAIL - NodeCore connection: Not connected")

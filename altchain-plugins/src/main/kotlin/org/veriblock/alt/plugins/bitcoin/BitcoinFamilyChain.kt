@@ -30,7 +30,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
@@ -247,20 +247,21 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun getSynchronizedStatus(): SyncStatus {
+    override suspend fun getBlockChainInfo(): StateInfo {
         return try {
-            val response: BtcSyncStatus = rpcRequest("getblockchaininfo")
+            val response: BlockChainInfo = rpcRequest("getblockchaininfo")
             val blockDifference = abs(response.headers - response.blocks)
-            SyncStatus(
+            StateInfo(
                 response.headers,
                 response.blocks,
                 blockDifference,
                 (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
-                response.initialblockdownload
+                response.initialblockdownload,
+                response.chain
             )
         } catch (e: Exception) {
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
-            SyncStatus()
+            StateInfo()
         }
     }
 }
@@ -310,7 +311,8 @@ private data class BtcScriptPubKey(
     val type: String
 )
 
-private data class BtcSyncStatus(
+private data class BlockChainInfo(
+    val chain: String,
     val blocks: Int,
     val headers: Int,
     val initialblockdownload: Boolean

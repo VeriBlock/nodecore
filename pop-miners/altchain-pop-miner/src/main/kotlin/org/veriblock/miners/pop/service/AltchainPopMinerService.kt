@@ -129,8 +129,8 @@ class AltchainPopMinerService(
     private fun ReadyCondition.getNotReadyMessage() = when (this) {
         ReadyCondition.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
         ReadyCondition.SYNCHRONIZED_NODECORE -> {
-           val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
-            "Waiting for NodeCore to synchronize. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})"
+           val nodeCoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
+            "Waiting for NodeCore to synchronize. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})"
         }
         ReadyCondition.SUFFICIENT_FUNDS -> {
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
@@ -196,9 +196,12 @@ class AltchainPopMinerService(
             if (!chain.isConnected()) {
                 throw MineException("The miner is not connected to the ${chain.name} chain")
             }
-            val chainSyncStatus = chain.getSynchronizedStatus()
-            if (!chainSyncStatus.isSynchronized) {
-                throw MineException("The chain ${chain.name} is not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight} InitialBlockDownload=${chainSyncStatus.initialblockdownload})")
+            val blockChainInfo = chain.getBlockChainInfo()
+            if (!blockChainInfo.isSynchronized) {
+                throw MineException("The chain ${chain.name} is not synchronized, ${blockChainInfo.blockDifference} blocks left (LocalHeight=${blockChainInfo.localBlockchainHeight} NetworkHeight=${blockChainInfo.networkHeight} InitialBlockDownload=${blockChainInfo.initialblockdownload})")
+            }
+            if (!context.networkParameters.name.replace("net", "").equals(blockChainInfo.networkVersion, true)) {
+                throw MineException("Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while the $chain daemon is at ${blockChainInfo.networkVersion}.")
             }
         }
 
