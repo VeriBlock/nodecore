@@ -10,10 +10,8 @@ package org.veriblock.miners.pop.core
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.core.AsyncEvent
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.WalletTransaction
-import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.service.Metrics
 import org.veriblock.sdk.alt.ApmInstruction
@@ -47,25 +45,33 @@ class ApmOperation(
         private set
     var merklePath: VeriBlockMerklePath? = null
         private set
-    var keystoneOfProof: FullBlock? = null
+    var keystoneOfProof: VeriBlockBlock? = null
         private set
     var publicationData: List<VeriBlockPublication>? = null
         private set
-    var vbkPopTransactionId: String? = null
+    var popTxId: String? = null
+        private set
+    var popTxBlockHash: String? = null
         private set
     var payoutBlockHash: String? = null
         private set
     var payoutAmount: Long? = null
         private set
 
-    val stateChangedEvent = AsyncEvent<ApmOperation>(Threading.MINER_THREAD)
-
     init {
         setState(ApmOperationState.INITIAL)
     }
 
     override fun onStateChanged() {
-        stateChangedEvent.trigger(this)
+        EventBus.operationStateChangedEvent.trigger(this)
+    }
+
+    override fun onCompleted() {
+        EventBus.operationFinishedEvent.trigger(this)
+    }
+
+    override fun onFailed() {
+        EventBus.operationFinishedEvent.trigger(this)
     }
 
     fun setMiningInstruction(miningInstruction: ApmInstruction) {
@@ -86,7 +92,7 @@ class ApmOperation(
         if (state != ApmOperationState.ENDORSEMENT_TRANSACTION) {
             error("Trying to set as transaction confirmed without such transaction")
         }
-        setState(ApmOperationState.CONFIRMED)
+        setState(ApmOperationState.ENDORSEMENT_TX_CONFIRMED)
 
         endorsementTransaction?.let {
             Metrics.spentFeesCounter.increment(it.fee.toDouble())
@@ -94,7 +100,7 @@ class ApmOperation(
     }
 
     fun setBlockOfProof(blockOfProof: VeriBlockBlock) {
-        if (state != ApmOperationState.CONFIRMED) {
+        if (state != ApmOperationState.ENDORSEMENT_TX_CONFIRMED) {
             error("Trying to set block of proof without having confirmed the transaction")
         }
         this.blockOfProof = blockOfProof
@@ -109,7 +115,7 @@ class ApmOperation(
         setState(ApmOperationState.PROVEN)
     }
 
-    fun setKeystoneOfProof(keystoneOfProof: FullBlock) {
+    fun setKeystoneOfProof(keystoneOfProof: VeriBlockBlock) {
         if (state != ApmOperationState.PROVEN) {
             error("Trying to set keystone of proof without having proven the transaction")
         }
@@ -125,16 +131,24 @@ class ApmOperation(
         setState(ApmOperationState.CONTEXT)
     }
 
-    fun setProofOfProofId(proofOfProofId: String) {
+    fun setPopTxId(popTxId: String) {
         if (state != ApmOperationState.CONTEXT) {
-            error("Trying to set Proof of Proof id without having the context")
+            error("Trying to set PoP transaction id without having the context")
         }
-        this.vbkPopTransactionId = proofOfProofId
+        this.popTxId = popTxId
         setState(ApmOperationState.SUBMITTED_POP_DATA)
     }
 
-    fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
+    fun setPopTxBlockHash(popTxBlockHash: String) {
         if (state != ApmOperationState.SUBMITTED_POP_DATA) {
+            error("Trying to set PoP transaction's block hash without having the PoP transaction id")
+        }
+        this.popTxBlockHash = popTxBlockHash
+        setState(ApmOperationState.POP_TX_CONFIRMED)
+    }
+
+    fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
+        if (state != ApmOperationState.POP_TX_CONFIRMED) {
             error("Trying to set Payout Data without having the Proof of Proof id")
         }
         this.payoutBlockHash = payoutBlockHash
@@ -146,6 +160,9 @@ class ApmOperation(
 
     override fun getDetailedInfo(): Map<String, String> {
         val result = LinkedHashMap<String, String>()
+        endorsedBlockHeight?.let {
+            result["expectedRewardBlock"] = (it + chain.getPayoutInterval()).toString()
+        }
         miningInstruction?.let { instruction ->
             result["chainIdentifier"] = instruction.publicationData.identifier.toString()
             result["publicationDataHeader"] = instruction.publicationData.header.toHex()
@@ -168,8 +185,8 @@ class ApmOperation(
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
             result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
         }
-        vbkPopTransactionId?.let {
-            result["vbkPopTransactionId"] = it
+        popTxId?.let {
+            result["altProofOfProofTxId"] = it
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it

@@ -23,7 +23,6 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpTransaction
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.util.VTBDebugUtility
@@ -33,6 +32,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -104,7 +104,7 @@ class ApmTaskService(
 
         operation.runTask(
             taskName = "Confirm transaction",
-            targetState = ApmOperationState.CONFIRMED,
+            targetState = ApmOperationState.ENDORSEMENT_TX_CONFIRMED,
             timeout = 1.hr
         ) {
             val endorsementTransaction = operation.endorsementTransaction
@@ -193,7 +193,7 @@ class ApmTaskService(
             } else {
                 desiredKeystoneOfProofHeight
             }
-            val keystoneOfProof = nodeCoreLiteKit.blockChain.newBestBlockChannel.asFlow().first { block ->
+            val keystoneOfProof = EventBus.newBestBlockChannel.asFlow().first { block ->
                 logger.debug(operation, "Checking block ${block.hash} @ ${block.height}...")
                 if (block.height > keystoneOfProofHeight) {
                     failOperation(
@@ -260,7 +260,7 @@ class ApmTaskService(
                 val chainName = operation.chain.name
                 logger.info(operation, "VTB submitted to $chainName! $chainName PoP TxId: $siTxId")
 
-                operation.setProofOfProofId(siTxId)
+                operation.setPopTxId(siTxId)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error submitting proof of proof" }
                 failTask("Error submitting proof of proof")
@@ -268,18 +268,16 @@ class ApmTaskService(
         }
 
         operation.runTask(
-            taskName = "Payout Detection",
-            targetState = MiningOperationState.COMPLETED,
-            timeout = 10.days
+            taskName = "Confirm PoP Transaction",
+            targetState = ApmOperationState.POP_TX_CONFIRMED,
+            timeout = 5.hr
         ) {
-            val miningInstruction = operation.miningInstruction
-                ?: failTask("PayoutDetectionTask called without mining instruction!")
-            val endorsementTransactionId = operation.vbkPopTransactionId
-                ?: failTask("PayoutDetectionTask called without proof of proof txId!")
+            val endorsementTransactionId = operation.popTxId
+                ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
 
             val chainName = operation.chain.name
-            logger.info(operation, "Waiting for $chainName Endorsement Transaction ($endorsementTransactionId) to be confirmed...")
-            val endorsementTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
+            logger.info(operation, "Waiting for $chainName PoP Transaction ($endorsementTransactionId) to be confirmed...")
+            val popTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
                 if (transaction.confirmations < 0) {
                     throw AltchainTransactionReorgException(transaction)
                 }
@@ -287,10 +285,25 @@ class ApmTaskService(
             }
             logger.info(
                 operation,
-                "Successfully confirmed $chainName endorsement transaction ${endorsementTransaction.txId}!" +
-                    " Confirmations: ${endorsementTransaction.confirmations}"
+                "Successfully confirmed $chainName PoP transaction ${popTransaction.txId}!" +
+                    " Confirmations: ${popTransaction.confirmations}"
             )
 
+            val txBlockHash = popTransaction.blockHash
+                ?: error("The  $chainName PoP transaction ${popTransaction.txId} has no block hash despite having been confirmed!")
+
+            operation.setPopTxBlockHash(txBlockHash)
+        }
+
+        operation.runTask(
+            taskName = "Payout Detection",
+            targetState = ApmOperationState.PAYOUT_DETECTED,
+            timeout = 10.days
+        ) {
+            val miningInstruction = operation.miningInstruction
+                ?: failTask("PayoutDetectionTask called without mining instruction!")
+
+            val chainName = operation.chain.name
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
             logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
             val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
@@ -313,12 +326,12 @@ class ApmTaskService(
                 "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
             )
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight) to be confirmed...")
-            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) { block ->
+            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) /*{ block ->
                 if (block.confirmations < 0) {
                     throw AltchainBlockReorgException(block)
                 }
                 block.confirmations >= operation.chain.config.neededConfirmations
-            }
+            }*/
             val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId)
                 ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
             val rewardVout = coinbaseTransaction.vout.find {
@@ -387,7 +400,7 @@ class ApmTaskService(
                 val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
                 val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
 
-                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i-1) else ArrayList<VeriBlockPublication>()))) {
+                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
                     logger.warn {
                         """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:
@@ -400,7 +413,7 @@ class ApmTaskService(
                 }
             }
         } catch (e: Exception) {
-            logger.error("An error occurred checking VTB connection and continuity!", e)
+            logger.debugError(e) { "An error occurred checking VTB connection and continuity!" }
         }
     }
 }

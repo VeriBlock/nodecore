@@ -59,11 +59,14 @@ private fun run(): Int {
         standardCommands()
         spvCommands(spvContext)
     })
+    shell.initialize()
 
     print(SharedConstants.LICENSE)
-    val objDiagnostics = DiagnosticUtility.getDiagnosticInfo()
-    val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
-    logger.debug(strDiagnostics)
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
+    println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
+    println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
+    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
+    println("${SharedConstants.TYPE_HELP}\n")
 
     logger.info { "Initializing SPV Context..." }
     try {
@@ -93,6 +96,7 @@ private fun run(): Int {
         logger.info { """Type "help" to display a list of available commands""" }
         shell.run()
     } catch (e: Exception) {
+        errored = true
         logger.warn(e) { "Fatal error: ${e.message}" }
     } finally {
         if (!shell.running) {
@@ -111,7 +115,7 @@ private fun run(): Int {
         return 1
     }
 
-    return 0
+    return if (!errored) 0 else 1
 }
 
 fun main() {

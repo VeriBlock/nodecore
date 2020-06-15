@@ -10,13 +10,6 @@
 
 NodeCore SPV (Simple Payment Verification) is a light wallet that allows a user to see their balance and send VBK without downloading, syncing, and running a full node.
 
-# How to Install
-
-Download BETA from here:
-
-* https://mirror.veriblock.org/veriblock-nodecore-spv-0.4.9-dev.79.tar.gz
-* https://mirror.veriblock.org/veriblock-nodecore-spv-0.4.9-dev.79.zip
-
 Tested on OpenJDK 8, 11, 14, for Windows and Ubuntu Linux
 
 # How to Run SPV

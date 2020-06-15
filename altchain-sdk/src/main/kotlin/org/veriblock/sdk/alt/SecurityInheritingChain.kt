@@ -13,7 +13,7 @@ import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
 
 interface SecurityInheritingChain {
@@ -86,6 +86,11 @@ interface SecurityInheritingChain {
     suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String
 
     /**
+     * Extracts an address' display string from the given data (coming from the Mining Instruction)
+     */
+    fun extractAddressDisplay(addressData: ByteArray): String
+
+    /**
      * Extracts a block endorsement from the given data (coming from a VBK PoP Transaction)
      */
     fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement
@@ -108,5 +113,5 @@ interface SecurityInheritingChain {
     /**
      * @return the Synchronization status
      */
-    suspend fun getSynchronizedStatus(): SyncStatus
+    suspend fun getBlockChainInfo(): StateInfo
 }

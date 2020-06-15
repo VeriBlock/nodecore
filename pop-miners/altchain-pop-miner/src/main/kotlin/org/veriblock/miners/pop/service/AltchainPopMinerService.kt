@@ -28,7 +28,10 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.debugError
+import org.veriblock.miners.pop.EventBus
 import java.io.IOException
+import java.time.LocalDateTime
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
 
@@ -65,22 +68,22 @@ class AltchainPopMinerService(
         // Restore operations (including re-attach listeners) before the network starts
         this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
 
-        nodeCoreLiteKit.network.healthyEvent.register(this) {
+        EventBus.nodeCoreHealthyEvent.register(this) {
             logger.info { "Successfully connected to NodeCore, waiting for the sync status..." }
             addReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
-        nodeCoreLiteKit.network.unhealthyEvent.register(this) {
+        EventBus.nodeCoreUnhealthyEvent.register(this) {
             logger.info { "Unable to connect to NodeCore at this time, trying to reconnect..." }
             removeReadyCondition(ReadyCondition.NODECORE_CONNECTED)
         }
-        nodeCoreLiteKit.network.healthySyncEvent.register(this) {
+        EventBus.nodeCoreHealthySyncEvent.register(this) {
             logger.info { "The connected NodeCore is synchronized" }
             addReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
-        nodeCoreLiteKit.network.unhealthySyncEvent.register(this) {
+        EventBus.nodeCoreUnhealthySyncEvent.register(this) {
             removeReadyCondition(ReadyCondition.SYNCHRONIZED_NODECORE)
         }
-        nodeCoreLiteKit.balanceChangedEvent.register(this) {
+        EventBus.balanceChangedEvent.register(this) {
             if (lastConfirmedBalance != it.confirmedBalance) {
                 lastConfirmedBalance = it.confirmedBalance
                 logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
@@ -90,6 +93,12 @@ class AltchainPopMinerService(
             } else {
                 removeReadyCondition(ReadyCondition.SUFFICIENT_FUNDS)
             }
+        }
+        EventBus.operationStateChangedEvent.register(this) {
+            operationService.storeOperation(it)
+        }
+        EventBus.operationFinishedEvent.register(this) {
+            operations.remove(it.id)
         }
     }
 
@@ -120,8 +129,8 @@ class AltchainPopMinerService(
     private fun ReadyCondition.getNotReadyMessage() = when (this) {
         ReadyCondition.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
         ReadyCondition.SYNCHRONIZED_NODECORE -> {
-           val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
-            "Waiting for NodeCore to synchronize. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})"
+           val nodeCoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
+            "Waiting for NodeCore to synchronize. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})"
         }
         ReadyCondition.SUFFICIENT_FUNDS -> {
             val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
@@ -187,10 +196,20 @@ class AltchainPopMinerService(
             if (!chain.isConnected()) {
                 throw MineException("The miner is not connected to the ${chain.name} chain")
             }
-            val chainSyncStatus = chain.getSynchronizedStatus()
-            if (!chainSyncStatus.isSynchronized) {
-                throw MineException("The chain ${chain.name} is not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight})")
+            val blockChainInfo = chain.getBlockChainInfo()
+            if (!blockChainInfo.isSynchronized) {
+                throw MineException("The chain ${chain.name} is not synchronized, ${blockChainInfo.blockDifference} blocks left (LocalHeight=${blockChainInfo.localBlockchainHeight} NetworkHeight=${blockChainInfo.networkHeight} InitialBlockDownload=${blockChainInfo.initialblockdownload})")
             }
+            if (!context.networkParameters.name.replace("net", "").equals(blockChainInfo.networkVersion, true)) {
+                throw MineException("Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while the $chain daemon is at ${blockChainInfo.networkVersion}.")
+            }
+        }
+
+        val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
+        val currentTime = LocalDateTime.now()
+
+        if (lastOperationTime != null && currentTime < lastOperationTime.plusSeconds(1)) {
+            throw MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation.")
         }
 
         val chainMonitor = securityInheritingService.getMonitor(chainId)
@@ -201,8 +220,6 @@ class AltchainPopMinerService(
             chain = chain,
             chainMonitor = chainMonitor
         )
-
-        registerToStateChangedEvent(operation)
 
         operation.state
         submit(operation)
@@ -235,8 +252,6 @@ class AltchainPopMinerService(
         newOperation.setContext(operation.publicationData!!)
         newOperation.reconstituting = false
 
-        registerToStateChangedEvent(newOperation)
-
         // Submit new operation
         submit(newOperation)
         operations[newOperation.id] = newOperation
@@ -266,12 +281,11 @@ class AltchainPopMinerService(
             }
 
             for (state in activeOperations) {
-                registerToStateChangedEvent(state)
                 operations[state.id] = state
             }
             logger.info("Loaded ${activeOperations.size} suspended operations")
         } catch (e: Exception) {
-            logger.error("Unable to load suspended operations", e)
+            logger.debugError(e) {"Unable to load suspended operations" }
         }
     }
 
@@ -290,16 +304,10 @@ class AltchainPopMinerService(
                 }
             }
         } catch (e: Exception) {
-            logger.error("Unable to resume suspended operations", e)
+            logger.debugError(e) { "Unable to resume suspended operations" }
         }
 
         operationsSubmitted = true
-    }
-
-    private fun registerToStateChangedEvent(operation: ApmOperation) {
-        operation.stateChangedEvent.register(operationService) {
-            operationService.storeOperation(operation)
-        }
     }
 
     private fun submit(operation: ApmOperation) {

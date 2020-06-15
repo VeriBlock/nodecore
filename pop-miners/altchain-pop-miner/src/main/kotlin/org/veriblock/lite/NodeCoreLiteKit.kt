@@ -15,7 +15,6 @@ import org.veriblock.core.contracts.Balance
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.Event
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.store.VeriBlockBlockStore
@@ -23,6 +22,7 @@ import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import veriblock.SpvContext
@@ -45,7 +45,6 @@ class NodeCoreLiteKit(
     lateinit var network: NodeCoreNetwork
 
     var beforeNetworkStart: () -> Unit = {}
-    val balanceChangedEvent = Event<Balance>()
 
     fun initialize() {
         if (!context.directory.exists() && !context.directory.mkdirs()) {
@@ -58,6 +57,7 @@ class NodeCoreLiteKit(
         blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
+            context,
             NodeCoreGateway(context.networkParameters),
             blockChain,
             transactionMonitor,
@@ -68,21 +68,21 @@ class NodeCoreLiteKit(
     fun start() {
         logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
 
-        blockChain.newBestBlockEvent.register(transactionMonitor) {
+        EventBus.newBestBlockEvent.register(transactionMonitor) {
             val balanceChanged = transactionMonitor.onNewBestBlock(it)
             if (balanceChanged) {
                 if (network.isHealthy()) {
-                    balanceChangedEvent.trigger(network.getBalance())
+                    EventBus.balanceChangedEvent.trigger(network.getBalance())
                 }
             }
         }
-        blockChain.blockChainReorganizedEvent.register(transactionMonitor) {
+        EventBus.blockChainReorganizedEvent.register(transactionMonitor) {
             transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
         }
-        blockChain.blockChainReorganizedEvent.register(this) {
+        EventBus.blockChainReorganizedEvent.register(this) {
             for (newBlock in it.newBlocks) {
-                blockChain.newBestBlockEvent.trigger(newBlock)
-                blockChain.newBestBlockChannel.offer(newBlock)
+                EventBus.newBestBlockEvent.trigger(newBlock)
+                EventBus.newBestBlockChannel.offer(newBlock)
             }
         }
 
@@ -91,7 +91,12 @@ class NodeCoreLiteKit(
         beforeNetworkStart()
         network.startAsync().addListener(Runnable {
             if (network.isHealthy()) {
-                balanceChangedEvent.trigger(network.getBalance())
+                val balance = try {
+                    network.getBalance()
+                } catch (ignored: Exception) {
+                    return@Runnable
+                }
+                EventBus.balanceChangedEvent.trigger(balance)
             }
         }, Threading.LISTENER_THREAD)
     }

@@ -9,7 +9,13 @@
 
 package org.veriblock.core.utilities
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executor
 
 private val logger = createLogger {}
 
@@ -27,7 +33,7 @@ class EmptyEvent(
     }
 
     fun unregister(listener: Any) {
-        logger.debug { "$listener unregistered from event event $name" }
+        logger.trace { "$listener unregistered from event event $name" }
         listeners.removeIf { it.first == listener }
     }
 
@@ -55,7 +61,7 @@ class Event<T>(
     }
 
     fun unregister(listener: Any) {
-        logger.debug { "$listener unregistered from event event $name" }
+        logger.trace { "$listener unregistered from event event $name" }
         listeners.removeIf { it.first == listener }
     }
 
@@ -65,6 +71,76 @@ class Event<T>(
         logger.trace { "Triggered event: $name" }
         for (listener in listeners) {
             listener.second(data)
+        }
+    }
+}
+
+typealias AsyncEmptyEventHandler = suspend () -> Unit
+typealias AsyncEmptyEventListenerPair = Pair<Any, AsyncEmptyEventHandler>
+
+class AsyncEmptyEvent<T>(
+    private val name: String,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default
+) {
+    constructor(name: String, executor: Executor) : this(name, executor.asCoroutineDispatcher())
+
+    private val coroutineScope = CoroutineScope(dispatcher)
+
+    private val listeners = CopyOnWriteArrayList<AsyncEmptyEventListenerPair>()
+
+    fun register(listener: Any, handler: AsyncEmptyEventHandler) {
+        logger.trace { "$listener registered to event event $name" }
+        listeners += listener to handler
+    }
+
+    fun unregister(listener: Any) {
+        logger.trace { "$listener unregistered from event event $name" }
+        listeners.removeIf { it.first == listener }
+    }
+
+    fun clear() = listeners.clear()
+
+    fun trigger() {
+        logger.trace { "Triggered event: $name" }
+        for (handler in listeners) {
+            coroutineScope.launch {
+                handler.second()
+            }
+        }
+    }
+}
+
+typealias AsyncEventHandler<T> = suspend (T) -> Unit
+typealias AsyncEventListenerPair<T> = Pair<Any, AsyncEventHandler<T>>
+
+class AsyncEvent<T>(
+    private val name: String,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default
+) {
+    constructor(name: String, executor: Executor) : this(name, executor.asCoroutineDispatcher())
+
+    private val coroutineScope = CoroutineScope(dispatcher)
+
+    private val listeners = CopyOnWriteArrayList<AsyncEventListenerPair<T>>()
+
+    fun register(listener: Any, handler: AsyncEventHandler<T>) {
+        logger.trace { "$listener registered to event event $name" }
+        listeners += listener to handler
+    }
+
+    fun unregister(listener: Any) {
+        logger.trace { "$listener unregistered from event event $name" }
+        listeners.removeIf { it.first == listener }
+    }
+
+    fun clear() = listeners.clear()
+
+    fun trigger(data: T) {
+        logger.trace { "Triggered event: $name" }
+        for (handler in listeners) {
+            coroutineScope.launch {
+                handler.second(data)
+            }
         }
     }
 }

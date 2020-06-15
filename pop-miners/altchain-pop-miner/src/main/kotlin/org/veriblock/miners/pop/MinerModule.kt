@@ -26,6 +26,7 @@ import org.veriblock.miners.pop.service.ApmTaskService
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
+import org.veriblock.miners.pop.service.DiagnosticService
 import org.veriblock.miners.pop.service.mockmining.MockMinerService
 import org.veriblock.miners.pop.service.OperationSerializer
 import org.veriblock.miners.pop.service.OperationService
@@ -66,7 +67,7 @@ val minerModule = module {
     single { SecurityInheritingService(get(), get()) }
     single {
         CommandFactory().apply {
-            configure(get(), get(), get(), get(), get(), get(), get())
+            configure(get(), get(), get(), get(), get(), get())
         }
     }
     single { Shell(get()) }
@@ -74,6 +75,7 @@ val minerModule = module {
     single { OperationSerializer(get(), get()) }
     single { OperationService(get(), get()) }
     single { PluginService(get()) }
+    single { DiagnosticService(get(), get(), get(), get(), get()) }
 
     // Storage
     single<DataSource> {

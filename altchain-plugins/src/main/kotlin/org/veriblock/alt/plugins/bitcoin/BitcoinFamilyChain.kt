@@ -30,7 +30,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
@@ -178,12 +178,13 @@ class BitcoinFamilyChain(
                     (it.value * 100000000).roundToLong(),
                     it.scriptPubKey.hex
                 )
-            }
+            },
+            btcTransaction.blockhash
         )
     }
 
     override fun getPayoutInterval(): Int {
-        return 501
+        return config.payoutInterval
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
@@ -219,6 +220,11 @@ class BitcoinFamilyChain(
         ))
     }
 
+    override fun extractAddressDisplay(addressData: ByteArray): String {
+        // TODO: extract correctly from param, use BitcoinJ maybe?
+        return config.payoutAddress ?: "UNKNOWN_ADDRESS"
+    }
+
     private val crypto = Crypto()
 
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
@@ -241,19 +247,21 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun getSynchronizedStatus(): SyncStatus {
+    override suspend fun getBlockChainInfo(): StateInfo {
         return try {
-            val response: BtcSyncStatus = rpcRequest("getblockchaininfo")
+            val response: BlockChainInfo = rpcRequest("getblockchaininfo")
             val blockDifference = abs(response.headers - response.blocks)
-            SyncStatus(
+            StateInfo(
                 response.headers,
                 response.blocks,
                 blockDifference,
-                response.headers > 0 && blockDifference < 4
+                (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
+                response.initialblockdownload,
+                response.chain
             )
         } catch (e: Exception) {
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
-            SyncStatus(0, 0, 0, false)
+            StateInfo()
         }
     }
 }
@@ -287,7 +295,8 @@ private data class BtcBlock(
 private data class BtcTransaction(
     val txid: String,
     val confirmations: Int,
-    val vout: List<BtcTransactionVout>
+    val vout: List<BtcTransactionVout>,
+    val blockhash: String?
 )
 
 private data class BtcTransactionVout(
@@ -302,7 +311,9 @@ private data class BtcScriptPubKey(
     val type: String
 )
 
-private data class BtcSyncStatus(
+private data class BlockChainInfo(
+    val chain: String,
     val blocks: Int,
-    val headers: Int
+    val headers: Int,
+    val initialblockdownload: Boolean
 )

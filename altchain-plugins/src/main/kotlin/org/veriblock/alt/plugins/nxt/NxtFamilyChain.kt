@@ -26,7 +26,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 
@@ -147,11 +147,13 @@ class NxtFamilyChain(
             ?: error("Unable to retrieve $key's submission response data")
     }
 
+    override fun extractAddressDisplay(addressData: ByteArray): String = TODO()
+
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
 
     override suspend fun isConnected(): Boolean = TODO()
 
-    override suspend fun getSynchronizedStatus(): SyncStatus = TODO()
+    override suspend fun getBlockChainInfo(): StateInfo = TODO()
     
     private fun Any.toJson() = Gson().toJson(this)
 }

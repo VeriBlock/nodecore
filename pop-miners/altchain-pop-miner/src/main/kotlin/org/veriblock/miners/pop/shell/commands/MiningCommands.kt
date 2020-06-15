@@ -10,9 +10,11 @@ package org.veriblock.miners.pop.shell.commands
 
 import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
+import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
+import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -22,6 +24,7 @@ import org.veriblock.shell.core.success
 
 fun CommandFactory.miningCommands(
     minerService: MinerService,
+    pluginService: PluginService,
     apmOperationExplainer: ApmOperationExplainer
 ) {
     val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
@@ -31,12 +34,23 @@ fun CommandFactory.miningCommands(
         form = "mine",
         description = "Begins a proof of proof mining operation",
         parameters = listOf(
-            CommandParameter("chain", CommandParameterMappers.STRING),
+            CommandParameter("chain", CommandParameterMappers.STRING, false),
             CommandParameter("block", CommandParameterMappers.INTEGER, false)
         )
     ) {
-        val chain: String = getParameter("chain")
+        var chain = getOptionalParameter<String>("chain")?.toLowerCase()
         val block: Int? = getOptionalParameter("block")
+
+        if (chain == null) {
+            val plugins = pluginService.getPlugins().keys.filter { it != "test" }
+            if (plugins.isEmpty()) {
+                throw MineException("There are no SI chains configured.")
+            }
+            if (plugins.size > 1) {
+                throw MineException("There are more than one altchains configured: ${plugins.joinToString { it }}. Please, specify which of them you are going to PoP mine.")
+            }
+            chain = plugins.first()
+        }
 
         val operationId = minerService.mine(chain, block)
         success {
@@ -66,10 +80,13 @@ fun CommandFactory.miningCommands(
     command(
         name = "List Operations",
         form = "listoperations",
-        description = "Lists the current running operations"
+        description = "Lists the currently running operations since the PoP miner started"
     ) {
         val operations = minerService.getOperations().map {
-            "${it.id}: ${it.chain.name} (${it.endorsedBlockHeight}) | ${it.state} | ${it.getStateDescription()}"
+            val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
+                " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutInterval()})"
+            } ?: ""
+            "${it.id}: ${it.chain.name}$heightString | ${it.state} | ${it.getStateDescription()}"
         }
 
         for (operation in operations) {
@@ -95,25 +112,10 @@ fun CommandFactory.miningCommands(
             printInfo("Operation data:")
             printInfo(prettyPrintGson.toJson(WorkflowProcessInfo(operation)))
             printInfo("Operation workflow:")
-            val tableFormat = "%1$-8s %2$-33s %3\$s"
+            val tableFormat = "%1$-8s %2$-35s %3\$s"
             //printInfo (String.format(tableFormat, "Status", "Step", "Details"))
             operationDetails.forEach { stage ->
-                val currentFailed = operation.isFailed() && stage.status == ApmOperationExplainer.OperationStatus.CURRENT
-                val status = if (stage.status != ApmOperationExplainer.OperationStatus.PENDING) {
-                    if (!currentFailed) stage.status else "FAILED"
-                } else {
-                    ""
-                }
-                val taskName = (stage.operationState.previousState?.taskName ?: "Start").toUpperCase().replace(' ', '_')
-                printInfo(String.format(
-                    tableFormat,
-                    status,
-                    "${stage.operationState.id + 1}.${taskName}",
-                    if (!currentFailed) stage.extraInformation.firstOrNull() ?: "" else operation.failureReason
-                ))
-                stage.extraInformation.drop(1).forEach { extraInformation ->
-                    printInfo(String.format(tableFormat, "", "", extraInformation))
-                }
+                printInfo(String.format(tableFormat, stage.status, stage.taskName, stage.extraInformation))
             }
             success()
         } else {

@@ -8,6 +8,7 @@
 package org.veriblock.lite.store
 
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.sdk.models.Constants
 import org.veriblock.core.crypto.VBlakeHash
@@ -366,7 +367,7 @@ class VeriBlockBlockStore(
                     logger.info { "Created VBK block store archive file: ${archive.name}" }
                 }
             } catch (e: IOException) {
-                logger.error(e) { "Unable to create archive file: $archiveName" }
+                logger.debugError(e) { "Unable to create archive file: $archiveName" }
             }
 
         }
@@ -385,12 +386,12 @@ class VeriBlockBlockStore(
                     }
                 }
             } catch (e: IOException) {
-                logger.error(e) { "Unable to make archive: $archiveName" }
+                logger.debugError(e) { "Unable to make archive: $archiveName" }
             } finally {
                 try {
                     fileLock = storeFileChannel.tryLock()
                 } catch (e: IOException) {
-                    logger.error(e) { "Unable to reacquire file lock" }
+                    logger.debugError(e) { "Unable to reacquire file lock" }
                 }
             }
         }

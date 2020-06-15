@@ -275,7 +275,7 @@ class VpmTaskService(
 
         operation.runTask(
             taskName = "Confirm Payout",
-            targetState = MiningOperationState.COMPLETED,
+            targetState = VpmOperationState.PAYOUT_DETECTED,
             timeout = 20.hr
         ) {
             val miningInstruction = operation.miningInstruction

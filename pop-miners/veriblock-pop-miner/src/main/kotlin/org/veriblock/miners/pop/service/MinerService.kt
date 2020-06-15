@@ -21,7 +21,6 @@ import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.common.amountToCoin
 import org.veriblock.miners.pop.common.formatBTCFriendlyString
 import org.veriblock.miners.pop.common.generateOperationId
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.core.VpmOperationState
 import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
@@ -296,7 +295,7 @@ class MinerService(
             )
             result.fail()
         } catch (e: Exception) {
-            result.addMessage("V500", "Send Failed", "Unable to send coins, view logs for details", true)
+            result.addMessage("V500", "Send Failed", "Unable to send coins: " + e.message, true)
             result.fail()
         }
         return result
@@ -410,8 +409,8 @@ class MinerService(
             }
             PopMinerDependencies.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
             PopMinerDependencies.SYNCHRONIZED_NODECORE -> {
-                val nodeCoreSyncStatus = nodeCoreGateway.getNodeCoreSyncStatus()
-                "Waiting for NodeCore to synchronize. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})"
+                val nodeCoreStateInfo = nodeCoreGateway.getNodeCoreStateInfo()
+                "Waiting for NodeCore to synchronize. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})"
             }
             PopMinerDependencies.BITCOIN_SERVICE_READY -> "Bitcoin service is not ready"
         }

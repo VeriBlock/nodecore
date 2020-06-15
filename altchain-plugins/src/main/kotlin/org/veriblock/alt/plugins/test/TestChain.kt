@@ -30,9 +30,8 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
-import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.TreeMap
 import kotlin.random.Random
 
@@ -152,6 +151,10 @@ class TestChain(
         return block.data.coinbaseTransactionId
     }
 
+    override fun extractAddressDisplay(addressData: ByteArray): String {
+        return String(addressData)
+    }
+
     override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
         val context = altchainPopEndorsement.getContextInfo()
         val hash = context.copyOfRange(0, 4)
@@ -166,7 +169,7 @@ class TestChain(
 
     private fun createBlock(height: Int): TestBlock {
         val hash = Utility.intToByteArray(height).toHex()
-        val coinbase = createTransaction(config.payoutAddress)
+        val coinbase = createTransaction(hash, config.payoutAddress)
         val previousBlockHeight = height - 1
         val previousBlock = if (previousBlockHeight > startingHeight) {
             blocks[previousBlockHeight] ?: createBlock(previousBlockHeight)
@@ -214,6 +217,7 @@ class TestChain(
     }
 
     private fun createTransaction(
+        blockHash: String,
         receiver: String
     ): SecurityInheritingTransaction {
         val transaction = SecurityInheritingTransaction(
@@ -221,7 +225,8 @@ class TestChain(
             100,
             listOf(
                 SecurityInheritingTransactionVout(20__000_000_00, receiver)
-            )
+            ),
+            blockHash
         )
         transactions[transaction.txId] = transaction
         return transaction
@@ -236,7 +241,7 @@ class TestChain(
         }
     }
 
-    override suspend fun getSynchronizedStatus(): SyncStatus = SyncStatus(50, 50, 0, true)
+    override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, 50, 0, true)
 }
 
 

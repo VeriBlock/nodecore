@@ -14,8 +14,8 @@ import org.bitcoinj.utils.ContextPropagatingThreadFactory
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
+import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.model.BlockStore
-import org.veriblock.sdk.models.SyncStatus
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class NodeCoreService(
+    private val config: VpmConfig,
     private val nodeCoreGateway: NodeCoreGateway,
     private val blockStore: BlockStore,
     bitcoinService: BitcoinService
@@ -49,10 +50,10 @@ class NodeCoreService(
         }
     }
 
-    private fun isHealthy(): Boolean =
+    fun isHealthy(): Boolean =
         healthy.get()
 
-    private fun isSynchronized(): Boolean =
+    fun isSynchronized(): Boolean =
         synchronized.get()
 
     fun shutdown() {
@@ -63,7 +64,7 @@ class NodeCoreService(
     private fun poll() {
         try {
             if (isHealthy() && isSynchronized()) {
-                if (!nodeCoreGateway.getNodeCoreSyncStatus().isSynchronized) {
+                if (!nodeCoreGateway.getNodeCoreStateInfo().isSynchronized) {
                     synchronized.set(false)
                     logger.info("The connected node is not synchronized")
                     EventBus.nodeCoreDesynchronizedEvent.trigger()
@@ -84,13 +85,21 @@ class NodeCoreService(
                 }
             } else {
                 if (nodeCoreGateway.ping()) {
+                    val nodeCoreStateInfo = nodeCoreGateway.getNodeCoreStateInfo()
+
+                    // Verify the NodeCore configured Network
+                    if (!nodeCoreStateInfo.networkVersion.equals(config.bitcoin.network.name, true)) {
+                        logger.info { "Network misconfiguration, VPM is configured at the ${config.bitcoin.network.name} network while NodeCore is at ${nodeCoreStateInfo.networkVersion}." }
+                        return
+                    }
+
                     if (!isHealthy()) {
                         logger.info("Connected to NodeCore")
                         EventBus.nodeCoreHealthyEvent.trigger()
                     }
 
                     healthy.set(true)
-                    if (nodeCoreGateway.getNodeCoreSyncStatus().isSynchronized) {
+                    if (nodeCoreStateInfo.isSynchronized) {
                         if (!isSynchronized()) {
                             logger.info("The connected node is synchronized")
                             EventBus.nodeCoreSynchronizedEvent.trigger()

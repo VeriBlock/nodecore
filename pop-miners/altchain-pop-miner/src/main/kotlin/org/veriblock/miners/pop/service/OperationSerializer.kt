@@ -50,10 +50,14 @@ class OperationSerializer(
                 SerializeDeserializeService.serializeHeaders(it)
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.toCompactString() ?: "",
+            keystoneOfProof = operation.keystoneOfProof?.let {
+                SerializeDeserializeService.serializeHeaders(it)
+            } ?: ByteArray(0),
             veriblockPublications = operation.publicationData?.map {
                 serialize(it)
             } ?: emptyList(),
-            proofOfProofId = operation.vbkPopTransactionId ?: "",
+            popTxId = operation.popTxId ?: "",
+            popTxBlockHash = operation.popTxBlockHash ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
             payoutAmount = operation.payoutAmount ?: 0L,
             failureReason = operation.failureReason ?: ""
@@ -87,7 +91,8 @@ class OperationSerializer(
                         deserialize(serialized.publicationData),
                         serialized.publicationContext,
                         serialized.publicationBtcContext
-                    ))
+                    )
+                )
             }
 
             if (serialized.txId.isNotEmpty()) {
@@ -108,14 +113,22 @@ class OperationSerializer(
                 setMerklePath(VeriBlockMerklePath(serialized.merklePath))
             }
 
+            if (serialized.keystoneOfProof.isNotEmpty()) {
+                setKeystoneOfProof(SerializeDeserializeService.parseVeriBlockBlock(serialized.keystoneOfProof))
+            }
+
             if (serialized.veriblockPublications.isNotEmpty()) {
                 setContext(serialized.veriblockPublications.map {
                     deserialize(it)
                 })
             }
 
-            if (serialized.proofOfProofId.isNotEmpty()) {
-                setProofOfProofId(serialized.proofOfProofId)
+            if (serialized.popTxId.isNotEmpty()) {
+                setPopTxId(serialized.popTxId)
+            }
+
+            if (serialized.popTxBlockHash.isNotEmpty()) {
+                setPopTxBlockHash(serialized.popTxBlockHash)
             }
 
             if (serialized.payoutBlockHash.isNotEmpty()) {
@@ -124,7 +137,7 @@ class OperationSerializer(
             }
 
             if (serialized.state == MiningOperationState.FAILED.id) {
-                fail(serialized.failureReason)
+                failureReason = serialized.failureReason
             }
 
             reconstituting = false

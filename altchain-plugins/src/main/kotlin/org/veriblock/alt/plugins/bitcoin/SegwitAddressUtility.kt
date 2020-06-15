@@ -89,7 +89,3 @@ object SegwitAddressUtility {
         }
     }
 }
-
-fun main() {
-    println(SegwitAddressUtility.generatePayoutScriptFromSegwitAddress("tb1q0ad0rgrtuha9nu7y9g02pfc5asttmhwz53hr4l").toHex())
-}

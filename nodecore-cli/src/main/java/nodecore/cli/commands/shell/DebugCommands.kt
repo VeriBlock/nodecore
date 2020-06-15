@@ -48,7 +48,7 @@ fun CommandFactory.debugCommands() {
         printInfo("Detected NodeCore folder: $providedNodeCoreFolder")
 
         // Get the data folder
-        val providedNetworkDataFolder = getOptionalParameter<String>("dataFolder") ?: Paths.get(providedNodeCoreFolder, "bin", network).toString()
+        val providedNetworkDataFolder = getOptionalParameter<String>("networkDataFolder") ?: Paths.get(providedNodeCoreFolder, "bin", network).toString()
         val networkDataFolder = File(providedNetworkDataFolder)
         if (!networkDataFolder.exists()) {
             return@cliCommand failure("V004", "Unable to find the network data folder", "The network data folder $networkDataFolder doesn't exists.")

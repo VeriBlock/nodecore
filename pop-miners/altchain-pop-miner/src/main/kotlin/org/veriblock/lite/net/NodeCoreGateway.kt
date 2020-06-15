@@ -24,7 +24,7 @@ import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -39,7 +39,6 @@ private val logger = createLogger {}
 class NodeCoreGateway(
     private val params: NetworkParameters
 ) {
-
     private val gatewayStrategy: GatewayStrategy = createFullNode(params)
 
     @Throws(InterruptedException::class)
@@ -200,25 +199,24 @@ class NodeCoreGateway(
     }
 
     /**
-     * Verify if the connected NodeCore is synchronized with the network (the block difference between the networkHeight and the localBlockchainHeight
-     * should be smaller than 4 blocks)
-     *
-     * This function will return an empty NodeCoreSyncStatus if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
+     * Retrieve the 'state info' from NodeCore
+     * This function will return an empty StateInfo if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
      */
-    fun getNodeCoreSyncStatus(): SyncStatus {
+    fun getNodeCoreStateInfo(): StateInfo {
         return try {
-            val request = gatewayStrategy.getNodeCoreSyncStatus(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
+            val request = gatewayStrategy.getNodeCoreStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
 
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
-            SyncStatus(
+            StateInfo(
                 request.networkHeight,
                 request.localBlockchainHeight,
                 blockDifference,
-                request.networkHeight > 0 && blockDifference < 4
+                request.networkHeight > 0 && blockDifference < 4,
+                networkVersion = request.networkVersion
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
-            SyncStatus(0, 0, 0, false)
+            StateInfo()
         }
     }
 

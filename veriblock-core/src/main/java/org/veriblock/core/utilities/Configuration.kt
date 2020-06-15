@@ -10,6 +10,7 @@ package org.veriblock.core.utilities
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigRenderOptions
 import io.github.config4k.extract
 import java.io.File
 import java.lang.ClassLoader.getSystemResourceAsStream
@@ -53,7 +54,7 @@ class Configuration(
         return config.entrySet().filter { entry ->
             !sysProperties.containsKey(entry.key)
         }.associate {
-            it.key to it.value.render().replace("\"", "")
+            it.key to it.value.render(ConfigRenderOptions.concise()).replace("\"", "")
         }.toSortedMap()
     }
 

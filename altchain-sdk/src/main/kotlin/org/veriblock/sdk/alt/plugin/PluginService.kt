@@ -51,7 +51,7 @@ class PluginService(
         logger.info { "Loaded plugin implementations: ${plugins.keys.joinToString()}" }
 
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
-            val pluginKey = config.pluginKey ?: key
+            val pluginKey = (config.pluginKey ?: key).toLowerCase()
             val pluginSupplier = plugins[pluginKey]
                 ?: return@mapNotNull null
             val plugin = try {
@@ -75,6 +75,9 @@ class PluginService(
 
     fun getPlugins(): Map<String, SecurityInheritingChain> =
         loadedPlugins.toMap()
+
+    fun getConfiguredPlugins(): Map<String, PluginConfig> =
+        configuredPlugins.toMap()
 
     operator fun get(key: String): SecurityInheritingChain? {
         return loadedPlugins[key]

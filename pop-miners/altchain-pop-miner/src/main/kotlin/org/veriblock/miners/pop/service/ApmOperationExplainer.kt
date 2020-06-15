@@ -1,7 +1,6 @@
 package org.veriblock.miners.pop.service
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmOperationState
@@ -19,21 +18,34 @@ class ApmOperationExplainer(
         }
         return ApmOperationState.ALL.map { operationState ->
             val status = operationState.getOperationStatus(currentState)
+            val currentFailed = operation.isFailed() && status == CURRENT
+            val statusDisplay = if (status != PENDING) {
+                if (!currentFailed) status.toString() else "FAILED"
+            } else {
+                ""
+            }
+            val taskName = (operationState.previousState?.taskName ?: "Start").toUpperCase().replace(' ', '_')
+            val taskId = operationState.id + 1
+            val taskIdString = if (taskId / 10 > 0) "$taskId." else " $taskId."
             OperationStage(
-                operationState = operationState,
-                status = status,
+                status = statusDisplay,
+                taskName = "$taskIdString $taskName",
                 extraInformation = when (status) {
                     DONE -> operationState.getExtraInformation(operation)
                     CURRENT -> operationState.getCurrentHint(operation)
-                    else -> emptyList()
+                    PENDING -> operationState.getPendingHint(operation)
                 }
             )
-        }
+        } + OperationStage(
+            if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
+            "11. COMPLETED",
+            if (operation.state == MiningOperationState.COMPLETED) "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}" else ""
+        )
     }
 
     private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
         return when {
-            operation.vbkPopTransactionId != null -> ApmOperationState.SUBMITTED_POP_DATA
+            operation.popTxId != null -> ApmOperationState.SUBMITTED_POP_DATA
             operation.publicationData != null -> ApmOperationState.CONTEXT
             operation.merklePath != null -> ApmOperationState.PROVEN
             operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
@@ -50,69 +62,94 @@ class ApmOperationExplainer(
     }
 
     private fun MiningOperationState.getExtraInformation(operation: ApmOperation) = when (this) {
-        ApmOperationState.INITIAL -> {
-            listOf("")
-        }
+        ApmOperationState.INITIAL ->
+            "Created APM operation id: ${operation.id}"
         ApmOperationState.INSTRUCTION -> {
-            listOf("Endorsed ${operation.chain.name} block height: ${operation.endorsedBlockHeight}")
+            "Endorsed ${operation.chain.name} block height: ${operation.endorsedBlockHeight}"
         }
         ApmOperationState.ENDORSEMENT_TRANSACTION -> {
             val transaction = operation.endorsementTransaction
-            listOf(
-                "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId}",
-                "${context.vbkTokenName} endorsement transaction fee: ${transaction?.fee?.formatAtomicLongWithDecimal()}"
-            )
+            "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId} (fee: ${transaction?.fee?.formatAtomicLongWithDecimal()})"
         }
-        ApmOperationState.CONFIRMED -> {
-            listOf("")
-        }
+        ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
+            ""
         ApmOperationState.BLOCK_OF_PROOF -> {
             val blockOfProof = operation.blockOfProof
-            listOf("${context.vbkTokenName} block of proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}")
+            "${context.vbkTokenName} Block of Proof: ${blockOfProof?.hash} @ ${blockOfProof?.height}"
         }
-        ApmOperationState.PROVEN -> {
-            listOf("Merkle path has been verified")
-        }
-        ApmOperationState.KEYSTONE_OF_PROOF -> {
-            listOf("Keystone of Proof: ${operation.keystoneOfProof?.hash}")
-        }
-        ApmOperationState.CONTEXT -> {
-            listOf("VTB Transactions: ${operation.publicationData?.joinToString { it.transaction.id.bytes.toHex() }}")
-            listOf("VTB BTC Blocks: ${operation.publicationData?.mapNotNull { it.getFirstBitcoinBlock() }?.joinToString { it.hash.bytes.toHex() }}")
-        }
-        ApmOperationState.SUBMITTED_POP_DATA -> {
-            listOf("VTB submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.vbkPopTransactionId}")
-        }
+        ApmOperationState.PROVEN ->
+            "Merkle path has been verified"
+        ApmOperationState.KEYSTONE_OF_PROOF ->
+            "${context.vbkTokenName} Keystone of Proof: ${operation.keystoneOfProof?.hash}"
+        ApmOperationState.CONTEXT ->
+            "Retrieved ${operation.publicationData?.size} VTBs"
+        ApmOperationState.SUBMITTED_POP_DATA ->
+            "VTBs submitted to ${operation.chain.name}! ${operation.chain.name} PoP TxId: ${operation.popTxId}"
+        ApmOperationState.POP_TX_CONFIRMED ->
+            "PoP Tx confirmed in ${operation.chain.name} block ${operation.popTxBlockHash}"
         ApmOperationState.PAYOUT_DETECTED -> {
-            listOf("Payout detected in ${operation.chain.name} block ${operation.payoutBlockHash}! Amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}")
+            operation.miningInstruction?.let { miningInstruction ->
+                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
+                val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
+                "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address"
+            } ?: "Payout detected in ${operation.chain.name}"
         }
-        else -> listOf("FAILED")
+        else ->
+            ""
     }
 
-    private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = when (this) {
-        ApmOperationState.CONFIRMED -> {
-            listOf("Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block")
-        }
-        ApmOperationState.KEYSTONE_OF_PROOF -> {
-            listOf("Waiting for next ${context.vbkTokenName} keystone")
-        }
-        ApmOperationState.CONTEXT -> {
-            listOf("Waiting for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}")
-        }
-        ApmOperationState.SUBMITTED_POP_DATA -> {
-            listOf("Submitting PoP Data to ${operation.chain.name}")
-        }
+    private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = operation.failureReason ?: when (this) {
+        ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
+            "Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block"
+        ApmOperationState.KEYSTONE_OF_PROOF ->
+            "Waiting for the next ${context.vbkTokenName} keystone"
+        ApmOperationState.CONTEXT ->
+            "Waiting for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}"
+        ApmOperationState.SUBMITTED_POP_DATA ->
+            "Submitting PoP Data to ${operation.chain.name}"
+        ApmOperationState.POP_TX_CONFIRMED ->
+            "Waiting for the ${operation.chain.name} PoP Tx ${operation.popTxId} to be confirmed"
         ApmOperationState.PAYOUT_DETECTED -> {
-            val payoutBlockHeight = (operation.miningInstruction?.endorsedBlockHeight ?: 0) + operation.chain.getPayoutInterval()
-            listOf("Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address ${operation.miningInstruction?.publicationData?.payoutInfo}")
+            operation.miningInstruction?.let { miningInstruction ->
+                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
+                val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
+                "Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
+            } ?: "Waiting for reward to be paid"
         }
-        else -> listOf("")
+        else ->
+            ""
+    }
+
+    private fun MiningOperationState.getPendingHint(operation: ApmOperation) = if (!operation.isFailed()) {
+        when (this) {
+            ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
+                "Will wait for ${context.vbkTokenName} endorsement transaction to appear in a block"
+            ApmOperationState.KEYSTONE_OF_PROOF ->
+                "Will wait for the next ${context.vbkTokenName} keystone after the endorsement transaction's block"
+            ApmOperationState.CONTEXT ->
+                "Will wait for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}"
+            ApmOperationState.SUBMITTED_POP_DATA ->
+                "Will submit PoP Data to ${operation.chain.name}"
+            ApmOperationState.POP_TX_CONFIRMED ->
+                "Will wait for the ${operation.chain.name} PoP Tx ${operation.popTxId} to be confirmed"
+            ApmOperationState.PAYOUT_DETECTED -> {
+                operation.miningInstruction?.let { miningInstruction ->
+                    val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
+                    val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
+                    "Will wait for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
+                } ?: "Will wait for reward to be paid"
+            }
+            else ->
+                ""
+        }
+    } else {
+        ""
     }
 
     data class OperationStage (
-        val operationState: MiningOperationState,
-        val status: OperationStatus,
-        val extraInformation: List<String>
+        val status: String,
+        val taskName: String,
+        val extraInformation: String
     )
 
     enum class OperationStatus {

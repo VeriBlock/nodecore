@@ -29,6 +29,7 @@ fun CommandFactory.walletCommands(
         description = "Gets the currently loaded VeriBlock address"
     ) {
         val address = miner.getAddress()
+        printInfo("${context.vbkTokenName} address")
         printInfo(address)
 
         success()
@@ -55,8 +56,8 @@ fun CommandFactory.walletCommands(
         form = "withdrawvbktoaddress",
         description = "Sends a VBK amount to a given address",
         parameters = listOf(
-            CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true),
-            CommandParameter(name = "destinationAddress", mapper = CommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true)
+            CommandParameter(name = "destinationAddress", mapper = CommandParameterMappers.STANDARD_OR_MULTISIG_ADDRESS, required = true),
+            CommandParameter(name = "amount", mapper = CommandParameterMappers.STRING, required = true)
         )
     ) {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))

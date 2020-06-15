@@ -9,6 +9,7 @@ import kotlinx.coroutines.yield
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.MiningOperationState
+import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
 import java.time.Duration
@@ -31,8 +32,8 @@ abstract class TaskService<MO : MiningOperation> {
         } catch (e: OperationException) {
             operation.fail(e.message)
         } catch (t: Throwable) {
-            logger.debug(t) { t.message }
-            operation.fail(t.message ?: t.toString())
+            logger.debug(operation, t, t.toString())
+            operation.fail(t.message ?: "An unexpected error has occurred. Please check the logs for further details")
         }
     }
 
@@ -49,7 +50,10 @@ abstract class TaskService<MO : MiningOperation> {
             return
         }
 
-        val timer = Metrics.getOperationStateTimerByState(targetState.previousState!!)
+        val timer = Metrics.getOperationStateTimerByState(
+            targetState.previousState
+                ?: error("Trying to create metrics for target state $targetState!")
+        )
 
         var success = false
         var attempts = 1
