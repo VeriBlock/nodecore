@@ -10,6 +10,7 @@ package org.veriblock.alt.plugins.bitcoin
 
 import io.kotlintest.shouldBe
 import org.junit.Test
+import org.veriblock.core.utilities.SegwitAddressUtility
 import org.veriblock.core.utilities.extensions.toHex
 
 /**

@@ -17,6 +17,7 @@ import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.crypto.Crypto
+import org.veriblock.core.utilities.SegwitAddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
