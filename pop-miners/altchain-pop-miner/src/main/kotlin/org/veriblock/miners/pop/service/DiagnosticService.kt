@@ -3,6 +3,8 @@ package org.veriblock.miners.pop.service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.DiagnosticUtility
+import org.veriblock.core.utilities.SegwitAddressUtility
+import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.util.formatCoinAmount
@@ -62,12 +64,34 @@ class DiagnosticService(
         val configuredPlugins = pluginService.getConfiguredPlugins().filter { it.key != "test" }
         if (configuredPlugins.isNotEmpty()) {
             configuredPlugins.forEach {
-                val loadedPayoutAddress = plugins[it.key]?.config?.payoutAddress ?: null
-                val configuredPayoutAddress = it.value.payoutAddress
-                if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress != loadedPayoutAddress) {
-                    information.add("FAIL - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is not valid.")
+                val configuredPayoutAddress = it.value.payoutAddress ?: ""
+                val isValidAddress = if (configuredPayoutAddress.isHex()) {
+                    true
                 } else {
-                    information.add("SUCCESS - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is valid.")
+                    try {
+                        SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(configuredPayoutAddress)
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+                if (configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || !isValidAddress) {
+                    information.add("FAIL - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is not valid")
+                } else {
+                    information.add("SUCCESS - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is valid")
+                }
+
+                // Check the auto mine rounds
+                val configuredAutoMineRounds = it.value.autoMineRounds
+                val min = configuredAutoMineRounds.min() ?: 0
+                val max = configuredAutoMineRounds.max() ?: 0
+                if (configuredAutoMineRounds.isNotEmpty() && (min < 1 || max > 4)) {
+                    val invalidMineRounds = configuredAutoMineRounds.filter { mineRound ->
+                        mineRound < 1 || mineRound > 4
+                    }
+                    information.add("FAIL - ${it.value.name} configuration has invalid value for autoMineRounds. '[${invalidMineRounds.joinToString(",")}]' is not valid, the rounds should be between 1 and 4")
+                } else {
+                    information.add("SUCCESS - ${it.value.name} configuration for autoMineRounds is valid")
                 }
             }
         } else {
