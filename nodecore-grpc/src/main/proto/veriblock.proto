@@ -1561,6 +1561,23 @@ message AbandonTransactionReply {
     repeated bytes txids_not_abandoned = 4;
 }
 
+message RebroadcastAddressTransactionsRequest {
+    repeated AddressIndexPair addresses = 1;
+}
+message RebroadcastTransactionRequest {
+    oneof transactions_to_rebroadcast {
+        TransactionSet txids = 1;
+        RebroadcastAddressTransactionsRequest addresses = 2;
+    }
+}
+
+message RebroadcastTransactionReply {
+    bool success = 1;
+    repeated Result results = 2;
+    repeated TransactionUnion rebroadcast_transactions = 3;
+    repeated bytes txids_not_rebroadcast = 4;
+}
+
 service Admin {
     rpc GetPop(GetPopRequest) returns (GetPopReply) {}
 
@@ -1701,4 +1718,6 @@ service Admin {
     rpc GetDebugVTBs(GetDebugVTBsRequest) returns (GetDebugVTBsReply) {}
 
     rpc AbandonTransaction(AbandonTransactionRequest) returns (AbandonTransactionReply) {}
+
+    rpc RebroadcastTransaction(RebroadcastTransactionRequest) returns (RebroadcastTransactionReply) {}
 }
