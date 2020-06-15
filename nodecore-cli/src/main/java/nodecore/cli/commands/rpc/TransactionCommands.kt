@@ -8,12 +8,7 @@ import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
-import nodecore.cli.serialization.AbandonTransactionFromTxIDInfo
-import nodecore.cli.serialization.AbandonTransactionsFromAddressInfo
-import nodecore.cli.serialization.MakeUnsignedMultisigTxPayload
-import nodecore.cli.serialization.SendCoinsPayload
-import nodecore.cli.serialization.TransactionInfo
-import nodecore.cli.serialization.TransactionReferencesPayload
+import nodecore.cli.serialization.*
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.shell.CommandFactory
@@ -43,6 +38,26 @@ fun CommandFactory.transactionCommands() {
     }
 
     rpcCommand(
+            name = "Rebroadcast Transaction From TxID",
+            form = "rebroadcasttransactionfromtxid",
+            description = "Rebroadcasts the specified pending transaction and all dependent transactions",
+            parameters = listOf(
+                    CommandParameter(name = "txId", mapper = CommandParameterMappers.STRING, required = true)
+            )
+    ) {
+        val txid: String = getParameter("txId")
+        val request = VeriBlockMessages.RebroadcastTransactionRequest.newBuilder()
+                .setTxids(VeriBlockMessages.TransactionSet.newBuilder()
+                        .addTxids(ByteString.copyFrom(Utility.hexToBytes(txid)))
+                ).build()
+        val result = cliShell.adminService.rebroadcastTransactionRequest(request)
+
+        prepareResult(result.success, result.resultsList) {
+            RebroadcastTransactionFromTxIDInfo(result)
+        }
+    }
+
+    rpcCommand(
         name = "Abandon Transactions From Address",
         form = "abandontransactionsfromaddress",
         description = "Abandons all pending transactions from a particular source address (optionally above a particular signature index), and all dependent transactions",
@@ -66,6 +81,33 @@ fun CommandFactory.transactionCommands() {
 
         prepareResult(result.success, result.resultsList) {
             AbandonTransactionsFromAddressInfo(result)
+        }
+    }
+
+    rpcCommand(
+            name = "Rebroadcast Transactions From Address",
+            form = "rebroadcasttransactionsfromaddress",
+            description = "Rebroadcasts all pending transactions from a particular source address (optionally above a particular signature index), and all dependent transactions",
+            parameters = listOf(
+                    CommandParameter(name = "address", mapper = CommandParameterMappers.STRING, required = true),
+                    CommandParameter(name = "index", mapper = CommandParameterMappers.LONG, required = false)
+            )
+    ) {
+        val address: String = getParameter("address")
+        val index: Long = getParameter("index") ?: 0
+        val request = VeriBlockMessages.RebroadcastTransactionRequest.newBuilder()
+                .setAddresses(
+                        VeriBlockMessages.RebroadcastAddressTransactionsRequest.newBuilder()
+                                .addAddresses(
+                                        VeriBlockMessages.AddressIndexPair.newBuilder()
+                                                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
+                                                .setStartingSignatureIndex(index)))
+                .build()
+
+        val result = cliShell.adminService.rebroadcastTransactionRequest(request)
+
+        prepareResult(result.success, result.resultsList) {
+            RebroadcastTransactionsFromAddressInfo(result)
         }
     }
 
