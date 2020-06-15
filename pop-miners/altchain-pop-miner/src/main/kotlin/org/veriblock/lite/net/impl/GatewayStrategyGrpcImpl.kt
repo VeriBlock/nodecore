@@ -49,7 +49,7 @@ class GatewayStrategyGrpcImpl(
             .ping(pingRequest)
     }
 
-    override fun getNodeCoreSyncStatus(getStateInfoRequest: VeriBlockMessages.GetStateInfoRequest): VeriBlockMessages.GetStateInfoReply {
+    override fun getNodeCoreStateInfo(getStateInfoRequest: VeriBlockMessages.GetStateInfoRequest): VeriBlockMessages.GetStateInfoReply {
         return blockingStub
             .withDeadlineAfter(5L, TimeUnit.SECONDS)
             .getStateInfo(getStateInfoRequest)
