@@ -23,6 +23,12 @@ data class MineRequest(
     val height: Int? = null
 )
 
+@Request("Configuration change request")
+class SetConfigRequest(
+    val key: String?,
+    val value: String?
+)
+
 @Response("List of operations")
 data class OperationSummaryListResponse(
     val operations: List<OperationSummaryResponse>
