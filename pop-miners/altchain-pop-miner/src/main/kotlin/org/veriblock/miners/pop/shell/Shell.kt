@@ -13,6 +13,7 @@ import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.DiagnosticService
+import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.shell.commands.configCommands
 import org.veriblock.miners.pop.shell.commands.diagnosticCommands
 import org.veriblock.miners.pop.shell.commands.miningCommands
@@ -23,15 +24,16 @@ import org.veriblock.shell.CommandFactory
 
 fun CommandFactory.configure(
     configuration: Configuration,
+    minerConfig: MinerConfig,
     context: Context,
-    miner: MinerService,
+    minerService: MinerService,
     pluginService: PluginService,
     diagnosticService: DiagnosticService,
     apmOperationExplainer: ApmOperationExplainer
 ) {
     standardCommands()
     diagnosticCommands(diagnosticService)
-    configCommands(configuration)
-    miningCommands(miner, pluginService, apmOperationExplainer)
-    walletCommands(context, miner)
+    configCommands(configuration, minerConfig, pluginService)
+    miningCommands(minerService, pluginService, apmOperationExplainer)
+    walletCommands(context, minerService)
 }

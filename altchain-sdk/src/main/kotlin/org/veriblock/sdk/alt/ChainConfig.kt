@@ -10,8 +10,10 @@ abstract class ChainConfig {
     abstract val spFinalityDelay: Int
     abstract val payoutAddress: String?
     abstract val payoutInterval: Int
-    abstract val blockRoundIndices: IntArray
-    open val autoMineRounds: List<Int> = emptyList()
+    abstract val blockRoundIndices: List<Int>
+    open val autoMineRounds: MutableSet<Int> = HashSet()
+
+    val availableRoundIndices: Set<Int> get() = blockRoundIndices.distinct().toSet()
 
     fun shouldAutoMine(): Boolean {
         return autoMineRounds.isNotEmpty()
@@ -30,7 +32,7 @@ abstract class ChainConfig {
         require(blockRoundIndices.size == keystonePeriod) {
             "You must specify a round index for each block along the keystone period! ($keystonePeriod)"
         }
-        val roundIndices = blockRoundIndices.distinct()
+        val roundIndices = availableRoundIndices
         for (enabledRound in autoMineRounds) {
             require(enabledRound in roundIndices) {
                 "Round $enabledRound is not defined in the chain's block round indices!"

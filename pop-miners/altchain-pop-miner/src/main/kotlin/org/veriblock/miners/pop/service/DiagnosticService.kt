@@ -11,8 +11,8 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.DiagnosticInformation
 
 class DiagnosticService(
-    private val config: MinerConfig,
     private val context: Context,
+    private val minerConfig: MinerConfig,
     private val minerService: MinerService,
     private val pluginService: PluginService,
     private val nodeCoreLiteKit: NodeCoreLiteKit
@@ -62,7 +62,7 @@ class DiagnosticService(
         val configuredPlugins = pluginService.getConfiguredPlugins().filter { it.key != "test" }
         if (configuredPlugins.isNotEmpty()) {
             configuredPlugins.forEach {
-                val loadedPayoutAddress = plugins[it.key]?.config?.payoutAddress ?: null
+                val loadedPayoutAddress = plugins[it.key]?.config?.payoutAddress
                 val configuredPayoutAddress = it.value.payoutAddress
                 if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress != loadedPayoutAddress) {
                     information.add("FAIL - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is not valid.")
@@ -78,10 +78,10 @@ class DiagnosticService(
         try {
             val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
             if (nodeCoreLiteKit.network.isHealthy()) {
-                if (currentBalance.atomicUnits > config.maxFee) {
+                if (currentBalance.atomicUnits > minerConfig.feePerByte) {
                     information.add("SUCCESS - The ${context.vbkTokenName} PoP wallet contains sufficient funds, current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                 } else {
-                    information.add("FAIL - The ${context.vbkTokenName} PoP wallet does not contain sufficient funds: current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}, minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more. See: https://wiki.veriblock.org/index.php/Get_VBK")
+                    information.add("FAIL - The ${context.vbkTokenName} PoP wallet does not contain sufficient funds: current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}, minimum required: ${minerConfig.maxFee.formatCoinAmount()}, need ${(minerConfig.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more. See: https://wiki.veriblock.org/index.php/Get_VBK")
                 }
             } else {
                 information.add("FAIL - Unable to determine the ${context.vbkTokenName} dPoP balance.")

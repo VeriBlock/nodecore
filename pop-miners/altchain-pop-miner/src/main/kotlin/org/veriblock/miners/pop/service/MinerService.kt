@@ -12,8 +12,8 @@ import org.veriblock.lite.core.Balance
 import org.veriblock.miners.pop.core.ApmOperation
 
 class MinerConfig(
-    val feePerByte: Long = 1_000,
-    val maxFee: Long = 10_000_000,
+    var feePerByte: Long = 1_000,
+    var maxFee: Long = 10_000_000,
     val mock: Boolean = false
 )
 

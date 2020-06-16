@@ -12,7 +12,7 @@ class TestConfig(
     override val neededConfirmations: Int = 20,
     override val spFinalityDelay: Int = 32,
     override val payoutInterval: Int = 100,
-    override val blockRoundIndices: IntArray = (1..keystonePeriod).map { 1 }.toIntArray(),
+    override val blockRoundIndices: List<Int> = (1..keystonePeriod).map { 1 }.toList(),
     val autoMinePeriod: Int? = null
 ) : ChainConfig() {
     override val auth: HttpAuthConfig? = null
@@ -24,7 +24,7 @@ class TestConfig(
         configuration.neededConfirmations ?: 10,
         configuration.spFinalityDelay ?: 32,
         configuration.payoutInterval ?: 100,
-        configuration.blockRoundIndices ?: intArrayOf(4, 1, 2, 1, 2),
+        configuration.blockRoundIndices ?: listOf(4, 1, 2, 1, 2),
         configuration.extraConfig["autoMinePeriod"]?.toIntOrNull()
     )
 }

@@ -12,8 +12,8 @@ class BitcoinConfig(
     override val neededConfirmations: Int = 10,
     override val spFinalityDelay: Int = 100,
     override val payoutInterval: Int = 500,
-    override val blockRoundIndices: IntArray = intArrayOf(4, 2, 3, 1, 2),
-    override val autoMineRounds: List<Int> = emptyList(),
+    override val blockRoundIndices: List<Int> = listOf(4, 2, 3, 1, 2),
+    override val autoMineRounds: MutableSet<Int> = HashSet(),
     val requestLogsPath: String? = null,
     val daemonConnectionTimeout: Int = 5000
 ) : ChainConfig() {
@@ -25,8 +25,8 @@ class BitcoinConfig(
         configuration.neededConfirmations ?: 10,
         configuration.spFinalityDelay ?: 100,
         configuration.payoutInterval ?: 500,
-        configuration.blockRoundIndices ?: intArrayOf(4, 2, 3, 1, 2),
-        configuration.autoMineRounds,
+        configuration.blockRoundIndices ?: listOf(4, 2, 3, 1, 2),
+        configuration.autoMineRounds.toMutableSet(),
         configuration.extraConfig["requestLogsPath"],
         configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 5000
     )
