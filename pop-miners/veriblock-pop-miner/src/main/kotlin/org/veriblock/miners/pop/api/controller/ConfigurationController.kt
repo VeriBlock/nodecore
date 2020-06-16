@@ -43,9 +43,8 @@ class ConfigurationController(
             val configValues = configuration.list()
             respond(configValues)
         }
-
         put<ConfigPath, Unit, SetConfigRequest>(
-            info("Set one configuration value")
+            info("Sets a new value for a config property (needs restart)")
         ) { _, request ->
             if (request.key == null) {
                 throw BadRequestException("'key' must be set")
@@ -61,6 +60,8 @@ class ConfigurationController(
             configuration.saveOverriddenProperties()
             respond(Unit)
         }
+
+
         get<AutominePath, AutoMineConfigDto>(
             info("Get the automine config")
         ) {

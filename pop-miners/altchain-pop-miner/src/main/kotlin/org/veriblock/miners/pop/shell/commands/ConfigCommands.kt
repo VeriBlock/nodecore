@@ -92,11 +92,11 @@ fun CommandFactory.configCommands(
     ) {
         val chainKey: String = getParameter("chain")
         val chain = pluginService[chainKey]
-            ?: throw CommandException("There is no plugin with the chain key $chainKey")
+            ?: throw CommandException("There is no SI chain with the key $chainKey")
         val round: Int = getParameter("round")
         val value: Boolean = getParameter("value")
         if (!chain.config.availableRoundIndices.contains(round)) {
-            throw CommandException("$round is not a valid round")
+            throw CommandException("Round $round is not defined in the chain's block round indices")
         }
         if (value) {
             chain.config.autoMineRounds.add(round)
