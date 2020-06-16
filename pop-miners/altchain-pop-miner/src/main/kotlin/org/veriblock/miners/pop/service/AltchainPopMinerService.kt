@@ -203,6 +203,9 @@ class AltchainPopMinerService(
             if (!context.networkParameters.name.replace("net", "").equals(blockChainInfo.networkVersion, true)) {
                 throw MineException("Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while the $chain daemon is at ${blockChainInfo.networkVersion}.")
             }
+            if (block != null && block < blockChainInfo.localBlockchainHeight - chain.getPayoutInterval() * 0.8) {
+                throw MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network.")
+            }
         }
 
         val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
