@@ -3,8 +3,6 @@ package org.veriblock.miners.pop.service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.DiagnosticUtility
-import org.veriblock.core.utilities.SegwitAddressUtility
-import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.util.formatCoinAmount
@@ -64,21 +62,11 @@ class DiagnosticService(
         val configuredPlugins = pluginService.getConfiguredPlugins().filter { it.key != "test" }
         if (configuredPlugins.isNotEmpty()) {
             configuredPlugins.forEach {
-                val configuredPayoutAddress = it.value.payoutAddress ?: ""
-                val isValidAddress = if (configuredPayoutAddress.isHex()) {
-                    true
+                val configuredPayoutAddress = it.value.payoutAddress
+                if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress.isEmpty()) {
+                    information.add("FAIL - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is not configured")
                 } else {
-                    try {
-                        SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(configuredPayoutAddress)
-                        true
-                    } catch (e: Exception) {
-                        false
-                    }
-                }
-                if (configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || !isValidAddress) {
-                    information.add("FAIL - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is not valid")
-                } else {
-                    information.add("SUCCESS - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is valid")
+                    information.add("SUCCESS - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is configured")
                 }
 
                 // Check the auto mine rounds
