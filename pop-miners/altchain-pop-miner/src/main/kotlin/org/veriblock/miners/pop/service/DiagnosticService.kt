@@ -24,11 +24,11 @@ class DiagnosticService(
         // Check the NodeCore status
         if (nodeCoreLiteKit.network.isHealthy()) {
             information.add("SUCCESS - NodeCore connection: Connected")
-            val nodeCoreSyncStatus = nodeCoreLiteKit.network.getNodeCoreSyncStatus()
+            val nodeCoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
             if (nodeCoreLiteKit.network.isSynchronized()) {
-                information.add("SUCCESS - NodeCore synchronization status: Synchronized (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
+                information.add("SUCCESS - NodeCore synchronization status: Synchronized (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})")
             } else {
-                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreSyncStatus.blockDifference} blocks left (LocalHeight=${nodeCoreSyncStatus.localBlockchainHeight} NetworkHeight=${nodeCoreSyncStatus.networkHeight})")
+                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})")
             }
         } else {
             information.add("FAIL - NodeCore connection: Not connected")
@@ -42,7 +42,7 @@ class DiagnosticService(
                 plugins.forEach {
                     if (it.value.isConnected()) {
                         information.add("SUCCESS - ${it.value.name} connection: Connected")
-                        val chainSyncStatus = it.value.getSynchronizedStatus()
+                        val chainSyncStatus = it.value.getBlockChainInfo()
                         if (chainSyncStatus.isSynchronized) {
                             information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight} InitialBlockDownload=${chainSyncStatus.initialblockdownload})")
                         } else {

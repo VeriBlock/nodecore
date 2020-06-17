@@ -27,7 +27,6 @@ dependencies {
     compile("com.j256.ormlite:ormlite-jdbc:5.1")
     compile("org.xerial:sqlite-jdbc:$sqliteVersion")
     compile("org.bitcoinj:bitcoinj-core:0.14.7")
-    compile("com.sparkjava:spark-core:2.7.2")
     implementation("ch.qos.logback:logback-classic:1.2.3")
     compile("com.google.code.gson:gson:2.8.2")
 

@@ -1,24 +1,17 @@
 package org.veriblock.spv.standalone.commands
 
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.protobuf.ByteString
-import com.google.protobuf.Message
-import com.google.protobuf.util.JsonFormat
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.jline.utils.AttributedStyle
-import org.veriblock.core.InvalidAddressException
-import org.veriblock.core.utilities.AddressUtility
+import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.shell.CommandContext
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
-import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.failure
+import org.veriblock.shell.core.success
 import veriblock.SpvContext
 import veriblock.model.Output
 import veriblock.model.asLightAddress
@@ -36,13 +29,13 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("getnewaddress") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
-        if (address != null) {
-            request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
-        }
-        val result = context.adminApiService.getBalance(request.build())
+        val addresses = address?.let {
+            listOf(address.asLightAddress())
+        } ?: emptyList()
+        val result = context.adminApiService.getBalance(addresses)
 
-        prepareResult(result.success, result.resultsList, result)
+        displayResult(result)
+        success()
     }
 
     command(
@@ -53,6 +46,7 @@ fun CommandFactory.spvCommands(
     ) {
         val result = context.adminApiService.getStateInfo()
         displayResult(result)
+        success()
     }
 
     command(
@@ -76,12 +70,14 @@ fun CommandFactory.spvCommands(
             outputs = listOf(
                 Output(
                     destinationAddress.asLightAddress(),
-                    Coin.valueOf(atomicAmount)
+                    atomicAmount.asCoin()
                 )
             )
         )
 
-        displayResult(result)
+        printInfo("Transaction ids:")
+        displayResult(result.map { it.toString() })
+        success()
     }
 
     command(
@@ -90,10 +86,8 @@ fun CommandFactory.spvCommands(
         description = "Disables the temporary unlock on the NodeCore wallet",
         suggestedCommands = { listOf("unlockwallet") }
     ) {
-        val request = VeriBlockMessages.LockWalletRequest.newBuilder().build()
-        val result = context.adminApiService.lockWallet(request)
-
-        prepareResult(result.success, result.resultsList, result)
+        context.adminApiService.lockWallet()
+        success()
     }
 
     command(
@@ -103,11 +97,8 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val request = VeriBlockMessages.UnlockWalletRequest.newBuilder()
-            .setPassphrase(passphrase).build()
-        val result = context.adminApiService.unlockWallet(request)
-
-        prepareResult(result.success, result.resultsList, result)
+        context.adminApiService.unlockWallet(passphrase)
+        success()
     }
 
     command(
@@ -117,12 +108,9 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("encryptwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
-            .setPassphrase(passphrase)
-            .build()
-        val result = context.adminApiService.decryptWallet(request)
-
-        prepareResult(result.success, result.resultsList, result)
+        context.adminApiService.decryptWallet(passphrase)
+        printInfo("Wallet has been decrypted")
+        success()
     }
 
     command(
@@ -132,18 +120,16 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("decryptwallet", "unlockwallet", "lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        if (passphrase.isNullOrEmpty()) {
+        if (passphrase.isEmpty()) {
             failure("V060", "Invalid Passphrase", "Passphrase cannot be empty")
         } else {
             val confirmation = shell.passwordPrompt("Confirm passphrase: ")
             if (passphrase == confirmation) {
-                val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
-                    .setPassphrase(passphrase).build()
-                val result = context.adminApiService.encryptWallet(request)
-
-                prepareResult(result.success, result.resultsList, result)
+                context.adminApiService.encryptWallet(passphrase)
+                printInfo("Wallet has been encrypted with supplied passphrase")
+                success()
             } else {
-                failure("V060", "Invalid Passphrase", "Passphrase and confirmation do not match")
+                throw WalletException("Passphrase and confirmation do not match")
             }
         }
     }
@@ -155,40 +141,28 @@ fun CommandFactory.spvCommands(
         parameters = listOf(
             CommandParameter(name = "sourceLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
-        suggestedCommands = { listOf("importprivatekey", "backupwallet") }
+        suggestedCommands = { listOf("backupwallet") }
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
         val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
-        val request = VeriBlockMessages.ImportWalletRequest.newBuilder()
-            .setSourceLocation(ByteString.copyFrom(sourceLocation.toByteArray()))
-
-        if (!passphrase.isNullOrEmpty()) {
-            request.passphrase = passphrase
-        }
-
-        val result = context.adminApiService.importWallet(request.build())
-
-        prepareResult(result.success, result.resultsList, result)
+        context.adminApiService.importWallet(sourceLocation, passphrase)
+        success()
     }
 
     command(
         name = "Backup Wallet",
         form = "backupwallet",
-        description = "Backup the wallet of a NodeCore instance",
+        description = "Backup the SPV wallet",
         parameters = listOf(
             CommandParameter(name = "targetLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
-        suggestedCommands = { listOf("importwallet", "importprivatekey") }
+        suggestedCommands = { listOf("importwallet") }
     ) {
         val targetLocation: String = getParameter("targetLocation")
-        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
-            .setTargetLocation(ByteString.copyFrom(targetLocation.toByteArray()))
-            .build()
-        val result = context.adminApiService.backupWallet(request)
-
-        printInfo("Note: The backed-up wallet file is saved on the computer where NodeCore is running.")
+        context.adminApiService.backupWallet(targetLocation)
+        printInfo("Note: The backed-up wallet file is saved on the computer where SPV is running.")
         printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
-        prepareResult(result.success, result.resultsList, result)
+        success()
     }
 
     command(
@@ -200,68 +174,22 @@ fun CommandFactory.spvCommands(
         ),
         suggestedCommands = { listOf("backupwallet", "getbalance") }
     ) {
-        val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
+        val count = getOptionalParameter<Int>("count")?.coerceAtLeast(1) ?: 1
 
-        val result = context.adminApiService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
-            .setCount(count)
-            .build()
-        )
-        prepareResult(result.success, result.resultsList, result)
-    }
-
-    command(
-        name = "Get New Address",
-        form = "getnewaddress",
-        description = "Gets {count} new address from the wallet (default: 1)",
-        parameters = listOf(
-            CommandParameter(name = "count", mapper = CommandParameterMappers.INTEGER, required = false)
-        ),
-        suggestedCommands = { listOf("backupwallet", "getbalance") }
-    ) {
-        val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
-
-        val result = context.adminApiService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
-            .setCount(count)
-            .build()
-        )
-        prepareResult(result.success, result.resultsList, result)
+        val result = context.adminApiService.getNewAddress(count)
+        printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
+        displayResult(result.map { it.hash })
+        success()
     }
 }
 
-fun CommandContext.prepareResult(
-    success: Boolean,
-    results: List<VeriBlockMessages.Result>,
-    payload: Message
-): Result {
-    return if (!success) {
-        failure(results)
-    } else {
-        shell.printStyled(
-            JsonFormat.printer().print(payload) + "\n",
-            AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
-        )
-        success(results)
-    }
-}
+private val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
 
 fun CommandContext.displayResult(
     result: Any
-): Result {
+) {
     shell.printStyled(
-        Gson().toJson(result) + "\n",
+        prettyPrintGson.toJson(result) + "\n",
         AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
     )
-    return org.veriblock.shell.core.success()
-}
-
-fun failure(results: List<VeriBlockMessages.Result>) = failure {
-    for (r in results) {
-        addMessage(r.code, r.message, r.details, r.error)
-    }
-}
-
-fun success(results: List<VeriBlockMessages.Result>) = org.veriblock.shell.core.success {
-    for (r in results) {
-        addMessage(r.code, r.message, r.details, r.error)
-    }
 }

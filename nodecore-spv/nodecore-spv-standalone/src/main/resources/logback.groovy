@@ -54,6 +54,7 @@ appender("FILE-ERROR", FileAppender) {
 }
 
 logger("org.veriblock", toLevel(logLevel, DEBUG))
+logger("veriblock", toLevel(logLevel, DEBUG))
 
 logger("shell-printing", INFO, ["FILE"], false)
 logger("Exposed", ERROR)

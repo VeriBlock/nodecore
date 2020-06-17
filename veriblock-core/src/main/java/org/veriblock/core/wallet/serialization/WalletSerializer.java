@@ -7,7 +7,7 @@
 
 package org.veriblock.core.wallet.serialization;
 
-import org.veriblock.core.wallet.WalletUnreadableException;
+import org.veriblock.core.WalletUnreadableException;
 
 import java.io.IOException;
 import java.io.InputStream;

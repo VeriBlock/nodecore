@@ -9,9 +9,16 @@ package org.veriblock.core.wallet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.WalletException;
 import org.veriblock.core.wallet.serialization.EncryptedInfo;
 
-import javax.crypto.*;
+import javax.crypto.AEADBadTagException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -21,7 +28,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class EncryptionManager {
     private static final Logger logger = LoggerFactory.getLogger(EncryptionManager.class);
@@ -79,7 +85,7 @@ public class EncryptionManager {
 
             return cipher.doFinal(encrypted.cipherText);
         } catch (AEADBadTagException e) {
-            throw new WalletLockedException("Invalid password supplied");
+            throw new WalletException("Invalid password supplied");
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

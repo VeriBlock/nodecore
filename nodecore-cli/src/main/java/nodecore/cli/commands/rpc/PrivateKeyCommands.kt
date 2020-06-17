@@ -3,6 +3,7 @@ package nodecore.cli.commands.rpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
@@ -48,7 +49,7 @@ fun CommandFactory.privateKeyCommands() {
     ) {
         val privateKeyHex: String = getParameter("privateKey")
         val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder()
-            .setPrivateKey(ByteStringUtility.hexToByteString(privateKeyHex))
+            .setPrivateKey(privateKeyHex.asHexByteString())
             .build()
         val result = cliShell.adminService.importPrivateKey(request)
 

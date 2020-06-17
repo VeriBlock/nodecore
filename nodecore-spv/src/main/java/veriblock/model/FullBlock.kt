@@ -8,16 +8,16 @@
 package veriblock.model
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 
 class FullBlock(
     height: Int,
     version: Short,
-    previousBlock: VBlakeHash?,
-    previousKeystone: VBlakeHash?,
-    secondPreviousKeystone: VBlakeHash?,
-    merkleRoot: Sha256Hash?,
+    previousBlock: VBlakeHash,
+    previousKeystone: VBlakeHash,
+    secondPreviousKeystone: VBlakeHash,
+    merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
     nonce: Int

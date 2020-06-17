@@ -344,4 +344,9 @@ public class AdminServiceClient implements AdminService {
     public VeriBlockMessages.AbandonTransactionReply abandonTransactionRequest(VeriBlockMessages.AbandonTransactionRequest request) {
         return blockingStub.abandonTransaction(request);
     }
+
+    @Override
+    public VeriBlockMessages.RebroadcastTransactionReply rebroadcastTransactionRequest(VeriBlockMessages.RebroadcastTransactionRequest request) {
+        return blockingStub.rebroadcastTransaction(request);
+    }
 }

@@ -6,6 +6,8 @@ import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.asCoin
+import org.veriblock.sdk.models.asCoinDecimal
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.Output
@@ -32,7 +34,7 @@ class TransactionServiceTest : TestCase() {
         val outputList = listOf(
             Output(
                 StandardAddress("V66n5xh5Mu8nnR1D3is3eRkp92ktL9"),
-                Coin.valueOf(450L * Coin.COIN_VALUE)
+                450.asCoinDecimal()
             )
         )
         val result = transactionService.createTransactionsByOutputList(

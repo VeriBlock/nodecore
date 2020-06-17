@@ -39,6 +39,7 @@ fun CommandFactory.standardCommands() {
     ) {
         val command: String? = getOptionalParameter("command")
         if (command == null) {
+            shell.printNormal("See wiki for more detail: https://wiki.veriblock.org/index.php/HowTo_run_SPV")
             shell.printNormal("Commands:")
             for (def in shell.getCommands()){
                 shell.printStyled("    $def", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))

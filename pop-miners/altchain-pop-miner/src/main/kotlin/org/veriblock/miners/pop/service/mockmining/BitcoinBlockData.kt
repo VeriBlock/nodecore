@@ -12,7 +12,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import java.util.ArrayList
 import kotlin.math.ln
 
-class BitcoinBlockData : ArrayList<ByteArray?>() {
+class BitcoinBlockData : ArrayList<ByteArray>() {
     val merkleRoot: Sha256Hash
         get() = calculateSubtreeHash(0, 0)
 

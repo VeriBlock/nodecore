@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.service
 
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.contracts.Balance
 import org.veriblock.miners.pop.core.ApmOperation
 
 class MinerConfig(

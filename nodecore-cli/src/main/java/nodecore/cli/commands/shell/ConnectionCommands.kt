@@ -6,7 +6,6 @@ import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
 import nodecore.cli.contracts.ProtocolEndpointType
-import nodecore.cli.models.ModeType
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -36,14 +35,12 @@ fun CommandFactory.connectionCommands() {
             }
         }
     ) {
-        val shell = cliShell
         val type = ProtocolEndpointType.RPC
         val peer: PeerEndpoint = getParameter("peer")
         val passwordParam: String? = getOptionalParameter("password")
         val endpoint = ProtocolEndpoint(peer.toString(), type, passwordParam)
 
         this.extraData["connect"] = endpoint
-        shell.modeType = ModeType.STANDARD
 
         success()
     }
@@ -53,9 +50,7 @@ fun CommandFactory.connectionCommands() {
         form = "disconnect",
         description = "Disconnect from the open P2P or RPC connection"
     ) {
-        val shell = cliShell
         this.extraData["disconnect"] = true
-        shell.modeType = ModeType.STANDARD
 
         success()
     }

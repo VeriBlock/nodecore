@@ -13,9 +13,11 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import veriblock.serialization.MessageSerializer.deserialize
 import veriblock.util.Threading
+import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.lang.Thread.sleep
 import java.net.Socket
 import java.net.SocketException
 import java.util.concurrent.BlockingQueue
@@ -119,15 +121,14 @@ class PeerSocketHandler(
                 logger.error("Error in output stream thread!", e)
                 break
             }
+            sleep(10)
         }
     }
 
-    fun runInput() {
+    private fun runInput() {
         while (isRunning()) {
             try {
-                val sizeBuffer = ByteArray(4)
-                inputStream.readFully(sizeBuffer)
-                val nextMessageSize = Utility.byteArrayToInt(sizeBuffer)
+                val nextMessageSize = inputStream.readInt()
                 val raw = ByteArray(nextMessageSize)
                 inputStream.readFully(raw)
                 val message = deserialize(raw)
@@ -144,6 +145,7 @@ class PeerSocketHandler(
                 logger.error("Socket error: ", e)
                 break
             }
+            sleep(10)
         }
     }
 }

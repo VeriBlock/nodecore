@@ -7,7 +7,6 @@
 
 package org.veriblock.core.bitcoinj;
 
-import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.TransactionEmbeddedDataUtility;
 import org.veriblock.core.utilities.Utility;

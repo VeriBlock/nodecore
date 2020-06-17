@@ -11,6 +11,7 @@ import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.SignMessagePayload
 import nodecore.cli.serialization.SignatureIndexPayload
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -47,7 +48,7 @@ fun CommandFactory.signatureCommands() {
         )
     ) {
         val address: String = getParameter("address")
-        val message: ByteArray = Utility.hexToBytes(getParameter<String>("message"))
+        val message: ByteArray = getParameter<String>("message").asHexBytes()
         val request = VeriBlockMessages.SignMessageRequest.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .setMessage(ByteString.copyFrom(message))

@@ -15,7 +15,7 @@ import org.veriblock.sdk.models.Constants;
 import org.veriblock.sdk.models.PublicationData;
 import org.veriblock.sdk.services.SerializeDeserializeService;
 import org.veriblock.sdk.util.StreamUtils;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,12 +51,12 @@ public class PublicationDataTests {
     @Test
     public void parseWhenInvalid() {    
         long identifier = 1;
-        byte[] header = Utils.fillBytes((byte) 0, Constants.MAX_HEADER_SIZE_PUBLICATION_DATA + 1);
-        byte[] payoutInfo = Utils.fillBytes((byte) 0, 1);
-        byte[] contextInfo = Utils.fillBytes((byte) 0, 1);
+        byte[] header = Utility.fillBytes((byte) 0, Constants.MAX_HEADER_SIZE_PUBLICATION_DATA + 1);
+        byte[] payoutInfo = Utility.fillBytes((byte) 0, 1);
+        byte[] contextInfo = Utility.fillBytes((byte) 0, 1);
         PublicationData data = new PublicationData(identifier, header, payoutInfo, contextInfo);
         
-        byte[] serialized = SerializeDeserializeService.serialize(data);
+        byte[] serialized = SerializeDeserializeService.INSTANCE.serialize(data);
         
         try {
             SerializeDeserializeService.parsePublicationData(serialized);
@@ -65,12 +65,12 @@ public class PublicationDataTests {
             Assert.assertTrue(e.getMessage().startsWith("Unexpected length"));
         }
         
-        header = Utils.fillBytes((byte) 0, 1);
-        payoutInfo = Utils.fillBytes((byte) 0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA + 1);
-        contextInfo = Utils.fillBytes((byte) 0, 1);
+        header = Utility.fillBytes((byte) 0, 1);
+        payoutInfo = Utility.fillBytes((byte) 0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA + 1);
+        contextInfo = Utility.fillBytes((byte) 0, 1);
         data = new PublicationData(identifier, header, payoutInfo, contextInfo);
         
-        serialized = SerializeDeserializeService.serialize(data);
+        serialized = SerializeDeserializeService.INSTANCE.serialize(data);
         
         try {
             SerializeDeserializeService.parsePublicationData(serialized);
@@ -79,12 +79,12 @@ public class PublicationDataTests {
             Assert.assertTrue(e.getMessage().startsWith("Unexpected length"));
         }
         
-        header = Utils.fillBytes((byte) 0, 1);
-        payoutInfo = Utils.fillBytes((byte) 0, 1);
-        contextInfo = Utils.fillBytes((byte) 0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA + 1);
+        header = Utility.fillBytes((byte) 0, 1);
+        payoutInfo = Utility.fillBytes((byte) 0, 1);
+        contextInfo = Utility.fillBytes((byte) 0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA + 1);
         data = new PublicationData(identifier, header, payoutInfo, contextInfo);
         
-        serialized = SerializeDeserializeService.serialize(data);
+        serialized = SerializeDeserializeService.INSTANCE.serialize(data);
         
         try {
             SerializeDeserializeService.parsePublicationData(serialized);

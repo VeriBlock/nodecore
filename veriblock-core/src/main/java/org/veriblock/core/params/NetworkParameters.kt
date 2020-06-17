@@ -8,12 +8,13 @@
 
 package org.veriblock.core.params
 
+import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH
 import org.veriblock.sdk.models.BitcoinBlock
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.services.SerializeDeserializeService
 import java.math.BigInteger
-import java.util.Base64
 
 class NetworkConfig(
     val network: String = "mainnet",
@@ -119,17 +120,25 @@ sealed class NetworkParametersTemplate {
 
 object MainNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "mainnet"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(900000000000L)
+    private val MINIMUM_POW_DIFFICULTY = 900_000_000_000L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10500
     override val p2pPort = 7500
 
     override val bootstrapDns = "seed.veriblock.org"
-    override val fileTag = null
-    override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
-        "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAp+Xyt+yUKRdntNZ7SjNoLVyYfgsGAOjUET2FTQ=="
-    ))
+    override val fileTag: String? = null
+    override val genesisBlock = VeriBlockBlock(
+        0,
+        2.toShort(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        Sha256Hash.wrap("A7E5F2B7EC94291767B4D67B4A33682D", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        1553497611,
+        BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1_000_000_000_000L)).toInt(),
+        289244493
+    )
     override val bitcoinOriginBlockHeight = 568690
     override val bitcoinOriginBlock = BitcoinBlock(
         545259520,
@@ -141,14 +150,14 @@ object MainNetParameters : NetworkParametersTemplate() {
     )
     override val protocolVersion: Int = 3
 
-    override val transactionPrefix = null
+    override val transactionPrefix: Byte? = null
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 }
 
 object TestNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "testnet"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000_000L)
+    private val MINIMUM_POW_DIFFICULTY = 100_000_000L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10501
@@ -156,9 +165,17 @@ object TestNetParameters : NetworkParametersTemplate() {
 
     override val bootstrapDns = "seedtestnet.veriblock.org"
     override val fileTag = "test"
-    override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
-        "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ=="
-    ))
+    override val genesisBlock = VeriBlockBlock(
+        0,
+        2.toShort(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        1570649416,
+        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        14304633
+    )
     override val bitcoinOriginBlockHeight = 1580892
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
@@ -177,17 +194,25 @@ object TestNetParameters : NetworkParametersTemplate() {
 
 object AlphaNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "alpha"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(9_999_872L)
+    private val MINIMUM_POW_DIFFICULTY = 9_999_872L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10502
     override val p2pPort = 7502
 
-    override val bootstrapDns = null
+    override val bootstrapDns: String? = null
     override val fileTag = "alpha"
-    override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
-        "AAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzyAl7A64qKMlSV/rWVALUFx5fAIEBfXhAw0E3w=="
-    ))
+    override val genesisBlock = VeriBlockBlock(
+        0,
+        1.toShort(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        Sha256Hash.wrap("CF2025EC0EB8A8A325495FEB59500B50", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        1551465474,
+        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        51184863
+    )
     override val bitcoinOriginBlockHeight = 1489475
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
@@ -206,16 +231,25 @@ object AlphaNetParameters : NetworkParametersTemplate() {
 
 object RegTestParameters : NetworkParametersTemplate() {
     const val NETWORK = "regtest"
+    private val MINIMUM_POW_DIFFICULTY: BigInteger = BigInteger.ONE
 
     override val name = NETWORK
     override val rpcPort = 10503
     override val p2pPort = 7503
 
-    override val bootstrapDns = null
+    override val bootstrapDns: String? = null
     override val fileTag = "regtest"
-    override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
-        "AAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzyAl7A64qKMlSV/rWVALUFx5fAIEBfXhAw0E3w=="
-    ))
+    override val genesisBlock = VeriBlockBlock(
+        0,
+        2.toShort(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        Sha256Hash.ZERO_HASH,
+        1577367966,
+        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        0
+    )
     override val bitcoinOriginBlockHeight = 1489475
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
@@ -228,17 +262,14 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val protocolVersion: Int = 3
 
     override val transactionPrefix = 0xBB.toByte()
-    override val minimumDifficulty = BigInteger.ONE
+    override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = true
 }
 
-@JvmField
 val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters.NETWORK))
-@JvmField
 val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
 @JvmField
 val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
-@JvmField
 val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
 
 fun getDefaultNetworkParameters(name: String) = when (name) {

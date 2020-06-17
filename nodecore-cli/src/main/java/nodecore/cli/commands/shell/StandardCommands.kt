@@ -5,7 +5,6 @@ import nodecore.cli.annotations.CommandServiceType
 import nodecore.cli.cliCommand
 import nodecore.cli.cliShell
 import nodecore.cli.contracts.ProtocolEndpointType
-import nodecore.cli.models.ModeType
 import org.jline.utils.AttributedStyle
 import org.veriblock.shell.Command
 import org.veriblock.shell.CommandFactory
@@ -46,50 +45,41 @@ fun CommandFactory.standardCommands() {
         val shell = cliShell
         val command: String? = getOptionalParameter("command")
         if (command == null) {
-            if(ModeType.STANDARD == shell.modeType) {
-                val categories = HashMap<CommandServiceType, MutableList<Command>>()
+            val categories = HashMap<CommandServiceType, MutableList<Command>>()
 
-                for (def in shell.getCommands()) {
-                    val extraData = checkNotNull(def.extraData) {
-                        "Command $def's extra data must not be null!"
-                    }
-                    val commandServiceType = CommandServiceType.valueOf(extraData)
-
-                    val requiresConnection = commandServiceType == CommandServiceType.RPC
-
-                    if (!isValidType(commandServiceType, shell.protocolType))
-                        continue
-
-                    if (requiresConnection && !shell.isConnected())
-                        continue
-
-                    val list = categories.getOrPut(commandServiceType) { ArrayList() }
-                    list.add(def)
-                    list.sortBy { it.form }
+            for (def in shell.getCommands()) {
+                val extraData = checkNotNull(def.extraData) {
+                    "Command $def's extra data must not be null!"
                 }
+                val commandServiceType = CommandServiceType.valueOf(extraData)
 
-                shell.printNormal("Commands:")
-                for ((category, list) in categories) {
-                    shell.printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
-                    for (def in list) {
-                        shell.printStyled("    ${def.form.split("|").first()}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
-                        shell.formatParameters(def.parameters)
-                        printInfo("")
-                    }
-                }
+                val requiresConnection = commandServiceType == CommandServiceType.RPC
 
-                shell.printNormal("")
-                shell.printNormal("    All RPC Commands support following selectors:")
-                shell.printNormal("        -o <filename>       Saves command output into a file")
-                shell.printNormal("        Example: getinfo -o abcde.json")
-            } else if(ModeType.SPV == shell.modeType){
-                shell.printNormal("Commands:")
-                shell.printNormal("")
-                for (command in shell.getCommandsSpv()){
-                    shell.printStyled("    $command", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                if (!isValidType(commandServiceType, shell.protocolType))
+                    continue
+
+                if (requiresConnection && !shell.isConnected())
+                    continue
+
+                val list = categories.getOrPut(commandServiceType) { ArrayList() }
+                list.add(def)
+                list.sortBy { it.form }
+            }
+
+            shell.printNormal("Commands:")
+            for ((category, list) in categories) {
+                shell.printStyled("\n ${category.name}: ", AttributedStyle.INVERSE.foreground(AttributedStyle.WHITE))
+                for (def in list) {
+                    shell.printStyled("    ${def.form.split("|").first()}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                    shell.formatParameters(def.parameters)
+                    printInfo("")
                 }
             }
 
+            shell.printNormal("")
+            shell.printNormal("    All RPC Commands support following selectors:")
+            shell.printNormal("        -o <filename>       Saves command output into a file")
+            shell.printNormal("        Example: getinfo -o abcde.json")
 
             success()
         } else {

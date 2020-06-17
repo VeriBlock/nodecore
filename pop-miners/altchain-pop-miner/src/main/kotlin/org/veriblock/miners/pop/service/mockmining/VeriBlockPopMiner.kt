@@ -12,10 +12,10 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPoPTransaction
+import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.nio.ByteBuffer
 import java.security.InvalidKeyException
 import java.security.KeyPair
@@ -44,12 +44,12 @@ class VeriBlockPopMiner(
     }
 
     @Throws(SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
-    private fun signTransaction(tx: VeriBlockPoPTransaction, privateKey: PrivateKey): VeriBlockPoPTransaction {
-        val signature = Utils.signMessageWithPrivateKey(
+    private fun signTransaction(tx: VeriBlockPopTransaction, privateKey: PrivateKey): VeriBlockPopTransaction {
+        val signature = Utility.signMessageWithPrivateKey(
             SerializeDeserializeService.getId(tx).bytes,
             privateKey
         )
-        return VeriBlockPoPTransaction(
+        return VeriBlockPopTransaction(
             tx.address,
             tx.publishedBlock,
             tx.bitcoinTransaction,
@@ -62,13 +62,11 @@ class VeriBlockPopMiner(
         )
     }
 
-    @Throws(
-        SQLException::class, SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class
-    )
+    @Throws(SQLException::class, SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
     fun mine(
         blockToEndorse: VeriBlockBlock,
-        lastKnownVBKBlock: VeriBlockBlock?,
-        lastKnownBTCBlock: BitcoinBlock?,
+        lastKnownVBKBlock: VeriBlockBlock,
+        lastKnownBTCBlock: BitcoinBlock,
         key: KeyPair
     ): VeriBlockPublication {
         log.debug("Mining")
@@ -80,15 +78,16 @@ class VeriBlockPopMiner(
         val blockOfProof = bitcoinBlockchain.mine(btcBlockData)
 
         // create a VeriBlock PoP transaction
-        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock!!)
+        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock)
         val popTx = signTransaction(
-            VeriBlockPoPTransaction(
+            VeriBlockPopTransaction(
                 address,
                 blockToEndorse,
                 bitcoinProofTx,
                 btcBlockData.getMerklePath(0),
                 blockOfProof,
-                blockOfProofContext, ByteArray(1),
+                blockOfProofContext,
+                ByteArray(1),
                 key.public.encoded,
                 veriBlockBlockchain.networkParameters.transactionPrefix
             ),

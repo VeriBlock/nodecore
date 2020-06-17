@@ -11,78 +11,72 @@ import org.veriblock.sdk.blockchain.VeriBlockBlockchain
 import org.veriblock.sdk.blockchain.store.BlockStore
 import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
-import org.veriblock.sdk.conf.VeriBlockNetworkParameters
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
-import org.veriblock.sdk.util.Utils
+import org.veriblock.core.utilities.Utility
 import java.sql.SQLException
 import java.util.ArrayList
-import java.util.Collections
 import java.util.HashMap
 
 class VeriBlockMockBlockchain(
-    networkParameters: NetworkParameters?,
+    networkParameters: NetworkParameters,
     private val store: BlockStore<StoredVeriBlockBlock, VBlakeHash>,
-    bitcoinStore: BlockStore<StoredBitcoinBlock?, Sha256Hash?>?
+    bitcoinStore: BlockStore<StoredBitcoinBlock, Sha256Hash>
 ) : VeriBlockBlockchain(networkParameters, store, bitcoinStore) {
     private val blockDataStore: MutableMap<VBlakeHash, VeriBlockBlockData> = HashMap()
 
-    @get:Throws(SQLException::class)
-    private val previousKeystoneForNewBlock: VBlakeHash
-        private get() {
-            val chainHead = chainHead
-            val blockHeight = chainHead.height + 1
-            var keystoneBlocksAgo = blockHeight % 20
-            when (keystoneBlocksAgo) {
-                0 -> keystoneBlocksAgo = 20
-                1 -> keystoneBlocksAgo = 21
-            }
-            val context = store[chainHead.hash, keystoneBlocksAgo]
-            return if (context.size == keystoneBlocksAgo) context[keystoneBlocksAgo - 1].block.hash.trimToPreviousKeystoneSize() else VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
+    @Throws(SQLException::class)
+    private fun getPreviousKeystoneForNewBlock(): VBlakeHash {
+        val chainHead = getChainHead()!!
+        val blockHeight = chainHead.height + 1
+        var keystoneBlocksAgo = blockHeight % 20
+        when (keystoneBlocksAgo) {
+            0 -> keystoneBlocksAgo = 20
+            1 -> keystoneBlocksAgo = 21
         }
+        val context = store.get(chainHead.hash, keystoneBlocksAgo)
+        return if (context.size == keystoneBlocksAgo) context[keystoneBlocksAgo - 1].block.hash.trimToPreviousKeystoneSize() else VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
+    }
 
-    @get:Throws(SQLException::class)
-    private val secondPreviousKeystoneForNewBlock: VBlakeHash
-        private get() {
-            val chainHead = chainHead
-            val blockHeight = chainHead.height + 1
-            var keystoneBlocksAgo = blockHeight % 20
-            when (keystoneBlocksAgo) {
-                0 -> keystoneBlocksAgo = 20
-                1 -> keystoneBlocksAgo = 21
-            }
-            keystoneBlocksAgo += 20
-            val context = store[chainHead.hash, keystoneBlocksAgo]
-            return if (context.size == keystoneBlocksAgo) context[keystoneBlocksAgo - 1].block.hash.trimToPreviousKeystoneSize() else VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
+    @Throws(SQLException::class)
+    private fun getSecondPreviousKeystoneForNewBlock(): VBlakeHash {
+        val chainHead = getChainHead()!!
+        val blockHeight = chainHead.height + 1
+        var keystoneBlocksAgo = blockHeight % 20
+        when (keystoneBlocksAgo) {
+            0 -> keystoneBlocksAgo = 20
+            1 -> keystoneBlocksAgo = 21
         }
+        keystoneBlocksAgo += 20
+        val context = store.get(chainHead.hash, keystoneBlocksAgo)
+        return if (context.size == keystoneBlocksAgo) context[keystoneBlocksAgo - 1].block.hash.trimToPreviousKeystoneSize() else VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
+    }
 
     // retrieve the blocks between lastKnownBlock and getChainHead()
     @Throws(SQLException::class)
-    fun getContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock?> {
-        val context: MutableList<VeriBlockBlock?> = ArrayList()
+    fun getContext(lastKnownBlock: VeriBlockBlock): List<VeriBlockBlock> {
+        val context: MutableList<VeriBlockBlock> = ArrayList()
 
         // FIXME: using scanBestChain as a workaround as it should be faster in cached stores than a plain get
-        var prevBlock = store.scanBestChain(chainHead.previousBlock)
+        var prevBlock = store.scanBestChain(getChainHead()!!.previousBlock)
         while (prevBlock != null && prevBlock.block != lastKnownBlock) {
             context.add(prevBlock.block)
             prevBlock = store.scanBestChain(prevBlock.block.previousBlock)
         }
-        Collections.reverse(context)
+        context.reverse()
         return context
     }
 
     @Throws(SQLException::class)
     fun mine(blockData: VeriBlockBlockData): VeriBlockBlock {
-        val chainHead = chainHead
+        val chainHead = getChainHead()!!
         val blockHeight = chainHead.height + 1
-        val previousKeystone = previousKeystoneForNewBlock
-        val secondPreviousKeystone = secondPreviousKeystoneForNewBlock
-        val timestamp = Math.max(
-            getNextEarliestTimestamp(chainHead.hash).orElse(0), Utils.getCurrentTimestamp()
-        )
+        val previousKeystone = getPreviousKeystoneForNewBlock()
+        val secondPreviousKeystone = getSecondPreviousKeystoneForNewBlock()
+        val timestamp = (getNextEarliestTimestamp(chainHead.hash) ?: 0).coerceAtLeast(Utility.getCurrentTimestamp())
         val difficulty = getNextDifficulty(chainHead).asInt
         for (nonce in 0 until Int.MAX_VALUE) {
             val newBlock = VeriBlockBlock(
@@ -104,5 +98,4 @@ class VeriBlockMockBlockchain(
         }
         throw RuntimeException("Failed to mine the block due to too high difficulty")
     }
-
 }

@@ -10,10 +10,10 @@ package org.veriblock.sdk.sqlite.tables;
 
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock;
 import org.veriblock.core.crypto.Sha256Hash;
-import org.veriblock.sdk.models.VBlakeHash;
+import org.veriblock.core.crypto.VBlakeHash;
 import org.veriblock.sdk.models.VeriBlockBlock;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.sdk.util.Utils;
+import org.veriblock.core.utilities.Utility;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -33,20 +33,20 @@ public class VeriBlockBlockRepository extends GenericBlockRepository<StoredVeriB
 
         public void toStmt(StoredVeriBlockBlock block, PreparedStatement stmt) throws SQLException {
             int i = 0;
-            stmt.setObject(++i, new StringBuilder(Utils.encodeHex(block.getHash().getBytes())).reverse().toString());
-            stmt.setObject(++i, new StringBuilder(Utils.encodeHex(block.getBlock().getPreviousBlock().getBytes())).reverse().toString());
+            stmt.setObject(++i, new StringBuilder(Utility.bytesToHex(block.getHash().getBytes())).reverse().toString());
+            stmt.setObject(++i, new StringBuilder(Utility.bytesToHex(block.getBlock().getPreviousBlock().getBytes())).reverse().toString());
             stmt.setObject(++i, block.getHeight());
             stmt.setObject(++i, block.getWork().toString());
-            stmt.setObject(++i, Utils.encodeHex(block.getBlockOfProof().getBytes()));
-            stmt.setObject(++i, Utils.encodeHex(SerializeDeserializeService.serialize(block.getBlock())));
+            stmt.setObject(++i, Utility.bytesToHex(block.getBlockOfProof().getBytes()));
+            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.INSTANCE.serialize(block.getBlock())));
         }
 
         public StoredVeriBlockBlock fromResult(ResultSet result) throws SQLException {
-            byte[] data = Utils.decodeHex(result.getString("data"));
+            byte[] data = Utility.hexToBytes(result.getString("data"));
             BigInteger work = new BigInteger(result.getString("work"));
-            Sha256Hash blockOfProof = Sha256Hash.wrap(Utils.decodeHex(result.getString("blockOfProof")));
+            Sha256Hash blockOfProof = Sha256Hash.wrap(Utility.hexToBytes(result.getString("blockOfProof")));
 
-            VeriBlockBlock block = SerializeDeserializeService.parseVeriBlockBlock(ByteBuffer.wrap(data));
+            VeriBlockBlock block = SerializeDeserializeService.INSTANCE.parseVeriBlockBlock(ByteBuffer.wrap(data));
             StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(block, work, blockOfProof);
             return storedBlock;
         }
@@ -76,7 +76,7 @@ public class VeriBlockBlockRepository extends GenericBlockRepository<StoredVeriB
         }
 
         public String idToString(VBlakeHash hash) {
-            return new StringBuilder(Utils.encodeHex(hash.getBytes())).reverse().toString();
+            return new StringBuilder(Utility.bytesToHex(hash.getBytes())).reverse().toString();
         }
     };
 

@@ -10,9 +10,7 @@
 
 package org.veriblock.spv.standalone
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.google.gson.GsonBuilder
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
 import org.veriblock.core.SharedConstants
@@ -20,6 +18,7 @@ import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
+import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
@@ -27,8 +26,8 @@ import org.veriblock.spv.standalone.commands.spvCommands
 import org.veriblock.spv.standalone.commands.standardCommands
 import veriblock.SpvContext
 import veriblock.model.DownloadStatus
-import veriblock.model.DownloadStatusResponse
 import veriblock.net.BootstrapPeerDiscovery
+import veriblock.net.LocalhostDiscovery
 import java.lang.Thread.sleep
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -44,6 +43,11 @@ private val networkParameters = NetworkParameters(
         network = config.getString("network") ?: MainNetParameters.NETWORK
     )
 )
+private val peerDiscovery = if (config.getBoolean("useLocalNode") == true) {
+    LocalhostDiscovery(networkParameters)
+} else {
+    BootstrapPeerDiscovery(networkParameters)
+}
 
 private fun run(): Int {
     Runtime.getRuntime().addShutdownHook(Thread {
@@ -64,10 +68,10 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
-    var errored = false
     logger.info { "Initializing SPV Context..." }
+    var errored = false
     try {
-        spvContext.init(networkParameters, BootstrapPeerDiscovery(networkParameters))
+        spvContext.init(networkParameters, peerDiscovery)
         spvContext.peerTable.start()
         ProgressBarBuilder().apply {
             setTaskName("Loading SPV")
@@ -75,12 +79,13 @@ private fun run(): Int {
             setStyle(ProgressBarStyle.COLORFUL_UNICODE_BLOCK)
         }.build().use { progressBar ->
             var status = spvContext.peerTable.getDownloadStatus()
+            val initialHeight = status.currentHeight
             progressBar.extraMessage = "Looking for peers..."
             while (status.downloadStatus != DownloadStatus.READY) {
                 if (status.downloadStatus == DownloadStatus.DOWNLOADING) {
                     progressBar.extraMessage = "Downloading blocks..."
-                    progressBar.maxHint(status.bestHeight.toLong())
-                    progressBar.stepTo(status.currentHeight.toLong())
+                    progressBar.maxHint(status.bestHeight.toLong() - initialHeight)
+                    progressBar.stepTo(status.currentHeight.toLong() - initialHeight)
                 }
                 sleep(1000L)
                 status = spvContext.peerTable.getDownloadStatus()
@@ -89,6 +94,7 @@ private fun run(): Int {
             progressBar.stepTo(status.bestHeight.toLong())
         }
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
+        logger.info { """Type "help" to display a list of available commands""" }
         shell.run()
     } catch (e: Exception) {
         errored = true

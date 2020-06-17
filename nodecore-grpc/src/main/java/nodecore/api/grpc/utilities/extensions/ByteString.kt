@@ -1,41 +1,38 @@
 package nodecore.api.grpc.utilities.extensions
 
 import com.google.protobuf.ByteString
-import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.asBase58Bytes
+import org.veriblock.core.utilities.extensions.asBase59Bytes
+import org.veriblock.core.utilities.extensions.asBase64Bytes
+import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.toBase58
+import org.veriblock.core.utilities.extensions.toBase59
+import org.veriblock.core.utilities.extensions.toBase64
+import org.veriblock.core.utilities.extensions.toHex
 
+fun String.asBase58ByteString(): ByteString =
+    ByteString.copyFrom(asBase58Bytes())
 
-fun String.asBase58ByteString(): ByteString? {
-    return ByteString.copyFrom(Utility.base58ToBytes(this))
-}
+fun String.asBase59ByteString(): ByteString =
+    ByteString.copyFrom(asBase59Bytes())
 
-fun base59ToByteString(value: String?): ByteString? {
-    return ByteString.copyFrom(Utility.base59ToBytes(value))
-}
+fun ByteString.toBase58(): String =
+    toByteArray().toBase58()
 
-fun byteStringToBase58(value: ByteString): String? {
-    return Utility.bytesToBase58(value.toByteArray())
-}
+fun ByteString.toBase59(): String =
+    toByteArray().toBase59()
 
-fun byteStringToBase59(value: ByteString): String? {
-    return Utility.bytesToBase59(value.toByteArray())
-}
+fun String.asBase64ByteString(): ByteString =
+    ByteString.copyFrom(asBase64Bytes())
 
-fun base64ToByteString(value: String?): ByteString? {
-    return ByteString.copyFrom(Utility.base64ToBytes(value))
-}
+fun ByteString.toBase64(): String =
+    toByteArray().toBase64()
 
-fun byteStringToBase64(value: ByteString): String? {
-    return Utility.bytesToBase64(value.toByteArray())
-}
+fun String.asHexByteString(): ByteString =
+    ByteString.copyFrom(asHexBytes())
 
-fun hexToByteString(value: String?): ByteString? {
-    return ByteString.copyFrom(Utility.hexToBytes(value))
-}
+fun ByteString.toHex(): String =
+    toByteArray().toHex()
 
-fun bytesToByteString(value: ByteArray?): ByteString? {
-    return ByteString.copyFrom(value)
-}
-
-fun byteStringToHex(value: ByteString): String? {
-    return Utility.bytesToHex(value.toByteArray())
-}
+fun ByteArray.toByteString(): ByteString =
+    ByteString.copyFrom(this)

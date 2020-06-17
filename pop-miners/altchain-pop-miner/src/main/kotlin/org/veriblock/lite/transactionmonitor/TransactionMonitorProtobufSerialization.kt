@@ -17,8 +17,9 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.InputStream
 import java.io.OutputStream
@@ -83,7 +84,7 @@ private fun TxmonProto.TransactionMonitor.toModel(context: Context): Transaction
 private fun TxmonProto.WalletTransaction.toModel(context: Context): WalletTransaction = WalletTransaction(
     0x01.toByte(),
     Address(input.address),
-    Coin.valueOf(input.amount),
+    input.amount.asCoin(),
     outputs.map { transactionOutput ->
         Output.of(transactionOutput.address, transactionOutput.amount)
     },

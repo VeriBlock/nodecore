@@ -48,9 +48,9 @@ class LedgerEntry(
         fun generateKey(
             address: String,
             txId: Sha256Hash,
-            debitAmount: Coin?,
-            creditAmount: Coin?,
-            positionIndex: Int?
+            debitAmount: Coin,
+            creditAmount: Coin,
+            positionIndex: Int
         ): Sha256Hash {
             val a = address.asLightAddress()
             try {
@@ -59,7 +59,7 @@ class LedgerEntry(
                     SerializerUtility.writeSingleByteLengthValueToStream(stream, txId.bytes)
                     SerializeDeserializeService.serialize(debitAmount, stream)
                     SerializeDeserializeService.serialize(creditAmount, stream)
-                    SerializerUtility.writeVariableLengthValueToStream(stream, positionIndex!!)
+                    SerializerUtility.writeVariableLengthValueToStream(stream, positionIndex)
                     return Sha256Hash.wrap(stream.toByteArray())
                 }
             } catch (e: IOException) {

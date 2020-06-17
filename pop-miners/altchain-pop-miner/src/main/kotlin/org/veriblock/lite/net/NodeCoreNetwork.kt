@@ -10,19 +10,20 @@ package org.veriblock.lite.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import org.veriblock.core.contracts.AddressManager
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
+import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.lite.core.Balance
 import org.veriblock.lite.core.BlockChain
+import org.veriblock.lite.core.Context
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class NodeCoreNetwork(
+    private val context: Context,
     private val gateway: NodeCoreGateway,
     private val blockChain: BlockChain,
     private val transactionMonitor: TransactionMonitor,
@@ -71,22 +73,30 @@ class NodeCoreNetwork(
         return gateway.getBlock(hash.toString())
     }
 
-    fun getNodeCoreSyncStatus() = gateway.getNodeCoreSyncStatus()
+    fun getNodeCoreStateInfo() = gateway.getNodeCoreStateInfo()
 
     private fun poll() {
         try {
-            var nodeCoreSyncStatus: SyncStatus? = null
+            var nodeCoreStateInfo: StateInfo? = null
             // Verify if we can make a connection with the remote NodeCore
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine
+                nodeCoreStateInfo = gateway.getNodeCoreStateInfo()
+
+                // Verify the NodeCore configured Network
+                if (!nodeCoreStateInfo.networkVersion.equals(context.networkParameters.name, true)) {
+                    logger.info { "Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while NodeCore is at ${nodeCoreStateInfo.networkVersion}." }
+                    return
+                }
+
                 if (!isHealthy()) {
                     healthy.set(true)
                     EventBus.nodeCoreHealthyEvent.trigger()
                 }
                 connected.set(true)
+
                 // Verify the remote NodeCore sync status
-                nodeCoreSyncStatus = gateway.getNodeCoreSyncStatus()
-                if (nodeCoreSyncStatus.isSynchronized) {
+                if (nodeCoreStateInfo.isSynchronized) {
                     if (!isSynchronized()) {
                         synchronized.set(true)
                         EventBus.nodeCoreHealthySyncEvent.trigger()
@@ -95,7 +105,7 @@ class NodeCoreNetwork(
                     if (isSynchronized()) {
                         synchronized.set(false)
                         EventBus.nodeCoreUnhealthySyncEvent.trigger()
-                        logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}, waiting until it synchronizes..." }
+                        logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreStateInfo.localBlockchainHeight}, Network Block: ${nodeCoreStateInfo.networkHeight}, Block Difference: ${nodeCoreStateInfo.blockDifference}, waiting until it synchronizes..." }
                     }
                 }
             } else {
@@ -138,9 +148,9 @@ class NodeCoreNetwork(
                     if (!isSynchronized()) {
                         logger.debug { "Cannot proceed because NodeCore is not synchronized" }
 
-                        nodeCoreSyncStatus?.let {
-                            if (nodeCoreSyncStatus.networkHeight != 0) {
-                                logger.debug { "Local Block: ${nodeCoreSyncStatus.localBlockchainHeight}, Network Block: ${nodeCoreSyncStatus.networkHeight}, Block Difference: ${nodeCoreSyncStatus.blockDifference}" }
+                        nodeCoreStateInfo?.let {
+                            if (nodeCoreStateInfo.networkHeight != 0) {
+                                logger.debug { "Local Block: ${nodeCoreStateInfo.localBlockchainHeight}, Network Block: ${nodeCoreStateInfo.networkHeight}, Block Difference: ${nodeCoreStateInfo.blockDifference}" }
                             } else {
                                 logger.debug { "Still not connected to the network" }
                             }

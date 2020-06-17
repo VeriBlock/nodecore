@@ -4,18 +4,15 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
-import nodecore.cli.serialization.AbandonTransactionFromTxIDInfo
-import nodecore.cli.serialization.AbandonTransactionsFromAddressInfo
-import nodecore.cli.serialization.MakeUnsignedMultisigTxPayload
-import nodecore.cli.serialization.SendCoinsPayload
-import nodecore.cli.serialization.TransactionInfo
-import nodecore.cli.serialization.TransactionReferencesPayload
+import nodecore.cli.serialization.*
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -33,12 +30,32 @@ fun CommandFactory.transactionCommands() {
         val txid: String = getParameter("txId")
         val request = VeriBlockMessages.AbandonTransactionRequest.newBuilder()
             .setTxids(VeriBlockMessages.TransactionSet.newBuilder()
-                .addTxids(ByteString.copyFrom(Utility.hexToBytes(txid)))
+                .addTxids(txid.asHexByteString())
             ).build()
         val result = cliShell.adminService.abandonTransactionRequest(request)
 
         prepareResult(result.success, result.resultsList) {
             AbandonTransactionFromTxIDInfo(result)
+        }
+    }
+
+    rpcCommand(
+            name = "Rebroadcast Transaction From TxID",
+            form = "rebroadcasttransactionfromtxid",
+            description = "Rebroadcasts the specified pending transaction and all dependent transactions",
+            parameters = listOf(
+                    CommandParameter(name = "txId", mapper = CommandParameterMappers.STRING, required = true)
+            )
+    ) {
+        val txid: String = getParameter("txId")
+        val request = VeriBlockMessages.RebroadcastTransactionRequest.newBuilder()
+                .setTxids(VeriBlockMessages.TransactionSet.newBuilder()
+                        .addTxids(ByteString.copyFrom(Utility.hexToBytes(txid)))
+                ).build()
+        val result = cliShell.adminService.rebroadcastTransactionRequest(request)
+
+        prepareResult(result.success, result.resultsList) {
+            RebroadcastTransactionFromTxIDInfo(result)
         }
     }
 
@@ -70,6 +87,33 @@ fun CommandFactory.transactionCommands() {
     }
 
     rpcCommand(
+            name = "Rebroadcast Transactions From Address",
+            form = "rebroadcasttransactionsfromaddress",
+            description = "Rebroadcasts all pending transactions from a particular source address (optionally above a particular signature index), and all dependent transactions",
+            parameters = listOf(
+                    CommandParameter(name = "address", mapper = CommandParameterMappers.STRING, required = true),
+                    CommandParameter(name = "index", mapper = CommandParameterMappers.LONG, required = false)
+            )
+    ) {
+        val address: String = getParameter("address")
+        val index: Long = getParameter("index") ?: 0
+        val request = VeriBlockMessages.RebroadcastTransactionRequest.newBuilder()
+                .setAddresses(
+                        VeriBlockMessages.RebroadcastAddressTransactionsRequest.newBuilder()
+                                .addAddresses(
+                                        VeriBlockMessages.AddressIndexPair.newBuilder()
+                                                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
+                                                .setStartingSignatureIndex(index)))
+                .build()
+
+        val result = cliShell.adminService.rebroadcastTransactionRequest(request)
+
+        prepareResult(result.success, result.resultsList) {
+            RebroadcastTransactionsFromAddressInfo(result)
+        }
+    }
+
+    rpcCommand(
         name = "Get Pending Transactions",
         form = "getpendingtransactions",
         description = "Returns the transactions pending on the network",
@@ -96,7 +140,7 @@ fun CommandFactory.transactionCommands() {
         val transactionId: String = getParameter("txId")
         val searchLength: Int? = getOptionalParameter("searchLength")
         val request = VeriBlockMessages.GetTransactionsRequest.newBuilder()
-            .addIds(ByteStringUtility.hexToByteString(transactionId))
+            .addIds(transactionId.asHexByteString())
 
         if (searchLength != null) {
             request.searchLength = searchLength
@@ -217,7 +261,7 @@ fun CommandFactory.transactionCommands() {
     ) {
         val rawTransaction: String = getParameter("rawTransaction")
         val request = VeriBlockMessages.SubmitTransactionsRequest
-            .newBuilder().addTransactions(VeriBlockMessages.TransactionUnion.parseFrom(Utility.hexToBytes(rawTransaction)))
+            .newBuilder().addTransactions(VeriBlockMessages.TransactionUnion.parseFrom(rawTransaction.asHexBytes()))
             .build()
         val result = cliShell.adminService.submitTransactions(request)
 
@@ -235,9 +279,11 @@ fun CommandFactory.transactionCommands() {
         ),
         suggestedCommands = { listOf("getbalance", "gethistory", "generatemultisigaddress", "makeunsignedmultisigtx") }
     ) {
-        val unsignedTransactionBytes = Utility.hexToBytes(getParameter("unsignedtransactionhex"))
+        val unsignedTransactionHex: String = getParameter("unsignedtransactionhex")
         val publicKeysOrAddressesStr: String = getParameter("csvpublickeysoraddresses")
         val signaturesHexStr: String = getParameter("csvsignatureshex")
+
+        val unsignedTransactionBytes = unsignedTransactionHex.asHexBytes()
 
         val publicKeysOrAddresses = publicKeysOrAddressesStr.split(",")
         val signaturesHex = signaturesHexStr.split(",")
@@ -271,8 +317,8 @@ fun CommandFactory.transactionCommands() {
                             if (signaturesHex[i].isEmpty()) {
                                 failure("-1", "Invalid signatures provided!", "Slot $i was indicated as populated (public key provided) but there is no corresponding signature!")
                             } else {
-                                multisigSlotBuilder.publicKey = ByteStringUtility.hexToByteString(publicKeysOrAddresses[i])
-                                multisigSlotBuilder.signature = ByteStringUtility.hexToByteString(signaturesHex[i])
+                                multisigSlotBuilder.publicKey = publicKeysOrAddresses[i].asHexByteString()
+                                multisigSlotBuilder.signature = signaturesHex[i].asHexByteString()
                                 multisigSlotBuilder.populated = true
                             }
                         }

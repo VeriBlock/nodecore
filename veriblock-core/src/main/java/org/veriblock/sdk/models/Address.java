@@ -105,7 +105,7 @@ public class Address {
     }
 
     public byte[] getBytes() {
-        return this.isMultisig() ? Base59.decode(this.address) : Base58.decode(this.address);
+        return isMultisig() ? Base59.decode(this.address) : Base58.decode(this.address);
     }
 
     @Override

@@ -6,8 +6,8 @@ import org.bitcoinj.core.UnsafeByteArrayOutputStream
 import java.io.ByteArrayOutputStream
 
 class ExpTransaction(
-    params: NetworkParameters?,
-    payloadBytes: ByteArray?
+    params: NetworkParameters,
+    payloadBytes: ByteArray
 ) : Transaction(
     params, payloadBytes
 ) {

@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReadWriteLock
 
 fun Int.isValidPort(): Boolean {
     return this in 1..65535
@@ -112,4 +114,22 @@ fun String.asDecimalCoinToAtomicLong(): Long {
         result += "0"
     }
     return result.toLong()
+}
+
+inline fun <T> ReadWriteLock.withReadLock(action: () -> T): T {
+    readLock().lock()
+    try {
+        return action()
+    } finally {
+        readLock().unlock()
+    }
+}
+
+inline fun <T> ReadWriteLock.withWriteLock(action: () -> T): T {
+    writeLock().lock()
+    try {
+        return action()
+    } finally {
+        writeLock().unlock()
+    }
 }

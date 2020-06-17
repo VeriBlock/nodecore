@@ -10,6 +10,7 @@ package org.veriblock.lite.core
 
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
+import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -19,11 +20,10 @@ import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.sdk.models.VBlakeHash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VerificationException
 import org.veriblock.sdk.services.ValidationService
-import org.veriblock.sdk.util.BitcoinUtils
 import java.math.BigInteger
 
 private const val MINIMUM_TIMESTAMP_BLOCK_COUNT = 20
@@ -55,7 +55,7 @@ class BlockChain(
 
         val storedBlock = StoredVeriBlockBlock(
             block,
-            cumulativeWork + BitcoinUtils.decodeCompactBits(block.difficulty.toLong())
+            cumulativeWork + BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())
         )
 
         veriBlockStore.put(storedBlock)
@@ -189,7 +189,7 @@ class BlockChain(
         val contextBlocks = context.map { it.block }
         val calculated = VeriBlockDifficultyCalculator.calculate(params, previous.block, contextBlocks)
 
-        if (block.difficulty != BitcoinUtils.encodeCompactBits(calculated).toInt()) {
+        if (block.difficulty != BitcoinUtilities.encodeCompactBits(calculated).toInt()) {
             throw VerificationException("Block does not conform to expected difficulty")
         }
     }

@@ -13,22 +13,23 @@ import io.grpc.StatusRuntimeException
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
-import org.veriblock.core.contracts.AddressManager
+import org.veriblock.core.contracts.Balance
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.core.Balance
+import org.veriblock.core.wallet.AddressManager
 import org.veriblock.lite.core.BlockChainDelta
 import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.serialization.deserialize
 import org.veriblock.lite.serialization.deserializeStandardTransaction
-import org.veriblock.sdk.models.SyncStatus
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.asCoin
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
@@ -105,8 +106,8 @@ class NodeCoreGateway(
 
         if (reply.success) {
             return Balance(
-                Coin.valueOf(reply.getConfirmed(0).unlockedAmount),
-                Coin.valueOf(reply.getUnconfirmed(0).amount)
+                reply.getConfirmed(0).unlockedAmount.asCoin(),
+                reply.getUnconfirmed(0).amount.asCoin()
             )
         } else {
             error("Unable to retrieve balance from address $address")
@@ -198,25 +199,24 @@ class NodeCoreGateway(
     }
 
     /**
-     * Verify if the connected NodeCore is synchronized with the network (the block difference between the networkHeight and the localBlockchainHeight
-     * should be smaller than 4 blocks)
-     *
-     * This function will return an empty NodeCoreSyncStatus if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
+     * Retrieve the 'state info' from NodeCore
+     * This function will return an empty StateInfo if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
      */
-    fun getNodeCoreSyncStatus(): SyncStatus {
+    fun getNodeCoreStateInfo(): StateInfo {
         return try {
-            val request = gatewayStrategy.getNodeCoreSyncStatus(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
+            val request = gatewayStrategy.getNodeCoreStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
 
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
-            SyncStatus(
+            StateInfo(
                 request.networkHeight,
                 request.localBlockchainHeight,
                 blockDifference,
-                request.networkHeight > 0 && blockDifference < 4
+                request.networkHeight > 0 && blockDifference < 4,
+                networkVersion = request.networkVersion
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
-            SyncStatus()
+            StateInfo()
         }
     }
 

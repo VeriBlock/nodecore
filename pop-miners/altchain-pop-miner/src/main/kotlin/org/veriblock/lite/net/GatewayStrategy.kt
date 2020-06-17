@@ -22,7 +22,7 @@ interface GatewayStrategy {
 
     fun ping(pingRequest: VeriBlockMessages.PingRequest): VeriBlockMessages.PingReply
 
-    fun getNodeCoreSyncStatus(getStateInfoRequest: VeriBlockMessages.GetStateInfoRequest): VeriBlockMessages.GetStateInfoReply
+    fun getNodeCoreStateInfo(getStateInfoRequest: VeriBlockMessages.GetStateInfoRequest): VeriBlockMessages.GetStateInfoReply
 
     fun submitTransactions(submitTransactionsRequest: VeriBlockMessages.SubmitTransactionsRequest): VeriBlockMessages.ProtocolReply
 

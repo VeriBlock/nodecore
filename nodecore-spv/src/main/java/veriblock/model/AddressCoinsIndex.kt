@@ -1,7 +1,7 @@
 package veriblock.model
 
 class AddressCoinsIndex(
-    var address: String,
-    var coins: Long,
-    var index: Long
+    val address: String,
+    val coins: Long,
+    val index: Long
 )

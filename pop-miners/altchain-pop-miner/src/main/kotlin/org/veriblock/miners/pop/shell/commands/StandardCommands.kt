@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -31,6 +32,7 @@ fun CommandFactory.standardCommands() {
         form = "quit|exit",
         description = "Quit the application"
     ) {
+        EventBus.programQuitEvent.trigger(1)
         quit()
         success()
     }

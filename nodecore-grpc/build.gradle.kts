@@ -14,6 +14,7 @@ import com.google.protobuf.gradle.protoc
 
 plugins {
     java
+    kotlin("jvm")
     idea
     `java-library`
     `maven-publish`

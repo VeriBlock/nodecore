@@ -24,8 +24,8 @@ class Ledger {
         )
     }
 
-    operator fun get(address: String): AddressLedger? {
-        return entries[address]
+    operator fun get(address: String): AddressLedger {
+        return entries.getValue(address)
     }
 
     fun list(): Collection<AddressLedger> {
@@ -42,7 +42,7 @@ class Ledger {
     fun record(tx: StandardTransaction) {
         val ledgerEntries = createLedgerEntriesFrom(tx)
         ledgerEntries.forEach {
-            get(it.address)!!.add(it)
+            get(it.address).add(it)
         }
     }
 
@@ -59,14 +59,14 @@ class Ledger {
         }
         if (entries.containsKey(tx.inputAddress!!.get())) {
             ledgerEntries.add(
-                LedgerEntry(tx.inputAddress!!.get(), tx.txId!!, tx.inputAmount!!, Coin.ZERO, tx.getSignatureIndex(), 0, status)
+                LedgerEntry(tx.inputAddress!!.get(), tx.txId, tx.inputAmount!!, Coin.ZERO, tx.getSignatureIndex(), 0, status)
             )
         }
         for (i in tx.getOutputs().indices) {
             val o = tx.getOutputs()[i]
             if (entries.containsKey(o.address.get())) {
                 ledgerEntries.add(
-                    LedgerEntry(o.address.get(), tx.txId!!, Coin.ZERO, o.amount, -1, i, status)
+                    LedgerEntry(o.address.get(), tx.txId, Coin.ZERO, o.amount, -1, i, status)
                 )
             }
         }
