@@ -62,12 +62,24 @@ class DiagnosticService(
         val configuredPlugins = pluginService.getConfiguredPlugins().filter { it.key != "test" }
         if (configuredPlugins.isNotEmpty()) {
             configuredPlugins.forEach {
-                val loadedPayoutAddress = plugins[it.key]?.config?.payoutAddress
                 val configuredPayoutAddress = it.value.payoutAddress
-                if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress != loadedPayoutAddress) {
-                    information.add("FAIL - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is not valid.")
+                if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress.isEmpty()) {
+                    information.add("FAIL - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is not configured")
                 } else {
-                    information.add("SUCCESS - ${it.value.name} configured payoutAddress '$configuredPayoutAddress' is valid.")
+                    information.add("SUCCESS - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is configured")
+                }
+
+                // Check the auto mine rounds
+                val configuredAutoMineRounds = it.value.autoMineRounds
+                val min = configuredAutoMineRounds.min() ?: 0
+                val max = configuredAutoMineRounds.max() ?: 0
+                if (configuredAutoMineRounds.isNotEmpty() && (min < 1 || max > 4)) {
+                    val invalidMineRounds = configuredAutoMineRounds.filter { mineRound ->
+                        mineRound < 1 || mineRound > 4
+                    }
+                    information.add("FAIL - ${it.value.name} configuration has invalid value for autoMineRounds. '[${invalidMineRounds.joinToString(",")}]' is not valid, the rounds should be between 1 and 4")
+                } else {
+                    information.add("SUCCESS - ${it.value.name} configuration for autoMineRounds is valid")
                 }
             }
         } else {

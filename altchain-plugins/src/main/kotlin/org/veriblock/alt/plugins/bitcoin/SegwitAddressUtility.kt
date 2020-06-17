@@ -1,6 +1,5 @@
 package org.veriblock.alt.plugins.bitcoin
 
-import org.veriblock.core.utilities.extensions.toHex
 import kotlin.experimental.or
 
 object SegwitAddressUtility {
