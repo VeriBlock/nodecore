@@ -12,8 +12,8 @@ class NxtConfig(
     override val neededConfirmations: Int = 10,
     override val spFinalityDelay: Int = 100,
     override val payoutInterval: Int = 100,
-    override val blockRoundIndices: IntArray = intArrayOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
-    override val autoMineRounds: List<Int> = emptyList()
+    override val blockRoundIndices: List<Int> = listOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
+    override val autoMineRounds: MutableSet<Int> = HashSet()
 ) : ChainConfig() {
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:8332",
@@ -23,7 +23,7 @@ class NxtConfig(
         configuration.neededConfirmations ?: 20,
         configuration.spFinalityDelay ?: 100,
         configuration.payoutInterval ?: 100,
-        configuration.blockRoundIndices ?: intArrayOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
-        configuration.autoMineRounds
+        configuration.blockRoundIndices ?: listOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
+        configuration.autoMineRounds.toMutableSet()
     )
 }
