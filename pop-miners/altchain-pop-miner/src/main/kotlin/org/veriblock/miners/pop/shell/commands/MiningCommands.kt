@@ -10,8 +10,10 @@ package org.veriblock.miners.pop.shell.commands
 
 import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
+import org.veriblock.core.CommandException
 import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -80,9 +82,25 @@ fun CommandFactory.miningCommands(
     command(
         name = "List Operations",
         form = "listoperations",
-        description = "Lists the currently running operations since the PoP miner started"
+        description = "Lists the currently running operations since the PoP miner started",
+        parameters = listOf(
+            CommandParameter("state", CommandParameterMappers.STRING, required = false)
+        )
     ) {
-        val operations = minerService.getOperations().map {
+        val state = getOptionalParameter<String>("state")?.toLowerCase() ?: "active"
+        if (state != "active" && state != "failed" && state != "completed" && state != "all") {
+            throw CommandException("$state is not valid, please use: active, failed, competed or all")
+        }
+        val operations = if (state == "active") {
+            minerService.getOperations()
+        } else {
+            val stateId = when(state) {
+                "completed" -> MiningOperationState.COMPLETED_ID
+                "failed" -> MiningOperationState.FAILED_ID
+                else -> -2
+            }
+            minerService.getStoredOperationsByState(stateId)
+        }.map {
             val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
                 " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutInterval()})"
             } ?: ""
