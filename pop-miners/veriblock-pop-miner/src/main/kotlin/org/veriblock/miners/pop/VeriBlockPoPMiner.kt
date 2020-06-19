@@ -12,14 +12,17 @@ package org.veriblock.miners.pop
 import mu.KotlinLogging
 import org.bitcoinj.core.Context
 import org.bitcoinj.utils.Threading
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
+import org.veriblock.core.params.*
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.automine.AutoMineEngine
 import org.veriblock.miners.pop.schedule.PoPMiningScheduler
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.PopShell
+import java.security.Security
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import kotlin.system.exitProcess
@@ -34,8 +37,11 @@ private lateinit var popMinerService: MinerService
 var externalQuit = false
 
 fun run(args: Array<String>): Int {
+    Security.addProvider(BouncyCastleProvider())
     EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
+
+    org.veriblock.core.Context.create(defaultTestNetProgPoWParameters);
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))

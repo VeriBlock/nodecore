@@ -206,14 +206,14 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
     override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
         "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ=="
     ))
-    override val bitcoinOriginBlockHeight = 1747807
+    override val bitcoinOriginBlockHeight = 1772359
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
-        Sha256Hash.wrap("000000004E645B8245259DE1D79BC06276018429D41D03CB55E0F212F130E271"),
-        Sha256Hash.wrap("6E9197243C835E33033C4A321C9BEDA8F2302FA43D73BD636025CD843A4799F6"),
-        1591397408,
-        486604799,
-        862190375
+        Sha256Hash.wrap("0000000000000082751B7DAE08AABA89E5830D8BCC4140C818239D9919E26CED"),
+        Sha256Hash.wrap("5D7EDB0C018B90747C3BE951FEF66834DA400D074B48723FDCD378064D1914AD"),
+        1592585289,
+        436315634,
+        -1398851890
     )
     override val protocolVersion: Int = 2
 
