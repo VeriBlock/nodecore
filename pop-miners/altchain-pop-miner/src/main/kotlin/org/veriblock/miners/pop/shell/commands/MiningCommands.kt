@@ -79,6 +79,7 @@ fun CommandFactory.miningCommands(
         }
     }
 
+
     command(
         name = "List Operations",
         form = "listoperations",
@@ -87,17 +88,18 @@ fun CommandFactory.miningCommands(
             CommandParameter("state", CommandParameterMappers.STRING, required = false)
         )
     ) {
-        val state = getOptionalParameter<String>("state")?.toLowerCase() ?: "active"
-        if (state != "active" && state != "failed" && state != "completed" && state != "all") {
-            throw CommandException("$state is not valid, please use: active, failed, competed or all")
-        }
-        val operations = if (state == "active") {
+        val state = getOptionalParameter<String>("state")?.let { stateString ->
+            ListOperationState.values().find { it.name == stateString.toUpperCase() }
+                ?: throw CommandException("$stateString is not valid, please use: active, failed, competed or all")
+        } ?: ListOperationState.ACTIVE
+
+        val operations = if (state == ListOperationState.ACTIVE) {
             minerService.getOperations()
         } else {
-            val stateId = when(state) {
-                "completed" -> MiningOperationState.COMPLETED_ID
-                "failed" -> MiningOperationState.FAILED_ID
-                else -> -2
+            val stateId = when (state) {
+                ListOperationState.COMPLETED -> MiningOperationState.COMPLETED_ID
+                ListOperationState.FAILED -> MiningOperationState.FAILED_ID
+                else -> null
             }
             minerService.getStoredOperationsByState(stateId)
         }.map {
@@ -176,6 +178,13 @@ fun CommandFactory.miningCommands(
         minerService.cancelOperation(id)
         success("V200", "Success", "The operation '$id' has been cancelled")
     }
+}
+
+enum class ListOperationState {
+    ACTIVE,
+    COMPLETED,
+    FAILED,
+    ALL
 }
 
 data class WorkflowProcessInfo(

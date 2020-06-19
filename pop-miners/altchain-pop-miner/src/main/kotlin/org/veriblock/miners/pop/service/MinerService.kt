@@ -26,7 +26,7 @@ interface MinerService {
 
     fun getOperation(id: String): ApmOperation?
 
-    fun getStoredOperationsByState(state: Int, limit: Int = 50): List<ApmOperation>
+    fun getStoredOperationsByState(state: Int?, limit: Int = 50): List<ApmOperation>
 
     fun getAddress(): String
 

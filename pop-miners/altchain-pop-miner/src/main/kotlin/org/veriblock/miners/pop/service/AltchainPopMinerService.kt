@@ -165,7 +165,7 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getStoredOperationsByState(state: Int, limit: Int): List<ApmOperation> {
+    override fun getStoredOperationsByState(state: Int?, limit: Int): List<ApmOperation> {
         return operationService.getOperationsByState(state, limit) { txId ->
             val hash = Sha256Hash.wrap(txId)
             nodeCoreLiteKit.transactionMonitor.getTransaction(hash)

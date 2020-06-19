@@ -36,7 +36,7 @@ class OperationService(
         }
     }
 
-    fun getOperationsByState(state: Int, limit: Int, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
+    fun getOperationsByState(state: Int?, limit: Int, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
         val operations = repository.getOperationsByState(state, limit)
         return operations.map {
             val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)

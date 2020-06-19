@@ -19,11 +19,11 @@ open class OperationRepository(
         }.toList()
     }
 
-    fun getOperationsByState(state: Int, limit: Int): List<OperationStateRecord> = transaction(database) {
-        OperationStateTable.select {
-            if (state == -2) {
-                (OperationStateTable.status greater state)
-            } else {
+    fun getOperationsByState(state: Int?, limit: Int): List<OperationStateRecord> = transaction(database) {
+        if (state == null) {
+            OperationStateTable.selectAll()
+        } else {
+            OperationStateTable.select {
                 (OperationStateTable.status eq state)
             }
         }.orderBy(OperationStateTable.createdAt).limit(limit).map {
