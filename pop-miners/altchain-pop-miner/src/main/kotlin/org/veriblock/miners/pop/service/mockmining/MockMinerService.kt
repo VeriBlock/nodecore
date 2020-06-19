@@ -220,6 +220,10 @@ class MockMinerService(
     override fun getOperation(id: String): ApmOperation? =
         operations[id]
 
+    override fun getStoredOperationsByState(state: Int?, limit: Int): List<ApmOperation> {
+        TODO("Not yet implemented")
+    }
+
     override fun getAddress(): String =
         "NO ADDRESS"
 
