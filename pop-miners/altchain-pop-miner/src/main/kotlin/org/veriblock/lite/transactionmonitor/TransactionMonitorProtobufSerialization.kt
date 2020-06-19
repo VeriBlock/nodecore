@@ -47,7 +47,7 @@ private fun WalletTransaction.toProto() = TxmonProto.WalletTransaction(
     signatureIndex = signatureIndex,
     signature = signature,
     publicKey = publicKey,
-    data = SerializeDeserializeService.serialize(publicationData),
+    data = publicationData?.let { SerializeDeserializeService.serialize(it) } ?: ByteArray(0),
     merkleBranch = merklePath?.toProto() ?: TxmonProto.MerkleBranch(),
     meta = transactionMeta.toProto()
 )

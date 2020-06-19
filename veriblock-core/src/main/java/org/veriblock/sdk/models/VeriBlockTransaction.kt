@@ -19,7 +19,7 @@ open class VeriBlockTransaction(
     sourceAmount: Coin,
     outputs: List<Output>?,
     signatureIndex: Long,
-    publicationData: PublicationData,
+    publicationData: PublicationData?,
     signature: ByteArray,
     publicKey: ByteArray,
     networkByte: Byte?
@@ -30,7 +30,7 @@ open class VeriBlockTransaction(
     val sourceAmount: Coin
     val outputs: List<Output>
     val signatureIndex: Long
-    val publicationData: PublicationData
+    val publicationData: PublicationData?
     val signature: ByteArray
     val publicKey: ByteArray
     val networkByte: Byte?

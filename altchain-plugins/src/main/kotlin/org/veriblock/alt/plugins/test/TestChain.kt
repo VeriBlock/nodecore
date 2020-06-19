@@ -140,6 +140,7 @@ class TestChain(
 
     override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         val publicationData = proofOfProof.transaction.publicationData
+            ?: error("Proof of proof does not have publication data!")
         val publicationDataHeader = publicationData.header.toHex()
         val publicationDataContextInfo = publicationData.contextInfo.toHex()
         val expectedContextInfo = operations[publicationDataHeader]

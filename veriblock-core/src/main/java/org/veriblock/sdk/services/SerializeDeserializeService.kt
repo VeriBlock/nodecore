@@ -152,7 +152,7 @@ object SerializeDeserializeService {
         for (o in veriBlockTransaction.outputs) {
             serialize(o, stream)
         }
-        val publicationDataBytes = serialize(veriBlockTransaction.publicationData)
+        val publicationDataBytes = veriBlockTransaction.publicationData?.let { serialize(it) } ?: ByteArray(0)
         StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockTransaction.signatureIndex)
         StreamUtils.writeVariableLengthValueToStream(stream, publicationDataBytes)
     }
@@ -431,9 +431,9 @@ object SerializeDeserializeService {
     }
 
     @JvmStatic
-    fun parsePublicationData(data: ByteArray): PublicationData {
-        require (data.isNotEmpty()) {
-            "Data cannot be empty"
+    fun parsePublicationData(data: ByteArray): PublicationData? {
+        if (data.isEmpty()) {
+            return null
         }
         val buffer = ByteBuffer.wrap(data)
         val identifierBytes = StreamUtils.getSingleByteLengthValue(buffer, 0, 8)
