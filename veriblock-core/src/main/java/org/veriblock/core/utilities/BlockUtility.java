@@ -170,44 +170,50 @@ public final class BlockUtility {
             ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
         }
 
-        // 20M block limit
-        if (height > 0 && height >= ProgPoWForkHeight && height <= 20000000) {
-            // Check if embedded block height is reasonable considering its timestamp.
-            // This avoids checking ProgPoW hash for a block hash which is obviously contextually invalid.
-            // TODO: Update with new parameters on fork.
+        if (height >= ProgPoWForkHeight) {
+            // 20M block limit for ProgPoW hash evaluation
+            if (height <= 20000000) {
+                // Check if embedded block height is reasonable considering its timestamp.
+                // This avoids checking ProgPoW hash for a block hash which is obviously contextually invalid.
+                // TODO: Update with new parameters on fork.
 
-            // VeriBlock block time is 30 seconds
-            // TODO: Move 30-second blocktime to network parameters
-            int blocktimeSeconds = 30;
-            long startTimeEpoch = 1591656086;
-            int gracePeriodDays = 5;
+                // VeriBlock block time is 30 seconds
+                // TODO: Move 30-second blocktime and start-time epoch to network parameters
+                int blocktimeSeconds = 30;
+                long startTimeEpoch = 1592584942;
+                int gracePeriodDays = 5;
 
-            int timestamp = extractTimestampFromBlockHeader(blockHeader);
+                int timestamp = extractTimestampFromBlockHeader(blockHeader);
 
-            if (timestamp < startTimeEpoch) {
-                // Timestamp is before starting timestamp, invalid
+                if (timestamp < startTimeEpoch) {
+                    // Timestamp is before starting timestamp, invalid
+                    return false;
+                }
+
+                long upperBound = startTimeEpoch + (blocktimeSeconds * height * 3) + (86400 * gracePeriodDays);
+                long lowerBound = (startTimeEpoch) + (blocktimeSeconds * height) / 3;
+                lowerBound -= (86400 * gracePeriodDays);
+                if (lowerBound < startTimeEpoch) {
+                    lowerBound = startTimeEpoch;
+                }
+
+                if (timestamp > upperBound) {
+                    // Timestamp is more than 3x higher than expected (+ grace period), invalid
+                    return false;
+                }
+
+                if (timestamp < lowerBound) {
+                    // Timestamp is less than 33.33% of expected (- grace period), invalid
+                    return false;
+                }
+
+                return isMinerHashBelowTarget(blockHeader);
+            } else {
                 return false;
             }
-
-            long upperBound = startTimeEpoch + (blocktimeSeconds * height * 3) + (86400 * gracePeriodDays);
-            long lowerBound = (startTimeEpoch) + (blocktimeSeconds * height) / 3;
-            lowerBound -= (86400 * gracePeriodDays);
-            if (lowerBound < startTimeEpoch) {
-                lowerBound = startTimeEpoch;
-            }
-
-            if (timestamp > upperBound) {
-                // Timestamp is more than 3x higher than expected (+ grace period), invalid
-                return false;
-            }
-
-            if (timestamp < lowerBound) {
-                // Timestamp is less than 33.33% of expected (- grace period), invalid
-                return false;
-            }
+        } else {
+            return isMinerHashBelowTarget(blockHeader);
         }
-
-        return isMinerHashBelowTarget(blockHeader);
     }
 
     /**
