@@ -45,7 +45,9 @@ abstract class MiningOperation(
     fun complete() {
         setState(MiningOperationState.COMPLETED)
 
-        onCompleted()
+        if (!reconstituting) {
+            onCompleted()
+        }
         Metrics.completedOperationsCounter.increment()
     }
 
@@ -57,9 +59,11 @@ abstract class MiningOperation(
         failureReason = reason
         setState(MiningOperationState.FAILED)
 
-        onFailed()
-        cancelJob()
-        Metrics.failedOperationsCounter.increment()
+        if (!reconstituting) {
+            onFailed()
+            cancelJob()
+            Metrics.failedOperationsCounter.increment()
+        }
     }
 
     open fun onFailed() {}
