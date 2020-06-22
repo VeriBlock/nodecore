@@ -6,7 +6,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-@file:JvmName("NetworkParameters")
 package org.veriblock.core.params
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
