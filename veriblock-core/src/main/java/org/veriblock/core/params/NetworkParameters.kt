@@ -6,6 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+@file:JvmName("NetworkParameters")
 package org.veriblock.core.params
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
@@ -266,10 +267,13 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = true
 }
 
+@JvmField
 val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters.NETWORK))
+@JvmField
 val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
 @JvmField
 val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
+@JvmField
 val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
 
 fun getDefaultNetworkParameters(name: String) = when (name) {
