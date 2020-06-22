@@ -1,4 +1,14 @@
 
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url = uri("https://dl.bintray.com/kotlin/kotlin-eap")
+        }
+    }
+}
+
 include("veriblock-core")
 include("veriblock-shell")
 
@@ -21,13 +31,3 @@ include("nodecore-spv")
 include("nodecore-spv:nodecore-spv-standalone")
 
 rootProject.name = "nodecore-suite"
-
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-        maven {
-            url = uri("https://dl.bintray.com/kotlin/kotlin-eap")
-        }
-    }
-}
