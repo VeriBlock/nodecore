@@ -58,7 +58,7 @@ dependencies {
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
     // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:reworked-model-SNAPSHOT")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.2-beta.8")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
@@ -68,8 +68,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
 
     // Protobuf Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:0.20.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
 
     implementation("commons-cli:commons-cli:1.4")
     implementation("com.google.code.gson:gson:2.8.2")
@@ -77,8 +77,7 @@ dependencies {
     implementation("com.diogonunes:JCDP:2.0.3.1")
 
     // Database
-    implementation("org.jetbrains.exposed:exposed-core:0.23.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("com.zaxxer:HikariCP:3.3.1")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
 

@@ -44,16 +44,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinxSerializationVersion")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
     // Persistence
-    implementation("org.jetbrains.exposed:exposed-core:0.23.1")
-    implementation("org.jetbrains.exposed:exposed-java-time:0.23.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.23.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
     // Metrics
     implementation("io.micrometer:micrometer-core:1.1.4")

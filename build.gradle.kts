@@ -34,14 +34,11 @@ allprojects {
         mavenLocal()
         jcenter()
         maven("https://jitpack.io")
+        maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 
     tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "1.8"
-            apiVersion = "1.3"
-            languageVersion = "1.3"
-        }
+        kotlinOptions.jvmTarget = "1.8"
     }
 }
 

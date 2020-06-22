@@ -21,3 +21,13 @@ include("nodecore-spv")
 include("nodecore-spv:nodecore-spv-standalone")
 
 rootProject.name = "nodecore-suite"
+
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url = uri("https://dl.bintray.com/kotlin/kotlin-eap")
+        }
+    }
+}
