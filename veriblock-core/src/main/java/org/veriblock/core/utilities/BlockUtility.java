@@ -19,7 +19,9 @@ import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.veriblock.core.types.Pair;
 
 import java.math.BigInteger;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Random;
 
 public final class BlockUtility {
     private BlockUtility(){}
@@ -190,20 +192,20 @@ public final class BlockUtility {
                     return false;
                 }
 
-                long upperBound = startTimeEpoch + (blocktimeSeconds * height * 3) + (86400 * gracePeriodDays);
-                long lowerBound = (startTimeEpoch) + (blocktimeSeconds * height) / 3;
+                long upperBound = startTimeEpoch + (int)(((double)blocktimeSeconds * (double)height * 1.2)) + (86400 * gracePeriodDays);
+                long lowerBound = (startTimeEpoch) + (int)(((double)blocktimeSeconds * (double)height / 1.2));
                 lowerBound -= (86400 * gracePeriodDays);
                 if (lowerBound < startTimeEpoch) {
                     lowerBound = startTimeEpoch;
                 }
 
                 if (timestamp > upperBound) {
-                    // Timestamp is more than 3x higher than expected (+ grace period), invalid
+                    // Timestamp is more than upper bound, invalid
                     return false;
                 }
 
                 if (timestamp < lowerBound) {
-                    // Timestamp is less than 33.33% of expected (- grace period), invalid
+                    // Timestamp is less than upper bound, invalid
                     return false;
                 }
 
@@ -433,15 +435,21 @@ public final class BlockUtility {
     }
 
     // The same block header is hashed many times in different operations, cache out expensive hash calculations
-    // TODO: Cache pruning
-    private static HashMap<String, String> hashCache = new HashMap<>();
+    static final int MAX_CACHE_SIZE = 100000 + new Random().nextInt(100000);
+    static final LinkedHashMap<String, String> hashCache = new LinkedHashMap<String, String>() {
+        @Override
+        protected boolean removeEldestEntry(final Map.Entry eldest) {
+            return size() > MAX_CACHE_SIZE;
+        }
+    };
+
+    public static void cacheExternalHash(String header, String hash) {
+        hashCache.put(header, hash);
+    }
 
     public static String hashBlock(byte[] blockHeader) {
-        String blockHeaderHex = Utility.bytesToHex(blockHeader);
-        if (hashCache.containsKey(blockHeaderHex)) {
-            return hashCache.get(blockHeaderHex);
-        }
         int blockNum = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
+        String blockHeaderHex = Utility.bytesToHex(blockHeader);
 
         int ProgPoWForkHeight;
 
@@ -461,6 +469,10 @@ public final class BlockUtility {
         if (blockNum < ProgPoWForkHeight) {
             blockHash = crypto.vBlakeReturnHex(blockHeader);
         } else {
+            if (hashCache.containsKey(blockHeaderHex)) {
+                return hashCache.get(blockHeaderHex);
+            }
+
             // Generate header hash...
             byte[] headerHash = getProgPoWHeaderHash(blockHeader);
             int extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
@@ -480,10 +492,11 @@ public final class BlockUtility {
             );
 
             blockHash = digest.toUnprefixedHexString().toUpperCase();
+            String hash = blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+            hashCache.put(blockHeaderHex, hash);
+            return hash;
         }
 
-        String hash = blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
-        hashCache.put(blockHeaderHex, hash);
-        return hash;
+        return blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
     }
 }
