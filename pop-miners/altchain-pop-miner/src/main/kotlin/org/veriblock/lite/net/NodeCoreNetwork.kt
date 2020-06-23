@@ -24,9 +24,11 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.getSynchronizedMessage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -95,7 +97,7 @@ class NodeCoreNetwork(
                 }
 
                 // Verify the NodeCore configured Network
-                if (nodeCoreStateInfo.networkVersion.equals(context.networkParameters.name, true)) {
+                if (nodeCoreStateInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
                     if (!isOnSameNetwork()) {
                         sameNetwork.set(true)
                         EventBus.nodeCoreSameNetworkEvent.trigger()
@@ -104,7 +106,7 @@ class NodeCoreNetwork(
                     if (isOnSameNetwork()) {
                         sameNetwork.set(false)
                         EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                        logger.info { "Network misconfiguration, APM is configured on ${context.networkParameters.name} network while NodeCore is on ${nodeCoreStateInfo.networkVersion}." }
+                        logger.warn { "The connected NodeCore (${nodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
                     }
                 }
 
@@ -115,12 +117,13 @@ class NodeCoreNetwork(
                     if (!isSynchronized()) {
                         synchronized.set(true)
                         EventBus.nodeCoreSynchronizedEvent.trigger()
+                        logger.info { "The connected NodeCore is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
                     }
                 } else {
                     if (isSynchronized()) {
                         synchronized.set(false)
                         EventBus.nodeCoreNotSynchronizedEvent.trigger()
-                        logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreStateInfo.localBlockchainHeight}, Network Block: ${nodeCoreStateInfo.networkHeight}, Block Difference: ${nodeCoreStateInfo.blockDifference}, waiting until it synchronizes..." }
+                        logger.info { "The connected NodeCore is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
                     }
                 }
             } else {
@@ -169,7 +172,7 @@ class NodeCoreNetwork(
 
                         nodeCoreStateInfo?.let {
                             if (nodeCoreStateInfo.networkHeight != 0) {
-                                logger.debug { "Local Block: ${nodeCoreStateInfo.localBlockchainHeight}, Network Block: ${nodeCoreStateInfo.networkHeight}, Block Difference: ${nodeCoreStateInfo.blockDifference}" }
+                                logger.debug { "${it.getSynchronizedMessage()}" }
                             } else {
                                 logger.debug { "Still not connected to the network" }
                             }

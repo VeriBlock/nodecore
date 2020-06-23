@@ -11,3 +11,7 @@ fun Long.formatCoinAmount() =
 
 fun Coin.formatCoinAmount() =
     atomicUnits.formatCoinAmount()
+
+inline fun String.isOnSameNetwork(network: String): Boolean {
+    return replace("net", "").equals(network, true)
+}

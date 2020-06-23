@@ -31,7 +31,10 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.getSynchronizedMessage
 import java.io.IOException
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -64,9 +67,7 @@ class AltchainPopMinerService(
         // Resubmit the suspended operations
         coroutineScope.launch {
             while (!operationsSubmitted) {
-                if (nodeCoreLiteKit.network.isAccessible() && nodeCoreLiteKit.network.isOnSameNetwork() && nodeCoreLiteKit.network.isSynchronized()) {
-                    submitSuspendedOperations()
-                }
+                submitSuspendedOperations()
                 delay(5 * 1000)
             }
         }
@@ -77,12 +78,10 @@ class AltchainPopMinerService(
         EventBus.nodeCoreNotAccessibleEvent.register(this) {
             logger.info { "Unable to connect to NodeCore at this time, trying to reconnect..." }
         }
-        EventBus.nodeCoreSynchronizedEvent.register(this) {
-            logger.info { "The connected NodeCore is synchronized" }
-        }
+        EventBus.nodeCoreSynchronizedEvent.register(this) { }
         EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
         EventBus.nodeCoreSameNetworkEvent.register(this){
-            logger.info { "The connected NodeCore and the APM are running on the same configured network" }
+            logger.info { "The connected NodeCore & APM are running on the same configured network (${context.networkParameters.name})" }
         }
         EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
         EventBus.balanceChangedEvent.register(this) {
@@ -169,27 +168,27 @@ class AltchainPopMinerService(
         val nodecoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
         // Verify the NodeCore configured Network
         if (!nodeCoreLiteKit.network.isOnSameNetwork()) {
-            throw MineException("Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while NodeCore is at ${nodecoreStateInfo.networkVersion}")
+            throw MineException("The connected NodeCore (${nodecoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
         }
         // Verify the synchronized status
         if (!nodecoreStateInfo.isSynchronized) {
-            throw MineException("The connected NodeCore is not synchronized: Local Block: ${nodecoreStateInfo.localBlockchainHeight}, Network Block: ${nodecoreStateInfo.networkHeight}, Block Difference: ${nodecoreStateInfo.blockDifference}")
+            throw MineException("The connected NodeCore is not synchronized: ${nodecoreStateInfo.getSynchronizedMessage()}")
         }
         // Specific checks for the alt chain
         runBlocking {
             // Verify the connection with the alt chain daemon
             if (!chain.isConnected()) {
-                throw MineException("The miner is not connected to the ${chain.name} chain")
+                throw MineException("The miner is not connected to the ${chain.name} chain at ${chain.config.host}, is it reachable?")
             }
             // Get the alt chain information
             val altChainBlockChainInfo = chain.getBlockChainInfo()
             // Verify if the alt chain daemon is running on the same network as the APM
-            if (!context.networkParameters.name.replace("net", "").equals(altChainBlockChainInfo.networkVersion, true)) {
-                throw MineException("Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while the $chain daemon is at ${altChainBlockChainInfo.networkVersion}.")
+            if (!context.networkParameters.name.isOnSameNetwork(altChainBlockChainInfo.networkVersion)) {
+                throw MineException("The connected ${chain.name} (${altChainBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
             }
             // Verify the synchronized status
             if (!altChainBlockChainInfo.isSynchronized) {
-                throw MineException("The chain ${chain.name} is not synchronized, ${altChainBlockChainInfo.blockDifference} blocks left (LocalHeight=${altChainBlockChainInfo.localBlockchainHeight} NetworkHeight=${altChainBlockChainInfo.networkHeight} InitialBlockDownload=${altChainBlockChainInfo.initialblockdownload})")
+                throw MineException("The chain ${chain.name} is not synchronized: ${altChainBlockChainInfo.getSynchronizedMessage()}")
             }
             // Verify if the block is too old to be mined
             if (block != null && block < altChainBlockChainInfo.localBlockchainHeight - chain.getPayoutInterval() * 0.8) {
@@ -284,23 +283,36 @@ class AltchainPopMinerService(
         }
     }
 
-    private fun submitSuspendedOperations() {
+    private suspend fun submitSuspendedOperations() {
         if (operations.isEmpty()) {
             operationsSubmitted = true
             logger.info { "There are no suspended operations to submitted..." }
             return
         }
 
-        logger.info("Submitting suspended operations")
+        if (nodeCoreLiteKit.network.isAccessible() && nodeCoreLiteKit.network.isOnSameNetwork() && nodeCoreLiteKit.network.isSynchronized()) {
+            logger.info("Submitting suspended operations")
 
-        try {
-            for (operation in operations.values) {
-                if (!operation.state.isDone() && operation.job == null) {
-                    submit(operation)
+            try {
+                var chain: SecurityInheritingChain? = null
+                var blockChainInfo: StateInfo? = null
+
+                for (operation in operations.values) {
+                    if (!operation.state.isDone() && operation.job == null) {
+                        if (chain == null || chain != operation.chain) {
+                            chain = operation.chain
+                            blockChainInfo = chain.getBlockChainInfo()
+                        }
+                        if (blockChainInfo != null) {
+                            if (operation.chain.isConnected() && context.networkParameters.name.isOnSameNetwork(blockChainInfo.networkVersion) && blockChainInfo.isSynchronized) {
+                                submit(operation)
+                            }
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                logger.debugError(e) { "Unable to resume suspended operations" }
             }
-        } catch (e: Exception) {
-            logger.debugError(e) { "Unable to resume suspended operations" }
         }
 
         operationsSubmitted = true
@@ -318,7 +330,7 @@ class AltchainPopMinerService(
         }
     }
 
-    fun cancel(operation: ApmOperation) {
+    private fun cancel(operation: ApmOperation) {
         if (operation.job == null) {
             error("Trying to cancel operation [${operation.id}] while it doesn't have a running job!")
         }

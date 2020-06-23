@@ -8,3 +8,7 @@ data class StateInfo(
     val initialblockdownload: Boolean = false,
     val networkVersion: String = ""
 )
+
+inline fun StateInfo.getSynchronizedMessage(): String {
+    return "$blockDifference blocks left (LocalHeight=$localBlockchainHeight NetworkHeight=$networkHeight InitialBlockDownload=$initialblockdownload)"
+}
