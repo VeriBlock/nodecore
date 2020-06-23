@@ -71,12 +71,11 @@ class AltchainPopMinerService(
                 delay(5 * 1000)
             }
         }
-
         EventBus.nodeCoreAccessibleEvent.register(this) {
-            logger.info { "Successfully connected to NodeCore, waiting for the sync status..." }
+            logger.info { "Successfully connected to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}" }
         }
         EventBus.nodeCoreNotAccessibleEvent.register(this) {
-            logger.info { "Unable to connect to NodeCore at this time, trying to reconnect..." }
+            logger.info { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, trying to reconnect..." }
         }
         EventBus.nodeCoreSynchronizedEvent.register(this) { }
         EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
@@ -136,7 +135,7 @@ class AltchainPopMinerService(
     override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> = if (nodeCoreLiteKit.network.isAccessible()) {
         nodeCoreLiteKit.network.sendCoins(destinationAddress, atomicAmount)
     } else {
-        throw CommunicationException("NodeCore is not healthy")
+        throw CommunicationException("NodeCore is not accessible at this time")
     }
 
     private fun verifyReadyConditions(chain: SecurityInheritingChain, block: Int?) {
@@ -207,6 +206,7 @@ class AltchainPopMinerService(
         val chainMonitor = securityInheritingService.getMonitor(chainId)
             ?: error("Unable to load altchain monitor $chainId")
 
+        // Verify all the mine pre-conditions
         verifyReadyConditions(chain, block)
 
         val operation = ApmOperation(

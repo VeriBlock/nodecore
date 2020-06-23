@@ -41,6 +41,7 @@ class NodeCoreNetwork(
     private val transactionMonitor: TransactionMonitor,
     private val addressManager: AddressManager
 ) {
+    private var firstPoll: Boolean = true
     private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
     private val sameNetwork = AtomicBoolean(false)
@@ -103,7 +104,7 @@ class NodeCoreNetwork(
                         EventBus.nodeCoreSameNetworkEvent.trigger()
                     }
                 } else {
-                    if (isOnSameNetwork()) {
+                    if (isOnSameNetwork() || firstPoll) {
                         sameNetwork.set(false)
                         EventBus.nodeCoreNotSameNetworkEvent.trigger()
                         logger.warn { "The connected NodeCore (${nodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
@@ -120,7 +121,7 @@ class NodeCoreNetwork(
                         logger.info { "The connected NodeCore is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
                     }
                 } else {
-                    if (isSynchronized()) {
+                    if (isSynchronized() || firstPoll) {
                         synchronized.set(false)
                         EventBus.nodeCoreNotSynchronizedEvent.trigger()
                         logger.info { "The connected NodeCore is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
@@ -183,6 +184,7 @@ class NodeCoreNetwork(
         } catch (e: Exception) {
             logger.debugError(e) { "Error when polling NodeCore" }
         }
+        firstPoll = false
     }
 
     // FIXME This implementation not good enough. Use channels.
