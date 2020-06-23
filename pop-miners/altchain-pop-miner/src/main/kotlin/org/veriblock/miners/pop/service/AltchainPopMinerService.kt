@@ -12,6 +12,7 @@ package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.veriblock.core.CommunicationException
@@ -58,7 +59,17 @@ class AltchainPopMinerService(
         nodeCoreLiteKit.initialize()
 
         // Restore operations (including re-attach listeners) before the network starts
-        this.nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
+        nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
+
+        // Resubmit the suspended operations
+        coroutineScope.launch {
+            while (!operationsSubmitted) {
+                if (nodeCoreLiteKit.network.isAccessible() && nodeCoreLiteKit.network.isOnSameNetwork() && nodeCoreLiteKit.network.isSynchronized()) {
+                    submitSuspendedOperations()
+                }
+                delay(5 * 1000)
+            }
+        }
 
         EventBus.nodeCoreAccessibleEvent.register(this) {
             logger.info { "Successfully connected to NodeCore, waiting for the sync status..." }
@@ -69,14 +80,11 @@ class AltchainPopMinerService(
         EventBus.nodeCoreSynchronizedEvent.register(this) {
             logger.info { "The connected NodeCore is synchronized" }
         }
-        EventBus.nodeCoreNotSynchronizedEvent.register(this) {
-        }
+        EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
         EventBus.nodeCoreSameNetworkEvent.register(this){
             logger.info { "The connected NodeCore and the APM are running on the same configured network" }
         }
-        EventBus.nodeCoreNotSameNetworkEvent.register(this) {
-
-        }
+        EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
         EventBus.balanceChangedEvent.register(this) {
             if (lastConfirmedBalance != it.confirmedBalance) {
                 lastConfirmedBalance = it.confirmedBalance
@@ -145,7 +153,7 @@ class AltchainPopMinerService(
         }
         // Specific checks for the NodeCore
         if (!nodeCoreLiteKit.network.isAccessible()) {
-            throw MineException("Unable to connect to the NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, is it reachablmine vte?")
+            throw MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, is it reachable?")
         }
         // Verify the balance
         val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
@@ -190,7 +198,7 @@ class AltchainPopMinerService(
         }
         // Verify if there are suspended operations to be submitted, all the previous conditions should be fine to submit the suspended operations
         if (!operationsSubmitted && operations.isNotEmpty()) {
-            throw MineException("Unable to mine, waiting for the suspended operations to be submitted...")
+            throw MineException("Unable to mine, waiting to verify if there are suspended operations to be submitted...")
         }
     }
 
@@ -279,6 +287,7 @@ class AltchainPopMinerService(
     private fun submitSuspendedOperations() {
         if (operations.isEmpty()) {
             operationsSubmitted = true
+            logger.info { "There are no suspended operations to submitted..." }
             return
         }
 
