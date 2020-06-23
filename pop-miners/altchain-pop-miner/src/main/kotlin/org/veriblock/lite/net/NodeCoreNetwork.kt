@@ -39,15 +39,19 @@ class NodeCoreNetwork(
     private val transactionMonitor: TransactionMonitor,
     private val addressManager: AddressManager
 ) {
-    private val healthy = AtomicBoolean(false)
+    private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
+    private val sameNetwork = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
 
-    fun isHealthy(): Boolean =
-        healthy.get()
+    fun isAccessible(): Boolean =
+        accessible.get()
 
     fun isSynchronized(): Boolean =
         synchronized.get()
+
+    fun isOnSameNetwork(): Boolean =
+        sameNetwork.get()
 
     fun startAsync(): ListenableFuture<Boolean> {
         Threading.NODECORE_POLL_THREAD.scheduleWithFixedDelay({
@@ -75,6 +79,8 @@ class NodeCoreNetwork(
 
     fun getNodeCoreStateInfo() = gateway.getNodeCoreStateInfo()
 
+    fun ping() = gateway.ping()
+
     private fun poll() {
         try {
             var nodeCoreStateInfo: StateInfo? = null
@@ -83,52 +89,65 @@ class NodeCoreNetwork(
                 // At this point the APM<->NodeCore connection is fine
                 nodeCoreStateInfo = gateway.getNodeCoreStateInfo()
 
-                // Verify the NodeCore configured Network
-                if (!nodeCoreStateInfo.networkVersion.equals(context.networkParameters.name, true)) {
-                    logger.info { "Network misconfiguration, APM is configured at the ${context.networkParameters.name} network while NodeCore is at ${nodeCoreStateInfo.networkVersion}." }
-                    return
+                if (!isAccessible()) {
+                    accessible.set(true)
+                    EventBus.nodeCoreAccessibleEvent.trigger()
                 }
 
-                if (!isHealthy()) {
-                    healthy.set(true)
-                    EventBus.nodeCoreHealthyEvent.trigger()
+                // Verify the NodeCore configured Network
+                if (nodeCoreStateInfo.networkVersion.equals(context.networkParameters.name, true)) {
+                    if (!isOnSameNetwork()) {
+                        sameNetwork.set(true)
+                        EventBus.nodeCoreSameNetworkEvent.trigger()
+                    }
+                } else {
+                    if (isOnSameNetwork()) {
+                        sameNetwork.set(false)
+                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                        logger.info { "Network misconfiguration, APM is configured on ${context.networkParameters.name} network while NodeCore is on ${nodeCoreStateInfo.networkVersion}." }
+                    }
                 }
+
                 connected.set(true)
 
                 // Verify the remote NodeCore sync status
                 if (nodeCoreStateInfo.isSynchronized) {
                     if (!isSynchronized()) {
                         synchronized.set(true)
-                        EventBus.nodeCoreHealthySyncEvent.trigger()
+                        EventBus.nodeCoreSynchronizedEvent.trigger()
                     }
                 } else {
                     if (isSynchronized()) {
                         synchronized.set(false)
-                        EventBus.nodeCoreUnhealthySyncEvent.trigger()
+                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
                         logger.info { "The connected NodeCore is not synchronized, Local Block: ${nodeCoreStateInfo.localBlockchainHeight}, Network Block: ${nodeCoreStateInfo.networkHeight}, Block Difference: ${nodeCoreStateInfo.blockDifference}, waiting until it synchronizes..." }
                     }
                 }
             } else {
                 // At this point the APM<->NodeCore can't be established
-                if (isHealthy()) {
-                    healthy.set(false)
-                    EventBus.nodeCoreUnhealthyEvent.trigger()
+                if (isAccessible()) {
+                    accessible.set(false)
+                    EventBus.nodeCoreNotAccessibleEvent.trigger()
                 }
                 if (isSynchronized()) {
                     synchronized.set(false)
-                    EventBus.nodeCoreUnhealthySyncEvent.trigger()
+                    EventBus.nodeCoreNotSynchronizedEvent.trigger()
+                }
+                if (isOnSameNetwork()) {
+                    sameNetwork.set(false)
+                    EventBus.nodeCoreNotSameNetworkEvent.trigger()
                 }
             }
-            if (isHealthy() && isSynchronized()) {
+            if (isAccessible() && isSynchronized() && isOnSameNetwork()) {
                 // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
                 // APM can continue with its work
                 val lastBlock: VeriBlockBlock = try {
                     gateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.debugWarn(e) { "Unable to get the last block from NodeCore" }
-                    if (isHealthy()) {
-                        healthy.set(false)
-                        EventBus.nodeCoreUnhealthyEvent.trigger()
+                    if (isAccessible()) {
+                        accessible.set(false)
+                        EventBus.nodeCoreNotAccessibleEvent.trigger()
                     }
                     return
                 }
@@ -142,7 +161,7 @@ class NodeCoreNetwork(
                     logger.debugError(e) { "VeriBlockBlock store exception" }
                 }
             } else {
-                if (!isHealthy()) {
+                if (!isAccessible()) {
                     logger.debug { "Cannot proceed: waiting for connection with NodeCore..." }
                 } else {
                     if (!isSynchronized()) {

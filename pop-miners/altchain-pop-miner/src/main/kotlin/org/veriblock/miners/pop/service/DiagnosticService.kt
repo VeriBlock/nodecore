@@ -22,7 +22,7 @@ class DiagnosticService(
         val information = ArrayList<String>()
 
         // Check the NodeCore status
-        if (nodeCoreLiteKit.network.isHealthy()) {
+        if (nodeCoreLiteKit.network.isAccessible()) {
             information.add("SUCCESS - NodeCore connection: Connected")
             val nodeCoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
             if (nodeCoreLiteKit.network.isSynchronized()) {
@@ -30,9 +30,15 @@ class DiagnosticService(
             } else {
                 information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})")
             }
+            if (nodeCoreStateInfo.networkVersion.equals(context.networkParameters.name, true)) {
+                information.add("SUCCESS - NodeCore configured network: NodeCore and APM are on the same configured network (${context.networkParameters.name})")
+            } else {
+                information.add("FAIL - NodeCore configured network: Network misconfiguration, APM is configured on ${context.networkParameters.name} network while NodeCore is on ${nodeCoreStateInfo.networkVersion}")
+            }
         } else {
             information.add("FAIL - NodeCore connection: Not connected")
-            information.add("FAIL - Unable to determine the NodeCore synchronization status")
+            information.add("FAIL - NodeCore unable to determine the synchronization status")
+            information.add("FAIL - NodeCore unable to determine the configured network")
         }
 
         // Check the altchains status
@@ -48,9 +54,15 @@ class DiagnosticService(
                         } else {
                             information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainSyncStatus.blockDifference} blocks left (LocalHeight=${chainSyncStatus.localBlockchainHeight} NetworkHeight=${chainSyncStatus.networkHeight} InitialBlockDownload=${chainSyncStatus.initialblockdownload})")
                         }
+                        if (context.networkParameters.name.replace("net", "").equals(chainSyncStatus.networkVersion, true)) {
+                            information.add("SUCCESS - ${it.value.name} configured network: ${it.value.name} and APM are on the same configured network (${context.networkParameters.name})")
+                        } else {
+                            information.add("FAIL - ${it.value.name} configured network: Network misconfiguration, APM is configured on ${context.networkParameters.name} network while ${it.value.name} is on ${chainSyncStatus.networkVersion}")
+                        }
                     } else {
                         information.add("FAIL - ${it.value.name} connection: Not connected")
-                        information.add("FAIL - Unable to determine the ${it.value.name} synchronization status")
+                        information.add("FAIL - ${it.value.name} Unable to determine the synchronization status")
+                        information.add("FAIL - ${it.value.name} unable to determine the configured network")
                     }
                 }
             }
@@ -89,14 +101,14 @@ class DiagnosticService(
         // Check the balance
         try {
             val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
-            if (nodeCoreLiteKit.network.isHealthy()) {
+            if (nodeCoreLiteKit.network.isAccessible()) {
                 if (currentBalance.atomicUnits > minerConfig.feePerByte) {
                     information.add("SUCCESS - The ${context.vbkTokenName} PoP wallet contains sufficient funds, current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                 } else {
                     information.add("FAIL - The ${context.vbkTokenName} PoP wallet does not contain sufficient funds: current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}, minimum required: ${minerConfig.maxFee.formatCoinAmount()}, need ${(minerConfig.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more. See: https://wiki.veriblock.org/index.php/Get_VBK")
                 }
             } else {
-                information.add("FAIL - Unable to determine the ${context.vbkTokenName} dPoP balance.")
+                information.add("FAIL - Unable to determine the ${context.vbkTokenName} PoP balance.")
             }
         } catch(e: StatusRuntimeException) {
             information.add("FAIL - Unable to determine the ${context.vbkTokenName} PoP balance.")

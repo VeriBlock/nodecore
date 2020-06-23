@@ -13,10 +13,13 @@ import org.veriblock.miners.pop.core.ApmOperation
 
 object EventBus {
 
-    val nodeCoreHealthyEvent = EmptyEvent("NodeCore Healthy")
-    val nodeCoreUnhealthyEvent = EmptyEvent("NodeCore Unhealthy")
-    val nodeCoreHealthySyncEvent = EmptyEvent("NodeCore Healthy Sync")
-    val nodeCoreUnhealthySyncEvent = EmptyEvent("NodeCore Unhealthy Sync")
+    val nodeCoreAccessibleEvent = EmptyEvent("NodeCore is accessible")
+    val nodeCoreNotAccessibleEvent = EmptyEvent("NodeCore is not accessible")
+    val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore is synchronized")
+    val nodeCoreNotSynchronizedEvent = EmptyEvent("NodeCore is not synchronized")
+    val nodeCoreSameNetworkEvent = EmptyEvent("NodeCore is at the same configured network")
+    val nodeCoreNotSameNetworkEvent = EmptyEvent("NodeCore is not at the same configured network")
+
     val balanceChangedEvent = Event<Balance>("Balance Changed")
 
     val newBestBlockEvent = AsyncEvent<FullBlock>("New Best Block", Threading.LISTENER_THREAD)
