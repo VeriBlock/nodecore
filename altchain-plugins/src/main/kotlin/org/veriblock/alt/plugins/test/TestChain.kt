@@ -233,16 +233,7 @@ class TestChain(
         return transaction
     }
 
-    override suspend fun isConnected(): Boolean {
-        return try {
-            getLastBitcoinBlockHash()
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, 50, 0, true)
+    override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, 50, 0, true, false, "testnet")
 }
 
 

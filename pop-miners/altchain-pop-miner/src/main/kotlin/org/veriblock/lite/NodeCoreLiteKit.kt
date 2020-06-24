@@ -11,7 +11,6 @@ package org.veriblock.lite
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.core.contracts.Balance
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
@@ -71,7 +70,7 @@ class NodeCoreLiteKit(
         EventBus.newBestBlockEvent.register(transactionMonitor) {
             val balanceChanged = transactionMonitor.onNewBestBlock(it)
             if (balanceChanged) {
-                if (network.isHealthy()) {
+                if (network.isAccessible()) {
                     EventBus.balanceChangedEvent.trigger(network.getBalance())
                 }
             }
@@ -90,7 +89,7 @@ class NodeCoreLiteKit(
         logger.info { "Connecting to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}..." }
         beforeNetworkStart()
         network.startAsync().addListener(Runnable {
-            if (network.isHealthy()) {
+            if (network.isAccessible()) {
                 val balance = try {
                     network.getBalance()
                 } catch (ignored: Exception) {

@@ -64,7 +64,7 @@ val minerModule = module {
         single<MinerService> { MockMinerService(get(), get()) }
     }
     single { ApmOperationExplainer(get()) }
-    single { SecurityInheritingService(get(), get()) }
+    single { SecurityInheritingService(get(), get(), get()) }
     single {
         CommandFactory().apply {
             configure(get(), get(), get(), get(), get(), get(), get())
@@ -75,7 +75,7 @@ val minerModule = module {
     single { OperationSerializer(get(), get()) }
     single { OperationService(get(), get()) }
     single { PluginService(get()) }
-    single { DiagnosticService(get(), get(), get(), get(), get()) }
+    single { DiagnosticService(get(), get(), get(), get(), get(), get()) }
 
     // Storage
     single<DataSource> {

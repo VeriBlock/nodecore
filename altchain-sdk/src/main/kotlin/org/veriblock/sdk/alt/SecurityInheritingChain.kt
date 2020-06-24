@@ -106,12 +106,7 @@ interface SecurityInheritingChain {
     fun shouldAutoMine(blockHeight: Int): Boolean = config.shouldAutoMine(blockHeight)
 
     /**
-     * @return true if the chain is connected
-     */
-    suspend fun isConnected(): Boolean
-
-    /**
-     * @return the Synchronization status
+     * @return the block chain information
      */
     suspend fun getBlockChainInfo(): StateInfo
 }

@@ -238,15 +238,6 @@ class BitcoinFamilyChain(
         return BlockEndorsement(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
 
-    override suspend fun isConnected(): Boolean {
-        return try {
-            rpcRequest<String>("getblockcount")
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     override suspend fun getBlockChainInfo(): StateInfo {
         return try {
             val response: BlockChainInfo = rpcRequest("getblockchaininfo")
