@@ -164,6 +164,14 @@ class SecurityInheritingMonitor(
                     accessible.set(true)
                     EventBus.altChainNotAccessibleEvent.trigger(chainId)
                 }
+                if (isSynchronized()) {
+                    synchronized.set(false)
+                    EventBus.altChainNotSynchronizedEvent.trigger(chainId)
+                }
+                if (isOnSameNetwork()) {
+                    sameNetwork.set(false)
+                    EventBus.altChainNotSameNetworkEvent.trigger(chainId)
+                }
             }
 
             if (isAccessible() && isSynchronized() && isOnSameNetwork()) {

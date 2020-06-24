@@ -83,7 +83,7 @@ class DiagnosticService(
             configuredPlugins.forEach {
                 val configuredPayoutAddress = it.value.payoutAddress
                 if (configuredPayoutAddress == null || configuredPayoutAddress == "INSERT PAYOUT ADDRESS" || configuredPayoutAddress.isEmpty()) {
-                    information.add("FAIL - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is notget configured")
+                    information.add("FAIL - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is not configured")
                 } else {
                     information.add("SUCCESS - ${it.value.name} payoutAddress: '$configuredPayoutAddress' is configured")
                 }
