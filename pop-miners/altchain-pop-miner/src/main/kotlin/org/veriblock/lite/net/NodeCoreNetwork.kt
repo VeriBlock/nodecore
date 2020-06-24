@@ -42,10 +42,15 @@ class NodeCoreNetwork(
     private val addressManager: AddressManager
 ) {
     private var firstPoll: Boolean = true
+
+    private val ready = AtomicBoolean(false)
     private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
     private val sameNetwork = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
+
+    fun isReady(): Boolean =
+        ready.get()
 
     fun isAccessible(): Boolean =
         accessible.get()
@@ -80,9 +85,7 @@ class NodeCoreNetwork(
         return gateway.getBlock(hash.toString())
     }
 
-    fun getNodeCoreStateInfo() = gateway.getNodeCoreStateInfo()
-
-    fun ping() = gateway.ping()
+    var latestNodeCoreStateInfo: StateInfo = StateInfo()
 
     private fun poll() {
         try {
@@ -91,6 +94,7 @@ class NodeCoreNetwork(
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine
                 nodeCoreStateInfo = gateway.getNodeCoreStateInfo()
+                latestNodeCoreStateInfo = nodeCoreStateInfo
 
                 if (!isAccessible()) {
                     accessible.set(true)
@@ -113,7 +117,7 @@ class NodeCoreNetwork(
 
                 connected.set(true)
 
-                // Verify the remote NodeCore sync status
+                // Verify the NodeCore synchronization status
                 if (nodeCoreStateInfo.isSynchronized) {
                     if (!isSynchronized()) {
                         synchronized.set(true)
@@ -128,22 +132,27 @@ class NodeCoreNetwork(
                     }
                 }
             } else {
-                // At this point the APM<->NodeCore can't be established
+                // At this point the APM<->NodeCore connection can't be established
+                latestNodeCoreStateInfo = StateInfo()
                 if (isAccessible()) {
                     accessible.set(false)
                     EventBus.nodeCoreNotAccessibleEvent.trigger()
                 }
-                if (isSynchronized()) {
+                /*if (isSynchronized()) {
                     synchronized.set(false)
                     EventBus.nodeCoreNotSynchronizedEvent.trigger()
                 }
                 if (isOnSameNetwork()) {
                     sameNetwork.set(false)
                     EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                }
+                }*/
             }
             if (isAccessible() && isSynchronized() && isOnSameNetwork()) {
-                // At this point the APM<->NodeCore connection is fine and the remote NodeCore is synchronized so
+                if (!isReady()) {
+                    ready.set(true)
+                    EventBus.nodeCoreReadyEvent.trigger()
+                }
+                // At this point the APM<->NodeCore connection is fine and the NodeCore is synchronized so
                 // APM can continue with its work
                 val lastBlock: VeriBlockBlock = try {
                     gateway.getLastBlock()
@@ -165,6 +174,10 @@ class NodeCoreNetwork(
                     logger.debugError(e) { "VeriBlockBlock store exception" }
                 }
             } else {
+                if (isReady()) {
+                    ready.set(false)
+                    EventBus.nodeCoreNotReadyEvent.trigger()
+                }
                 if (!isAccessible()) {
                     logger.debug { "Cannot proceed: waiting for connection with NodeCore..." }
                 } else {
@@ -173,7 +186,7 @@ class NodeCoreNetwork(
 
                         nodeCoreStateInfo?.let {
                             if (nodeCoreStateInfo.networkHeight != 0) {
-                                logger.debug { "${it.getSynchronizedMessage()}" }
+                                logger.debug { it.getSynchronizedMessage() }
                             } else {
                                 logger.debug { "Still not connected to the network" }
                             }

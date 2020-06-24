@@ -14,7 +14,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.veriblock.core.CommunicationException
 import org.veriblock.core.MineException
 import org.veriblock.core.utilities.createLogger
@@ -31,9 +30,9 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.util.isOnSameNetwork
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
+import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
 import java.io.IOException
 import java.time.LocalDateTime
@@ -66,11 +65,14 @@ class AltchainPopMinerService(
 
         // Resubmit the suspended operations
         coroutineScope.launch {
+            delay(5 * 1000)
             while (!operationsSubmitted) {
                 submitSuspendedOperations()
                 delay(5 * 1000)
             }
         }
+
+        // NodeCore Events
         EventBus.nodeCoreAccessibleEvent.register(this) {
             logger.info { "Successfully connected to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}" }
         }
@@ -83,12 +85,43 @@ class AltchainPopMinerService(
             logger.info { "The connected NodeCore & APM are running on the same configured network (${context.networkParameters.name})" }
         }
         EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
+        EventBus.nodeCoreReadyEvent.register(this) {
+            logger.info { "The connected NodeCore is ready" }
+        }
+        EventBus.nodeCoreNotReadyEvent.register(this) {
+            logger.info { "The connected NodeCore is not ready" }
+        }
+        // Altchain Events
+        EventBus.altChainAccessibleEvent.register(this) {
+            pluginService[it]?.let {
+                logger.info { "Successfully connected to ${it.name} chain at ${it.config.host}" }
+            }
+        }
+        EventBus.altChainNotAccessibleEvent.register(this) {
+            pluginService[it]?.let {
+                logger.info { "Unable to connect to ${it.name} chain at ${it.config.host}, trying to reconnect..." }
+            }
+        }
+        EventBus.altChainSynchronizedEvent.register(this) { }
+        EventBus.altChainNotSynchronizedEvent.register(this) { }
+        EventBus.altChainSameNetworkEvent.register(this) {
+            logger.info { "The connected $it chain & APM are running on the same configured network (${context.networkParameters.name})" }
+        }
+        EventBus.altChainNotSameNetworkEvent.register(this) { }
+        EventBus.altChainReadyEvent.register(this) {
+            logger.info { "$it chain is ready" }
+        }
+        EventBus.altChainNotReadyEvent.register(this) {
+            logger.info { "$it chain is not ready" }
+        }
+        // Balance Events
         EventBus.balanceChangedEvent.register(this) {
             if (lastConfirmedBalance != it.confirmedBalance) {
                 lastConfirmedBalance = it.confirmedBalance
                 logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
             }
         }
+        // Operation Events
         EventBus.operationStateChangedEvent.register(this) {
             operationService.storeOperation(it)
         }
@@ -138,66 +171,56 @@ class AltchainPopMinerService(
         throw CommunicationException("NodeCore is not accessible at this time")
     }
 
-    private fun verifyReadyConditions(chain: SecurityInheritingChain, block: Int?) {
+    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
         // Check the last operation time
         val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
         val currentTime = LocalDateTime.now()
         if (lastOperationTime != null && currentTime < lastOperationTime.plusSeconds(1)) {
-            throw MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation.")
+            return CheckResult.Failure(MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation"))
         }
         // Verify if the miner is shutting down
         if (isShuttingDown) {
-            throw MineException("Unable to mine, the miner is currently shutting down")
+            return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
         }
         // Specific checks for the NodeCore
         if (!nodeCoreLiteKit.network.isAccessible()) {
-            throw MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, is it reachable?")
+            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, is it reachable?"))
         }
         // Verify the balance
         val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
         if (currentBalance.atomicUnits < config.maxFee) {
-            throw MineException("""
+            return CheckResult.Failure(MineException("""
                 PoP wallet does not contain sufficient funds, 
                 Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
                 Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more
                 Send ${context.vbkTokenName} coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
-            """.trimIndent())
+            """.trimIndent()))
         }
-        // Get the NodeCore state info
-        val nodecoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
         // Verify the NodeCore configured Network
         if (!nodeCoreLiteKit.network.isOnSameNetwork()) {
-            throw MineException("The connected NodeCore (${nodecoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
+            return CheckResult.Failure(MineException("The connected NodeCore (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network"))
         }
         // Verify the synchronized status
-        if (!nodecoreStateInfo.isSynchronized) {
-            throw MineException("The connected NodeCore is not synchronized: ${nodecoreStateInfo.getSynchronizedMessage()}")
+        if (!nodeCoreLiteKit.network.isSynchronized()) {
+            return CheckResult.Failure(MineException("The connected NodeCore is not synchronized: ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}"))
         }
         // Specific checks for the alt chain
-        runBlocking {
-            // Verify the connection with the alt chain daemon
-            if (!chain.isConnected()) {
-                throw MineException("The miner is not connected to the ${chain.name} chain at ${chain.config.host}, is it reachable?")
-            }
-            // Get the alt chain information
-            val altChainBlockChainInfo = chain.getBlockChainInfo()
-            // Verify if the alt chain daemon is running on the same network as the APM
-            if (!context.networkParameters.name.isOnSameNetwork(altChainBlockChainInfo.networkVersion)) {
-                throw MineException("The connected ${chain.name} (${altChainBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
-            }
-            // Verify the synchronized status
-            if (!altChainBlockChainInfo.isSynchronized) {
-                throw MineException("The chain ${chain.name} is not synchronized: ${altChainBlockChainInfo.getSynchronizedMessage()}")
-            }
-            // Verify if the block is too old to be mined
-            if (block != null && block < altChainBlockChainInfo.localBlockchainHeight - chain.getPayoutInterval() * 0.8) {
-                throw MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network.")
-            }
+        if (!monitor.isAccessible()) {
+            return CheckResult.Failure(MineException("The miner is not connected to the ${chain.name} chain at ${chain.config.host}, is it reachable?"))
         }
-        // Verify if there are suspended operations to be submitted, all the previous conditions should be fine to submit the suspended operations
-        if (!operationsSubmitted && operations.isNotEmpty()) {
-            throw MineException("Unable to mine, waiting to verify if there are suspended operations to be submitted...")
+        // Verify if the alt chain daemon is running on the same network as the APM
+        if (!monitor.isOnSameNetwork()) {
+            return CheckResult.Failure(MineException("The connected ${chain.name} (${monitor.latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network"))
         }
+        // Verify the synchronized status
+        if (!monitor.isSynchronized()) {
+            return CheckResult.Failure(MineException("The chain ${chain.name} is not synchronized: ${monitor.latestBlockChainInfo.getSynchronizedMessage()}"))
+        }
+        // Verify if the block is too old to be mined
+        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutInterval() * 0.8) {
+            return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
+        }
+        return CheckResult.Success()
     }
 
     override fun mine(chainId: String, block: Int?): String {
@@ -207,7 +230,10 @@ class AltchainPopMinerService(
             ?: error("Unable to load altchain monitor $chainId")
 
         // Verify all the mine pre-conditions
-        verifyReadyConditions(chain, block)
+        val result = checkReadyConditions(chain, chainMonitor, block)
+        if (result is CheckResult.Failure) {
+            throw result.error
+        }
 
         val operation = ApmOperation(
             endorsedBlockHeight = block,
@@ -290,23 +316,15 @@ class AltchainPopMinerService(
             return
         }
 
-        if (nodeCoreLiteKit.network.isAccessible() && nodeCoreLiteKit.network.isOnSameNetwork() && nodeCoreLiteKit.network.isSynchronized()) {
+        if (nodeCoreLiteKit.network.isReady()) {
             logger.info("Submitting suspended operations")
 
             try {
-                var chain: SecurityInheritingChain? = null
-                var blockChainInfo: StateInfo? = null
-
                 for (operation in operations.values) {
                     if (!operation.state.isDone() && operation.job == null) {
-                        if (chain == null || chain != operation.chain) {
-                            chain = operation.chain
-                            blockChainInfo = chain.getBlockChainInfo()
-                        }
-                        if (blockChainInfo != null) {
-                            if (operation.chain.isConnected() && context.networkParameters.name.isOnSameNetwork(blockChainInfo.networkVersion) && blockChainInfo.isSynchronized) {
-                                submit(operation)
-                            }
+                        val chainMonitor = securityInheritingService.getMonitor(operation.chain.key) ?: null
+                        if (chainMonitor != null && chainMonitor.isReady()) {
+                            submit(operation)
                         }
                     }
                 }

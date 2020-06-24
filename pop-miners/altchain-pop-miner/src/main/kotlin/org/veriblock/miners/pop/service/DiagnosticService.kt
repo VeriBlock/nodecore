@@ -5,8 +5,8 @@ import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
-import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.DiagnosticInformation
@@ -17,7 +17,8 @@ class DiagnosticService(
     private val minerConfig: MinerConfig,
     private val minerService: MinerService,
     private val pluginService: PluginService,
-    private val nodeCoreLiteKit: NodeCoreLiteKit
+    private val nodeCoreLiteKit: NodeCoreLiteKit,
+    private val securityInheritingService: SecurityInheritingService
 ) {
 
     fun collectDiagnosticInformation(): DiagnosticInformation {
@@ -26,18 +27,17 @@ class DiagnosticService(
         // Check the NodeCore status
         if (nodeCoreLiteKit.network.isAccessible()) {
             information.add("SUCCESS - NodeCore connection: Connected to ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}")
-            val nodeCoreStateInfo = nodeCoreLiteKit.network.getNodeCoreStateInfo()
             // Configured network
-            if (nodeCoreStateInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
+            if (nodeCoreLiteKit.network.isOnSameNetwork()) {
                 information.add("SUCCESS - NodeCore configured network: NodeCore & APM are running on the same configured network (${context.networkParameters.name})")
             } else {
-                information.add("FAIL - NodeCore configured network: NodeCore (${nodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
+                information.add("FAIL - NodeCore configured network: NodeCore (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
             }
             // Synchronization
             if (nodeCoreLiteKit.network.isSynchronized()) {
-                information.add("SUCCESS - NodeCore synchronization status: Synchronized ${nodeCoreStateInfo.getSynchronizedMessage()}")
+                information.add("SUCCESS - NodeCore synchronization status: Synchronized ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
             } else {
-                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreStateInfo.getSynchronizedMessage()}")
+                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
             }
         } else {
             information.add("FAIL - NodeCore connection: Not connected to ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}")
@@ -50,20 +50,21 @@ class DiagnosticService(
         if (plugins.isNotEmpty()) {
             runBlocking {
                 plugins.forEach {
-                    if (it.value.isConnected()) {
+                    val chainMonitor = securityInheritingService.getMonitor(it.key)
+                        ?: error("Unable to load altchain monitor ${it.key}") // Shouldn't happen
+                    if (chainMonitor.isAccessible()) {
                         information.add("SUCCESS - ${it.value.name} connection: Connected to ${it.value.config.host}")
-                        val blockChainInfo = it.value.getBlockChainInfo()
                         // Configured network
-                        if (context.networkParameters.name.isOnSameNetwork(blockChainInfo.networkVersion)) {
+                        if (chainMonitor.isOnSameNetwork()) {
                             information.add("SUCCESS - ${it.value.name} configured network: ${it.value.name} & APM are running on the same configured network (${context.networkParameters.name})")
                         } else {
-                            information.add("FAIL - ${it.value.name} configured network: ${it.value.name} (${blockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
+                            information.add("FAIL - ${it.value.name} configured network: ${it.value.name} (${chainMonitor.latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
                         }
                         // Synchronization
-                        if (blockChainInfo.isSynchronized) {
-                            information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized ${blockChainInfo.getSynchronizedMessage()}")
+                        if (chainMonitor.isSynchronized()) {
+                            information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized ${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()}")
                         } else {
-                            information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${blockChainInfo.getSynchronizedMessage()}")
+                            information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()}")
                         }
                     } else {
                         information.add("FAIL - ${it.value.name} connection: Not connected to ${it.value.config.host}")

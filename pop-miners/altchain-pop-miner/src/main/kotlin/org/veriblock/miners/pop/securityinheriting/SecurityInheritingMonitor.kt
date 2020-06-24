@@ -22,11 +22,16 @@ import kotlinx.coroutines.launch
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
+import org.veriblock.lite.core.Context
 import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.util.checkSuccess
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -37,29 +42,49 @@ import kotlin.concurrent.withLock
 private val logger = createLogger {}
 
 class SecurityInheritingMonitor(
+    val context: Context,
     configuration: Configuration,
     private val chainId: String,
     private val chain: SecurityInheritingChain
 ) {
     private val pollingPeriodSeconds = configuration.getLong(
         "securityInheriting.$chainId.pollingPeriodSeconds"
-    ) ?: 20L
+    ) ?: 10L
 
     private val lock = ReentrantLock()
 
     private lateinit var miner: MinerService
 
-    private val healthy = AtomicBoolean(false)
+    private var firstPoll: Boolean = true
+
+    private val ready = AtomicBoolean(false)
+    private val accessible = AtomicBoolean(false)
+    private val synchronized = AtomicBoolean(false)
+    private val sameNetwork = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
 
     private var bestBlockHeight: Int = -1
 
     private var pollSchedule: Job? = null
 
-    val newBlockHeightBroadcastChannel = BroadcastChannel<Int>(CONFLATED)
+    private val newBlockHeightBroadcastChannel = BroadcastChannel<Int>(CONFLATED)
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
+
+    fun isReady(): Boolean =
+        ready.get()
+
+    fun isAccessible(): Boolean =
+        accessible.get()
+
+    fun isSynchronized(): Boolean =
+        synchronized.get()
+
+    fun isOnSameNetwork(): Boolean =
+        sameNetwork.get()
+
+    var latestBlockChainInfo: StateInfo = StateInfo()
 
     /**
      * Starts monitoring the corresponding chain with a polling schedule
@@ -74,10 +99,7 @@ class SecurityInheritingMonitor(
             }
         }
 
-        logger.info("Connecting to SI Chain ($chainId)...")
-        connected.addListener(Runnable {
-            logger.info("Connected to SI Chain ($chainId)!")
-        }, Threading.SI_POLL_THREAD)
+        logger.info("Connecting to SI Chain ($chainId) at ${chain.config.host}...")
     }
 
     /**
@@ -94,12 +116,72 @@ class SecurityInheritingMonitor(
      */
     private suspend fun poll() {
         try {
-            if (healthy.get()) {
+            // Verify if we can make a connection with the Altchain
+            val pinged = checkSuccess { chain.getBestBlockHeight() }
+            if (pinged) {
+                // At this point the APM<->Altchain connection is fine
+                latestBlockChainInfo = chain.getBlockChainInfo()
+
+                if (!isAccessible()) {
+                    accessible.set(true)
+                    EventBus.altChainAccessibleEvent.trigger(chainId)
+                }
+
+                // Verify the Altchain configured network
+                if (latestBlockChainInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
+                    if (!isOnSameNetwork()) {
+                        sameNetwork.set(true)
+                        EventBus.altChainSameNetworkEvent.trigger(chainId)
+                    }
+                } else {
+                    if (isOnSameNetwork() || firstPoll) {
+                        sameNetwork.set(false)
+                        EventBus.altChainSameNetworkEvent.trigger(chainId)
+                        logger.warn { "The connected ${chain.name} chain (${latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
+                    }
+                }
+
+                connected.set(true)
+
+                // Verify the altchain synchronization status
+                if (latestBlockChainInfo.isSynchronized) {
+                    if (!isSynchronized()) {
+                        synchronized.set(true)
+                        EventBus.altChainSynchronizedEvent.trigger(chainId)
+                        logger.info { "The connected ${chain.name} chain is synchronized: ${latestBlockChainInfo.getSynchronizedMessage()}" }
+                    }
+                } else {
+                    if (isSynchronized() || firstPoll) {
+                        synchronized.set(false)
+                        EventBus.altChainNotSynchronizedEvent.trigger(chainId)
+                        logger.info { "The connected ${chain.name} chain is not synchronized: ${latestBlockChainInfo.getSynchronizedMessage()}" }
+                    }
+                }
+            } else {
+                // At this point the APM<->Altchain connection can't be established
+                latestBlockChainInfo = StateInfo()
+                if (isAccessible()) {
+                    accessible.set(true)
+                    EventBus.altChainNotAccessibleEvent.trigger(chainId)
+                }
+            }
+
+            if (isAccessible() && isSynchronized() && isOnSameNetwork()) {
+                if (!isReady()) {
+                    ready.set(true)
+                    EventBus.altChainReadyEvent.trigger(chainId)
+                }
+
+                // At this point the APM<->Altchain conection is fine and the Altchain is synchronized so
+                // APM can continue with its work
                 val bestBlockHeight: Int = try {
                     chain.getBestBlockHeight()
                 } catch (e: Exception) {
                     logger.debugWarn(e) { "Error while retrieving ${chain.name} tip height" }
-                    healthy.set(false)
+                    if (isAccessible()) {
+                        accessible.set(false)
+                        EventBus.altChainNotAccessibleEvent.trigger(chainId)
+                    }
                     return
                 }
 
@@ -116,15 +198,15 @@ class SecurityInheritingMonitor(
                     handleTransactionListeners()
                 }
             } else {
-                val pinged = checkSuccess { chain.getBestBlockHeight() }
-                if (pinged) {
-                    healthy.set(true)
-                    connected.set(true)
+                if (isReady()) {
+                    ready.set(false)
+                    EventBus.altChainNotReadyEvent.trigger(chainId)
                 }
             }
         } catch (t: Throwable) {
             logger.debugWarn(t) { "Error when polling SI Chain ($chainId)" }
         }
+        firstPoll = false
     }
 
     private suspend fun getBlockAtHeight(height: Int): SecurityInheritingBlock? {
