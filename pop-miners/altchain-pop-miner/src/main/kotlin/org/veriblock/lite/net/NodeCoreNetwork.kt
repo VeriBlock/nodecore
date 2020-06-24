@@ -138,14 +138,14 @@ class NodeCoreNetwork(
                     accessible.set(false)
                     EventBus.nodeCoreNotAccessibleEvent.trigger()
                 }
-                /*if (isSynchronized()) {
+                if (isSynchronized()) {
                     synchronized.set(false)
                     EventBus.nodeCoreNotSynchronizedEvent.trigger()
                 }
                 if (isOnSameNetwork()) {
                     sameNetwork.set(false)
                     EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                }*/
+                }
             }
             if (isAccessible() && isSynchronized() && isOnSameNetwork()) {
                 if (!isReady()) {

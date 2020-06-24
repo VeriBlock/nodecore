@@ -310,9 +310,9 @@ class AltchainPopMinerService(
         logger.info("Submitting suspended operations")
         try {
             val operationsToSubmit = ArrayList(activeOperations)
-            val operationsToRemove = ArrayList<ApmOperation>()
             while (operationsToSubmit.isNotEmpty()) {
                 if (nodeCoreLiteKit.network.isReady()) {
+                    val operationsToRemove = ArrayList<ApmOperation>()
                     for (operation in operationsToSubmit) {
                         if (!operation.state.isDone() && operation.job == null) {
                             val chainMonitor = securityInheritingService.getMonitor(operation.chain.key)
