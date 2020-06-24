@@ -54,23 +54,13 @@ class AltchainPopMinerService(
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
-    private var operationsSubmitted = false
     private var lastConfirmedBalance = Coin.ZERO
 
     override fun initialize() {
         nodeCoreLiteKit.initialize()
 
-        // Restore operations (including re-attach listeners) before the network starts
-        nodeCoreLiteKit.beforeNetworkStart = { loadSuspendedOperations() }
-
-        // Resubmit the suspended operations
-        coroutineScope.launch {
-            delay(5 * 1000)
-            while (!operationsSubmitted) {
-                submitSuspendedOperations()
-                delay(5 * 1000)
-            }
-        }
+        // Restore & submit operations (including re-attach listeners) before the network starts
+        nodeCoreLiteKit.beforeNetworkStart = { loadAndSubmitSuspendedOperations() }
 
         // NodeCore Events
         EventBus.nodeCoreAccessibleEvent.register(this) {
@@ -293,48 +283,52 @@ class AltchainPopMinerService(
         isShuttingDown = b
     }
 
-    private fun loadSuspendedOperations() {
+    private fun loadAndSubmitSuspendedOperations() {
         try {
             val activeOperations = operationService.getActiveOperations { txId ->
                 val hash = Sha256Hash.wrap(txId)
                 nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
             }
-
             for (state in activeOperations) {
                 operations[state.id] = state
             }
             logger.info("Loaded ${activeOperations.size} suspended operations")
+
+            if (activeOperations.isNotEmpty()) {
+                coroutineScope.launch {
+                    submitSuspendedOperations(activeOperations)
+                }
+            } else {
+                logger.info { "There are no suspended operations to submitted..." }
+            }
         } catch (e: Exception) {
             logger.debugError(e) {"Unable to load suspended operations" }
         }
     }
 
-    private suspend fun submitSuspendedOperations() {
-        if (operations.isEmpty()) {
-            operationsSubmitted = true
-            logger.info { "There are no suspended operations to submitted..." }
-            return
-        }
-
-        if (nodeCoreLiteKit.network.isReady()) {
-            logger.info("Submitting suspended operations")
-
-            try {
-                for (operation in operations.values) {
-                    if (!operation.state.isDone() && operation.job == null) {
-                        val chainMonitor = securityInheritingService.getMonitor(operation.chain.key) ?: null
-                        if (chainMonitor != null && chainMonitor.isReady()) {
-                            submit(operation)
+    private suspend fun submitSuspendedOperations(activeOperations: List<ApmOperation>) {
+        logger.info("Submitting suspended operations")
+        try {
+            val operationsToSubmit = ArrayList(activeOperations)
+            val operationsToRemove = ArrayList<ApmOperation>()
+            while (operationsToSubmit.isNotEmpty()) {
+                if (nodeCoreLiteKit.network.isReady()) {
+                    for (operation in operationsToSubmit) {
+                        if (!operation.state.isDone() && operation.job == null) {
+                            val chainMonitor = securityInheritingService.getMonitor(operation.chain.key)
+                            if (chainMonitor != null && chainMonitor.isReady()) {
+                                submit(operation)
+                                operationsToRemove.add(operation)
+                            }
                         }
                     }
+                    operationsToSubmit.removeAll(operationsToRemove)
                 }
-            } catch (e: Exception) {
-                logger.debugError(e) { "Unable to resume suspended operations" }
+                delay(5 * 1000)
             }
+        } catch (e: Exception) {
+            logger.debugError(e) { "Unable to resume suspended operations" }
         }
-
-        operationsSubmitted = true
-
         logger.info { "All the suspended operations have been submitted" }
     }
 
