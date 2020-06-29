@@ -114,31 +114,6 @@ class NodeCoreGateway(
         }
     }
 
-    fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> {
-        logger.debug { "Requested to send $atomicAmount coins to $destinationAddress" }
-        val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
-        if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
-            request.addAmounts(VeriBlockMessages.Output.newBuilder()
-                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
-                .setAmount(atomicAmount))
-
-            val reply = gatewayStrategy.sendCoins(request.build())
-            if (reply.success) {
-                return (0 until reply.txIdsCount).mapNotNull {
-                    ByteStringUtility.byteStringToHex(reply.getTxIds(it))
-                }.toList()
-            } else {
-                for (error in reply.resultsList) {
-                    logger.error { "NodeCore error: ${error.message} | ${error.details}" }
-                }
-                error("Unable to send $atomicAmount to $destinationAddress")
-            }
-        } else {
-            // Should never happen; address validity is checked by argument parser
-            error("$destinationAddress is not a valid address!")
-        }
-    }
-
     fun getVeriBlockPublications(keystoneHash: String, contextHash: String, btcContextHash: String): List<VeriBlockPublication> {
         logger.debug { "Requesting veriblock publications for keystone $keystoneHash..." }
         val request = VeriBlockMessages.GetVeriBlockPublicationsRequest

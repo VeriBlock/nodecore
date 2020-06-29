@@ -62,8 +62,7 @@ fun CommandFactory.walletCommands(
     ) {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
         val destinationAddress = getParameter<String>("destinationAddress")
-        val result = miner.sendCoins(destinationAddress, atomicAmount)
-        printInfo(result.joinToString())
-        success()
+        printInfo("withdrawvbktoaddress is not implemented yet")
+        failure()
     }
 }

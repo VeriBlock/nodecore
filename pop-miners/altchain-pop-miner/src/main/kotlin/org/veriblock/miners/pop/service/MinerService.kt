@@ -32,8 +32,6 @@ interface MinerService {
 
     fun getBalance(): Balance?
 
-    fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String>
-
     fun mine(chainId: String, block: Int?): String
 
     fun resubmit(operation: ApmOperation)
