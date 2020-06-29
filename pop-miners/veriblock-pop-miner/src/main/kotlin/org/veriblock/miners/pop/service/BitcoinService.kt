@@ -53,6 +53,7 @@ import org.veriblock.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import java.io.File
+import java.time.Instant
 import java.util.ArrayList
 import java.util.Date
 import java.util.LinkedHashMap
@@ -145,7 +146,6 @@ class BitcoinService(
             context, Script.ScriptType.P2WPKH, null, File("."), filePrefix
         ) {
             override fun provideBlockStore(file: File): BlockStore {
-                checkpoints = this::class.java.classLoader.getResourceAsStream("checkpoints-${configuration.network.name.toLowerCase()}.txt")
                 return SPVBlockStore(context.params, file, configuration.blockStoreCapacity, true)
             }
 
@@ -183,6 +183,14 @@ class BitcoinService(
                     pingIntervalMsec = configuration.peerPingIntervalMillis
                     setStallThreshold(configuration.downloadBlockchainPeriodSeconds, configuration.downloadBlockchainBytesPerSecond)
                     addBlocksDownloadedEventListener(this@BitcoinService)
+                }
+
+                val earliestKeyCreationTime = wallet.earliestKeyCreationTime
+                if (earliestKeyCreationTime > 0) {
+                    val createdDaysAgo = (Instant.now().epochSecond - earliestKeyCreationTime) / 86400
+                    if (createdDaysAgo >= 5) {
+                        logger.info { "This wallet was created $createdDaysAgo day(s) ago, we recommend you to create a new wallet and move your funds there, this will drastically decrease the needed time to synchronize the wallet" }
+                    }
                 }
 
                 setServiceReady(true)
