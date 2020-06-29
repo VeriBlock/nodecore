@@ -56,9 +56,7 @@ class ApmTaskService(
             targetState = ApmOperationState.INSTRUCTION,
             timeout = 90.sec
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Retrieve Mining Instruction from ${operation.chain.name}': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             logger.info(operation, "Getting the mining instruction...")
             val publicationData = try {
                 operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
@@ -79,9 +77,7 @@ class ApmTaskService(
             targetState = ApmOperationState.ENDORSEMENT_TRANSACTION,
             timeout = 90.sec
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Create Endorsement Transaction': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failTask("CreateEndorsementTransactionTask called without mining instruction!")
             // Something to fill in all the gaps
@@ -118,9 +114,7 @@ class ApmTaskService(
             targetState = ApmOperationState.ENDORSEMENT_TX_CONFIRMED,
             timeout = 1.hr
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Confirm transaction': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyNodeCoreStatus()
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("ConfirmTransactionTask called without wallet transaction!")
 
@@ -145,9 +139,6 @@ class ApmTaskService(
             targetState = ApmOperationState.BLOCK_OF_PROOF,
             timeout = 20.sec
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Determine Block of Proof: ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
             val transaction = operation.endorsementTransaction?.transaction
                 ?: failTask("The operation has no transaction set!")
 
@@ -169,9 +160,6 @@ class ApmTaskService(
             targetState = ApmOperationState.PROVEN,
             timeout = 20.sec
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Prove Transaction': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("ProveTransactionTask called without VBK endorsement transaction!")
             val blockOfProof = operation.blockOfProof
@@ -202,9 +190,7 @@ class ApmTaskService(
             targetState = ApmOperationState.KEYSTONE_OF_PROOF,
             timeout = 1.hr
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Wait for next VeriBlock Keystone': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyNodeCoreStatus()
             val blockOfProof = operation.blockOfProof
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without block of proof!")
 
@@ -235,9 +221,7 @@ class ApmTaskService(
             targetState = ApmOperationState.CONTEXT,
             timeout = 1.hr
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Retrieve VeriBlock Publication data': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
             val keystoneOfProof = operation.keystoneOfProof
@@ -261,9 +245,7 @@ class ApmTaskService(
             targetState = ApmOperationState.SUBMITTED_POP_DATA,
             timeout = 240.hr
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Submit Proof of Proof': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val miningInstruction = operation.miningInstruction
                 ?: failTask("SubmitProofOfProofTask called without mining instruction!")
             val endorsementTransaction = operation.endorsementTransaction
@@ -302,9 +284,7 @@ class ApmTaskService(
             targetState = ApmOperationState.POP_TX_CONFIRMED,
             timeout = 5.hr
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Confirm PoP Transaction': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val endorsementTransactionId = operation.popTxId
                 ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
 
@@ -333,9 +313,7 @@ class ApmTaskService(
             targetState = ApmOperationState.PAYOUT_DETECTED,
             timeout = 10.days
         ) {
-            if (!operation.chainMonitor.isReady() || !nodeCoreLiteKit.network.isReady()) {
-                throw TaskException("Unable to continue with the task 'Payout Detection': ${getExtraMinerStatusInformation(operation.chain.name, operation.chainMonitor)}")
-            }
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val miningInstruction = operation.miningInstruction
                 ?: failTask("PayoutDetectionTask called without mining instruction!")
 
@@ -453,14 +431,26 @@ class ApmTaskService(
         }
     }
 
-    private fun getExtraMinerStatusInformation(chainName: String, chainMonitor: SecurityInheritingMonitor): String {
-        val altChainStatus = if (!chainMonitor.isReady()) {
-            """$chainName is not ready: Connection: ${chainMonitor.isAccessible()}, SameNetwork: ${chainMonitor.isOnSameNetwork()}, Synchronized: ${chainMonitor.isSynchronized()} (${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()})""".trimMargin()
-        } else { "$chainName is ready" }
-        val nodeCoreStatus = if (!nodeCoreLiteKit.network.isReady()) {
-            """NodeCore is not ready: Connection ${nodeCoreLiteKit.network.isAccessible()}, SameNetwork: ${nodeCoreLiteKit.network.isOnSameNetwork()}, Synchronized: ${nodeCoreLiteKit.network.isSynchronized()} (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()})""".trimIndent()
-        } else { "NodeCore is ready" }
-        return "$nodeCoreStatus, $altChainStatus"
+    private fun verifyNodeCoreStatus() {
+        if (!nodeCoreLiteKit.network.isReady()) {
+            throw TaskException(
+                "NodeCore is not ready: Connection ${nodeCoreLiteKit.network.isAccessible()}," +
+                    " SameNetwork: ${nodeCoreLiteKit.network.isOnSameNetwork()}," +
+                    " Synchronized: ${nodeCoreLiteKit.network.isSynchronized()}" +
+                    " (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()})"
+            )
+        }
+    }
+
+    private fun verifyAltchainStatus(chainName: String, chainMonitor: SecurityInheritingMonitor) {
+        if (!chainMonitor.isReady()) {
+            throw TaskException(
+                "$chainName is not ready: Connection: ${chainMonitor.isAccessible()}," +
+                    " SameNetwork: ${chainMonitor.isOnSameNetwork()}," +
+                    " Synchronized: ${chainMonitor.isSynchronized()}" +
+                    " (${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()})"
+            )
+        }
     }
 }
 
