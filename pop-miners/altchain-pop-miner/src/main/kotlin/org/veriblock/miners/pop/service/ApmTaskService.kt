@@ -338,9 +338,14 @@ class ApmTaskService(
                 it.addressHex.asHexBytes().contentEquals(miningInstruction.publicationData.payoutInfo)
             }
             if (rewardVout != null) {
+                val payoutName = if (operation.chain.key.startsWith("v", true)) {
+                    operation.chain.key.toUpperCase().decapitalize()
+                } else {
+                    operation.chain.key.toUpperCase()
+                }
                 logger.info(
                     operation,
-                    "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} ${operation.chain.key.toUpperCase()}"
+                    "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} $payoutName"
                 )
                 logger.info(operation, "Completed!")
                 operation.setPayoutData(payoutBlock.hash, rewardVout.value)
