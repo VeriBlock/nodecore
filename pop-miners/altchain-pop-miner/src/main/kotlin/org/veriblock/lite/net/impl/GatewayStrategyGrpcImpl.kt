@@ -57,13 +57,13 @@ class GatewayStrategyGrpcImpl(
 
     override fun submitTransactions(submitTransactionsRequest: VeriBlockMessages.SubmitTransactionsRequest): VeriBlockMessages.ProtocolReply {
         return blockingStub
-            .withDeadlineAfter(3, TimeUnit.SECONDS)
+            .withDeadlineAfter(30, TimeUnit.SECONDS)
             .submitTransactions(submitTransactionsRequest)
     }
 
     override fun createAltChainEndorsement(altChainEndorsementRequest: VeriBlockMessages.CreateAltChainEndorsementRequest): VeriBlockMessages.CreateAltChainEndorsementReply {
         return blockingStub
-            .withDeadlineAfter(2, TimeUnit.SECONDS)
+            .withDeadlineAfter(30, TimeUnit.SECONDS)
             .createAltChainEndorsement(altChainEndorsementRequest)
     }
 
@@ -75,7 +75,7 @@ class GatewayStrategyGrpcImpl(
 
     override fun getBlock(getBlocksRequest: VeriBlockMessages.GetBlocksRequest): VeriBlockMessages.GetBlocksReply {
         return blockingStub
-            .withDeadlineAfter(5, TimeUnit.SECONDS)
+            .withDeadlineAfter(120, TimeUnit.SECONDS)
             .getBlocks(getBlocksRequest)
     }
 
