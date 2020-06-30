@@ -23,7 +23,6 @@ import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
-import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -32,7 +31,6 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
@@ -117,8 +115,7 @@ class BitcoinFamilyChain(
             btcBlock.merkleroot,
             btcBlock.difficulty,
             btcBlock.tx[0],
-            btcBlock.tx.drop(1),
-            btcBlock.pop.state.stored.atvs
+            btcBlock.tx.drop(1)
         )
     }
 
@@ -189,16 +186,8 @@ class BitcoinFamilyChain(
         )
     }
 
-    override fun getPayoutDelay(): Int {
-        return config.payoutDelay
-    }
-
-    override suspend fun getBestKnownVbkBlockHash(): String {
-        return rpcRequest("getvbkbestblockhash")
-    }
-
-    override suspend fun getPopMempool(): PopMempool {
-        TODO("Not yet implemented")
+    override fun getPayoutInterval(): Int {
+        return config.payoutInterval
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
@@ -236,28 +225,13 @@ class BitcoinFamilyChain(
         )
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        logger.info { "Submitting PoP data to $name daemon at ${config.host}..." }
-        val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            contextBlocks.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            },
-            vtbs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            },
-            atvs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            }
+    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
+        return rpcRequest("submitpop", listOf(
+            proofOfProof.getBlocks().map { SerializeDeserializeService.serialize(it) },
+            SerializeDeserializeService.serialize(proofOfProof).toHex(),
+            veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ))
-        logger.debug { "SubmitPoP Response: $submitPopResponse" }
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
@@ -320,8 +294,7 @@ private data class BtcBlock(
     val merkleroot: String,
     val difficulty: Double,
     val tx: List<String>,
-    val previousblockhash: String?,
-    val pop: BtcPopData
+    val previousblockhash: String?
 )
 
 private data class BtcTransaction(
@@ -343,38 +316,9 @@ private data class BtcScriptPubKey(
     val type: String
 )
 
-private data class BtcPopData(
-    val state: BtcPopStateData
-)
-
-private data class BtcPopStateData(
-    val stored: BtcPopStoredStateData
-)
-
-private data class BtcPopStoredStateData(
-    val atvs: List<String>
-)
-
 private data class BlockChainInfo(
     val chain: String,
     val blocks: Int,
     val headers: Int,
     val initialblockdownload: Boolean
-)
-
-private data class SubmitPopResponse(
-    val vbkblocks: List<ValidationData>,
-    val vtbs: List<ValidationData>,
-    val atvs: List<ValidationData>
-)
-
-private data class ValidationData(
-    val id: String,
-    val validity: ValidityInfo
-)
-
-private data class ValidityInfo(
-    val state: String,
-    val code: String,
-    val message: String
 )
