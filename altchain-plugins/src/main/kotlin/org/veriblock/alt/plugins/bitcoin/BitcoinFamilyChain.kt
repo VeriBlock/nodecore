@@ -228,6 +228,7 @@ class BitcoinFamilyChain(
     override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
         return rpcRequest("submitpop", listOf(
+            proofOfProof.getBlocks().map { SerializeDeserializeService.serialize(it) },
             SerializeDeserializeService.serialize(proofOfProof).toHex(),
             veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ))

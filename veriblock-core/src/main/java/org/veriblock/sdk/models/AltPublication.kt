@@ -8,16 +8,17 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.Preconditions
+import java.util.ArrayList
 
-class VeriBlockPublication(
-    val transaction: VeriBlockPopTransaction,
+class AltPublication(
+    val transaction: VeriBlockTransaction,
     val merklePath: VeriBlockMerklePath,
     val containingBlock: VeriBlockBlock,
     val context: List<VeriBlockBlock> = emptyList()
 ) {
-    // TODO bitcoinTransaction::hash
-    //fun getId(): ByteArray =
-    //    Sha256Hash.hash(transaction.bitcoinTransaction.hash + transaction.blockOfProof.hash.bytes)
+    fun getId(): ByteArray =
+        Sha256Hash.hash(transaction.id.bytes + containingBlock.hash.bytes)
 
     fun getBlocks(): List<VeriBlockBlock> =
         context + containingBlock
@@ -25,14 +26,12 @@ class VeriBlockPublication(
     fun getFirstBlock(): VeriBlockBlock =
         getBlocks().first()
 
-    fun getFirstBitcoinBlock(): BitcoinBlock? =
-        transaction.getBlocks().firstOrNull()
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
-        val obj = other as VeriBlockPublication
-        return transaction == obj.transaction && merklePath == obj.merklePath && containingBlock == obj.containingBlock
+        if (other !is AltPublication) return false
+
+        return transaction == other.transaction && merklePath == other.merklePath &&
+            containingBlock == other.containingBlock && context == other.context
     }
 
     override fun hashCode(): Int {
@@ -41,5 +40,9 @@ class VeriBlockPublication(
         result = 31 * result + containingBlock.hashCode()
         result = 31 * result + context.hashCode()
         return result
+    }
+
+    companion object {
+        const val MAX_CONTEXT_COUNT = 15000
     }
 }

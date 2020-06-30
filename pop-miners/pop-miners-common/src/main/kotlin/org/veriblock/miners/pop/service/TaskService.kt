@@ -69,7 +69,7 @@ abstract class TaskService<MO : MiningOperation> {
                 logger.warn(this, "Task '$taskName' has failed: ${e.message}")
                 if (attempts < MAX_TASK_RETRIES) {
                     attempts++
-                    // Check if the task was cancelled before performing any reattempts
+                    // Check if the task was cancelled before performing sany reattempts
                     yield()
                     // Wait a growing amount of time before every reattempt
                     val secondsToWait = attempts * attempts * 10
