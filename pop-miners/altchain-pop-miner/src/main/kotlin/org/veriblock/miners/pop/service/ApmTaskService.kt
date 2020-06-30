@@ -36,7 +36,6 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.core.crypto.VBlakeHash
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
@@ -57,6 +56,7 @@ class ApmTaskService(
             timeout = 90.sec
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
+            verifyNodeCoreStatus()
             logger.info(operation, "Getting the mining instruction...")
             val publicationData = try {
                 operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
