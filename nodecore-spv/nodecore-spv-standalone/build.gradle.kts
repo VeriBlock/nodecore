@@ -122,7 +122,6 @@ distributions {
                 into("bin")
             }
             rename("application-default.conf", "application.conf")
-            from ("./README.md")
         }
     }
 }
