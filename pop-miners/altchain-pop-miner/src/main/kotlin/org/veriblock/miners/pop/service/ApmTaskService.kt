@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.service
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import org.veriblock.core.altchain.checkForValidEndorsement
@@ -35,7 +36,9 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
@@ -44,12 +47,16 @@ class ApmTaskService(
     private val minerConfig: MinerConfig,
     private val nodeCoreLiteKit: NodeCoreLiteKit
 ) : TaskService<ApmOperation>() {
+
+    @ExperimentalCoroutinesApi
     override suspend fun runTasksInternal(operation: ApmOperation) {
         operation.runTask(
             taskName = "Retrieve Mining Instruction from ${operation.chain.name}",
             targetState = ApmOperationState.INSTRUCTION,
             timeout = 90.sec
         ) {
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
+            verifyNodeCoreStatus()
             logger.info(operation, "Getting the mining instruction...")
             val publicationData = try {
                 operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
@@ -70,9 +77,9 @@ class ApmTaskService(
             targetState = ApmOperationState.ENDORSEMENT_TRANSACTION,
             timeout = 90.sec
         ) {
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failTask("CreateEndorsementTransactionTask called without mining instruction!")
-
             // Something to fill in all the gaps
             logger.info(operation, "Submitting endorsement VBK transaction...")
             val transaction = try {
@@ -107,6 +114,7 @@ class ApmTaskService(
             targetState = ApmOperationState.ENDORSEMENT_TX_CONFIRMED,
             timeout = 1.hr
         ) {
+            verifyNodeCoreStatus()
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("ConfirmTransactionTask called without wallet transaction!")
 
@@ -182,6 +190,7 @@ class ApmTaskService(
             targetState = ApmOperationState.KEYSTONE_OF_PROOF,
             timeout = 1.hr
         ) {
+            verifyNodeCoreStatus()
             val blockOfProof = operation.blockOfProof
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without block of proof!")
 
@@ -206,11 +215,13 @@ class ApmTaskService(
             operation.setKeystoneOfProof(keystoneOfProof)
             logger.info(operation, "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}")
         }
+
         operation.runTask(
             taskName = "Retrieve VeriBlock Publication data",
             targetState = ApmOperationState.CONTEXT,
             timeout = 1.hr
         ) {
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
             val keystoneOfProof = operation.keystoneOfProof
@@ -234,6 +245,7 @@ class ApmTaskService(
             targetState = ApmOperationState.SUBMITTED_POP_DATA,
             timeout = 240.hr
         ) {
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val miningInstruction = operation.miningInstruction
                 ?: failTask("SubmitProofOfProofTask called without mining instruction!")
             val endorsementTransaction = operation.endorsementTransaction
@@ -272,6 +284,7 @@ class ApmTaskService(
             targetState = ApmOperationState.POP_TX_CONFIRMED,
             timeout = 5.hr
         ) {
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val endorsementTransactionId = operation.popTxId
                 ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
 
@@ -300,6 +313,7 @@ class ApmTaskService(
             targetState = ApmOperationState.PAYOUT_DETECTED,
             timeout = 10.days
         ) {
+            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val miningInstruction = operation.miningInstruction
                 ?: failTask("PayoutDetectionTask called without mining instruction!")
 
@@ -419,6 +433,28 @@ class ApmTaskService(
             }
         } catch (e: Exception) {
             logger.debugError(e) { "An error occurred checking VTB connection and continuity!" }
+        }
+    }
+
+    private fun verifyNodeCoreStatus() {
+        if (!nodeCoreLiteKit.network.isReady()) {
+            throw TaskException(
+                "NodeCore is not ready: Connection ${nodeCoreLiteKit.network.isAccessible()}," +
+                    " SameNetwork: ${nodeCoreLiteKit.network.isOnSameNetwork()}," +
+                    " Synchronized: ${nodeCoreLiteKit.network.isSynchronized()}" +
+                    " (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()})"
+            )
+        }
+    }
+
+    private fun verifyAltchainStatus(chainName: String, chainMonitor: SecurityInheritingMonitor) {
+        if (!chainMonitor.isReady()) {
+            throw TaskException(
+                "$chainName is not ready: Connection: ${chainMonitor.isAccessible()}," +
+                    " SameNetwork: ${chainMonitor.isOnSameNetwork()}," +
+                    " Synchronized: ${chainMonitor.isSynchronized()}" +
+                    " (${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()})"
+            )
         }
     }
 }
