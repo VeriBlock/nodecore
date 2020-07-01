@@ -229,9 +229,6 @@ class MockMinerService(
 
     override fun getBalance(): Balance? =
         null
-
-    override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> =
-        throw NotImplementedException("Operation not supported in the Mock Miner")
 }
 
 @Throws(NoSuchAlgorithmException::class, InvalidAlgorithmParameterException::class)

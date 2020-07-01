@@ -155,12 +155,6 @@ class AltchainPopMinerService(
         null
     }
 
-    override fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> = if (nodeCoreLiteKit.network.isAccessible()) {
-        nodeCoreLiteKit.network.sendCoins(destinationAddress, atomicAmount)
-    } else {
-        throw CommunicationException("NodeCore is not accessible at this time")
-    }
-
     private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
         // Check the last operation time
         val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
