@@ -17,18 +17,24 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
+import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
 import org.veriblock.miners.pop.api.dto.MinerInfoResponse
 import org.veriblock.miners.pop.api.dto.OperationDetailResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
+import org.veriblock.miners.pop.api.dto.OperationWorkflow
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
-import org.veriblock.miners.pop.core.MiningOperationState
+import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.sdk.alt.plugin.PluginService
 
 class MiningController(
-    private val miner: MinerService
+    private val miner: MinerService,
+    private val operationExplainer: ApmOperationExplainer,
+    private val pluginService: PluginService
 ) : ApiController {
 
     @Path("mine")
@@ -50,11 +56,19 @@ class MiningController(
         @PathParam("Operation ID") val id: String
     )
 
+    @Path("operations/{id}/workflow")
+    class MinerOperationWorkflowPath(
+        @PathParam("Operation ID") val id: String
+    )
+
     @Path("operations/{id}/logs")
     class MinerOperationLogsPath(
         @PathParam("Operation ID") val id: String,
         @QueryParam("Log level (optional, INFO by default)") val level: String?
     )
+
+    @Path("configured-altchains")
+    class MinerConfiguredAltchainsPath
 
     override fun NormalOpenAPIRoute.registerApi() = route("miner") {
         get<Unit, MinerInfoResponse>(
@@ -121,6 +135,32 @@ class MiningController(
 
             val responseModel = operation.getLogs(level).map { it.toString() }
             respond(responseModel)
+        }
+        get<MinerOperationWorkflowPath, OperationWorkflow>(
+            info("Get operation workflow")
+        ) { location ->
+            val id = location.id
+
+            val operation = miner.getOperation(id)
+                ?: throw NotFoundException("Operation $id not found")
+
+            val workflow = operationExplainer.explainOperation(operation)
+            respond(workflow)
+        }
+        get<MinerConfiguredAltchainsPath, ConfiguredAltchainList>(
+            info("Get configured altchains")
+        ) {
+            val altchains = pluginService.getPlugins().values.map {
+                ConfiguredAltchain(
+                    it.id,
+                    it.key,
+                    it.name,
+                    it.getPayoutInterval()
+                )
+            }.sortedBy {
+                it.key
+            }
+            respond(ConfiguredAltchainList(altchains))
         }
     }
 }

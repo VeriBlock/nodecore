@@ -27,13 +27,13 @@ fun Application.statusPages() {
             call.respond(HttpStatusCode.BadRequest, ApiError(it.message))
         }
         exception<JsonParseException> {
-            call.respond(HttpStatusCode.BadRequest, "Invalid JSON")
+            call.respond(HttpStatusCode.BadRequest, ApiError("Invalid JSON"))
         }
         exception<JsonMappingException> {
-            call.respond(HttpStatusCode.BadRequest, it.message ?: "Unable to parse JSON body")
+            call.respond(HttpStatusCode.BadRequest, ApiError(it.message ?: "Unable to parse JSON body"))
         }
         exception<MissingKotlinParameterException> {
-            call.respond(HttpStatusCode.BadRequest, "Missing body parameter: ${it.parameter.name}")
+            call.respond(HttpStatusCode.BadRequest, ApiError("Missing body parameter: ${it.parameter.name}"))
         }
         exception<NotFoundException> {
             call.respond(HttpStatusCode.NotFound, ApiError(it.message))

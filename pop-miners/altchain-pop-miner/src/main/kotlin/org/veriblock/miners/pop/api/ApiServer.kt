@@ -22,9 +22,13 @@ import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
+import io.ktor.http.content.defaultResource
+import io.ktor.http.content.resources
+import io.ktor.http.content.static
 import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
 import io.ktor.metrics.micrometer.MicrometerMetrics
@@ -42,7 +46,7 @@ import org.veriblock.miners.pop.api.controller.statusPages
 import org.veriblock.miners.pop.service.Metrics
 import kotlin.reflect.KType
 
-const val API_VERSION = "0.1"
+const val API_VERSION = "0.2"
 
 private val logger = createLogger {}
 
@@ -65,6 +69,10 @@ class ApiServer(
         server = embeddedServer(Netty, host = host, port = port) {
             install(DefaultHeaders)
             install(CallLogging)
+            install(CORS) {
+                anyHost()
+                allowNonSimpleContentTypes = true
+            }
 
             install(OpenAPIGen) {
                 info {
@@ -120,6 +128,10 @@ class ApiServer(
                 get("metrics") {
                     call.respond(Metrics.registry.scrape())
                 }
+                static {
+                    resources("/spa-client")
+                    defaultResource("/spa-client/index.html")
+                }
             }
             apiRouting {
                 route("api") {
@@ -131,6 +143,8 @@ class ApiServer(
                 }
             }
         }.start()
+
+        logger.info { "NEW: Check out the experimental user interface at http://localhost:$port" }
     }
 
     fun shutdown() {
