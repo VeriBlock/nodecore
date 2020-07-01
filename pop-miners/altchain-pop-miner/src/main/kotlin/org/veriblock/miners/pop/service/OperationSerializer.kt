@@ -100,7 +100,8 @@ class OperationSerializer(
                     setTransaction(ApmSpTransaction(txFactory(serialized.txId)))
                 } catch (e: IllegalStateException) {
                     fail(e.message ?: "Unable to load VBK transaction ${serialized.txId}")
-                    throw e
+                    reconstituting = false
+                    return this
                 }
             }
 

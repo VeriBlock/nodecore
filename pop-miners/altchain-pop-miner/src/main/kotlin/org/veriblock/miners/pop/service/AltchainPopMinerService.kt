@@ -305,7 +305,7 @@ class AltchainPopMinerService(
                 logger.info { "There are no suspended operations to submitted..." }
             }
         } catch (e: Exception) {
-            logger.debugError(e) {"Unable to load suspended operations" }
+            logger.debugError(e) { "Unable to load suspended operations" }
         }
     }
 

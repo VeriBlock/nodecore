@@ -13,7 +13,9 @@ import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
+import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.RpcException
+import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.crypto.Crypto
@@ -228,8 +230,8 @@ class BitcoinFamilyChain(
     override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
         return rpcRequest("submitpop", listOf(
-            proofOfProof.getBlocks().map { SerializeDeserializeService.serialize(it) },
-            SerializeDeserializeService.serialize(proofOfProof).toHex(),
+            proofOfProof.getBlocks().map { SerializeDeserializeService.serialize(it).toHex() },
+            listOf(SerializeDeserializeService.serialize(proofOfProof).toHex()),
             veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ))
     }
