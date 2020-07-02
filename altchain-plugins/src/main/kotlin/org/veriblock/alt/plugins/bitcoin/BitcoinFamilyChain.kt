@@ -231,8 +231,8 @@ class BitcoinFamilyChain(
         logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
         return rpcRequest("submitpop", listOf(
             proofOfProof.getBlocks().map { SerializeDeserializeService.serialize(it).toHex() },
-            listOf(SerializeDeserializeService.serialize(proofOfProof).toHex()),
-            veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
+            veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() },
+            listOf(SerializeDeserializeService.serialize(proofOfProof).toHex())
         ))
     }
 
