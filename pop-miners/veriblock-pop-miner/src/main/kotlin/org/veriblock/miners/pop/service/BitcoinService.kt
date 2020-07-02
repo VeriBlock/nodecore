@@ -188,7 +188,7 @@ class BitcoinService(
                 val earliestKeyCreationTime = wallet.earliestKeyCreationTime
                 if (earliestKeyCreationTime > 0) {
                     val createdDaysAgo = (Instant.now().epochSecond - earliestKeyCreationTime) / 86400
-                    if (createdDaysAgo >= 5) {
+                    if (createdDaysAgo >= 30) {
                         logger.info { "This wallet was created $createdDaysAgo day(s) ago, we recommend you to create a new wallet and move your funds there, this will drastically decrease the needed time to synchronize the wallet" }
                     }
                 }
