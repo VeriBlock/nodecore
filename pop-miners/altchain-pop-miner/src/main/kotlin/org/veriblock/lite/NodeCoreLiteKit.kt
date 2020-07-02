@@ -20,8 +20,8 @@ import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
-import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import veriblock.SpvContext
@@ -35,6 +35,7 @@ val logger = createLogger {}
 private const val WALLET_FILE_EXTENSION = ".wallet"
 
 class NodeCoreLiteKit(
+    private val config: MinerConfig,
     private val context: Context
 ) {
     lateinit var blockStore: VeriBlockBlockStore
@@ -56,6 +57,7 @@ class NodeCoreLiteKit(
         blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
+            config,
             context,
             NodeCoreGateway(context.networkParameters),
             blockChain,
@@ -68,12 +70,7 @@ class NodeCoreLiteKit(
         logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
 
         EventBus.newBestBlockEvent.register(transactionMonitor) {
-            val balanceChanged = transactionMonitor.onNewBestBlock(it)
-            if (balanceChanged) {
-                if (network.isAccessible()) {
-                    EventBus.balanceChangedEvent.trigger(network.getBalance())
-                }
-            }
+            transactionMonitor.onNewBestBlock(it)
         }
         EventBus.blockChainReorganizedEvent.register(transactionMonitor) {
             transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
@@ -88,16 +85,7 @@ class NodeCoreLiteKit(
         logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}..." }
         beforeNetworkStart()
-        network.startAsync().addListener(Runnable {
-            if (network.isAccessible()) {
-                val balance = try {
-                    network.getBalance()
-                } catch (ignored: Exception) {
-                    return@Runnable
-                }
-                EventBus.balanceChangedEvent.trigger(balance)
-            }
-        }, Threading.LISTENER_THREAD)
+        network.startAsync()
     }
 
     fun shutdown() {

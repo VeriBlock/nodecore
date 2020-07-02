@@ -58,7 +58,7 @@ val minerModule = module {
 
     // Miner
     if (!minerConfig.mock) {
-        single { NodeCoreLiteKit(get()) }
+        single { NodeCoreLiteKit(get(), get()) }
         single<MinerService> { AltchainPopMinerService(get(), get(), get(), get(), get(), get(), get()) }
     } else {
         single<MinerService> { MockMinerService(get(), get()) }
