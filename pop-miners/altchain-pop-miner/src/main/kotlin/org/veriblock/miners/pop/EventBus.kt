@@ -34,7 +34,9 @@ object EventBus {
     val altChainNotReadyEvent = Event<String>("Altchain is not ready")
 
     // Balance Events
-    val balanceChangedEvent = Event<Balance>("Balance Changed")
+    val sufficientBalanceEvent = Event<Balance>("Sufficient balance")
+    val insufficientBalanceEvent = EmptyEvent("Insufficient balance")
+    val balanceChangeEvent = Event<Balance>("Balance changed")
 
     // Block Events
     val newBestBlockEvent = AsyncEvent<FullBlock>("New Best Block", Threading.LISTENER_THREAD)

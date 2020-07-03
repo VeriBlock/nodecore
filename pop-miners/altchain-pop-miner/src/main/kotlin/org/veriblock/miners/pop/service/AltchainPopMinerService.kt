@@ -14,7 +14,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.veriblock.core.CommunicationException
 import org.veriblock.core.MineException
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
@@ -26,7 +25,6 @@ import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
@@ -53,8 +51,6 @@ class AltchainPopMinerService(
     private var isShuttingDown: Boolean = false
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
-
-    private var lastConfirmedBalance = Coin.ZERO
 
     override fun initialize() {
         nodeCoreLiteKit.initialize()
@@ -105,11 +101,12 @@ class AltchainPopMinerService(
             logger.info { "$it chain is not ready" }
         }
         // Balance Events
-        EventBus.balanceChangedEvent.register(this) {
-            if (lastConfirmedBalance != it.confirmedBalance) {
-                lastConfirmedBalance = it.confirmedBalance
-                logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
-            }
+        EventBus.sufficientBalanceEvent.register(this) { balance ->
+            logger.info { "PoP wallet contains sufficient funds: ${balance.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
+        }
+        EventBus.insufficientBalanceEvent.register(this) { }
+        EventBus.balanceChangeEvent.register(this) {
+            logger.info { "Current balance: ${it.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}" }
         }
         // Operation Events
         EventBus.operationStateChangedEvent.register(this) {
@@ -149,11 +146,7 @@ class AltchainPopMinerService(
 
     override fun getAddress(): String = nodeCoreLiteKit.getAddress()
 
-    override fun getBalance(): Balance? = if (nodeCoreLiteKit.network.isAccessible()) {
-        nodeCoreLiteKit.network.getBalance()
-    } else {
-        null
-    }
+    override fun getBalance(): Balance = nodeCoreLiteKit.network.latestBalance
 
     private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
         // Check the last operation time
@@ -170,19 +163,18 @@ class AltchainPopMinerService(
         if (!nodeCoreLiteKit.network.isAccessible()) {
             return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, is it reachable?"))
         }
-        // Verify the balance
-        val currentBalance = getBalance()?.confirmedBalance ?: Coin.ZERO
-        if (currentBalance.atomicUnits < config.maxFee) {
-            return CheckResult.Failure(MineException("""
-                PoP wallet does not contain sufficient funds, 
-                Current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
-                Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - currentBalance.atomicUnits).formatCoinAmount()} more
-                Send ${context.vbkTokenName} coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
-            """.trimIndent()))
-        }
         // Verify the NodeCore configured Network
         if (!nodeCoreLiteKit.network.isOnSameNetwork()) {
             return CheckResult.Failure(MineException("The connected NodeCore (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network"))
+        }
+        // Verify the balance
+        if (!nodeCoreLiteKit.network.isSufficientFunded()) {
+            return CheckResult.Failure(MineException("""
+                PoP wallet does not contain sufficient funds, 
+                Current balance: ${nodeCoreLiteKit.network.latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
+                Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - nodeCoreLiteKit.network.latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
+                Send ${context.vbkTokenName} coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
+            """.trimIndent()))
         }
         // Verify the synchronized status
         if (!nodeCoreLiteKit.network.isSynchronized()) {

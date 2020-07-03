@@ -24,6 +24,8 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
@@ -35,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class NodeCoreNetwork(
+    private val config: MinerConfig,
     private val context: Context,
     private val gateway: NodeCoreGateway,
     private val blockChain: BlockChain,
@@ -47,7 +50,14 @@ class NodeCoreNetwork(
     private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
     private val sameNetwork = AtomicBoolean(false)
+    private val sufficientFunds = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
+
+    var latestBalance: Balance = Balance()
+    var latestNodeCoreStateInfo: StateInfo = StateInfo()
+
+    fun isSufficientFunded(): Boolean =
+        sufficientFunds.get()
 
     fun isReady(): Boolean =
         ready.get()
@@ -85,20 +95,43 @@ class NodeCoreNetwork(
         return gateway.getBlock(hash.toString())
     }
 
-    var latestNodeCoreStateInfo: StateInfo = StateInfo()
-
     private fun poll() {
         try {
             var nodeCoreStateInfo: StateInfo? = null
-            // Verify if we can make a connection with the remote NodeCore
+            // Verify if we can make a connection with NodeCore
             if (gateway.ping()) {
                 // At this point the APM<->NodeCore connection is fine
-                nodeCoreStateInfo = gateway.getNodeCoreStateInfo()
-                latestNodeCoreStateInfo = nodeCoreStateInfo
-
                 if (!isAccessible()) {
                     accessible.set(true)
                     EventBus.nodeCoreAccessibleEvent.trigger()
+                }
+                // Get the latest stats from NodeCore
+                nodeCoreStateInfo = gateway.getNodeCoreStateInfo()
+                latestNodeCoreStateInfo = nodeCoreStateInfo
+                // Get the latest balance from NodeCore
+                val balance = gateway.getBalance(addressManager.defaultAddress.hash)
+                if (balance.confirmedBalance != latestBalance.confirmedBalance) {
+                    EventBus.balanceChangeEvent.trigger(balance)
+                }
+                latestBalance = balance
+
+                // Verify the balance
+                if (latestBalance.confirmedBalance.atomicUnits > config.maxFee) {
+                    if (!isSufficientFunded()) {
+                        sufficientFunds.set(true)
+                        EventBus.sufficientBalanceEvent.trigger(latestBalance)
+                    }
+                } else {
+                    if (isSufficientFunded()) {
+                        sufficientFunds.set(false)
+                        EventBus.insufficientBalanceEvent.trigger()
+                        logger.info {"""
+                            PoP wallet does not contain sufficient funds, 
+                            Current balance: ${latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
+                            Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
+                            Send ${context.vbkTokenName} coins to: ${addressManager.defaultAddress.hash}
+                        """.trimIndent()}
+                    }
                 }
 
                 // Verify the NodeCore configured Network
@@ -134,6 +167,7 @@ class NodeCoreNetwork(
             } else {
                 // At this point the APM<->NodeCore connection can't be established
                 latestNodeCoreStateInfo = StateInfo()
+                latestBalance = Balance()
                 if (isAccessible()) {
                     accessible.set(false)
                     EventBus.nodeCoreNotAccessibleEvent.trigger()
@@ -146,8 +180,16 @@ class NodeCoreNetwork(
                     sameNetwork.set(false)
                     EventBus.nodeCoreNotSameNetworkEvent.trigger()
                 }
+                if (isSufficientFunded()) {
+                    sufficientFunds.set(false)
+                    EventBus.insufficientBalanceEvent.trigger()
+                }
+                if (isReady()) {
+                    ready.set(false)
+                    EventBus.nodeCoreNotReadyEvent.trigger()
+                }
             }
-            if (isAccessible() && isSynchronized() && isOnSameNetwork()) {
+            if (isAccessible() && isOnSameNetwork() && isSynchronized()) {
                 if (!isReady()) {
                     ready.set(true)
                     EventBus.nodeCoreReadyEvent.trigger()
@@ -158,9 +200,27 @@ class NodeCoreNetwork(
                     gateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.debugWarn(e) { "Unable to get the last block from NodeCore" }
+                    latestNodeCoreStateInfo = StateInfo()
+                    latestBalance = Balance()
                     if (isAccessible()) {
                         accessible.set(false)
                         EventBus.nodeCoreNotAccessibleEvent.trigger()
+                    }
+                    if (isSynchronized()) {
+                        synchronized.set(false)
+                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
+                    }
+                    if (isOnSameNetwork()) {
+                        sameNetwork.set(false)
+                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                    }
+                    if (isSufficientFunded()) {
+                        sufficientFunds.set(false)
+                        EventBus.insufficientBalanceEvent.trigger()
+                    }
+                    if (isReady()) {
+                        ready.set(false)
+                        EventBus.nodeCoreNotReadyEvent.trigger()
                     }
                     return
                 }
@@ -179,12 +239,13 @@ class NodeCoreNetwork(
                     EventBus.nodeCoreNotReadyEvent.trigger()
                 }
                 if (!isAccessible()) {
-                    logger.debug { "Cannot proceed: waiting for connection with NodeCore..." }
+                    logger.debug { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}" }
                 } else {
-                    if (!isSynchronized()) {
-                        logger.debug { "Cannot proceed because NodeCore is not synchronized" }
-
-                        nodeCoreStateInfo?.let {
+                    nodeCoreStateInfo?.let {
+                        if (!isOnSameNetwork()) {
+                            logger.debug { "NodeCore (${nodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
+                        }
+                        if (!isSynchronized()) {
                             if (nodeCoreStateInfo.networkHeight != 0) {
                                 logger.debug { it.getSynchronizedMessage() }
                             } else {
@@ -261,9 +322,6 @@ class NodeCoreNetwork(
             logger.debugWarn(e) { "NodeCore Error" }
         }
     }
-
-    fun getBalance(): Balance =
-        gateway.getBalance(addressManager.defaultAddress.hash)
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
         gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)

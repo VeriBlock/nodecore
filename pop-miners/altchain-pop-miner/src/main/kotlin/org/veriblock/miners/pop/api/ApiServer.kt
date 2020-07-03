@@ -144,7 +144,7 @@ class ApiServer(
             }
         }.start()
 
-        logger.info { "NEW: Check out the experimental user interface at http://localhost:$port" }
+        logger.info { "Hosting experimental user interface at http://localhost:$port" }
     }
 
     fun shutdown() {
