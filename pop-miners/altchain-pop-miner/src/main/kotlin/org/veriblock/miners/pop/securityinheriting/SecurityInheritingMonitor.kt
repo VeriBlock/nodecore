@@ -30,6 +30,7 @@ import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.util.checkSuccess
@@ -71,6 +72,8 @@ class SecurityInheritingMonitor(
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
+
+    private val atvBlocksById = ConcurrentHashMap<String, SecurityInheritingBlock>()
 
     fun isReady(): Boolean =
         ready.get()
@@ -202,6 +205,11 @@ class SecurityInheritingMonitor(
                     this.bestBlockHeight = bestBlockHeight
                     newBlockHeightBroadcastChannel.offer(bestBlockHeight)
 
+                    val block = getBlockAtHeight(bestBlockHeight)
+                        ?: error("Unable to find block at tip height $bestBlockHeight")
+
+                    handleNewBlock(block)
+
                     handleBlockHeightListeners()
                     handleTransactionListeners()
                 }
@@ -217,6 +225,12 @@ class SecurityInheritingMonitor(
         firstPoll = false
     }
 
+    private suspend fun handleNewBlock(block: SecurityInheritingBlock) {
+        for (atvId in block.veriBlockPublicationIds) {
+            atvBlocksById[atvId] = block
+        }
+    }
+
     private suspend fun getBlockAtHeight(height: Int): SecurityInheritingBlock? {
         // Ignore if we didn't still reach the registered height yet
         if (height > bestBlockHeight) {
@@ -227,7 +241,7 @@ class SecurityInheritingMonitor(
             // Retrieve block from SI chain
             chain.getBlock(height)
         } catch (e: Exception) {
-            logger.debugWarn(e) { "Error when polling for block $height" }
+            logger.debugWarn(e) { "Error when retrieving ${chain.name} block $height" }
             null
         }
         // The best block should never be null if the chain's integrity is not compromised
@@ -238,7 +252,7 @@ class SecurityInheritingMonitor(
         // Retrieve block from SI chain
         chain.getTransaction(txId)
     } catch (e: Exception) {
-        logger.debugWarn(e) { "Error when polling for transaction $txId" }
+        logger.debugWarn(e) { "Error when retrieving ${chain.name} transaction $txId" }
         null
     }
 
@@ -287,6 +301,21 @@ class SecurityInheritingMonitor(
         val channel = subscribe(transactionListeners, txId)
         return channel.consumeAsFlow().first {
             predicate(it)
+        }
+    }
+
+    suspend fun confirmAtv(id: String): SecurityInheritingBlock {
+        while (true) {
+            val block = atvBlocksById[id]
+            if (block == null) {
+                delay(20_000L)
+                continue
+            }
+            if (bestBlockHeight - block.height < chain.config.neededConfirmations) {
+                delay(20_000L)
+                continue
+            }
+            return block
         }
     }
 

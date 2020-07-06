@@ -48,8 +48,8 @@ object OperationProto {
         @ProtoNumber(10) val merklePath: String,
         @ProtoNumber(11) val keystoneOfProof: ByteArray,
         @ProtoNumber(12) val veriblockPublications: List<VeriBlockPublication> = emptyList(),
-        @ProtoNumber(13) val popTxId: String,
-        @ProtoNumber(14) val popTxBlockHash: String,
+        @ProtoNumber(13) val atvId: String,
+        @ProtoNumber(14) val atvBlockHash: String,
         @ProtoNumber(15) val payoutBlockHash: String,
         @ProtoNumber(16) val payoutAmount: Long,
         @ProtoNumber(17) val failureReason: String

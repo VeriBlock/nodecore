@@ -11,13 +11,13 @@ object ApmOperationState {
     val PROVEN = MiningOperationState(5, "Endorsement Transaction proven", "Wait for Keystone of Proof", BLOCK_OF_PROOF)
     val KEYSTONE_OF_PROOF = MiningOperationState(6, "Keystone of Proof retrieved", "Get VBK Publications", PROVEN)
     val CONTEXT = MiningOperationState(7, "VBK Publications retrieved", "Submit PoP Transaction", KEYSTONE_OF_PROOF)
-    val SUBMITTED_POP_DATA = MiningOperationState(8, "VBK Publications submitted", "Confirm PoP Transaction", CONTEXT)
-    val POP_TX_CONFIRMED = MiningOperationState(9, "PoP Transaction Confirmed", "Wait for Payout Block", SUBMITTED_POP_DATA)
-    val PAYOUT_DETECTED = MiningOperationState(10, "Payout detected", "Complete and save", POP_TX_CONFIRMED)
+    val SUBMITTED_POP_DATA = MiningOperationState(8, "VBK Publications submitted", "Confirm ATV", CONTEXT)
+    val ATV_CONFIRMED = MiningOperationState(9, "ATV Confirmed", "Wait for Payout Block", SUBMITTED_POP_DATA)
+    val PAYOUT_DETECTED = MiningOperationState(10, "Payout detected", "Complete and save", ATV_CONFIRMED)
 
     val ALL = listOf(
         INITIAL, INSTRUCTION, ENDORSEMENT_TRANSACTION, ENDORSEMENT_TX_CONFIRMED, BLOCK_OF_PROOF, PROVEN,
-        KEYSTONE_OF_PROOF, CONTEXT, SUBMITTED_POP_DATA, POP_TX_CONFIRMED, PAYOUT_DETECTED
+        KEYSTONE_OF_PROOF, CONTEXT, SUBMITTED_POP_DATA, ATV_CONFIRMED, PAYOUT_DETECTED
     )
 }
 

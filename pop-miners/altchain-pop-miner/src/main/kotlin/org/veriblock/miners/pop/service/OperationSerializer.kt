@@ -56,8 +56,8 @@ class OperationSerializer(
             veriblockPublications = operation.publicationData?.map {
                 serialize(it)
             } ?: emptyList(),
-            popTxId = operation.popTxId ?: "",
-            popTxBlockHash = operation.popTxBlockHash ?: "",
+            atvId = operation.atvId ?: "",
+            atvBlockHash = operation.atvBlockHash ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
             payoutAmount = operation.payoutAmount ?: 0L,
             failureReason = operation.failureReason ?: ""
@@ -124,12 +124,12 @@ class OperationSerializer(
                 })
             }
 
-            if (serialized.popTxId.isNotEmpty()) {
-                setPopTxId(serialized.popTxId)
+            if (serialized.atvId.isNotEmpty()) {
+                setAtvId(serialized.atvId)
             }
 
-            if (serialized.popTxBlockHash.isNotEmpty()) {
-                setPopTxBlockHash(serialized.popTxBlockHash)
+            if (serialized.atvBlockHash.isNotEmpty()) {
+                setAtvBlockHash(serialized.atvBlockHash)
             }
 
             if (serialized.payoutBlockHash.isNotEmpty()) {

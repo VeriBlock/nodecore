@@ -272,7 +272,7 @@ class ApmTaskService(
                 val chainName = operation.chain.name
                 logger.info(operation, "VTB submitted to $chainName! $chainName PoP TxId: $siTxId")
 
-                operation.setPopTxId(siTxId)
+                operation.setAtvId(siTxId)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error submitting proof of proof" }
                 failTask("Error submitting proof of proof")
@@ -280,32 +280,20 @@ class ApmTaskService(
         }
 
         operation.runTask(
-            taskName = "Confirm PoP Transaction",
-            targetState = ApmOperationState.POP_TX_CONFIRMED,
+            taskName = "Confirm ATV",
+            targetState = ApmOperationState.ATV_CONFIRMED,
             timeout = 5.hr
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-            val endorsementTransactionId = operation.popTxId
-                ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
+            val atvId = operation.atvId
+                ?: failTask("Confirm PoP Transaction task called without ATV id!")
 
             val chainName = operation.chain.name
-            logger.info(operation, "Waiting for $chainName PoP Transaction ($endorsementTransactionId) to be confirmed...")
-            val popTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
-                if (transaction.confirmations < 0) {
-                    throw AltchainTransactionReorgException(transaction)
-                }
-                transaction.confirmations >= operation.chain.config.neededConfirmations
-            }
-            logger.info(
-                operation,
-                "Successfully confirmed $chainName PoP transaction ${popTransaction.txId}!" +
-                    " Confirmations: ${popTransaction.confirmations}"
-            )
+            logger.info(operation, "Waiting for $chainName ATV ($atvId) to be confirmed...")
+            val atvBlock = operation.chainMonitor.confirmAtv(atvId)
+            logger.info(operation, "Successfully confirmed $chainName ATV $atvId!")
 
-            val txBlockHash = popTransaction.blockHash
-                ?: error("The  $chainName PoP transaction ${popTransaction.txId} has no block hash despite having been confirmed!")
-
-            operation.setPopTxBlockHash(txBlockHash)
+            operation.setAtvBlockHash(atvBlock.hash)
         }
 
         operation.runTask(

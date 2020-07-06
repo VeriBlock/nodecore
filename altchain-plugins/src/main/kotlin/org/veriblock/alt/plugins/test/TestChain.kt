@@ -51,6 +51,7 @@ class TestChain(
     private val operations = HashMap<String, String>()
     private val blocks = TreeMap<Int, TestBlock>()
     private val transactions = HashMap<String, SecurityInheritingTransaction>()
+    private val publishedAtvs = ArrayList<AltPublication>()
 
     private val startingHeight = (System.currentTimeMillis() / 10000).toInt() - 20
 
@@ -149,6 +150,7 @@ class TestChain(
             error("Expected publication data context differs from the one PoP supplied back")
         }
         val block = createBlock((System.currentTimeMillis() / 10000).toInt())
+        publishedAtvs += proofOfProof
         return block.data.coinbaseTransactionId
     }
 
@@ -208,9 +210,12 @@ class TestChain(
             0.0,
             coinbase.txId,
             listOf(),
+            publishedAtvs.map { it.getId().toHex() },
             previousKeystone.hash,
             secondPreviousKeystone.hash
         )
+
+        publishedAtvs.clear()
 
         val block = TestBlock(blockData, previousBlock, previousKeystone, secondPreviousKeystone)
         blocks[height] = block
