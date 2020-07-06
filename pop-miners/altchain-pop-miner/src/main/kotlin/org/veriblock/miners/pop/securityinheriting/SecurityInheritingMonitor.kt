@@ -15,34 +15,23 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.service.MinerService
-import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.miners.pop.util.isOnSameNetwork
-import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.util.checkSuccess
 import java.util.concurrent.ConcurrentHashMap
@@ -57,8 +46,7 @@ class SecurityInheritingMonitor(
     val context: Context,
     configuration: Configuration,
     private val chainId: String,
-    private val chain: SecurityInheritingChain,
-    private val nodeCoreLiteKit: NodeCoreLiteKit
+    private val chain: SecurityInheritingChain
 ) {
     private val pollingPeriodSeconds = configuration.getLong(
         "securityInheriting.$chainId.pollingPeriodSeconds"
@@ -106,31 +94,15 @@ class SecurityInheritingMonitor(
      */
     fun start(miner: MinerService) {
         this.miner = miner
-
-        val coroutineScope = CoroutineScope(Threading.SI_POLL_THREAD.asCoroutineDispatcher())
-        coroutineScope.launch {
-            // Wait for nodeCore to be ready
-            while (!nodeCoreLiteKit.network.isReady()) {
-                delay(5_000L)
+        pollSchedule = CoroutineScope(Threading.SI_POLL_THREAD.asCoroutineDispatcher()).launch {
+            delay(5_000L)
+            while (true) {
+                poll()
+                delay(pollingPeriodSeconds * 1000)
             }
-
-            logger.info("Connecting to ${chain.name} daemon at ${chain.config.host}...")
-            pollSchedule = launch {
-                delay(5_000L)
-                while (true) {
-                    poll()
-                    delay(pollingPeriodSeconds * 1000)
-                }
-            }
-
-            // Wait for altchain to be ready
-            while (!isReady()) {
-                delay(20_000L)
-            }
-            // Start submitting context and VTBs
-            launch { submitContext() }
-            launch { submitVtbs() }
         }
+
+        logger.info("Connecting to SI Chain ($chainId) at ${chain.config.host}...")
     }
 
     /**
@@ -253,82 +225,9 @@ class SecurityInheritingMonitor(
         firstPoll = false
     }
 
-    private suspend fun submitContext() = coroutineScope {
-        logger.info("Starting continuous submission of VBK Context for ${chain.name}")
-        EventBus.newBestBlockChannel.asFlow().collect {
-            val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
-            val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
-                ?: return@collect
-            val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
-                ?: return@collect
-
-            if (bestKnownBlock.height == bestBlock.height) {
-                return@collect
-            }
-
-            val contextBlocks = generateSequence(bestBlock) {
-                nodeCoreLiteKit.blockChain.get(it.previousBlock)
-            }.takeWhile {
-                it.hash == bestKnownBlockHash
-            }.sortedBy {
-                it.height
-            }.toList()
-
-            chain.submitContext(contextBlocks)
-            logger.info { "Submitted ${contextBlocks.size} VBK context blocks to ${chain.name}." }
-        }
-    }
-
-    private suspend fun submitVtbs() = coroutineScope {
-        logger.info("Starting continuous submission of VTBs for ${chain.name}")
-        while (true) {
-            try {
-                val instruction = chain.getMiningInstruction()
-                val vbkContextBlock = nodeCoreLiteKit.blockChain.get(VBlakeHash.wrap(instruction.context.first()))
-                if (vbkContextBlock == null) {
-                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                    // Let's try again after a while
-                    delay(300_000L)
-                    continue
-                }
-                logger.info { "${chain.name}'s known context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}. Waiting for keystone..." }
-                val newKeystone = EventBus.newBestBlockChannel.asFlow().filter {
-                    it.height % 20 == 0 && it.height > vbkContextBlock.height
-                }.first()
-
-                logger.info { "Got keystone for ${chain.name}'s VTBs: ${newKeystone.hash} @ ${newKeystone.height}. Retrieving publication data..." }
-                // Fetch and wait for veriblock publications (VTBs)
-                val vtbs = nodeCoreLiteKit.network.getVeriBlockPublications(
-                    newKeystone.hash.toString(),
-                    instruction.context.first().toHex(),
-                    instruction.btcContext.first().toHex()
-                )
-                // Validate the retrieved data
-                verifyPublications(instruction, vtbs)
-
-                logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
-
-                // Submit them to the blockchain
-                chain.submitVtbs(vtbs)
-                logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
-            } catch (e: Exception) {
-                logger.warn(e) { "Error while submitting VTBs to ${chain.name}" }
-            }
-        }
-    }
-
     private suspend fun handleNewBlock(block: SecurityInheritingBlock) {
-        logger.debug {
-            val publicationsString = if (block.veriBlockPublicationIds.isEmpty()) {
-                "with no VBK publications"
-            } else {
-                "with ${block.veriBlockPublicationIds.size} publications: ${block.veriBlockPublicationIds.joinToString()}"
-            }
-            "Found new ${chain.name} block: ${block.hash} @ ${block.height} $publicationsString"
-        }
-
         for (atvId in block.veriBlockPublicationIds) {
-            atvBlocksById[atvId.toLowerCase()] = block
+            atvBlocksById[atvId] = block
         }
     }
 
@@ -407,8 +306,12 @@ class SecurityInheritingMonitor(
 
     suspend fun confirmAtv(id: String): SecurityInheritingBlock {
         while (true) {
-            val block = atvBlocksById[id.toLowerCase()]
+            val block = atvBlocksById[id]
             if (block == null) {
+                delay(20_000L)
+                continue
+            }
+            if (bestBlockHeight - block.height < chain.config.neededConfirmations) {
                 delay(20_000L)
                 continue
             }
@@ -435,68 +338,5 @@ class SecurityInheritingMonitor(
             }
         }
         return channel
-    }
-}
-
-private fun verifyPublications(
-    miningInstruction: ApmInstruction,
-    publications: List<VeriBlockPublication>
-) {
-    try {
-        val btcContext = miningInstruction.btcContext
-        // List<byte[]> vbkContext = context.getContext();
-
-        // Check that the first VTB connects somewhere in the BTC context
-        val firstPublication = publications[0]
-
-        val serializedAltchainBTCContext = btcContext.joinToString("\n") { Utility.bytesToHex(it) }
-
-        val serializedBTCHashesInPoPTransaction = VTBDebugUtility.serializeBitcoinBlockHashList(
-            VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(
-                firstPublication.transaction
-            )
-        )
-
-        if (!VTBDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
-            logger.error {
-                """Error: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} does not connect to the altchain context!
-                               Altchain Bitcoin Context:
-                               $serializedAltchainBTCContext
-                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
-            }
-        } else {
-            logger.debug {
-                """Success: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} connects to the altchain context!
-                               Altchain Bitcoin Context:
-                               $serializedAltchainBTCContext
-                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
-            }
-        }
-
-        // Check that every VTB connects to the previous one
-        for (i in 1 until publications.size) {
-            val anchor = publications[i - 1]
-            val toConnect = publications[i]
-
-            val anchorBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(anchor.transaction)
-            val toConnectBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(toConnect.transaction)
-
-            val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
-            val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
-
-            if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
-                logger.warn {
-                    """Error: VTB at index $i does not connect to the previous VTB!
-                                   VTB #${i - 1} BTC blocks:
-                                   $serializedAnchorBTCBlocks
-                                   VTB #$i BTC blocks:
-                                   $serializedToConnectBTCBlocks""".trimIndent()
-                }
-            } else {
-                logger.debug { "Success, VTB at index $i connects to VTB at index ${i - 1}!" }
-            }
-        }
-    } catch (e: Exception) {
-        logger.debugError(e) { "An error occurred checking VTB connection and continuity!" }
     }
 }

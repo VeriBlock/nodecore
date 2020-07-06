@@ -9,7 +9,7 @@ package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
 
-class VeriBlockPublication(
+data class VeriBlockPublication(
     val transaction: VeriBlockPopTransaction,
     val merklePath: VeriBlockMerklePath,
     val containingBlock: VeriBlockBlock,

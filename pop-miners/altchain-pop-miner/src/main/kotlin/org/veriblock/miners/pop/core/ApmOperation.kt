@@ -45,6 +45,10 @@ class ApmOperation(
         private set
     var merklePath: VeriBlockMerklePath? = null
         private set
+    var keystoneOfProof: VeriBlockBlock? = null
+        private set
+    var publicationData: List<VeriBlockPublication>? = null
+        private set
     var atvId: String? = null
         private set
     var atvBlockHash: String? = null
@@ -111,9 +115,25 @@ class ApmOperation(
         setState(ApmOperationState.PROVEN)
     }
 
-    fun setAtvId(atvId: String) {
+    fun setKeystoneOfProof(keystoneOfProof: VeriBlockBlock) {
         if (state != ApmOperationState.PROVEN) {
-            error("Trying to set ATV id without having proven the transaction")
+            error("Trying to set keystone of proof without having proven the transaction")
+        }
+        this.keystoneOfProof = keystoneOfProof
+        setState(ApmOperationState.KEYSTONE_OF_PROOF)
+    }
+
+    fun setContext(context: List<VeriBlockPublication>) {
+        if (state != ApmOperationState.KEYSTONE_OF_PROOF) {
+            error("Trying to set context without the keystone of proof")
+        }
+        this.publicationData = context
+        setState(ApmOperationState.CONTEXT)
+    }
+
+    fun setAtvId(atvId: String) {
+        if (state != ApmOperationState.CONTEXT) {
+            error("Trying to set PoP transaction id without having the context")
         }
         this.atvId = atvId
         setState(ApmOperationState.SUBMITTED_POP_DATA)
@@ -141,7 +161,7 @@ class ApmOperation(
     override fun getDetailedInfo(): Map<String, String> {
         val result = LinkedHashMap<String, String>()
         endorsedBlockHeight?.let {
-            result["expectedRewardBlock"] = (it + chain.getPayoutDelay()).toString()
+            result["expectedRewardBlock"] = (it + chain.getPayoutInterval()).toString()
         }
         miningInstruction?.let { instruction ->
             result["chainIdentifier"] = instruction.publicationData.identifier.toString()
@@ -160,6 +180,10 @@ class ApmOperation(
         }
         merklePath?.let {
             result["merklePath"] = it.toCompactString()
+        }
+        publicationData?.let { context ->
+            result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
+            result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
         }
         atvId?.let {
             result["altAtvId"] = it
