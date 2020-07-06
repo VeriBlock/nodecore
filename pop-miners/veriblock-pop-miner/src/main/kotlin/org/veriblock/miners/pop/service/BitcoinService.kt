@@ -16,20 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.tuple.Pair
-import org.bitcoinj.core.Address
-import org.bitcoinj.core.BitcoinSerializer
-import org.bitcoinj.core.Block
-import org.bitcoinj.core.BlockChain
-import org.bitcoinj.core.Coin
-import org.bitcoinj.core.Context
-import org.bitcoinj.core.FilteredBlock
-import org.bitcoinj.core.InsufficientMoneyException
-import org.bitcoinj.core.PartialMerkleTree
-import org.bitcoinj.core.Peer
-import org.bitcoinj.core.PeerGroup
-import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.core.StoredBlock
-import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.*
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener
 import org.bitcoinj.core.listeners.DownloadProgressTracker
 import org.bitcoinj.kits.WalletAppKit
@@ -53,9 +40,7 @@ import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransaction
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import java.io.File
 import java.time.Instant
-import java.util.ArrayList
-import java.util.Date
-import java.util.LinkedHashMap
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
@@ -333,7 +318,7 @@ class BitcoinService(
 
     fun getPendingBalance(): Coin = runBlocking {
         withContext(contextCoroutineScope.coroutineContext) {
-            wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE)
+            wallet.getBalance(Wallet.BalanceType.ESTIMATED) - wallet.balance
         }
     }
 
