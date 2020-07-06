@@ -6,11 +6,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.InsufficientMoneyException
 import org.bitcoinj.core.StoredBlock
+import org.bitcoinj.utils.Threading
+import org.veriblock.core.MineException
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.CoinsReceivedEventDto
@@ -18,6 +24,7 @@ import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
+import org.veriblock.miners.pop.common.CheckResult
 import org.veriblock.miners.pop.common.amountToCoin
 import org.veriblock.miners.pop.common.formatBTCFriendlyString
 import org.veriblock.miners.pop.common.generateOperationId
@@ -27,21 +34,18 @@ import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransaction
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import org.veriblock.miners.pop.model.ApplicationExceptions.UnableToAcquireTransactionLock
 import org.veriblock.miners.pop.model.OperationSummary
-import org.veriblock.miners.pop.model.PopMinerDependencies
-import org.veriblock.miners.pop.model.result.DefaultResultMessage
 import org.veriblock.miners.pop.model.result.MineResult
 import org.veriblock.miners.pop.model.result.OperationNotFoundException
 import org.veriblock.miners.pop.model.result.Result
 import org.veriblock.miners.pop.storage.KeyValueRecord
 import org.veriblock.miners.pop.storage.KeyValueRepository
 import org.veriblock.miners.pop.tasks.ProcessManager
+import org.veriblock.sdk.models.getSynchronizedMessage
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.ArrayList
-import java.util.EnumSet
 import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 
@@ -58,55 +62,105 @@ class MinerService(
 ) : Runnable {
     private val operations = ConcurrentHashMap<String, VpmOperation>()
     private var isShuttingDown = false
-    private var stateRestored: Boolean = false
-    private val readyConditions: EnumSet<PopMinerDependencies> = EnumSet.noneOf(PopMinerDependencies::class.java)
 
-    private fun readyToMine(): Boolean {
-        ensureBitcoinServiceReady()
-        ensureBlockchainDownloaded()
-        ensureSufficientFunds()
-        return isReady()
-    }
+    private val coroutineScope = CoroutineScope(Threading.THREAD_POOL.asCoroutineDispatcher())
 
     override fun run() {
+        // Operation Events
         EventBus.popMiningOperationCompletedEvent.register(this, ::onPoPMiningOperationCompleted)
-        EventBus.insufficientFundsEvent.register(this, ::onInsufficientFunds)
-        EventBus.bitcoinServiceReadyEvent.register(this, ::onBitcoinServiceReady)
-        EventBus.bitcoinServiceNotReadyEvent.register(this, ::onBitcoinServiceNotReady)
-        EventBus.blockchainDownloadedEvent.register(this, ::onBlockchainDownloaded)
-        EventBus.nodeCoreHealthyEvent.register(this, ::onNodeCoreHealthy)
-        EventBus.nodeCoreUnhealthyEvent.register(this, ::onNodeCoreUnhealthy)
-        EventBus.nodeCoreSynchronizedEvent.register(this, ::onNodeCoreSynchronized)
-        EventBus.nodeCoreDesynchronizedEvent.register(this, ::onNodeCoreDesynchronized)
+        // Balance Events
+        EventBus.sufficientFundsEvent.register(this) { balance ->
+            logger.info { "Available Bitcoin balance: ${balance.formatBTCFriendlyString()}" }
+            logger.info { "Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}" }
+        }
+        EventBus.insufficientFundsEvent.register(this) { balance ->
+            val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
+            logger.info("PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
+                balance.formatBTCFriendlyString() + System.lineSeparator() + String.format(
+                "  Minimum required: %1\$s, need %2\$s more",
+                maximumTransactionFee.formatBTCFriendlyString(),
+                maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
+            ) + System.lineSeparator() + "  Send Bitcoin to: " +
+                bitcoinService.currentReceiveAddress())
+        }
+        EventBus.balanceChangedEvent.register(this) { balance ->
+            logger.info { "Current balance: ${balance.formatBTCFriendlyString()}" }
+        }
+        // Block Events
         EventBus.newVeriBlockFoundEvent.register(this, ::onNewVeriBlockFound)
+        // Bitcoin Events
+        EventBus.bitcoinServiceReadyEvent.register(this) {
+            logger.info { "Bitcoin service is ready" }
+        }
+        EventBus.bitcoinServiceNotReadyEvent.register(this) {
+            logger.info { "Bitcoin service is not ready" }
+        }
+        EventBus.blockchainDownloadedEvent.register(this) {
+            logger.info("Bitcoin blockchain finished downloading")
+        }
+        // NodeCore Events
+        EventBus.nodeCoreAccessibleEvent.register(this) {
+            logger.info { "Successfully connected to NodeCore at ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}" }
+        }
+        EventBus.nodeCoreNotAccessibleEvent.register(this) {
+            logger.info { "Unable to connect to NodeCore at ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}, trying to reconnect..." }
+        }
+        EventBus.nodeCoreSynchronizedEvent.register(this) { }
+        EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
+        EventBus.nodeCoreSameNetworkEvent.register(this) {
+            logger.info { "The connected NodeCore & VPM are running on the same configured network (${config.bitcoin.network.name})" }
+        }
+        EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
+        EventBus.nodeCoreReadyEvent.register(this) {
+            logger.info { "The connected NodeCore is ready" }
+        }
+        EventBus.nodeCoreNotReadyEvent.register(this) {
+            logger.info { "The connected NodeCore is not ready" }
+        }
+
         bitcoinService.initialize()
+        nodeCoreService.initialize()
+
         if (!config.skipAck) {
             val data = keyValueRepository[Constants.WALLET_SEED_VIEWED_KEY]
             if (data == null || data.value != "1") {
                 EventBus.walletSeedAgreementMissingEvent.trigger()
             }
         }
+
+        coroutineScope.launch {
+            restoreOperations()
+        }
     }
 
     fun shutdown() {
+        // Operation Events
         EventBus.popMiningOperationCompletedEvent.unregister(this)
+        // Balance Events
+        EventBus.sufficientFundsEvent.unregister(this)
         EventBus.insufficientFundsEvent.unregister(this)
+        EventBus.balanceChangedEvent.unregister(this)
+
+        // Block Events
+        EventBus.newVeriBlockFoundEvent.unregister(this)
+        // Bitcoin Events
         EventBus.bitcoinServiceReadyEvent.unregister(this)
         EventBus.bitcoinServiceNotReadyEvent.unregister(this)
         EventBus.blockchainDownloadedEvent.unregister(this)
-        EventBus.nodeCoreHealthyEvent.unregister(this)
-        EventBus.nodeCoreUnhealthyEvent.unregister(this)
+        // NodeCore Events
+        EventBus.nodeCoreAccessibleEvent.unregister(this)
+        EventBus.nodeCoreNotAccessibleEvent.unregister(this)
         EventBus.nodeCoreSynchronizedEvent.unregister(this)
-        EventBus.nodeCoreDesynchronizedEvent.unregister(this)
-        EventBus.newVeriBlockFoundEvent.unregister(this)
+        EventBus.nodeCoreNotSynchronizedEvent.unregister(this)
+        EventBus.nodeCoreSameNetworkEvent.unregister(this)
+        EventBus.nodeCoreNotSameNetworkEvent.unregister(this)
+        EventBus.nodeCoreReadyEvent.unregister(this)
+        EventBus.nodeCoreNotReadyEvent.unregister(this)
 
         processManager.shutdown()
         bitcoinService.shutdown()
         nodeCoreService.shutdown()
     }
-
-    fun isReady(): Boolean =
-        PopMinerDependencies.SATISFIED == readyConditions
 
     fun listOperations(): List<OperationSummary> {
         return operations.values.asSequence().map { operation ->
@@ -124,35 +178,64 @@ class MinerService(
     fun getOperation(id: String) =
         stateService.getOperation(id)
 
-    fun mine(blockNumber: Int?): MineResult {
-        val operationId = generateOperationId()
-        val result = MineResult(operationId)
-        if (!readyToMine()) {
-            result.fail()
-            val reasons = listPendingReadyConditions()
-            result.addMessage(DefaultResultMessage("V412", "Miner is not ready", reasons, true))
-            return result
-        }
+    fun checkReadyConditions(): CheckResult {
+        // Verify if the miner is shutting down
         if (isShuttingDown) {
-            result.addMessage(DefaultResultMessage("V412", "Miner is not ready", "The miner is currently shutting down", true))
-            return result
+            return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
         }
-
+        // Specific checks for Bitcoin
+        if (!bitcoinService.isServiceReady()) {
+            return CheckResult.Failure(MineException("Bitcoin service is not ready"))
+        }
+        if (!bitcoinService.isBlockchainDownloaded()) {
+            return CheckResult.Failure(MineException("Bitcoin blockchain is not downloaded"))
+        }
         // TODO: This is pretty naive. Wallet right now uses DefaultCoinSelector which doesn't do a great job with
         // multiple UTXO and long mempool chains. If that was improved, this count algorithm wouldn't be necessary.
         val count = operations.values.count { VpmOperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
         if (count >= Constants.MEMPOOL_CHAIN_LIMIT) {
-            result.fail()
-            result.addMessage(
-                DefaultResultMessage(
-                    "V412",
-                    "Too Many Pending Transaction operations",
-                    "Creating additional operations at this time would result in rejection on the Bitcoin network",
-                    true
+            return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the Bitcoin network"))
+        }
+        // Specific checks for the NodeCore
+        if (!nodeCoreService.isAccessible()) {
+            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}, is it reachable?"))
+        }
+        // Verify the NodeCore configured Network
+        if (!nodeCoreService.isOnSameNetwork()) {
+            return CheckResult.Failure(MineException("The connected NodeCore (${nodeCoreService.latestNodeCoreStateInfo.networkVersion}) & VPM (${config.bitcoin.network}) are not running on the same configured network"))
+        }
+        // Verify the balance
+        if (!bitcoinService.isSufficientlyFunded()) {
+            val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
+            val balance = bitcoinService.getBalance()
+            return CheckResult.Failure(
+                MineException(
+                    "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
+                        balance.formatBTCFriendlyString() + System.lineSeparator() + String.format(
+                        "  Minimum required: %1\$s, need %2\$s more",
+                        maximumTransactionFee.formatBTCFriendlyString(),
+                        maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
+                    ) + System.lineSeparator() + "  Send Bitcoin to: " +
+                        bitcoinService.currentReceiveAddress()
                 )
             )
-            return result
         }
+        // Verify the synchronized status
+        if (!nodeCoreService.isSynchronized()) {
+            return CheckResult.Failure(MineException("The connected NodeCore is not synchronized: ${nodeCoreService.latestNodeCoreStateInfo.getSynchronizedMessage()}"))
+        }
+        return CheckResult.Success()
+    }
+
+    fun mine(blockNumber: Int?): MineResult {
+        // Verify all the mine pre-conditions
+        val conditionResult = checkReadyConditions()
+        if (conditionResult is CheckResult.Failure) {
+            throw conditionResult.error
+        }
+
+        val operationId = generateOperationId()
+        val result = MineResult(operationId)
         val operation = VpmOperation(operationId, endorsedBlockHeight = blockNumber)
         operations.putIfAbsent(operationId, operation)
         processManager.submit(operation)
@@ -166,14 +249,13 @@ class MinerService(
     }
 
     fun resubmit(id: String): Result {
-        val result = Result()
-        if (!readyToMine()) {
-            result.fail()
-            val reasons = listPendingReadyConditions()
-            result.addMessage("V412", "Miner is not ready", reasons.joinToString(";"), true)
-            return result
+        // Verify all the mine pre-conditions
+        val conditionResult = checkReadyConditions()
+        if (conditionResult is CheckResult.Failure) {
+            throw conditionResult.error
         }
 
+        val result = Result()
         val operation = operations[id]
         if (operation == null) {
             result.fail()
@@ -220,7 +302,7 @@ class MinerService(
     }
 
     fun getMinerAddress(): String? {
-        return if (readyConditions.contains(PopMinerDependencies.NODECORE_CONNECTED)) {
+        return if (nodeCoreService.isAccessible()) {
             nodeCoreGateway.getMinerAddress()
         } else {
             null
@@ -340,97 +422,35 @@ class MinerService(
         return result
     }
 
-    private fun ensureBlockchainDownloaded() {
-        if (!readyConditions.contains(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED) && bitcoinService.blockchainDownloaded()) {
-            addReadyCondition(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED)
-        }
-    }
-
-    private fun ensureBitcoinServiceReady() {
-        if (!readyConditions.contains(PopMinerDependencies.BITCOIN_SERVICE_READY) && bitcoinService.serviceReady()) {
-            addReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
-        }
-    }
-
-    private fun ensureSufficientFunds() {
-        val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
-        if (!bitcoinService.getBalance().isLessThan(maximumTransactionFee)) {
-            if (!readyConditions.contains(PopMinerDependencies.SUFFICIENT_FUNDS)) {
-                logger.info("PoP wallet is sufficiently funded")
-                EventBus.fundsAddedEvent.trigger()
-            }
-            addReadyCondition(PopMinerDependencies.SUFFICIENT_FUNDS)
-        } else {
-            removeReadyCondition(PopMinerDependencies.SUFFICIENT_FUNDS)
-        }
-    }
-
-    private fun addReadyCondition(flag: PopMinerDependencies) {
-        val previousReady = isReady()
-        readyConditions.add(flag)
-        if (!previousReady && isReady()) {
-            if (!stateRestored) {
-                restoreOperations()
-            }
-            logger.info("PoP Miner: READY")
-        }
-    }
-
-    private fun removeReadyCondition(flag: PopMinerDependencies) {
-        val removed = readyConditions.remove(flag)
-        if (removed) {
-            logger.warn("PoP Miner: NOT READY ({})", getMessageForDependencyCondition(flag))
-            EventBus.popMinerNotReadyEvent.trigger(flag)
-        }
-    }
-
-    private fun listPendingReadyConditions(): List<String> {
-        val reasons: MutableList<String> = ArrayList()
-        val pending = EnumSet.complementOf(readyConditions)
-        for (flag in pending) {
-            reasons.add(getMessageForDependencyCondition(flag))
-        }
-        return reasons
-    }
-
-    private fun getMessageForDependencyCondition(flag: PopMinerDependencies): String {
-        return when (flag) {
-            PopMinerDependencies.BLOCKCHAIN_DOWNLOADED -> "Bitcoin blockchain is not downloaded"
-            PopMinerDependencies.SUFFICIENT_FUNDS -> {
-                val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
-                val balance = bitcoinService.getBalance()
-                "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
-                    balance.formatBTCFriendlyString() + System.lineSeparator() + String.format(
-                    "  Minimum required: %1\$s, need %2\$s more",
-                    maximumTransactionFee.formatBTCFriendlyString(),
-                    maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
-                ) + System.lineSeparator() + "  Send Bitcoin to: " +
-                    bitcoinService.currentReceiveAddress()
-            }
-            PopMinerDependencies.NODECORE_CONNECTED -> "Waiting for connection to NodeCore"
-            PopMinerDependencies.SYNCHRONIZED_NODECORE -> {
-                val nodeCoreStateInfo = nodeCoreGateway.getNodeCoreStateInfo()
-                "Waiting for NodeCore to synchronize. ${nodeCoreStateInfo.blockDifference} blocks left (LocalHeight=${nodeCoreStateInfo.localBlockchainHeight} NetworkHeight=${nodeCoreStateInfo.networkHeight})"
-            }
-            PopMinerDependencies.BITCOIN_SERVICE_READY -> "Bitcoin service is not ready"
-        }
-    }
-
-    private fun restoreOperations() {
+    private suspend fun restoreOperations() {
         val preservedOperations = stateService.getActiveOperations()
-        logger.info { "Found ${preservedOperations.size} operations to restore" }
-        for (miningOperation in preservedOperations) {
-            try {
-                if (!miningOperation.isFailed()) {
-                    processManager.submit(miningOperation)
-                }
+
+        if (preservedOperations.isNotEmpty()) {
+            for (miningOperation in preservedOperations) {
                 operations[miningOperation.id] = miningOperation
-                logger.debug("Successfully restored operation {}", miningOperation.id)
-            } catch (e: Exception) {
-                logger.warn("Unable to restore previous operation {}", miningOperation.id)
             }
+            logger.info { "Found ${preservedOperations.size} operations to restore" }
+
+            val operationsToSubmit = ArrayList(preservedOperations)
+            while (operationsToSubmit.isNotEmpty()) {
+                val operationsToRemove = ArrayList<VpmOperation>()
+                for (miningOperation in operationsToSubmit) {
+                    try {
+                        if (!miningOperation.isFailed() && nodeCoreService.isAccessible() && nodeCoreService.isOnSameNetwork() && nodeCoreService.isSynchronized() &&
+                            bitcoinService.isServiceReady() && bitcoinService.isBlockchainDownloaded() && bitcoinService.isSufficientlyFunded()) {
+                            processManager.submit(miningOperation)
+                            operationsToRemove.add(miningOperation)
+                            logger.debug("Successfully restored operation {}", miningOperation.id)
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("Unable to restore previous operation {}", miningOperation.id)
+                    }
+                }
+                operationsToSubmit.removeAll(operationsToRemove)
+                delay(5 * 1000)
+            }
+            logger.info { "All the suspended operations have been submitted" }
         }
-        stateRestored = true
     }
 
     fun setIsShuttingDown(b: Boolean) {
@@ -448,76 +468,6 @@ class MinerService(
     private fun onCoinsReceived(event: CoinsReceivedEventDto) {
         try {
             logger.info { "Received pending tx '${event.tx.txId}', pending balance: '${event.newBalance.formatBTCFriendlyString()}'" }
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onInsufficientFunds() {
-        try {
-            removeReadyCondition(PopMinerDependencies.SUFFICIENT_FUNDS)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onBitcoinServiceReady() {
-        try {
-            addReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onBitcoinServiceNotReady() {
-        try {
-            removeReadyCondition(PopMinerDependencies.BITCOIN_SERVICE_READY)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onBlockchainDownloaded() {
-        try {
-            addReadyCondition(PopMinerDependencies.BLOCKCHAIN_DOWNLOADED)
-            ensureSufficientFunds()
-            logger.info(
-                "Available Bitcoin balance: " + bitcoinService.getBalance().formatBTCFriendlyString()
-            )
-            logger.info("Send Bitcoin to: " + bitcoinService.currentReceiveAddress())
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    fun onNodeCoreHealthy() {
-        try {
-            addReadyCondition(PopMinerDependencies.NODECORE_CONNECTED)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-        return
-    }
-
-    private fun onNodeCoreUnhealthy() {
-        try {
-            removeReadyCondition(PopMinerDependencies.NODECORE_CONNECTED)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onNodeCoreSynchronized() {
-        try {
-            addReadyCondition(PopMinerDependencies.SYNCHRONIZED_NODECORE)
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun onNodeCoreDesynchronized() {
-        try {
-            removeReadyCondition(PopMinerDependencies.SYNCHRONIZED_NODECORE)
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

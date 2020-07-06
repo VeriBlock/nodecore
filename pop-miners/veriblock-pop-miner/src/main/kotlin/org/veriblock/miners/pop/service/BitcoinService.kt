@@ -61,6 +61,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val logger = createLogger {}
 
@@ -99,8 +100,10 @@ class BitcoinService(
     var blockchainDownloadBlocksToGo = 0
     var blockchainDownloadPercent = 0
 
-    private var isBlockchainDownloaded = false
-    private var isServiceReady = false
+    private val blockChainDownloaded = AtomicBoolean(false)
+    private val serviceReady = AtomicBoolean(false)
+    private val funded = AtomicBoolean(false)
+
     private var receiveAddress: String? = null
     private var changeAddress: Address? = null
 
@@ -125,25 +128,26 @@ class BitcoinService(
     }
 
     fun setServiceReady(value: Boolean) {
-        if (value == isServiceReady) {
+        if (value == isServiceReady()) {
             return
         }
-        isServiceReady = value
-        if (isServiceReady) {
-            logger.info("Bitcoin service is ready")
+        serviceReady.set(value)
+        if (isServiceReady()) {
             EventBus.bitcoinServiceReadyEvent.trigger()
         } else {
-            logger.warn("Bitcoin service is not ready")
             EventBus.bitcoinServiceNotReadyEvent.trigger()
         }
     }
+
+    // Used to track changes on the wallet balance
+    private var latestBalance: Coin = Coin.ZERO
 
     private fun createWalletAppKit(
         context: Context,
         filePrefix: String,
         seed: DeterministicSeed?
     ): WalletAppKit {
-        isBlockchainDownloaded = false
+        blockChainDownloaded.set(false)
         var kit: WalletAppKit = object : WalletAppKit(
             context, Script.ScriptType.P2WPKH, null, File("."), filePrefix
         ) {
@@ -167,6 +171,25 @@ class BitcoinService(
                                 "Received ${delta.formatBTCFriendlyString()}"
                             }
                             "New pending BTC transaction: $action. New pending balance: ${newBalance.formatBTCFriendlyString()}"
+                        }
+                    }
+
+                    addChangeEventListener {
+                        val balance = it.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+                        if (balance != latestBalance) {
+                            if (balance.isLessThan(getMaximumTransactionFee())) {
+                                if (isSufficientlyFunded()) {
+                                    funded.set(false)
+                                    EventBus.insufficientFundsEvent.trigger(balance)
+                                }
+                            } else {
+                                if (!isSufficientlyFunded()) {
+                                    funded.set(true)
+                                    EventBus.sufficientFundsEvent.trigger(balance)
+                                }
+                            }
+                            EventBus.balanceChangedEvent.trigger(balance)
+                            latestBalance = it.balance
                         }
                     }
                 }
@@ -201,10 +224,25 @@ class BitcoinService(
         kit.setBlockingStartup(false)
         kit.setDownloadListener(object : DownloadProgressTracker() {
             override fun doneDownload() {
-                if (!isBlockchainDownloaded) {
-                    isBlockchainDownloaded = true
-                    logger.info("Bitcoin blockchain finished downloading")
+                if (!isBlockchainDownloaded()) {
+                    blockChainDownloaded.set(true)
                     EventBus.blockchainDownloadedEvent.trigger()
+
+                    blockchainDownloadPercent = 100
+                    blockchainDownloadBlocksToGo = 0
+
+                    val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+                    if (balance != latestBalance) {
+                        if (balance.isLessThan(getMaximumTransactionFee())) {
+                            funded.set(false)
+                            EventBus.insufficientFundsEvent.trigger(balance)
+                        } else {
+                            funded.set(true)
+                            EventBus.sufficientFundsEvent.trigger(balance)
+                        }
+                        EventBus.balanceChangedEvent.trigger(balance)
+                        latestBalance = balance
+                    }
                 }
             }
 
@@ -262,9 +300,14 @@ class BitcoinService(
         }
     }
 
-    fun serviceReady(): Boolean {
-        return isBlockchainDownloaded && isServiceReady
-    }
+    fun isServiceReady() =
+        serviceReady.get()
+
+    fun isBlockchainDownloaded() =
+        blockChainDownloaded.get()
+
+    fun isSufficientlyFunded() =
+        funded.get()
 
     fun currentReceiveAddress(): String {
         return receiveAddress ?: run {
@@ -301,10 +344,6 @@ class BitcoinService(
         shutdown()
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
         initialize()
-    }
-
-    fun blockchainDownloaded(): Boolean {
-        return isBlockchainDownloaded
     }
 
     fun generatePoPScript(opReturnData: ByteArray): Script {
@@ -549,7 +588,8 @@ class BitcoinService(
                     )
                 }
             } catch (e: InsufficientMoneyException) {
-                EventBus.insufficientFundsEvent.trigger()
+                funded.set(false)
+                EventBus.insufficientFundsEvent.trigger(wallet.balance)
                 error("PoP wallet does not contain sufficient funds to create PoP transaction")
             } catch (e: Wallet.CompletionException) {
                 error("Unable to complete transaction: ${e.javaClass.simpleName}")

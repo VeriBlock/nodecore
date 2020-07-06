@@ -20,6 +20,7 @@ import org.quartz.impl.StdSchedulerFactory
 import org.quartz.spi.JobFactory
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.VpmConfig
+import org.veriblock.miners.pop.common.CheckResult
 import org.veriblock.miners.pop.service.MinerService
 import java.text.SimpleDateFormat
 
@@ -91,11 +92,12 @@ class PoPMiningScheduler(
 
     private fun executeSchedule() {
         Context.propagate(config.bitcoin.context)
-        if (popMinerService.isReady()) {
+        val conditionResult = popMinerService.checkReadyConditions()
+        if (conditionResult is CheckResult.Success) {
             logger.info("Starting mining operation as scheduled")
             popMinerService.mine(null)
         } else {
-            logger.info("PoP miner is not in ready state, skipping scheduled mining operation")
+            logger.info("PoP miner is not in ready state, skipping scheduled mining operation: ${(conditionResult as CheckResult.Failure).error.message}")
         }
     }
 }

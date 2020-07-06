@@ -2,28 +2,43 @@ package org.veriblock.miners.pop
 
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Transaction
+import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
 import org.veriblock.miners.pop.core.VpmOperation
-import org.veriblock.miners.pop.model.PopMinerDependencies
 import org.veriblock.miners.pop.model.VeriBlockHeader
 
 object EventBus {
+    // Bitcoin Events
     val bitcoinServiceReadyEvent = EmptyEvent("Bitcoin Service Ready")
     val bitcoinServiceNotReadyEvent = EmptyEvent("Bitcoin Service Not Ready")
-    val blockchainDownloadedEvent = EmptyEvent("Blockchain Downloaded")
-    val fundsAddedEvent = EmptyEvent("Funds Added")
-    val insufficientFundsEvent = EmptyEvent("Insufficient Funds")
+    val blockchainDownloadedEvent = EmptyEvent("Bitcoin blockchain downloaded")
+
+    // Balance Events
+    val sufficientFundsEvent = Event<Coin>("Sufficient Funds")
+    val insufficientFundsEvent = Event<Coin>("Insufficient Funds")
+    val balanceChangedEvent = Event<Coin>("Balance changed")
+
+
+    // Block Events
     val newVeriBlockFoundEvent = Event<NewVeriBlockFoundEventDto>("New VeriBlock Found")
-    val nodeCoreHealthyEvent = EmptyEvent("NodeCore Healthy")
-    val nodeCoreUnhealthyEvent = EmptyEvent("NodeCore Unhealthy")
-    val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore Synchronized")
-    val nodeCoreDesynchronizedEvent = EmptyEvent("NodeCore Desynchronized")
-    val popMinerReadyEvent = EmptyEvent("PoP Miner Ready")
-    val popMinerNotReadyEvent = Event<PopMinerDependencies>("PoP Miner Not Ready")
+
+    // NodeCore Events
+    val nodeCoreAccessibleEvent = EmptyEvent("NodeCore is accessible")
+    val nodeCoreNotAccessibleEvent = EmptyEvent("NodeCore is not accessible")
+    val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore is synchronized")
+    val nodeCoreNotSynchronizedEvent = EmptyEvent("NodeCore is not synchronized")
+    val nodeCoreSameNetworkEvent = EmptyEvent("NodeCore is at the same configured network")
+    val nodeCoreNotSameNetworkEvent = EmptyEvent("NodeCore is not at the same configured network")
+    val nodeCoreReadyEvent = EmptyEvent("NodeCore is ready")
+    val nodeCoreNotReadyEvent = EmptyEvent("NodeCore is not ready")
+
+    // Operation Events
     val popMiningOperationCompletedEvent = Event<String>("PoP Mining Operation Completed")
     val popMiningOperationFinishedEvent = Event<VpmOperation>("PoP Mining Operation Finished")
     val popMiningOperationStateChangedEvent = Event<VpmOperation>("PoP Mining Operation State Changed")
+
+    // Others
     val programQuitEvent = Event<Int>("Program Quit")
     val shellCompletedEvent = EmptyEvent("Shell Completed")
     val walletSeedAgreementMissingEvent = EmptyEvent("Wallet Seed Agreement Missing")

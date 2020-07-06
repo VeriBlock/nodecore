@@ -39,7 +39,7 @@ import javax.sql.DataSource
 val bootstrapModule = module {
     single { BlockStore() }
     single { AutoMineEngine(get(), get()) }
-    single { VpmTaskService(get(), get()) }
+    single { VpmTaskService(get(), get(), get()) }
     single { ProcessManager(get(), get()) }
     single { ChannelBuilder(get()) }
     single { MinerService(get(), get(), get(), get(), get(), get(), get()) }
