@@ -62,6 +62,7 @@ class MinerService(
 ) : Runnable {
     private val operations = ConcurrentHashMap<String, VpmOperation>()
     private var isShuttingDown = false
+    private var isMinerReady = false
 
     private val coroutineScope = CoroutineScope(Threading.THREAD_POOL.asCoroutineDispatcher())
 
@@ -72,6 +73,7 @@ class MinerService(
         EventBus.sufficientFundsEvent.register(this) { balance ->
             logger.info { "Available Bitcoin balance: ${balance.formatBTCFriendlyString()}" }
             logger.info { "Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}" }
+            verifyMinerIsReady()
         }
         EventBus.insufficientFundsEvent.register(this) { balance ->
             val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
@@ -82,6 +84,7 @@ class MinerService(
                 maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
             ) + System.lineSeparator() + "  Send Bitcoin to: " +
                 bitcoinService.currentReceiveAddress())
+            verifyMinerIsReady()
         }
         EventBus.balanceChangedEvent.register(this) { balance ->
             logger.info { "Current balance: ${balance.formatBTCFriendlyString()}" }
@@ -91,19 +94,26 @@ class MinerService(
         // Bitcoin Events
         EventBus.bitcoinServiceReadyEvent.register(this) {
             logger.info { "Bitcoin service is ready" }
+            verifyMinerIsReady()
         }
         EventBus.bitcoinServiceNotReadyEvent.register(this) {
             logger.info { "Bitcoin service is not ready" }
+            verifyMinerIsReady()
         }
         EventBus.blockchainDownloadedEvent.register(this) {
             logger.info("Bitcoin blockchain finished downloading")
+            verifyMinerIsReady()
+        }
+        EventBus.blockchainNotDownloadedEvent.register(this) {
+            logger.info { "Bitcoin blockchain is not downloaded" }
+            verifyMinerIsReady()
         }
         // NodeCore Events
         EventBus.nodeCoreAccessibleEvent.register(this) {
-            logger.info { "Successfully connected to NodeCore at ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}" }
+            logger.info { "Successfully connected to NodeCore at ${config.nodeCoreRpc.host}:${config.nodeCoreRpc.port}" }
         }
         EventBus.nodeCoreNotAccessibleEvent.register(this) {
-            logger.info { "Unable to connect to NodeCore at ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}, trying to reconnect..." }
+            logger.info { "Unable to connect to NodeCore at ${config.nodeCoreRpc.host}:${config.nodeCoreRpc.port}, trying to reconnect..." }
         }
         EventBus.nodeCoreSynchronizedEvent.register(this) { }
         EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
@@ -113,9 +123,18 @@ class MinerService(
         EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
         EventBus.nodeCoreReadyEvent.register(this) {
             logger.info { "The connected NodeCore is ready" }
+            verifyMinerIsReady()
         }
         EventBus.nodeCoreNotReadyEvent.register(this) {
             logger.info { "The connected NodeCore is not ready" }
+            verifyMinerIsReady()
+        }
+        // Miner Events
+        EventBus.minerReadyEvent.register(this) {
+            logger.info { "The miner is ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. " }
+        }
+        EventBus.minerNotReadyEvent.register(this) {
+            logger.info { "The miner is not ready" }
         }
 
         bitcoinService.initialize()
@@ -133,6 +152,20 @@ class MinerService(
         }
     }
 
+    private fun verifyMinerIsReady() {
+        if (nodeCoreService.isReady() && bitcoinService.isServiceReady() && bitcoinService.isBlockchainDownloaded() && bitcoinService.isSufficientlyFunded()) {
+            if (!isMinerReady) {
+                isMinerReady = true
+                EventBus.minerReadyEvent.trigger()
+            }
+        } else {
+            if (isMinerReady) {
+                isMinerReady = false
+                EventBus.minerNotReadyEvent.trigger()
+            }
+        }
+    }
+
     fun shutdown() {
         // Operation Events
         EventBus.popMiningOperationCompletedEvent.unregister(this)
@@ -140,13 +173,13 @@ class MinerService(
         EventBus.sufficientFundsEvent.unregister(this)
         EventBus.insufficientFundsEvent.unregister(this)
         EventBus.balanceChangedEvent.unregister(this)
-
         // Block Events
         EventBus.newVeriBlockFoundEvent.unregister(this)
         // Bitcoin Events
         EventBus.bitcoinServiceReadyEvent.unregister(this)
         EventBus.bitcoinServiceNotReadyEvent.unregister(this)
         EventBus.blockchainDownloadedEvent.unregister(this)
+        EventBus.blockchainNotDownloadedEvent.unregister(this)
         // NodeCore Events
         EventBus.nodeCoreAccessibleEvent.unregister(this)
         EventBus.nodeCoreNotAccessibleEvent.unregister(this)
@@ -156,6 +189,9 @@ class MinerService(
         EventBus.nodeCoreNotSameNetworkEvent.unregister(this)
         EventBus.nodeCoreReadyEvent.unregister(this)
         EventBus.nodeCoreNotReadyEvent.unregister(this)
+        // Miner Events
+        EventBus.minerReadyEvent.unregister(this)
+        EventBus.minerNotReadyEvent.unregister(this)
 
         processManager.shutdown()
         bitcoinService.shutdown()
@@ -198,7 +234,7 @@ class MinerService(
         }
         // Specific checks for the NodeCore
         if (!nodeCoreService.isAccessible()) {
-            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}, is it reachable?"))
+            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${config.nodeCoreRpc.host}:${config.nodeCoreRpc.port}, is it reachable?"))
         }
         // Verify the NodeCore configured Network
         if (!nodeCoreService.isOnSameNetwork()) {
@@ -436,7 +472,7 @@ class MinerService(
                 val operationsToRemove = ArrayList<VpmOperation>()
                 for (miningOperation in operationsToSubmit) {
                     try {
-                        if (!miningOperation.isFailed() && nodeCoreService.isAccessible() && nodeCoreService.isOnSameNetwork() && nodeCoreService.isSynchronized() &&
+                        if (!miningOperation.isFailed() && nodeCoreService.isReady() &&
                             bitcoinService.isServiceReady() && bitcoinService.isBlockchainDownloaded() && bitcoinService.isSufficientlyFunded()) {
                             processManager.submit(miningOperation)
                             operationsToRemove.add(miningOperation)

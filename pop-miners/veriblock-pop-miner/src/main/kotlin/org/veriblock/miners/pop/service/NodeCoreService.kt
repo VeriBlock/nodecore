@@ -61,6 +61,9 @@ class NodeCoreService(
         }
     }
 
+    /**
+     * This variable should be true if accessible, sameNetwork and synchronized variables are true as well
+     */
     fun isReady(): Boolean =
         ready.get()
 

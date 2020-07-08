@@ -13,12 +13,12 @@ object EventBus {
     val bitcoinServiceReadyEvent = EmptyEvent("Bitcoin Service Ready")
     val bitcoinServiceNotReadyEvent = EmptyEvent("Bitcoin Service Not Ready")
     val blockchainDownloadedEvent = EmptyEvent("Bitcoin blockchain downloaded")
+    val blockchainNotDownloadedEvent = EmptyEvent("Bitcoin blockchain not downloaded")
 
     // Balance Events
     val sufficientFundsEvent = Event<Coin>("Sufficient Funds")
     val insufficientFundsEvent = Event<Coin>("Insufficient Funds")
     val balanceChangedEvent = Event<Coin>("Balance changed")
-
 
     // Block Events
     val newVeriBlockFoundEvent = Event<NewVeriBlockFoundEventDto>("New VeriBlock Found")
@@ -37,6 +37,10 @@ object EventBus {
     val popMiningOperationCompletedEvent = Event<String>("PoP Mining Operation Completed")
     val popMiningOperationFinishedEvent = Event<VpmOperation>("PoP Mining Operation Finished")
     val popMiningOperationStateChangedEvent = Event<VpmOperation>("PoP Mining Operation State Changed")
+
+    // Miner Events
+    val minerReadyEvent = EmptyEvent("Miner is ready")
+    val minerNotReadyEvent = EmptyEvent("Miner is not ready")
 
     // Others
     val programQuitEvent = Event<Int>("Program Quit")

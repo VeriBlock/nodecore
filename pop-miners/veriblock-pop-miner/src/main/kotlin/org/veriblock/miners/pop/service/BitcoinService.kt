@@ -47,6 +47,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.schedule
 
 private val logger = createLogger {}
 
@@ -80,7 +81,7 @@ class BitcoinService(
         }
     }
 
-    private val bitcoinNetwork = this.configuration.network
+    private val bitcoinNetwork = configuration.network
 
     var blockchainDownloadBlocksToGo = 0
     var blockchainDownloadPercent = 0
@@ -109,10 +110,13 @@ class BitcoinService(
                 it.endorsementTransaction?.confidence?.removeEventListener(it.transactionListener)
             }
         }
+        Timer().schedule(10000) {
+            verifyBalance(true)
+        }
         logger.info("BitcoinService constructor finished")
     }
 
-    fun setServiceReady(value: Boolean) {
+    private fun setServiceReady(value: Boolean) {
         if (value == isServiceReady()) {
             return
         }
@@ -124,6 +128,18 @@ class BitcoinService(
         }
     }
 
+    private fun setBlockChainDownloaded(value: Boolean) {
+        if (value == isBlockchainDownloaded()) {
+            return
+        }
+        blockChainDownloaded.set(value)
+        if (isBlockchainDownloaded()) {
+            EventBus.blockchainDownloadedEvent.trigger()
+        } else {
+            EventBus.blockchainNotDownloadedEvent.trigger()
+        }
+    }
+
     // Used to track changes on the wallet balance
     private var latestBalance: Coin = Coin.ZERO
 
@@ -132,7 +148,7 @@ class BitcoinService(
         filePrefix: String,
         seed: DeterministicSeed?
     ): WalletAppKit {
-        blockChainDownloaded.set(false)
+        setBlockChainDownloaded(false)
         var kit: WalletAppKit = object : WalletAppKit(
             context, Script.ScriptType.P2WPKH, null, File("."), filePrefix
         ) {
@@ -159,23 +175,9 @@ class BitcoinService(
                         }
                     }
 
+                    // Verify the balance at any wallet-change
                     addChangeEventListener {
-                        val balance = it.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
-                        if (balance != latestBalance) {
-                            if (balance.isLessThan(getMaximumTransactionFee())) {
-                                if (isSufficientlyFunded()) {
-                                    funded.set(false)
-                                    EventBus.insufficientFundsEvent.trigger(balance)
-                                }
-                            } else {
-                                if (!isSufficientlyFunded()) {
-                                    funded.set(true)
-                                    EventBus.sufficientFundsEvent.trigger(balance)
-                                }
-                            }
-                            EventBus.balanceChangedEvent.trigger(balance)
-                            latestBalance = it.balance
-                        }
+                        verifyBalance()
                     }
                 }
 
@@ -210,24 +212,12 @@ class BitcoinService(
         kit.setDownloadListener(object : DownloadProgressTracker() {
             override fun doneDownload() {
                 if (!isBlockchainDownloaded()) {
-                    blockChainDownloaded.set(true)
-                    EventBus.blockchainDownloadedEvent.trigger()
+                    setBlockChainDownloaded(true)
 
                     blockchainDownloadPercent = 100
                     blockchainDownloadBlocksToGo = 0
 
-                    val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
-                    if (balance != latestBalance) {
-                        if (balance.isLessThan(getMaximumTransactionFee())) {
-                            funded.set(false)
-                            EventBus.insufficientFundsEvent.trigger(balance)
-                        } else {
-                            funded.set(true)
-                            EventBus.sufficientFundsEvent.trigger(balance)
-                        }
-                        EventBus.balanceChangedEvent.trigger(balance)
-                        latestBalance = balance
-                    }
+                    verifyBalance(true)
                 }
             }
 
@@ -253,6 +243,25 @@ class BitcoinService(
             kit = kit.restoreWalletFromSeed(seed)
         }
         return kit
+    }
+
+    fun verifyBalance(ignoreCondition: Boolean = false) {
+        val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+        if (balance != latestBalance) {
+            if (balance.isLessThan(getMaximumTransactionFee())) {
+                if (ignoreCondition || isSufficientlyFunded()) {
+                    funded.set(false)
+                    EventBus.insufficientFundsEvent.trigger(balance)
+                }
+            } else {
+                if (ignoreCondition || !isSufficientlyFunded()) {
+                    funded.set(true)
+                    EventBus.sufficientFundsEvent.trigger(balance)
+                }
+            }
+            EventBus.balanceChangedEvent.trigger(balance)
+            latestBalance = balance
+        }
     }
 
     fun initialize() {
@@ -325,6 +334,7 @@ class BitcoinService(
     fun resetWallet() {
         receiveAddress = null
         setServiceReady(false)
+        setBlockChainDownloaded(false)
         wallet.reset()
         shutdown()
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
@@ -534,6 +544,7 @@ class BitcoinService(
 
     fun shutdown() {
         setServiceReady(false)
+        setBlockChainDownloaded(false)
         receiveAddress = null
         kit.stopAsync()
         kit.awaitTerminated()

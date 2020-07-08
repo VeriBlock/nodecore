@@ -17,7 +17,7 @@ class DiagnosticService(
 
         // Check the NodeCore status
         if (nodeCoreService.isAccessible()) {
-            information.add("SUCCESS - NodeCore connection: Connected to ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}")
+            information.add("SUCCESS - NodeCore connection: Connected to ${config.nodeCoreRpc.host}:${config.nodeCoreRpc.port}")
             // Configured network
             if (nodeCoreService.isOnSameNetwork()) {
                 information.add("SUCCESS - NodeCore configured network: NodeCore & VPM are running on the same configured network (${config.bitcoin.network.name})")
@@ -31,7 +31,7 @@ class DiagnosticService(
                 information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreService.latestNodeCoreStateInfo.getSynchronizedMessage()}")
             }
         } else {
-            information.add("FAIL - NodeCore connection: Not connected to ${config.nodeCoreRpc.host}@${config.nodeCoreRpc.port}")
+            information.add("FAIL - NodeCore connection: Not connected to ${config.nodeCoreRpc.host}:${config.nodeCoreRpc.port}")
             information.add("FAIL - NodeCore unable to determine the synchronization status")
             information.add("FAIL - NodeCore unable to determine the configured network")
         }
