@@ -11,7 +11,6 @@ import com.google.gson.GsonBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.DiagnosticUtility
-import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.model.result.Result
 import org.veriblock.miners.pop.model.result.ResultMessage
@@ -27,7 +26,6 @@ class PopShell(
     private var mustAcceptWalletSeed = false
 
     init {
-        EventBus.popMinerReadyEvent.register(this, ::onPopMinerReady)
         EventBus.walletSeedAgreementMissingEvent.register(this, ::onWalletSeedAgreementMissing)
     }
 
@@ -77,16 +75,6 @@ class PopShell(
                     )
                 }
             }
-        }
-    }
-
-    private fun onPopMinerReady() {
-        try {
-            printInfo("**********************************************************************************************")
-            printInfo("* Ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. *")
-            printInfo("**********************************************************************************************")
-        } catch (e: Exception) {
-            logger.error(e.message, e)
         }
     }
 

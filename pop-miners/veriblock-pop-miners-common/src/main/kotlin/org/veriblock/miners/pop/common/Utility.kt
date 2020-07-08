@@ -49,3 +49,7 @@ private val BTC_FORMAT = MonetaryFormat.BTC
 fun Coin.formatBTCFriendlyString(): String {
     return BTC_FORMAT.format(this).toString()
 }
+
+fun String.isOnSameNetwork(network: String): Boolean {
+    return replace("net", "", true).equals(network.replace("net", "", true), true)
+}

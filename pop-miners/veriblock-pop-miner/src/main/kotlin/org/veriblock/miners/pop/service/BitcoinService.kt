@@ -16,20 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.tuple.Pair
-import org.bitcoinj.core.Address
-import org.bitcoinj.core.BitcoinSerializer
-import org.bitcoinj.core.Block
-import org.bitcoinj.core.BlockChain
-import org.bitcoinj.core.Coin
-import org.bitcoinj.core.Context
-import org.bitcoinj.core.FilteredBlock
-import org.bitcoinj.core.InsufficientMoneyException
-import org.bitcoinj.core.PartialMerkleTree
-import org.bitcoinj.core.Peer
-import org.bitcoinj.core.PeerGroup
-import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.core.StoredBlock
-import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.*
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener
 import org.bitcoinj.core.listeners.DownloadProgressTracker
 import org.bitcoinj.kits.WalletAppKit
@@ -53,14 +40,14 @@ import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransaction
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
 import java.io.File
 import java.time.Instant
-import java.util.ArrayList
-import java.util.Date
-import java.util.LinkedHashMap
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.schedule
 
 private val logger = createLogger {}
 
@@ -94,13 +81,15 @@ class BitcoinService(
         }
     }
 
-    private val bitcoinNetwork = this.configuration.network
+    private val bitcoinNetwork = configuration.network
 
     var blockchainDownloadBlocksToGo = 0
     var blockchainDownloadPercent = 0
 
-    private var isBlockchainDownloaded = false
-    private var isServiceReady = false
+    private val blockChainDownloaded = AtomicBoolean(false)
+    private val serviceReady = AtomicBoolean(false)
+    private val funded = AtomicBoolean(false)
+
     private var receiveAddress: String? = null
     private var changeAddress: Address? = null
 
@@ -121,29 +110,45 @@ class BitcoinService(
                 it.endorsementTransaction?.confidence?.removeEventListener(it.transactionListener)
             }
         }
+        Timer().schedule(10000) {
+            verifyBalance(true)
+        }
         logger.info("BitcoinService constructor finished")
     }
 
-    fun setServiceReady(value: Boolean) {
-        if (value == isServiceReady) {
+    private fun setServiceReady(value: Boolean) {
+        if (value == isServiceReady()) {
             return
         }
-        isServiceReady = value
-        if (isServiceReady) {
-            logger.info("Bitcoin service is ready")
+        serviceReady.set(value)
+        if (isServiceReady()) {
             EventBus.bitcoinServiceReadyEvent.trigger()
         } else {
-            logger.warn("Bitcoin service is not ready")
             EventBus.bitcoinServiceNotReadyEvent.trigger()
         }
     }
+
+    private fun setBlockChainDownloaded(value: Boolean) {
+        if (value == isBlockchainDownloaded()) {
+            return
+        }
+        blockChainDownloaded.set(value)
+        if (isBlockchainDownloaded()) {
+            EventBus.blockchainDownloadedEvent.trigger()
+        } else {
+            EventBus.blockchainNotDownloadedEvent.trigger()
+        }
+    }
+
+    // Used to track changes on the wallet balance
+    private var latestBalance: Coin = Coin.ZERO
 
     private fun createWalletAppKit(
         context: Context,
         filePrefix: String,
         seed: DeterministicSeed?
     ): WalletAppKit {
-        isBlockchainDownloaded = false
+        setBlockChainDownloaded(false)
         var kit: WalletAppKit = object : WalletAppKit(
             context, Script.ScriptType.P2WPKH, null, File("."), filePrefix
         ) {
@@ -168,6 +173,11 @@ class BitcoinService(
                             }
                             "New pending BTC transaction: $action. New pending balance: ${newBalance.formatBTCFriendlyString()}"
                         }
+                    }
+
+                    // Verify the balance at any wallet-change
+                    addChangeEventListener {
+                        verifyBalance()
                     }
                 }
 
@@ -201,10 +211,13 @@ class BitcoinService(
         kit.setBlockingStartup(false)
         kit.setDownloadListener(object : DownloadProgressTracker() {
             override fun doneDownload() {
-                if (!isBlockchainDownloaded) {
-                    isBlockchainDownloaded = true
-                    logger.info("Bitcoin blockchain finished downloading")
-                    EventBus.blockchainDownloadedEvent.trigger()
+                if (!isBlockchainDownloaded()) {
+                    setBlockChainDownloaded(true)
+
+                    blockchainDownloadPercent = 100
+                    blockchainDownloadBlocksToGo = 0
+
+                    verifyBalance(true)
                 }
             }
 
@@ -230,6 +243,25 @@ class BitcoinService(
             kit = kit.restoreWalletFromSeed(seed)
         }
         return kit
+    }
+
+    fun verifyBalance(ignoreCondition: Boolean = false) {
+        val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+        if (balance != latestBalance) {
+            if (balance.isLessThan(getMaximumTransactionFee())) {
+                if (ignoreCondition || isSufficientlyFunded()) {
+                    funded.set(false)
+                    EventBus.insufficientFundsEvent.trigger(balance)
+                }
+            } else {
+                if (ignoreCondition || !isSufficientlyFunded()) {
+                    funded.set(true)
+                    EventBus.sufficientFundsEvent.trigger(balance)
+                }
+            }
+            EventBus.balanceChangedEvent.trigger(balance)
+            latestBalance = balance
+        }
     }
 
     fun initialize() {
@@ -262,9 +294,14 @@ class BitcoinService(
         }
     }
 
-    fun serviceReady(): Boolean {
-        return isBlockchainDownloaded && isServiceReady
-    }
+    fun isServiceReady() =
+        serviceReady.get()
+
+    fun isBlockchainDownloaded() =
+        blockChainDownloaded.get()
+
+    fun isSufficientlyFunded() =
+        funded.get()
 
     fun currentReceiveAddress(): String {
         return receiveAddress ?: run {
@@ -290,21 +327,18 @@ class BitcoinService(
 
     fun getPendingBalance(): Coin = runBlocking {
         withContext(contextCoroutineScope.coroutineContext) {
-            wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE)
+            wallet.getBalance(Wallet.BalanceType.ESTIMATED) - wallet.balance
         }
     }
 
     fun resetWallet() {
         receiveAddress = null
         setServiceReady(false)
+        setBlockChainDownloaded(false)
         wallet.reset()
         shutdown()
         kit = createWalletAppKit(context, bitcoinNetwork.getFilePrefix(), null)
         initialize()
-    }
-
-    fun blockchainDownloaded(): Boolean {
-        return isBlockchainDownloaded
     }
 
     fun generatePoPScript(opReturnData: ByteArray): Script {
@@ -510,6 +544,7 @@ class BitcoinService(
 
     fun shutdown() {
         setServiceReady(false)
+        setBlockChainDownloaded(false)
         receiveAddress = null
         kit.stopAsync()
         kit.awaitTerminated()
@@ -549,7 +584,8 @@ class BitcoinService(
                     )
                 }
             } catch (e: InsufficientMoneyException) {
-                EventBus.insufficientFundsEvent.trigger()
+                funded.set(false)
+                EventBus.insufficientFundsEvent.trigger(wallet.balance)
                 error("PoP wallet does not contain sufficient funds to create PoP transaction")
             } catch (e: Wallet.CompletionException) {
                 error("Unable to complete transaction: ${e.javaClass.simpleName}")

@@ -9,9 +9,6 @@ import org.bitcoinj.core.TransactionConfidence
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.miners.pop.common.serializeHeader
-import org.veriblock.miners.pop.core.MiningOperationState
-import org.veriblock.miners.pop.core.VpmContext
-import org.veriblock.miners.pop.core.VpmMerklePath
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.core.VpmOperationState
 import org.veriblock.miners.pop.core.debug
@@ -25,28 +22,34 @@ import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree
 import org.veriblock.miners.pop.model.merkle.MerkleProof
 import org.veriblock.miners.pop.service.BitcoinService
 import org.veriblock.miners.pop.service.NodeCoreGateway
+import org.veriblock.miners.pop.service.NodeCoreService
 import org.veriblock.miners.pop.service.PopSubmitRejected
+import org.veriblock.miners.pop.service.TaskException
 import org.veriblock.miners.pop.service.TaskService
 import org.veriblock.miners.pop.service.failOperation
 import org.veriblock.miners.pop.service.failTask
 import org.veriblock.miners.pop.service.hr
 import org.veriblock.miners.pop.service.min
 import org.veriblock.miners.pop.service.sec
+import org.veriblock.sdk.models.getSynchronizedMessage
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
 private val logger = createLogger {}
 
 class VpmTaskService(
+    private val nodeCoreService: NodeCoreService,
     private val nodeCoreGateway: NodeCoreGateway,
     private val bitcoinService: BitcoinService
 ) : TaskService<VpmOperation>() {
     override suspend fun runTasksInternal(operation: VpmOperation) {
+
         operation.runTask(
             taskName = "Retrieve Mining Instruction from NodeCore",
             targetState = VpmOperationState.INSTRUCTION,
             timeout = 10.sec
         ) {
+            verifyNodeCoreStatus()
             // Get the PoPMiningInstruction, consisting of the 80 bytes of data that VeriBlock will pay the PoP miner
             // to publish to Bitcoin (includes 64-byte VB header and 16-byte miner ID) as well as the
             // PoP miner's address
@@ -211,6 +214,7 @@ class VpmTaskService(
             targetState = VpmOperationState.CONTEXT,
             timeout = 2.min
         ) {
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failOperation("Trying to build context without the mining instruction!")
             val blockOfProof = operation.blockOfProof
@@ -243,6 +247,7 @@ class VpmTaskService(
             targetState = VpmOperationState.SUBMITTED_POP_DATA,
             timeout = 30.sec
         ) {
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failOperation("Trying to submit PoP endorsement without the mining instruction!")
             val endorsementTransactionBytes = operation.endorsementTransactionBytes
@@ -278,6 +283,7 @@ class VpmTaskService(
             targetState = VpmOperationState.PAYOUT_DETECTED,
             timeout = 20.hr
         ) {
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failOperation("Trying to confirm Payout without the mining instruction!")
 
@@ -328,5 +334,16 @@ class VpmTaskService(
         }
 
         operation.complete()
+    }
+
+    private fun verifyNodeCoreStatus() {
+        if (!nodeCoreService.isReady()) {
+            throw TaskException(
+                "NodeCore is not ready: Connection ${nodeCoreService.isAccessible()}," +
+                    " SameNetwork: ${nodeCoreService.isOnSameNetwork()}," +
+                    " Synchronized: ${nodeCoreService.isSynchronized()}" +
+                    " (${nodeCoreService.latestNodeCoreStateInfo.getSynchronizedMessage()})"
+            )
+        }
     }
 }

@@ -15,7 +15,10 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
+import org.veriblock.miners.pop.common.isOnSameNetwork
 import org.veriblock.miners.pop.model.BlockStore
+import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.getSynchronizedMessage
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,10 +29,16 @@ class NodeCoreService(
     private val config: VpmConfig,
     private val nodeCoreGateway: NodeCoreGateway,
     private val blockStore: BlockStore,
-    bitcoinService: BitcoinService
+    private var bitcoinService: BitcoinService
 ) {
-    private val healthy = AtomicBoolean(false)
+    private var firstPoll: Boolean = true
+
+    private val ready = AtomicBoolean(false)
+    private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
+    private val sameNetwork = AtomicBoolean(false)
+
+    var latestNodeCoreStateInfo: StateInfo = StateInfo()
 
     private val scheduledExecutorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
         ContextPropagatingThreadFactory("nc-poll")
@@ -37,7 +46,9 @@ class NodeCoreService(
 
     private val coroutineScope = CoroutineScope(scheduledExecutorService.asCoroutineDispatcher())
 
-    init {
+    fun initialize() {
+        logger.info { "Connecting to NodeCore at ${config.nodeCoreRpc.host}:${config.nodeCoreRpc.port}..." }
+
         // Launching from the bitcoin context in order to propagate it
         bitcoinService.contextCoroutineScope.launch {
             coroutineScope.launch {
@@ -50,11 +61,20 @@ class NodeCoreService(
         }
     }
 
-    fun isHealthy(): Boolean =
-        healthy.get()
+    /**
+     * This variable should be true if accessible, sameNetwork and synchronized variables are true as well
+     */
+    fun isReady(): Boolean =
+        ready.get()
+
+    fun isAccessible(): Boolean =
+        accessible.get()
 
     fun isSynchronized(): Boolean =
         synchronized.get()
+
+    fun isOnSameNetwork(): Boolean =
+        sameNetwork.get()
 
     fun shutdown() {
         scheduledExecutorService.shutdown()
@@ -63,19 +83,77 @@ class NodeCoreService(
 
     private fun poll() {
         try {
-            if (isHealthy() && isSynchronized()) {
-                if (!nodeCoreGateway.getNodeCoreStateInfo().isSynchronized) {
-                    synchronized.set(false)
-                    logger.info("The connected node is not synchronized")
-                    EventBus.nodeCoreDesynchronizedEvent.trigger()
-                    return
+            var nodeCoreStateInfo: StateInfo?
+            // Verify if we can make a connection with NodeCore
+            if (nodeCoreGateway.ping()) {
+                // At this point the VPM<->NodeCore connection is fine
+                nodeCoreStateInfo = nodeCoreGateway.getNodeCoreStateInfo()
+                latestNodeCoreStateInfo = nodeCoreStateInfo
+
+                if (!isAccessible()) {
+                    accessible.set(true)
+                    EventBus.nodeCoreAccessibleEvent.trigger()
                 }
+
+                // Verify the NodeCore configured Network
+                if (nodeCoreStateInfo.networkVersion.isOnSameNetwork(config.bitcoin.network.name)) {
+                    if (!isOnSameNetwork()) {
+                        sameNetwork.set(true)
+                        EventBus.nodeCoreSameNetworkEvent.trigger()
+                    }
+                } else {
+                    if (isOnSameNetwork() || firstPoll) {
+                        sameNetwork.set(false)
+                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                        logger.warn { "The connected NodeCore (${nodeCoreStateInfo.networkVersion}) & VPM (${config.bitcoin.network.name}) are not running on the same configured network" }
+                    }
+                }
+
+                // Verify the NodeCore synchronization status
+                if (nodeCoreStateInfo.isSynchronized) {
+                    if (!isSynchronized()) {
+                        synchronized.set(true)
+                        EventBus.nodeCoreSynchronizedEvent.trigger()
+                        logger.info { "The connected NodeCore is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                    }
+                } else {
+                    if (isSynchronized() || firstPoll) {
+                        synchronized.set(false)
+                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
+                        logger.info { "The connected NodeCore is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                    }
+                }
+            } else {
+                // At this point the VPM<->NodeCore connection can't be established
+                latestNodeCoreStateInfo = StateInfo()
+                if (isAccessible()) {
+                    accessible.set(false)
+                    EventBus.nodeCoreNotAccessibleEvent.trigger()
+                }
+                if (isSynchronized()) {
+                    synchronized.set(false)
+                    EventBus.nodeCoreNotSynchronizedEvent.trigger()
+                }
+                if (isOnSameNetwork()) {
+                    sameNetwork.set(false)
+                    EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                }
+            }
+
+            if (isAccessible() && isOnSameNetwork() && isSynchronized()) {
+                if (!isReady()) {
+                    ready.set(true)
+                    EventBus.nodeCoreReadyEvent.trigger()
+                }
+
+                // At this point the VPM<->NodeCore connection is fine and the NodeCore is synchronized so
+                // VPM can continue with its work
                 val latestBlock = try {
                     nodeCoreGateway.getLastBlock()
                 } catch (e: Exception) {
                     logger.error("Unable to get the last block from NodeCore")
-                    healthy.set(false)
-                    EventBus.nodeCoreUnhealthyEvent.trigger()
+                    accessible.set(false)
+                    EventBus.nodeCoreNotAccessibleEvent.trigger()
                     return
                 }
                 val chainHead = blockStore.getChainHead()
@@ -84,48 +162,14 @@ class NodeCoreService(
                     EventBus.newVeriBlockFoundEvent.trigger(NewVeriBlockFoundEventDto(latestBlock, chainHead))
                 }
             } else {
-                if (nodeCoreGateway.ping()) {
-                    val nodeCoreStateInfo = nodeCoreGateway.getNodeCoreStateInfo()
-
-                    // Verify the NodeCore configured Network
-                    if (!nodeCoreStateInfo.networkVersion.equals(config.bitcoin.network.name, true)) {
-                        logger.info { "Network misconfiguration, VPM is configured at the ${config.bitcoin.network.name} network while NodeCore is at ${nodeCoreStateInfo.networkVersion}." }
-                        return
-                    }
-
-                    if (!isHealthy()) {
-                        logger.info("Connected to NodeCore")
-                        EventBus.nodeCoreHealthyEvent.trigger()
-                    }
-
-                    healthy.set(true)
-                    if (nodeCoreStateInfo.isSynchronized) {
-                        if (!isSynchronized()) {
-                            logger.info("The connected node is synchronized")
-                            EventBus.nodeCoreSynchronizedEvent.trigger()
-                        }
-                        synchronized.set(true)
-                    } else {
-                        if (isSynchronized()) {
-                            logger.info("The connected node is not synchronized")
-                            EventBus.nodeCoreDesynchronizedEvent.trigger()
-                        }
-                        synchronized.set(false)
-                    }
-                } else {
-                    if (isHealthy()) {
-                        EventBus.nodeCoreUnhealthyEvent.trigger()
-                    }
-                    if (isSynchronized()) {
-                        logger.info("The connected node is not synchronized")
-                        EventBus.nodeCoreDesynchronizedEvent.trigger()
-                    }
-                    healthy.set(false)
-                    synchronized.set(false)
+                if (isReady()) {
+                    ready.set(false)
+                    EventBus.nodeCoreNotReadyEvent.trigger()
                 }
             }
         } catch (e: Exception) {
             logger.error("Error while polling NodeCore", e)
         }
+        firstPoll = false
     }
 }
