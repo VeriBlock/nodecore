@@ -60,10 +60,10 @@ class AltchainPopMinerService(
 
         // NodeCore Events
         EventBus.nodeCoreAccessibleEvent.register(this) {
-            logger.info { "Successfully connected to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}" }
+            logger.info { "Successfully connected to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}" }
         }
         EventBus.nodeCoreNotAccessibleEvent.register(this) {
-            logger.info { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, trying to reconnect..." }
+            logger.info { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}, trying to reconnect..." }
         }
         EventBus.nodeCoreSynchronizedEvent.register(this) { }
         EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
@@ -161,7 +161,7 @@ class AltchainPopMinerService(
         }
         // Specific checks for the NodeCore
         if (!nodeCoreLiteKit.network.isAccessible()) {
-            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}, is it reachable?"))
+            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}, is it reachable?"))
         }
         // Verify the NodeCore configured Network
         if (!nodeCoreLiteKit.network.isOnSameNetwork()) {

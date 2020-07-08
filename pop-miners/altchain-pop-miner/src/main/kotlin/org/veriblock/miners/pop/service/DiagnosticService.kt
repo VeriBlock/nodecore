@@ -26,7 +26,7 @@ class DiagnosticService(
 
         // Check the NodeCore status
         if (nodeCoreLiteKit.network.isAccessible()) {
-            information.add("SUCCESS - NodeCore connection: Connected to ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}")
+            information.add("SUCCESS - NodeCore connection: Connected to ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}")
             // Configured network
             if (nodeCoreLiteKit.network.isOnSameNetwork()) {
                 information.add("SUCCESS - NodeCore configured network: NodeCore & APM are running on the same configured network (${context.networkParameters.name})")
@@ -40,7 +40,7 @@ class DiagnosticService(
                 information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
             }
         } else {
-            information.add("FAIL - NodeCore connection: Not connected to ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}")
+            information.add("FAIL - NodeCore connection: Not connected to ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}")
             information.add("FAIL - NodeCore unable to determine the synchronization status")
             information.add("FAIL - NodeCore unable to determine the configured network")
         }

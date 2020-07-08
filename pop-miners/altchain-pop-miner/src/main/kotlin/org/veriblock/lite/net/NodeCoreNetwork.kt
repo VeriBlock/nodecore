@@ -239,7 +239,7 @@ class NodeCoreNetwork(
                     EventBus.nodeCoreNotReadyEvent.trigger()
                 }
                 if (!isAccessible()) {
-                    logger.debug { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}@${context.networkParameters.rpcPort}" }
+                    logger.debug { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}" }
                 } else {
                     nodeCoreStateInfo?.let {
                         if (!isOnSameNetwork()) {
