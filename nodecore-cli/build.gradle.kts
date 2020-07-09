@@ -40,6 +40,7 @@ dependencies {
     implementation("io.netty:netty-tcnative-boringssl-static:2.0.7.Final")
     implementation("com.opencsv:opencsv:4.3.2")
     implementation("commons-codec:commons-codec:1.9")
+    implementation("org.jprocesses:jProcesses:1.6.5")
 
     // Testing
     testImplementation("junit:junit:4.12")

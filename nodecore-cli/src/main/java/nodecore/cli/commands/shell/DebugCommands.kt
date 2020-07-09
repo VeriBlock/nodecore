@@ -1,21 +1,18 @@
 package nodecore.cli.commands.shell
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonSyntaxException
 import nodecore.cli.cliCommand
-import org.apache.commons.codec.digest.DigestUtils
+import nodecore.cli.prepareResult
+import org.jutils.jprocesses.JProcesses
+import org.koin.ext.isInt
 import org.veriblock.core.utilities.DiagnosticInfo
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.failure
-import org.veriblock.shell.core.success
 import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
-import java.net.URL
 import java.nio.file.Paths
 
 fun CommandFactory.debugCommands() {
@@ -55,18 +52,6 @@ fun CommandFactory.debugCommands() {
         }
         printInfo("Detected NodeCore data folder: $providedNetworkDataFolder")
 
-        // Get the bootstrap information
-        val result = try {
-            URL("https://mirror.veriblock.org/bootstrap/$network/blockFiles.json").readText()
-        } catch (ignored: Exception) {
-            null
-        }
-        // Parse the bootstrap information
-        val blockList = try {
-            Gson().fromJson(result, BlockList::class.java)
-        } catch (ignored: JsonSyntaxException) {
-            null
-        }
         // Get the default diagnostic information
         val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
         // Get the system environment variables related with NodeCore
@@ -76,56 +61,33 @@ fun CommandFactory.debugCommands() {
             }.map {
                 NodecoreEnvironmentVariables(it.key, it.value)
             }
-        } catch(ignored: SecurityException) {
+        } catch (ignored: SecurityException) {
             null
         }
 
         val configuration = ArrayList<String>()
-
-        // Check all the files inside the data folder, and verify the file integrity
-        val nodecoreDataInformation = networkDataFolder.walk().filter {
-            it.absolutePath.toLowerCase().contains(network) || it.absolutePath == networkDataFolder.absolutePath || it.name == "nodecore.properties"
+        val nodeCoreDataFileTree = networkDataFolder.walk().filter { file ->
+            !file.parentFile.name.isInt()
         }.map { file ->
-            val calculateFileSpecifications = file.name == "nodecore.dat" || file.parentFile?.parentFile?.name == "blocks"
-            val fileSpecifications = if (calculateFileSpecifications) {
-                file.inputStream().use { inputStream ->
-                    val fileLength = file.length()
-                    val fileChecksum = DigestUtils.md5Hex(inputStream)
-                    val blockFileData = blockList?.files?.find { blockFile ->
-                        (blockFile.name == file.name && blockFile.folder == "${file.parentFile?.parentFile?.name}/${file.parentFile?.name}") ||
-                            (blockFile.name == "nodecore.dat" && file.name == "nodecore.dat")
-                    }
-                    val fileState = blockFileData?.let { blockFile ->
-                        if (fileLength != blockFile.size || fileChecksum != blockFile.checksum) {
-                            "Outdated - Length: $fileLength (expected: ${blockFile.size}), checksum: $fileChecksum (expected: ${blockFile.checksum})"
-                        } else {
-                            "Ok"
-                        }
-                    } ?: "Unknown"
-                    FileSpecifications(fileLength, fileChecksum, fileState)
-                }
-            } else {
-                null
-            }
             // Get the content from the configuration file
             if (file.name == "nodecore.properties") {
                 file.forEachLine { line ->
                     // Don't add the password-related configurations
-                    if (!line.toLowerCase().contains("password")) {
+                    if (!line.contains("password", true)) {
                         configuration.add(line)
                     }
                 }
             }
-            FileInformation(file.name, file.absolutePath, fileSpecifications)
+            file.path.replace(networkDataFolder.path, "")
         }.toList()
 
-        // Check the libraries inside the nodecore folder
-        val nodecoreLibraryInformation = nodecoreFolder.walk().filter {
-            it.name.toLowerCase().endsWith(".jar")
-        }.map { file ->
-            FileInformation(file.name, file.absolutePath)
-        }.toList()
-
+        // Get the process information related with NodeCore
+        val processInformation = JProcesses.getProcessList().filter { process ->
+            process.name.contains("nodecore", true) || process.name.contains("veriblock", true) ||
+                process.command.contains("nodecore", true) || process.command.contains("veriblock", true)
+        }.map { process ->
+            ProcessInformation(process.pid, process.name, process.command)
+        }
         // Verify if the common NodeCore ports are available
         val ports = listOf(6500, 7500, 7501, 8080, 8081, 8500, 10500, 10501, 10502)
         val portInformation = ports.map { port ->
@@ -140,28 +102,21 @@ fun CommandFactory.debugCommands() {
         // Generate the final object with all the collected information
         val debugInformation = DebugInformation(
             diagnosticInfo,
-            nodecoreDataInformation,
-            nodecoreLibraryInformation,
+            nodeCoreDataFileTree,
             nodecoreEnvironmentVariables,
+            processInformation,
             portInformation,
             configuration
         )
-        val jsonDebugInformation = GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(debugInformation)
-        // Display all the information to the user
-        shell.printInfo(jsonDebugInformation)
-        // Store the output into a file
-        val outputFile = File("${networkDataFolder.toPath()}/getdebuginfo.json")
-        outputFile.writeText(
-            jsonDebugInformation
-        )
-        shell.printInfo("The output file has been stored at: ${outputFile.toPath()}")
-        success()
+        prepareResult(true, emptyList()) {
+            debugInformation
+        }
     }
 }
 
 fun getDefaultNodeCoreFolder(): String {
     // Get the root folder from the package
-    val packageParentFolder = Paths.get("").toAbsolutePath()?.parent?.parent
+    val packageParentFolder = Paths.get("").toAbsolutePath().parent?.parent
         ?: error("Unable to find the default root NodeCore folder, please specify it as a parameter.")
     // Search the NodeCore folder inside the package
     val nodeCoreFolder = packageParentFolder.toFile().listFiles().find {
@@ -172,9 +127,9 @@ fun getDefaultNodeCoreFolder(): String {
 
 data class DebugInformation(
     val diagnosticInfo: DiagnosticInfo,
-    val nodecoreDataInformation: List<FileInformation>,
-    val nodecoreLibraryInformation: List<FileInformation>,
+    val nodecoreDataFileTree: List<String>,
     val nodecoreEnvironmentVariables: List<NodecoreEnvironmentVariables>?,
+    val nodecoreProcesses: List<ProcessInformation>,
     val nodecorePorts: List<PortInformation>,
     val configuration: List<String>
 )
@@ -184,31 +139,13 @@ data class PortInformation(
     val isFree: Boolean
 )
 
-data class FileInformation(
-    val name: String,
-    val route: String,
-    val fileSpecifications: FileSpecifications? = null
-)
-
-data class FileSpecifications(
-    val length: Long,
-    val checksum: String,
-    val state: String
+data class ProcessInformation(
+    val pid: String?,
+    val name: String?,
+    val command: String?
 )
 
 data class NodecoreEnvironmentVariables(
     val key: String,
     val value: String
-)
-
-data class BlockList(
-    val updateDate: String,
-    val files: List<BlockFile>
-)
-
-data class BlockFile(
-    val name: String,
-    val folder: String,
-    val size: Long,
-    val checksum: String
 )

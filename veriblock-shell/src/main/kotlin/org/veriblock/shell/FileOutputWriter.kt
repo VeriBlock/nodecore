@@ -67,7 +67,7 @@ class FileOutputWriter {
     private fun saveToJson(filename: String, payload: Any) {
         try {
             PrintWriter(filename).use { out ->
-                out.print(GsonBuilder().setPrettyPrinting().create().toJson(payload))
+                out.print(GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(payload))
                 out.flush()
             }
         } catch (e: FileNotFoundException) {

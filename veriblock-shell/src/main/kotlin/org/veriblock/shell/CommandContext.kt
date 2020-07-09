@@ -77,7 +77,7 @@ class CommandContext(
 
     fun outputObject(obj: Any) {
         shell.printStyled(
-            GsonBuilder().setPrettyPrinting().create().toJson(obj) + "\n",
+            GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create().toJson(obj) + "\n",
             AttributedStyle.BOLD.foreground(AttributedStyle.GREEN)
         )
 
