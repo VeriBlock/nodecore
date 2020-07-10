@@ -195,7 +195,7 @@ object TestNetParameters : NetworkParametersTemplate() {
 
 object TestNetProgPoWParameters : NetworkParametersTemplate() {
     const val NETWORK = "testnet_progpow"
-    private val MINIMUM_POW_DIFFICULTY = BigInteger.valueOf(100_000L)
+    private val MINIMUM_POW_DIFFICULTY = 100_000_000L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10501
@@ -203,9 +203,17 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
 
     override val bootstrapDns = "seedtestnetprogpow.veriblock.org"
     override val fileTag = "test-progpow"
-    override val genesisBlock: VeriBlockBlock = SerializeDeserializeService.parseVeriBlockBlock(Base64.getDecoder().decode(
-        "AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoup8Ke95FdtBLr1AEqnGF12eNUgEBfXhANpFeQ=="
-    ))
+    override val genesisBlock = VeriBlockBlock(
+        0,
+        2.toShort(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        1570649416,
+        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        14304633
+    )
     override val bitcoinOriginBlockHeight = 1772359
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
