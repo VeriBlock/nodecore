@@ -5,10 +5,12 @@ data class StateInfo(
     val localBlockchainHeight: Int = 0,
     val blockDifference: Int = 0,
     val isSynchronized: Boolean = false,
-    val initialblockdownload: Boolean = false,
+    val initialBlockDownload: Boolean = false,
     val networkVersion: String = ""
 )
 
-inline fun StateInfo.getSynchronizedMessage(): String {
-    return "$blockDifference blocks left (LocalHeight=$localBlockchainHeight NetworkHeight=$networkHeight InitialBlockDownload=$initialblockdownload)"
+fun StateInfo.getSynchronizedMessage(): String = if (networkHeight == 0) {
+    "connecting to the network..."
+} else {
+    "$blockDifference blocks left (LocalHeight=$localBlockchainHeight NetworkHeight=$networkHeight InitialBlockDownload=$initialBlockDownload)"
 }

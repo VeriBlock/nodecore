@@ -150,7 +150,7 @@ class AltchainPopMinerService(
 
     private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
         // Check the last operation time
-        val lastOperationTime = getOperations().maxBy { it.createdAt }?.createdAt
+        val lastOperationTime = getOperations().maxOfOrNull { it.createdAt }
         val currentTime = LocalDateTime.now()
         if (lastOperationTime != null && currentTime < lastOperationTime.plusSeconds(1)) {
             return CheckResult.Failure(MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation"))
