@@ -1,6 +1,5 @@
 package org.veriblock.miners.pop
 
-import com.typesafe.config.ConfigException
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.veriblock.core.params.NetworkConfig
@@ -15,11 +14,7 @@ import org.veriblock.miners.pop.service.mockmining.MockMinerService
 
 fun configModule(): Module {
     // Config
-    val configuration = try {
-        Configuration()
-    } catch (e: ConfigException) {
-        error("Unable to parse the configuration: ${e.message}")
-    }
+    val configuration = Configuration()
     val minerConfig: MinerConfig = configuration.extract("miner") ?: MinerConfig()
 
     return module {

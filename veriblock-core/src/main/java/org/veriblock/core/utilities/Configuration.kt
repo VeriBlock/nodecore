@@ -19,6 +19,8 @@ import java.nio.file.Paths
 private const val CONFIG_FILE_ENV_VAR = "CONFIG_FILE"
 private const val DEFAULT_CONFIG_FILE = "application.conf"
 
+private val logger = createLogger {}
+
 class Configuration(
     configFilePath: String = "./$DEFAULT_CONFIG_FILE",
     bootOptions: BootOptions? = null
@@ -101,8 +103,6 @@ class Configuration(
     }
 }
 
-private val logger = createLogger {}
-
 private fun computeConfigPath(configFilePath: String, bootOptions: BootOptions?): String {
     return if (bootOptions != null && bootOptions.config.hasPath(CONFIG_FILE_OPTION_KEY)) {
         bootOptions.config.getString(CONFIG_FILE_OPTION_KEY)
@@ -123,7 +123,13 @@ private fun loadConfig(configFilePath: String, bootOptions: BootOptions?): Confi
     val appConfig = if (configFile.exists()) {
         // Parse it if it exists
         logger.debug { "Loading config file $configFile" }
-        ConfigFactory.parseFile(configFile)
+        try {
+            ConfigFactory.parseFile(configFile)
+        } catch (e: Throwable) {
+            logger.debugWarn(e) { "Unable to load the configuration: ${e.message}" }
+            logger.info { "Loading the default configuration file..." }
+            ConfigFactory.load()
+        }
     } else {
         logger.debug { "Config file $configFile does not exist! Loading defaults..." }
         if (!isDocker) {
