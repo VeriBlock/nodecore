@@ -10,6 +10,7 @@ package org.veriblock.miners.pop.service
 
 import org.veriblock.core.contracts.Balance
 import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.MiningOperationStatus
 
 class MinerConfig(
     var feePerByte: Long = 1_000,
@@ -22,11 +23,9 @@ interface MinerService {
 
     fun start()
 
-    fun getOperations(): List<ApmOperation>
+    fun getOperations(status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Long = 0L): List<ApmOperation>
 
     fun getOperation(id: String): ApmOperation?
-
-    fun getStoredOperationsByState(state: Int?, limit: Int = 50): List<ApmOperation>
 
     fun getAddress(): String
 

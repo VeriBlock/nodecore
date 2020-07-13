@@ -17,6 +17,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import org.veriblock.core.CommandException
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
@@ -27,6 +28,7 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.OperationWorkflow
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
+import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -42,8 +44,9 @@ class MiningController(
 
     @Path("operations")
     class MinerOperationsPath(
+        @QueryParam("Operation status (optional)") val status: String?,
         @QueryParam("Pagination limit (optional)") val limit: Int?,
-        @QueryParam("Pagination offset (optional)") val offset: Int?
+        @QueryParam("Pagination offset (optional)") val offset: Long?
     )
 
     @Path("operations/{id}")
@@ -97,14 +100,19 @@ class MiningController(
         get<MinerOperationsPath, OperationSummaryListResponse>(
             info("Get operations list")
         ) { location ->
-            // Get all the operations
-            val allOperations = miner.getOperations()
-            // Get the given offset filter
-            val offset = location.offset ?: 0
+            // Get the given status filter
+            val status = location.status?.let { stateString ->
+                MiningOperationStatus.values().find { it.name == stateString.toUpperCase() }
+                    ?: throw BadRequestException("'$stateString' is not valid. Available options: 'active', 'failed', 'completed', 'all'")
+            } ?: MiningOperationStatus.ACTIVE
             // Get the given limit filter
-            val limit = location.limit ?: allOperations.size
+            val limit = location.limit ?: 50
+            // Get the given offset filter
+            val offset = location.offset ?: 0L
+            // Get the operations
+            val allOperations = miner.getOperations(status, limit, offset)
             // Paginate and map operations
-            val result = allOperations.asSequence().drop(offset).take(limit).map {
+            val result = allOperations.map {
                 it.toSummaryResponse()
             }.toList()
             respond(OperationSummaryListResponse(result))

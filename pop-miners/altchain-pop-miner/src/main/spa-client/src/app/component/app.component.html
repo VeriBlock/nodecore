@@ -20,7 +20,25 @@
     <mat-icon>add</mat-icon>
   </button>
 
-  <span *ngIf="operations.length == 0">There are no running operations</span>
+  Filter by status
+  <mat-button-toggle-group (valueChange)="changeStatusFilter($event)">
+    <mat-button-toggle value="active" checked title="Active operations">
+      <mat-icon>pending_actions</mat-icon>
+    </mat-button-toggle>
+    <mat-button-toggle value="completed" title="Completed operations">
+      <mat-icon>check_box</mat-icon>
+    </mat-button-toggle>
+    <mat-button-toggle value="failed" title="Failed operations">
+      <mat-icon>error</mat-icon>
+    </mat-button-toggle>
+    <mat-button-toggle value="all" title="All operations">
+      <mat-icon>list_alt</mat-icon>
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <p></p>
+
+  <span *ngIf="operations.length == 0">There are no operations matching the current filter</span>
 
   <table mat-table *ngIf="operations.length > 0"
          [dataSource]="operations" [trackBy]="trackByOperationId"
@@ -74,4 +92,10 @@
     </tr>
     <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
   </table>
+  <mat-paginator
+    *ngIf="operations.length > 0"
+    [pageSizeOptions]="[20, 50, 100]"
+    showFirstLastButtons
+    (page)="changePage($event)">
+  </mat-paginator>
 </div>

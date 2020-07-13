@@ -14,6 +14,7 @@ import org.veriblock.core.CommandException
 import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.MiningOperationState
+import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -89,20 +90,11 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val state = getOptionalParameter<String>("state")?.let { stateString ->
-            ListOperationState.values().find { it.name == stateString.toUpperCase() }
-                ?: throw CommandException("$stateString is not valid, please use: active, failed, competed or all")
-        } ?: ListOperationState.ACTIVE
+            MiningOperationStatus.values().find { it.name == stateString.toUpperCase() }
+                ?: throw CommandException("'$stateString' is not valid. Available options: 'active', 'failed', 'completed', 'all'")
+        } ?: MiningOperationStatus.ACTIVE
 
-        val operations = if (state == ListOperationState.ACTIVE) {
-            minerService.getOperations()
-        } else {
-            val stateId = when (state) {
-                ListOperationState.COMPLETED -> MiningOperationState.COMPLETED_ID
-                ListOperationState.FAILED -> MiningOperationState.FAILED_ID
-                else -> null
-            }
-            minerService.getStoredOperationsByState(stateId)
-        }.map {
+        val operations = minerService.getOperations(state).map {
             val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
                 " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutInterval()})"
             } ?: ""
@@ -178,13 +170,6 @@ fun CommandFactory.miningCommands(
         minerService.cancelOperation(id)
         success("V200", "Success", "The operation '$id' has been cancelled")
     }
-}
-
-enum class ListOperationState {
-    ACTIVE,
-    COMPLETED,
-    FAILED,
-    ALL
 }
 
 data class WorkflowProcessInfo(

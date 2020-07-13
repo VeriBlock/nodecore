@@ -26,6 +26,7 @@ import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.core.utilities.Utility
+import org.veriblock.miners.pop.core.MiningOperationStatus
 import java.nio.charset.StandardCharsets
 import java.security.InvalidAlgorithmParameterException
 import java.security.KeyPair
@@ -214,15 +215,11 @@ class MockMinerService(
     override fun cancelOperation(id: String) =
         throw NotImplementedException("Operation not supported in the Mock Miner")
 
-    override fun getOperations(): List<ApmOperation> =
+    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Long): List<ApmOperation> =
         operations.values.sortedBy { it.createdAt }
 
     override fun getOperation(id: String): ApmOperation? =
         operations[id]
-
-    override fun getStoredOperationsByState(state: Int?, limit: Int): List<ApmOperation> {
-        TODO("Not yet implemented")
-    }
 
     override fun getAddress(): String =
         "NO ADDRESS"
