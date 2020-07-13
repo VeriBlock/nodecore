@@ -57,6 +57,8 @@ class NetworkParameters(
     val minimumDifficulty: BigInteger
     val powNoRetargeting: Boolean
 
+    val progPowForkHeight: Int
+
     var certificateChainPath: String? = config.certificateChainPath
     var isSsl = config.isSsl
     var adminPassword: String? = config.adminPassword
@@ -99,6 +101,7 @@ class NetworkParameters(
         transactionPrefix = template.transactionPrefix
         minimumDifficulty = template.minimumDifficulty
         powNoRetargeting = template.powNoRetargeting
+        progPowForkHeight = template.progPowForkHeight
     }
 }
 
@@ -117,6 +120,7 @@ sealed class NetworkParametersTemplate {
     abstract val transactionPrefix: Byte?
     abstract val minimumDifficulty: BigInteger
     abstract val powNoRetargeting: Boolean
+    open val progPowForkHeight: Int = Int.MAX_VALUE // Default of "never"
 }
 
 object MainNetParameters : NetworkParametersTemplate() {
@@ -191,6 +195,8 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val transactionPrefix = 0xAA.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
+
+    override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
 }
 
 object TestNetProgPoWParameters : NetworkParametersTemplate() {
@@ -228,6 +234,8 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
     override val transactionPrefix = 0xAB.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
+
+    override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
 }
 
 object AlphaNetParameters : NetworkParametersTemplate() {

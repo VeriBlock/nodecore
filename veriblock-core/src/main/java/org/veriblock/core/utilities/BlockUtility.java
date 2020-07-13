@@ -160,19 +160,8 @@ public final class BlockUtility {
         }
 
         // TODO: Deduplicate this code
-        int ProgPoWForkHeight;
-
-        if (Context.get().getNetworkParameters().equals("mainnet")) {
-            ProgPoWForkHeight = Integer.MAX_VALUE; // No scheduled height yet
-        } else if (Context.get().getNetworkParameters().getName().equals("testnet")) {
-            ProgPoWForkHeight = 435000; // For testing purposes only, subject to change!
-        } else if (Context.get().getNetworkParameters().getName().equals("testnet_progpow")) {
-            ProgPoWForkHeight = 1; // Only genesis block doesn't use ProgPoW
-        } else {
-            ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
-        }
-
-        if (height >= ProgPoWForkHeight) {
+        int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
+        if (height >= progPowForkHeight) {
             // 20M block limit for ProgPoW hash evaluation
             if (height <= 20000000) {
                 // Check if embedded block height is reasonable considering its timestamp.
@@ -451,22 +440,12 @@ public final class BlockUtility {
         int blockNum = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
         String blockHeaderHex = Utility.bytesToHex(blockHeader);
 
-        int ProgPoWForkHeight;
-
-        if (Context.get().getNetworkParameters().equals("mainnet")) {
-            ProgPoWForkHeight = Integer.MAX_VALUE; // No scheduled height yet
-        } else if (Context.get().getNetworkParameters().getName().equals("testnet")) {
-            ProgPoWForkHeight = 435000; // For testing purposes only, subject to change!
-        } else if (Context.get().getNetworkParameters().getName().equals("testnet_progpow")) {
-            ProgPoWForkHeight = 1; // Only genesis block doesn't use ProgPoW
-        } else {
-            ProgPoWForkHeight = Integer.MAX_VALUE; // Default of "never"
-        }
+        int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
 
         Crypto crypto = new Crypto();
 
         String blockHash;
-        if (blockNum < ProgPoWForkHeight) {
+        if (blockNum < progPowForkHeight) {
             blockHash = crypto.vBlakeReturnHex(blockHeader);
         } else {
             if (hashCache.containsKey(blockHeaderHex)) {
