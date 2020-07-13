@@ -112,7 +112,7 @@ export class AppComponent implements OnInit {
 
   changePage(event: PageEvent) {
     this.pageLimit = event.pageSize
-    this.pageOffset = event.pageIndex
+    this.pageOffset = event.pageIndex * event.pageSize
     this.refreshOperationList();
   }
 

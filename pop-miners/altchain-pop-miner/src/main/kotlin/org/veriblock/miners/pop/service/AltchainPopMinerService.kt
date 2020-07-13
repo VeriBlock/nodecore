@@ -128,8 +128,14 @@ class AltchainPopMinerService(
     }
 
     override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Long): List<ApmOperation> {
-        return if (status == MiningOperationStatus.ACTIVE && limit >= operations.size) {
-            operations.values.sortedBy { it.createdAt }
+        return if (status == MiningOperationStatus.ACTIVE) {
+            operations.values.asSequence().sortedBy {
+                it.createdAt
+            }.drop(
+                offset.toInt()
+            ).take(
+                limit
+            ).toList()
         } else {
             operationService.getOperations(status, limit, offset) { txId ->
                 val hash = Sha256Hash.wrap(txId)
