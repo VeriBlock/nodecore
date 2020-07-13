@@ -1,13 +1,14 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from "../service/api.service";
-import {Operation} from "../model/operation";
-import {EMPTY, empty, interval} from "rxjs";
-import {startWith, switchMap} from "rxjs/operators";
+import {Operation, OperationSummaryList} from "../model/operation";
+import {EMPTY, empty, interval, of} from "rxjs";
+import {catchError, startWith, switchMap} from "rxjs/operators";
 import {MineDialogComponent} from "./mine-dialog/mine-dialog.component";
 import {LogsDialogComponent} from "./logs-dialog/logs-dialog.component";
 import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {ConfiguredAltchain} from "../model/configured-altchain";
+import {MatPaginator, PageEvent} from "@angular/material/paginator";
 
 @Component({
   selector: 'app-root',
@@ -31,6 +32,10 @@ export class AppComponent implements OnInit {
   operations: Operation[] = []
   selectedOperationId: string
   columnsToDisplay = ['operationId', 'chain', 'state', 'task']
+
+  statusFilter = 'active'
+  pageLimit = 50
+  pageOffset = 0
 
   operationWorkflows = {}
 
@@ -59,7 +64,7 @@ export class AppComponent implements OnInit {
     // Check the operation list API every 2 seconds
     interval(2_000).pipe(
       startWith(0),
-      switchMap(() => this.apiService.getOperations())
+      switchMap(() => this.apiService.getOperations(this.statusFilter, this.pageLimit, this.pageOffset))
     ).subscribe(response => {
       this.operations = response.operations
     })
@@ -94,6 +99,26 @@ export class AppComponent implements OnInit {
       const dialogConfig = new MatDialogConfig()
       dialogConfig.data = logs
       this.dialog.open(LogsDialogComponent, dialogConfig)
+    })
+  }
+
+  changeStatusFilter(filter: string) {
+    if (!filter) {
+      return
+    }
+    this.statusFilter = filter
+    this.refreshOperationList();
+  }
+
+  changePage(event: PageEvent) {
+    this.pageLimit = event.pageSize
+    this.pageOffset = event.pageIndex
+    this.refreshOperationList();
+  }
+
+  private refreshOperationList() {
+    this.apiService.getOperations(this.statusFilter, this.pageLimit, this.pageOffset).subscribe(response => {
+      this.operations = response.operations
     })
   }
 }

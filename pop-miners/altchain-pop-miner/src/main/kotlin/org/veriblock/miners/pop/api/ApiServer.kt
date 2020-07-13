@@ -46,7 +46,7 @@ import org.veriblock.miners.pop.api.controller.statusPages
 import org.veriblock.miners.pop.service.Metrics
 import kotlin.reflect.KType
 
-const val API_VERSION = "0.2"
+const val API_VERSION = "0.3"
 
 private val logger = createLogger {}
 

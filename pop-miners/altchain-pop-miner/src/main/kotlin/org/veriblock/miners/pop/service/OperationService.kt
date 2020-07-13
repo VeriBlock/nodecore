@@ -12,6 +12,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.veriblock.lite.proto.OperationProto
 import org.veriblock.lite.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.core.parseOperationLogs
 import org.veriblock.miners.pop.core.toJson
 import org.veriblock.miners.pop.storage.OperationRepository
@@ -36,8 +37,8 @@ class OperationService(
         }
     }
 
-    fun getOperationsByState(state: Int?, limit: Int, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
-        val operations = repository.getOperationsByState(state, limit)
+    fun getOperations(state: MiningOperationStatus, limit: Int, offset: Long, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
+        val operations = repository.getOperations(state, limit, offset)
         return operations.map {
             val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)
             operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)

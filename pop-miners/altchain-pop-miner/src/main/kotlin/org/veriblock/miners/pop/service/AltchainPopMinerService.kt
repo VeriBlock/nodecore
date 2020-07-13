@@ -28,6 +28,7 @@ import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.SecurityInheritingChain
@@ -67,7 +68,7 @@ class AltchainPopMinerService(
         }
         EventBus.nodeCoreSynchronizedEvent.register(this) { }
         EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
-        EventBus.nodeCoreSameNetworkEvent.register(this){
+        EventBus.nodeCoreSameNetworkEvent.register(this) {
             logger.info { "The connected NodeCore & APM are running on the same configured network (${context.networkParameters.name})" }
         }
         EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
@@ -126,22 +127,24 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getOperations() = operations.values.sortedBy { it.createdAt }
+    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Long): List<ApmOperation> {
+        return if (status == MiningOperationStatus.ACTIVE && limit >= operations.size) {
+            operations.values.sortedBy { it.createdAt }
+        } else {
+            operationService.getOperations(status, limit, offset) { txId ->
+                val hash = Sha256Hash.wrap(txId)
+                nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
+            }.map {
+                it
+            }.toList()
+        }
+    }
 
     override fun getOperation(id: String): ApmOperation? {
         return operations[id] ?: operationService.getOperation(id) { txId ->
             val hash = Sha256Hash.wrap(txId)
             nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
         }
-    }
-
-    override fun getStoredOperationsByState(state: Int?, limit: Int): List<ApmOperation> {
-        return operationService.getOperationsByState(state, limit) { txId ->
-            val hash = Sha256Hash.wrap(txId)
-            nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
-        }.map {
-            it
-        }.toList()
     }
 
     override fun getAddress(): String = nodeCoreLiteKit.getAddress()

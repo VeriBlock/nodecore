@@ -24,8 +24,8 @@ export class ApiService {
     return this.http.get<MinerInfo>(`${environment.apiUrl}/miner`);
   }
 
-  getOperations(): Observable<OperationSummaryList> {
-    return this.http.get<OperationSummaryList>(`${environment.apiUrl}/miner/operations`);
+  getOperations(status: string, limit: number, offset: number): Observable<OperationSummaryList> {
+    return this.http.get<OperationSummaryList>(`${environment.apiUrl}/miner/operations?status=${status}&limit=${limit}&offset=${offset}`);
   }
 
   getOperation(id: string): Observable<Operation> {

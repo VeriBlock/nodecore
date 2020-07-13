@@ -9,24 +9,34 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import org.veriblock.miners.pop.core.MiningOperationState
+import org.veriblock.miners.pop.core.MiningOperationStatus
 
 open class OperationRepository(
     protected val database: Database
 ) {
-    fun getAllOperations(): List<OperationStateRecord> = transaction(database) {
-        OperationStateTable.selectAll().map {
-            it.toOperationStateRecord()
-        }.toList()
-    }
-
-    fun getOperationsByState(state: Int?, limit: Int): List<OperationStateRecord> = transaction(database) {
-        if (state == null) {
-            OperationStateTable.selectAll()
-        } else {
-            OperationStateTable.select {
-                (OperationStateTable.status eq state)
+    fun getOperations(
+        status: MiningOperationStatus = MiningOperationStatus.ACTIVE,
+        limit: Int = 50,
+        offset: Long = 0L
+    ): List<OperationStateRecord> = transaction(database) {
+        when (status) {
+            MiningOperationStatus.ACTIVE -> OperationStateTable.select {
+                (OperationStateTable.status greaterEq MiningOperationState.INITIAL_ID) and
+                    (OperationStateTable.status less MiningOperationState.COMPLETED_ID)
             }
-        }.orderBy(OperationStateTable.createdAt).limit(limit).map {
+            MiningOperationStatus.COMPLETED ->OperationStateTable.select {
+                OperationStateTable.status eq MiningOperationState.COMPLETED_ID
+            }
+            MiningOperationStatus.FAILED ->OperationStateTable.select {
+                OperationStateTable.status eq MiningOperationState.FAILED_ID
+            }
+            MiningOperationStatus.ALL ->
+                OperationStateTable.selectAll()
+        }.orderBy(
+            OperationStateTable.createdAt
+        ).limit(
+            limit, offset
+        ).map {
             it.toOperationStateRecord()
         }.toList()
     }
