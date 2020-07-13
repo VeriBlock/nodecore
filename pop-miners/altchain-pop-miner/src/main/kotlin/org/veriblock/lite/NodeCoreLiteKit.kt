@@ -51,7 +51,7 @@ class NodeCoreLiteKit(
             throw IOException("Unable to create directory")
         }
 
-        this.blockStore = createBlockStore()
+        blockStore = createBlockStore()
         addressManager = loadAddressManager()
         transactionMonitor = createOrLoadTransactionMonitor()
         blockChain = BlockChain(context.networkParameters, blockStore)
@@ -100,7 +100,7 @@ class NodeCoreLiteKit(
         val chainFile = File(context.directory, context.filePrefix + ".spvchain")
         VeriBlockBlockStore(chainFile)
     } catch (e: BlockStoreException) {
-        throw IOException("Unable to initialize VBK block store", e)
+        throw IOException("Unable to initialize VBK block store: ${e.cause?.message}", e)
     }
 
     private fun createOrLoadTransactionMonitor(): TransactionMonitor {

@@ -133,16 +133,14 @@ class VeriBlockBlockStore(
                 logger.info("Creating new SPV block chain file $workingStoreFile")
                 randomAccessFile!!.setLength(fileSize)
             } else if (randomAccessFile!!.length() != fileSize) {
-                throw BlockStoreException(
-                    "File size on disk does not match expected size: " +
-                        randomAccessFile!!.length() + " vs " + fileSize
-                )
+                throw BlockStoreException("File size on disk does not match expected size: ${randomAccessFile!!.length()} vs $fileSize")
             }
 
             this.storeFileChannel = randomAccessFile!!.channel
             this.fileLock = storeFileChannel.tryLock()
-            if (fileLock == null)
-                throw BlockStoreException("Store file is already locked by another process")
+            if (fileLock == null) {
+                throw BlockStoreException("Store file ${workingStoreFile.name} is already locked by another process")
+            }
 
             // Map it into memory read/write. The kernel will take care of flushing writes to disk at the most
             // efficient times, which may mean that until the map is deallocated the data on disk is randomly
@@ -157,7 +155,7 @@ class VeriBlockBlockStore(
                 headerBytes = ByteArray(4)
                 buffer!!.get(headerBytes)
                 if (this.header != String(headerBytes, StandardCharsets.US_ASCII)) {
-                    throw BlockStoreException("Header bytes do not equal " + this.header)
+                    throw BlockStoreException("Header bytes do not equal ${this.header}")
                 }
             } else {
                 initNewStore()
