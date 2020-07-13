@@ -33,6 +33,8 @@ class LoggingLineAppender : AppenderBase<ILoggingEvent>() {
     lateinit var encoder: Encoder<ILoggingEvent> // Initialized by the logger config
 
     override fun append(event: ILoggingEvent) {
-        currentShell?.reader?.printAbove(encoder.encode(event).toString(Charset.defaultCharset()))
+        val message = encoder.encode(event).toString(Charset.defaultCharset())
+        currentShell?.reader?.printAbove(message)
+            ?: print(message)
     }
 }
