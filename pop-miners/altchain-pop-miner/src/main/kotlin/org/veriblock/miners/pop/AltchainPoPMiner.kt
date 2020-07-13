@@ -47,7 +47,13 @@ private fun run(): Int {
 
     logger.info { "Starting dependency injection" }
     val koin = startKoin {
-        modules(listOf(minerModule, webApiModule))
+        modules(
+            listOf(
+                configModule(),
+                minerModule,
+                webApiModule
+            )
+        )
     }.koin
 
     minerService = koin.get()
