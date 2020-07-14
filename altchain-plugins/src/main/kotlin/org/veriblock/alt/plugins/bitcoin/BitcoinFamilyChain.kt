@@ -198,20 +198,27 @@ class BitcoinFamilyChain(
         logger.info { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
         val response: BtcPublicationData = rpcRequest("getpopdata", listOf(actualBlockHeight))
 
+        if (response.block_header == null) {
+            error("Publication data's 'block_header' must be set!")
+        }
+        if (response.raw_contextinfocontainer == null) {
+            error("Publication data's 'raw_contextinfocontainer' must be set!")
+        }
+        if (response.last_known_veriblock_blocks.isNullOrEmpty()) {
+            error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
+        }
+
         val publicationData = PublicationData(
             id,
             response.block_header.asHexBytes(),
             payoutAddressScript,
             response.raw_contextinfocontainer.asHexBytes()
         )
-        if (response.last_known_veriblock_blocks.isEmpty()) {
-            error("Publication data's context (last known VeriBlock blocks) must not be empty!")
-        }
         return ApmInstruction(
             actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },
-            response.last_known_bitcoin_blocks.map { it.asHexBytes() }
+            response.last_known_bitcoin_blocks?.map { it.asHexBytes() } ?: emptyList()
         )
     }
 
@@ -267,10 +274,10 @@ fun ByteBuffer.getBytes(count: Int): ByteArray {
 }
 
 private data class BtcPublicationData(
-    val block_header: String,
-    val raw_contextinfocontainer: String,
-    val last_known_veriblock_blocks: List<String>,
-    val last_known_bitcoin_blocks: List<String>,
+    val block_header: String?,
+    val raw_contextinfocontainer: String?,
+    val last_known_veriblock_blocks: List<String>?,
+    val last_known_bitcoin_blocks: List<String>?,
     val first_address: String? = null
 )
 
