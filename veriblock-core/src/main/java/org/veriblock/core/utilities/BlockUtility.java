@@ -159,7 +159,6 @@ public final class BlockUtility {
             return false;
         }
 
-        // TODO: Deduplicate this code
         int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
         if (height >= progPowForkHeight) {
             // 20M block limit for ProgPoW hash evaluation
