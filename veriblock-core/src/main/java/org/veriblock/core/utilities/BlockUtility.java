@@ -167,10 +167,8 @@ public final class BlockUtility {
                 // This avoids checking ProgPoW hash for a block hash which is obviously contextually invalid.
                 // TODO: Update with new parameters on fork.
 
-                // VeriBlock block time is 30 seconds
-                // TODO: Move 30-second blocktime and start-time epoch to network parameters
-                int blocktimeSeconds = 30;
-                long startTimeEpoch = 1592584942;
+                int blocktimeSeconds = Context.get().getNetworkParameters().getBlockTimeSeconds();
+                long startTimeEpoch = Context.get().getNetworkParameters().getProgPowStartTimeEpoch();
                 int gracePeriodDays = 5;
 
                 int timestamp = extractTimestampFromBlockHeader(blockHeader);

@@ -11,8 +11,8 @@ package org.veriblock.core.params
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH
-import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
 
@@ -57,7 +57,10 @@ class NetworkParameters(
     val minimumDifficulty: BigInteger
     val powNoRetargeting: Boolean
 
+    var blockTimeSeconds: Int
+
     val progPowForkHeight: Int
+    var progPowStartTimeEpoch: Long
 
     var certificateChainPath: String? = config.certificateChainPath
     var isSsl = config.isSsl
@@ -101,7 +104,9 @@ class NetworkParameters(
         transactionPrefix = template.transactionPrefix
         minimumDifficulty = template.minimumDifficulty
         powNoRetargeting = template.powNoRetargeting
+        blockTimeSeconds = template.blocktimeSeconds
         progPowForkHeight = template.progPowForkHeight
+        progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
 }
 
@@ -120,7 +125,11 @@ sealed class NetworkParametersTemplate {
     abstract val transactionPrefix: Byte?
     abstract val minimumDifficulty: BigInteger
     abstract val powNoRetargeting: Boolean
+
+    open val blocktimeSeconds: Int = 30
+
     open val progPowForkHeight: Int = Int.MAX_VALUE // Default of "never"
+    open val progPowStartTimeEpoch: Long = Long.MAX_VALUE // Default of "never"
 }
 
 object MainNetParameters : NetworkParametersTemplate() {
@@ -235,7 +244,9 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 
-    override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
+    //override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
+    override val progPowForkHeight = 100 // First 100 blocks don't use ProgPoW
+    override val progPowStartTimeEpoch: Long = 1594735637L
 }
 
 object AlphaNetParameters : NetworkParametersTemplate() {
