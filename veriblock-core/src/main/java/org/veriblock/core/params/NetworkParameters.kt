@@ -232,11 +232,11 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
     override val bitcoinOriginBlockHeight = 1772359
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
-        Sha256Hash.wrap("0000000000000082751B7DAE08AABA89E5830D8BCC4140C818239D9919E26CED"),
-        Sha256Hash.wrap("5D7EDB0C018B90747C3BE951FEF66834DA400D074B48723FDCD378064D1914AD"),
-        1592585289,
-        436315634,
-        -1398851890
+        Sha256Hash.wrap("000000000B9EED5D8006046CCB7F3F36D8116D9477426EB922702C596DC5E410"),
+        Sha256Hash.wrap("11AD448E7713A35E4587352ABB4EA843373ADD517C2698042D3371B3106FAF23"),
+        1594743345,
+        420380176,
+        1105743762
     )
     override val protocolVersion: Int = 2
 
@@ -246,7 +246,7 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
 
     //override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
     override val progPowForkHeight = 100 // First 100 blocks don't use ProgPoW
-    override val progPowStartTimeEpoch: Long = 1594735637L
+    override val progPowStartTimeEpoch: Long = 1594744537L
 }
 
 object AlphaNetParameters : NetworkParametersTemplate() {
@@ -307,7 +307,7 @@ object RegTestParameters : NetworkParametersTemplate() {
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
         0
     )
-    override val bitcoinOriginBlockHeight = 1489475
+    override val bitcoinOriginBlockHeight = 1780693
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
         Sha256Hash.wrap("00000000000000b345b7bbf29bda1507a679b97967f99a10ab0088899529def7"),
