@@ -58,7 +58,7 @@ object Threading {
             CompletableFuture.runAsync { shutdown(MINER_THREAD) },
             CompletableFuture.runAsync { shutdown(TASK_POOL) }
         )
-        shutdownTasks.get()
+        shutdownTasks.get(20, TimeUnit.SECONDS)
     }
 
     private fun shutdown(executorService: ExecutorService) {
