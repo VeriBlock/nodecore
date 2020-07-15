@@ -215,8 +215,11 @@ class MockMinerService(
     override fun cancelOperation(id: String) =
         throw NotImplementedException("Operation not supported in the Mock Miner")
 
-    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Long): List<ApmOperation> =
+    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Int): List<ApmOperation> =
         operations.values.sortedBy { it.createdAt }
+
+    override fun getOperationsCount(status: MiningOperationStatus): Int =
+        operations.size
 
     override fun getOperation(id: String): ApmOperation? =
         operations[id]

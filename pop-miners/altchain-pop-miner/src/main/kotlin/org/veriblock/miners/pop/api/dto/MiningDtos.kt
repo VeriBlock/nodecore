@@ -31,7 +31,8 @@ class SetConfigRequest(
 
 @Response("List of operations")
 data class OperationSummaryListResponse(
-    val operations: List<OperationSummaryResponse>
+    val operations: List<OperationSummaryResponse>,
+    val totalCount: Int
 )
 
 @Response("Basic mining operation information")

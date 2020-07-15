@@ -1,6 +1,7 @@
 package org.veriblock.miners.pop.storage
 
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
@@ -17,28 +18,38 @@ open class OperationRepository(
     fun getOperations(
         status: MiningOperationStatus = MiningOperationStatus.ACTIVE,
         limit: Int = 50,
-        offset: Long = 0L
+        offset: Int = 0
     ): List<OperationStateRecord> = transaction(database) {
-        when (status) {
+        operationsFilterSelect(status).orderBy(
+            OperationStateTable.createdAt
+        ).limit(
+            limit, offset.toLong()
+        ).map {
+            it.toOperationStateRecord()
+        }.toList()
+    }
+
+    fun getOperationsCount(
+        status: MiningOperationStatus = MiningOperationStatus.ACTIVE
+    ): Int = transaction(database) {
+        operationsFilterSelect(status).count().toInt()
+    }
+
+    private fun operationsFilterSelect(status: MiningOperationStatus): Query {
+        return when (status) {
             MiningOperationStatus.ACTIVE -> OperationStateTable.select {
                 (OperationStateTable.status greaterEq MiningOperationState.INITIAL_ID) and
                     (OperationStateTable.status less MiningOperationState.COMPLETED_ID)
             }
-            MiningOperationStatus.COMPLETED ->OperationStateTable.select {
+            MiningOperationStatus.COMPLETED -> OperationStateTable.select {
                 OperationStateTable.status eq MiningOperationState.COMPLETED_ID
             }
-            MiningOperationStatus.FAILED ->OperationStateTable.select {
+            MiningOperationStatus.FAILED -> OperationStateTable.select {
                 OperationStateTable.status eq MiningOperationState.FAILED_ID
             }
             MiningOperationStatus.ALL ->
                 OperationStateTable.selectAll()
-        }.orderBy(
-            OperationStateTable.createdAt
-        ).limit(
-            limit, offset
-        ).map {
-            it.toOperationStateRecord()
-        }.toList()
+        }
     }
 
     fun getActiveOperations(): List<OperationStateRecord> = transaction(database) {

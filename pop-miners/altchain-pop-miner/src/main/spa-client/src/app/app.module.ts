@@ -24,10 +24,12 @@ import {MatSelectModule} from "@angular/material/select";
 import {MatListModule} from "@angular/material/list";
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import {OperationsComponent} from "./component/operations.component";
 
 @NgModule({
   declarations: [
     AppComponent,
+    OperationsComponent,
     MineDialogComponent,
     LogsDialogComponent
   ],

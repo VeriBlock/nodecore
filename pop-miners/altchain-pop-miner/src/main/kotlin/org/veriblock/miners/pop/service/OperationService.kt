@@ -37,12 +37,16 @@ class OperationService(
         }
     }
 
-    fun getOperations(state: MiningOperationStatus, limit: Int, offset: Long, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
+    fun getOperations(state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
         val operations = repository.getOperations(state, limit, offset)
         return operations.map {
             val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)
             operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)
         }
+    }
+
+    fun getOperationsCount(state: MiningOperationStatus): Int {
+        return repository.getOperationsCount(state)
     }
 
     fun storeOperation(operation: ApmOperation) {

@@ -23,7 +23,9 @@ interface MinerService {
 
     fun start()
 
-    fun getOperations(status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Long = 0L): List<ApmOperation>
+    fun getOperations(status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Int = 0): List<ApmOperation>
+
+    fun getOperationsCount(status: MiningOperationStatus = MiningOperationStatus.ACTIVE): Int
 
     fun getOperation(id: String): ApmOperation?
 

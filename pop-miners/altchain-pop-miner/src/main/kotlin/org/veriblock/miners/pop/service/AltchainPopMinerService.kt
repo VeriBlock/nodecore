@@ -127,7 +127,7 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Long): List<ApmOperation> {
+    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Int): List<ApmOperation> {
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.values.asSequence().sortedBy {
                 it.createdAt
@@ -143,6 +143,14 @@ class AltchainPopMinerService(
             }.map {
                 it
             }.toList()
+        }
+    }
+
+    override fun getOperationsCount(status: MiningOperationStatus): Int {
+        return if (status == MiningOperationStatus.ACTIVE) {
+            operations.size
+        } else {
+            operationService.getOperationsCount(status)
         }
     }
 

@@ -10,6 +10,7 @@ export class Operation {
 
 export class OperationSummaryList {
   operations: Operation[];
+  totalCount: number;
 }
 
 export class OperationWorkflowStage {

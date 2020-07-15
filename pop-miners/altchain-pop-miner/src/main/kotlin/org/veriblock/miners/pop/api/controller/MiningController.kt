@@ -46,6 +46,13 @@ class MiningController(
     class MinerOperationsPath(
         @QueryParam("Operation status (optional)") val status: String?,
         @QueryParam("Pagination limit (optional)") val limit: Int?,
+        @QueryParam("Pagination offset (optional)") val offset: Int?
+    )
+
+    @Path("operations/count")
+    class MinerOperationsCountPath(
+        @QueryParam("Operation status (optional)") val status: String?,
+        @QueryParam("Pagination limit (optional)") val limit: Int?,
         @QueryParam("Pagination offset (optional)") val offset: Long?
     )
 
@@ -108,14 +115,15 @@ class MiningController(
             // Get the given limit filter
             val limit = location.limit ?: 50
             // Get the given offset filter
-            val offset = location.offset ?: 0L
+            val offset = location.offset ?: 0
             // Get the operations
-            val allOperations = miner.getOperations(status, limit, offset)
+            val operations = miner.getOperations(status, limit, offset)
+            val count = miner.getOperationsCount(status)
             // Paginate and map operations
-            val result = allOperations.map {
+            val result = operations.map {
                 it.toSummaryResponse()
             }.toList()
-            respond(OperationSummaryListResponse(result))
+            respond(OperationSummaryListResponse(result, count))
         }
         get<MinerOperationPath, OperationDetailResponse>(
             info("Get operation details")
