@@ -133,7 +133,7 @@ class ApmOperationExplainer(
             ApmOperationState.SUBMITTED_POP_DATA ->
                 "Will submit PoP Data to ${operation.chain.name}"
             ApmOperationState.ATV_CONFIRMED ->
-                "Will wait for the ${operation.chain.name} ATV ${operation.atvId} to be confirmed"
+                "Will wait for the ${operation.chain.name} ATV to be confirmed"
             ApmOperationState.PAYOUT_DETECTED -> {
                 operation.miningInstruction?.let { miningInstruction ->
                     val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
