@@ -229,7 +229,7 @@ class ApmTaskService(
 
             // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
             val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
-                operation.id,
+                operation,
                 keystoneOfProof.hash.toString(),
                 miningInstruction.context[0].toHex(),
                 miningInstruction.btcContext[0].toHex()

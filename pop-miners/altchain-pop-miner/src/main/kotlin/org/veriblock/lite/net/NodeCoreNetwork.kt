@@ -24,6 +24,8 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
@@ -263,19 +265,20 @@ class NodeCoreNetwork(
 
     // FIXME This implementation not good enough. Use channels.
     suspend fun getVeriBlockPublications(
-        operationId: String,
+        operation: ApmOperation,
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
         val newBlockChannel = EventBus.newBestBlockChannel.openSubscription()
-        logger.info {
-            """[$operationId] Successfully subscribed to VTB retrieval event!
+        logger.info(
+            operation,
+            """ Successfully subscribed to VTB retrieval event!
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
                 |   - BTC Context Hash: $btcContextHash""".trimMargin()
-        }
-        logger.info { "[$operationId] Waiting for this operation's VTBs..." }
+        )
+        logger.info(operation, "Waiting for this operation's VTBs...")
         // Loop through each new block until we get a not-empty publication list
         for (newBlock in newBlockChannel) {
             // Retrieve VTBs from NodeCore

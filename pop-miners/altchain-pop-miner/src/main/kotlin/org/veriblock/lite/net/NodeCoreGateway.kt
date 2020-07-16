@@ -130,10 +130,22 @@ class NodeCoreGateway(
                 it.deserialize(params.transactionPrefix)
             }
         } else {
+            val errors = if (reply.resultsList.isNotEmpty()) {
+                reply.resultsList.joinToString(
+                    separator = "\n",
+                    prefix = " NodeCore Errors:\n"
+                ) {
+                    "${it.message} | ${it.details}"
+                }
+            } else {
+                ""
+            }
             for (error in reply.resultsList) {
                 logger.error { "NodeCore error: ${error.message} | ${error.details}" }
             }
-            error("Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash")
+            error(
+                "Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash$errors"
+            )
         }
     }
 
