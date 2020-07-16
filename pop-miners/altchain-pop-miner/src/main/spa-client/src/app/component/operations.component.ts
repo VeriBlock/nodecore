@@ -164,7 +164,7 @@ export class OperationsComponent implements OnInit {
       queryParams.push(`pageOffset=${this.pageOffset}`);
     }
     const query = queryParams.join("&");
-    this.location.go("", query);
+    this.location.go("operations", query);
   }
 }
 

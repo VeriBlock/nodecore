@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.github.lamba92.ktor.features.SinglePageApplication
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.openAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
@@ -26,9 +27,6 @@ import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
-import io.ktor.http.content.defaultResource
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
 import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
 import io.ktor.metrics.micrometer.MicrometerMetrics
@@ -128,10 +126,6 @@ class ApiServer(
                 get("metrics") {
                     call.respond(Metrics.registry.scrape())
                 }
-                static {
-                    resources("/spa-client")
-                    defaultResource("/spa-client/index.html")
-                }
             }
             apiRouting {
                 route("api") {
@@ -141,6 +135,11 @@ class ApiServer(
                         }
                     }
                 }
+            }
+            install(SinglePageApplication) {
+                folderPath = "/spa-client"
+                defaultPage = "index.html"
+                ignoreIfContains = "^/api/".toRegex()
             }
         }.start()
 
