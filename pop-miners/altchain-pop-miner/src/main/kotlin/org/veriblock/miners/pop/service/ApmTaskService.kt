@@ -275,7 +275,7 @@ class ApmTaskService(
                 operation.setAtvId(siTxId)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error submitting proof of proof" }
-                failTask("Error submitting proof of proof")
+                failTask("Error submitting proof of proof to ${operation.chain.name}: ${e.message}")
             }
         }
 
