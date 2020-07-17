@@ -226,6 +226,15 @@ class SecurityInheritingMonitor(
     }
 
     private suspend fun handleNewBlock(block: SecurityInheritingBlock) {
+        logger.debug {
+            val publicationsString = if (block.veriBlockPublicationIds.isEmpty()) {
+                "with no VBK publications"
+            } else {
+                "with ${block.veriBlockPublicationIds.size} publications: ${block.veriBlockPublicationIds.joinToString()}"
+            }
+            "Found new ${chain.name} block: ${block.hash} @ ${block.height} $publicationsString"
+        }
+
         for (atvId in block.veriBlockPublicationIds) {
             atvBlocksById[atvId] = block
         }
