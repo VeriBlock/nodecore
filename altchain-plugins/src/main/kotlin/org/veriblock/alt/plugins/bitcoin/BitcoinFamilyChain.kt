@@ -70,8 +70,11 @@ class BitcoinFamilyChain(
         checkNotNull(config.payoutAddress) {
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
+        if (config.payoutAddress.isEmpty()) {
+            error("$name's payoutAddress ($key.payoutAddress) shouldn't be empty")
+        }
         if (config.payoutAddress == "INSERT PAYOUT ADDRESS") {
-            error("${config.payoutAddress} is not a valid value for the payoutAddress configuration, please set up a valid payout address")
+            error("${config.payoutAddress} is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress), please set up a valid payout address")
         }
         payoutAddressScript = if (config.payoutAddress.isHex()) {
             config.payoutAddress.asHexBytes()
