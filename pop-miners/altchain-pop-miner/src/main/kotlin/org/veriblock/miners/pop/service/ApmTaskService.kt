@@ -370,6 +370,7 @@ class ApmTaskService(
                 )
             }
         }
+
         operation.complete()
     }
 

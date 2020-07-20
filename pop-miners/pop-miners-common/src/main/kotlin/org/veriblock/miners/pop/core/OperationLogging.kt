@@ -75,10 +75,14 @@ fun KLogger.warn(
     operation: MiningOperation, msg: String
 ) = log(operation, WARN, msg)
 
+fun KLogger.warn(
+    operation: MiningOperation, t: Throwable, msg: String
+) = log(operation, WARN, msg, t)
+
 fun KLogger.error(
     operation: MiningOperation, msg: String
 ) = log(operation, ERROR, msg)
 
 fun KLogger.error(
     operation: MiningOperation, t: Throwable, msg: String
-) = log(operation, TRACE, msg, t)
+) = log(operation, ERROR, msg, t)

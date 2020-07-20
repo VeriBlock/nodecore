@@ -26,6 +26,7 @@ import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.info
+import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
@@ -279,19 +280,28 @@ class NodeCoreNetwork(
                 |   - BTC Context Hash: $btcContextHash""".trimMargin()
         )
         logger.info(operation, "Waiting for this operation's VTBs...")
-        // Loop through each new block until we get a not-empty publication list
-        for (newBlock in newBlockChannel) {
-            // Retrieve VTBs from NodeCore
-            val veriBlockPublications = gateway.getVeriBlockPublications(
-                keystoneHash, contextHash, btcContextHash
-            )
-            // If the list is not empty, return it
-            if (veriBlockPublications.isNotEmpty()) {
-                return veriBlockPublications
+        try {
+            // Loop through each new block until we get a not-empty publication list
+            for (newBlock in newBlockChannel) {
+                // Retrieve VTBs from NodeCore
+                val veriBlockPublications = gateway.getVeriBlockPublications(
+                    keystoneHash, contextHash, btcContextHash
+                )
+                // If the list is not empty, return it
+                if (veriBlockPublications.isNotEmpty()) {
+                    return veriBlockPublications
+                }
             }
+        } catch (e: Exception) {
+            logger.warn(operation, e, """Error while retrieving VTBs!
+                |   - Keystone Hash: $keystoneHash
+                |   - VBK Context Hash: $contextHash
+                |   - BTC Context Hash: $btcContextHash""".trimMargin())
+        } finally {
+            newBlockChannel.cancel()
         }
         // The new block channel never ends, so this will never happen
-        error("Unable to retrieve veriblock publications: the subscription to new blocks has been interrupted")
+        error("Unable to retrieve VeriBlock publications: the subscription to new blocks has been interrupted")
     }
 
     private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
