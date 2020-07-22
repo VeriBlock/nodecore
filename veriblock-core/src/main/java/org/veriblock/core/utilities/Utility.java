@@ -7,11 +7,11 @@
 
 package org.veriblock.core.utilities;
 
-import org.veriblock.core.bitcoinj.Base58;
-import org.veriblock.core.bitcoinj.Base59;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.SharedConstants;
+import org.veriblock.core.bitcoinj.Base58;
+import org.veriblock.core.bitcoinj.Base59;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -21,7 +21,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.security.*;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -29,6 +35,7 @@ import java.util.BitSet;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A lightweight Utility class comprised entirely of static methods for low-level encoding/manipulation/numerical tasks.
@@ -254,7 +261,43 @@ public class Utility {
         }
 
         throw new RuntimeException("Unable to use the provided privateKey to sign the provided message (" +
-                bytesToHex(message) + ")!");
+            bytesToHex(message) + ")!");
+    }
+
+    public static boolean verifyKeyPair(PublicKey publicKey, PrivateKey privateKey) {
+        if (publicKey == null) {
+            throw new IllegalArgumentException("verifyKeyPair cannot be called with a null public key!");
+        }
+
+        if (privateKey == null) {
+            throw new IllegalArgumentException("verifyKeyPair cannot be called with a null private key!");
+        }
+
+        try {
+            // create a challenge
+            byte[] challenge = new byte[10000];
+            ThreadLocalRandom.current().nextBytes(challenge);
+
+            Signature signature = Signature.getInstance("SHA256withECDSA");
+
+            signature.initSign(privateKey);
+            signature.update(challenge);
+
+            byte[] signed = signature.sign();
+
+            signature.initVerify(publicKey);
+            signature.update(challenge);
+
+            return signature.verify(signed);
+        } catch (NoSuchAlgorithmException e) {
+            _logger.error("Unable to create an instance of SHA256withECDSA Signature!", e);
+        } catch (InvalidKeyException e) {
+            _logger.error("Unable to initialize the signature with one of the private keys!", e);
+        } catch (SignatureException e) {
+            _logger.error("Unable to sign the challenge with one of the private keys!", e);
+        }
+
+        throw new RuntimeException("Unable to verify key pair!");
     }
 
     public static byte[] trimmedByteArrayFromInteger(int input) {

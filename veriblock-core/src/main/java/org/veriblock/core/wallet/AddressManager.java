@@ -10,6 +10,7 @@ package org.veriblock.core.wallet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.ImportException;
+import org.veriblock.core.WalletException;
 import org.veriblock.core.WalletLockedException;
 import org.veriblock.core.WalletUnreadableException;
 import org.veriblock.core.types.Pair;
@@ -610,8 +611,12 @@ public class AddressManager {
                     try {
                         PublicKey publicKey = AddressKeyGenerator.getPublicKey(a.publicKey);
                         PrivateKey privateKey = AddressKeyGenerator.getPrivateKey(a.cipher.cipherText);
+                        boolean isKeyPairValid = Utility.verifyKeyPair(publicKey, privateKey);
 
                         a.address = AddressUtility.addressFromPublicKey(publicKey);
+                        if (!isKeyPairValid) {
+                            throw new WalletException("Invalid key pair for address " + a.address);
+                        }
 
                         if (wallet.locked) {
                             if (!unlocked) {
