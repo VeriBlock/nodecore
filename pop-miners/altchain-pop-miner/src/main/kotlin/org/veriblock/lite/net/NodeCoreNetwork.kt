@@ -295,6 +295,11 @@ class NodeCoreNetwork(
             }
         } catch (e: Exception) {
             logger.warn(operation, e, "Error while retrieving VTBs!\n$extraLogData")
+            try {
+                val lastBlock = gateway.getLastBlock()
+                logger.info(operation, "Current last block: ${lastBlock.hash} @ ${lastBlock.height}")
+            } catch (ignored: Exception) {
+            }
         } finally {
             newBlockChannel.cancel()
         }
