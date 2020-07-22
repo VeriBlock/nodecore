@@ -231,8 +231,8 @@ class ApmTaskService(
             val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
                 operation,
                 keystoneOfProof.hash.toString(),
-                miningInstruction.context[0].toHex(),
-                miningInstruction.btcContext[0].toHex()
+                miningInstruction.context.first().toHex(),
+                miningInstruction.btcContext.first().toHex()
             )
             operation.setContext(publications)
 

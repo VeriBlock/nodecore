@@ -207,6 +207,9 @@ class BitcoinFamilyChain(
         if (response.last_known_veriblock_blocks.isNullOrEmpty()) {
             error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
         }
+        if (response.last_known_bitcoin_blocks.isNullOrEmpty()) {
+            error("Publication data's 'last_known_bitcoin_blocks' must not be empty!")
+        }
 
         val publicationData = PublicationData(
             id,
@@ -218,7 +221,7 @@ class BitcoinFamilyChain(
             actualBlockHeight,
             publicationData,
             response.last_known_veriblock_blocks.map { it.asHexBytes() },
-            response.last_known_bitcoin_blocks?.map { it.asHexBytes() } ?: emptyList()
+            response.last_known_bitcoin_blocks.map { it.asHexBytes() }
         )
     }
 
