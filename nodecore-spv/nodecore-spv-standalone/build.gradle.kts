@@ -116,7 +116,7 @@ tasks.register<Deb>("createDeb") {
 setupJacoco()
 
 distributions {
-    main {
+    getByName("main") {
         contents {
             from ("./src/main/resources/application-default.conf") {
                 into("bin")
