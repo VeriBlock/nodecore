@@ -30,4 +30,6 @@ include("altchain-plugins")
 include("nodecore-spv")
 include("nodecore-spv:nodecore-spv-standalone")
 
+include("bootstrap-downloader")
+
 rootProject.name = "nodecore-suite"
