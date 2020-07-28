@@ -272,13 +272,6 @@ fun main(args: Array<String>) {
                         configMapping = "downloader.dataDir"
                     ),
                     bootOption(
-                        opt = "g",
-                        longOpt = "generator",
-                        desc = "Generate the JSON file used by the downloader tool",
-                        argName = "generator",
-                        configMapping = "downloader.generator"
-                    ),
-                    bootOption(
                         opt = "l",
                         longOpt = "localUrl",
                         desc = "Specifies if the url is local or not",
