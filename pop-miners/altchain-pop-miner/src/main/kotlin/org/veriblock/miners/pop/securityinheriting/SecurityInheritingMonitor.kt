@@ -320,10 +320,6 @@ class SecurityInheritingMonitor(
                 delay(20_000L)
                 continue
             }
-            if (bestBlockHeight - block.height < chain.config.neededConfirmations) {
-                delay(20_000L)
-                continue
-            }
             return block
         }
     }
