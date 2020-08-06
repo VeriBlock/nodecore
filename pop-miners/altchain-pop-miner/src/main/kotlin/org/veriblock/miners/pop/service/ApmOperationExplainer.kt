@@ -40,7 +40,7 @@ class ApmOperationExplainer(
             )
         } + OperationWorkflowStage(
             if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
-            "11. COMPLETED",
+            "12. COMPLETED",
             if (operation.state == MiningOperationState.COMPLETED) "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}" else ""
         ))
     }
