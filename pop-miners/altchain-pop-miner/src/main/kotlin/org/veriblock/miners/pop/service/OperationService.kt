@@ -25,14 +25,14 @@ class OperationService(
     fun getOperation(id: String, txFactory: (String) -> WalletTransaction): ApmOperation? {
         val operation = repository.getOperation(id)
             ?: return null
-        val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), operation.state)
+        val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), operation.state)
         return operationSerializer.deserialize(protoData, operation.createdAt, operation.logs.parseOperationLogs(), txFactory)
     }
 
     fun getActiveOperations(txFactory: (String) -> WalletTransaction): List<ApmOperation> {
         val activeOperations = repository.getActiveOperations()
         return activeOperations.map {
-            val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)
+            val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)
             operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)
         }
     }
@@ -40,7 +40,7 @@ class OperationService(
     fun getOperations(state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
         val operations = repository.getOperations(state, limit, offset)
         return operations.map {
-            val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), it.state)
+            val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)
             operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)
         }
     }
@@ -55,7 +55,7 @@ class OperationService(
             OperationStateRecord(
                 operation.id,
                 operation.state.id,
-                ProtoBuf.dump(OperationProto.Operation.serializer(), serialized),
+                ProtoBuf.encodeToByteArray(OperationProto.Operation.serializer(), serialized),
                 operation.createdAt,
                 operation.getLogs().toJson()
             )

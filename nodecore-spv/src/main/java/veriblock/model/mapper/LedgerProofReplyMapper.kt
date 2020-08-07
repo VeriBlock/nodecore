@@ -32,7 +32,7 @@ object LedgerProofReplyMapper {
             LedgerProofStatus.ADDRESS_EXISTS -> {
                 val ledgerProofNode = ledgerProofResult.ledgerProofWithContext.ledgerProof.proofOfExistence.verticalProofLayersList.firstOrNull()
                     ?: throw SpvProcessException("Ledger proof reply doesn't have ledger value.")
-                ledgerProofNode.ledgerValue.map()
+                ledgerProofNode.ledgerValue.toModel()
             }
             LedgerProofStatus.ADDRESS_DOES_NOT_EXIST ->
                 LedgerValue(0, 0, -1)
@@ -47,10 +47,7 @@ object LedgerProofReplyMapper {
         )
     }
 
-    private fun VeriBlockMessages.LedgerValue.map(): LedgerValue {
-        return LedgerValue(
-            availableAtomicUnits, frozenAtomicUnits,
-            signatureIndex
-        )
+    private fun VeriBlockMessages.LedgerValue.toModel(): LedgerValue {
+        return LedgerValue(availableAtomicUnits, frozenAtomicUnits, signatureIndex)
     }
 }

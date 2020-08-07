@@ -110,3 +110,8 @@ data class OutputData(
     val address: String,
     val amount: Long
 )
+
+data class AddressAvailableBalance(
+    val address: String,
+    val availableBalance: Long
+)

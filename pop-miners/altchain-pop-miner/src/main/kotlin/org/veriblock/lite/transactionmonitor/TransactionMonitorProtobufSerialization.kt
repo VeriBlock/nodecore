@@ -25,12 +25,12 @@ import java.io.InputStream
 import java.io.OutputStream
 
 fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor) {
-    val data = ProtoBuf.dump(TxmonProto.TransactionMonitor.serializer(), transactionMonitor.toProto())
+    val data = ProtoBuf.encodeToByteArray(TxmonProto.TransactionMonitor.serializer(), transactionMonitor.toProto())
     write(data)
 }
 
 fun InputStream.readTransactionMonitor(context: Context): TransactionMonitor {
-    val data = ProtoBuf.load(TxmonProto.TransactionMonitor.serializer(), readBytes())
+    val data = ProtoBuf.decodeFromByteArray(TxmonProto.TransactionMonitor.serializer(), readBytes())
     return data.toModel(context)
 }
 

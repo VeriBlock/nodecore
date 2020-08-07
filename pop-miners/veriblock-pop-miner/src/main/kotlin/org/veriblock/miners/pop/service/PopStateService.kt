@@ -93,7 +93,7 @@ class PopStateService(
             payoutAmount = operation.payoutAmount ?: 0L,
             failureReason = operation.failureReason ?: ""
         )
-        return ProtoBuf.dump(OperationProto.Operation.serializer(), protoData)
+        return ProtoBuf.encodeToByteArray(OperationProto.Operation.serializer(), protoData)
     }
 
     private fun reconstitute(record: OperationStateRecord): VpmOperation {
@@ -103,7 +103,7 @@ class PopStateService(
             logs = record.logs.parseOperationLogs(),
             reconstituting = true
         )
-        val protoData = ProtoBuf.load(OperationProto.Operation.serializer(), record.state)
+        val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), record.state)
         logger.debug("Reconstituting operation {}", protoData.id)
         if (protoData.endorsedBlockNumber >= 0) {
             operation.endorsedBlockHeight = protoData.endorsedBlockNumber

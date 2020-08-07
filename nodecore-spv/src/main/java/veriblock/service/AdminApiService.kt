@@ -91,8 +91,8 @@ class AdminApiService(
             for (availableAddress in getAvailableAddresses(totalOutputAmount)) {
                 addressCoinsIndexList.add(
                     AddressCoinsIndex(
-                        availableAddress.first, availableAddress.second,
-                        getSignatureIndex(availableAddress.first)
+                        availableAddress.address, availableAddress.availableBalance,
+                        getSignatureIndex(availableAddress.address)
                     )
                 )
             }
@@ -385,7 +385,7 @@ class AdminApiService(
         return futureEventReply.get().veriblockPublicationsReply
     }
 
-    private fun getAvailableAddresses(totalOutputAmount: Long): List<Pair<String, Long>> {
+    private fun getAvailableAddresses(totalOutputAmount: Long): List<AddressAvailableBalance> {
         //Use default address if there balance is enough.
         val ledgerContext = peerTable.getAddressState(addressManager.defaultAddress.hash)
             ?: throw WalletException("Could not find default address' state")
@@ -394,23 +394,23 @@ class AdminApiService(
         }
         if (ledgerContext.ledgerValue.availableAtomicUnits > totalOutputAmount) {
             return listOf(
-                Pair(ledgerContext.address.address, ledgerContext.ledgerValue.availableAtomicUnits)
+                AddressAvailableBalance(ledgerContext.address.address, ledgerContext.ledgerValue.availableAtomicUnits)
             )
         }
-        val addressBalanceList: MutableList<Pair<String, Long>> = ArrayList()
+        val addressBalanceList: MutableList<AddressAvailableBalance> = ArrayList()
         val ledgerContextMap = peerTable.getAddressesState()
         for (address in addressManager.all) {
             val lc = ledgerContextMap.getValue(address.hash)
             if (ledgerContextMap.containsKey(address.hash) && lc.ledgerValue != null) {
                 addressBalanceList.add(
-                    Pair(address.hash, lc.ledgerValue.availableAtomicUnits)
+                    AddressAvailableBalance(address.hash, lc.ledgerValue.availableAtomicUnits)
                 )
             }
         }
         return addressBalanceList.filter {
-            it.second > 0
-        }.sortedBy {
-            it.second
+            it.availableBalance > 0
+        }.sortedByDescending {
+            it.availableBalance
         }
     }
 

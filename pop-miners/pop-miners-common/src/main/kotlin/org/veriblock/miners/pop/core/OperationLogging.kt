@@ -10,6 +10,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.parse
+import kotlinx.serialization.stringify
 import mu.KLogger
 import org.veriblock.core.contracts.MiningInstruction
 import java.time.Instant
@@ -28,11 +30,11 @@ class OperationLog(
     }
 }
 
-private val jsonSerialization = Json(JsonConfiguration.Stable)
+private val jsonSerialization = Json {}
 private val logSerializer = ListSerializer(OperationLog.serializer())
 
-fun List<OperationLog>.toJson() = jsonSerialization.stringify(logSerializer, this)
-fun String.parseOperationLogs() = jsonSerialization.parse(logSerializer, this)
+fun List<OperationLog>.toJson() = jsonSerialization.encodeToString(logSerializer, this)
+fun String.parseOperationLogs() = jsonSerialization.decodeFromString(logSerializer, this)
 
 private fun KLogger.log(
     operation: MiningOperation,
