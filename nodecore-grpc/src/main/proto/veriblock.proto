@@ -1075,6 +1075,18 @@ message GetLastBitcoinBlockReply {
     bytes hash = 5 [(hex_encoded)=true];
 }
 
+message GetLastBitcoinBlockAtVeriBlockBlockRequest {
+    bytes vbk_block_hash = 1 [(hex_encoded)=true];
+}
+
+message GetLastBitcoinBlockAtVeriBlockBlockReply {
+    bool success = 1;
+    repeated Result results = 2;
+    bytes header = 3 [(hex_encoded)=true];
+    int32 height = 4;
+    bytes hash = 5 [(hex_encoded)=true];
+}
+
 message GetLastBlockReply {
     bool success = 1;
     repeated Result results = 2;
@@ -1670,6 +1682,8 @@ service Admin {
     rpc SetDefaultAddress(SetDefaultAddressRequest) returns (SetDefaultAddressReply) {}
 
     rpc GetLastBitcoinBlock(GetLastBitcoinBlockRequest) returns (GetLastBitcoinBlockReply) {}
+
+    rpc GetLastBitcoinBlockAtVeriBlockBlock(GetLastBitcoinBlockAtVeriBlockBlockRequest) returns (GetLastBitcoinBlockAtVeriBlockBlockReply) {}
 
     rpc GetProtectedChildren(GetProtectedChildrenRequest) returns (GetProtectedChildrenReply) {}
 
