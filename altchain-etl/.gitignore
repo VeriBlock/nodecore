@@ -1,0 +1,9 @@
+# Configuration
+application*.conf
+
+# Enviroment
+.env*.local
+
+# Database
+db/data/
+*.db
