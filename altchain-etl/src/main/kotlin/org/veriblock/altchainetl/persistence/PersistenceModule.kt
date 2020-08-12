@@ -34,7 +34,14 @@ val persistenceModule = module {
         Database.connect(HikariDataSource(hikariConfig)).apply {
             transactionManager.defaultIsolationLevel = Connection.TRANSACTION_READ_UNCOMMITTED
             transaction(this) {
-                SchemaUtils.createMissingTablesAndColumns()
+                SchemaUtils.createMissingTablesAndColumns(
+                    BtcBlockTable,
+                    VbkBlockTable,
+                    AltBlockTable,
+                    AtvTable,
+                    VtbTable,
+                    TxTable
+                )
             }
         }
     }
