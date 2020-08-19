@@ -74,7 +74,7 @@ dependencies {
     implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.2-beta.8")
 
     // Protobuf Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
 
     // Logging

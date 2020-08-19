@@ -71,7 +71,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
 
     // Protobuf Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
 
     implementation("commons-cli:commons-cli:1.4")

@@ -99,7 +99,7 @@ class VeriBlockPopMiner(
         val block = veriBlockBlockchain.mine(blockData)
 
         // create a VTB
-        val context = veriBlockBlockchain.getContext(lastKnownVBKBlock!!)
+        val context = veriBlockBlockchain.getContext(lastKnownVBKBlock)
         return VeriBlockPublication(
             popTx,
             blockData.getPoPMerklePath(0),

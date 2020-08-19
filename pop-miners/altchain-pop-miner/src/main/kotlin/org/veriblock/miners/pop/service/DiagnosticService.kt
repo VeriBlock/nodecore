@@ -90,8 +90,8 @@ class DiagnosticService(
 
                 // Check the auto mine rounds
                 val configuredAutoMineRounds = it.value.autoMineRounds
-                val min = configuredAutoMineRounds.min() ?: 0
-                val max = configuredAutoMineRounds.max() ?: 0
+                val min = configuredAutoMineRounds.minOrNull() ?: 0
+                val max = configuredAutoMineRounds.minOrNull() ?: 0
                 if (configuredAutoMineRounds.isNotEmpty() && (min < 1 || max > 4)) {
                     val invalidMineRounds = configuredAutoMineRounds.filter { mineRound ->
                         mineRound < 1 || mineRound > 4

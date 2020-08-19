@@ -52,9 +52,9 @@ class CommandContext(
         val commandSummaries = suggestedCommands.associateWith {
             shell.getCommand(it).description
         }
-        val maxLength = commandSummaries.keys.map {
+        val maxLength = commandSummaries.keys.maxOfOrNull {
             it.length
-        }.max() ?:0
+        } ?:0
 
         shell.printStyled(
             "You may also find the following command(s) useful ('help' for syntax):",
