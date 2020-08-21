@@ -33,14 +33,14 @@ import java.util.stream.Stream;
  */
 public final class ProgPoW {
 
-    public static int PROGPOW_PERIOD = 50;
+    public static int PROGPOW_PERIOD = 10;
     public static int PROGPOW_LANES = 16;
     public static int PROGPOW_REGS = 32;
     public static int PROGPOW_DAG_LOADS = 4;
     public static int PROGPOW_CACHE_BYTES = 16 * 1024;
     public static int PROGPOW_CNT_DAG = 64;
-    public static int PROGPOW_CNT_CACHE = 12;
-    public static int PROGPOW_CNT_MATH = 20;
+    public static int PROGPOW_CNT_CACHE = 11;
+    public static int PROGPOW_CNT_MATH = 18;
     public static UInt32 FNV_PRIME = UInt32.fromHexString("0x1000193");
     public static Bytes FNV_OFFSET_BASIS = Bytes.fromHexString("0x811c9dc5");
     public static int HASH_BYTES = 64;
@@ -68,8 +68,15 @@ public final class ProgPoW {
         // keccak(header..nonce)
         Bytes32 seed_256 = Keccakf800.keccakF800Progpow(header, nonce, Bytes32.ZERO);
 
+        // Additional Keccak256 round for seed
+        seed_256 = Keccakf800.keccakF800Progpow(seed_256, 0L, Bytes32.ZERO);
+
         // endian swap so byte 0 of the hash is the MSB of the value
         long seed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
+
+        // Manually zero out the first bit of seed to reduce seed space to 2^62
+        seed = seed & 0x3FFFFFFFFFFFFFFFL;
+
         // initialize mix for all lanes
         for (int l = 0; l < PROGPOW_LANES; l++)
             mix[l] = fillMix(UInt64.fromBytes(Bytes.wrap(ByteBuffer.allocate(8).putLong(seed).array())), UInt32.valueOf(l));
@@ -146,14 +153,14 @@ public final class ProgPoW {
     static UInt32 merge(UInt32 a, UInt32 b, UInt32 r) {
         switch (r.mod(UInt32.valueOf(4)).intValue()) {
             case 0:
-                return (a.multiply(UInt32.valueOf(33))).add(b);
+                return ProgPoWMath.rotr32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
             case 1:
-                return a.xor(b).multiply(UInt32.valueOf(33));
+                return ProgPoWMath.rotl32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
             // prevent rotate by 0 which is a NOP
             case 2:
-                return ProgPoWMath.rotl32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
+                return a.xor(b).multiply(UInt32.valueOf(33));
             case 3:
-                return ProgPoWMath.rotr32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
+                return (a.multiply(UInt32.valueOf(33))).add(b);
             default:
                 throw new IllegalArgumentException(
                     "r mod 4 is larger than 4" + r.toHexString() + " " + r.mod(UInt32.valueOf(4)).intValue());

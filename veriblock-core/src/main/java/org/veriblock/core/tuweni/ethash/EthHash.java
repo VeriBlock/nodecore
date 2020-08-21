@@ -55,9 +55,13 @@ public class EthHash {
      */
     public static int CACHE_MULTIPLIER = 1024;
     /**
-     * blocks per epoch
+     * blocks per epoch (~2.777 days with 30-second block time)
      */
-    public static int EPOCH_LENGTH = 30000;
+    public static int EPOCH_LENGTH = 8000;
+    /**
+     * Initial EPOCH offset (332=2.59375GB added)
+     */
+    public static int EPOCH_OFFSET = 332;
     /**
      * width of mix
      */
@@ -93,7 +97,7 @@ public class EthHash {
      * @return EthHash Epoch
      */
     public static long epoch(long block) {
-        return block / EPOCH_LENGTH;
+        return (block / EPOCH_LENGTH) + EPOCH_OFFSET;
     }
 
     /**
@@ -103,7 +107,7 @@ public class EthHash {
      * @return the size of the cache at the block number, in bytes
      */
     public static int getCacheSize(long block_number) {
-        long sz = CACHE_BYTES_INIT + CACHE_BYTES_GROWTH * (block_number / EPOCH_LENGTH);
+        long sz = CACHE_BYTES_INIT + CACHE_BYTES_GROWTH * (epoch(block_number));
         sz -= HASH_BYTES;
         while (!isPrime(sz / HASH_BYTES)) {
             sz -= 2 * HASH_BYTES;
@@ -118,7 +122,7 @@ public class EthHash {
      * @return the size of the full dataset at the block number, in bytes
      */
     public static long getFullSize(long block_number) {
-        long sz = DATASET_BYTES_INIT + DATASET_BYTES_GROWTH * (block_number / EPOCH_LENGTH);
+        long sz = DATASET_BYTES_INIT + DATASET_BYTES_GROWTH * (epoch(block_number));
         sz -= MIX_BYTES;
         while (!isPrime(sz / MIX_BYTES)) {
             sz -= 2 * MIX_BYTES;
@@ -199,7 +203,7 @@ public class EthHash {
     public static Bytes dagSeed(long block) {
         Bytes32 seed = Bytes32.wrap(new byte[32]);
         if (Long.compareUnsigned(block, EPOCH_LENGTH) >= 0) {
-            for (int i = 0; i < Long.divideUnsigned(block, EPOCH_LENGTH); i++) {
+            for (int i = 0; i < (Long.divideUnsigned(block, EPOCH_LENGTH) + EPOCH_OFFSET); i++) {
                 seed = Hash.keccak256(seed);
             }
         }

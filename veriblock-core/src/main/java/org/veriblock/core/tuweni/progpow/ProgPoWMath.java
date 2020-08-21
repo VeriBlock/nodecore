@@ -23,27 +23,27 @@ final class ProgPoWMath {
     static UInt32 math(UInt32 a, UInt32 b, UInt32 r) {
         switch (r.mod(UInt32.valueOf(11)).intValue()) {
             case 0:
-                return a.add(b);
-            case 1:
-                return a.multiply(b);
-            case 2:
-                return mul_hi(a, b);
-            case 3:
-                return min(a, b);
-            case 4:
                 return rotl32(a, b);
+            case 1:
+                return a.and(b);
+            case 2:
+                return a.add(b);
+            case 3:
+                return popcount(a).add(popcount(b));
+            case 4:
+                return clz(a).add(clz(b));
             case 5:
                 return rotr32(a, b);
             case 6:
-                return a.and(b);
+                return mul_hi(a, b);
             case 7:
                 return a.or(b);
             case 8:
-                return a.xor(b);
+                return a.multiply(b);
             case 9:
-                return clz(a).add(clz(b));
+                return a.xor(b);
             case 10:
-                return popcount(a).add(popcount(b));
+                return min(a, b);
             default:
                 throw new IllegalArgumentException(
                     "Value " + r + " has mod larger than 11 " + r.mod(UInt32.valueOf(11).intValue()));
