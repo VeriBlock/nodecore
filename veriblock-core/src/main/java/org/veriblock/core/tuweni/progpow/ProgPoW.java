@@ -68,10 +68,12 @@ public final class ProgPoW {
         // keccak(header..nonce)
         Bytes32 seed_256 = Keccakf800.keccakF800Progpow(header, nonce, Bytes32.ZERO);
 
-        // Additional Keccak256 round for seed
-        seed_256 = Keccakf800.keccakF800Progpow(seed_256, 0L, Bytes32.ZERO);
-
         // endian swap so byte 0 of the hash is the MSB of the value
+        long intermediateSeed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
+
+        // Additional Keccak256 round for seed
+        seed_256 = Keccakf800.keccakF800Progpow(Bytes32.ZERO, intermediateSeed, Bytes32.ZERO);
+
         long seed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
 
         // Manually zero out the first bit of seed to reduce seed space to 2^62
