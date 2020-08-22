@@ -160,9 +160,9 @@ public final class ProgPoW {
                 return ProgPoWMath.rotl32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
             // prevent rotate by 0 which is a NOP
             case 2:
-                return a.xor(b).multiply(UInt32.valueOf(33));
-            case 3:
                 return (a.multiply(UInt32.valueOf(33))).add(b);
+            case 3:
+                return a.xor(b).multiply(UInt32.valueOf(33));
             default:
                 throw new IllegalArgumentException(
                     "r mod 4 is larger than 4" + r.toHexString() + " " + r.mod(UInt32.valueOf(4)).intValue());
@@ -236,7 +236,8 @@ public final class ProgPoW {
         int[] mix_seq_src = new int[PROGPOW_REGS];
         int mix_seq_dst_cnt = 0;
         int mix_seq_src_cnt = 0;
-        KISS99Random prog_rnd = progPowInit(UInt64.valueOf(blockNumber / PROGPOW_PERIOD), mix_seq_src, mix_seq_dst);
+        KISS99Random prog_rnd = progPowInit(UInt64.valueOf((blockNumber + (EthHash.EPOCH_LENGTH * EthHash.EPOCH_OFFSET)) / PROGPOW_PERIOD), mix_seq_src, mix_seq_dst);
+
 
         int max_i = Integer.max(PROGPOW_CNT_CACHE, PROGPOW_CNT_MATH);
         for (int i = 0; i < max_i; i++) {

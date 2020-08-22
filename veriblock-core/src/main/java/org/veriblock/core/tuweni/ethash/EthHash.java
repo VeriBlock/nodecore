@@ -202,8 +202,8 @@ public class EthHash {
 
     public static Bytes dagSeed(long block) {
         Bytes32 seed = Bytes32.wrap(new byte[32]);
-        if (Long.compareUnsigned(block, EPOCH_LENGTH) >= 0) {
-            for (int i = 0; i < (Long.divideUnsigned(block, EPOCH_LENGTH) + EPOCH_OFFSET); i++) {
+        if (Long.compareUnsigned(block + (EPOCH_OFFSET * EPOCH_LENGTH), EPOCH_LENGTH) >= 0) {
+            for (int i = 0; i < epoch(block); i++) {
                 seed = Hash.keccak256(seed);
             }
         }
