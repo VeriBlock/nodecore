@@ -13,7 +13,6 @@ import com.google.gson.GsonBuilder
 import org.veriblock.core.CommandException
 import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
@@ -86,15 +85,18 @@ fun CommandFactory.miningCommands(
         form = "listoperations",
         description = "Lists the currently running operations since the PoP miner started",
         parameters = listOf(
-            CommandParameter("state", CommandParameterMappers.STRING, required = false)
+            CommandParameter("state", CommandParameterMappers.STRING, required = false),
+            CommandParameter("limit", CommandParameterMappers.INTEGER, required = false),
+            CommandParameter("offset", CommandParameterMappers.INTEGER, required = false)
         )
     ) {
         val state = getOptionalParameter<String>("state")?.let { stateString ->
             MiningOperationStatus.values().find { it.name == stateString.toUpperCase() }
                 ?: throw CommandException("'$stateString' is not valid. Available options: 'active', 'failed', 'completed', 'all'")
         } ?: MiningOperationStatus.ACTIVE
-
-        val operations = minerService.getOperations(state).map {
+        val limit = getOptionalParameter<Int>("limit") ?: 50
+        val offset = getOptionalParameter<Int>("offset") ?: 0
+        val operations = minerService.getOperations(state, limit, offset).map {
             val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
                 " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutInterval()})"
             } ?: ""
