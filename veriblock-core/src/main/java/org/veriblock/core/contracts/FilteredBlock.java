@@ -24,7 +24,7 @@ public interface FilteredBlock {
 
     int getDifficulty();
 
-    long getNonce();
+    int getNonce();
 
     int getTotalRegularTransactions();
 
