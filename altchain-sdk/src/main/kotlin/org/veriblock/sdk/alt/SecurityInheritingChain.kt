@@ -69,9 +69,9 @@ interface SecurityInheritingChain {
     suspend fun getTransaction(txId: String): SecurityInheritingTransaction?
 
     /**
-     * Returns this security inheriting chain's payout interval, in blocks.
+     * Returns this security inheriting chain's payout delay, in blocks.
      */
-    fun getPayoutInterval(): Int
+    fun getPayoutDelay(): Int
 
     /**
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height

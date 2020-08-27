@@ -109,8 +109,8 @@ class TestChain(
         return transactions[txId]
     }
 
-    override fun getPayoutInterval(): Int {
-        return config.payoutInterval
+    override fun getPayoutDelay(): Int {
+        return config.payoutDelay
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {

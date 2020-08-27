@@ -161,7 +161,7 @@ class ApmOperation(
     override fun getDetailedInfo(): Map<String, String> {
         val result = LinkedHashMap<String, String>()
         endorsedBlockHeight?.let {
-            result["expectedRewardBlock"] = (it + chain.getPayoutInterval()).toString()
+            result["expectedRewardBlock"] = (it + chain.getPayoutDelay()).toString()
         }
         miningInstruction?.let { instruction ->
             result["chainIdentifier"] = instruction.publicationData.identifier.toString()

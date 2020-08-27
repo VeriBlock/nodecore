@@ -98,7 +98,7 @@ fun CommandFactory.miningCommands(
         val offset = getOptionalParameter<Int>("offset") ?: 0
         val operations = minerService.getOperations(state, limit, offset).map {
             val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
-                " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutInterval()})"
+                " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutDelay()})"
             } ?: ""
             "${it.id}: ${it.chain.name}$heightString | ${it.state} | ${it.getStateDescription()}"
         }

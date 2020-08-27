@@ -11,7 +11,7 @@ class NxtConfig(
     override val keystonePeriod: Int = 10,
     override val neededConfirmations: Int = 10,
     override val spFinalityDelay: Int = 100,
-    override val payoutInterval: Int = 100,
+    override val payoutDelay: Int = 100,
     override val blockRoundIndices: List<Int> = listOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
     override val autoMineRounds: MutableSet<Int> = HashSet()
 ) : ChainConfig() {
@@ -22,7 +22,7 @@ class NxtConfig(
         configuration.keystonePeriod ?: 10,
         configuration.neededConfirmations ?: 20,
         configuration.spFinalityDelay ?: 100,
-        configuration.payoutInterval ?: 100,
+        configuration.payoutDelay ?: 100,
         configuration.blockRoundIndices ?: listOf(4, 1, 2, 3, 1, 2, 3, 1, 2, 3),
         configuration.autoMineRounds.toMutableSet()
     )
