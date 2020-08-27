@@ -140,8 +140,9 @@ public final class BlockUtility {
         }
 
         if (blockHeight >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
-            shift = 32;
-            for (int i = NONCE_START_POSITION; i <= NONCE_END_POSITION; i++) {
+            header[NONCE_START_POSITION] = (byte)(nonce >> 32);
+            shift = 24;
+            for (int i = NONCE_START_POSITION + 1; i <= NONCE_END_POSITION; i++) {
                 header[i] = (byte)((nonce & MASKS[i - NONCE_START_POSITION]) >> shift);
                 shift -= 8;
             }
