@@ -7,8 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.services
 
+import org.veriblock.core.Context
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Address
@@ -164,16 +166,15 @@ object SerializeDeserializeService {
     // VeriBlockBlock
     fun parseVeriBlockBlock(buffer: ByteBuffer): VeriBlockBlock {
         val raw = StreamUtils.getSingleByteLengthValue(
-            buffer, Constants.HEADER_SIZE_VeriBlockBlock, Constants.HEADER_SIZE_VeriBlockBlock
+            buffer, Constants.HEADER_SIZE_VeriBlockBlock_VBlake, Constants.HEADER_SIZE_VeriBlockBlock
         )
         return parseVeriBlockBlock(raw)
     }
 
     fun parseVeriBlockBlock(raw: ByteArray): VeriBlockBlock {
-        Preconditions.notNull(raw, "VeriBlock raw data cannot be null")
-        Preconditions.argument<Any>(
-            raw.size == Constants.HEADER_SIZE_VeriBlockBlock
-        ) { "Invalid VeriBlock raw data: " + Utility.bytesToHex(raw) }
+        check(raw.size == Constants.HEADER_SIZE_VeriBlockBlock || raw.size == Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
+            "Invalid VeriBlock raw data: " + Utility.bytesToHex(raw)
+        }
         val buffer = ByteBuffer.allocateDirect(raw.size)
         buffer.put(raw)
         buffer.flip()
@@ -187,7 +188,11 @@ object SerializeDeserializeService {
         )
         val timestamp = BytesUtility.readBEInt32(buffer)
         val difficulty = BytesUtility.readBEInt32(buffer)
-        val nonce = BytesUtility.readBEInt32(buffer)
+        var nonce = BytesUtility.readBEInt32(buffer).toLong()
+        if (BlockUtility.isProgPow(height)) {
+            val nonceExtraByte = buffer.get()
+            nonce = (nonce shl 8) or nonceExtraByte.toLong()
+        }
         return VeriBlockBlock(
             height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot,
             timestamp, difficulty, nonce
@@ -212,7 +217,13 @@ object SerializeDeserializeService {
     }
 
     fun serializeHeaders(veriBlockBlock: VeriBlockBlock): ByteArray {
-        val buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_VeriBlockBlock)
+        // Hardcode 0 length hash size for network param serialization
+        val headerSize = if (veriBlockBlock.height == 0) {
+            Constants.HEADER_SIZE_VeriBlockBlock_VBlake
+        } else {
+            BlockUtility.getBlockHeaderLength(veriBlockBlock.height)
+        }
+        val buffer = ByteBuffer.allocateDirect(headerSize)
         BytesUtility.putBEInt32(buffer, veriBlockBlock.height)
         BytesUtility.putBEInt16(buffer, veriBlockBlock.version)
         BytesUtility.putBEBytes(buffer, veriBlockBlock.previousBlock.bytes)
@@ -221,10 +232,13 @@ object SerializeDeserializeService {
         BytesUtility.putBEBytes(buffer, veriBlockBlock.merkleRoot.bytes)
         BytesUtility.putBEInt32(buffer, veriBlockBlock.timestamp)
         BytesUtility.putBEInt32(buffer, veriBlockBlock.difficulty)
-        BytesUtility.putBEInt32(buffer, veriBlockBlock.nonce)
+        if (veriBlockBlock.height > 0 && BlockUtility.isProgPow(veriBlockBlock.height)) {
+            buffer.put((veriBlockBlock.nonce shr 32).toByte())
+        }
+        BytesUtility.putBEInt32(buffer, veriBlockBlock.nonce.toInt())
         buffer.flip()
-        val bytes = ByteArray(Constants.HEADER_SIZE_VeriBlockBlock)
-        buffer[bytes, 0, Constants.HEADER_SIZE_VeriBlockBlock]
+        val bytes = ByteArray(headerSize)
+        buffer.get(bytes, 0, headerSize)
         return bytes
     }
 

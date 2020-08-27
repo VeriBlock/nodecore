@@ -71,7 +71,7 @@ public class BlockSummaryInfo {
     public long decoded_difficulty;
 
     @SerializedName("winning_nonce")
-    public int winningNonce;
+    public long winningNonce;
 
     @SerializedName("ledger_hash")
     public String ledgerHash;

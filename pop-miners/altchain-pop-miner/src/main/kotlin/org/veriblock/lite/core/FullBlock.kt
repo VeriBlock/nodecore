@@ -25,7 +25,7 @@ class FullBlock(
     merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
-    nonce: Int,
+    nonce: Long,
     val normalTransactions: List<VeriBlockTransaction>,
     val popTransactions: List<VeriBlockPopTransaction>,
     val metaPackage: BlockMetaPackage

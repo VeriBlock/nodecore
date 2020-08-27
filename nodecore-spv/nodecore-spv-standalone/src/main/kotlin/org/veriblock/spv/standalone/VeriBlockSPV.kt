@@ -68,7 +68,7 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
-    logger.info { "Initializing SPV Context..." }
+    logger.info { "Initializing SPV Context (${networkParameters.name})..." }
     var errored = false
     try {
         spvContext.init(networkParameters, peerDiscovery)

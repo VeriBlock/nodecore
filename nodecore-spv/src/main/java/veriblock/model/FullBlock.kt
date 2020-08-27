@@ -20,7 +20,7 @@ class FullBlock(
     merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
-    nonce: Int
+    nonce: Long
 ) : VeriBlockBlock(
     height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot, timestamp, difficulty, nonce
 ) {

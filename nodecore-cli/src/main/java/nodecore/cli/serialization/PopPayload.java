@@ -43,7 +43,7 @@ public class PopPayload {
 
     public int encoded_difficulty;
 
-    public int nonce;
+    public long nonce;
 
     public String pop_miner_address;
 

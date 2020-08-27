@@ -7,6 +7,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.AddressCreationException
+import org.veriblock.core.Context
 import org.veriblock.core.EndorsementCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
@@ -49,6 +50,7 @@ class AdminApiServiceTest {
 
     @Before
     fun setUp() {
+        Context.create(defaultTestNetParameters)
         spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
