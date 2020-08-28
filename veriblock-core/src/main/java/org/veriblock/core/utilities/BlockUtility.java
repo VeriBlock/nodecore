@@ -161,8 +161,6 @@ public final class BlockUtility {
      * Determine whether the provided byte[] is a plausible block header, meaning it:
      * - Is the correct length
      * - vBlake hashes to fit under it's embedded difficulty
-     * @param blockHeader
-     * @return
      */
     public static boolean isPlausibleBlockHeader(byte[] blockHeader) {
         if (blockHeader.length != NONCE_END_POSITION + 1 && blockHeader.length != NONCE_END_POSITION_VBLAKE + 1) {
