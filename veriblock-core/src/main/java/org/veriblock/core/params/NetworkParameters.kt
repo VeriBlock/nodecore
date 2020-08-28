@@ -205,7 +205,7 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 
-    override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
+    //override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
 }
 
 object TestNetProgPoWParameters : NetworkParametersTemplate() {
