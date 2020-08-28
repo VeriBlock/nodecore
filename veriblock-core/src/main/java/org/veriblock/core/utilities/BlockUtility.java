@@ -428,7 +428,7 @@ public final class BlockUtility {
 
         if (blockHeader.length != HEADER_SIZE && blockHeader.length != HEADER_SIZE_VBLAKE) {
             throw new IllegalArgumentException("extractFromBlockHeader cannot be called with a block header that is "
-                    + blockHeader.length + " bytes, must be " + HEADER_SIZE + "! (or " + HEADER_SIZE_VBLAKE + " if VBlake");
+                    + blockHeader.length + " bytes, must be " + HEADER_SIZE + "! (or " + HEADER_SIZE_VBLAKE + " if VBlake)");
         }
 
         byte[] extracted = new byte[length];
