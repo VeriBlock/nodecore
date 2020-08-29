@@ -846,6 +846,27 @@ public class Utility {
                (((int)input[3] & 0xFF));
     }
 
+    /**
+     * Converts a big-endian byte[] too an integer
+     *
+     * @param input The byte array to interpret as an integer
+     * @return The integer resulting from interpreting the provided byte array
+     */
+    public static long byteArrayToLong(byte[] input) {
+        if (input.length != 8) {
+            throw new IllegalArgumentException("byteArrayToLong cannot be called with an input which isn't of length 8!");
+        }
+
+        return (((long)input[0] & 0xFF) << 56) |
+            (((long)input[1] & 0xFF) << 48) |
+            (((long)input[2] & 0xFF) << 40) |
+            (((long)input[3] & 0xFF) << 32) |
+            (((long)input[4] & 0xFF) << 24) |
+            (((long)input[5] & 0xFF) << 16) |
+            (((long)input[6] & 0xFF) <<  8) |
+            (((long)input[7] & 0xFF));
+    }
+
 
     /**
      * Converts the given four bytes to big-endian integer
