@@ -29,6 +29,13 @@ public final class BlockUtility {
 
     private static final int[] MASKS = new int[]{0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF};
 
+    private static final long[] NONCE_MASKS = new long[]{
+        0x000000FF00000000L,
+        0x00000000FF000000L,
+        0x0000000000FF0000L,
+        0x000000000000FF00L,
+        0x00000000000000FF};
+
     private static final int HEADER_SIZE = 65;
     private static final int HEADER_SIZE_VBLAKE = 64;
 
@@ -141,15 +148,15 @@ public final class BlockUtility {
 
         if (blockHeight >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
             header[NONCE_START_POSITION] = (byte)(nonce >> 32);
-            shift = 24;
+            shift = 32;
             for (int i = NONCE_START_POSITION + 1; i <= NONCE_END_POSITION; i++) {
-                header[i] = (byte)((nonce & MASKS[i - NONCE_START_POSITION]) >> shift);
+                header[i] = (byte)((nonce & NONCE_MASKS[i - NONCE_START_POSITION]) >> shift);
                 shift -= 8;
             }
         } else {
             shift = 24;
             for (int i = NONCE_START_POSITION; i <= NONCE_END_POSITION_VBLAKE; i++) {
-                header[i] = (byte)((nonce & MASKS[i - NONCE_START_POSITION]) >> shift);
+                header[i] = (byte)((nonce & (MASKS[i - NONCE_START_POSITION])) >> shift);
                 shift -= 8;
             }
         }
@@ -485,7 +492,8 @@ public final class BlockUtility {
             byte[] headerHash = getProgPoWHeaderHash(blockHeader);
             long extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
 
-            long converted = (extractedNonce & 0x0000_000F_FFFF_FFFFL);
+            // Nonce in VeriBlock is only 40 bits (5 bytes)
+            long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
 
             // TODO: Move to crypto
             Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
