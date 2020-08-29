@@ -452,8 +452,8 @@ public final class BlockUtility {
     }
 
     public static byte[] extractHeaderBytesForProgPoWHeaderHashCalculation(byte[] header) {
-        // Chop off the last 4 bytes of the header (nonce)
-        byte[] chopped = new byte[header.length - 4];
+        // Chop off the last 5 bytes of the header (nonce)
+        byte[] chopped = new byte[header.length - 5];
         System.arraycopy(header, 0, chopped, 0, chopped.length);
 
         return chopped;
