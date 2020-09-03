@@ -14,6 +14,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 
 interface SecurityInheritingChain {
@@ -77,13 +78,23 @@ interface SecurityInheritingChain {
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height
      * if [blockHeight] is null).
      */
-    suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction
+    suspend fun getMiningInstruction(blockHeight: Int? = null): ApmInstruction
 
     /**
-     * Submits ATV ([proofOfProof]) and VTBs ([veriBlockPublications]) to the altchain
-     * @return The submission's resulting pop transaction hash
+     * Submits VeriBlock context blocks ([contextBlocks]), ATVs ([atvs]) and VTBs ([vtbs]) to the altchain
+     * @return The submission's resulting first ATV id
      */
-    suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String
+    suspend fun submit(
+        contextBlocks: List<VeriBlockBlock>,
+        atvs: List<AltPublication>,
+        vtbs: List<VeriBlockPublication>
+    )
+
+    suspend fun submitContext(contextBlocks: List<VeriBlockBlock>) = submit(contextBlocks, emptyList(), emptyList())
+
+    suspend fun submitAtvs(atvs: List<AltPublication>) = submit(emptyList(), atvs, emptyList())
+
+    suspend fun submitVtbs(vtbs: List<VeriBlockPublication>) = submit(emptyList(), emptyList(), vtbs)
 
     /**
      * Extracts an address' display string from the given data (coming from the Mining Instruction)

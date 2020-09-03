@@ -243,35 +243,6 @@ class AltchainPopMinerService(
         return operation.id
     }
 
-    override fun resubmit(operation: ApmOperation) {
-        if (operation.publicationData == null) {
-            error("The operation [${operation.id}] has no context to be resubmitted!")
-        }
-
-        // Copy the operation
-        val newOperation = ApmOperation(
-            chain = operation.chain,
-            chainMonitor = operation.chainMonitor,
-            endorsedBlockHeight = operation.endorsedBlockHeight,
-            reconstituting = true
-        )
-
-        // Replicate its state up until prior to the PoP data submission
-        newOperation.setMiningInstruction(operation.miningInstruction!!)
-        newOperation.setTransaction(operation.endorsementTransaction!!)
-        newOperation.setConfirmed()
-        newOperation.setBlockOfProof(operation.blockOfProof!!)
-        newOperation.setMerklePath(operation.merklePath!!)
-        newOperation.setContext(operation.publicationData!!)
-        newOperation.reconstituting = false
-
-        // Submit new operation
-        submit(newOperation)
-        operations[newOperation.id] = newOperation
-
-        logger.info { "Resubmitted operation [${operation.id}] as new operation [${newOperation.id}]" }
-    }
-
     override fun cancelOperation(id: String) {
         val operation = operations[id]
             ?: error(String.format("Could not find operation with id '%s'", id))

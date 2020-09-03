@@ -27,6 +27,7 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 
@@ -128,11 +129,15 @@ class NxtFamilyChain(
         )
     }
 
-    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+    override suspend fun submit(
+        contextBlocks: List<VeriBlockBlock>,
+        atvs: List<AltPublication>,
+        vtbs: List<VeriBlockPublication>
+    ) {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
         val jsonBody = NxtSubmitData(
-            atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
-            vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
+            atv = SerializeDeserializeService.serialize(atvs.first()).toHex(),
+            vtb = vtbs.map { SerializeDeserializeService.serialize(it).toHex() }
         ).toJson()
         val submitResponse: NxtSubmitResponse = httpClient.get("${config.host}/nxt") {
             parameter("requestType", "submitPop")
@@ -142,9 +147,6 @@ class NxtFamilyChain(
         if (submitResponse.error != null) {
             error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
         }
-
-        return submitResponse.transaction?.signature
-            ?: error("Unable to retrieve $key's submission response data")
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String = TODO()

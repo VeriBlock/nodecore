@@ -14,7 +14,7 @@ import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
 import java.time.Duration
 
-val logger = createLogger {}
+private val logger = createLogger {}
 
 const val MAX_TASK_RETRIES = 10
 
