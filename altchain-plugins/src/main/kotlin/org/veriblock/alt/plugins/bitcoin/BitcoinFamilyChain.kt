@@ -13,9 +13,7 @@ import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
-import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.RpcException
-import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.crypto.Crypto
@@ -33,6 +31,7 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
@@ -228,25 +227,28 @@ class BitcoinFamilyChain(
         )
     }
 
-    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
-        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
-        val veriBlockBlocks = proofOfProof.getBlocks().toSet() + veriBlockPublications.flatMap {
-            it.getBlocks()
-        }
+    override suspend fun submit(
+        contextBlocks: List<VeriBlockBlock>,
+        atvs: List<AltPublication>,
+        vtbs: List<VeriBlockPublication>
+    ) {
+        logger.info { "Submitting PoP data to $name daemon at ${config.host}..." }
         val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            veriBlockBlocks.map {
+            contextBlocks.map {
                 SerializeDeserializeService.serialize(it).toHex()
             },
-            veriBlockPublications.map {
+            vtbs.map {
                 SerializeDeserializeService.serialize(
                     it.copy(context = emptyList())
                 ).toHex()
             },
-            listOf(SerializeDeserializeService.serialize(
-                proofOfProof.copy(context = emptyList())
-            ).toHex())
+            atvs.map {
+                SerializeDeserializeService.serialize(
+                    it.copy(context = emptyList())
+                ).toHex()
+            }
         ))
-        return submitPopResponse.atvs.first().id
+        logger.debug { "SubmitPoP Response: $submitPopResponse" }
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {

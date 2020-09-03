@@ -115,25 +115,16 @@ class MockMinerService(
         val lastKnownBtcBlock = bitcoinBlockchain.get(Sha256Hash.wrap(lastKnownBtcBlockHash))!!
         val lastKnownVbkBlock = veriBlockBlockchain.get(VBlakeHash.wrap(lastKnownVbkBlockHash))!!
 
-        val vtb = vpm.mine(
-            vbkTip,
-            lastKnownVbkBlock,
-            lastKnownBtcBlock,
-            key
-        )
-        val vtbs = listOf(vtb)
-        operation.setContext(vtbs)
-
-        val submissionResult = try {
+        try {
             runBlocking {
-                chain.submit(atv, vtbs)
+                chain.submitAtvs(listOf(atv))
             }
         } catch (e: Exception) {
             operation.fail(e.message ?: "Unknown reason")
             throw e
         }
-        operation.setAtvId(submissionResult)
-        logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
+        operation.setAtvId(atv.getId().toHex())
+        logger.info { "Mock mine operation completed successfully!" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
         operation.setPayoutData("", 0)
@@ -208,9 +199,6 @@ class MockMinerService(
             context
         )
     }
-
-    override fun resubmit(operation: ApmOperation) =
-        throw NotImplementedException("Operation not supported in the Mock Miner")
 
     override fun cancelOperation(id: String) =
         throw NotImplementedException("Operation not supported in the Mock Miner")

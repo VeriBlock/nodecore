@@ -48,7 +48,6 @@ class ApmOperationExplainer(
     private fun getStateFromFailedOperation(operation: ApmOperation): MiningOperationState {
         return when {
             operation.atvId != null -> ApmOperationState.SUBMITTED_POP_DATA
-            operation.publicationData != null -> ApmOperationState.CONTEXT
             operation.merklePath != null -> ApmOperationState.PROVEN
             operation.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
             operation.endorsementTransaction != null -> ApmOperationState.ENDORSEMENT_TRANSACTION
@@ -81,10 +80,6 @@ class ApmOperationExplainer(
         }
         ApmOperationState.PROVEN ->
             "Merkle path has been verified"
-        ApmOperationState.KEYSTONE_OF_PROOF ->
-            "${context.vbkTokenName} Keystone of Proof: ${operation.keystoneOfProof?.hash}"
-        ApmOperationState.CONTEXT ->
-            "Retrieved ${operation.publicationData?.size} VTBs"
         ApmOperationState.SUBMITTED_POP_DATA ->
             "VTBs submitted to ${operation.chain.name}! ${operation.chain.name} ATV id: ${operation.atvId}"
         ApmOperationState.ATV_CONFIRMED ->
@@ -103,10 +98,6 @@ class ApmOperationExplainer(
     private fun MiningOperationState.getCurrentHint(operation: ApmOperation) = operation.failureReason ?: when (this) {
         ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
             "Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block"
-        ApmOperationState.KEYSTONE_OF_PROOF ->
-            "Waiting for the next ${context.vbkTokenName} keystone"
-        ApmOperationState.CONTEXT ->
-            "Waiting for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}"
         ApmOperationState.SUBMITTED_POP_DATA ->
             "Submitting PoP Data to ${operation.chain.name}"
         ApmOperationState.ATV_CONFIRMED ->
@@ -126,10 +117,6 @@ class ApmOperationExplainer(
         when (this) {
             ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
                 "Will wait for ${context.vbkTokenName} endorsement transaction to appear in a block"
-            ApmOperationState.KEYSTONE_OF_PROOF ->
-                "Will wait for the next ${context.vbkTokenName} keystone after the endorsement transaction's block"
-            ApmOperationState.CONTEXT ->
-                "Will wait for the VeriBlock network to build the VTBs to be submitted to ${operation.chain.name}"
             ApmOperationState.SUBMITTED_POP_DATA ->
                 "Will submit PoP Data to ${operation.chain.name}"
             ApmOperationState.ATV_CONFIRMED ->

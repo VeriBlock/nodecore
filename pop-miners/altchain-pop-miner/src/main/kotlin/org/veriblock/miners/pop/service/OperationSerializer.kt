@@ -17,18 +17,10 @@ import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.BitcoinBlock
-import org.veriblock.sdk.models.BitcoinTransaction
-import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
-import org.veriblock.sdk.models.VeriBlockPopTransaction
-import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.time.LocalDateTime
-import java.util.ArrayList
 
 class OperationSerializer(
     private val pluginService: PluginService,
@@ -40,7 +32,7 @@ class OperationSerializer(
             chainId = operation.chain.key,
             state = operation.state.id,
             blockHeight = operation.endorsedBlockHeight ?: 0,
-            publicationData = operation.miningInstruction?.let {
+            miningInstruction = operation.miningInstruction?.let {
                 serialize(it.publicationData)
             } ?: OperationProto.PublicationData(),
             publicationContext = operation.miningInstruction?.context ?: emptyList(),
@@ -50,12 +42,6 @@ class OperationSerializer(
                 SerializeDeserializeService.serializeHeaders(it)
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.toCompactString() ?: "",
-            keystoneOfProof = operation.keystoneOfProof?.let {
-                SerializeDeserializeService.serializeHeaders(it)
-            } ?: ByteArray(0),
-            veriblockPublications = operation.publicationData?.map {
-                serialize(it)
-            } ?: emptyList(),
             atvId = operation.atvId ?: "",
             atvBlockHash = operation.atvBlockHash ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
@@ -84,11 +70,11 @@ class OperationSerializer(
             createdAt = createdAt,
             reconstituting = true
         ).apply {
-            if (serialized.publicationData.header.isNotEmpty()) {
+            if (serialized.miningInstruction.header.isNotEmpty()) {
                 setMiningInstruction(
                     ApmInstruction(
                         serialized.blockHeight,
-                        deserialize(serialized.publicationData),
+                        deserialize(serialized.miningInstruction),
                         serialized.publicationContext,
                         serialized.publicationBtcContext
                     )
@@ -112,16 +98,6 @@ class OperationSerializer(
 
             if (serialized.merklePath.isNotEmpty()) {
                 setMerklePath(VeriBlockMerklePath(serialized.merklePath))
-            }
-
-            if (serialized.keystoneOfProof.isNotEmpty()) {
-                setKeystoneOfProof(SerializeDeserializeService.parseVeriBlockBlock(serialized.keystoneOfProof))
-            }
-
-            if (serialized.veriblockPublications.isNotEmpty()) {
-                setContext(serialized.veriblockPublications.map {
-                    deserialize(it)
-                })
             }
 
             if (serialized.atvId.isNotEmpty()) {
@@ -151,68 +127,6 @@ class OperationSerializer(
             header = data.header,
             payoutInfo = data.payoutInfo,
             veriblockContext = data.contextInfo
-        )
-    }
-
-    private fun serialize(publication: VeriBlockPublication): OperationProto.VeriBlockPublication {
-        return OperationProto.VeriBlockPublication(
-            transaction = serialize(publication.transaction),
-            merklePath = publication.merklePath.toCompactString(),
-            containingBlock = SerializeDeserializeService.serializeHeaders(publication.containingBlock),
-            context = publication.context.map { SerializeDeserializeService.serializeHeaders(it) }
-        )
-    }
-
-    private fun serialize(tx: VeriBlockPopTransaction): OperationProto.PopTransaction {
-        return OperationProto.PopTransaction(
-            txId = tx.id.toString(),
-            address = tx.address.toString(),
-            publishedBlock = SerializeDeserializeService.serializeHeaders(tx.publishedBlock),
-            bitcoinTx = tx.bitcoinTransaction.rawBytes,
-            merklePath = tx.merklePath.toCompactString(),
-            blockOfProof = tx.blockOfProof.raw,
-            bitcoinContext = tx.blockOfProofContext.map { it.raw },
-            signature = tx.signature,
-            publicKey = tx.publicKey,
-            networkByte = tx.networkByte?.toInt() ?: 0
-        )
-    }
-
-    private fun deserialize(serialized: OperationProto.PopTransaction): VeriBlockPopTransaction {
-        val context = ArrayList<BitcoinBlock>(serialized.bitcoinContext.size)
-        for (raw in serialized.bitcoinContext) {
-            context.add(SerializeDeserializeService.parseBitcoinBlock(raw))
-        }
-
-        var networkByte: Byte? = null
-        if (serialized.networkByte > 0) {
-            networkByte = serialized.networkByte.toByte()
-        }
-
-        return VeriBlockPopTransaction(
-            Address(serialized.address),
-            SerializeDeserializeService.parseVeriBlockBlock(serialized.publishedBlock),
-            BitcoinTransaction(serialized.bitcoinTx),
-            MerklePath(serialized.merklePath),
-            SerializeDeserializeService.parseBitcoinBlock(serialized.blockOfProof),
-            context,
-            serialized.signature,
-            serialized.publicKey,
-            networkByte
-        )
-    }
-
-    private fun deserialize(serialized: OperationProto.VeriBlockPublication): VeriBlockPublication {
-        val context = ArrayList<VeriBlockBlock>(serialized.context.size)
-        for (raw in serialized.context) {
-            context.add(SerializeDeserializeService.parseVeriBlockBlock(raw))
-        }
-
-        return VeriBlockPublication(
-            deserialize(serialized.transaction),
-            VeriBlockMerklePath(serialized.merklePath),
-            SerializeDeserializeService.parseVeriBlockBlock(serialized.containingBlock),
-            context
         )
     }
 
