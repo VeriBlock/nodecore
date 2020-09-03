@@ -117,11 +117,13 @@ open class Shell(
         startRunning()
 
         while (running) {
-            val input = readLine()
+            var input = readLine()
                 ?: break // Reached EOF/interrupt
             if (input.isEmpty())
                 continue
-
+            
+            input = input.trim();
+            
             val stopwatch = Stopwatch.createStarted()
 
             var clear: Boolean? = null
