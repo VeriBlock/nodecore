@@ -43,6 +43,9 @@ import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+private const val SERIALIZATION_VERSION = 0x01
+private val SERIALIZATION_VERSION_BYTES = Utility.toByteArray(SERIALIZATION_VERSION)
+
 object SerializeDeserializeService {
 
     fun serialize(veriBlockPoPTransaction: VeriBlockPopTransaction, stream: OutputStream) {
@@ -115,6 +118,7 @@ object SerializeDeserializeService {
     }
 
     fun serialize(veriBlockPublication: VeriBlockPublication, stream: OutputStream) {
+        stream.write(SERIALIZATION_VERSION_BYTES)
         serialize(veriBlockPublication.transaction, stream)
         serialize(veriBlockPublication.merklePath, stream)
         serialize(veriBlockPublication.containingBlock, stream)
@@ -394,6 +398,7 @@ object SerializeDeserializeService {
     }
 
     fun serialize(altPublication: AltPublication, stream: ByteArrayOutputStream) {
+        stream.write(SERIALIZATION_VERSION_BYTES)
         serialize(altPublication.transaction, stream)
         serialize(altPublication.merklePath, stream)
         serialize(altPublication.containingBlock, stream)
