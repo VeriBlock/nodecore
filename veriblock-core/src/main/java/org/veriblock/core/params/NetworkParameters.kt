@@ -229,14 +229,14 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
         14304633
     )
-    override val bitcoinOriginBlockHeight = 1772359
+    override val bitcoinOriginBlockHeight = 1831239
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
-        Sha256Hash.wrap("000000000B9EED5D8006046CCB7F3F36D8116D9477426EB922702C596DC5E410"),
-        Sha256Hash.wrap("11AD448E7713A35E4587352ABB4EA843373ADD517C2698042D3371B3106FAF23"),
-        1594743345,
-        420380176,
-        1105743762
+        Sha256Hash.wrap("00000000000003679F7D5A0DF9DAA5C6B038A03DB5086859799E5D236FABB1FA"),
+        Sha256Hash.wrap("0A06A77D9AD07C3A44BE03E74427B39D1A6CFCCA4DC5477B31E73A5BE0BA8886"),
+        1599156998,
+        436469756,
+        1151429633
     )
     override val protocolVersion: Int = 2
 
