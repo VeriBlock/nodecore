@@ -36,6 +36,7 @@ class CommandFactory {
             throw malformedCommandError()
         }
 
+        request = request.trim();
         val parts = request.split(" ").dropLastWhile { it.isEmpty() }
         if (parts.isEmpty()) {
             throw malformedCommandError()
