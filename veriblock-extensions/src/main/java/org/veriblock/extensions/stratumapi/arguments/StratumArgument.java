@@ -33,7 +33,7 @@ public abstract class StratumArgument {
         JOB_ID("int|zero_or_greater", StratumArgumentJobId.class),
         SUBSCRIPTION_TRIPLE("string", StratumArgumentSubscriptionTriple.class),
         ERROR("string", StratumArgumentError.class),
-        SYNTHETIC_EXTRA_NONCE("string|hexadecimal|length:8", StratumArgumentSyntheticExtraNonce.class), // 4 bytes TODO FIX
+        SYNTHETIC_EXTRA_NONCE("string|hexadecimal|length:6", StratumArgumentSyntheticExtraNonce.class), // 3 bytes
         SEED_HASH("string|hexadecimal|length:64", StratumArgumentSeedHash.class), // 32 bytes
         HEADER_HASH("string|hexadecimal|length:64", StratumArgumentHeaderHash.class), // 32 bytes
         BOOLEAN("boolean", StratumArgumentBoolean.class),
