@@ -410,21 +410,30 @@ public final class BlockUtility {
             nonceBytes = extractFromBlockHeader(blockHeader, NONCE_START_POSITION,
                 NONCE_END_POSITION - NONCE_START_POSITION + 1);
             initialShift = 32;
+
+            long nonce = 0;
+            int bytePointer = 0;
+            for (int shift = initialShift; shift >= 0; shift-=8) {
+                nonce += (0xFFL & (nonceBytes[bytePointer])) << shift;
+                bytePointer++;
+            }
+
+            return nonce;
         } else {
             nonceBytes = extractFromBlockHeader(blockHeader, NONCE_START_POSITION,
                 NONCE_END_POSITION_VBLAKE - NONCE_START_POSITION + 1);
             initialShift = 24;
+
+            int nonce = 0;
+            int bytePointer = 0;
+            for (int shift = initialShift; shift >= 0; shift-=8) {
+                nonce += (0xFF & (nonceBytes[bytePointer])) << shift;
+                bytePointer++;
+            }
+
+            return nonce;
         }
 
-
-        int nonce = 0;
-        int bytePointer = 0;
-        for (int shift = initialShift; shift >= 0; shift-=8) {
-            nonce += (0xFF & (nonceBytes[bytePointer])) << shift;
-            bytePointer++;
-        }
-
-        return nonce;
     }
 
     private static byte[] extractFromBlockHeader(byte[] blockHeader, int offset, int length) throws IllegalArgumentException {
