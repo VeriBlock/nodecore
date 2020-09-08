@@ -14,6 +14,7 @@ import kotlinx.coroutines.CancellationException
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toBase58
@@ -109,7 +110,7 @@ class NodeCoreGateway(
                 publicationData = publicationData,
                 minerAddressBytes = reply.popMinerAddress.toByteArray(),
                 lastBitcoinBlock = reply.lastKnownBlock.header.toByteArray(),
-                endorsedBlockHeader = Arrays.copyOfRange(publicationData, 0, 64),
+                endorsedBlockHeader = Arrays.copyOfRange(publicationData, 0, BlockUtility.getBlockHeaderLength(reply.blockHeight)),
                 endorsedBlockContextHeaders = reply.lastKnownBlockContextList.map { it.header.toByteArray() }
             )
             return instruction
