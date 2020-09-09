@@ -34,9 +34,9 @@ import java.util.stream.Stream;
 public final class ProgPoW {
 
     public static int PROGPOW_PERIOD = 10;
-    public static int PROGPOW_LANES = 15;
+    public static int PROGPOW_LANES = 16;
     public static int PROGPOW_REGS = 32;
-    public static int PROGPOW_DAG_LOADS = 4;
+    public static int PROGPOW_DAG_LOADS = 8;
     public static int PROGPOW_CACHE_BYTES = 16 * 1024;
     public static int PROGPOW_CNT_DAG = 64;
     public static int PROGPOW_CNT_CACHE = 11;
