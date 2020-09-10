@@ -36,14 +36,14 @@ public final class ProgPoW {
     public static int PROGPOW_PERIOD = 10;
     public static int PROGPOW_LANES = 16;
     public static int PROGPOW_REGS = 32;
-    public static int PROGPOW_DAG_LOADS = 8;
+    public static int PROGPOW_DAG_LOADS = 4;
     public static int PROGPOW_CACHE_BYTES = 16 * 1024;
     public static int PROGPOW_CNT_DAG = 64;
     public static int PROGPOW_CNT_CACHE = 11;
     public static int PROGPOW_CNT_MATH = 18;
     public static UInt32 FNV_PRIME = UInt32.fromHexString("0x1000193");
     public static Bytes FNV_OFFSET_BASIS = Bytes.fromHexString("0x811c9dc5");
-    public static int HASH_BYTES = 64;
+    public static int HASH_BYTES = 128;
     public static int HASH_WORDS = 16;
     public static int DATASET_PARENTS = 256;
 
