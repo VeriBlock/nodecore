@@ -9,7 +9,7 @@ abstract class ChainConfig {
     abstract val neededConfirmations: Int
     abstract val spFinalityDelay: Int
     abstract val payoutAddress: String?
-    abstract val payoutInterval: Int
+    abstract val payoutDelay: Int
     abstract val blockRoundIndices: List<Int>
     open val autoMineRounds: MutableSet<Int> = HashSet()
 

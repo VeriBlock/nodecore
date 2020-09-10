@@ -86,7 +86,7 @@ class ApmOperationExplainer(
             "ATV confirmed in ${operation.chain.name} block ${operation.atvBlockHash}"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
-                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
+                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
                 val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
                 "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address"
             } ?: "Payout detected in ${operation.chain.name}"
@@ -104,7 +104,7 @@ class ApmOperationExplainer(
             "Waiting for the ${operation.chain.name} ATV ${operation.atvId} to be confirmed"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
-                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
+                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
                 val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
                 "Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
             } ?: "Waiting for reward to be paid"
@@ -123,7 +123,7 @@ class ApmOperationExplainer(
                 "Will wait for the ${operation.chain.name} ATV to be confirmed"
             ApmOperationState.PAYOUT_DETECTED -> {
                 operation.miningInstruction?.let { miningInstruction ->
-                    val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutInterval()
+                    val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
                     val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
                     "Will wait for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
                 } ?: "Will wait for reward to be paid"

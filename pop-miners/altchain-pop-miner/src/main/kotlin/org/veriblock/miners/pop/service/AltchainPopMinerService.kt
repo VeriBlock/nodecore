@@ -210,7 +210,7 @@ class AltchainPopMinerService(
             return CheckResult.Failure(MineException("The chain ${chain.name} is not synchronized: ${monitor.latestBlockChainInfo.getSynchronizedMessage()}"))
         }
         // Verify if the block is too old to be mined
-        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutInterval() * 0.8) {
+        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
             return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
         }
         return CheckResult.Success()

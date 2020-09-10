@@ -11,7 +11,7 @@ class TestConfig(
     override val keystonePeriod: Int = 10,
     override val neededConfirmations: Int = 20,
     override val spFinalityDelay: Int = 32,
-    override val payoutInterval: Int = 100,
+    override val payoutDelay: Int = 100,
     override val blockRoundIndices: List<Int> = (1..keystonePeriod).map { 1 }.toList(),
     val autoMinePeriod: Int? = null
 ) : ChainConfig() {
@@ -23,7 +23,7 @@ class TestConfig(
         configuration.keystonePeriod ?: 5,
         configuration.neededConfirmations ?: 10,
         configuration.spFinalityDelay ?: 32,
-        configuration.payoutInterval ?: 100,
+        configuration.payoutDelay ?: 100,
         configuration.blockRoundIndices ?: listOf(4, 1, 2, 1, 2),
         configuration.extraConfig["autoMinePeriod"]?.toIntOrNull()
     )

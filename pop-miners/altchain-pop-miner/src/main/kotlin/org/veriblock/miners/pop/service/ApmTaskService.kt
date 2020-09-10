@@ -256,10 +256,10 @@ class ApmTaskService(
             //}
             //logger.info(operation, "Successfully confirmed $chainName endorsed block ${endorsedBlock.hash}!")
 
-            val payoutBlockHeight = endorsedBlockHeight + operation.chain.getPayoutInterval()
+            val payoutBlockHeight = endorsedBlockHeight + operation.chain.getPayoutDelay()
             logger.debug(
                 operation,
-                "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutInterval()})"
+                "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutDelay()})"
             )
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
             val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight)
