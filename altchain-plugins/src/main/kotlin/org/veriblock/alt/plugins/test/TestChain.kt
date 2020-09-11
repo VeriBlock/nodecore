@@ -23,6 +23,7 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -113,6 +114,14 @@ class TestChain(
 
     override fun getPayoutInterval(): Int {
         return config.payoutInterval
+    }
+
+    override suspend fun getBestKnownVbkBlockHash(): String {
+        return getLastVeriBlockBlockHash()
+    }
+
+    override suspend fun getPopMempool(): PopMempool {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {

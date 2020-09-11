@@ -23,6 +23,7 @@ import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
+import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -190,6 +191,14 @@ class BitcoinFamilyChain(
 
     override fun getPayoutInterval(): Int {
         return config.payoutInterval
+    }
+
+    override suspend fun getBestKnownVbkBlockHash(): String {
+        return rpcRequest("getvbkbestblockhash")
+    }
+
+    override suspend fun getPopMempool(): PopMempool {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
