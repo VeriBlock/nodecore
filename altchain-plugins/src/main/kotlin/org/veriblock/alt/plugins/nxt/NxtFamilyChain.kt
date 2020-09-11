@@ -20,6 +20,7 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.plugin.PluginConfig
@@ -81,6 +82,14 @@ class NxtFamilyChain(
 
     override fun getPayoutDelay(): Int {
         return config.payoutDelay
+    }
+
+    override suspend fun getBestKnownVbkBlockHash(): String {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getPopMempool(): PopMempool {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {

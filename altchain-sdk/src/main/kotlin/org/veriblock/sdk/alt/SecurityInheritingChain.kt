@@ -10,6 +10,7 @@ package org.veriblock.sdk.alt
 
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
+import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
@@ -73,6 +74,16 @@ interface SecurityInheritingChain {
      * Returns this security inheriting chain's payout delay, in blocks.
      */
     fun getPayoutDelay(): Int
+
+    /**
+     * Returns this security inheriting chain's best known VeriBlock Block hash.
+     */
+    suspend fun getBestKnownVbkBlockHash(): String
+
+    /**
+     * Returns this security inheriting chain's PoP mempool (ATVs and VTBs).
+     */
+    suspend fun getPopMempool(): PopMempool
 
     /**
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height

@@ -127,10 +127,9 @@ class SecurityInheritingMonitor(
             while (!isReady()) {
                 delay(20_000L)
             }
-            launch {
-                // Start submitting context and VTBs
-                submitContextAndVtbs()
-            }
+            // Start submitting context and VTBs
+            launch { submitContext() }
+            launch { submitVtbs() }
         }
     }
 
@@ -254,7 +253,33 @@ class SecurityInheritingMonitor(
         firstPoll = false
     }
 
-    private suspend fun submitContextAndVtbs() = coroutineScope {
+    private suspend fun submitContext() = coroutineScope {
+        logger.info("Starting continuous submission of VBK Context for ${chain.name}")
+        EventBus.newBestBlockChannel.asFlow().collect {
+            val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
+            val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
+                ?: return@collect
+            val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
+                ?: return@collect
+
+            if (bestKnownBlock.height == bestBlock.height) {
+                return@collect
+            }
+
+            val contextBlocks = generateSequence(bestBlock) {
+                nodeCoreLiteKit.blockChain.get(it.previousBlock)
+            }.takeWhile {
+                it.hash == bestKnownBlockHash
+            }.sortedBy {
+                it.height
+            }.toList()
+
+            chain.submitContext(contextBlocks)
+            logger.info { "Submitted ${contextBlocks.size} VBK context blocks to ${chain.name}." }
+        }
+    }
+
+    private suspend fun submitVtbs() = coroutineScope {
         logger.info("Starting continuous submission of VBK Context and VTBs for ${chain.name}")
         while (true) {
             try {
@@ -282,14 +307,9 @@ class SecurityInheritingMonitor(
                 verifyPublications(instruction, vtbs)
 
                 logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
-                // Collect context blocks from the actual mining instruction and the retrieved VTBs
-                val contextBlocks = instruction.context.mapNotNull {
-                    nodeCoreLiteKit.blockChain.get(VBlakeHash.wrap(it))
-                } + vtbs.flatMap {
-                    it.getBlocks()
-                }
+
                 // Submit them to the blockchain
-                chain.submit(contextBlocks, emptyList(), vtbs)
+                chain.submitVtbs(vtbs)
                 logger.info { "Context submitted to ${chain.name}!" }
             } catch (e: Exception) {
                 logger.warn(e) { "Error while submitting Context and VTBs to ${chain.name}" }
