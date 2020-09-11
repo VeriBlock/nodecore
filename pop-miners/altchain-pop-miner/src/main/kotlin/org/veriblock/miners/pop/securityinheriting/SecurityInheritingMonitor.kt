@@ -280,7 +280,7 @@ class SecurityInheritingMonitor(
     }
 
     private suspend fun submitVtbs() = coroutineScope {
-        logger.info("Starting continuous submission of VBK Context and VTBs for ${chain.name}")
+        logger.info("Starting continuous submission of VTBs for ${chain.name}")
         while (true) {
             try {
                 val instruction = chain.getMiningInstruction()
