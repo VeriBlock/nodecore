@@ -17,6 +17,7 @@ import org.veriblock.core.tuweni.bytes.Bytes32;
 import org.veriblock.core.tuweni.ethash.EthHash;
 import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.veriblock.core.tuweni.units.bigints.UInt64;
+import org.veriblock.core.utilities.Utility;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -38,12 +39,13 @@ public final class ProgPoW {
     public static int PROGPOW_REGS = 32;
     public static int PROGPOW_DAG_LOADS = 4;
     public static int PROGPOW_CACHE_BYTES = 16 * 1024;
-    public static int PROGPOW_CNT_DAG = 64;
+    public static int PROGPOW_CNT_DAG = 128;
     public static int PROGPOW_CNT_CACHE = 11;
-    public static int PROGPOW_CNT_MATH = 18;
+    public static int PROGPOW_CNT_MATH = 20;
+
     public static UInt32 FNV_PRIME = UInt32.fromHexString("0x1000193");
     public static Bytes FNV_OFFSET_BASIS = Bytes.fromHexString("0x811c9dc5");
-    public static int HASH_BYTES = 128;
+    public static int HASH_BYTES = 64;
     public static int HASH_WORDS = 16;
     public static int DATASET_PARENTS = 256;
 
@@ -65,6 +67,15 @@ public final class ProgPoW {
         Function<Integer, Bytes> dagLookupFunction) {
         UInt32[][] mix = new UInt32[PROGPOW_LANES][PROGPOW_REGS];
 
+        System.out.println("PROGPOW_PERIOD: " + PROGPOW_PERIOD);
+        System.out.println("PROGPOW_LANES: " + PROGPOW_LANES);
+        System.out.println("PROGPOW_REGS: " + PROGPOW_REGS);
+        System.out.println("PROGPOW_DAG_LOADS: " + PROGPOW_DAG_LOADS);
+        System.out.println("PROGPOW_CACHE_BYTES: " + PROGPOW_CACHE_BYTES);
+        System.out.println("PROGPOW_CNT_DAG: " + PROGPOW_CNT_DAG);
+        System.out.println("PROGPOW_CNT_CACHE: " + PROGPOW_CNT_CACHE);
+        System.out.println("PROGPOW_CNT_MATH: " + PROGPOW_CNT_MATH);
+
         // keccak(header..nonce)
         Bytes32 seed_256 = Keccakf800.keccakF800Progpow(header, nonce, Bytes32.ZERO);
 
@@ -79,14 +90,32 @@ public final class ProgPoW {
         long seed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
 
         // Manually zero out the first bit of seed to reduce seed space to 2^62
-        seed = seed & 0x3FFFFFFFFFFFFFFFL;
+        seed = seed & 0x007FFFFFFFFFFFFFL;
+
+        // System.out.println("Seed hash: " + Long.toHexString(seed));
 
         // initialize mix for all lanes
-        for (int l = 0; l < PROGPOW_LANES; l++)
+        for (int l = 0; l < PROGPOW_LANES; l++) {
             mix[l] = fillMix(UInt64.fromBytes(Bytes.wrap(ByteBuffer.allocate(8).putLong(seed).array())), UInt32.valueOf(l));
+            // System.out.println("Finished filling mix(" + Utility.bytesToHex((ByteBuffer.allocate(8).putLong(seed).array())) + ", " + l + ")!");
+            // System.out.println("mix[" + l + "]: ");
+            for (int k = 0; k < mix[l].length; k++) {
+                // System.out.println("\tmix[" + l + "][" + k + "]: " + Utility.bytesToHex(mix[l][k].toBytes().toArray()));
+            }
+        }
+
         // execute the randomly generated inner loop
-        for (int i = 0; i < PROGPOW_CNT_DAG; i++)
+        for (int i = 0; i < PROGPOW_CNT_DAG; i++) {
+            // System.out.println("A_Loop: " + i);
             progPowLoop(blockNumber, UInt32.valueOf(i), mix, dag, dagLookupFunction);
+            // System.out.println("After A_Loop " + i + ":");
+            for (int z = 0; z < mix.length; z++) {
+                // System.out.println("mix[" + z + "]: ");
+                for (int k = 0; k < mix[z].length; k++) {
+                    // System.out.println("\tmix[" + z + "][" + k + "]: " + Utility.bytesToHex(mix[z][k].toBytes().toArray()));
+                }
+            }
+        }
 
         // Reduce mix data to a per-lane 32-bit digest
         UInt32[] digest_lane = new UInt32[PROGPOW_LANES];
@@ -200,6 +229,7 @@ public final class ProgPoW {
         Function<Integer, Bytes> dagLookupFunction) {
 
         long dagBytes = EthHash.getFullSize(blockNumber);
+        System.out.println("dagBytes: " + dagBytes);
 
         // dag_entry holds the 256 bytes of data loaded from the DAG
         UInt32[][] dag_entry = new UInt32[PROGPOW_LANES][PROGPOW_DAG_LOADS];
@@ -209,6 +239,8 @@ public final class ProgPoW {
         int dag_addr_base = mix[loop.intValue() % PROGPOW_LANES][0]
             .mod(UInt32.valueOf(Math.toIntExact(dagBytes / (PROGPOW_LANES * PROGPOW_DAG_LOADS * Integer.BYTES))))
             .intValue();
+
+        System.out.println("dag_addr_base: " + dag_addr_base);
         //mix[loop.intValue()%PROGPOW_LANES][0].mod(UInt32.valueOf((int) dagBytes / (PROGPOW_LANES*PROGPOW_DAG_LOADS*4))).intValue();
         Bytes lookupHolder = null;
         UInt32 lastLookup = null;
