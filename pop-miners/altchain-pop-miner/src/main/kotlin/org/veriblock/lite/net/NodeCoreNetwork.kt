@@ -24,6 +24,7 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.lite.store.VERIBLOCK_BLOCK_STORE_CAPACITY
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
@@ -308,7 +309,7 @@ class NodeCoreNetwork(
     private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
         logger.debug { "Reconciling VBK blockchain..." }
         try {
-            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 500
+            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > VERIBLOCK_BLOCK_STORE_CAPACITY
             if (tooFarBehind) {
                 logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
                 blockChain.reset()
