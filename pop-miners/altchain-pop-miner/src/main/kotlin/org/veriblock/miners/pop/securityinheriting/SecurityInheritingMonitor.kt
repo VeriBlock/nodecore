@@ -255,15 +255,28 @@ class SecurityInheritingMonitor(
 
     private suspend fun submitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK Context for ${chain.name}")
-        EventBus.newBestBlockChannel.asFlow().collect {
+        val subscription = EventBus.newBestBlockChannel.openSubscription()
+        for (newBlock in subscription) {
             val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
             val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
-                ?: return@collect
+            if (bestKnownBlock == null) {
+                val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(bestKnownBlockHash)
+                    ?: continue
+
+                val gap = newBlock.height - networkBestKnownBlock.height
+                logger.warn {
+                    "Unable to find ${chain.name}'s best known block $bestKnownBlockHash in the local blockchain store." +
+                        " There's a context gap of $gap blocks. Skipping VBK block context submission..."
+                }
+                subscription.cancel()
+                continue
+            }
+
             val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
-                ?: return@collect
+                ?: continue
 
             if (bestKnownBlock.height == bestBlock.height) {
-                return@collect
+                continue
             }
 
             val contextBlocks = generateSequence(bestBlock) {
