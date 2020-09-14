@@ -11,6 +11,7 @@ data class SecurityInheritingBlock(
     val difficulty: Double,
     val coinbaseTransactionId: String,
     val transactionIds: List<String>,
+    val veriBlockPublicationIds: List<String>,
 
     // Previous keystone references
     val previousKeystone: String? = null,

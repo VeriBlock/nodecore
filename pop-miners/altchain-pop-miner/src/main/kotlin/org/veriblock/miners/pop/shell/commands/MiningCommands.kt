@@ -61,26 +61,6 @@ fun CommandFactory.miningCommands(
     }
 
     command(
-        name = "Resubmit",
-        form = "resubmit",
-        description = "Submits the PoP data of a copy of an already complete proof of proof mining operation",
-        parameters = listOf(
-            CommandParameter("id", CommandParameterMappers.STRING)
-        )
-    ) {
-        val id: String = getParameter("id")
-        val operation = minerService.getOperation(id)
-        if (operation == null) {
-            printInfo("Operation $id not found")
-            failure()
-        } else {
-            minerService.resubmit(operation)
-            success()
-        }
-    }
-
-
-    command(
         name = "List Operations",
         form = "listoperations",
         description = "Lists the currently running operations since the PoP miner started",

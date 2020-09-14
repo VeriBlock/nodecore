@@ -45,13 +45,9 @@ class ApmOperation(
         private set
     var merklePath: VeriBlockMerklePath? = null
         private set
-    var keystoneOfProof: VeriBlockBlock? = null
+    var atvId: String? = null
         private set
-    var publicationData: List<VeriBlockPublication>? = null
-        private set
-    var popTxId: String? = null
-        private set
-    var popTxBlockHash: String? = null
+    var atvBlockHash: String? = null
         private set
     var payoutBlockHash: String? = null
         private set
@@ -115,40 +111,24 @@ class ApmOperation(
         setState(ApmOperationState.PROVEN)
     }
 
-    fun setKeystoneOfProof(keystoneOfProof: VeriBlockBlock) {
+    fun setAtvId(atvId: String) {
         if (state != ApmOperationState.PROVEN) {
-            error("Trying to set keystone of proof without having proven the transaction")
+            error("Trying to set ATV id without having proven the transaction")
         }
-        this.keystoneOfProof = keystoneOfProof
-        setState(ApmOperationState.KEYSTONE_OF_PROOF)
-    }
-
-    fun setContext(context: List<VeriBlockPublication>) {
-        if (state != ApmOperationState.KEYSTONE_OF_PROOF) {
-            error("Trying to set context without the keystone of proof")
-        }
-        this.publicationData = context
-        setState(ApmOperationState.CONTEXT)
-    }
-
-    fun setPopTxId(popTxId: String) {
-        if (state != ApmOperationState.CONTEXT) {
-            error("Trying to set PoP transaction id without having the context")
-        }
-        this.popTxId = popTxId
+        this.atvId = atvId
         setState(ApmOperationState.SUBMITTED_POP_DATA)
     }
 
-    fun setPopTxBlockHash(popTxBlockHash: String) {
+    fun setAtvBlockHash(atvBlockHash: String) {
         if (state != ApmOperationState.SUBMITTED_POP_DATA) {
             error("Trying to set PoP transaction's block hash without having the PoP transaction id")
         }
-        this.popTxBlockHash = popTxBlockHash
-        setState(ApmOperationState.POP_TX_CONFIRMED)
+        this.atvBlockHash = atvBlockHash
+        setState(ApmOperationState.ATV_CONFIRMED)
     }
 
     fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
-        if (state != ApmOperationState.POP_TX_CONFIRMED) {
+        if (state != ApmOperationState.ATV_CONFIRMED) {
             error("Trying to set Payout Data without having the Proof of Proof id")
         }
         this.payoutBlockHash = payoutBlockHash
@@ -181,12 +161,11 @@ class ApmOperation(
         merklePath?.let {
             result["merklePath"] = it.toCompactString()
         }
-        publicationData?.let { context ->
-            result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
-            result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
+        atvId?.let {
+            result["altAtvId"] = it
         }
-        popTxId?.let {
-            result["altProofOfProofTxId"] = it
+        atvBlockHash?.let {
+            result["altAtvBlockHash"] = it
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it

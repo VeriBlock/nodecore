@@ -23,6 +23,7 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -31,6 +32,7 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import java.util.TreeMap
 import kotlin.random.Random
@@ -51,6 +53,7 @@ class TestChain(
     private val operations = HashMap<String, String>()
     private val blocks = TreeMap<Int, TestBlock>()
     private val transactions = HashMap<String, SecurityInheritingTransaction>()
+    private val publishedAtvs = ArrayList<AltPublication>()
 
     private val startingHeight = (System.currentTimeMillis() / 10000).toInt() - 20
 
@@ -64,7 +67,7 @@ class TestChain(
         body = JsonRpcRequestBody("getlastbitcoinblock", Any()).toJson()
     }.handle<BtcBlockData>().hash
 
-    private suspend fun getLastBlockHash() = httpClient.post<RpcResponse>(config.host) {
+    private suspend fun getLastVeriBlockBlockHash() = httpClient.post<RpcResponse>(config.host) {
         body = JsonRpcRequestBody("getlastblock", Any()).toJson()
     }.handle<BlockHeaderContainer>().header.hash
 
@@ -113,9 +116,17 @@ class TestChain(
         return config.payoutDelay
     }
 
+    override suspend fun getBestKnownVbkBlockHash(): String {
+        return getLastVeriBlockBlockHash()
+    }
+
+    override suspend fun getPopMempool(): PopMempool {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
-        val lastVbkHash = getLastBlockHash().asHexBytes()
+        val lastVbkHash = getLastVeriBlockBlockHash().asHexBytes()
         val lastBtcHash = getLastBitcoinBlockHash().asHexBytes()
 
         val finalBlockHeight = blockHeight ?: getBestBlockHeight()
@@ -138,8 +149,14 @@ class TestChain(
         return ApmInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
-    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
-        val publicationData = proofOfProof.transaction.publicationData
+    override suspend fun submit(
+        contextBlocks: List<VeriBlockBlock>,
+        atvs: List<AltPublication>,
+        vtbs: List<VeriBlockPublication>
+    ) {
+        val atv = atvs.firstOrNull()
+            ?: return
+        val publicationData = atv.transaction.publicationData
             ?: error("Proof of proof does not have publication data!")
         val publicationDataHeader = publicationData.header.toHex()
         val publicationDataContextInfo = publicationData.contextInfo.toHex()
@@ -148,8 +165,7 @@ class TestChain(
         if (publicationDataContextInfo != expectedContextInfo) {
             error("Expected publication data context differs from the one PoP supplied back")
         }
-        val block = createBlock((System.currentTimeMillis() / 10000).toInt())
-        return block.data.coinbaseTransactionId
+        publishedAtvs += atvs
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
@@ -208,9 +224,12 @@ class TestChain(
             0.0,
             coinbase.txId,
             listOf(),
+            publishedAtvs.map { it.getId().toHex() },
             previousKeystone.hash,
             secondPreviousKeystone.hash
         )
+
+        publishedAtvs.clear()
 
         val block = TestBlock(blockData, previousBlock, previousKeystone, secondPreviousKeystone)
         blocks[height] = block

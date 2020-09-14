@@ -9,11 +9,8 @@
 package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.first
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.AddressUtility
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
@@ -26,18 +23,14 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.debug
 import org.veriblock.miners.pop.core.info
-import org.veriblock.miners.pop.util.VTBDebugUtility
-import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
-import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
 
@@ -186,126 +179,54 @@ class ApmTaskService(
         }
 
         operation.runTask(
-            taskName = "Wait for next VeriBlock Keystone",
-            targetState = ApmOperationState.KEYSTONE_OF_PROOF,
-            timeout = 1.hr
-        ) {
-            verifyNodeCoreStatus()
-            val blockOfProof = operation.blockOfProof
-                ?: failTask("RegisterVeriBlockPublicationPollingTask called without block of proof!")
-
-            logger.info(operation, "Waiting for the next VBK Keystone...")
-            val topBlockHeight = nodeCoreLiteKit.blockChain.getChainHead()?.height ?: 0
-            val desiredKeystoneOfProofHeight = blockOfProof.height / 20 * 20 + 20
-            val keystoneOfProofHeight = if (topBlockHeight >= desiredKeystoneOfProofHeight) {
-                topBlockHeight / 20 * 20 + 20
-            } else {
-                desiredKeystoneOfProofHeight
-            }
-            val keystoneOfProof = EventBus.newBestBlockChannel.asFlow().first { block ->
-                logger.debug(operation, "Checking block ${block.hash} @ ${block.height}...")
-                if (block.height > keystoneOfProofHeight) {
-                    failOperation(
-                        "The next VBK Keystone has been skipped!" +
-                            " Expected keystone height: $keystoneOfProofHeight; received block height: ${block.height}"
-                    )
-                }
-                block.height == keystoneOfProofHeight
-            }
-            operation.setKeystoneOfProof(keystoneOfProof)
-            logger.info(operation, "Keystone of Proof received: ${keystoneOfProof.hash} @ ${keystoneOfProof.height}")
-        }
-
-        operation.runTask(
-            taskName = "Retrieve VeriBlock Publication data",
-            targetState = ApmOperationState.CONTEXT,
-            timeout = 1.hr
-        ) {
-            verifyNodeCoreStatus()
-            val miningInstruction = operation.miningInstruction
-                ?: failTask("RegisterVeriBlockPublicationPollingTask called without mining instruction!")
-            val keystoneOfProof = operation.keystoneOfProof
-                ?: failTask("RegisterVeriBlockPublicationPollingTask called without keystone of proof!")
-
-            // We will be waiting for this operation's veriblock publication, which will trigger the SubmitProofOfProofTask
-            val publications = nodeCoreLiteKit.network.getVeriBlockPublications(
-                operation,
-                keystoneOfProof.hash.toString(),
-                miningInstruction.context.first().toHex(),
-                miningInstruction.btcContext.first().toHex()
-            )
-            operation.setContext(publications)
-
-            // Verify context
-            verifyPublications(miningInstruction, publications)
-        }
-
-        operation.runTask(
             taskName = "Submit Proof of Proof",
             targetState = ApmOperationState.SUBMITTED_POP_DATA,
             timeout = 240.hr
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-            val miningInstruction = operation.miningInstruction
-                ?: failTask("SubmitProofOfProofTask called without mining instruction!")
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("SubmitProofOfProofTask called without endorsement transaction!")
             val blockOfProof = operation.blockOfProof
                 ?: failTask("SubmitProofOfProofTask called without block of proof!")
             val merklePath = operation.merklePath
                 ?: failTask("SubmitProofOfProofTask called without merkle path!")
-            val veriBlockPublications = operation.publicationData
-                ?: failTask("SubmitProofOfProofTask called without VeriBlock publications!")
 
             try {
                 val proofOfProof = AltPublication(
                     endorsementTransaction.transaction,
                     merklePath,
                     blockOfProof,
-                    miningInstruction.context.mapNotNull {
-                        nodeCoreLiteKit.blockStore.get(VBlakeHash.wrap(it))?.block
-                    }
+                    emptyList()
                 )
 
-                val siTxId = operation.chain.submit(proofOfProof, veriBlockPublications)
+                operation.chain.submitAtvs(listOf(proofOfProof))
+                val atvId = proofOfProof.getId().toHex()
 
                 val chainName = operation.chain.name
-                logger.info(operation, "VTB submitted to $chainName! $chainName PoP TxId: $siTxId")
+                logger.info(operation, "ATV submitted to $chainName! $chainName ATV Id: $atvId")
 
-                operation.setPopTxId(siTxId)
+                operation.setAtvId(atvId)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error submitting proof of proof" }
-                failTask("Error submitting proof of proof")
+                failTask("Error submitting proof of proof to ${operation.chain.name}: ${e.message}")
             }
         }
 
         operation.runTask(
-            taskName = "Confirm PoP Transaction",
-            targetState = ApmOperationState.POP_TX_CONFIRMED,
+            taskName = "Confirm ATV",
+            targetState = ApmOperationState.ATV_CONFIRMED,
             timeout = 5.hr
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-            val endorsementTransactionId = operation.popTxId
-                ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
+            val atvId = operation.atvId
+                ?: failTask("Confirm PoP Transaction task called without ATV id!")
 
             val chainName = operation.chain.name
-            logger.info(operation, "Waiting for $chainName PoP Transaction ($endorsementTransactionId) to be confirmed...")
-            val popTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
-                if (transaction.confirmations < 0) {
-                    throw AltchainTransactionReorgException(transaction)
-                }
-                transaction.confirmations >= operation.chain.config.neededConfirmations
-            }
-            logger.info(
-                operation,
-                "Successfully confirmed $chainName PoP transaction ${popTransaction.txId}!" +
-                    " Confirmations: ${popTransaction.confirmations}"
-            )
+            logger.info(operation, "Waiting for $chainName ATV ($atvId) to be published in a block...")
+            val atvBlock = operation.chainMonitor.confirmAtv(atvId)
+            logger.info(operation, "Successfully confirmed $chainName ATV $atvId!")
 
-            val txBlockHash = popTransaction.blockHash
-                ?: error("The  $chainName PoP transaction ${popTransaction.txId} has no block hash despite having been confirmed!")
-
-            operation.setPopTxBlockHash(txBlockHash)
+            operation.setAtvBlockHash(atvBlock.hash)
         }
 
         operation.runTask(
@@ -319,33 +240,29 @@ class ApmTaskService(
 
             val chainName = operation.chain.name
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
-            logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
-            val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
-                block.confirmations >= operation.chain.config.neededConfirmations
-            }
 
-            val endorsedBlockHeader = miningInstruction.publicationData.header
-            val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
-            if (!belongsToMainChain) {
-                failOperation(
-                    "Endorsed block header ${endorsedBlockHeader.toHex()} @ $endorsedBlockHeight" +
-                        " is not in $chainName's main chain"
-                )
-            }
-            logger.info(operation, "Successfully confirmed $chainName endorsed block ${endorsedBlock.hash}!")
+            //logger.info(operation, "Waiting for $chainName endorsed block ($endorsedBlockHeight) to be confirmed...")
+            //val endorsedBlock = operation.chainMonitor.getBlockAtHeight(endorsedBlockHeight) { block ->
+            //    block.confirmations >= operation.chain.config.neededConfirmations
+            //}
+            //
+            //val endorsedBlockHeader = miningInstruction.publicationData.header
+            //val belongsToMainChain = operation.chain.checkBlockIsOnMainChain(endorsedBlockHeight, endorsedBlockHeader)
+            //if (!belongsToMainChain) {
+            //    failOperation(
+            //        "Endorsed block header ${endorsedBlockHeader.toHex()} @ $endorsedBlockHeight" +
+            //            " is not in $chainName's main chain"
+            //    )
+            //}
+            //logger.info(operation, "Successfully confirmed $chainName endorsed block ${endorsedBlock.hash}!")
 
             val payoutBlockHeight = endorsedBlockHeight + operation.chain.getPayoutDelay()
             logger.debug(
                 operation,
                 "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutDelay()})"
             )
-            logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight) to be confirmed...")
-            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight) /*{ block ->
-                if (block.confirmations < 0) {
-                    throw AltchainBlockReorgException(block)
-                }
-                block.confirmations >= operation.chain.config.neededConfirmations
-            }*/
+            logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
+            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight)
             val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId)
                 ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
             val rewardVout = coinbaseTransaction.vout.find {
@@ -374,68 +291,6 @@ class ApmTaskService(
         operation.complete()
     }
 
-    private fun verifyPublications(
-        miningInstruction: ApmInstruction,
-        publications: List<VeriBlockPublication>
-    ) {
-        try {
-            val btcContext = miningInstruction.btcContext
-            // List<byte[]> vbkContext = context.getContext();
-
-            // Check that the first VTB connects somewhere in the BTC context
-            val firstPublication = publications[0]
-
-            val serializedAltchainBTCContext = btcContext.joinToString("\n") { Utility.bytesToHex(it) }
-
-            val serializedBTCHashesInPoPTransaction = VTBDebugUtility.serializeBitcoinBlockHashList(
-                VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(
-                    firstPublication.transaction
-                )
-            )
-
-            if (!VTBDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
-                logger.error {
-                    """Error: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} does not connect to the altchain context!
-                               Altchain Bitcoin Context:
-                               $serializedAltchainBTCContext
-                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
-                }
-            } else {
-                logger.debug {
-                    """Success: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} connects to the altchain context!
-                               Altchain Bitcoin Context:
-                               $serializedAltchainBTCContext
-                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
-                }
-            }
-
-            // Check that every VTB connects to the previous one
-            for (i in 1 until publications.size) {
-                val anchor = publications[i - 1]
-                val toConnect = publications[i]
-
-                val anchorBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(anchor.transaction)
-                val toConnectBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(toConnect.transaction)
-
-                val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
-                val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
-
-                if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
-                    logger.warn {
-                        """Error: VTB at index $i does not connect to the previous VTB!
-                                   VTB #${i - 1} BTC blocks:
-                                   $serializedAnchorBTCBlocks
-                                   VTB #$i BTC blocks:
-                                   $serializedToConnectBTCBlocks""".trimIndent()
-                    }
-                } else {
-                    logger.debug { "Success, VTB at index $i connects to VTB at index ${i - 1}!" }
-                }
-            }
-        } catch (e: Exception) {
-            logger.debugError(e) { "An error occurred checking VTB connection and continuity!" }
-        }
-    }
 
     private fun verifyNodeCoreStatus() {
         if (!nodeCoreLiteKit.network.isReady()) {
