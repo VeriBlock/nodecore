@@ -296,7 +296,7 @@ class SecurityInheritingMonitor(
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()
 
-                logger.info { "Got keystone for ${chain.name}'s context: ${newKeystone.hash} @ ${newKeystone.height}. Retrieving publication data..." }
+                logger.info { "Got keystone for ${chain.name}'s VTBs: ${newKeystone.hash} @ ${newKeystone.height}. Retrieving publication data..." }
                 // Fetch and wait for veriblock publications (VTBs)
                 val vtbs = nodeCoreLiteKit.network.getVeriBlockPublications(
                     newKeystone.hash.toString(),
@@ -310,9 +310,9 @@ class SecurityInheritingMonitor(
 
                 // Submit them to the blockchain
                 chain.submitVtbs(vtbs)
-                logger.info { "Context submitted to ${chain.name}!" }
+                logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
             } catch (e: Exception) {
-                logger.warn(e) { "Error while submitting Context and VTBs to ${chain.name}" }
+                logger.warn(e) { "Error while submitting VTBs to ${chain.name}" }
             }
         }
     }
