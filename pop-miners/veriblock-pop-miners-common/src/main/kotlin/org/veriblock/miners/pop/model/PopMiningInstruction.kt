@@ -23,7 +23,7 @@ class PopMiningInstruction(
 
     override val endorsedBlockHeight: Int = BlockUtility.extractBlockHeightFromBlockHeader(endorsedBlockHeader)
 
-    val endorsedBlockHash: String = Crypto().vBlakeReturnHex(endorsedBlockHeader)
+    //val endorsedBlockHash: String = Crypto().vBlakeReturnHex(endorsedBlockHeader)
 
     val minerAddress: String = minerAddressBytes.toBase58()
 }

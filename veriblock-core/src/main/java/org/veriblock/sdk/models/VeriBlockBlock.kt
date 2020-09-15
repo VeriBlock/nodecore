@@ -21,7 +21,7 @@ open class VeriBlockBlock(
     merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
-    nonce: Int
+    nonce: Long
 ) {
     val raw: ByteArray
     val height: Int
@@ -32,7 +32,7 @@ open class VeriBlockBlock(
     val merkleRoot: Sha256Hash
     val timestamp: Int
     val difficulty: Int
-    val nonce: Int
+    val nonce: Long
     val hash: VBlakeHash
 
     init {

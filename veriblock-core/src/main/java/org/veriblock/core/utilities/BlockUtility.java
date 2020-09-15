@@ -11,15 +11,33 @@ import org.veriblock.core.Context;
 import org.veriblock.core.SharedConstants;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.crypto.Crypto;
+import org.veriblock.core.tuweni.bytes.Bytes32;
+import org.veriblock.core.tuweni.ethash.EthHash;
+import org.veriblock.core.tuweni.progpow.ProgPoW;
+import org.veriblock.core.tuweni.progpow.ProgPoWCache;
+import org.veriblock.core.tuweni.units.bigints.UInt32;
+import org.veriblock.core.types.Pair;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Random;
 
 public final class BlockUtility {
     private BlockUtility(){}
 
     private static final int[] MASKS = new int[]{0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF};
 
-    private static final int HEADER_SIZE = 64;
+    private static final long[] NONCE_MASKS = new long[]{
+        0x000000FF00000000L,
+        0x00000000FF000000L,
+        0x0000000000FF0000L,
+        0x000000000000FF00L,
+        0x00000000000000FF};
+
+    private static final int HEADER_SIZE = 65;
+    private static final int HEADER_SIZE_VBLAKE = 64;
 
     private static final int BLOCK_HEIGHT_START_POSITION = 0;
     private static final int BLOCK_HEIGHT_END_POSITION = 3;
@@ -46,7 +64,8 @@ public final class BlockUtility {
     private static final int DIFFICULTY_END_POSITION = 59;
 
     private static final int NONCE_START_POSITION = 60;
-    private static final int NONCE_END_POSITION = 63;
+    private static final int NONCE_END_POSITION = 64;
+    private static final int NONCE_END_POSITION_VBLAKE = 63;
 
     /**
      * Assembles the compact-format block header, which is used for PoW mining and is published during the PoP process
@@ -63,7 +82,7 @@ public final class BlockUtility {
      * @param merkleRootHash           16-byte merkle root hash encoded as hexadecimal
      * @param timestamp                4-byte timestamp in Unix epoch format (with second granularity)
      * @param difficulty               4-byte difficulty
-     * @param nonce                    4-byte nonce used to achieve a block hash under target
+     * @param nonce                    4/5-byte nonce used to achieve a block hash under target
      * @return The block header created from all provided parameters
      */
     public static byte[] assembleBlockHeader(int blockHeight,
@@ -74,8 +93,13 @@ public final class BlockUtility {
                                              String merkleRootHash,
                                              int timestamp,
                                              int difficulty,
-                                             int nonce) {
-        byte[] header = new byte[NONCE_END_POSITION + 1];
+                                             long nonce) {
+        byte[] header;
+        if (blockHeight >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
+            header = new byte[NONCE_END_POSITION + 1];
+        } else {
+            header = new byte[NONCE_END_POSITION_VBLAKE + 1];
+        }
 
         int shift = 24;
         for (int i = BLOCK_HEIGHT_START_POSITION; i <= BLOCK_HEIGHT_END_POSITION; i++) {
@@ -122,10 +146,18 @@ public final class BlockUtility {
             shift -= 8;
         }
 
-        shift = 24;
-        for (int i = NONCE_START_POSITION; i <= NONCE_END_POSITION; i++) {
-            header[i] = (byte)((nonce & MASKS[i - NONCE_START_POSITION]) >> shift);
-            shift -= 8;
+        if (blockHeight >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
+            shift = 32;
+            for (int i = NONCE_START_POSITION; i <= NONCE_END_POSITION; i++) {
+                header[i] = (byte)((nonce & NONCE_MASKS[i - NONCE_START_POSITION]) >> shift);
+                shift -= 8;
+            }
+        } else {
+            shift = 24;
+            for (int i = NONCE_START_POSITION; i <= NONCE_END_POSITION_VBLAKE; i++) {
+                header[i] = (byte)((nonce & (MASKS[i - NONCE_START_POSITION])) >> shift);
+                shift -= 8;
+            }
         }
 
         return header;
@@ -135,15 +167,68 @@ public final class BlockUtility {
      * Determine whether the provided byte[] is a plausible block header, meaning it:
      * - Is the correct length
      * - vBlake hashes to fit under it's embedded difficulty
-     * @param blockHeader
-     * @return
      */
     public static boolean isPlausibleBlockHeader(byte[] blockHeader) {
-        if (blockHeader.length != NONCE_END_POSITION + 1) {
+        if (blockHeader.length != NONCE_END_POSITION + 1 && blockHeader.length != NONCE_END_POSITION_VBLAKE + 1) {
             return false;
         }
 
-        return isMinerHashBelowTarget(blockHeader);
+        int height = extractBlockHeightFromBlockHeader(blockHeader);
+
+        if (height < 0) {
+            // Cannot have height below 0!
+            return false;
+        }
+
+        int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
+        if (height >= progPowForkHeight) {
+            if (blockHeader.length != NONCE_END_POSITION + 1) {
+                return false;
+            }
+            // 20M block limit for ProgPoW hash evaluation
+            if (height <= 20000000) {
+                // Check if embedded block height is reasonable considering its timestamp.
+                // This avoids checking ProgPoW hash for a block hash which is obviously contextually invalid.
+                // TODO: Update with new parameters on fork.
+
+                int blocktimeSeconds = Context.get().getNetworkParameters().getBlockTimeSeconds();
+                long startTimeEpoch = Context.get().getNetworkParameters().getProgPowStartTimeEpoch();
+                int gracePeriodDays = 5;
+
+                int timestamp = extractTimestampFromBlockHeader(blockHeader);
+
+                if (timestamp < startTimeEpoch) {
+                    // Timestamp is before starting timestamp, invalid
+                    return false;
+                }
+
+                long upperBound = startTimeEpoch + (int)(((double)blocktimeSeconds * (double)height * 1.2)) + (86400 * gracePeriodDays);
+                long lowerBound = (startTimeEpoch) + (int)(((double)blocktimeSeconds * (double)height / 1.2));
+                lowerBound -= (86400 * gracePeriodDays);
+                if (lowerBound < startTimeEpoch) {
+                    lowerBound = startTimeEpoch;
+                }
+
+                if (timestamp > upperBound) {
+                    // Timestamp is more than upper bound, invalid
+                    return false;
+                }
+
+                if (timestamp < lowerBound) {
+                    // Timestamp is less than upper bound, invalid
+                    return false;
+                }
+
+                return isMinerHashBelowTarget(blockHeader);
+            } else {
+                return false;
+            }
+        } else {
+            if (blockHeader.length != NONCE_END_POSITION_VBLAKE + 1) {
+                return false;
+            }
+            return isMinerHashBelowTarget(blockHeader);
+        }
     }
 
     /**
@@ -154,19 +239,14 @@ public final class BlockUtility {
      * @return Whether or not this block header's hash meets it's embedded difficulty
      */
     public static boolean isMinerHashBelowTarget(byte[] blockHeader) {
-        Crypto crypto = new Crypto();
-        String blockHash = crypto.vBlakeReturnHex(blockHeader);
+        String blockHash = hashBlock(blockHeader);
         BigInteger difficulty = BitcoinUtilities.decodeCompactBits(extractDifficultyFromBlockHeader(blockHeader));
-
         if (difficulty.compareTo(BigInteger.ZERO) < 0 || !isEmbeddedDifficultyValid(difficulty) ) {
             return false;
         }
 
         BigInteger target = SharedConstants.DIFFICULTY_CALCULATOR_MAXIMUM_TARGET.divide(difficulty.multiply(BigInteger.valueOf(1)));
-
-        boolean valid = new BigInteger(blockHash, 16).compareTo(target) < 0;
-
-        return valid;
+        return new BigInteger(blockHash, 16).compareTo(target) < 0;
     }
 
     public static boolean isEmbeddedDifficultyValid(BigInteger embeddedDifficulty) {
@@ -322,18 +402,38 @@ public final class BlockUtility {
      * @param blockHeader Block header to extract the nonce from
      * @return Extracted integer nonce
      */
-    public static int extractNonceFromBlockHeader(byte[] blockHeader) {
-        byte[] nonceBytes = extractFromBlockHeader(blockHeader, NONCE_START_POSITION,
+    public static long extractNonceFromBlockHeader(byte[] blockHeader) {
+        int blockHeight = extractBlockHeightFromBlockHeader(blockHeader);
+        byte[] nonceBytes;
+        int initialShift;
+        if (blockHeight >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
+            nonceBytes = extractFromBlockHeader(blockHeader, NONCE_START_POSITION,
                 NONCE_END_POSITION - NONCE_START_POSITION + 1);
+            initialShift = 32;
 
-        int nonce = 0;
-        int bytePointer = 0;
-        for (int shift = 24; shift >= 0; shift-=8) {
-            nonce += (0xFF & (nonceBytes[bytePointer])) << shift;
-            bytePointer++;
+            long nonce = 0;
+            int bytePointer = 0;
+            for (int shift = initialShift; shift >= 0; shift-=8) {
+                nonce += (0xFFL & (nonceBytes[bytePointer])) << shift;
+                bytePointer++;
+            }
+
+            return nonce;
+        } else {
+            nonceBytes = extractFromBlockHeader(blockHeader, NONCE_START_POSITION,
+                NONCE_END_POSITION_VBLAKE - NONCE_START_POSITION + 1);
+            initialShift = 24;
+
+            int nonce = 0;
+            int bytePointer = 0;
+            for (int shift = initialShift; shift >= 0; shift-=8) {
+                nonce += (0xFF & (nonceBytes[bytePointer])) << shift;
+                bytePointer++;
+            }
+
+            return nonce;
         }
 
-        return nonce;
     }
 
     private static byte[] extractFromBlockHeader(byte[] blockHeader, int offset, int length) throws IllegalArgumentException {
@@ -341,9 +441,9 @@ public final class BlockUtility {
             throw new IllegalArgumentException("extractFromBlockHeader cannot be called with a null block header!");
         }
 
-        if (blockHeader.length != HEADER_SIZE) {
+        if (blockHeader.length != HEADER_SIZE && blockHeader.length != HEADER_SIZE_VBLAKE) {
             throw new IllegalArgumentException("extractFromBlockHeader cannot be called with a block header that is "
-                    + blockHeader.length + " bytes, must be " + HEADER_SIZE + "!");
+                    + blockHeader.length + " bytes, must be " + HEADER_SIZE + "! (or " + HEADER_SIZE_VBLAKE + " if VBlake)");
         }
 
         byte[] extracted = new byte[length];
@@ -351,8 +451,101 @@ public final class BlockUtility {
         return extracted;
     }
 
+    public static byte[] getProgPoWHeaderHash(byte[] header) {
+        Crypto crypto = new Crypto();
+
+        byte[] choppedHeaderToHash = extractHeaderBytesForProgPoWHeaderHashCalculation(header);
+        byte[] headerHash = crypto.SHA256D(choppedHeaderToHash);
+        return headerHash;
+    }
+
+    public static byte[] extractHeaderBytesForProgPoWHeaderHashCalculation(byte[] header) {
+        // Chop off the last 5 bytes of the header (nonce)
+        byte[] chopped = new byte[header.length - 5];
+        System.arraycopy(header, 0, chopped, 0, chopped.length);
+
+        return chopped;
+    }
+
+    // The same block header is hashed many times in different operations, cache out expensive hash calculations
+    static final int MAX_CACHE_SIZE = 100000 + new Random().nextInt(100000);
+    static final LinkedHashMap<String, String> hashCache = new LinkedHashMap<String, String>() {
+        @Override
+        protected boolean removeEldestEntry(final Map.Entry eldest) {
+            return size() > MAX_CACHE_SIZE;
+        }
+    };
+
+    public static void cacheExternalHash(String header, String hash) {
+        hashCache.put(header, hash);
+    }
+
     public static String hashBlock(byte[] blockHeader) {
-        String blockHashUnchopped = new Crypto().vBlakeReturnHex(blockHeader);
-        return blockHashUnchopped.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+        int blockNum = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
+        String blockHeaderHex = Utility.bytesToHex(blockHeader);
+
+        int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
+
+        Crypto crypto = new Crypto();
+
+        String blockHash;
+        if (blockNum < progPowForkHeight) {
+            blockHash = crypto.vBlakeReturnHex(blockHeader);
+        } else {
+            if (hashCache.containsKey(blockHeaderHex)) {
+                return hashCache.get(blockHeaderHex);
+            }
+
+            // Generate header hash...
+            byte[] headerHash = getProgPoWHeaderHash(blockHeader);
+            long extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
+
+            // Nonce in VeriBlock is only 40 bits (5 bytes)
+            long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
+
+            // TODO: Move to crypto
+            Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
+            UInt32[] cache = cachePair.getFirst();
+            UInt32[] cDag = cachePair.getSecond();
+            Bytes32 digest = ProgPoW.progPowHash(
+                blockNum,
+                converted,
+                Bytes32.wrap(headerHash),
+                cDag,
+                (ind) -> EthHash.calcDatasetItem(cache, ind)
+            );
+
+            blockHash = digest.toUnprefixedHexString().toUpperCase();
+            String hash = blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+            hashCache.put(blockHeaderHex, hash);
+            return hash;
+        }
+
+        return blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+    }
+
+    public static boolean isProgPow(int blockHeight) {
+        int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
+        return blockHeight >= progPowForkHeight;
+    }
+
+    public static int getBlockHeaderLength(int blockHeight) {
+        if (isProgPow(blockHeight)) {
+            return HEADER_SIZE;
+        } else {
+            return HEADER_SIZE_VBLAKE;
+        }
+    }
+
+    public static byte[] getBlockHeader(ByteBuffer buffer) {
+        byte[] blockHeader = new byte[HEADER_SIZE_VBLAKE];
+        buffer.get(blockHeader);
+        int height = extractBlockHeightFromBlockHeader(blockHeader);
+        if (isProgPow(height)) {
+            buffer.position(buffer.position() - blockHeader.length);
+            blockHeader = new byte[HEADER_SIZE];
+            buffer.get(blockHeader);
+        }
+        return blockHeader;
     }
 }

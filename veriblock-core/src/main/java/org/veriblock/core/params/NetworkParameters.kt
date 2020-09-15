@@ -11,8 +11,8 @@ package org.veriblock.core.params
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH
-import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
 
@@ -57,6 +57,11 @@ class NetworkParameters(
     val minimumDifficulty: BigInteger
     val powNoRetargeting: Boolean
 
+    var blockTimeSeconds: Int
+
+    val progPowForkHeight: Int
+    var progPowStartTimeEpoch: Long
+
     var certificateChainPath: String? = config.certificateChainPath
     var isSsl = config.isSsl
     var adminPassword: String? = config.adminPassword
@@ -72,6 +77,7 @@ class NetworkParameters(
         val template = when (config.network.toLowerCase()) {
             "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
+            "testnet_progpow" -> TestNetProgPoWParameters
             "alpha" -> AlphaNetParameters
             "regtest" -> RegTestParameters
             else -> error("Invalid network")
@@ -98,6 +104,9 @@ class NetworkParameters(
         transactionPrefix = template.transactionPrefix
         minimumDifficulty = template.minimumDifficulty
         powNoRetargeting = template.powNoRetargeting
+        blockTimeSeconds = template.blocktimeSeconds
+        progPowForkHeight = template.progPowForkHeight
+        progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
 }
 
@@ -116,6 +125,11 @@ sealed class NetworkParametersTemplate {
     abstract val transactionPrefix: Byte?
     abstract val minimumDifficulty: BigInteger
     abstract val powNoRetargeting: Boolean
+
+    open val blocktimeSeconds: Int = 30
+
+    open val progPowForkHeight: Int = Int.MAX_VALUE // Default of "never"
+    open val progPowStartTimeEpoch: Long = Long.MAX_VALUE // Default of "never"
 }
 
 object MainNetParameters : NetworkParametersTemplate() {
@@ -190,6 +204,49 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val transactionPrefix = 0xAA.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
+
+    //override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
+}
+
+object TestNetProgPoWParameters : NetworkParametersTemplate() {
+    const val NETWORK = "testnet_progpow"
+    private val MINIMUM_POW_DIFFICULTY = 100_000_000L.toBigInteger()
+
+    override val name = NETWORK
+    override val rpcPort = 10501
+    override val p2pPort = 7502
+
+    override val bootstrapDns = "seedtestnetprogpow.veriblock.org"
+    override val fileTag = "test-progpow"
+    override val genesisBlock = VeriBlockBlock(
+        0,
+        2.toShort(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        1570649416,
+        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        14304633
+    )
+    override val bitcoinOriginBlockHeight = 1834502
+    override val bitcoinOriginBlock = BitcoinBlock(
+        version = 536870912,
+        previousBlock = Sha256Hash.wrap("000000000000013e99a05bc2dca97efdab0976001eb73e4efabe6d2cded2d011"),
+        merkleRoot = Sha256Hash.wrap("aab85d892f28b227557543645c406eb4ca32cf0def54d3c324272891ae8c94a6"),
+        timestamp = 1600091168,
+        difficulty = 436381186,
+        nonce = 707329687L.toInt()
+    )
+    override val protocolVersion: Int = 2
+
+    override val transactionPrefix = 0xAB.toByte()
+    override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
+    override val powNoRetargeting = false
+
+    //override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
+    override val progPowForkHeight = 100 // First 100 blocks don't use ProgPoW
+    override val progPowStartTimeEpoch: Long = 1600091168L
 }
 
 object AlphaNetParameters : NetworkParametersTemplate() {
@@ -250,7 +307,7 @@ object RegTestParameters : NetworkParametersTemplate() {
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
         0
     )
-    override val bitcoinOriginBlockHeight = 1489475
+    override val bitcoinOriginBlockHeight = 1780693
     override val bitcoinOriginBlock = BitcoinBlock(
         536870912,
         Sha256Hash.wrap("00000000000000b345b7bbf29bda1507a679b97967f99a10ab0088899529def7"),
@@ -271,6 +328,8 @@ val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters
 @JvmField
 val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
 @JvmField
+val defaultTestNetProgPoWParameters = NetworkParameters(NetworkConfig(TestNetProgPoWParameters.NETWORK))
+@JvmField
 val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
 @JvmField
 val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
@@ -278,6 +337,7 @@ val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters
 fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
+    TestNetProgPoWParameters.NETWORK -> defaultTestNetProgPoWParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
     RegTestParameters.NETWORK -> defaultRegTestParameters
     else -> error("Unknown VBK network: $name")

@@ -31,8 +31,8 @@ fun CommandFactory.debugCommands() {
         // Get the network
         val network = getOptionalParameter<String>("network")?.toLowerCase() ?: "mainnet"
         // Verify the network parameter
-        if (network != "mainnet" && network != "testnet" && network != "alpha" ) {
-            return@cliCommand failure("V004", "Unknown Network", "The supplied network $network is not valid, please use mainnet, testnet or alpha.")
+        if (network != "mainnet" && network != "testnet" && network != "testnet_progpow" && network != "alpha" ) {
+            return@cliCommand failure("V004", "Unknown Network", "The supplied network $network is not valid, please use mainnet, testnet, testnet_progpow, or alpha.")
         }
         printInfo("Detected network: $network")
 
@@ -89,7 +89,7 @@ fun CommandFactory.debugCommands() {
             ProcessInformation(process.pid, process.name, process.command)
         }
         // Verify if the common NodeCore ports are available
-        val ports = listOf(6500, 7500, 7501, 8080, 8081, 8500, 10500, 10501, 10502)
+        val ports = listOf(6500, 7500, 7501, 7502, 8080, 8081, 8500, 10500, 10501, 10502)
         val portInformation = ports.map { port ->
             try {
                 val socket = ServerSocket(port)

@@ -68,7 +68,7 @@ class VeriBlockStore(
     @Throws(BlockStoreException::class, SQLException::class)
     override fun put(block: StoredVeriBlockBlock) {
         if (veriBlockRepository[block.hash] != null) {
-            throw BlockStoreException("A block with the same hash is already in the store")
+            throw BlockStoreException("A block with the hash " + block.hash + " is already in the store")
         }
         veriBlockRepository.save(block)
     }

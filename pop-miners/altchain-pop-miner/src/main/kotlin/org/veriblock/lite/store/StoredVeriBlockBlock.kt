@@ -10,6 +10,7 @@ package org.veriblock.lite.store
 import org.veriblock.sdk.models.Constants
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.core.utilities.Utility
@@ -62,7 +63,7 @@ class StoredVeriBlockBlock(
     }
 
     companion object {
-        const val SIZE = 24 + 12 + 32 + 64
+        const val SIZE = 24 + 12 + 32 + 65
         const val CHAIN_WORK_BYTES = 12
 
         fun deserialize(buffer: ByteBuffer): StoredVeriBlockBlock {
@@ -74,8 +75,7 @@ class StoredVeriBlockBlock(
             buffer.get(blockOfProofBytes)
             val blockOfProof = Sha256Hash.wrap(blockOfProofBytes)
 
-            val blockBytes = ByteArray(Constants.HEADER_SIZE_VeriBlockBlock)
-            buffer.get(blockBytes)
+            val blockBytes = BlockUtility.getBlockHeader(buffer)
             val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
 
             return StoredVeriBlockBlock(block, work, blockOfProof)

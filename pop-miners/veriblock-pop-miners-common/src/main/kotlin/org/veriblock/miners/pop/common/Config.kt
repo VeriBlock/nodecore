@@ -12,7 +12,8 @@ data class NodeCoreRpcConfig(
     val port: Int = 10500,
     val password: String? = null,
     val ssl: Boolean = false,
-    val certificateChainPath: String? = null
+    val certificateChainPath: String? = null,
+    val performNetworkChecks: Boolean = true
 )
 
 data class ApiConfig(

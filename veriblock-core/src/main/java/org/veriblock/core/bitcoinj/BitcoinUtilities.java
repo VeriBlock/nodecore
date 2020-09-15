@@ -7,6 +7,7 @@
 
 package org.veriblock.core.bitcoinj;
 
+import org.veriblock.core.Context;
 import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.TransactionEmbeddedDataUtility;
 import org.veriblock.core.utilities.Utility;
@@ -103,6 +104,12 @@ public class BitcoinUtilities {
                 System.arraycopy(bitcoinTransaction, i, potentialPoPPublication, 0, potentialPoPPublication.length);
                 byte[] potentialHeader = new byte[64];
                 System.arraycopy(potentialPoPPublication, 0, potentialHeader, 0, potentialHeader.length);
+
+                int height = BlockUtility.extractBlockHeightFromBlockHeader(potentialHeader);
+                if (height >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
+                    potentialHeader = new byte[65];
+                    System.arraycopy(potentialPoPPublication, 0, potentialHeader, 0, potentialHeader.length);
+                }
 
                 if (BlockUtility.isPlausibleBlockHeader(potentialHeader)) {
                     return potentialPoPPublication;

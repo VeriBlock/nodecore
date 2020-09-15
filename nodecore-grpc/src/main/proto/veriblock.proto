@@ -430,7 +430,7 @@ message BlockSummary {
     bytes second_previous_hash = 5 [(hex_encoded)=true];
     bytes third_previous_hash = 6 [(hex_encoded)=true];
     fixed64 decoded_difficulty = 7;
-    sint32 winning_nonce = 8;
+    sint64 winning_nonce = 8;
     int32 num_regular_transactions = 9;
     int32 num_pop_transactions = 10;
     int64 total_fees = 11;
@@ -451,7 +451,7 @@ message LightBlockSummary {
     bytes second_previous_hash = 5 [(hex_encoded)=true];
     bytes third_previous_hash = 6 [(hex_encoded)=true];
     fixed64 decoded_difficulty = 7;
-    sint32 winning_nonce = 8;
+    sint64 winning_nonce = 8;
     int32 num_known_regular_transactions = 9;
     int32 num_pop_transactions = 10;
     int64 pow_coinbase_reward = 11;
@@ -471,7 +471,7 @@ message Block {
     bytes second_previous_hash = 5 [(hex_encoded)=true];
     bytes third_previous_hash = 6 [(hex_encoded)=true];
     int32 encoded_difficulty = 7;
-    sint32 winning_nonce = 8;
+    sint64 winning_nonce = 8;
     repeated TransactionUnion regular_transactions = 9;
     repeated TransactionUnion pop_transactions = 10;
     int64 total_fees = 11;
@@ -498,7 +498,7 @@ message FilteredBlock {
     bytes merkle_root = 6;
     int32 timestamp = 7;
     int32 difficulty = 8;
-    sint32 nonce = 9;
+    sint64 nonce = 9;
     int32 total_regular_transactions = 10;
     int32 total_pop_transactions = 11;
     repeated bytes merkle_hashes = 12 [(hex_encoded)=true];
@@ -513,7 +513,7 @@ message LightVBKBlock {
     bytes second_previous_hash = 5 [(hex_encoded)=true];
     bytes third_previous_hash = 6 [(hex_encoded)=true];
     int32 encoded_difficulty = 7;
-    sint32 winning_nonce = 8;
+    sint64 winning_nonce = 8;
     repeated VBKTransactionWithContext known_regular_transactions = 9;
     repeated TransactionUnion pop_transactions = 10;
     int64 pow_coinbase_reward = 11;
@@ -818,7 +818,7 @@ message GetPopReply {
     bytes merkle_root = 8;
     int32 timestamp = 9;
     int32 encoded_difficulty = 10;
-    sint32 nonce = 11;
+    sint64 nonce = 11;
     bytes pop_miner_address = 12 [(address_encoded)=true];
     bytes full_pop = 13 [(hex_encoded)=true];
     BitcoinBlockHeader last_known_block = 14;
