@@ -265,7 +265,7 @@ class SecurityInheritingMonitor(
 
                 val gap = newBlock.height - networkBestKnownBlock.height
                 logger.warn {
-                    "Unable to find ${chain.name}'s best known block $bestKnownBlockHash in the local blockchain store." +
+                    "Unable to find ${chain.name}'s best known VeriBlock block $bestKnownBlockHash in the local blockchain store." +
                         " There's a context gap of $gap blocks. Skipping VBK block context submission..."
                 }
                 subscription.cancel()
@@ -297,12 +297,29 @@ class SecurityInheritingMonitor(
         while (true) {
             try {
                 val instruction = chain.getMiningInstruction()
-                val vbkContextBlock = nodeCoreLiteKit.blockChain.get(VBlakeHash.wrap(instruction.context.first()))
+                val vbkContextBlockHash = VBlakeHash.wrap(instruction.context.first())
+                val vbkContextBlock = nodeCoreLiteKit.blockChain.get(vbkContextBlockHash)
                 if (vbkContextBlock == null) {
-                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                    // Let's try again after a while
-                    delay(300_000L)
-                    continue
+                    val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(vbkContextBlockHash)
+                    if (networkBestKnownBlock == null) {
+                        // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                        // Let's try again after a while
+                        delay(300_000L)
+                        continue
+                    }
+
+                    val latestBlock = nodeCoreLiteKit.blockStore.getChainHead()
+                    if (latestBlock == null) {
+                        delay(20_000L)
+                        continue
+                    }
+
+                    val gap = latestBlock.height - networkBestKnownBlock.height
+                    logger.warn {
+                        "Unable to find ${chain.name}'s best known VeriBlock block $vbkContextBlock in the local blockchain store." +
+                            " There's a context gap of $gap blocks. Skipping VBK block context submission..."
+                    }
+                    return@coroutineScope
                 }
                 logger.info { "${chain.name}'s known context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}. Waiting for keystone..." }
                 val newKeystone = EventBus.newBestBlockChannel.asFlow().filter {

@@ -323,7 +323,9 @@ public class AddressManager {
     }
 
     public boolean encryptWallet(char[] passphrase) {
-        if (wallet.locked) throw new IllegalStateException("Wallet is already encrypted");
+        if (wallet.locked) {
+            throw new IllegalStateException("Wallet is already encrypted");
+        }
         try {
             lock.lock();
 
@@ -347,7 +349,9 @@ public class AddressManager {
     }
 
     public boolean decryptWallet(char[] passphrase) {
-        if (!wallet.locked) return true;
+        if (!wallet.locked) {
+            throw new IllegalStateException("Wallet is already decrypted");
+        }
 
         try {
             lock.lock();
