@@ -198,7 +198,8 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getPopMempool(): PopMempool {
-        TODO("Not yet implemented")
+        val response: BtcPopMempool = rpcRequest("getrawpopmempool")
+        return PopMempool(response.vbkblocks, response.atvs, response.vtbs)
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
@@ -377,4 +378,10 @@ private data class ValidityInfo(
     val state: String,
     val code: String,
     val message: String
+)
+
+private data class BtcPopMempool(
+    val vbkblocks: List<String>,
+    val atvs: List<String>,
+    val vtbs: List<String>
 )

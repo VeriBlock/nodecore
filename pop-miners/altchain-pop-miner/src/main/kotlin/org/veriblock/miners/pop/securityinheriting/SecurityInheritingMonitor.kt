@@ -18,7 +18,6 @@ import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -125,7 +124,7 @@ class SecurityInheritingMonitor(
 
             // Wait for altchain to be ready
             while (!isReady()) {
-                delay(20_000L)
+                delay(1_000L)
             }
             // Start submitting context and VTBs
             launch { submitContext() }
@@ -282,13 +281,22 @@ class SecurityInheritingMonitor(
             val contextBlocks = generateSequence(bestBlock) {
                 nodeCoreLiteKit.blockChain.get(it.previousBlock)
             }.takeWhile {
-                it.hash == bestKnownBlockHash
+                it.hash != bestKnownBlockHash
             }.sortedBy {
                 it.height
             }.toList()
 
-            chain.submitContext(contextBlocks)
-            logger.info { "Submitted ${contextBlocks.size} VBK context blocks to ${chain.name}." }
+            val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+            val contextBlocksToSubmit = contextBlocks.filter {
+                it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
+            }
+
+            if (contextBlocksToSubmit.isEmpty()) {
+                continue
+            }
+
+            chain.submitContext(contextBlocksToSubmit)
+            logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
         }
     }
 
@@ -342,7 +350,8 @@ class SecurityInheritingMonitor(
                 chain.submitVtbs(vtbs)
                 logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
             } catch (e: Exception) {
-                logger.warn(e) { "Error while submitting VTBs to ${chain.name}" }
+                logger.warn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
+                delay(300_000L)
             }
         }
     }

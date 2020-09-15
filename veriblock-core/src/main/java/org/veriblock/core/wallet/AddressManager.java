@@ -511,7 +511,9 @@ public class AddressManager {
     }
 
     public void lock() {
-        if (!wallet.locked) return;
+        if (!wallet.locked) {
+            return;
+        }
 
         try {
             lock.lock();
@@ -525,7 +527,9 @@ public class AddressManager {
     }
 
     public boolean unlock(char[] passphrase) {
-        if (!wallet.locked) return true;
+        if (!wallet.locked) {
+            return true;
+        }
 
         try {
             lock.lock();
