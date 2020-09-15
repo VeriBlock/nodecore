@@ -8,8 +8,8 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.util.BytesUtility
+import org.veriblock.sdk.util.putLEBytes
+import org.veriblock.sdk.util.putLEInt32
 import java.nio.ByteBuffer
 import java.util.Arrays
 
@@ -23,12 +23,12 @@ class BitcoinBlock(
 ) {
     val raw: ByteArray = run {
         val buffer = ByteBuffer.allocateDirect(Constants.HEADER_SIZE_BitcoinBlock)
-        BytesUtility.putLEInt32(buffer, version)
-        BytesUtility.putLEBytes(buffer, previousBlock.bytes)
-        BytesUtility.putLEBytes(buffer, merkleRoot.bytes)
-        BytesUtility.putLEInt32(buffer, timestamp)
-        BytesUtility.putLEInt32(buffer, difficulty)
-        BytesUtility.putLEInt32(buffer, nonce)
+        buffer.putLEInt32(version)
+        buffer.putLEBytes(previousBlock.bytes)
+        buffer.putLEBytes(merkleRoot.bytes)
+        buffer.putLEInt32(timestamp)
+        buffer.putLEInt32(difficulty)
+        buffer.putLEInt32(nonce)
         buffer.flip()
         val bytes = ByteArray(Constants.HEADER_SIZE_BitcoinBlock)
         buffer[bytes]

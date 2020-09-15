@@ -10,6 +10,7 @@ package org.veriblock.miners.pop.securityinheriting
 
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -19,11 +20,12 @@ private val logger = createLogger {}
 class SecurityInheritingService(
     context: Context,
     configuration: Configuration,
-    pluginService: PluginService
+    pluginService: PluginService,
+    nodeCoreLiteKit: NodeCoreLiteKit
 ) {
     private val monitors by lazy {
         pluginService.getPlugins().entries.associate { (chainId, chain) ->
-            chainId to SecurityInheritingMonitor(context, configuration, chainId, chain)
+            chainId to SecurityInheritingMonitor(context, configuration, chainId, chain, nodeCoreLiteKit)
         }
     }
 

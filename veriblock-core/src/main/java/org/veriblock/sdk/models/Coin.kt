@@ -7,8 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-import org.veriblock.sdk.util.StreamUtils
 import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.util.getSingleByteLengthValue
 import java.nio.ByteBuffer
 import kotlin.math.roundToLong
 
@@ -57,12 +57,6 @@ class Coin(
         const val COIN_VALUE: Long = 100000000L
         val ZERO = 0.asCoin()
         val ONE = COIN_VALUE.asCoin()
-
-        @JvmStatic
-        fun parse(txBuffer: ByteBuffer?): Coin {
-            val atomicUnits = Utility.toLong(StreamUtils.getSingleByteLengthValue(txBuffer, 0, 8))
-            return atomicUnits.asCoin()
-        }
     }
 }
 
@@ -83,3 +77,8 @@ fun Long.asCoin(): Coin = Coin(this)
 fun Int.asCoinDecimal(): Coin = Coin(this * Coin.COIN_VALUE)
 fun Long.asCoinDecimal(): Coin = Coin(this * Coin.COIN_VALUE)
 fun Double.asCoinDecimal(): Coin = Coin((this * Coin.COIN_VALUE).roundToLong())
+
+fun ByteBuffer.parseCoin(): Coin {
+    val atomicUnits = Utility.toLong(getSingleByteLengthValue(0, 8))
+    return atomicUnits.asCoin()
+}

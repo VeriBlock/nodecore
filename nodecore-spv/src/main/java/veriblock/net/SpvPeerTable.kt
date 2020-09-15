@@ -459,9 +459,9 @@ class SpvPeerTable(
 
     fun getAvailablePeers(): Int = peers.size
 
-    fun getBestBlockHeight(): Int = peers.values.map {
+    fun getBestBlockHeight(): Int = peers.values.maxOfOrNull {
         it.bestBlockHeight
-    }.max() ?: 0
+    } ?: 0
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus

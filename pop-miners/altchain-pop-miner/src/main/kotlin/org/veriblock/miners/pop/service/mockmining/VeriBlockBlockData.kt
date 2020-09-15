@@ -13,6 +13,7 @@ import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.ArrayList
+import kotlin.math.ln
 
 class VeriBlockBlockData {
     abstract inner class Subtree<T> : ArrayList<T>() {
@@ -22,7 +23,7 @@ class VeriBlockBlockData {
 
         // calculate the number of bits it takes to store size()
         private val maxDepth: Int
-            private get() = (Math.log(size.toDouble()) / Math.log(2.0) + 1).toInt()
+            get() = (ln(size.toDouble()) / ln(2.0) + 1).toInt()
 
         // at each depth, there are 2**depth subtrees
         // leaves are at the depth equal to getMaxDepth()

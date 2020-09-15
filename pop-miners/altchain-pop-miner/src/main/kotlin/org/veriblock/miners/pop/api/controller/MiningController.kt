@@ -17,7 +17,6 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import org.veriblock.core.CommandException
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
@@ -171,7 +170,7 @@ class MiningController(
                     it.id,
                     it.key,
                     it.name,
-                    it.getPayoutInterval()
+                    it.getPayoutDelay()
                 )
             }.sortedBy {
                 it.key

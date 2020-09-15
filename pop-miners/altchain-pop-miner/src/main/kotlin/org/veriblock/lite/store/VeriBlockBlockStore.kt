@@ -31,8 +31,8 @@ import kotlin.concurrent.withLock
 
 private const val RECORD_SIZE = StoredVeriBlockBlock.SIZE
 
-/** The default number of headers that will be stored in the ring buffer.  */
-private const val DEFAULT_NUM_HEADERS = 5000
+/** The number of headers that will be stored in the ring buffer.  */
+const val VERIBLOCK_BLOCK_STORE_CAPACITY = 20000
 
 private const val FILE_PROLOGUE_BYTES = 1024
 private val NOT_FOUND_MARKER = Any()
@@ -53,8 +53,7 @@ private val logger = createLogger {}
  * 64 bytes of block header data
  */
 class VeriBlockBlockStore(
-    private var workingStoreFile: File,
-    capacity: Int = DEFAULT_NUM_HEADERS
+    private var workingStoreFile: File
 ) {
     private val header: String = Constants.VERIBLOCK_HEADER_MAGIC
 
@@ -124,7 +123,7 @@ class VeriBlockBlockStore(
     init {
         require(header.length == 4) { "Header must be 4 characters long" }
         try {
-            this.capacity = capacity
+            this.capacity = VERIBLOCK_BLOCK_STORE_CAPACITY
             val exists = workingStoreFile.exists()
             // Set up the backing file.
             this.randomAccessFile = RandomAccessFile(workingStoreFile, "rw")

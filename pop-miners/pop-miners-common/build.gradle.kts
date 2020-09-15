@@ -44,7 +44,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
