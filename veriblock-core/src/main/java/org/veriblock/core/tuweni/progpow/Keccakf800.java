@@ -57,11 +57,11 @@ final class Keccakf800 {
 
         for (int i = 0; i < 22; i++) {
             // theta
-            int c0 = a00 ^ a05 ^ a10 ^ a15 ^ a20;
-            int c1 = a01 ^ a06 ^ a11 ^ a16 ^ a21;
-            int c2 = a02 ^ a07 ^ a12 ^ a17 ^ a22;
-            int c3 = a03 ^ a08 ^ a13 ^ a18 ^ a23;
-            int c4 = a04 ^ a09 ^ a14 ^ a19 ^ a24;
+            int c0 = a00 ^ a06 ^ a09 ^ a12 ^ a17;
+            int c1 = a08 ^ a11 ^ a14 ^ a19 ^ a23;
+            int c2 = a02 ^ a07 ^ a10 ^ a18 ^ a22;
+            int c3 = a04 ^ a05 ^ a15 ^ a20 ^ a24;
+            int c4 = a01 ^ a03 ^ a13 ^ a16 ^ a21;
 
             int d1 = (c1 << 1 | c1 >>> 31) ^ c4;
             int d2 = (c2 << 1 | c2 >>> 31) ^ c0;
@@ -121,6 +121,9 @@ final class Keccakf800 {
             a11 = a07 << 6 | a07 >>> 26;
             a07 = a10 << 3 | a10 >>> 29;
             a10 = c1;
+
+            a03 ^= 0x79938B61;
+            a10 ^= (a19 & 0x000000FF | a24 & 0x0000FF00 | a06 & 0x00FF0000 | a14 & 0xFF000000);
 
             // chi
             c0 = a00 ^ (~a01 & a02);

@@ -81,8 +81,8 @@ public class LedgerProofWithContext {
                     " array containing a path which isn't a 32-byte hash!");
         }
 
-        if (containingHeader == null || containingHeader.length != 64) {
-            throw new IllegalArgumentException("A LedgerProofWithContext requires a 64-byte containing header!");
+        if (containingHeader == null || (containingHeader.length != 64 && containingHeader.length != 65)) {
+            throw new IllegalArgumentException("A LedgerProofWithContext requires a 64/65-byte containing header!");
         }
 
         this.topPath = new byte[topPath.length][];

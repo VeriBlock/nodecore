@@ -35,8 +35,8 @@ class NodeCoreService(
 
     private val ready = AtomicBoolean(false)
     private val accessible = AtomicBoolean(false)
-    private val synchronized = AtomicBoolean(false)
-    private val sameNetwork = AtomicBoolean(false)
+    private val synchronized = AtomicBoolean(!config.nodeCoreRpc.performNetworkChecks)
+    private val sameNetwork = AtomicBoolean(!config.nodeCoreRpc.performNetworkChecks)
 
     var latestNodeCoreStateInfo: StateInfo = StateInfo()
 
@@ -95,32 +95,34 @@ class NodeCoreService(
                     EventBus.nodeCoreAccessibleEvent.trigger()
                 }
 
-                // Verify the NodeCore configured Network
-                if (nodeCoreStateInfo.networkVersion.isOnSameNetwork(config.bitcoin.network.name)) {
-                    if (!isOnSameNetwork()) {
-                        sameNetwork.set(true)
-                        EventBus.nodeCoreSameNetworkEvent.trigger()
+                if (config.nodeCoreRpc.performNetworkChecks) {
+                    // Verify the NodeCore configured Network
+                    if (nodeCoreStateInfo.networkVersion.isOnSameNetwork(config.bitcoin.network.name)) {
+                        if (!isOnSameNetwork()) {
+                            sameNetwork.set(true)
+                            EventBus.nodeCoreSameNetworkEvent.trigger()
+                        }
+                    } else {
+                        if (isOnSameNetwork() || firstPoll) {
+                            sameNetwork.set(false)
+                            EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                            logger.warn { "The connected NodeCore (${nodeCoreStateInfo.networkVersion}) & VPM (${config.bitcoin.network.name}) are not running on the same configured network" }
+                        }
                     }
-                } else {
-                    if (isOnSameNetwork() || firstPoll) {
-                        sameNetwork.set(false)
-                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                        logger.warn { "The connected NodeCore (${nodeCoreStateInfo.networkVersion}) & VPM (${config.bitcoin.network.name}) are not running on the same configured network" }
-                    }
-                }
 
-                // Verify the NodeCore synchronization status
-                if (nodeCoreStateInfo.isSynchronized) {
-                    if (!isSynchronized()) {
-                        synchronized.set(true)
-                        EventBus.nodeCoreSynchronizedEvent.trigger()
-                        logger.info { "The connected NodeCore is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
-                    }
-                } else {
-                    if (isSynchronized() || firstPoll) {
-                        synchronized.set(false)
-                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
-                        logger.info { "The connected NodeCore is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                    // Verify the NodeCore synchronization status
+                    if (nodeCoreStateInfo.isSynchronized) {
+                        if (!isSynchronized()) {
+                            synchronized.set(true)
+                            EventBus.nodeCoreSynchronizedEvent.trigger()
+                            logger.info { "The connected NodeCore is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                        }
+                    } else {
+                        if (isSynchronized() || firstPoll) {
+                            synchronized.set(false)
+                            EventBus.nodeCoreNotSynchronizedEvent.trigger()
+                            logger.info { "The connected NodeCore is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                        }
                     }
                 }
             } else {
@@ -130,13 +132,15 @@ class NodeCoreService(
                     accessible.set(false)
                     EventBus.nodeCoreNotAccessibleEvent.trigger()
                 }
-                if (isSynchronized()) {
-                    synchronized.set(false)
-                    EventBus.nodeCoreNotSynchronizedEvent.trigger()
-                }
-                if (isOnSameNetwork()) {
-                    sameNetwork.set(false)
-                    EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                if (config.nodeCoreRpc.performNetworkChecks) {
+                    if (isSynchronized()) {
+                        synchronized.set(false)
+                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
+                    }
+                    if (isOnSameNetwork()) {
+                        sameNetwork.set(false)
+                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
+                    }
                 }
             }
 

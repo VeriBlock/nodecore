@@ -9,6 +9,7 @@ package org.veriblock.sdk.blockchain.store
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Constants
@@ -87,13 +88,12 @@ class StoredVeriBlockBlock @JvmOverloads constructor(
         @JvmStatic
         fun deserialize(buffer: ByteBuffer): StoredVeriBlockBlock {
             val workBytes = ByteArray(CHAIN_WORK_BYTES)
-            buffer[workBytes]
+            buffer.get(workBytes)
             val work = BigInteger(1, workBytes)
             val blockOfProofBytes = ByteArray(Sha256Hash.BITCOIN_LENGTH)
-            buffer[blockOfProofBytes]
+            buffer.get(blockOfProofBytes)
             val blockOfProof = Sha256Hash.wrap(blockOfProofBytes)
-            val blockBytes = ByteArray(Constants.HEADER_SIZE_VeriBlockBlock)
-            buffer[blockBytes]
+            val blockBytes = BlockUtility.getBlockHeader(buffer)
             val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
             return StoredVeriBlockBlock(block, work, blockOfProof)
         }

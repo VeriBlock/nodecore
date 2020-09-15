@@ -205,7 +205,7 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 
-    override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
+    //override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
 }
 
 object TestNetProgPoWParameters : NetworkParametersTemplate() {
@@ -229,14 +229,14 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
         14304633
     )
-    override val bitcoinOriginBlockHeight = 1772359
+    override val bitcoinOriginBlockHeight = 1834502
     override val bitcoinOriginBlock = BitcoinBlock(
-        536870912,
-        Sha256Hash.wrap("000000000B9EED5D8006046CCB7F3F36D8116D9477426EB922702C596DC5E410"),
-        Sha256Hash.wrap("11AD448E7713A35E4587352ABB4EA843373ADD517C2698042D3371B3106FAF23"),
-        1594743345,
-        420380176,
-        1105743762
+        version = 536870912,
+        previousBlock = Sha256Hash.wrap("000000000000013e99a05bc2dca97efdab0976001eb73e4efabe6d2cded2d011"),
+        merkleRoot = Sha256Hash.wrap("aab85d892f28b227557543645c406eb4ca32cf0def54d3c324272891ae8c94a6"),
+        timestamp = 1600091168,
+        difficulty = 436381186,
+        nonce = 707329687L.toInt()
     )
     override val protocolVersion: Int = 2
 
@@ -246,7 +246,7 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
 
     //override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
     override val progPowForkHeight = 100 // First 100 blocks don't use ProgPoW
-    override val progPowStartTimeEpoch: Long = 1594744537L
+    override val progPowStartTimeEpoch: Long = 1600091168L
 }
 
 object AlphaNetParameters : NetworkParametersTemplate() {

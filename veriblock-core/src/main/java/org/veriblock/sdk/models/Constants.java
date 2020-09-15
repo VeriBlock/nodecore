@@ -16,9 +16,9 @@ public class Constants {
 
     public static final int HEADER_SIZE_BitcoinBlock = 80;
 
-    public static final int HEADER_SIZE_VeriBlockBlock = 64;
+    public static final int HEADER_SIZE_VeriBlockBlock = 65;
+    public static final int HEADER_SIZE_VeriBlockBlock_VBlake = 64;
     public static final int KEYSTONE_INTERVAL = 20;
-
 
     public static final int ALLOWED_TIME_DRIFT = 60 * 5;
     public static final BigInteger MAXIMUM_DIFFICULTY = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);

@@ -190,7 +190,7 @@ fun randomFullBlock(
     merkleRoot: Sha256Hash = randomSha256Hash(),
     timestamp: Int = randomInt(0, Int.MAX_VALUE),
     difficulty: Int = randomInt(0, Int.MAX_VALUE),
-    nonce: Int = randomInt(0, Int.MAX_VALUE),
+    nonce: Long = randomLong(0, Int.MAX_VALUE.toLong()),
     normalTransactions: List<VeriBlockTransaction> = (1..10).map { randomVeriBlockTransaction(context) },
     popTransactions: List<VeriBlockPopTransaction> = (1..10).map { randomVeriBlockPoPTransaction(context) },
     metaPackage: BlockMetaPackage = randomBlockMetaPackage()
@@ -251,7 +251,7 @@ fun randomVeriBlockBlock(
     merkleRoot: Sha256Hash = randomSha256Hash(),
     timestamp: Int = randomInt(1, 65535),
     difficulty: Int = randomInt(1, 65535),
-    nonce: Int = randomInt(1, 35535)
+    nonce: Long = randomLong(1, 35535)
 ): VeriBlockBlock {
     return VeriBlockBlock(
         height,

@@ -13,6 +13,7 @@ package org.veriblock.spv.standalone
 import com.google.gson.GsonBuilder
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
+import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkConfig
@@ -68,9 +69,10 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
-    logger.info { "Initializing SPV Context..." }
+    logger.info { "Initializing SPV Context (${networkParameters.name})..." }
     var errored = false
     try {
+        Context.create(networkParameters)
         spvContext.init(networkParameters, peerDiscovery)
         spvContext.peerTable.start()
         ProgressBarBuilder().apply {

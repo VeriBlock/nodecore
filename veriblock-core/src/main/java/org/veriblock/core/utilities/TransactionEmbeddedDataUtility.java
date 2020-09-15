@@ -7,6 +7,7 @@
 
 package org.veriblock.core.utilities;
 
+import org.veriblock.core.Context;
 import org.veriblock.core.types.BitString;
 
 import java.io.ByteArrayInputStream;
@@ -116,10 +117,16 @@ public class TransactionEmbeddedDataUtility {
                             outputStream.write(section);
                         }
 
-                        byte[] vBlakeHeader = new byte[64];
+                        byte[] blockHeader = new byte[64];
                         byte[] extractedData = outputStream.toByteArray();
-                        System.arraycopy(extractedData, 0, vBlakeHeader, 0, vBlakeHeader.length);
-                        if (BlockUtility.isPlausibleBlockHeader(vBlakeHeader)) {
+                        System.arraycopy(extractedData, 0, blockHeader, 0, blockHeader.length);
+                        int height = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
+                        if (height >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
+                            blockHeader = new byte[65];
+                            System.arraycopy(extractedData, 0, blockHeader, 0, blockHeader.length);
+                        }
+
+                        if (BlockUtility.isPlausibleBlockHeader(blockHeader)) {
                             return extractedData;
                         }
                     } catch (Exception e) {

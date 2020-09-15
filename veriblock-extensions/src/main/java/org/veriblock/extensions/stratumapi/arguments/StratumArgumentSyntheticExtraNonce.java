@@ -23,7 +23,7 @@ public class StratumArgumentSyntheticExtraNonce extends StratumArgument {
 
 
         // For VeriBLock's purposes, the synthetic extra nonce must be all zeroes.
-        if (!data.equalsIgnoreCase("00000000")) {
+        if (!data.equalsIgnoreCase("000000")) {
             throw new IllegalArgumentException("The synthetic extra nonce for VeriBlock must be all zeroes!");
         }
 

@@ -39,7 +39,7 @@ class VeriBlockHeader(
     fun getDifficulty(): Int =
         BlockUtility.extractDifficultyFromBlockHeader(bytes)
 
-    fun getNonce(): Int =
+    fun getNonce(): Long =
         BlockUtility.extractNonceFromBlockHeader(bytes)
 
     fun toByteArray(): ByteArray {

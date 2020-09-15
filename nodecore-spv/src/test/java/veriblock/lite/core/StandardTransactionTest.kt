@@ -4,7 +4,9 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.params.defaultMainNetParameters
+import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
@@ -14,12 +16,18 @@ import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.asStandardAddress
 import veriblock.net.LocalhostDiscovery
+import java.io.File
 
 class StandardTransactionTest {
     private val spvContext = SpvContext()
 
     @Before
     fun setUp() {
+        val dbFile = File("./data/database.db")
+        if (dbFile.exists()) {
+            dbFile.delete()
+        }
+        Context.create(defaultMainNetParameters)
         spvContext.init(defaultMainNetParameters, LocalhostDiscovery(defaultMainNetParameters))
     }
 

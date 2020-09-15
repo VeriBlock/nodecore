@@ -9,13 +9,16 @@ package veriblock.lite.core
 
 import org.junit.Assert
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.params.defaultTestNetParameters
 
 class VBlakeHashTests {
 
     @Test
     fun hash() {
+        Context.create(defaultTestNetParameters)
         val header = BlockUtility.assembleBlockHeader(
             14,
             1.toShort(),

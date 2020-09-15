@@ -17,6 +17,7 @@ import org.veriblock.core.tuweni.bytes.Bytes32;
 import org.veriblock.core.tuweni.ethash.EthHash;
 import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.veriblock.core.tuweni.units.bigints.UInt64;
+import org.veriblock.core.utilities.Utility;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -38,9 +39,10 @@ public final class ProgPoW {
     public static int PROGPOW_REGS = 32;
     public static int PROGPOW_DAG_LOADS = 4;
     public static int PROGPOW_CACHE_BYTES = 16 * 1024;
-    public static int PROGPOW_CNT_DAG = 64;
+    public static int PROGPOW_CNT_DAG = 128;
     public static int PROGPOW_CNT_CACHE = 11;
-    public static int PROGPOW_CNT_MATH = 18;
+    public static int PROGPOW_CNT_MATH = 20;
+
     public static UInt32 FNV_PRIME = UInt32.fromHexString("0x1000193");
     public static Bytes FNV_OFFSET_BASIS = Bytes.fromHexString("0x811c9dc5");
     public static int HASH_BYTES = 64;
@@ -64,27 +66,36 @@ public final class ProgPoW {
         UInt32[] dag, // gigabyte DAG located in framebuffer - the first portion gets cached
         Function<Integer, Bytes> dagLookupFunction) {
         UInt32[][] mix = new UInt32[PROGPOW_LANES][PROGPOW_REGS];
-
+        
         // keccak(header..nonce)
         Bytes32 seed_256 = Keccakf800.keccakF800Progpow(header, nonce, Bytes32.ZERO);
 
+        // Extra 13 rounds of Keccakf800
+        for (int i = 0; i < 13; i++) {
+            // endian swap so byte 0 of the hash is the MSB of the value
+            long intermediateSeed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
+            seed_256 = Keccakf800.keccakF800Progpow(Bytes32.ZERO, intermediateSeed, Bytes32.ZERO);
+        }
+
         // endian swap so byte 0 of the hash is the MSB of the value
-        long intermediateSeed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
-
-        // Additional Keccak256 round for seed
-        seed_256 = Keccakf800.keccakF800Progpow(Bytes32.ZERO, intermediateSeed, Bytes32.ZERO);
-
         long seed = (Integer.toUnsignedLong(seed_256.getInt(0)) << 32) | Integer.toUnsignedLong(seed_256.getInt(4));
 
         // Manually zero out the first bit of seed to reduce seed space to 2^62
-        seed = seed & 0x3FFFFFFFFFFFFFFFL;
+        seed = seed & 0x007FFFFFFFFFFFFFL;
 
         // initialize mix for all lanes
-        for (int l = 0; l < PROGPOW_LANES; l++)
+        for (int l = 0; l < PROGPOW_LANES; l++) {
             mix[l] = fillMix(UInt64.fromBytes(Bytes.wrap(ByteBuffer.allocate(8).putLong(seed).array())), UInt32.valueOf(l));
+        }
+
         // execute the randomly generated inner loop
-        for (int i = 0; i < PROGPOW_CNT_DAG; i++)
+        for (int i = 0; i < PROGPOW_CNT_DAG; i++) {
             progPowLoop(blockNumber, UInt32.valueOf(i), mix, dag, dagLookupFunction);
+            for (int z = 0; z < mix.length; z++) {
+                for (int k = 0; k < mix[z].length; k++) {
+                }
+            }
+        }
 
         // Reduce mix data to a per-lane 32-bit digest
         UInt32[] digest_lane = new UInt32[PROGPOW_LANES];
@@ -207,6 +218,7 @@ public final class ProgPoW {
         int dag_addr_base = mix[loop.intValue() % PROGPOW_LANES][0]
             .mod(UInt32.valueOf(Math.toIntExact(dagBytes / (PROGPOW_LANES * PROGPOW_DAG_LOADS * Integer.BYTES))))
             .intValue();
+
         //mix[loop.intValue()%PROGPOW_LANES][0].mod(UInt32.valueOf((int) dagBytes / (PROGPOW_LANES*PROGPOW_DAG_LOADS*4))).intValue();
         Bytes lookupHolder = null;
         UInt32 lastLookup = null;

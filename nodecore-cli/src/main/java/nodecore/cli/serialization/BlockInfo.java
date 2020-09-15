@@ -115,7 +115,7 @@ public class BlockInfo {
     public int encoded_difficulty;
 
     @SerializedName("winning_nonce")
-    public int winningNonce;
+    public long winningNonce;
 
     @SerializedName("bitcoin_block_headers")
     public List<String> bitcoinBlockHeaders = new ArrayList<>();
