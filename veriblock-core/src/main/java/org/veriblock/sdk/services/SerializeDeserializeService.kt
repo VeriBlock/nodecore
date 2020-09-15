@@ -197,7 +197,7 @@ object SerializeDeserializeService {
         )
         val timestamp = buffer.readBEInt32()
         val difficulty = buffer.readBEInt32()
-        val nonce = buffer.readBEInt32().toLong()
+        var nonce = buffer.readBEInt32().toLong()
         if (BlockUtility.isProgPow(height)) {
             val nonceExtraByte = buffer.get()
             nonce = (nonce shl 8) or nonceExtraByte.toLong()
