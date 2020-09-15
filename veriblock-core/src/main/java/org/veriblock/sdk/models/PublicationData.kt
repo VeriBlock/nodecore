@@ -7,4 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-class PublicationData(val identifier: Long, val header: ByteArray, val payoutInfo: ByteArray, val contextInfo: ByteArray) 
+class PublicationData(
+    val identifier: Long,
+    val header: ByteArray,
+    val payoutInfo: ByteArray,
+    val contextInfo: ByteArray
+)

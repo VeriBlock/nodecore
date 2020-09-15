@@ -13,7 +13,6 @@ import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.parse
 import kotlinx.serialization.stringify
 import mu.KLogger
-import org.veriblock.core.contracts.MiningInstruction
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId

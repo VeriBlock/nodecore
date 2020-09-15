@@ -28,21 +28,33 @@ import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.sdk.util.BytesUtility
-import org.veriblock.sdk.util.StreamUtils
+import org.veriblock.sdk.util.getSingleByteLengthValue
+import org.veriblock.sdk.util.getVariableLengthValue
+import org.veriblock.sdk.util.putBEBytes
+import org.veriblock.sdk.util.putBEInt16
+import org.veriblock.sdk.util.putBEInt32
+import org.veriblock.sdk.util.readBEInt16
+import org.veriblock.sdk.util.readBEInt32
+import org.veriblock.sdk.util.readLEInt32
+import org.veriblock.sdk.util.writeSingleByteLengthValue
+import org.veriblock.sdk.util.writeSingleIntLengthValue
+import org.veriblock.sdk.util.writeVariableLengthValue
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+private const val SERIALIZATION_VERSION = 0x01
+private val SERIALIZATION_VERSION_BYTES = Utility.toByteArray(SERIALIZATION_VERSION)
+
 object SerializeDeserializeService {
-    @Throws(IOException::class)
+
     fun serialize(veriBlockPoPTransaction: VeriBlockPopTransaction, stream: OutputStream) {
         val rawTransaction = serializeTransactionEffects(veriBlockPoPTransaction)
-        StreamUtils.writeVariableLengthValueToStream(stream, rawTransaction)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockPoPTransaction.signature)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockPoPTransaction.publicKey)
+        stream.writeVariableLengthValue(rawTransaction)
+        stream.writeSingleByteLengthValue(veriBlockPoPTransaction.signature)
+        stream.writeSingleByteLengthValue(veriBlockPoPTransaction.publicKey)
     }
 
     fun serializeTransactionEffects(veriBlockPoPTransaction: VeriBlockPopTransaction): ByteArray {
@@ -57,7 +69,6 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     private fun serializeTransactionEffects(tx: VeriBlockPopTransaction, stream: OutputStream) {
         if (tx.networkByte != null) {
             // Replay protection versus mainnet network
@@ -81,7 +92,7 @@ object SerializeDeserializeService {
         serialize(tx.blockOfProof, stream)
 
         // Write number of context Bitcoin block headers (can be 0)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, tx.blockOfProofContext.size)
+        stream.writeSingleByteLengthValue(tx.blockOfProofContext.size)
         for (block in tx.blockOfProofContext) {
             serialize(block, stream)
         }
@@ -108,26 +119,25 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serialize(veriBlockPublication: VeriBlockPublication, stream: OutputStream) {
+        stream.write(SERIALIZATION_VERSION_BYTES)
         serialize(veriBlockPublication.transaction, stream)
         serialize(veriBlockPublication.merklePath, stream)
         serialize(veriBlockPublication.containingBlock, stream)
 
         // Write number of context Bitcoin block headers (can be 0)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockPublication.context.size)
+        stream.writeSingleByteLengthValue(veriBlockPublication.context.size)
         for (block in veriBlockPublication.context) {
             serialize(block, stream)
         }
     }
 
     // VeriBlockTransaction
-    @Throws(IOException::class)
     fun serialize(veriBlockTransaction: VeriBlockTransaction, stream: OutputStream) {
         val rawTransaction = serializeTransactionEffects(veriBlockTransaction)
-        StreamUtils.writeVariableLengthValueToStream(stream, rawTransaction)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockTransaction.signature)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockTransaction.publicKey)
+        stream.writeVariableLengthValue(rawTransaction)
+        stream.writeSingleByteLengthValue(veriBlockTransaction.signature)
+        stream.writeSingleByteLengthValue(veriBlockTransaction.publicKey)
     }
 
     fun serializeTransactionEffects(veriBlockTransaction: VeriBlockTransaction): ByteArray {
@@ -142,7 +152,6 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serializeTransactionEffects(veriBlockTransaction: VeriBlockTransaction, stream: OutputStream) {
         if (veriBlockTransaction.networkByte != null) {
             stream.write(veriBlockTransaction.networkByte.toInt())
@@ -155,8 +164,8 @@ object SerializeDeserializeService {
             serialize(o, stream)
         }
         val publicationDataBytes = veriBlockTransaction.publicationData?.let { serialize(it) } ?: ByteArray(0)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, veriBlockTransaction.signatureIndex)
-        StreamUtils.writeVariableLengthValueToStream(stream, publicationDataBytes)
+        stream.writeSingleByteLengthValue(veriBlockTransaction.signatureIndex)
+        stream.writeVariableLengthValue(publicationDataBytes)
     }
 
     fun getId(veriBlockTransaction: VeriBlockTransaction): Sha256Hash {
@@ -165,8 +174,8 @@ object SerializeDeserializeService {
 
     // VeriBlockBlock
     fun parseVeriBlockBlock(buffer: ByteBuffer): VeriBlockBlock {
-        val raw = StreamUtils.getSingleByteLengthValue(
-            buffer, Constants.HEADER_SIZE_VeriBlockBlock_VBlake, Constants.HEADER_SIZE_VeriBlockBlock
+        val raw = buffer.getSingleByteLengthValue(
+            Constants.HEADER_SIZE_VeriBlockBlock_VBlake, Constants.HEADER_SIZE_VeriBlockBlock
         )
         return parseVeriBlockBlock(raw)
     }
@@ -178,17 +187,17 @@ object SerializeDeserializeService {
         val buffer = ByteBuffer.allocateDirect(raw.size)
         buffer.put(raw)
         buffer.flip()
-        val height = BytesUtility.readBEInt32(buffer)
-        val version = BytesUtility.readBEInt16(buffer)
+        val height = buffer.readBEInt32()
+        val version = buffer.readBEInt16()
         val previousBlock = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_BLOCK_LENGTH)
         val previousKeystone = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_KEYSTONE_LENGTH)
         val secondPreviousKeystone = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_KEYSTONE_LENGTH)
         val merkleRoot = Sha256Hash.extract(
             buffer, Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH, ByteOrder.BIG_ENDIAN
         )
-        val timestamp = BytesUtility.readBEInt32(buffer)
-        val difficulty = BytesUtility.readBEInt32(buffer)
-        var nonce = BytesUtility.readBEInt32(buffer).toLong()
+        val timestamp = buffer.readBEInt32()
+        val difficulty = buffer.readBEInt32()
+        val nonce = buffer.readBEInt32().toLong()
         if (BlockUtility.isProgPow(height)) {
             val nonceExtraByte = buffer.get()
             nonce = (nonce shl 8) or nonceExtraByte.toLong()
@@ -199,9 +208,8 @@ object SerializeDeserializeService {
         )
     }
 
-    @Throws(IOException::class)
-    fun serialize(veriBlockBlock: VeriBlockBlock, stream: OutputStream?) {
-        StreamUtils.writeSingleByteLengthValueToStream(stream, serializeHeaders(veriBlockBlock))
+    fun serialize(veriBlockBlock: VeriBlockBlock, stream: OutputStream) {
+        stream.writeSingleByteLengthValue(serializeHeaders(veriBlockBlock))
     }
 
     fun serialize(veriBlockBlock: VeriBlockBlock): ByteArray {
@@ -224,18 +232,18 @@ object SerializeDeserializeService {
             BlockUtility.getBlockHeaderLength(veriBlockBlock.height)
         }
         val buffer = ByteBuffer.allocateDirect(headerSize)
-        BytesUtility.putBEInt32(buffer, veriBlockBlock.height)
-        BytesUtility.putBEInt16(buffer, veriBlockBlock.version)
-        BytesUtility.putBEBytes(buffer, veriBlockBlock.previousBlock.bytes)
-        BytesUtility.putBEBytes(buffer, veriBlockBlock.previousKeystone.bytes)
-        BytesUtility.putBEBytes(buffer, veriBlockBlock.secondPreviousKeystone.bytes)
-        BytesUtility.putBEBytes(buffer, veriBlockBlock.merkleRoot.bytes)
-        BytesUtility.putBEInt32(buffer, veriBlockBlock.timestamp)
-        BytesUtility.putBEInt32(buffer, veriBlockBlock.difficulty)
+        buffer.putBEInt32(veriBlockBlock.height)
+        buffer.putBEInt16(veriBlockBlock.version)
+        buffer.putBEBytes(veriBlockBlock.previousBlock.bytes)
+        buffer.putBEBytes(veriBlockBlock.previousKeystone.bytes)
+        buffer.putBEBytes(veriBlockBlock.secondPreviousKeystone.bytes)
+        buffer.putBEBytes(veriBlockBlock.merkleRoot.bytes)
+        buffer.putBEInt32(veriBlockBlock.timestamp)
+        buffer.putBEInt32(veriBlockBlock.difficulty)
         if (veriBlockBlock.height > 0 && BlockUtility.isProgPow(veriBlockBlock.height)) {
             buffer.put((veriBlockBlock.nonce shr 32).toByte())
         }
-        BytesUtility.putBEInt32(buffer, veriBlockBlock.nonce.toInt())
+        buffer.putBEInt32(veriBlockBlock.nonce.toInt())
         buffer.flip()
         val bytes = ByteArray(headerSize)
         buffer.get(bytes, 0, headerSize)
@@ -243,9 +251,8 @@ object SerializeDeserializeService {
     }
 
     //MerklePath
-    @Throws(IOException::class)
-    fun serialize(merklePath: MerklePath, stream: OutputStream?) {
-        StreamUtils.writeVariableLengthValueToStream(stream, serializeComponents(merklePath))
+    fun serialize(merklePath: MerklePath, stream: OutputStream) {
+        stream.writeVariableLengthValue(serializeComponents(merklePath))
     }
 
     private fun serializeComponents(merklePath: MerklePath): ByteArray {
@@ -260,44 +267,42 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serializeComponentsToStream(merklePath: MerklePath, stream: OutputStream) {
         // Index
-        StreamUtils.writeSingleIntLengthValueToStream(stream, merklePath.index)
+        stream.writeSingleIntLengthValue(merklePath.index)
 
         // Layer size
-        StreamUtils.writeSingleIntLengthValueToStream(stream, merklePath.layers.size)
+        stream.writeSingleIntLengthValue(merklePath.layers.size)
         val sizeBottomData = Utility.toByteArray(merklePath.subject.length)
 
         // Write size of the int describing the size of the bottom layer of data
-        StreamUtils.writeSingleIntLengthValueToStream(stream, sizeBottomData.size)
+        stream.writeSingleIntLengthValue(sizeBottomData.size)
         stream.write(sizeBottomData)
         for (hash in merklePath.layers) {
             val layer = hash.bytes
-            StreamUtils.writeSingleByteLengthValueToStream(stream, layer)
+            stream.writeSingleByteLengthValue(layer)
         }
     }
 
     // VeriBlockMerklePath
-    @Throws(IOException::class)
     fun serialize(blockMerklePath: VeriBlockMerklePath, stream: OutputStream) {
         // Tree index
-        StreamUtils.writeSingleIntLengthValueToStream(stream, blockMerklePath.treeIndex)
+        stream.writeSingleIntLengthValue(blockMerklePath.treeIndex)
 
         // Index
-        StreamUtils.writeSingleIntLengthValueToStream(stream, blockMerklePath.index)
+        stream.writeSingleIntLengthValue(blockMerklePath.index)
 
         // Subject
         val subjectBytes = blockMerklePath.subject.bytes
-        StreamUtils.writeSingleByteLengthValueToStream(stream, subjectBytes)
+        stream.writeSingleByteLengthValue(subjectBytes)
 
         // Layer size
-        StreamUtils.writeSingleIntLengthValueToStream(stream, blockMerklePath.layers.size)
+        stream.writeSingleIntLengthValue(blockMerklePath.layers.size)
 
         // Layers
         for (hash in blockMerklePath.layers) {
             val layer = hash.bytes
-            StreamUtils.writeSingleByteLengthValueToStream(stream, layer)
+            stream.writeSingleByteLengthValue(layer)
         }
     }
 
@@ -315,17 +320,16 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serialize(bitcoinBlock: BitcoinBlock, stream: OutputStream) {
-        StreamUtils.writeSingleByteLengthValueToStream(
-            stream, bitcoinBlock.raw
+        stream.writeSingleByteLengthValue(
+            bitcoinBlock.raw
         )
     }
 
     @JvmStatic
-    fun parseBitcoinBlockWithLength(buffer: ByteBuffer?): BitcoinBlock {
-        val raw = StreamUtils.getSingleByteLengthValue(
-            buffer, Constants.HEADER_SIZE_BitcoinBlock, Constants.HEADER_SIZE_BitcoinBlock
+    fun parseBitcoinBlockWithLength(buffer: ByteBuffer): BitcoinBlock {
+        val raw = buffer.getSingleByteLengthValue(
+            Constants.HEADER_SIZE_BitcoinBlock, Constants.HEADER_SIZE_BitcoinBlock
         )
         return parseBitcoinBlock(raw)
     }
@@ -339,12 +343,12 @@ object SerializeDeserializeService {
         val buffer = ByteBuffer.allocateDirect(bytes.size)
         buffer.put(bytes)
         buffer.flip()
-        val version = BytesUtility.readLEInt32(buffer)
+        val version = buffer.readLEInt32()
         val previousBlock = Sha256Hash.extract(buffer)
         val merkleRoot = Sha256Hash.extract(buffer)
-        val timestamp = BytesUtility.readLEInt32(buffer)
-        val bits = BytesUtility.readLEInt32(buffer)
-        val nonce = BytesUtility.readLEInt32(buffer)
+        val timestamp = buffer.readLEInt32()
+        val bits = buffer.readLEInt32()
+        val nonce = buffer.readLEInt32()
         return BitcoinBlock(version, previousBlock, merkleRoot, timestamp, bits, nonce)
     }
 
@@ -361,7 +365,6 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serialize(address: Address, stream: OutputStream) {
         val bytes = address.bytes
         if (address.isMultisig) {
@@ -369,7 +372,7 @@ object SerializeDeserializeService {
         } else {
             stream.write(1)
         }
-        StreamUtils.writeSingleByteLengthValueToStream(stream, bytes)
+        stream.writeSingleByteLengthValue(bytes)
     }
 
     // Coin
@@ -385,13 +388,11 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serialize(coin: Coin, stream: OutputStream) {
-        StreamUtils.writeSingleByteLengthValueToStream(stream, coin.atomicUnits)
+        stream.writeSingleByteLengthValue(coin.atomicUnits)
     }
 
     // Output
-    @Throws(IOException::class)
     fun serialize(output: Output, stream: OutputStream) {
         serialize(output.address, stream)
         serialize(output.amount, stream)
@@ -410,14 +411,14 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serialize(altPublication: AltPublication, stream: ByteArrayOutputStream) {
+        stream.write(SERIALIZATION_VERSION_BYTES)
         serialize(altPublication.transaction, stream)
         serialize(altPublication.merklePath, stream)
         serialize(altPublication.containingBlock, stream)
 
         // Write number of context Bitcoin block headers (can be 0)
-        StreamUtils.writeSingleByteLengthValueToStream(stream, altPublication.context.size)
+        stream.writeSingleByteLengthValue(altPublication.context.size)
         for (block in altPublication.context) {
             serialize(block, stream)
         }
@@ -436,12 +437,11 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
-    @Throws(IOException::class)
     fun serialize(publicationData: PublicationData, stream: OutputStream) {
-        StreamUtils.writeSingleByteLengthValueToStream(stream, publicationData.identifier)
-        StreamUtils.writeVariableLengthValueToStream(stream, publicationData.header)
-        StreamUtils.writeVariableLengthValueToStream(stream, publicationData.contextInfo)
-        StreamUtils.writeVariableLengthValueToStream(stream, publicationData.payoutInfo)
+        stream.writeSingleByteLengthValue(publicationData.identifier)
+        stream.writeVariableLengthValue(publicationData.header)
+        stream.writeVariableLengthValue(publicationData.contextInfo)
+        stream.writeVariableLengthValue(publicationData.payoutInfo)
     }
 
     @JvmStatic
@@ -450,23 +450,22 @@ object SerializeDeserializeService {
             return null
         }
         val buffer = ByteBuffer.wrap(data)
-        val identifierBytes = StreamUtils.getSingleByteLengthValue(buffer, 0, 8)
+        val identifierBytes = buffer.getSingleByteLengthValue(0, 8)
         val identifier = Utility.toLong(identifierBytes)
-        val headerBytes = StreamUtils.getVariableLengthValue(
-            buffer, 0, Constants.MAX_HEADER_SIZE_PUBLICATION_DATA
+        val headerBytes = buffer.getVariableLengthValue(
+            0, Constants.MAX_HEADER_SIZE_PUBLICATION_DATA
         )
-        val contextInfoBytes = StreamUtils.getVariableLengthValue(
-            buffer, 0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA
+        val contextInfoBytes = buffer.getVariableLengthValue(
+            0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA
         )
-        val payoutInfoBytes = StreamUtils.getVariableLengthValue(
-            buffer, 0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA
+        val payoutInfoBytes = buffer.getVariableLengthValue(
+            0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA
         )
         return PublicationData(identifier, headerBytes, payoutInfoBytes, contextInfoBytes)
     }
 
     // BitcoinTransaction
-    @Throws(IOException::class)
     fun serialize(bitcoinTransaction: BitcoinTransaction, stream: OutputStream) {
-        StreamUtils.writeVariableLengthValueToStream(stream, bitcoinTransaction.rawBytes)
+        stream.writeVariableLengthValue(bitcoinTransaction.rawBytes)
     }
 }

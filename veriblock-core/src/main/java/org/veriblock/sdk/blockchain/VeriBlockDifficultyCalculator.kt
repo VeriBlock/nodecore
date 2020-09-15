@@ -28,18 +28,19 @@ object VeriBlockDifficultyCalculator {
         lastBlock: VeriBlockBlock,
         context: List<VeriBlockBlock>
     ): BigInteger {
-        var context = context
         if (lastBlock.height < N || networkParameters.powNoRetargeting) {
             return BitcoinUtilities.decodeCompactBits(lastBlock.difficulty.toLong())
         }
         var sumTarget = BigDecimal.valueOf(0)
         var t: Long = 0
         var j: Long = 0
-        if (context.size > N) {
-            context = context.subList(0, N)
+        val contextToCheck = if (context.size > N) {
+            context.subList(0, N)
+        } else {
+            context
         }
-        for (i in context.size - 1 downTo 1) {
-            var solveTime = context[i - 1].timestamp - context[i].timestamp
+        for (i in contextToCheck.size - 1 downTo 1) {
+            var solveTime = contextToCheck[i - 1].timestamp - contextToCheck[i].timestamp
             if (solveTime > T * 6) {
                 solveTime = T * 6
             } else if (solveTime < -6 * T) {
@@ -47,7 +48,7 @@ object VeriBlockDifficultyCalculator {
             }
             j++
             t += solveTime * j
-            sumTarget = sumTarget.add(BigDecimal(BitcoinUtilities.decodeCompactBits(context[i].difficulty.toLong())))
+            sumTarget = sumTarget.add(BigDecimal(BitcoinUtilities.decodeCompactBits(contextToCheck[i].difficulty.toLong())))
         }
         sumTarget = sumTarget.divide(BigDecimal.valueOf(N - 1.toLong()), 8, RoundingMode.HALF_UP)
         if (t < K.divide(BigInteger.valueOf(10)).intValueExact()) {

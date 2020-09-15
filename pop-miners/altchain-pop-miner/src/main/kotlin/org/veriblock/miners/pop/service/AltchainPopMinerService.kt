@@ -210,7 +210,7 @@ class AltchainPopMinerService(
             return CheckResult.Failure(MineException("The chain ${chain.name} is not synchronized: ${monitor.latestBlockChainInfo.getSynchronizedMessage()}"))
         }
         // Verify if the block is too old to be mined
-        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutInterval() * 0.8) {
+        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
             return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
         }
         return CheckResult.Success()
@@ -241,35 +241,6 @@ class AltchainPopMinerService(
         logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name}" }
 
         return operation.id
-    }
-
-    override fun resubmit(operation: ApmOperation) {
-        if (operation.publicationData == null) {
-            error("The operation [${operation.id}] has no context to be resubmitted!")
-        }
-
-        // Copy the operation
-        val newOperation = ApmOperation(
-            chain = operation.chain,
-            chainMonitor = operation.chainMonitor,
-            endorsedBlockHeight = operation.endorsedBlockHeight,
-            reconstituting = true
-        )
-
-        // Replicate its state up until prior to the PoP data submission
-        newOperation.setMiningInstruction(operation.miningInstruction!!)
-        newOperation.setTransaction(operation.endorsementTransaction!!)
-        newOperation.setConfirmed()
-        newOperation.setBlockOfProof(operation.blockOfProof!!)
-        newOperation.setMerklePath(operation.merklePath!!)
-        newOperation.setContext(operation.publicationData!!)
-        newOperation.reconstituting = false
-
-        // Submit new operation
-        submit(newOperation)
-        operations[newOperation.id] = newOperation
-
-        logger.info { "Resubmitted operation [${operation.id}] as new operation [${newOperation.id}]" }
     }
 
     override fun cancelOperation(id: String) {
@@ -305,7 +276,7 @@ class AltchainPopMinerService(
                 logger.info { "There are no suspended operations to submitted..." }
             }
         } catch (e: Exception) {
-            logger.debugError(e) {"Unable to load suspended operations" }
+            logger.debugError(e) { "Unable to load suspended operations" }
         }
     }
 

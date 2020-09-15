@@ -14,8 +14,8 @@ import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.sdk.models.Constants;
 import org.veriblock.sdk.models.PublicationData;
 import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.sdk.util.StreamUtils;
 import org.veriblock.core.utilities.Utility;
+import org.veriblock.sdk.util.StreamUtilsKt;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,10 +31,10 @@ public class PublicationDataTests {
 
         byte[] data = null;
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-            StreamUtils.writeSingleByteLengthValueToStream(stream, identifier);
-            StreamUtils.writeVariableLengthValueToStream(stream, header);
-            StreamUtils.writeVariableLengthValueToStream(stream, contextInfo);
-            StreamUtils.writeVariableLengthValueToStream(stream, payoutInfo);
+            StreamUtilsKt.writeSingleByteLengthValue(stream, identifier);
+            StreamUtilsKt.writeVariableLengthValue(stream, header);
+            StreamUtilsKt.writeVariableLengthValue(stream, contextInfo);
+            StreamUtilsKt.writeVariableLengthValue(stream, payoutInfo);
 
             data = stream.toByteArray();
         } catch (IOException e) {

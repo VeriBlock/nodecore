@@ -35,8 +35,6 @@ interface MinerService {
 
     fun mine(chainId: String, block: Int?): String
 
-    fun resubmit(operation: ApmOperation)
-
     fun cancelOperation(id: String)
 
     fun shutdown()

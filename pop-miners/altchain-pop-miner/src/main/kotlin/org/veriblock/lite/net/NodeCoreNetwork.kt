@@ -24,6 +24,7 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.lite.store.VERIBLOCK_BLOCK_STORE_CAPACITY
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
@@ -266,7 +267,6 @@ class NodeCoreNetwork(
 
     // FIXME This implementation not good enough. Use channels.
     suspend fun getVeriBlockPublications(
-        operation: ApmOperation,
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
@@ -276,11 +276,10 @@ class NodeCoreNetwork(
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
                 |   - BTC Context Hash: $btcContextHash""".trimMargin()
-        logger.info(
-            operation,
+        logger.debug {
             "Successfully subscribed to VTB retrieval event!\n$extraLogData"
-        )
-        logger.info(operation, "Waiting for this operation's VTBs...")
+        }
+        logger.debug("Waiting for VTBs...")
         try {
             // Loop through each new block until we get a not-empty publication list
             for (newBlock in newBlockChannel) {
@@ -294,7 +293,12 @@ class NodeCoreNetwork(
                 }
             }
         } catch (e: Exception) {
-            logger.warn(operation, e, "Error while retrieving VTBs!\n$extraLogData")
+            try {
+                val lastBlock = gateway.getLastBlock()
+                logger.info { "Current last block: ${lastBlock.hash} @ ${lastBlock.height}" }
+            } catch (ignored: Exception) {
+            }
+            throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", e)
         } finally {
             newBlockChannel.cancel()
         }
@@ -305,7 +309,7 @@ class NodeCoreNetwork(
     private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
         logger.debug { "Reconciling VBK blockchain..." }
         try {
-            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 500
+            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > VERIBLOCK_BLOCK_STORE_CAPACITY
             if (tooFarBehind) {
                 logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
                 blockChain.reset()

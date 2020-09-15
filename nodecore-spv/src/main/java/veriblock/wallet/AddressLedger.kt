@@ -45,12 +45,12 @@ class AddressLedger(
         SignatureIndex(
             value = entries.values.asSequence()
                 .filter { it.status != LedgerEntry.Status.PENDING }
-                .mapNotNull { it.signatureIndex }
-                .max() ?: startingSignatureIndex,
+                .maxOfOrNull { it.signatureIndex }
+                ?: startingSignatureIndex,
             pending = entries.values.asSequence()
                 .filter { it.status == LedgerEntry.Status.PENDING }
-                .mapNotNull { it.signatureIndex }
-                .max() ?: startingSignatureIndex
+                .maxOfOrNull { it.signatureIndex }
+                ?: startingSignatureIndex
         )
     }
 
