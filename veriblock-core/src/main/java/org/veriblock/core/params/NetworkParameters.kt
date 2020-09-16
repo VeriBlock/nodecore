@@ -134,7 +134,7 @@ sealed class NetworkParametersTemplate {
 
 object MainNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "mainnet"
-    private val MINIMUM_POW_DIFFICULTY = 900_000_000_000L.toBigInteger()
+    private val MINIMUM_POW_DIFFICULTY = 90_000_000_000L.toBigInteger()
 
     override val name = NETWORK
     override val rpcPort = 10500
@@ -167,6 +167,9 @@ object MainNetParameters : NetworkParametersTemplate() {
     override val transactionPrefix: Byte? = null
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
+
+    override val progPowForkHeight = 1512000
+    override val progPowStartTimeEpoch: Long = 1600716052L
 }
 
 object TestNetParameters : NetworkParametersTemplate() {
@@ -205,7 +208,7 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 
-    //override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
+    override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
 }
 
 object TestNetProgPoWParameters : NetworkParametersTemplate() {
