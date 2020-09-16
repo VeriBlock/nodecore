@@ -214,7 +214,7 @@ class AdminApiService(
                     throw WalletException("Unable to decrypt wallet, see NodeCore logs")
                 }
             } catch (e: IllegalStateException) {
-                throw WalletException("Wallet is already encrypted and must be decrypted first")
+                throw WalletException("Wallet is already decrypted and must be encrypted first")
             }
         }
     }
