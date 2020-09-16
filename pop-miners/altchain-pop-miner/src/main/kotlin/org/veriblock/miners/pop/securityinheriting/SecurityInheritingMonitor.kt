@@ -329,7 +329,7 @@ class SecurityInheritingMonitor(
                     }
                     return@coroutineScope
                 }
-                logger.info { "${chain.name}'s known context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}. Waiting for keystone..." }
+                logger.info { "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}. Waiting for keystone..." }
                 val newKeystone = EventBus.newBestBlockChannel.asFlow().filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()

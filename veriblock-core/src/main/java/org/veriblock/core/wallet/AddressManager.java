@@ -512,7 +512,7 @@ public class AddressManager {
 
     public void lock() {
         if (!wallet.locked) {
-            return;
+            throw new IllegalStateException("Unable to lock wallet; wallet is not currently encrypted.");
         }
 
         try {
