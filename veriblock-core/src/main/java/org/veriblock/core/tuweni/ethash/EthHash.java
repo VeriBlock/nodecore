@@ -59,9 +59,9 @@ public class EthHash {
      */
     public static int EPOCH_LENGTH = 8000;
     /**
-     * Initial EPOCH offset (332=2.59375GB added)
+     * Initial EPOCH offset (323=2.584GB added)
      */
-    public static int EPOCH_OFFSET = 332;
+    public static int EPOCH_OFFSET = 323;
     /**
      * width of mix
      */
