@@ -10,6 +10,7 @@ package org.veriblock.core.wallet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.veriblock.core.ImportException;
+import org.veriblock.core.WalletException;
 import org.veriblock.core.WalletLockedException;
 import org.veriblock.core.WalletUnreadableException;
 import org.veriblock.core.types.Pair;
@@ -324,7 +325,7 @@ public class AddressManager {
 
     public boolean encryptWallet(char[] passphrase) {
         if (wallet.locked) {
-            throw new IllegalStateException("Wallet is already encrypted");
+            throw new WalletException("Wallet is already encrypted");
         }
         try {
             lock.lock();
@@ -350,7 +351,7 @@ public class AddressManager {
 
     public boolean decryptWallet(char[] passphrase) {
         if (!wallet.locked) {
-            throw new IllegalStateException("Wallet is already decrypted");
+            throw new WalletException("Wallet is already decrypted");
         }
 
         try {
@@ -512,7 +513,7 @@ public class AddressManager {
 
     public void lock() {
         if (!wallet.locked) {
-            throw new IllegalStateException("Unable to lock wallet; wallet is not currently encrypted.");
+            throw new WalletException("Unable to lock wallet; wallet is not currently encrypted.");
         }
 
         try {
