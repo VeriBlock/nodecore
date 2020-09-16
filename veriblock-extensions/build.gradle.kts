@@ -29,7 +29,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.3")
     compile("com.google.code.gson:gson:2.8.2")
     compile("io.netty:netty-buffer:4.1.30.Final")
-    compile("org.bouncycastle:bcprov-jdk15on:1.65")
+    compile("org.bouncycastle:bcprov-jdk15on:1.60")
     compile("io.vertx:vertx-core:3.6.2")
 
     testImplementation("junit:junit:4.12")

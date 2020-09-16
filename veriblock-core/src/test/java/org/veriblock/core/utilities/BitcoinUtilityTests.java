@@ -84,7 +84,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "39DFC8"; // last 3 bytes of header
         transactionBytes += "57801424B0F5DE63992A016F5F38FEB4"; // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
 
         // And test with it padded
@@ -92,7 +92,7 @@ public class BitcoinUtilityTests {
             transactionBytes += Utility.bytesToHex(new byte[]{(byte)(i * 11 /* Arbitrary byte */)});
         }
 
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -183,7 +183,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "57801424B0F5DE63992A016F5F38FEB4"; // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
 
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
 
         // And test with it padded
@@ -191,7 +191,7 @@ public class BitcoinUtilityTests {
             transactionBytes += Utility.bytesToHex(new byte[]{(byte)(i * 11 /* Arbitrary byte */)});
         }
 
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -259,7 +259,7 @@ public class BitcoinUtilityTests {
         transactionBytes.append("39DFC8"); // last 3 bytes of header
         transactionBytes.append("57801424B0F5DE63992A016F5F38FEB4"); // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes.toString()));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes.toString()), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
 
         // And test with it padded
@@ -268,7 +268,7 @@ public class BitcoinUtilityTests {
         }
 
 
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes.toString()));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes.toString()), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -326,7 +326,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "1039DFC8"; // last 4 bytes of header
         transactionBytes += "57801424B0F5DE63992A016F5F38FEB4"; // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -359,14 +359,14 @@ public class BitcoinUtilityTests {
         // First chunk; 64 bytes of a header + 16 bytes PoP miner identification
         transactionBytes += "00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4";
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
 
         // Random bytes
         transactionBytes += "00FFAC03B1C7";
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -394,7 +394,7 @@ public class BitcoinUtilityTests {
 
         transactionBytes += descriptorBytes;
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
 
 
@@ -402,7 +402,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7";
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -435,7 +435,7 @@ public class BitcoinUtilityTests {
 
         transactionBytes += descriptorBytes;
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
 
 
@@ -443,7 +443,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7";
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -476,7 +476,7 @@ public class BitcoinUtilityTests {
         // First chunk; 64 bytes of a header + 16 bytes PoP miner identification
         transactionBytes += "00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4";
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
 
         // Still picks up valid PoP publication regardless of malformatted magic data, as PoP publication is continuous
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
@@ -485,7 +485,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7";
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
     }
 
@@ -554,7 +554,7 @@ public class BitcoinUtilityTests {
         transactionBytes += "0000042D00011E1E07C7674E0426D1A17E36C0D18EEE597DD7DC18572DD0FE6A925EF8CE4DC8F11BDB07EC256C08D4F9E01E764D5B9C47CD060C88B3FDF4D3DF57801424B0F5DE63992A016F5F38FEB4";
 
 
-        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        byte[] embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertFalse(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("0000042D00011E1E07C7674E0426D1A17E36C0D18EEE597DD7DC18572DD0FE6A925EF8CE4DC8F11BDB07EC256C08D4F9E01E764D5B9C47CD060C88B3FDF4D3DF57801424B0F5DE63992A016F5F38FEB4")));
 
@@ -563,7 +563,7 @@ public class BitcoinUtilityTests {
             transactionBytes += Utility.bytesToHex(new byte[]{(byte)(i * 11 /* Arbitrary byte */)});
         }
 
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes));
+        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1);
         Assert.assertFalse(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("0000042D00011E1E07C7674E0426D1A17E36C0D18EEE597DD7DC18572DD0FE6A925EF8CE4DC8F11BDB07EC256C08D4F9E01E764D5B9C47CD060C88B3FDF4D3DF57801424B0F5DE63992A016F5F38FEB4")));
 

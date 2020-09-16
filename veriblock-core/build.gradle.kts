@@ -43,7 +43,7 @@ dependencies {
     testImplementation("junit:junit:4.12")
 
     compile("io.netty:netty-buffer:4.1.30.Final")
-    compile("org.bouncycastle:bcprov-jdk15on:1.65")
+    compile("org.bouncycastle:bcprov-jdk15on:1.60")
     compile("io.vertx:vertx-core:3.6.2")
     compile("com.google.guava:guava:20.0")
 

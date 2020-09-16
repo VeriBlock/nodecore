@@ -202,8 +202,8 @@ public final class BlockUtility {
                     return false;
                 }
 
-                long upperBound = startTimeEpoch + (int)(((double)blocktimeSeconds * (double)height * 1.2)) + (86400 * gracePeriodDays);
-                long lowerBound = (startTimeEpoch) + (int)(((double)blocktimeSeconds * (double)height / 1.2));
+                long upperBound = startTimeEpoch + (int)(((double)blocktimeSeconds * (double)(height-progPowForkHeight) * 1.2)) + (86400 * gracePeriodDays);
+                long lowerBound = (startTimeEpoch) + (int)(((double)blocktimeSeconds * (double)(height-progPowForkHeight) / 1.2));
                 lowerBound -= (86400 * gracePeriodDays);
                 if (lowerBound < startTimeEpoch) {
                     lowerBound = startTimeEpoch;

@@ -97,7 +97,7 @@ public class BitcoinUtilities {
         return result;
     }
 
-    public static byte[] extractPoPData(byte[] bitcoinTransaction) {
+    public static byte[] extractPoPData(byte[] bitcoinTransaction, int reportedHeight) {
         for (int i = 0; i <= bitcoinTransaction.length - 80; i++) {
             try {
                 byte[] potentialPoPPublication = new byte[80];
@@ -107,6 +107,10 @@ public class BitcoinUtilities {
 
                 int height = BlockUtility.extractBlockHeightFromBlockHeader(potentialHeader);
                 if (height >= Context.get().getNetworkParameters().getProgPowForkHeight()) {
+                    if (height > reportedHeight || height < reportedHeight - 1000 /* 1000-block grace period for reported height to be
+                        lower than the extracted height */) {
+                        continue; // Extracted height is not valid given known context, ignore...
+                    }
                     potentialHeader = new byte[65];
                     System.arraycopy(potentialPoPPublication, 0, potentialHeader, 0, potentialHeader.length);
                 }
