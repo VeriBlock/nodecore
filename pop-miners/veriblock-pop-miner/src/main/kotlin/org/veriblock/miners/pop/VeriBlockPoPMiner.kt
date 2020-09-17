@@ -41,7 +41,8 @@ fun run(args: Array<String>): Int {
     EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
 
-    org.veriblock.core.Context.create(defaultTestNetProgPoWParameters);
+
+    org.veriblock.core.Context.create(defaultMainNetParameters);
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
