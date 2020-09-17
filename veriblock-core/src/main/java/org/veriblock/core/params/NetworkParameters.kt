@@ -208,7 +208,8 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 
-    override val progPowForkHeight = 435000 // For testing purposes only, subject to change!
+    override val progPowForkHeight = 872000
+    override val progPowStartTimeEpoch: Long = 1600444017L;
 }
 
 object TestNetProgPoWParameters : NetworkParametersTemplate() {
