@@ -48,7 +48,6 @@ class Peer(
 
     fun setConnection(handler: PeerSocketHandler) {
         this.handler = handler
-        this.handler.setPeer(this)
         this.handler.start()
         val announce = VeriBlockMessages.Event.newBuilder()
             .setId(next())

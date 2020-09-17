@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class PeerSocketHandler(
-    private val socket: Socket
+    private val socket: Socket,
+    private val peer: Peer
 ) {
     private val writeQueue: BlockingQueue<VeriBlockMessages.Event> = LinkedTransferQueue()
     private val running = AtomicBoolean(false)
@@ -37,15 +38,10 @@ class PeerSocketHandler(
     private lateinit var inputThread: CompletableFuture<Void>
     private var outputStream: DataOutputStream
     private lateinit var outputThread: CompletableFuture<Void>
-    private var peer: Peer? = null
 
     init {
         inputStream = DataInputStream(socket.getInputStream())
         outputStream = DataOutputStream(socket.getOutputStream())
-    }
-
-    fun setPeer(peer: Peer?) {
-        this.peer = peer
     }
 
     fun isRunning(): Boolean {
@@ -83,6 +79,7 @@ class PeerSocketHandler(
     }
 
     fun write(message: VeriBlockMessages.Event) {
+        logger.info("Sending {} message to {}", message.resultsCase.name, peer?.address)
         try {
             if (writeQueue.size < 1100) {
                 writeQueue.put(message)

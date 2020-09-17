@@ -314,7 +314,7 @@ class NodeCoreNetwork(
                 logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
                 blockChain.reset()
             }
-            if (previousHead == null || latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
+            if (previousHead != null && latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
                 val downloaded = getBlock(latestBlock.hash)
                 if (downloaded != null) {
                     blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
@@ -322,7 +322,12 @@ class NodeCoreNetwork(
                 return
             }
 
-            val blockChainDelta = gateway.listChangesSince(previousHead.hash.toString())
+            val startBlockHeight = (latestBlock.height - 2900).coerceAtLeast(0)
+            val startBlock = previousHead
+                ?: gateway.getBlock(startBlockHeight)
+                ?: error("Unable to find block @ $startBlockHeight")
+
+            val blockChainDelta = gateway.listChangesSince(startBlock.hash.toString())
 
             val added = ArrayList<FullBlock>(blockChainDelta.added.size)
             for (block in blockChainDelta.added) {
