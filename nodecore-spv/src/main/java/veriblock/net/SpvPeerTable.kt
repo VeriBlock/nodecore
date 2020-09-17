@@ -171,7 +171,7 @@ class SpvPeerTable(
     @Throws(IOException::class)
     fun openConnection(peer: Peer) {
         val socket = Socket(peer.address, peer.port)
-        val handler = PeerSocketHandler(socket)
+        val handler = PeerSocketHandler(socket, peer)
         peer.setConnection(handler)
     }
 
@@ -256,14 +256,16 @@ class SpvPeerTable(
             while (running.get()) {
                 try {
                     val message = incomingQueue.take()
-                    logger.debug("{} message from {}", message.message.resultsCase.name, message.sender.address)
+                    logger.info("Received {} message from {}", message.message.resultsCase.name, message.sender.address)
                     when (message.message.resultsCase) {
                         ResultsCase.HEARTBEAT -> {
                             val heartbeat = message.message.heartbeat
+                            // Copy reference to local scope
+                            val downloadPeer = downloadPeer
                             if (downloadPeer == null && heartbeat.block.number > 0) {
                                 startBlockchainDownload(message.sender)
                             } else if (downloadPeer != null &&
-                                heartbeat.block.number - downloadPeer!!.bestBlockHeight > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER
+                                heartbeat.block.number - downloadPeer.bestBlockHeight > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER
                             ) {
                                 startBlockchainDownload(message.sender)
                             }

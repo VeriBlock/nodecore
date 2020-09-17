@@ -55,7 +55,6 @@ class SpvContext {
         private set
     lateinit var blockchain: Blockchain
         private set
-    val startTime = Instant.now()
     lateinit var adminApiService: AdminApiService
         private set
     lateinit var peerTable: SpvPeerTable
@@ -71,6 +70,8 @@ class SpvContext {
     lateinit var pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
         private set
 
+    val startTime: Instant = Instant.now()
+
     /**
      * Initialise context. This method should be call on the start app.
      *
@@ -78,7 +79,6 @@ class SpvContext {
      * @param baseDir        will use as a start point for inner directories. (db, wallet so on.)
      * @param filePr         prefix for wallet name. (for example: vbk-MainNet, vbk-TestNet)
      * @param peerDiscovery  discovery peers.
-     * @param runAdminServer Start Admin RPC service. (It can be not necessary for tests.)
      */
     @Synchronized
     fun init(
@@ -88,7 +88,7 @@ class SpvContext {
         peerDiscovery: PeerDiscovery
     ) {
         try {
-            Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdown() }, "ShutdownHook nodecore-spv"))
+            Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))
             networkParameters = networkParam
             directory = baseDir
             filePrefix = filePr
@@ -124,7 +124,6 @@ class SpvContext {
      *
      * @param networkParameters Config for particular network.
      * @param peerDiscovery     discovery peers.
-     * @param runAdminServer    Start Admin RPC service. (It can be not necessary for tests.)
      */
     @Synchronized
     fun init(networkParameters: NetworkParameters, peerDiscovery: PeerDiscovery) {

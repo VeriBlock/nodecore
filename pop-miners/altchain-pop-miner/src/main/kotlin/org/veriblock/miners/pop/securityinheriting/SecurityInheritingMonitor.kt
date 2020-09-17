@@ -325,11 +325,14 @@ class SecurityInheritingMonitor(
                     val gap = latestBlock.height - networkBestKnownBlock.height
                     logger.warn {
                         "Unable to find ${chain.name}'s best known VeriBlock block $vbkContextBlock in the local blockchain store." +
-                            " There's a context gap of $gap blocks. Skipping VBK block context submission..."
+                            " There's a context gap of $gap blocks. Skipping VTB submission..."
                     }
                     return@coroutineScope
                 }
-                logger.info { "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}. Waiting for keystone..." }
+                logger.info {
+                    "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
+                    "Bitcoin context block: ${instruction.btcContext.first()}. Waiting for next VBK keystone..."
+                }
                 val newKeystone = EventBus.newBestBlockChannel.asFlow().filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()

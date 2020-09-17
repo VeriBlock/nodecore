@@ -16,7 +16,6 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BitcoinTransaction
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
@@ -29,7 +28,6 @@ import veriblock.model.MultisigTransaction
 import veriblock.model.OutputFactory.create
 import veriblock.model.PopTransactionLight
 import veriblock.model.StandardTransaction
-import veriblock.model.asLightAddress
 import veriblock.model.asLightAddress
 
 private val logger = createLogger {}
@@ -97,7 +95,7 @@ object MessageSerializer {
         return block
     }
 
-    fun deserializeStandardTransaction(signedTransaction: SignedTransaction): StandardTransaction {
+    private fun deserializeStandardTransaction(signedTransaction: SignedTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
         val tx = StandardTransaction(Sha256Hash.wrap(txMessage.txId.toByteArray()))
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
@@ -112,7 +110,7 @@ object MessageSerializer {
         return tx
     }
 
-    fun deserializeMultisigTransaction(signedTransaction: SignedMultisigTransaction): StandardTransaction {
+    private fun deserializeMultisigTransaction(signedTransaction: SignedMultisigTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
         val tx: StandardTransaction = MultisigTransaction(Sha256Hash.wrap(txMessage.txId.toByteArray()))
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()

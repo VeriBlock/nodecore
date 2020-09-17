@@ -16,6 +16,10 @@ class Context(
     configuration: Configuration,
     val networkParameters: NetworkParameters
 ) {
+    init {
+        org.veriblock.core.Context.create(networkParameters)
+    }
+
     val dataDir = System.getenv("DATA_DIR")
         ?: configuration.extract("dataDir")
         ?: "./"

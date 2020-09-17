@@ -207,10 +207,10 @@ class NodeCoreGateway(
         }
     }
 
-    fun listChangesSince(hash: String?): BlockChainDelta {
+    fun listChangesSince(hash: String): BlockChainDelta {
         logger.debug { "Requesting delta since hash $hash..." }
         val builder = VeriBlockMessages.ListBlocksSinceRequest.newBuilder()
-        if (hash != null && hash.isNotEmpty()) {
+        if (hash.isNotEmpty()) {
             builder.hash = ByteStringUtility.hexToByteString(hash)
         }
         val reply = gatewayStrategy.listChangesSince(builder.build())

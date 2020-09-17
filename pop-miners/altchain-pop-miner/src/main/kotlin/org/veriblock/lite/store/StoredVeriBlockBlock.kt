@@ -45,10 +45,12 @@ class StoredVeriBlockBlock(
     }
 
     fun serialize(buffer: ByteBuffer) {
+        val initialPosition = buffer.position()
         buffer.put(hash.bytes)
         buffer.put(Utility.toBytes(work, CHAIN_WORK_BYTES))
         buffer.put(blockOfProof.bytes)
         buffer.put(SerializeDeserializeService.serializeHeaders(block))
+        buffer.position(initialPosition + SIZE)
     }
 
     fun serialize(): ByteArray {
