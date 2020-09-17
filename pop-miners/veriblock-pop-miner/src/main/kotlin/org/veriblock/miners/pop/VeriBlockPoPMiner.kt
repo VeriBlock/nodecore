@@ -42,8 +42,6 @@ fun run(args: Array<String>): Int {
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
 
 
-    org.veriblock.core.Context.create(defaultMainNetParameters);
-
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
     println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
@@ -62,6 +60,13 @@ fun run(args: Array<String>): Int {
         )
     }.koin
     val config: VpmConfig = startupInjector.get()
+
+    if (config.bitcoin.network.toString() == "MainNet") {
+        org.veriblock.core.Context.create(defaultMainNetParameters);
+    } else {
+        org.veriblock.core.Context.create(defaultTestNetParameters);
+    }
+
     Threading.ignoreLockCycles()
     Threading.USER_THREAD = Executor { command: Runnable ->
         Context.propagate(config.bitcoin.context)
