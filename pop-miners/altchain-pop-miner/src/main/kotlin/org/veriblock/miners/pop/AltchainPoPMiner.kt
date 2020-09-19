@@ -10,6 +10,7 @@
 
 package org.veriblock.miners.pop
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.utilities.createLogger
@@ -21,6 +22,7 @@ import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.Shell
+import java.security.Security
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
 
@@ -33,6 +35,7 @@ private val eventRegistrar = Any()
 var externalQuit = false
 
 private fun run(): Int {
+    Security.addProvider(BouncyCastleProvider())
     EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
 

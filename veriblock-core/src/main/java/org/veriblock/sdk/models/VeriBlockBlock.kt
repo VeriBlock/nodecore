@@ -9,6 +9,8 @@ package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.tuweni.progpow.ProgPoW
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.Arrays
 
@@ -58,7 +60,13 @@ open class VeriBlockBlock(
         this.difficulty = difficulty
         this.nonce = nonce
         raw = SerializeDeserializeService.serializeHeaders(this)
-        hash = VBlakeHash.hash(raw)
+        hash = VBlakeHash.wrap(
+            if (height == 0) {
+                BlockUtility.hashVBlakeBlock(raw)
+            } else {
+                BlockUtility.hashBlock(raw)
+            }
+        )
     }
 
     fun getRoundIndex(): Int =

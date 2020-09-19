@@ -7,6 +7,7 @@
 
 package org.veriblock.core.utilities;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -14,6 +15,8 @@ import org.junit.Test;
 import org.veriblock.core.Context;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.types.BitString;
+
+import java.security.Security;
 
 import static org.veriblock.core.params.NetworkParametersKt.defaultAlphaNetParameters;
 
@@ -567,5 +570,15 @@ public class BitcoinUtilityTests {
         Assert.assertFalse(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4")));
         Assert.assertTrue(Utility.byteArraysAreEqual(embeddedData, Utility.hexToBytes("0000042D00011E1E07C7674E0426D1A17E36C0D18EEE597DD7DC18572DD0FE6A925EF8CE4DC8F11BDB07EC256C08D4F9E01E764D5B9C47CD060C88B3FDF4D3DF57801424B0F5DE63992A016F5F38FEB4")));
 
+    }
+
+    @Test
+    public void testProgPowHash() {
+        Security.addProvider(new BouncyCastleProvider());
+        String headerHex = "000D532B00020F2F1A55A6523A39EB7DC08CFD0B88C6E6AC5C79FB12D2F9E527B45D57FE18D30532FB0694DFA136EAAA2594D31F5F6608FB04257C501003A12C2C";
+        byte[] header = Utility.hexToBytes(headerHex);
+        int height = BlockUtility.extractBlockHeightFromBlockHeader(header);
+        String hash = BlockUtility.hashProgPowBlock(header, height);
+        Assert.assertEquals("BA8D7CEDBF88EC9D5CBDF1D11562A1890297268430B0F6D4", hash);
     }
 }

@@ -8,12 +8,15 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
+import ch.qos.logback.classic.Logger
 import io.ktor.http.ContentType
+import mu.KLogger
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
+import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
 import org.veriblock.core.crypto.Crypto
@@ -64,8 +67,9 @@ class BitcoinFamilyChain(
         connectionTimeout = config.daemonConnectionTimeout
     )
 
-    override val requestLogsPath: String?
-        get() = config.requestLogsPath
+    override val requestsLogger = config.requestLogsPath?.let {
+        createLoggerFor(it, "http-calls-$key")
+    }
 
     init {
         config.checkValidity()
@@ -83,10 +87,6 @@ class BitcoinFamilyChain(
             } catch (e: Exception) {
                 error("Invalid segwit address: ${e.message}")
             }
-        }
-
-        if (requestLogsPath != null) {
-            File(requestLogsPath).mkdirs()
         }
     }
 

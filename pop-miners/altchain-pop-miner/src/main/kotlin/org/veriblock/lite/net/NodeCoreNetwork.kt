@@ -309,7 +309,7 @@ class NodeCoreNetwork(
     private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
         logger.debug { "Reconciling VBK blockchain..." }
         try {
-            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > VERIBLOCK_BLOCK_STORE_CAPACITY
+            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 2900
             if (tooFarBehind) {
                 logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
                 blockChain.reset()

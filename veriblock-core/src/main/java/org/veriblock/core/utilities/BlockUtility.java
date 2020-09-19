@@ -7,6 +7,7 @@
 
 package org.veriblock.core.utilities;
 
+import org.jetbrains.annotations.NotNull;
 import org.veriblock.core.Context;
 import org.veriblock.core.SharedConstants;
 import org.veriblock.core.bitcoinj.BitcoinUtilities;
@@ -482,46 +483,51 @@ public final class BlockUtility {
 
     public static String hashBlock(byte[] blockHeader) {
         int blockNum = BlockUtility.extractBlockHeightFromBlockHeader(blockHeader);
-        String blockHeaderHex = Utility.bytesToHex(blockHeader);
-
         int progPowForkHeight = Context.get().getNetworkParameters().getProgPowForkHeight();
-
-        Crypto crypto = new Crypto();
-
-        String blockHash;
         if (blockNum < progPowForkHeight) {
-            blockHash = crypto.vBlakeReturnHex(blockHeader);
+            return hashVBlakeBlock(blockHeader);
         } else {
-            if (hashCache.containsKey(blockHeaderHex)) {
-                return hashCache.get(blockHeaderHex);
-            }
+            return hashProgPowBlock(blockHeader, blockNum);
+        }
+    }
 
-            // Generate header hash...
-            byte[] headerHash = getProgPoWHeaderHash(blockHeader);
-            long extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
+    @NotNull
+    public static String hashVBlakeBlock(byte[] blockHeader) {
+        Crypto crypto = new Crypto();
+        String blockHash = crypto.vBlakeReturnHex(blockHeader);
+        return blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+    }
 
-            // Nonce in VeriBlock is only 40 bits (5 bytes)
-            long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
-
-            // TODO: Move to crypto
-            Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
-            UInt32[] cache = cachePair.getFirst();
-            UInt32[] cDag = cachePair.getSecond();
-            Bytes32 digest = ProgPoW.progPowHash(
-                blockNum,
-                converted,
-                Bytes32.wrap(headerHash),
-                cDag,
-                (ind) -> EthHash.calcDatasetItem(cache, ind)
-            );
-
-            blockHash = digest.toUnprefixedHexString().toUpperCase();
-            String hash = blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
-            hashCache.put(blockHeaderHex, hash);
-            return hash;
+    @NotNull
+    public static String hashProgPowBlock(byte[] blockHeader, int blockNum) {
+        String blockHeaderHex = Utility.bytesToHex(blockHeader);
+        if (hashCache.containsKey(blockHeaderHex)) {
+            return hashCache.get(blockHeaderHex);
         }
 
-        return blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+        // Generate header hash...
+        byte[] headerHash = getProgPoWHeaderHash(blockHeader);
+        long extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
+
+        // Nonce in VeriBlock is only 40 bits (5 bytes)
+        long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
+
+        // TODO: Move to crypto
+        Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
+        UInt32[] cache = cachePair.getFirst();
+        UInt32[] cDag = cachePair.getSecond();
+        Bytes32 digest = ProgPoW.progPowHash(
+            blockNum,
+            converted,
+            Bytes32.wrap(headerHash),
+            cDag,
+            (ind) -> EthHash.calcDatasetItem(cache, ind)
+        );
+
+        String blockHash = digest.toUnprefixedHexString().toUpperCase();
+        String hash = blockHash.substring(0, SharedConstants.VBLAKE_HASH_OUTPUT_SIZE_BYTES * 2); // *2 to account for Hex
+        hashCache.put(blockHeaderHex, hash);
+        return hash;
     }
 
     public static boolean isProgPow(int blockHeight) {

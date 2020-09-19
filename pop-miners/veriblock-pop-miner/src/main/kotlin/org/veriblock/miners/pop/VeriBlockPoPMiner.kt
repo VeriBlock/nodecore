@@ -41,7 +41,6 @@ fun run(args: Array<String>): Int {
     EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
 
-
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
     println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")

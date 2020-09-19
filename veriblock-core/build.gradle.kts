@@ -36,16 +36,15 @@ dependencies {
     api("ch.qos.logback:logback-classic:1.2.3")
     api("io.github.microutils:kotlin-logging:1.6.26")
 
+    api("io.netty:netty-buffer:4.1.30.Final")
+    api("io.vertx:vertx-core:3.6.2")
+    api("com.google.guava:guava:20.0")
+
     // Joda Time
     api("joda-time:joda-time:2.9.9")
 
     // Unit testing
     testImplementation("junit:junit:4.12")
-
-    compile("io.netty:netty-buffer:4.1.30.Final")
-    compile("org.bouncycastle:bcprov-jdk15on:1.60")
-    compile("io.vertx:vertx-core:3.6.2")
-    compile("com.google.guava:guava:20.0")
 
 }
 
