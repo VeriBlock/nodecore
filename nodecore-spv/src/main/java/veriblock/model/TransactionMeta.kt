@@ -9,11 +9,10 @@ package veriblock.model
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
-import veriblock.listeners.TransactionStateChangedListener
+import org.veriblock.core.utilities.AsyncEvent
+import veriblock.EventBus
 import java.util.ArrayList
 import java.util.HashSet
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executor
 
 class TransactionMeta(
     val txId: Sha256Hash
@@ -22,10 +21,12 @@ class TransactionMeta(
     var appearsAtChainHeight = -1
     var depth = 0
     private val seenByPeers: MutableSet<String> = HashSet()
-    private val stateChangedListeners: CopyOnWriteArrayList<ListenerRegistration<TransactionStateChangedListener>> = CopyOnWriteArrayList()
     var state = MetaState.UNKNOWN
         private set
     var appearsInBestChainBlock: VBlakeHash? = null
+
+    val transactionStateChangedEvent = AsyncEvent<TransactionMeta>("Transaction State Changed", EventBus.executor)
+    val transactionDepthChangedEvent = AsyncEvent<TransactionMeta>("Transaction Depth Changed", EventBus.executor)
 
     fun getAppearsInBlock(): List<VBlakeHash> {
         return appearsInBlock
@@ -54,36 +55,12 @@ class TransactionMeta(
         return true
     }
 
-    fun addTransactionStateChangedListener(listener: TransactionStateChangedListener, executor: Executor) {
-        stateChangedListeners.add(ListenerRegistration(listener, executor))
-    }
-
-    fun removeTransactionStateChangedListener(listener: TransactionStateChangedListener) {
-        ListenerRegistration.Companion.removeFromList<TransactionStateChangedListener>(listener, stateChangedListeners)
-    }
-
     private fun informListenersStateChanged() {
-        val self = this
-        for (registration in stateChangedListeners) {
-            registration.executor.execute {
-                registration.listener.onTransactionStateChanged(
-                    self,
-                    TransactionStateChangedListener.ChangeReason.STATE
-                )
-            }
-        }
+        transactionStateChangedEvent.trigger(this)
     }
 
     private fun informListenersDepthChanged() {
-        val self = this
-        for (registration in stateChangedListeners) {
-            registration.executor.execute {
-                registration.listener.onTransactionStateChanged(
-                    self,
-                    TransactionStateChangedListener.ChangeReason.DEPTH
-                )
-            }
-        }
+        transactionDepthChangedEvent.trigger(this)
     }
 
     fun setState(state: MetaState) {

@@ -5,11 +5,12 @@ import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
 import veriblock.model.StandardTransaction
+import veriblock.model.TransactionMeta
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 object EventBus {
-
-    private val executor = Executors.newSingleThreadExecutor(
+    val executor: ExecutorService = Executors.newSingleThreadExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("event-listener")
             .build()
