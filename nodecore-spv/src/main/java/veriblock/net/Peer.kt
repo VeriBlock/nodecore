@@ -19,6 +19,8 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
+import veriblock.EventBus
+import veriblock.MessageReceivedEvent
 import veriblock.SpvContext
 import veriblock.model.ListenerRegistration
 import veriblock.model.NodeMetadata
@@ -37,10 +39,7 @@ class Peer(
     private val self: NodeMetadata,
     val address: String,
     val port: Int
-) : PeerSocketClosedEventListener {
-    private val connectedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PeerConnectedEventListener>>()
-    private val disconnectedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PeerDisconnectedEventListener>>()
-    private val messageReceivedEventListeners = CopyOnWriteArrayList<ListenerRegistration<MessageReceivedEventListener>>()
+) {
     private lateinit var handler: PeerSocketHandler
     var bestBlockHeight = 0
         private set
@@ -79,7 +78,7 @@ class Peer(
             ResultsCase.ANNOUNCE -> {
                 // Set a status to "Open"
                 // Extract peer info
-                notifyPeerConnected()
+                EventBus.peerConnectedEvent.trigger(this)
             }
             ResultsCase.ADVERTISE_BLOCKS -> {
                 if (message.advertiseBlocks.headersCount >= 1000) {
@@ -87,16 +86,16 @@ class Peer(
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence().map {
-                            SerializeDeserializeService.parseVeriBlockBlock(
-                                it.header.toByteArray()
-                            )
-                        }.filter {
+                        SerializeDeserializeService.parseVeriBlockBlock(
+                            it.header.toByteArray()
+                        )
+                    }.filter {
                         it.height % 20 == 0
                     }.sortedByDescending {
                         it.height
                     }.take(10).toList()
                     requestBlockDownload(extractedKeystones)
-                } else if (bestBlockHeight == 0) {
+                } else if (bestBlockHeight == 0) { // FIXME: Remove after we're able to retrieve best block height
                     val lastHeader = message.advertiseBlocks.headersList.last().header.toByteArray()
                     val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
                     bestBlockHeight = lastHeight
@@ -191,39 +190,12 @@ class Peer(
         )
     }
 
-    fun addConnectedEventListener(executor: Executor?, listener: PeerConnectedEventListener) {
-        connectedEventListeners.add(ListenerRegistration(listener, executor!!))
-    }
-
-    private fun notifyPeerConnected() {
-        for (registration in connectedEventListeners) {
-            registration.executor.execute { registration.listener.onPeerConnected(this) }
-        }
-    }
-
-    fun addDisconnectedEventListener(executor: Executor?, listener: PeerDisconnectedEventListener) {
-        disconnectedEventListeners.add(ListenerRegistration(listener, executor!!))
-    }
-
-    private fun notifyPeerDisconnected() {
-        for (registration in disconnectedEventListeners) {
-            registration.executor.execute { registration.listener.onPeerDisconnected(this) }
-        }
-    }
-
-    fun addMessageReceivedEventListeners(executor: Executor?, listener: MessageReceivedEventListener) {
-        messageReceivedEventListeners.add(ListenerRegistration(listener, executor!!))
-    }
-
     private fun notifyMessageReceived(message: VeriBlockMessages.Event) {
-        for (registration in messageReceivedEventListeners) {
-            registration.executor.execute { registration.listener.onMessageReceived(message, this) }
-        }
+        EventBus.messageReceivedEvent.trigger(MessageReceivedEvent(this, message))
     }
 
-    override fun onPeerSocketClosed() {
+    fun onPeerSocketClosed() {
         // Set a status to "Closed"
-        notifyPeerDisconnected()
+        EventBus.peerDisconnectedEvent.trigger(this)
     }
-
 }

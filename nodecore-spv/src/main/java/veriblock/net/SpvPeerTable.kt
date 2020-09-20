@@ -24,8 +24,8 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
+import veriblock.EventBus
 import veriblock.SpvContext
-import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.DownloadStatus
 import veriblock.model.DownloadStatusResponse
 import veriblock.model.FutureEventReply
@@ -50,6 +50,7 @@ import veriblock.util.MessageIdGenerator.next
 import veriblock.util.Threading
 import veriblock.util.Threading.shutdown
 import veriblock.validator.LedgerProofReplyValidator
+import veriblock.wallet.PendingTransactionDownloadedListener
 import java.io.IOException
 import java.net.Socket
 import java.sql.SQLException
@@ -66,6 +67,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
@@ -80,7 +82,7 @@ class SpvPeerTable(
     private val p2PService: P2PService,
     peerDiscovery: PeerDiscovery,
     pendingTransactionContainer: PendingTransactionContainer
-) : PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
+) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
     private val discovery: PeerDiscovery
@@ -96,7 +98,6 @@ class SpvPeerTable(
     private val peers = ConcurrentHashMap<String, Peer>()
     private val pendingPeers = ConcurrentHashMap<String, Peer>()
     private val incomingQueue: BlockingQueue<NetworkMessage> = LinkedTransferQueue()
-    private val pendingTransactionDownloadedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PendingTransactionDownloadedListener>>()
     private val futureExecutor = Executors.newCachedThreadPool()
     private val futureEventReplyList: MutableMap<String, FutureEventReply> = ConcurrentHashMap()
 
@@ -114,7 +115,11 @@ class SpvPeerTable(
         )
         discovery = peerDiscovery
         this.pendingTransactionContainer = pendingTransactionContainer
-        addPendingTransactionDownloadedEventListeners(executor, spvContext.pendingTransactionDownloadedListener)
+
+        EventBus.pendingTransactionDownloadedEvent.register(
+            spvContext.pendingTransactionDownloadedListener,
+            spvContext.pendingTransactionDownloadedListener::onPendingTransactionDownloaded
+        )
     }
 
     fun start() {
@@ -126,6 +131,12 @@ class SpvPeerTable(
 
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
         messageExecutor.scheduleWithFixedDelay({ processIncomingMessages() }, 1, 1, TimeUnit.SECONDS)
+
+        EventBus.peerConnectedEvent.register(this, ::onPeerConnected)
+        EventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
+        EventBus.messageReceivedEvent.register(this) {
+            onMessageReceived(it.message, it.peer)
+        }
     }
 
     fun shutdown() {
@@ -149,8 +160,6 @@ class SpvPeerTable(
             return it
         }
         val peer = createPeer(address)
-        peer.addConnectedEventListener(Threading.LISTENER_THREAD, this)
-        peer.addDisconnectedEventListener(Threading.LISTENER_THREAD, this)
         lock.lock()
         return try {
             openConnection(peer)
@@ -355,62 +364,40 @@ class SpvPeerTable(
         }
     }
 
-    fun addPendingTransactionDownloadedEventListeners(
-        executor: Executor,
-        listener: PendingTransactionDownloadedListener
-    ) {
-        pendingTransactionDownloadedEventListeners.add(
-            ListenerRegistration(listener, executor)
-        )
-    }
-
     private fun notifyPendingTransactionDownloaded(tx: StandardTransaction) {
-        for (registration in pendingTransactionDownloadedEventListeners) {
-            registration.executor.execute { registration.listener.onPendingTransactionDownloaded(tx) }
+        EventBus.pendingTransactionDownloadedEvent.trigger(tx)
+    }
+
+    fun onPeerConnected(peer: Peer) = lock.withLock {
+        logger.debug("Peer {} connected", peer.address)
+        pendingPeers.remove(peer.address)
+        peers[peer.address] = peer
+
+        // TODO: Wallet related setup (bloom filter)
+
+        // Attach listeners
+        peer.setFilter(bloomFilter)
+
+        peer.sendMessage(
+            VeriBlockMessages.Event.newBuilder()
+                .setStateInfoRequest(VeriBlockMessages.GetStateInfoRequest.getDefaultInstance())
+                .build()
+        )
+
+        if (downloadPeer == null) {
+            startBlockchainDownload(peer)
         }
     }
 
-    override fun onPeerConnected(peer: Peer) {
-        lock.lock()
-        try {
-            logger.debug("Peer {} connected", peer.address)
-            pendingPeers.remove(peer.address)
-            peers[peer.address] = peer
-
-            // TODO: Wallet related setup (bloom filter)
-
-            // Attach listeners
-            peer.addMessageReceivedEventListeners(executor, this)
-            peer.setFilter(bloomFilter)
-
-            peer.sendMessage(
-                VeriBlockMessages.Event.newBuilder()
-                    .setStateInfoRequest(VeriBlockMessages.GetStateInfoRequest.getDefaultInstance())
-                    .build()
-            )
-
-            if (downloadPeer == null) {
-                startBlockchainDownload(peer)
-            }
-        } finally {
-            lock.unlock()
+    fun onPeerDisconnected(peer: Peer) = lock.withLock {
+        pendingPeers.remove(peer.address)
+        peers.remove(peer.address)
+        if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
+            downloadPeer = null
         }
     }
 
-    override fun onPeerDisconnected(peer: Peer) {
-        lock.lock()
-        try {
-            pendingPeers.remove(peer.address)
-            peers.remove(peer.address)
-            if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
-                downloadPeer = null
-            }
-        } finally {
-            lock.unlock()
-        }
-    }
-
-    override fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
+    fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
         try {
             logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.put(NetworkMessage(sender, message))
