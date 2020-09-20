@@ -17,7 +17,6 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import org.veriblock.sdk.sqlite.FileManager
-import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.TransactionPool
 import veriblock.net.P2PService
 import veriblock.net.PeerDiscovery
@@ -26,7 +25,7 @@ import veriblock.service.AdminApiService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
-import veriblock.wallet.PendingTransactionDownloadedListenerImpl
+import veriblock.wallet.PendingTransactionDownloadedListener
 import java.io.File
 import java.nio.file.Paths
 import java.sql.SQLException
@@ -106,7 +105,7 @@ class SpvContext {
             addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)
-            pendingTransactionDownloadedListener = PendingTransactionDownloadedListenerImpl(this)
+            pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
             peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
             transactionService = TransactionService(addressManager, networkParameters)
             adminApiService = AdminApiService(

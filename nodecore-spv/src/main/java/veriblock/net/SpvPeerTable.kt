@@ -24,8 +24,8 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
+import veriblock.EventBus
 import veriblock.SpvContext
-import veriblock.listeners.PendingTransactionDownloadedListener
 import veriblock.model.DownloadStatus
 import veriblock.model.DownloadStatusResponse
 import veriblock.model.FutureEventReply
@@ -50,6 +50,7 @@ import veriblock.util.MessageIdGenerator.next
 import veriblock.util.Threading
 import veriblock.util.Threading.shutdown
 import veriblock.validator.LedgerProofReplyValidator
+import veriblock.wallet.PendingTransactionDownloadedListener
 import java.io.IOException
 import java.net.Socket
 import java.sql.SQLException
@@ -96,7 +97,6 @@ class SpvPeerTable(
     private val peers = ConcurrentHashMap<String, Peer>()
     private val pendingPeers = ConcurrentHashMap<String, Peer>()
     private val incomingQueue: BlockingQueue<NetworkMessage> = LinkedTransferQueue()
-    private val pendingTransactionDownloadedEventListeners = CopyOnWriteArrayList<ListenerRegistration<PendingTransactionDownloadedListener>>()
     private val futureExecutor = Executors.newCachedThreadPool()
     private val futureEventReplyList: MutableMap<String, FutureEventReply> = ConcurrentHashMap()
 
@@ -114,7 +114,11 @@ class SpvPeerTable(
         )
         discovery = peerDiscovery
         this.pendingTransactionContainer = pendingTransactionContainer
-        addPendingTransactionDownloadedEventListeners(executor, spvContext.pendingTransactionDownloadedListener)
+
+        EventBus.pendingTransactionDownloadedEvent.register(
+            spvContext.pendingTransactionDownloadedListener,
+            spvContext.pendingTransactionDownloadedListener::onPendingTransactionDownloaded
+        )
     }
 
     fun start() {
@@ -355,19 +359,8 @@ class SpvPeerTable(
         }
     }
 
-    fun addPendingTransactionDownloadedEventListeners(
-        executor: Executor,
-        listener: PendingTransactionDownloadedListener
-    ) {
-        pendingTransactionDownloadedEventListeners.add(
-            ListenerRegistration(listener, executor)
-        )
-    }
-
     private fun notifyPendingTransactionDownloaded(tx: StandardTransaction) {
-        for (registration in pendingTransactionDownloadedEventListeners) {
-            registration.executor.execute { registration.listener.onPendingTransactionDownloaded(tx) }
-        }
+        EventBus.pendingTransactionDownloadedEvent.trigger(tx)
     }
 
     override fun onPeerConnected(peer: Peer) {

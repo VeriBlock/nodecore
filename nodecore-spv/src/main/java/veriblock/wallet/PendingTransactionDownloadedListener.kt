@@ -2,21 +2,23 @@ package veriblock.wallet
 
 import org.veriblock.core.crypto.Sha256Hash
 import veriblock.SpvContext
-import veriblock.listeners.PendingTransactionDownloadedListener
-import veriblock.model.Output
 import veriblock.model.StandardTransaction
 import veriblock.model.TransactionMeta
 import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
-class PendingTransactionDownloadedListenerImpl(
+class PendingTransactionDownloadedListener(
     private val spvContext: SpvContext
-) : PendingTransactionDownloadedListener {
+) {
     private val transactions: MutableMap<Sha256Hash, StandardTransaction> = mutableMapOf()
     private val ledger = Ledger()
     private val keyRing = KeyRing()
     private val lock = ReentrantLock(true)
-    override fun onPendingTransactionDownloaded(transaction: StandardTransaction?) {}
+
+    // TODO
+    fun onPendingTransactionDownloaded(transaction: StandardTransaction) {
+    }
 
     fun loadTransactions(toLoad: List<StandardTransaction>) {
         for (tx in toLoad) {
@@ -25,18 +27,13 @@ class PendingTransactionDownloadedListenerImpl(
         }
     }
 
-    fun commitTx(tx: StandardTransaction) {
-        lock.lock()
-        try {
-            if (transactions.containsKey(tx.txId)) {
-                return
-            }
-            tx.transactionMeta!!.setState(TransactionMeta.MetaState.PENDING)
-            transactions[tx.txId] = tx
-            ledger.record(tx)
-        } finally {
-            lock.unlock()
+    fun commitTx(tx: StandardTransaction) = lock.withLock {
+        if (transactions.containsKey(tx.txId)) {
+            return
         }
+        tx.transactionMeta!!.setState(TransactionMeta.MetaState.PENDING)
+        transactions[tx.txId] = tx
+        ledger.record(tx)
     }
 
     fun getStandardTransaction(txId: Sha256Hash?): StandardTransaction? {
@@ -59,15 +56,9 @@ class PendingTransactionDownloadedListenerImpl(
         }
     }
 
-    private fun addTransaction(tx: StandardTransaction) {
-        lock.lock()
-        try {
-            transactions.putIfAbsent(tx.txId, tx)
-            ledger.record(tx)
-            //save();
-        } finally {
-            lock.unlock()
-        }
+    private fun addTransaction(tx: StandardTransaction) = lock.withLock {
+        transactions.putIfAbsent(tx.txId, tx)
+        ledger.record(tx)
+        //save();
     }
-
 }

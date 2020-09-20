@@ -87,16 +87,16 @@ class Peer(
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence().map {
-                            SerializeDeserializeService.parseVeriBlockBlock(
-                                it.header.toByteArray()
-                            )
-                        }.filter {
+                        SerializeDeserializeService.parseVeriBlockBlock(
+                            it.header.toByteArray()
+                        )
+                    }.filter {
                         it.height % 20 == 0
                     }.sortedByDescending {
                         it.height
                     }.take(10).toList()
                     requestBlockDownload(extractedKeystones)
-                } else if (bestBlockHeight == 0) {
+                } else if (bestBlockHeight == 0) { // FIXME: Remove after we're able to retrieve best block height
                     val lastHeader = message.advertiseBlocks.headersList.last().header.toByteArray()
                     val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
                     bestBlockHeight = lastHeight
