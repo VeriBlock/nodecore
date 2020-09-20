@@ -67,6 +67,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
@@ -81,7 +82,7 @@ class SpvPeerTable(
     private val p2PService: P2PService,
     peerDiscovery: PeerDiscovery,
     pendingTransactionContainer: PendingTransactionContainer
-) : PeerConnectedEventListener, PeerDisconnectedEventListener, MessageReceivedEventListener {
+) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
     private val discovery: PeerDiscovery
@@ -130,6 +131,12 @@ class SpvPeerTable(
 
         // Scheduling with a fixed delay allows it to recover in the event of an unhandled exception
         messageExecutor.scheduleWithFixedDelay({ processIncomingMessages() }, 1, 1, TimeUnit.SECONDS)
+
+        EventBus.peerConnectedEvent.register(this, ::onPeerConnected)
+        EventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
+        EventBus.messageReceivedEvent.register(this) {
+            onMessageReceived(it.message, it.peer)
+        }
     }
 
     fun shutdown() {
@@ -153,8 +160,6 @@ class SpvPeerTable(
             return it
         }
         val peer = createPeer(address)
-        peer.addConnectedEventListener(Threading.LISTENER_THREAD, this)
-        peer.addDisconnectedEventListener(Threading.LISTENER_THREAD, this)
         lock.lock()
         return try {
             openConnection(peer)
@@ -363,47 +368,36 @@ class SpvPeerTable(
         EventBus.pendingTransactionDownloadedEvent.trigger(tx)
     }
 
-    override fun onPeerConnected(peer: Peer) {
-        lock.lock()
-        try {
-            logger.debug("Peer {} connected", peer.address)
-            pendingPeers.remove(peer.address)
-            peers[peer.address] = peer
+    fun onPeerConnected(peer: Peer) = lock.withLock {
+        logger.debug("Peer {} connected", peer.address)
+        pendingPeers.remove(peer.address)
+        peers[peer.address] = peer
 
-            // TODO: Wallet related setup (bloom filter)
+        // TODO: Wallet related setup (bloom filter)
 
-            // Attach listeners
-            peer.addMessageReceivedEventListeners(executor, this)
-            peer.setFilter(bloomFilter)
+        // Attach listeners
+        peer.setFilter(bloomFilter)
 
-            peer.sendMessage(
-                VeriBlockMessages.Event.newBuilder()
-                    .setStateInfoRequest(VeriBlockMessages.GetStateInfoRequest.getDefaultInstance())
-                    .build()
-            )
+        peer.sendMessage(
+            VeriBlockMessages.Event.newBuilder()
+                .setStateInfoRequest(VeriBlockMessages.GetStateInfoRequest.getDefaultInstance())
+                .build()
+        )
 
-            if (downloadPeer == null) {
-                startBlockchainDownload(peer)
-            }
-        } finally {
-            lock.unlock()
+        if (downloadPeer == null) {
+            startBlockchainDownload(peer)
         }
     }
 
-    override fun onPeerDisconnected(peer: Peer) {
-        lock.lock()
-        try {
-            pendingPeers.remove(peer.address)
-            peers.remove(peer.address)
-            if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
-                downloadPeer = null
-            }
-        } finally {
-            lock.unlock()
+    fun onPeerDisconnected(peer: Peer) = lock.withLock {
+        pendingPeers.remove(peer.address)
+        peers.remove(peer.address)
+        if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
+            downloadPeer = null
         }
     }
 
-    override fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
+    fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
         try {
             logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.put(NetworkMessage(sender, message))

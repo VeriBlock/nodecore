@@ -25,9 +25,6 @@ class TransactionMeta(
         private set
     var appearsInBestChainBlock: VBlakeHash? = null
 
-    val transactionStateChangedEvent = AsyncEvent<TransactionMeta>("Transaction State Changed", EventBus.executor)
-    val transactionDepthChangedEvent = AsyncEvent<TransactionMeta>("Transaction Depth Changed", EventBus.executor)
-
     fun getAppearsInBlock(): List<VBlakeHash> {
         return appearsInBlock
     }
@@ -56,11 +53,11 @@ class TransactionMeta(
     }
 
     private fun informListenersStateChanged() {
-        transactionStateChangedEvent.trigger(this)
+        EventBus.transactionStateChangedEvent.trigger(this)
     }
 
     private fun informListenersDepthChanged() {
-        transactionDepthChangedEvent.trigger(this)
+        EventBus.transactionDepthChangedEvent.trigger(this)
     }
 
     fun setState(state: MetaState) {
