@@ -766,6 +766,8 @@ message Event {
         GetVeriBlockPublicationsReply veriblock_publications_reply = 31;
         GetDebugVTBsRequest debug_vtb_request = 32;
         GetDebugVTBsReply debug_vtb_reply = 33;
+        GetStateInfoRequest state_info_request = 35;
+        GetStateInfoReply state_info_reply = 36;
     }
     string id = 11;
     bool acknowledge = 12;

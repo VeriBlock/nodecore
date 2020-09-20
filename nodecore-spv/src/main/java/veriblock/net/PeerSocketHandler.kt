@@ -50,8 +50,8 @@ class PeerSocketHandler(
 
     fun start() {
         running.set(true)
-        inputThread = CompletableFuture.runAsync(Runnable { runInput() }, Threading.PEER_INPUT_POOL)
-        outputThread = CompletableFuture.runAsync(Runnable { runOutput() }, Threading.PEER_OUTPUT_POOL)
+        inputThread = CompletableFuture.runAsync({ runInput() }, Threading.PEER_INPUT_POOL)
+        outputThread = CompletableFuture.runAsync({ runOutput() }, Threading.PEER_OUTPUT_POOL)
         inputThread.thenRun { stop() }
         outputThread.thenRun { stop() }
     }
@@ -74,12 +74,12 @@ class PeerSocketHandler(
                     logger.warn("Exception closing socket", e)
                 }
             }
-            peer?.onPeerSocketClosed()
+            peer.onPeerSocketClosed()
         }
     }
 
     fun write(message: VeriBlockMessages.Event) {
-        logger.info("Sending {} message to {}", message.resultsCase.name, peer?.address)
+        logger.debug("Sending {} message to {}", message.resultsCase.name, peer.address)
         try {
             if (writeQueue.size < 1100) {
                 writeQueue.put(message)
@@ -132,7 +132,7 @@ class PeerSocketHandler(
                 if (message == null) {
                     // Handle bad messages
                 } else {
-                    peer?.processMessage(message)
+                    peer.processMessage(message)
                 }
             } catch (e: SocketException) {
                 logger.info("Attempted to read from a socket that has been closed.")

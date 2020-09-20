@@ -92,6 +92,7 @@ private fun run(): Int {
                 sleep(1000L)
                 status = spvContext.peerTable.getDownloadStatus()
             }
+            progressBar.extraMessage = "Ready!"
             progressBar.maxHint(status.bestHeight.toLong())
             progressBar.stepTo(status.bestHeight.toLong())
         }

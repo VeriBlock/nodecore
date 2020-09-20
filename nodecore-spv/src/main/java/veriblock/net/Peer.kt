@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
@@ -42,8 +43,6 @@ class Peer(
     private val messageReceivedEventListeners = CopyOnWriteArrayList<ListenerRegistration<MessageReceivedEventListener>>()
     private lateinit var handler: PeerSocketHandler
     var bestBlockHeight = 0
-        private set
-    var bestBlockHash: String? = null
         private set
 
     fun setConnection(handler: PeerSocketHandler) {
@@ -77,9 +76,11 @@ class Peer(
 
     fun processMessage(message: VeriBlockMessages.Event) {
         when (message.resultsCase) {
-            ResultsCase.ANNOUNCE ->                 // Set a status to "Open"
+            ResultsCase.ANNOUNCE -> {
+                // Set a status to "Open"
                 // Extract peer info
                 notifyPeerConnected()
+            }
             ResultsCase.ADVERTISE_BLOCKS -> {
                 if (message.advertiseBlocks.headersCount >= 1000) {
                     logger.debug("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
@@ -95,6 +96,10 @@ class Peer(
                         it.height
                     }.take(10).toList()
                     requestBlockDownload(extractedKeystones)
+                } else if (bestBlockHeight == 0) {
+                    val lastHeader = message.advertiseBlocks.headersList.last().header.toByteArray()
+                    val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
+                    bestBlockHeight = lastHeight
                 }
                 notifyMessageReceived(message)
             }
@@ -122,7 +127,6 @@ class Peer(
             ResultsCase.HEARTBEAT -> {
                 // TODO: Need a way to request this or get it sooner than the current cycle time
                 bestBlockHeight = message.heartbeat.block.number
-                bestBlockHash = ByteStringUtility.byteStringToHex(message.heartbeat.block.hash)
                 notifyMessageReceived(message)
             }
             ResultsCase.TX_REQUEST -> notifyMessageReceived(message)
@@ -130,6 +134,9 @@ class Peer(
             ResultsCase.TRANSACTION_REPLY -> notifyMessageReceived(message)
             ResultsCase.DEBUG_VTB_REPLY -> notifyMessageReceived(message)
             ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> notifyMessageReceived(message)
+            ResultsCase.STATE_INFO_REPLY -> {
+                bestBlockHeight = message.stateInfoReply.localBlockchainHeight
+            }
         }
     }
 

@@ -256,7 +256,7 @@ class SpvPeerTable(
             while (running.get()) {
                 try {
                     val message = incomingQueue.take()
-                    logger.info("Received {} message from {}", message.message.resultsCase.name, message.sender.address)
+                    logger.debug("Received {} message from {}", message.message.resultsCase.name, message.sender.address)
                     when (message.message.resultsCase) {
                         ResultsCase.HEARTBEAT -> {
                             val heartbeat = message.message.heartbeat
@@ -278,6 +278,9 @@ class SpvPeerTable(
                             )
                             val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
                                 MessageSerializer.deserialize(it)
+                            }
+                            if (downloadPeer == null && veriBlockBlocks.last().height > 0) {
+                                startBlockchainDownload(message.sender)
                             }
                             try {
                                 blockchain.addAll(veriBlockBlocks)
@@ -379,6 +382,16 @@ class SpvPeerTable(
             // Attach listeners
             peer.addMessageReceivedEventListeners(executor, this)
             peer.setFilter(bloomFilter)
+
+            peer.sendMessage(
+                VeriBlockMessages.Event.newBuilder()
+                    .setStateInfoRequest(VeriBlockMessages.GetStateInfoRequest.getDefaultInstance())
+                    .build()
+            )
+
+            if (downloadPeer == null) {
+                startBlockchainDownload(peer)
+            }
         } finally {
             lock.unlock()
         }
@@ -470,7 +483,7 @@ class SpvPeerTable(
         val currentHeight = blockchain.getChainHead().height
         val bestBlockHeight = downloadPeer?.bestBlockHeight ?: 0
         status = when {
-            downloadPeer == null ->
+            downloadPeer == null || bestBlockHeight == 0 ->
                 DownloadStatus.DISCOVERING
             bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
                 DownloadStatus.READY
