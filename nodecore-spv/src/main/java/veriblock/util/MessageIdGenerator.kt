@@ -9,10 +9,8 @@ package veriblock.util
 
 import java.util.concurrent.atomic.AtomicLong
 
-object MessageIdGenerator {
-    private val identity = AtomicLong(0)
-    @JvmStatic
-    operator fun next(): String {
-        return identity.incrementAndGet().toString()
-    }
+private val identity = AtomicLong(0)
+
+fun nextMessageId(): String {
+    return identity.incrementAndGet().toString()
 }

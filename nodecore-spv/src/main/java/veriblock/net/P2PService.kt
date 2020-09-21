@@ -7,7 +7,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
 import veriblock.model.TransactionTypeIdentifier
 import veriblock.service.PendingTransactionContainer
-import veriblock.util.MessageIdGenerator.next
+import veriblock.util.nextMessageId
 
 private val logger = createLogger {}
 
@@ -21,7 +21,7 @@ class P2PService(
             if (transaction != null) {
                 logger.debug("Found a transaction for the given transaction id: $txId")
                 val builder = VeriBlockMessages.Event.newBuilder()
-                    .setId(next())
+                    .setId(nextMessageId())
                     .setAcknowledge(false)
                 when (transaction.transactionTypeIdentifier) {
                     TransactionTypeIdentifier.STANDARD -> builder.setTransaction(
@@ -41,7 +41,7 @@ class P2PService(
             } else {
                 logger.debug("Couldn't find a transaction for the given id $txId")
                 val builder = VeriBlockMessages.Event.newBuilder()
-                    .setId(next())
+                    .setId(nextMessageId())
                     .setAcknowledge(false)
                     .setNotFound(
                         VeriBlockMessages.NotFound.newBuilder()

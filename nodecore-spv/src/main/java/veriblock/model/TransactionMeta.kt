@@ -10,7 +10,7 @@ package veriblock.model
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.AsyncEvent
-import veriblock.EventBus
+import veriblock.util.EventBus
 import java.util.ArrayList
 import java.util.HashSet
 

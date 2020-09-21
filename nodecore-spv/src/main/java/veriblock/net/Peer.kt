@@ -8,28 +8,31 @@
 package veriblock.net
 
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
+import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.KeystoneQuery
-import nodecore.api.grpc.utilities.ByteStringUtility
-import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
-import veriblock.EventBus
-import veriblock.MessageReceivedEvent
 import veriblock.SpvContext
-import veriblock.model.ListenerRegistration
 import veriblock.model.NodeMetadata
 import veriblock.service.Blockchain
-import veriblock.util.MessageIdGenerator.next
-import java.util.Comparator
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executor
-import java.util.stream.Collectors
+import veriblock.util.EventBus
+import veriblock.util.MessageReceivedEvent
+import veriblock.util.nextMessageId
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeoutException
+import kotlin.coroutines.coroutineContext
 
 private val logger = createLogger {}
 
@@ -44,11 +47,13 @@ class Peer(
     var bestBlockHeight = 0
         private set
 
+    private val expectedResponses: MutableMap<String, Channel<VeriBlockMessages.Event>> = ConcurrentHashMap()
+
     fun setConnection(handler: PeerSocketHandler) {
         this.handler = handler
         this.handler.start()
         val announce = VeriBlockMessages.Event.newBuilder()
-            .setId(next())
+            .setId(nextMessageId())
             .setAcknowledge(false)
             .setAnnounce(
                 VeriBlockMessages.Announce.newBuilder()
@@ -74,6 +79,9 @@ class Peer(
     }
 
     fun processMessage(message: VeriBlockMessages.Event) {
+        // Handle as an expected response if possible
+        expectedResponses[message.id]?.offer(message)
+
         when (message.resultsCase) {
             ResultsCase.ANNOUNCE -> {
                 // Set a status to "Open"
@@ -115,7 +123,7 @@ class Peer(
                 if (txRequestBuilder.transactionsCount > 0) {
                     sendMessage(
                         VeriBlockMessages.Event.newBuilder()
-                            .setId(next())
+                            .setId(nextMessageId())
                             .setAcknowledge(false)
                             .setTxRequest(txRequestBuilder)
                             .build()
@@ -136,6 +144,9 @@ class Peer(
             ResultsCase.STATE_INFO_REPLY -> {
                 bestBlockHeight = message.stateInfoReply.localBlockchainHeight
             }
+            else -> {
+                // Ignore the other message types as they are irrelevant for SPV
+            }
         }
     }
 
@@ -154,7 +165,7 @@ class Peer(
     fun setFilter(filter: BloomFilter) {
         sendMessage(
             VeriBlockMessages.Event.newBuilder()
-                .setId(next())
+                .setId(nextMessageId())
                 .setAcknowledge(false)
                 .setCreateFilter(
                     VeriBlockMessages.CreateFilter.newBuilder()
@@ -183,11 +194,34 @@ class Peer(
         logger.debug("Sending keystone query, last block @ {}", keystones[0].height)
         sendMessage(
             VeriBlockMessages.Event.newBuilder()
-                .setId(next())
+                .setId(nextMessageId())
                 .setAcknowledge(false)
                 .setKeystoneQuery(queryBuilder.build())
                 .build()
         )
+    }
+
+    /**
+     * Sends a P2P request and waits for the peer to respond it during the given timeout (or a default of 2 seconds).
+     * This applies to Request/Response event type pairs.
+     */
+    suspend fun requestMessage(
+        request: VeriBlockMessages.Event,
+        timeoutInMillis: Long = 2000L
+    ): VeriBlockMessages.Event = try {
+        // Create conflated channel
+        val expectedResponseChannel = Channel<VeriBlockMessages.Event>(CONFLATED)
+        // Set this channel as the expected response for the request id
+        expectedResponses[request.id] = expectedResponseChannel
+        // Send the request
+        sendMessage(request)
+        // Wait until the expected response arrives (or times out)
+        withTimeout(timeoutInMillis) {
+            expectedResponseChannel.receive()
+        }
+    } finally {
+        // Unregister the channel
+        expectedResponses.remove(request.id)
     }
 
     private fun notifyMessageReceived(message: VeriBlockMessages.Event) {

@@ -33,13 +33,19 @@ object Threading {
             .setNameFormat("peer-input-%d")
             .build()
     )
+    val EVENT_EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("event-listener")
+            .build()
+    )
 
     @Throws(ExecutionException::class, InterruptedException::class)
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
             CompletableFuture.runAsync { shutdown(LISTENER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_OUTPUT_POOL) },
-            CompletableFuture.runAsync { shutdown(PEER_INPUT_POOL) }
+            CompletableFuture.runAsync { shutdown(PEER_INPUT_POOL) },
+            CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) }
         )
         shutdownTasks.get()
     }

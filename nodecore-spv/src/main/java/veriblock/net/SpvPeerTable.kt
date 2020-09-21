@@ -11,6 +11,17 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.protobuf.ByteString
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withTimeout
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
@@ -24,13 +35,10 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
-import veriblock.EventBus
 import veriblock.SpvContext
 import veriblock.model.DownloadStatus
 import veriblock.model.DownloadStatusResponse
-import veriblock.model.FutureEventReply
 import veriblock.model.LedgerContext
-import veriblock.model.ListenerRegistration
 import veriblock.model.NetworkMessage
 import veriblock.model.NodeMetadata
 import veriblock.model.PeerAddress
@@ -46,11 +54,10 @@ import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionData
 import veriblock.service.TransactionInfo
 import veriblock.service.TransactionType
-import veriblock.util.MessageIdGenerator.next
-import veriblock.util.Threading
+import veriblock.util.EventBus
+import veriblock.util.nextMessageId
 import veriblock.util.Threading.shutdown
 import veriblock.validator.LedgerProofReplyValidator
-import veriblock.wallet.PendingTransactionDownloadedListener
 import java.io.IOException
 import java.net.Socket
 import java.sql.SQLException
@@ -58,8 +65,6 @@ import java.util.Collections
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.LinkedTransferQueue
@@ -99,7 +104,6 @@ class SpvPeerTable(
     private val pendingPeers = ConcurrentHashMap<String, Peer>()
     private val incomingQueue: BlockingQueue<NetworkMessage> = LinkedTransferQueue()
     private val futureExecutor = Executors.newCachedThreadPool()
-    private val futureEventReplyList: MutableMap<String, FutureEventReply> = ConcurrentHashMap()
 
     init {
         bloomFilter = createBloomFilter()
@@ -213,7 +217,7 @@ class SpvPeerTable(
             ledgerProof.addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
         }
         val request = VeriBlockMessages.Event.newBuilder()
-            .setId(next())
+            .setId(nextMessageId())
             .setAcknowledge(false)
             .setLedgerProofRequest(ledgerProof.build())
             .build()
@@ -227,7 +231,7 @@ class SpvPeerTable(
         val pendingTransactionsId = pendingTransactionContainer.getPendingTransactionsId()
         for (sha256Hash in pendingTransactionsId) {
             val request = VeriBlockMessages.Event.newBuilder()
-                .setId(next())
+                .setId(nextMessageId())
                 .setAcknowledge(false)
                 .setTransactionRequest(
                     VeriBlockMessages.GetTransactionRequest.newBuilder()
@@ -326,11 +330,6 @@ class SpvPeerTable(
                         ResultsCase.TRANSACTION_REPLY -> if (message.message.transactionReply.success) {
                             pendingTransactionContainer.updateTransactionInfo(message.message.transactionReply.transaction.toModel())
                         }
-                        ResultsCase.DEBUG_VTB_REPLY -> {
-                        }
-                        ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> if (futureEventReplyList.containsKey(message.message.requestId)) {
-                            futureEventReplyList[message.message.requestId]!!.response(message.message)
-                        }
                         else -> {
                             // Ignore the other message types as they are irrelevant for SPV
                         }
@@ -408,7 +407,7 @@ class SpvPeerTable(
 
     fun advertise(transaction: Transaction) {
         val advertise = VeriBlockMessages.Event.newBuilder()
-            .setId(next())
+            .setId(nextMessageId())
             .setAcknowledge(false)
             .setAdvertiseTx(
                 VeriBlockMessages.AdvertiseTransaction.newBuilder()
@@ -432,27 +431,28 @@ class SpvPeerTable(
         }
     }
 
-    fun advertiseWithReply(event: VeriBlockMessages.Event): Future<VeriBlockMessages.Event> {
-        val futureEventReply = FutureEventReply()
-        futureEventReplyList[event.id] = futureEventReply
-        for (peer in peers.values) {
-            try {
-                peer.sendMessage(event)
-            } catch (ex: Exception) {
-                logger.error(ex.message, ex)
-            }
-        }
-        return futureExecutor.submit(Callable {
-            while (!futureEventReply.isDone()) {
-                try {
-                    Thread.sleep(2000)
-                } catch (e: InterruptedException) {
-                    logger.error(e.message, e)
+    suspend fun requestMessage(
+        event: VeriBlockMessages.Event,
+        timeoutInMillis: Long = 2000L
+    ): VeriBlockMessages.Event = withTimeout(timeoutInMillis) {
+        // Create a flow that emits in execution order
+        val executionOrderFlow = flow {
+            // Open a select scope for being able to call onAwait concurrently for all peers
+            select {
+                // Perform the request for all the peers asynchronously
+                // TODO: consider a less expensive approach such as asking a random peer. There can be peer behavior score weighting and/or retries.
+                for (peer in peers.values) {
+                    async {
+                        peer.requestMessage(event, timeoutInMillis)
+                    }.onAwait {
+                        // Emit in the flow on completion, so the first one to complete will get the other jobs cancelled
+                        emit(it)
+                    }
                 }
             }
-            futureEventReplyList.remove(event.id)
-            futureEventReply.response
-        })
+        }
+        // Choose the first one to complete
+        executionOrderFlow.first()
     }
 
     fun getSignatureIndex(address: String): Long? {

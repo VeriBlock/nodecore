@@ -42,7 +42,7 @@ import veriblock.model.Transaction
 import veriblock.model.asLightAddress
 import veriblock.net.SpvPeerTable
 import veriblock.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
-import veriblock.util.MessageIdGenerator.next
+import veriblock.util.nextMessageId
 import java.io.File
 import java.io.IOException
 import java.util.ArrayList
@@ -58,7 +58,6 @@ class AdminApiService(
     private val blockchain: Blockchain
 ) {
     fun getStateInfo(): StateInfo {
-        //TODO do real states
         val blockchainState = BlockchainState.LOADED
         val operatingState = OperatingState.STARTED
         val networkState = NetworkState.CONNECTED
@@ -375,14 +374,14 @@ class AdminApiService(
         pendingTransactionContainer.getTransactionInfo(it)
     }
 
-    fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest?): GetVeriBlockPublicationsReply {
+    suspend fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest?): GetVeriBlockPublicationsReply {
         val advertise = VeriBlockMessages.Event.newBuilder()
-            .setId(next())
+            .setId(nextMessageId())
             .setAcknowledge(false)
             .setVeriblockPublicationsRequest(getVeriBlockPublicationsRequest)
             .build()
-        val futureEventReply = peerTable.advertiseWithReply(advertise)
-        return futureEventReply.get().veriblockPublicationsReply
+        val reply = peerTable.requestMessage(advertise)
+        return reply.veriblockPublicationsReply
     }
 
     private fun getAvailableAddresses(totalOutputAmount: Long): List<AddressAvailableBalance> {
@@ -428,20 +427,5 @@ class AdminApiService(
     private fun getSignatureIndex(address: String): Long {
         return pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
             ?: return peerTable.getSignatureIndex(address)!!
-    }
-
-    private fun makeResult(
-        code: String,
-        message: String,
-        details: String?,
-        error: Boolean
-    ): VeriBlockMessages.Result {
-        return VeriBlockMessages.Result
-            .newBuilder()
-            .setCode(code)
-            .setMessage(message)
-            .setDetails(details)
-            .setError(error)
-            .build()
     }
 }
