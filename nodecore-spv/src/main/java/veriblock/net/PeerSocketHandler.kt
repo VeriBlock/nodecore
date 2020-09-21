@@ -7,13 +7,16 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import nodecore.api.grpc.VeriBlockMessages
-import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import veriblock.serialization.MessageSerializer.deserialize
-import veriblock.util.Threading
-import java.io.ByteArrayInputStream
+import veriblock.util.Threading.PEER_INPUT_POOL
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.EOFException
@@ -22,7 +25,6 @@ import java.lang.Thread.sleep
 import java.net.Socket
 import java.net.SocketException
 import java.util.concurrent.BlockingQueue
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -35,8 +37,9 @@ class PeerSocketHandler(
     private val inputStream = DataInputStream(socket.getInputStream())
     private val outputStream = DataOutputStream(socket.getOutputStream())
 
-    private lateinit var inputThread: CompletableFuture<Void>
-    private lateinit var outputThread: CompletableFuture<Void>
+    private val coroutineScope = CoroutineScope(PEER_INPUT_POOL.asCoroutineDispatcher())
+    private lateinit var inputJob: Job
+    private lateinit var outputJob: Job
 
     private val writeQueue: BlockingQueue<VeriBlockMessages.Event> = LinkedTransferQueue()
     private val running = AtomicBoolean(false)
@@ -48,22 +51,17 @@ class PeerSocketHandler(
 
     fun start() {
         running.set(true)
-        inputThread = CompletableFuture.runAsync({ runInput() }, Threading.PEER_INPUT_POOL)
-        outputThread = CompletableFuture.runAsync({ runOutput() }, Threading.PEER_OUTPUT_POOL)
-        inputThread.thenRun { stop() }
-        outputThread.thenRun { stop() }
+        inputJob = coroutineScope.launch { runInput() }
+        outputJob = coroutineScope.launch { runOutput() }
+        inputJob.invokeOnCompletion { stop() }
+        outputJob.invokeOnCompletion { stop() }
     }
 
     @Synchronized
     fun stop() {
         if (isRunning()) {
             running.set(false)
-            if (!inputThread.isDone) {
-                inputThread.cancel(true)
-            }
-            if (!outputThread.isDone) {
-                outputThread.cancel(true)
-            }
+            coroutineScope.cancel()
             writeQueue.clear()
             if (!socket.isClosed) {
                 try {
