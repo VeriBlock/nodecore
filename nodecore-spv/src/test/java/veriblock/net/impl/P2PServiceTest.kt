@@ -3,6 +3,7 @@ package veriblock.net.impl
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import nodecore.api.grpc.VeriBlockMessages
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.sdk.models.Coin
@@ -38,12 +39,12 @@ class P2PServiceTest {
         val txIds = listOf(Sha256Hash.ZERO_HASH)
 
         every { pendingTransactionContainer.getTransaction(any()) } returns null
-        every {peer.sendMessage((any()))} returns Unit
+        every { peer.sendMessage((any<VeriBlockMessages.Event>())) } returns Unit
 
         p2PService.onTransactionRequest(txIds, peer)
 
-        verify(exactly = 1 )  { pendingTransactionContainer.getTransaction(any()) }
-        verify(exactly = 1 )  { peer.sendMessage(any()) }
+        verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(any()) }
+        verify(exactly = 1 ) { peer.sendMessage(any<VeriBlockMessages.Event>()) }
     }
 
     @Test
@@ -60,11 +61,11 @@ class P2PServiceTest {
         standardTransaction.addSignature(sign, pub)
 
         every { pendingTransactionContainer.getTransaction(txIds[0]) } returns standardTransaction
-        every {peer.sendMessage((any()))} returns Unit
+        every { peer.sendMessage((any<VeriBlockMessages.Event>())) } returns Unit
 
         p2PService.onTransactionRequest(txIds, peer)
 
-        verify(exactly = 1 )  { pendingTransactionContainer.getTransaction(txIds[0]) }
-        verify(exactly = 1 )  { peer.sendMessage(any()) }
+        verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(txIds[0]) }
+        verify(exactly = 1 ) { peer.sendMessage(any<VeriBlockMessages.Event>()) }
     }
 }
