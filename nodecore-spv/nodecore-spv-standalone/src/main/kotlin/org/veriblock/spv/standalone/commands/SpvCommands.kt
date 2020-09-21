@@ -1,6 +1,8 @@
 package org.veriblock.spv.standalone.commands
 
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.runBlocking
+import nodecore.api.grpc.VeriBlockMessages
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.Utility
@@ -179,6 +181,18 @@ fun CommandFactory.spvCommands(
         val result = context.adminApiService.getNewAddress(count)
         printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
         displayResult(result.map { it.hash })
+        success()
+    }
+
+    command(
+        name = "Test",
+        form = "test",
+        description = "Tests"
+    ) {
+        runBlocking {
+            val response = context.adminApiService.getVeriBlockPublications(VeriBlockMessages.GetVeriBlockPublicationsRequest.getDefaultInstance())
+            println(response)
+        }
         success()
     }
 }

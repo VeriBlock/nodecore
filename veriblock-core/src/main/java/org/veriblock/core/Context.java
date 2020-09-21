@@ -45,4 +45,16 @@ public class Context {
             lock.unlock();
         }
     }
+
+    public static void set(NetworkParameters networkParameters) {
+        lock.lock();
+        try {
+            if (instance != null) {
+                logger.warn("Context was already initialized. Setting new context...");
+            }
+            instance = new Context(networkParameters);
+        } finally {
+            lock.unlock();
+        }
+    }
 }

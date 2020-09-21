@@ -7,10 +7,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.Utility
@@ -92,15 +94,9 @@ class PeerSocketHandler(
         }
     }
 
-    fun runOutput() {
+    suspend fun runOutput() {
         while (isRunning()) {
             try {
-                if (Thread.interrupted()) {
-                    logger.info(
-                        "Output thread for peer {} interrupted.", socket.inetAddress.hostAddress
-                    )
-                    break
-                }
                 val event = writeQueue.take()
                 val message = event.toByteArray()
                 val messageSize = Utility.intToByteArray(message.size)
@@ -110,15 +106,18 @@ class PeerSocketHandler(
             } catch (e: InterruptedException) {
                 logger.info("Output stream thread shutting down")
                 break
+            } catch (e: CancellationException) {
+                logger.info("Output stream thread shutting down")
+                break
             } catch (e: Exception) {
                 logger.error("Error in output stream thread!", e)
                 break
             }
-            sleep(10)
+            delay(10L)
         }
     }
 
-    private fun runInput() {
+    private suspend fun runInput() {
         while (isRunning()) {
             try {
                 val nextMessageSize = inputStream.readInt()
@@ -141,7 +140,7 @@ class PeerSocketHandler(
                 logger.error("Socket error: ", e)
                 break
             }
-            sleep(10)
+            delay(10)
         }
     }
 }

@@ -28,15 +28,15 @@ dependencies {
     implementation(project(":nodecore-grpc"))
     implementation(project(":nodecore-p2p"))
 
-    runtime("org.codehaus.groovy:groovy:2.4.12")
+    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
 
-    compile("ch.qos.logback:logback-classic:1.2.3")
-    compile("org.xerial:sqlite-jdbc:$sqliteVersion")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
 
-    compile("com.google.protobuf:protobuf-java:3.6.1")
-    compile("com.google.protobuf:protobuf-java-util:3.6.1")
+    implementation("com.google.protobuf:protobuf-java:3.6.1")
+    implementation("com.google.protobuf:protobuf-java-util:3.6.1")
 
-    compile("org.freemarker:freemarker:2.3.14")
+    implementation("org.freemarker:freemarker:2.3.14")
 
     //veriblock-core and nodecore-grpc plus their dependencies
     implementation(fileTree(mapOf("dir" to "$projectDir/../lib/", "include" to listOf("*.jar"))))

@@ -425,7 +425,7 @@ class SpvPeerTable(
 
     suspend fun requestMessage(
         event: VeriBlockMessages.Event,
-        timeoutInMillis: Long = 2000L
+        timeoutInMillis: Long = 5000L
     ): VeriBlockMessages.Event = withTimeout(timeoutInMillis) {
         // Create a flow that emits in execution order
         val executionOrderFlow = flow {

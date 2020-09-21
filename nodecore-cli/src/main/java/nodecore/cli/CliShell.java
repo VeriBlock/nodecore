@@ -20,6 +20,7 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.Context;
 import org.veriblock.core.SharedConstants;
 import org.veriblock.shell.Command;
 import org.veriblock.shell.CommandContext;
@@ -32,6 +33,10 @@ import veriblock.SpvContext;
 import javax.net.ssl.SSLException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.veriblock.core.params.NetworkParametersKt.defaultAlphaNetParameters;
+import static org.veriblock.core.params.NetworkParametersKt.defaultMainNetParameters;
+import static org.veriblock.core.params.NetworkParametersKt.defaultTestNetParameters;
 
 public class CliShell extends Shell {
     private static final Logger _logger = LoggerFactory.getLogger(CliShell.class);
@@ -53,6 +58,13 @@ public class CliShell extends Shell {
             disconnect();
         }
 
+        if (endpoint.port() % 100 == 0) {
+            Context.set(defaultMainNetParameters);
+        } else if (endpoint.port() % 100 == 1) {
+            Context.set(defaultTestNetParameters);
+        } else {
+            Context.set(defaultAlphaNetParameters);
+        }
         switch (endpoint.type()) {
             case NONE:
                 return false;

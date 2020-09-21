@@ -29,6 +29,7 @@ import veriblock.model.NodeMetadata
 import veriblock.service.Blockchain
 import veriblock.util.EventBus
 import veriblock.util.MessageReceivedEvent
+import veriblock.util.buildMessage
 import veriblock.util.nextMessageId
 import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
@@ -53,25 +54,21 @@ class Peer(
 
     init {
         handler.start()
-        val announce = VeriBlockMessages.Event.newBuilder()
-            .setId(nextMessageId())
-            .setAcknowledge(false)
-            .setAnnounce(
-                VeriBlockMessages.Announce.newBuilder()
-                    .setReply(false)
-                    .setNodeInfo(
-                        VeriBlockMessages.NodeInfo.newBuilder().setApplication(self.application)
-                            .setProtocolVersion(spvContext.networkParameters.protocolVersion)
-                            .setPlatform(self.platform)
-                            .setStartTimestamp(self.startTimestamp)
-                            .setShare(false)
-                            .setId(self.id)
-                            .setPort(self.port)
-                            .build()
-                    )
-                    .build()
-            )
-            .build()
+        val announce = buildMessage {
+            announce = VeriBlockMessages.Announce.newBuilder()
+                .setReply(false)
+                .setNodeInfo(
+                    VeriBlockMessages.NodeInfo.newBuilder().setApplication(self.application)
+                        .setProtocolVersion(spvContext.networkParameters.protocolVersion)
+                        .setPlatform(self.platform)
+                        .setStartTimestamp(self.startTimestamp)
+                        .setShare(false)
+                        .setId(self.id)
+                        .setPort(self.port)
+                        .build()
+                )
+                .build()
+        }
         sendMessage(announce)
     }
 
@@ -79,9 +76,14 @@ class Peer(
         handler.write(message)
     }
 
+    fun sendMessage(buildBlock: VeriBlockMessages.Event.Builder.() -> Unit) = sendMessage(
+        buildMessage(buildBlock = buildBlock)
+    )
+
     fun processMessage(message: VeriBlockMessages.Event) {
+        logger.debug { "Received ${message.resultsCase.name} from $address" }
         // Handle as an expected response if possible
-        expectedResponses[message.id]?.offer(message)
+        expectedResponses[message.requestId]?.offer(message)
 
         when (message.resultsCase) {
             ResultsCase.ANNOUNCE -> {
@@ -122,13 +124,9 @@ class Peer(
                     }
                 }
                 if (txRequestBuilder.transactionsCount > 0) {
-                    sendMessage(
-                        VeriBlockMessages.Event.newBuilder()
-                            .setId(nextMessageId())
-                            .setAcknowledge(false)
-                            .setTxRequest(txRequestBuilder)
-                            .build()
-                    )
+                    sendMessage {
+                        setTxRequest(txRequestBuilder)
+                    }
                 }
             }
             ResultsCase.TRANSACTION -> notifyMessageReceived(message)
@@ -164,19 +162,15 @@ class Peer(
     }
 
     fun setFilter(filter: BloomFilter) {
-        sendMessage(
-            VeriBlockMessages.Event.newBuilder()
-                .setId(nextMessageId())
-                .setAcknowledge(false)
-                .setCreateFilter(
-                    VeriBlockMessages.CreateFilter.newBuilder()
-                        .setFilter(ByteString.copyFrom(filter.bits))
-                        .setFlags(BloomFilter.Flags.BLOOM_UPDATE_NONE.Value)
-                        .setHashIterations(filter.hashIterations)
-                        .setTweak(filter.tweak)
-                )
-                .build()
-        )
+        sendMessage {
+            setCreateFilter(
+                VeriBlockMessages.CreateFilter.newBuilder()
+                    .setFilter(ByteString.copyFrom(filter.bits))
+                    .setFlags(BloomFilter.Flags.BLOOM_UPDATE_NONE.Value)
+                    .setHashIterations(filter.hashIterations)
+                    .setTweak(filter.tweak)
+            )
+        }
     }
 
     fun closeConnection() {
@@ -193,13 +187,9 @@ class Peer(
             )
         }
         logger.debug("Sending keystone query, last block @ {}", keystones[0].height)
-        sendMessage(
-            VeriBlockMessages.Event.newBuilder()
-                .setId(nextMessageId())
-                .setAcknowledge(false)
-                .setKeystoneQuery(queryBuilder.build())
-                .build()
-        )
+        sendMessage {
+            keystoneQuery = queryBuilder.build()
+        }
     }
 
     /**
@@ -208,11 +198,12 @@ class Peer(
      */
     suspend fun requestMessage(
         request: VeriBlockMessages.Event,
-        timeoutInMillis: Long = 2000L
+        timeoutInMillis: Long = 5000L
     ): VeriBlockMessages.Event = try {
         // Create conflated channel
         val expectedResponseChannel = Channel<VeriBlockMessages.Event>(CONFLATED)
         // Set this channel as the expected response for the request id
+        logger.debug { "Expecting a response to ${request.resultsCase.name} from $address" }
         expectedResponses[request.id] = expectedResponseChannel
         // Send the request
         sendMessage(request)
