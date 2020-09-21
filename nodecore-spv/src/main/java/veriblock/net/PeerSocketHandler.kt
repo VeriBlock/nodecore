@@ -16,6 +16,7 @@ import veriblock.util.Threading
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.io.EOFException
 import java.io.IOException
 import java.lang.Thread.sleep
 import java.net.Socket
@@ -28,21 +29,18 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class PeerSocketHandler(
-    private val socket: Socket,
     private val peer: Peer
 ) {
+    private val socket = Socket(peer.address, peer.port)
+    private val inputStream = DataInputStream(socket.getInputStream())
+    private val outputStream = DataOutputStream(socket.getOutputStream())
+
+    private lateinit var inputThread: CompletableFuture<Void>
+    private lateinit var outputThread: CompletableFuture<Void>
+
     private val writeQueue: BlockingQueue<VeriBlockMessages.Event> = LinkedTransferQueue()
     private val running = AtomicBoolean(false)
     private val errored = AtomicBoolean(false)
-    private var inputStream: DataInputStream
-    private lateinit var inputThread: CompletableFuture<Void>
-    private var outputStream: DataOutputStream
-    private lateinit var outputThread: CompletableFuture<Void>
-
-    init {
-        inputStream = DataInputStream(socket.getInputStream())
-        outputStream = DataOutputStream(socket.getOutputStream())
-    }
 
     fun isRunning(): Boolean {
         return running.get()
@@ -137,6 +135,9 @@ class PeerSocketHandler(
             } catch (e: SocketException) {
                 logger.info("Attempted to read from a socket that has been closed.")
                 // Disconnect?
+                break
+            } catch (e: EOFException) {
+                logger.info("Disconnected from peer ${peer.address}.")
                 break
             } catch (e: Exception) {
                 logger.error("Socket error: ", e)

@@ -30,6 +30,7 @@ import veriblock.service.Blockchain
 import veriblock.util.EventBus
 import veriblock.util.MessageReceivedEvent
 import veriblock.util.nextMessageId
+import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.coroutineContext
@@ -39,19 +40,19 @@ private val logger = createLogger {}
 class Peer(
     private val spvContext: SpvContext,
     private val blockchain: Blockchain,
-    private val self: NodeMetadata,
+    self: NodeMetadata,
     val address: String,
     val port: Int
 ) {
-    private lateinit var handler: PeerSocketHandler
+    private val handler = PeerSocketHandler(this)
+
     var bestBlockHeight = 0
         private set
 
     private val expectedResponses: MutableMap<String, Channel<VeriBlockMessages.Event>> = ConcurrentHashMap()
 
-    fun setConnection(handler: PeerSocketHandler) {
-        this.handler = handler
-        this.handler.start()
+    init {
+        handler.start()
         val announce = VeriBlockMessages.Event.newBuilder()
             .setId(nextMessageId())
             .setAcknowledge(false)

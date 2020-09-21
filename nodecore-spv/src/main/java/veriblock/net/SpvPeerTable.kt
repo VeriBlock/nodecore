@@ -163,10 +163,9 @@ class SpvPeerTable(
         peers[address.address]?.let {
             return it
         }
-        val peer = createPeer(address)
         lock.lock()
         return try {
-            openConnection(peer)
+            val peer = createPeer(address)
             pendingPeers[address.address] = peer
             peer
         } catch (e: IOException) {
@@ -179,13 +178,6 @@ class SpvPeerTable(
 
     fun createPeer(address: PeerAddress): Peer {
         return Peer(spvContext, blockchain, NodeMetadata, address.address, address.port)
-    }
-
-    @Throws(IOException::class)
-    fun openConnection(peer: Peer) {
-        val socket = Socket(peer.address, peer.port)
-        val handler = PeerSocketHandler(socket, peer)
-        peer.setConnection(handler)
     }
 
     fun startBlockchainDownload(peer: Peer) {
