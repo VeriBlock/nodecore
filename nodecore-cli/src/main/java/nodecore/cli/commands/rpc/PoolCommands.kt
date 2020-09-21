@@ -34,7 +34,7 @@ fun CommandFactory.poolCommands() {
         ),
         suggestedCommands = { listOf("stoppool", "getbalance", "setdefaultaddress") }
     ) {
-        val address: String? = getParameter("address")
+        val address: String? = getOptionalParameter("address")
         val request = if (address != null) {
             VeriBlockMessages.StartSoloPoolRequest.newBuilder()
                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
