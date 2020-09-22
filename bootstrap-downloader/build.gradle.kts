@@ -31,4 +31,8 @@ dependencies {
 application.applicationName = "bootstrap-downloader"
 application.mainClassName = "bootstrap.downloader.DownloaderKt"
 
+tasks.startScripts {
+    defaultJvmOpts = listOf("-Xms3g", "-Xmx3g")
+}
+
 setupJar("Bootstrap Downloader", "bootstrap.downloader")
