@@ -17,13 +17,13 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
 
 class NetworkConfig(
-    val network: String = "mainnet",
-    val host: String? = null,
-    val port: Int? = null,
-    val certificateChainPath: String? = null,
-    val isSsl: Boolean = false,
-    val adminPassword: String? = null,
-    val bitcoinOriginBlock: BitcoinOriginBlockConfig? = null
+    var network: String = "mainnet",
+    var host: String? = null,
+    var port: Int? = null,
+    var certificateChainPath: String? = null,
+    var isSsl: Boolean = false,
+    var adminPassword: String? = null,
+    var bitcoinOriginBlock: BitcoinOriginBlockConfig? = null
 )
 
 class BitcoinOriginBlockConfig(
@@ -109,6 +109,12 @@ class NetworkParameters(
         progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
 }
+
+/**
+ * Network Parameters builder (kotlin builder functions start with upper case, to resemble a constructor)
+ */
+inline fun NetworkParameters(builder: NetworkConfig.() -> Unit = {}) =
+    NetworkParameters(NetworkConfig().apply(builder))
 
 sealed class NetworkParametersTemplate {
     abstract val name: String
@@ -328,15 +334,15 @@ object RegTestParameters : NetworkParametersTemplate() {
 }
 
 @JvmField
-val defaultMainNetParameters = NetworkParameters(NetworkConfig(MainNetParameters.NETWORK))
+val defaultMainNetParameters = NetworkParameters { network = MainNetParameters.NETWORK }
 @JvmField
-val defaultTestNetParameters = NetworkParameters(NetworkConfig(TestNetParameters.NETWORK))
+val defaultTestNetParameters = NetworkParameters { network = TestNetParameters.NETWORK }
 @JvmField
-val defaultTestNetProgPoWParameters = NetworkParameters(NetworkConfig(TestNetProgPoWParameters.NETWORK))
+val defaultTestNetProgPoWParameters = NetworkParameters { network = TestNetProgPoWParameters.NETWORK }
 @JvmField
-val defaultAlphaNetParameters = NetworkParameters(NetworkConfig(AlphaNetParameters.NETWORK))
+val defaultAlphaNetParameters = NetworkParameters { network = AlphaNetParameters.NETWORK }
 @JvmField
-val defaultRegTestParameters = NetworkParameters(NetworkConfig(RegTestParameters.NETWORK))
+val defaultRegTestParameters = NetworkParameters { network = RegTestParameters.NETWORK }
 
 fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters

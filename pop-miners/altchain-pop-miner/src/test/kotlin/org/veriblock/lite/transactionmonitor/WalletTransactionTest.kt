@@ -25,7 +25,7 @@ import org.veriblock.lite.core.randomWalletTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
 
 class WalletTransactionTest {
-    private val networkParameters = NetworkParameters(NetworkConfig())
+    private val networkParameters = NetworkParameters()
     private val context = Context(Configuration(), networkParameters)
 
     @Test

@@ -21,7 +21,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 class WalletProtobufSerializerTest {
-    private val networkParameters = NetworkParameters(NetworkConfig())
+    private val networkParameters = NetworkParameters()
     private val context = Context(Configuration(), networkParameters)
 
     @Test

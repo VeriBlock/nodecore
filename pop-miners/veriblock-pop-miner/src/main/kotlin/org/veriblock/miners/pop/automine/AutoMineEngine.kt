@@ -8,6 +8,7 @@ package org.veriblock.miners.pop.automine
 
 import org.apache.commons.lang3.StringUtils
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
@@ -58,7 +59,7 @@ class AutoMineEngine(
                 }
             }
         } catch (e: Exception) {
-            logger.warn("Error handling new block", e)
+            logger.debugWarn(e) { "Error handling new block" }
         }
     }
 

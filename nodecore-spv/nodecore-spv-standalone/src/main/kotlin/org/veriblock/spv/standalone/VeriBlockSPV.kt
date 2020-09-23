@@ -13,6 +13,7 @@ package org.veriblock.spv.standalone
 import com.google.gson.GsonBuilder
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
@@ -30,6 +31,7 @@ import veriblock.model.DownloadStatus
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
 import java.lang.Thread.sleep
+import java.security.Security
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
 
@@ -39,11 +41,9 @@ private val shutdownSignal = CountDownLatch(1)
 
 private val config = Configuration()
 
-private val networkParameters = NetworkParameters(
-    NetworkConfig(
-        network = config.getString("network") ?: MainNetParameters.NETWORK
-    )
-)
+private val networkParameters = NetworkParameters {
+    network = config.getString("network") ?: MainNetParameters.NETWORK
+}
 private val peerDiscovery = if (config.getBoolean("useLocalNode") == true) {
     LocalhostDiscovery(networkParameters)
 } else {
@@ -51,6 +51,7 @@ private val peerDiscovery = if (config.getBoolean("useLocalNode") == true) {
 }
 
 private fun run(): Int {
+    Security.addProvider(BouncyCastleProvider())
     Runtime.getRuntime().addShutdownHook(Thread {
         shutdownSignal.countDown()
     })
