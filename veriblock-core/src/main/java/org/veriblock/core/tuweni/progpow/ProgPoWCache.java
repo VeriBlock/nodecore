@@ -20,7 +20,11 @@ public class ProgPoWCache {
     // Maps epochs to pairs of DAG caches and cDags
     private static final Map<Integer, Triple<UInt32[], UInt32[], Long>> cachedPairs = new HashMap<>();
 
-    private static final Integer MAX_CACHED_PAIRS = 10 + new Random().nextInt(4);
+    private static Integer MAX_CACHED_PAIRS = 10 + new Random().nextInt(4);
+
+    public static void setMaxCachedPairs(int limit) {
+        MAX_CACHED_PAIRS = limit;
+    }
 
     public static Pair<UInt32[], UInt32[]> getDAGCache(int blockHeight) {
         int epoch = (int)EthHash.epoch(blockHeight);
