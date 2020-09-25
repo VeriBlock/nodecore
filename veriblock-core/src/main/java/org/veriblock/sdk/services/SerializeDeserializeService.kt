@@ -200,7 +200,7 @@ object SerializeDeserializeService {
         var nonce = buffer.readBEInt32().toLong()
         if (BlockUtility.isProgPow(height)) {
             val nonceExtraByte = buffer.get()
-            nonce = (nonce shl 8) or nonceExtraByte.toLong()
+            nonce = (nonce shl 8) or (nonceExtraByte.toLong() and 0xFF)
         }
         return VeriBlockBlock(
             height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot,
