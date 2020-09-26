@@ -13,64 +13,61 @@
 
 package org.veriblock.core.tuweni.progpow;
 
-import org.veriblock.core.tuweni.units.bigints.UInt32;
-import org.veriblock.core.tuweni.units.bigints.UInt64;
-
-import static org.veriblock.core.tuweni.units.bigints.UInt32s.min;
-
 final class ProgPoWMath {
 
-    static UInt32 math(UInt32 a, UInt32 b, UInt32 r) {
-        switch (r.mod(UInt32.valueOf(11)).intValue()) {
+    static int math(int a, int b, int r) {
+        int rMod = (int)((((long)r) & 0x00000000FFFFFFFFL) % 11);
+        switch (rMod) {
             case 0:
                 return rotl32(a, b);
             case 1:
-                return a.and(b);
+                return a & b;
             case 2:
-                return a.add(b);
+                return a + b;
             case 3:
-                return popcount(a).add(popcount(b));
+                return popcount(a) + (popcount(b));
             case 4:
-                return clz(a).add(clz(b));
+                return clz(a) + (clz(b));
             case 5:
                 return rotr32(a, b);
             case 6:
                 return mul_hi(a, b);
             case 7:
-                return a.or(b);
+                return a | b;
             case 8:
-                return a.multiply(b);
+                return a * b;
             case 9:
-                return a.xor(b);
+                return a ^ b;
             case 10:
-                return min(a, b);
+                return (((long)a) & 0x00000000FFFFFFFFL) > (((long)b) & 0x00000000FFFFFFFFL) ? b : a;
             default:
                 throw new IllegalArgumentException(
-                    "Value " + r + " has mod larger than 11 " + r.mod(UInt32.valueOf(11).intValue()));
+                    "Value " + r + " has mod larger than 11 " + rMod);
         }
     }
 
-    private static UInt32 mul_hi(UInt32 x, UInt32 y) {
-        return UInt32
-            .fromBytes(UInt64.fromBytes(x.toBytes()).multiply(UInt64.fromBytes(y.toBytes())).toBytes().slice(0, 4));
+    private static int mul_hi(int x, int y) {
+        int multiplied = x * y;
+        int high = (multiplied & 0xFFFF0000);
+        return high;
     }
 
-    private static UInt32 clz(UInt32 value) {
-        return UInt32.valueOf(value.numberOfLeadingZeros());
+    private static int clz(int value) {
+        return Integer.numberOfLeadingZeros(value);
     }
 
-    private static UInt32 popcount(UInt32 value) {
-        return UInt32.valueOf(Integer.bitCount(value.intValue()));
+    private static int popcount(int value) {
+        return Integer.bitCount(value);
     }
 
-    static UInt32 rotl32(UInt32 var, UInt32 hops) {
-        return var.shiftLeft(hops.mod(UInt32.valueOf(32)).intValue()).or(
-            var.shiftRight(UInt32.valueOf(32).subtract(hops.mod(UInt32.valueOf(32))).intValue()));
+    static int rotl32(int var, int hops) {
+        int hopsMod32 = (int)((((long)hops) & 0x00000000FFFFFFFFL) % 32);
+        return ((var << (hopsMod32))) | (var >>> (32 - hopsMod32));
     }
 
-    static UInt32 rotr32(UInt32 var, UInt32 hops) {
-        return var.shiftRight(hops.mod(UInt32.valueOf(32)).intValue()).or(
-            var.shiftLeft(UInt32.valueOf(32).subtract(hops.mod(UInt32.valueOf(32))).intValue()));
+    static int rotr32(int var, int hops) {
+        int hopsMod32 = (int)((((long)hops) & 0x00000000FFFFFFFFL) % 32);
+        return ((var >>> (hopsMod32))) | (var << (32 - hopsMod32));
     }
 }
 

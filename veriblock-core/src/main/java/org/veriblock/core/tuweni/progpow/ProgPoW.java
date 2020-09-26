@@ -17,7 +17,6 @@ import org.veriblock.core.tuweni.bytes.Bytes32;
 import org.veriblock.core.tuweni.ethash.EthHash;
 import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.veriblock.core.tuweni.units.bigints.UInt64;
-import org.veriblock.core.utilities.Utility;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -65,7 +64,7 @@ public final class ProgPoW {
         Bytes32 header,
         UInt32[] dag, // gigabyte DAG located in framebuffer - the first portion gets cached
         Function<Integer, Bytes> dagLookupFunction) {
-        UInt32[][] mix = new UInt32[PROGPOW_LANES][PROGPOW_REGS];
+        int[][] mix = new int[PROGPOW_LANES][PROGPOW_REGS];
         
         // keccak(header..nonce)
         Bytes32 seed_256 = Keccakf800.keccakF800Progpow(header, nonce, Bytes32.ZERO);
@@ -85,34 +84,35 @@ public final class ProgPoW {
 
         // initialize mix for all lanes
         for (int l = 0; l < PROGPOW_LANES; l++) {
-            mix[l] = fillMix(UInt64.fromBytes(Bytes.wrap(ByteBuffer.allocate(8).putLong(seed).array())), UInt32.valueOf(l));
+            mix[l] = fillMix(UInt64.fromBytes(Bytes.wrap(ByteBuffer.allocate(8).putLong(seed).array())), l);
         }
 
         // execute the randomly generated inner loop
         for (int i = 0; i < PROGPOW_CNT_DAG; i++) {
-            progPowLoop(blockNumber, UInt32.valueOf(i), mix, dag, dagLookupFunction);
-            for (int z = 0; z < mix.length; z++) {
-                for (int k = 0; k < mix[z].length; k++) {
-                }
-            }
+            progPowLoop(blockNumber, i, mix, dag, dagLookupFunction);
         }
 
         // Reduce mix data to a per-lane 32-bit digest
-        UInt32[] digest_lane = new UInt32[PROGPOW_LANES];
+        int[] digest_lane = new int[PROGPOW_LANES];
         for (int l = 0; l < PROGPOW_LANES; l++) {
-            digest_lane[l] = UInt32.fromBytes(FNV_OFFSET_BASIS);
+            digest_lane[l] = 0x811c9dc5;
             for (int i = 0; i < PROGPOW_REGS; i++)
                 digest_lane[l] = fnv1a(digest_lane[l], mix[l][i]);
         }
         // Reduce all lanes to a single 256-bit digest
-        UInt32[] digest = new UInt32[8];
-        Arrays.fill(digest, UInt32.fromBytes(FNV_OFFSET_BASIS));
+        int[] digest = new int[8];
+        Arrays.fill(digest, 0x811c9dc5);
 
         for (int l = 0; l < PROGPOW_LANES; l++) {
             digest[l % 8] = fnv1a(digest[l % 8], digest_lane[l]);
         }
 
-        Bytes32 bytesDigest = Bytes32.wrap(Bytes.concatenate(Stream.of(digest).map(UInt32::toBytes).toArray(Bytes[]::new)));
+        UInt32[] digestConverted = new UInt32[digest.length];
+        for (int i = 0; i < digestConverted.length; i++) {
+            digestConverted[i] = new UInt32(digest[i]);
+        }
+
+        Bytes32 bytesDigest = Bytes32.wrap(Bytes.concatenate(Stream.of(digestConverted).map(UInt32::toBytes).toArray(Bytes[]::new)));
 
         // keccak(header .. keccak(header..nonce) .. digest);
         return Keccakf800.keccakF800Progpow(header, seed, bytesDigest);
@@ -138,24 +138,25 @@ public final class ProgPoW {
     }
 
     public static KISS99Random progPowInit(UInt64 prog_seed, int[] mix_seq_src, int[] mix_seq_dst) {
-        UInt32 leftSeed = UInt32.fromBytes(prog_seed.toBytes().slice(0, 4));
-        UInt32 rightSeed = UInt32.fromBytes(prog_seed.toBytes().slice(4));
-        UInt32 z = fnv1a(UInt32.fromBytes(FNV_OFFSET_BASIS), rightSeed);
-        UInt32 w = fnv1a(z, leftSeed);
-        UInt32 jsr = fnv1a(w, rightSeed);
-        UInt32 jcong = fnv1a(jsr, leftSeed);
+        int leftSeed = prog_seed.toBytes().slice(0, 4).toInt();
+        int rightSeed = prog_seed.toBytes().slice(4).toInt();
+        int z = fnv1a(0x811c9dc5, rightSeed);
+        int w = fnv1a(z, leftSeed);
+        int jsr = fnv1a(w, rightSeed);
+        int jcong = fnv1a(jsr, leftSeed);
         KISS99Random prog_rnd = new KISS99Random(z, w, jsr, jcong);
 
         for (int i = 0; i < PROGPOW_REGS; i++) {
             mix_seq_dst[i] = i;
             mix_seq_src[i] = i;
         }
+
         for (int i = PROGPOW_REGS - 1; i > 0; i--) {
-            int j = prog_rnd.generate().mod(UInt32.valueOf(i + 1)).intValue();
+            int j = (int)((((long)prog_rnd.generate()) & 0x00000000FFFFFFFFL) % (i + 1));
             int buffer = mix_seq_dst[i];
             mix_seq_dst[i] = mix_seq_dst[j];
             mix_seq_dst[j] = buffer;
-            j = prog_rnd.generate().mod(UInt32.valueOf(i + 1)).intValue();
+            j = (int)((((long)prog_rnd.generate()) & 0x00000000FFFFFFFFL) % (i + 1));
             buffer = mix_seq_src[i];
             mix_seq_src[i] = mix_seq_src[j];
             mix_seq_src[j] = buffer;
@@ -163,33 +164,32 @@ public final class ProgPoW {
         return prog_rnd;
     }
 
-    static UInt32 merge(UInt32 a, UInt32 b, UInt32 r) {
-        switch (r.mod(UInt32.valueOf(4)).intValue()) {
+    static int merge(int a, int b, int r) {
+        switch ((int)((((long)r)&0x00000000FFFFFFFFL) % 4)) {
             case 0:
-                return ProgPoWMath.rotr32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
+                return ProgPoWMath.rotr32(a, ((r >>> 16) % 31) + 1) ^ b;
             case 1:
-                return ProgPoWMath.rotl32(a, (r.shiftRight(16).mod(UInt32.valueOf(31))).add(UInt32.ONE)).xor(b);
+                return ProgPoWMath.rotl32(a, ((r >>> 16) % 31) + 1) ^ b;
             // prevent rotate by 0 which is a NOP
             case 2:
-                return (a.multiply(UInt32.valueOf(33))).add(b);
+                return ((a * 33) + b);
             case 3:
-                return a.xor(b).multiply(UInt32.valueOf(33));
+                return ((a ^ b) * 33);
             default:
                 throw new IllegalArgumentException(
-                    "r mod 4 is larger than 4" + r.toHexString() + " " + r.mod(UInt32.valueOf(4)).intValue());
+                    "r mod 4 is larger than 4! r = " + r + ", r % 4 = " + (r % 4));
         }
     }
 
-    public static UInt32[] fillMix(UInt64 seed, UInt32 laneId) {
-
-        UInt32 z = fnv1a(UInt32.fromBytes(FNV_OFFSET_BASIS), UInt32.fromBytes(seed.toBytes().slice(4, 4)));
-        UInt32 w = fnv1a(z, UInt32.fromBytes(seed.toBytes().slice(0, 4)));
-        UInt32 jsr = fnv1a(w, laneId);
-        UInt32 jcong = fnv1a(jsr, laneId);
+    public static int[] fillMix(UInt64 seed, int laneId) {
+        int z = fnv1a(0x811c9dc5, seed.toBytes().slice(4, 4).toInt());
+        int w = fnv1a(z, seed.toBytes().slice(0, 4).toInt());
+        int jsr = fnv1a(w, laneId);
+        int jcong = fnv1a(jsr, laneId);
 
         KISS99Random random = new KISS99Random(z, w, jsr, jcong);
 
-        UInt32[] mix = new UInt32[ProgPoW.PROGPOW_REGS];
+        int[] mix = new int[ProgPoW.PROGPOW_REGS];
         for (int i = 0; i < mix.length; i++) {
             mix[i] = random.generate();
         }
@@ -197,46 +197,53 @@ public final class ProgPoW {
         return mix;
     }
 
-    static UInt32 fnv1a(UInt32 h, UInt32 d) {
-        return (h.xor(d)).multiply(FNV_PRIME);
+    static int fnv1a(int h, int d) {
+        return (h ^ d) * (0x1000193);
     }
 
     public static void progPowLoop(
         long blockNumber,
-        UInt32 loop,
-        UInt32[][] mix,
+        int loop,
+        int[][] mix,
         UInt32[] dag,
         Function<Integer, Bytes> dagLookupFunction) {
 
         long dagBytes = EthHash.getFullSize(blockNumber);
 
         // dag_entry holds the 256 bytes of data loaded from the DAG
-        UInt32[][] dag_entry = new UInt32[PROGPOW_LANES][PROGPOW_DAG_LOADS];
+        int[][] dag_entry = new int[PROGPOW_LANES][PROGPOW_DAG_LOADS];
         // On each loop iteration rotate which lane is the source of the DAG address.
         // The source lane's mix[0] value is used to ensure the last loop's DAG data feeds into this loop's address.
         // dag_addr_base is which 256-byte entry within the DAG will be accessed
-        int dag_addr_base = mix[loop.intValue() % PROGPOW_LANES][0]
-            .mod(UInt32.valueOf(Math.toIntExact(dagBytes / (PROGPOW_LANES * PROGPOW_DAG_LOADS * Integer.BYTES))))
-            .intValue();
+        int dag_addr_base = (int)((((long)(mix[loop % PROGPOW_LANES][0])) & 0x00000000FFFFFFFFL) %
+            ((Math.toIntExact(dagBytes / (PROGPOW_LANES * PROGPOW_DAG_LOADS * Integer.BYTES)))));
 
         //mix[loop.intValue()%PROGPOW_LANES][0].mod(UInt32.valueOf((int) dagBytes / (PROGPOW_LANES*PROGPOW_DAG_LOADS*4))).intValue();
         Bytes lookupHolder = null;
-        UInt32 lastLookup = null;
+
+        boolean initial = true;
+        int lastLookup = 0;
         for (int l = 0; l < PROGPOW_LANES; l++) {
             // Lanes access DAG_LOADS sequential words from the dag entry
             // Shuffle which portion of the entry each lane accesses each iteration by XORing lane and loop.
             // This prevents multi-chip ASICs from each storing just a portion of the DAG
             //
-            int dag_addr_lane = dag_addr_base * PROGPOW_LANES + Integer.remainderUnsigned(l ^ loop.intValue(), PROGPOW_LANES);
-            int offset = Integer.remainderUnsigned(l ^ loop.intValue(), PROGPOW_LANES);
-            UInt32 lookup = (UInt32.valueOf(dag_addr_lane).divide(UInt32.valueOf(4))).add(offset >> 4);
+            int dag_addr_lane = dag_addr_base * PROGPOW_LANES + Integer.remainderUnsigned(l ^ loop, PROGPOW_LANES);
+            int offset = Integer.remainderUnsigned(l ^ loop, PROGPOW_LANES);
+            int lookup = (int)(((((long)dag_addr_lane) & 0x00000000FFFFFFFFL) / 4) + (offset >> 4));
+            if (initial) {
+                initial = false;
+                lastLookup = lookup;
+                lookupHolder = dagLookupFunction.apply(lookup);
+            }
+
             if (lookup != lastLookup) {
                 lastLookup = lookup;
-                lookupHolder = dagLookupFunction.apply(lookup.intValue());
+                lookupHolder = dagLookupFunction.apply(lookup);
             }
             for (int i = 0; i < PROGPOW_DAG_LOADS; i++) {
                 int lookupOffset = (i * 4 + ((offset & 0xf) << 4)) % 64;
-                dag_entry[l][i] = UInt32.fromBytes(lookupHolder.slice(lookupOffset, 4).reverse());
+                dag_entry[l][i] = (lookupHolder.slice(lookupOffset, 4).reverse()).toInt();
 
             }
 
@@ -258,27 +265,29 @@ public final class ProgPoW {
                 // lanes access random 32-bit locations within the first portion of the DAG
                 int src = mix_seq_src[(mix_seq_src_cnt++) % PROGPOW_REGS];
                 int dst = mix_seq_dst[(mix_seq_dst_cnt++) % PROGPOW_REGS];
-                UInt32 sel = prog_rnd.generate();
+                int sel = prog_rnd.generate();
                 for (int l = 0; l < PROGPOW_LANES; l++) {
-                    UInt32 offset = mix[l][src].mod(UInt32.valueOf(PROGPOW_CACHE_BYTES / 4));
-                    mix[l][dst] = merge(mix[l][dst], dag[offset.intValue()], sel);
+                    int offset = (int)((((long)(mix[l][src])) & 0x00000000FFFFFFFFL) % ((PROGPOW_CACHE_BYTES / 4)));
+                    int result = merge(mix[l][dst], dag[offset].intValue(), sel);
+                    mix[l][dst] = result;
                 }
             }
 
             if (i < PROGPOW_CNT_MATH) {
                 // Random ProgPoWMath
                 // Generate 2 unique sources
-                UInt32 src_rnd = prog_rnd.generate().mod(UInt32.valueOf(PROGPOW_REGS * (PROGPOW_REGS - 1)));
-                int src1 = src_rnd.mod(UInt32.valueOf(PROGPOW_REGS)).intValue(); // 0 <= src1 < PROGPOW_REGS
-                int src2 = src_rnd.divide(UInt32.valueOf(PROGPOW_REGS)).intValue(); // 0 <= src2 < PROGPOW_REGS - 1
+                int src_rnd = (int)((((long)prog_rnd.generate() & 0x00000000FFFFFFFFL) % (PROGPOW_REGS * (PROGPOW_REGS - 1))));
+                int src1 = (int)((((long)src_rnd) & 0x000000FFFFFFFFL) % (PROGPOW_REGS)); // 0 <= src1 < PROGPOW_REGS
+                int src2 = (int)((((long)src_rnd) & 0x00000000FFFFFFFFL) / (PROGPOW_REGS)); // 0 <= src2 < PROGPOW_REGS - 1
                 if (src2 >= src1)
                     ++src2; // src2 is now any reg other than src1
-                UInt32 sel1 = prog_rnd.generate();
+                int sel1 = prog_rnd.generate();
                 int dst = mix_seq_dst[(mix_seq_dst_cnt++) % PROGPOW_REGS];
-                UInt32 sel2 = prog_rnd.generate();
+                int sel2 = prog_rnd.generate();
                 for (int l = 0; l < PROGPOW_LANES; l++) {
-                    UInt32 data = ProgPoWMath.math(mix[l][src1], mix[l][src2], sel1);
-                    mix[l][dst] = merge(mix[l][dst], data, sel2);
+                    int data = ProgPoWMath.math(mix[l][src1], mix[l][src2], sel1);
+                    int result = merge(mix[l][dst], data, sel2);
+                    mix[l][dst] = result;
                 }
             }
         }
@@ -287,7 +296,7 @@ public final class ProgPoW {
         // Always merge into mix[0] to feed the offset calculation
         for (int i = 0; i < PROGPOW_DAG_LOADS; i++) {
             int dst = (i == 0) ? 0 : mix_seq_dst[(mix_seq_dst_cnt++) % PROGPOW_REGS];
-            UInt32 sel = prog_rnd.generate();
+            int sel = prog_rnd.generate();
             for (int l = 0; l < PROGPOW_LANES; l++) {
                 mix[l][dst] = merge(mix[l][dst], dag_entry[l][i], sel);
             }

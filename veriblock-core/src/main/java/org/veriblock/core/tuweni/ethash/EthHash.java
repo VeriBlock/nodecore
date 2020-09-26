@@ -177,26 +177,43 @@ public class EthHash {
      * @param index the current index
      * @return a new DAG item to append to the DAG
      */
-    public static Bytes calcDatasetItem(UInt32[] cache, int index) {
+    public static Bytes calcDatasetItem(int[] cache, int index) {
         int rows = cache.length / HASH_WORDS;
-        UInt32[] mixInts = new UInt32[HASH_BYTES / 4];
+        int[] mixInts = new int[HASH_BYTES / 4];
         int offset = index % rows * HASH_WORDS;
-        mixInts[0] = cache[offset].xor(UInt32.valueOf(index));
+        mixInts[0] = cache[offset] ^ (index);
         System.arraycopy(cache, offset + 1, mixInts, 1, HASH_WORDS - 1);
-        Bytes buffer = intToByte(mixInts);
+
+        byte[] bytesOfMixInts = new byte[mixInts.length * 4];
+        for (int i = 0; i < mixInts.length; i++) {
+            bytesOfMixInts[i*4]  = ((byte)(mixInts[i] & 0x000000FF));
+            bytesOfMixInts[i*4+1]  = ((byte)((mixInts[i] & 0x0000FF00) >>> 8));
+            bytesOfMixInts[i*4+2]  = ((byte)((mixInts[i] & 0x00FF0000) >>> 16));
+            bytesOfMixInts[i*4+3]  = ((byte)((mixInts[i] & 0xFF000000) >>> 24));
+        }
+
+        Bytes buffer = Bytes.wrap(bytesOfMixInts); // intToByte(mixInts);
 
         buffer = Hash.keccak512(buffer);
         for (int i = 0; i < mixInts.length; i++) {
-            mixInts[i] = UInt32.fromBytes(buffer.slice(i * 4, 4).reverse());
+            mixInts[i] = (buffer.slice(i * 4, 4).reverse()).toInt();
         }
         for (int i = 0; i < DATASET_PARENTS; ++i) {
             fnvHash(
                 mixInts,
                 cache,
-                fnv(UInt32.valueOf(index).xor(UInt32.valueOf(i)), mixInts[i % 16]).mod(UInt32.valueOf(rows)).multiply(
-                    UInt32.valueOf(HASH_WORDS)));
+                (int)(((((long)fnv((index) ^ (i), mixInts[i % 16])) & 0x00000000FFFFFFFFL) % (rows)) * HASH_WORDS));
         }
-        Bytes result = Hash.keccak512(intToByte(mixInts));
+
+        bytesOfMixInts = new byte[mixInts.length * 4];
+        for (int i = 0; i < mixInts.length; i++) {
+            bytesOfMixInts[i*4]  = ((byte)(mixInts[i] & 0x000000FF));
+            bytesOfMixInts[i*4+1]  = ((byte)((mixInts[i] & 0x0000FF00) >>> 8));
+            bytesOfMixInts[i*4+2]  = ((byte)((mixInts[i] & 0x00FF0000) >>> 16));
+            bytesOfMixInts[i*4+3]  = ((byte)((mixInts[i] & 0xFF000000) >>> 24));
+        }
+
+        Bytes result = Hash.keccak512(Bytes.wrap(bytesOfMixInts));
         return result;
     }
 
@@ -210,13 +227,13 @@ public class EthHash {
         return seed;
     }
 
-    private static UInt32 fnv(UInt32 v1, UInt32 v2) {
-        return (v1.multiply(FNV_PRIME)).xor(v2);
+    private static int fnv(int v1, int v2) {
+        return (v1 * (FNV_PRIME)) ^ (v2);
     }
 
-    private static void fnvHash(UInt32[] mix, UInt32[] cache, UInt32 offset) {
+    private static void fnvHash(int[] mix, int[] cache, int offset) {
         for (int i = 0; i < mix.length; i++) {
-            mix[i] = fnv(mix[i], cache[offset.intValue() + i]);
+            mix[i] = fnv(mix[i], cache[offset + i]);
         }
     }
 
