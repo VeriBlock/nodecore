@@ -53,58 +53,6 @@ public final class ProgPoW {
     public static int HASH_WORDS = 16;
     public static int DATASET_PARENTS = 256;
 
-    public static void main(String[] args) {
-        Security.addProvider(new BouncyCastleProvider());
-        byte[] randomheader = new byte[32];
-        new Random(100).nextBytes(randomheader);
-        byte[] headerHash = BlockUtility.getProgPoWHeaderHash(randomheader);
-
-        System.out.println("Generating cache pair...");
-        long start = System.currentTimeMillis();
-        Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(100);
-        System.out.println("Time to generate cache pair: " + (System.currentTimeMillis() - start) + "ms.");
-        UInt32[] cache = cachePair.getFirst();
-        UInt32[] cDag = cachePair.getSecond();
-
-        int[] trueCache = new int[cache.length];
-        for (int i = 0; i < cache.length; i++) {
-            trueCache[i] = cache[i].intValue();
-        }
-
-        String[] hashes = new String[]{
-            "0x98cdbcf8f7b4a0cf575bb31634750996d98286f7a8f6130e228610a06353e201",
-            "0xb6716228d2f2c0087dfcadbfccdac057a828122090af546d9bc117d1bcd57364",
-            "0x1118a4616fc1e6780cde3c19216d3f6360f6fae2c1e133ab6e660bd41bbcd1bd",
-            "0xf87a41e1a95f04df80c256fce7fe638ed7e26d339262bde6e54a0a7d81a3e583",
-            "0x674a50549c1026b0c5efaeb207150243d8c67e819251d5b01a588a518bc64403",
-            "0x17e621b1df5537c24e1b1de4b151517e919b24f774475cd22e39a11cfe101377",
-            "0xf33d633729ed73817e3ddac6a3273dd565c678d33bbdf1f71c98efa24f16e32e",
-            "0x013e2a4bf0d4ad3ebe0913f569297bb973c9b938ffb6273de524e594b9756eb4",
-            "0x76159ecdaa8a435234b349d922ba8308fef086a330d534a0f1526c321ee94988",
-            "0xe63907b1817fc3dda5763ca008519487159f53bf3f9db1effa3285cf0cede242"
-        };
-
-        for (long nonce = 0; nonce < 100000; nonce++) {
-            start = System.currentTimeMillis();
-            Bytes32 digest = ProgPoW.progPowHash(
-                100,
-                nonce,
-                Bytes32.wrap(headerHash),
-                cDag,
-                (ind) -> EthHash.calcDatasetItem(trueCache, ind)
-            );
-            System.out.println(" Took " + (System.currentTimeMillis() - start) + "ms: " + digest.toHexString());
-
-            if (nonce < 10) {
-                if (!digest.toHexString().equals(hashes[(int) nonce])) {
-                    System.out.println("Hash at nonce " + nonce + " invalid!");
-                    System.exit(0);
-                }
-            }
-        }
-    }
-
-
     /**
      * Creates a hash using the ProgPoW formulation of a block
      *
