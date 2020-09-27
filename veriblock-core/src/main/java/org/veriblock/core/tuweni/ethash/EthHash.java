@@ -20,7 +20,9 @@ import org.veriblock.core.tuweni.units.bigints.UInt32;
 
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -115,6 +117,13 @@ public class EthHash {
         return (int) sz;
     }
 
+    static Map<Long, Long> fullSizeCache = new HashMap<>();
+    static {
+        for (long block = 0; block < 20_000_000; block+=EPOCH_LENGTH) {
+            fullSizeCache.put(block, getFullSize(block));
+        }
+    }
+
     /**
      * Provides the size of the full dataset at a given block number
      *
@@ -122,6 +131,10 @@ public class EthHash {
      * @return the size of the full dataset at the block number, in bytes
      */
     public static long getFullSize(long block_number) {
+        if (fullSizeCache.containsKey(block_number - (block_number % EPOCH_LENGTH))) {
+            return fullSizeCache.get(block_number - (block_number % EPOCH_LENGTH));
+        }
+
         long sz = DATASET_BYTES_INIT + DATASET_BYTES_GROWTH * (epoch(block_number));
         sz -= MIX_BYTES;
         while (!isPrime(sz / MIX_BYTES)) {
