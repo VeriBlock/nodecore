@@ -1,6 +1,7 @@
 package org.veriblock.core.utilities
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.veriblock.core.Context
@@ -10,9 +11,18 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import java.security.Security
 import kotlin.system.measureTimeMillis
 
-class ProgPowPerformanceTest {
+@Ignore
+class ProgPowTests {
 
-    private val logger = createLogger {}
+    @Test
+    fun testProgPowHash() {
+        Security.addProvider(BouncyCastleProvider())
+        val headerHex = "000D532B00020F2F1A55A6523A39EB7DC08CFD0B88C6E6AC5C79FB12D2F9E527B45D57FE18D30532FB0694DFA136EAAA2594D31F5F6608FB04257C501003A12C2C"
+        val header = Utility.hexToBytes(headerHex)
+        val height = BlockUtility.extractBlockHeightFromBlockHeader(header)
+        val hash = BlockUtility.hashProgPowBlock(header, height)
+        Assert.assertEquals("BA8D7CEDBF88EC9D5CBDF1D11562A1890297268430B0F6D4", hash)
+    }
 
     @Ignore
     @Test
