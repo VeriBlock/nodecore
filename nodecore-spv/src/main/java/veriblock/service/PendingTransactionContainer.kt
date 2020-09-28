@@ -12,7 +12,7 @@ class PendingTransactionContainer {
     private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
     private val transactionsForMonitoring: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
 
-    fun getPendingTransactionsId(): Set<Sha256Hash> {
+    fun getPendingTransactionIds(): Set<Sha256Hash> {
         val allPendingTx: MutableSet<Sha256Hash> = HashSet()
         allPendingTx.addAll(pendingTxIdTransaction.keys)
         allPendingTx.addAll(transactionsForMonitoring)

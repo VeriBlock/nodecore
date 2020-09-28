@@ -8,13 +8,11 @@
 package veriblock.net
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
-import kotlinx.coroutines.channels.Channel.Factory.RENDEZVOUS
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.withTimeoutOrNull
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.KeystoneQuery
@@ -30,11 +28,7 @@ import veriblock.service.Blockchain
 import veriblock.util.EventBus
 import veriblock.util.MessageReceivedEvent
 import veriblock.util.buildMessage
-import veriblock.util.nextMessageId
-import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeoutException
-import kotlin.coroutines.coroutineContext
 
 private val logger = createLogger {}
 
@@ -81,7 +75,6 @@ class Peer(
     )
 
     fun processMessage(message: VeriBlockMessages.Event) {
-        logger.debug { "Received ${message.resultsCase.name} from $address" }
         // Handle as an expected response if possible
         expectedResponses[message.requestId]?.offer(message)
 
@@ -95,17 +88,22 @@ class Peer(
                 if (message.advertiseBlocks.headersCount >= 1000) {
                     logger.debug("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
 
-                    // Extract latest keystones and ask for more
-                    val extractedKeystones = message.advertiseBlocks.headersList.asSequence().map {
-                        SerializeDeserializeService.parseVeriBlockBlock(
-                            it.header.toByteArray()
-                        )
-                    }.filter {
-                        it.height % 20 == 0
-                    }.sortedByDescending {
-                        it.height
-                    }.take(10).toList()
-                    requestBlockDownload(extractedKeystones)
+                    // TODO create a proper coroutine scope for this
+                    GlobalScope.launch {
+                        // Extract latest keystones and ask for more
+                        val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
+                            .map {
+                                SerializeDeserializeService.parseVeriBlockBlock(
+                                    it.header.toByteArray()
+                                )
+                            }
+                            .filter { it.height % 20 == 0 }
+                            .sortedByDescending { it.height }
+                            .take(10)
+                            .toList()
+                        logger.debug { "Received keystones ${extractedKeystones.map { it.height }}"}
+                        requestBlockDownload(extractedKeystones)
+                    }
                 } else if (bestBlockHeight == 0) { // FIXME: Remove after we're able to retrieve best block height
                     val lastHeader = message.advertiseBlocks.headersList.last().header.toByteArray()
                     val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
@@ -180,6 +178,7 @@ class Peer(
     private fun requestBlockDownload(keystones: List<VeriBlockBlock>) {
         val queryBuilder = KeystoneQuery.newBuilder()
         for (block in keystones) {
+            logger.debug { "Preparing keystone ${block.height}..." }
             queryBuilder.addHeaders(
                 VeriBlockMessages.BlockHeader.newBuilder()
                     .setHash(ByteString.copyFrom(block.hash.bytes))

@@ -28,9 +28,7 @@ class Blockchain(
     val blockStore: VeriBlockStore
 ) {
     //TODO SPV-124
-    private val blocksCache = EvictingQueue.create<StoredVeriBlockBlock>(
-        1000
-    )
+    private val blocksCache = EvictingQueue.create<StoredVeriBlockBlock>(1000)
 
     fun getChainHead(): VeriBlockBlock {
         try {
@@ -69,11 +67,8 @@ class Blockchain(
     @Throws(SQLException::class)
     fun addAll(blocks: List<VeriBlockBlock>) {
         val sortedBlock = blocks.sortedBy { it.height }
-        logger.debug(
-            "Add blocks {} blocks, height {} - {}", sortedBlock.size, sortedBlock.first().height,
-            sortedBlock.last().height
-        )
-        if (!areBlocksSequentially(sortedBlock)) {
+        logger.debug { "Adding ${sortedBlock.size} blocks, height ${sortedBlock.first().height} - ${sortedBlock.last().height}" }
+        if (!areBlocksSequential(sortedBlock)) {
             // todo throw Exception
             return
         }
@@ -142,7 +137,7 @@ class Blockchain(
                 ?: return listOf(genesisBlock)
 
             blocks.add(cursor.block)
-            // TODO 16 is too much for bigDb with current approach. It take a lot of time. Try to get amount of blocks by height and process in memory.
+            // TODO 16 is too much for bigDb with current approach. It takes a lot of time. Try to get amount of blocks by height and process in memory.
             // for (int i = 0; i < 16; i++) {
             outer@
             for (i in 0..4) {
@@ -172,7 +167,7 @@ class Blockchain(
         }
     }
 
-    private fun areBlocksSequentially(blocks: List<VeriBlockBlock>): Boolean {
+    private fun areBlocksSequential(blocks: List<VeriBlockBlock>): Boolean {
         if (blocks.isEmpty()) {
             return false
         }

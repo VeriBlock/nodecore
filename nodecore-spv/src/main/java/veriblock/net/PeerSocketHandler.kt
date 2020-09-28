@@ -77,7 +77,7 @@ class PeerSocketHandler(
     }
 
     fun write(message: VeriBlockMessages.Event) {
-        logger.debug("Sending {} message to {}", message.resultsCase.name, peer.address)
+        logger.debug { "Sending ${message.resultsCase.name} message to ${peer.address}" }
         try {
             if (writeQueue.size < 1100) {
                 writeQueue.put(message)
@@ -88,9 +88,7 @@ class PeerSocketHandler(
                 )
             }
         } catch (e: InterruptedException) {
-            logger.warn(
-                "Output stream thread shutting down for peer {}", socket.inetAddress.hostAddress
-            )
+            logger.warn { "Output stream thread shutting down for peer ${socket.inetAddress.hostAddress}" }
         }
     }
 
@@ -127,6 +125,7 @@ class PeerSocketHandler(
                 if (message == null) {
                     // Handle bad messages
                 } else {
+                    logger.debug { "Received ${message.resultsCase.name} from ${peer.address}" }
                     peer.processMessage(message)
                 }
             } catch (e: SocketException) {

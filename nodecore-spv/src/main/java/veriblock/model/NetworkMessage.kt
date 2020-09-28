@@ -10,7 +10,7 @@ package veriblock.model
 import nodecore.api.grpc.VeriBlockMessages
 import veriblock.net.Peer
 
-class NetworkMessage(
+data class NetworkMessage(
     val sender: Peer,
     val message: VeriBlockMessages.Event
 )

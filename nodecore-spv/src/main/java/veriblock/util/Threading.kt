@@ -8,6 +8,9 @@
 package veriblock.util
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
@@ -19,6 +22,16 @@ object Threading {
     val LISTENER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("event-listener")
+            .build()
+    )
+    val PEER_TABLE_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("peer-table-thread")
+            .build()
+    )
+    val MESSAGE_HANDLER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("message-handler-thread")
             .build()
     )
     val PEER_OUTPUT_POOL: ExecutorService = Executors.newFixedThreadPool(
@@ -43,6 +56,8 @@ object Threading {
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
             CompletableFuture.runAsync { shutdown(LISTENER_THREAD) },
+            CompletableFuture.runAsync { shutdown(PEER_TABLE_THREAD) },
+            CompletableFuture.runAsync { shutdown(MESSAGE_HANDLER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_OUTPUT_POOL) },
             CompletableFuture.runAsync { shutdown(PEER_INPUT_POOL) },
             CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) }
@@ -61,5 +76,17 @@ object Threading {
             executorService.shutdownNow()
             Thread.currentThread().interrupt()
         }
+    }
+}
+
+inline fun CoroutineScope.launchWithFixedDelay(
+    initialDelayMillis: Long = 0,
+    periodMillis: Long = 1000L,
+    crossinline block: suspend CoroutineScope.() -> Unit
+) = launch {
+    delay(initialDelayMillis)
+    while (true) {
+        block()
+        delay(periodMillis)
     }
 }

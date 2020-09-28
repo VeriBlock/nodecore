@@ -9,7 +9,6 @@ package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
-import org.veriblock.core.tuweni.progpow.ProgPoW
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.Arrays
@@ -25,7 +24,6 @@ open class VeriBlockBlock(
     difficulty: Int,
     nonce: Long
 ) {
-    val raw: ByteArray
     val height: Int
     val version: Short
     val previousBlock: VBlakeHash
@@ -35,7 +33,20 @@ open class VeriBlockBlock(
     val timestamp: Int
     val difficulty: Int
     val nonce: Long
-    val hash: VBlakeHash
+
+    val raw: ByteArray by lazy {
+        SerializeDeserializeService.serializeHeaders(this)
+    }
+
+    val hash: VBlakeHash by lazy {
+        VBlakeHash.wrap(
+            if (height == 0) {
+                BlockUtility.hashVBlakeBlock(raw)
+            } else {
+                BlockUtility.hashBlock(raw)
+            }
+        )
+    }
 
     init {
         require(previousBlock.length >= VBlakeHash.PREVIOUS_BLOCK_LENGTH) {
@@ -59,14 +70,6 @@ open class VeriBlockBlock(
         this.timestamp = timestamp
         this.difficulty = difficulty
         this.nonce = nonce
-        raw = SerializeDeserializeService.serializeHeaders(this)
-        hash = VBlakeHash.wrap(
-            if (height == 0) {
-                BlockUtility.hashVBlakeBlock(raw)
-            } else {
-                BlockUtility.hashBlock(raw)
-            }
-        )
     }
 
     fun getRoundIndex(): Int =
