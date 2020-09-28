@@ -515,19 +515,13 @@ public final class BlockUtility {
         // TODO: Move to crypto
         Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
         UInt32[] cache = cachePair.getFirst();
-
-        int[] trueCache = new int[cache.length];
-        for (int i = 0; i < cache.length; i++) {
-            trueCache[i] = cache[i].intValue();
-        }
-
         UInt32[] cDag = cachePair.getSecond();
         Bytes32 digest = ProgPoW.progPowHash(
             blockNum,
             converted,
             Bytes32.wrap(headerHash),
             cDag,
-            (ind) -> EthHash.calcDatasetItem(trueCache, ind)
+            (ind) -> EthHash.calcDatasetItem(cache, ind)
         );
 
         String blockHash = digest.toUnprefixedHexString().toUpperCase();

@@ -105,7 +105,7 @@ public final class UInt32 implements UInt32Value<UInt32> {
         return new UInt32(value);
     }
 
-    public UInt32(int value) {
+    private UInt32(int value) {
         this.value = value;
     }
 
