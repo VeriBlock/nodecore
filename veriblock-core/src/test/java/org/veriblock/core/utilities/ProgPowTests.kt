@@ -18,10 +18,10 @@ class ProgPowTests {
     fun testProgPowHash() {
         Security.addProvider(BouncyCastleProvider())
         val headerHex = "000D532B00020F2F1A55A6523A39EB7DC08CFD0B88C6E6AC5C79FB12D2F9E527B45D57FE18D30532FB0694DFA136EAAA2594D31F5F6608FB04257C501003A12C2C"
-        val header = Utility.hexToBytes(headerHex)
+        val header = headerHex.asHexBytes()
         val height = BlockUtility.extractBlockHeightFromBlockHeader(header)
         val hash = BlockUtility.hashProgPowBlock(header, height)
-        Assert.assertEquals("BA8D7CEDBF88EC9D5CBDF1D11562A1890297268430B0F6D4", hash)
+        Assert.assertEquals("00000000AC2178C652A1051DB63637340BB251424E9DCE8C", hash)
     }
 
     @Ignore

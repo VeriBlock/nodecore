@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
 
-class Peer(
+class SpvPeer(
     private val spvContext: SpvContext,
     private val blockchain: Blockchain,
     self: NodeMetadata,
@@ -85,11 +85,11 @@ class Peer(
                 // Extract peer info
                 val info = message.announce.nodeInfo
                 val capabilities = PeerCapabilities.parse(info.capabilities)
-                if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
-                    logger.warn { "Peer $address has no SPV support. Disconnecting..." }
-                    closeConnection()
-                    return
-                }
+                //if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
+                //    logger.warn { "Peer $address has no SPV support. Disconnecting..." }
+                //    closeConnection()
+                //    return
+                //}
                 EventBus.peerConnectedEvent.trigger(this)
             }
             ResultsCase.ADVERTISE_BLOCKS -> {

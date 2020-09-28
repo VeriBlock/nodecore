@@ -83,13 +83,13 @@ class SpvPeerTable(
     private val discovery: PeerDiscovery
     private val blockchain: Blockchain
     var maximumPeers = DEFAULT_CONNECTIONS
-    var downloadPeer: Peer? = null
+    var downloadPeer: SpvPeer? = null
     val bloomFilter: BloomFilter
     private val addressesState: MutableMap<String, LedgerContext> = ConcurrentHashMap()
     private val pendingTransactionContainer: PendingTransactionContainer
 
-    private val peers = ConcurrentHashMap<String, Peer>()
-    private val pendingPeers = ConcurrentHashMap<String, Peer>()
+    private val peers = ConcurrentHashMap<String, SpvPeer>()
+    private val pendingPeers = ConcurrentHashMap<String, SpvPeer>()
     private val incomingQueue: BlockingQueue<NetworkMessage> = LinkedTransferQueue()
 
     init {
@@ -143,7 +143,7 @@ class SpvPeerTable(
         }
     }
 
-    fun connectTo(address: PeerAddress): Peer {
+    fun connectTo(address: PeerAddress): SpvPeer {
         peers[address.address]?.let {
             return it
         }
@@ -160,11 +160,11 @@ class SpvPeerTable(
         }
     }
 
-    fun createPeer(address: PeerAddress): Peer {
-        return Peer(spvContext, blockchain, NodeMetadata, address.address, address.port)
+    fun createPeer(address: PeerAddress): SpvPeer {
+        return SpvPeer(spvContext, blockchain, NodeMetadata, address.address, address.port)
     }
 
-    fun startBlockchainDownload(peer: Peer) {
+    fun startBlockchainDownload(peer: SpvPeer) {
         logger.debug("Beginning blockchain download")
         try {
             downloadPeer = peer
@@ -344,7 +344,7 @@ class SpvPeerTable(
         EventBus.pendingTransactionDownloadedEvent.trigger(tx)
     }
 
-    fun onPeerConnected(peer: Peer) = lock.withLock {
+    fun onPeerConnected(peer: SpvPeer) = lock.withLock {
         logger.debug("Peer {} connected", peer.address)
         pendingPeers.remove(peer.address)
         peers[peer.address] = peer
@@ -365,7 +365,7 @@ class SpvPeerTable(
         }
     }
 
-    fun onPeerDisconnected(peer: Peer) = lock.withLock {
+    fun onPeerDisconnected(peer: SpvPeer) = lock.withLock {
         pendingPeers.remove(peer.address)
         peers.remove(peer.address)
         if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
@@ -373,7 +373,7 @@ class SpvPeerTable(
         }
     }
 
-    fun onMessageReceived(message: VeriBlockMessages.Event, sender: Peer) {
+    fun onMessageReceived(message: VeriBlockMessages.Event, sender: SpvPeer) {
         try {
             logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.put(NetworkMessage(sender, message))
@@ -465,7 +465,7 @@ class SpvPeerTable(
         return addressesState[address]
     }
 
-    fun getConnectedPeers(): Collection<Peer> = Collections.unmodifiableCollection(peers.values)
+    fun getConnectedPeers(): Collection<SpvPeer> = Collections.unmodifiableCollection(peers.values)
 
     fun countConnectedPeers(): Int {
         return peers.size

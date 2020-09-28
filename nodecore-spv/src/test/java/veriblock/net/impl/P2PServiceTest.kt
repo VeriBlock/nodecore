@@ -6,24 +6,22 @@ import io.mockk.verify
 import nodecore.api.grpc.VeriBlockMessages
 import org.junit.Before
 import org.junit.Test
-import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
 import veriblock.SpvContext
 import veriblock.model.Output
-import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.asStandardAddress
 import veriblock.net.LocalhostDiscovery
 import veriblock.net.P2PService
-import veriblock.net.Peer
+import veriblock.net.SpvPeer
 import veriblock.service.PendingTransactionContainer
 
 class P2PServiceTest {
     private val spvContext = SpvContext()
     private lateinit var pendingTransactionContainer: PendingTransactionContainer
-    private lateinit var peer: Peer
+    private lateinit var peer: SpvPeer
     private lateinit var p2PService: P2PService
 
     @Before

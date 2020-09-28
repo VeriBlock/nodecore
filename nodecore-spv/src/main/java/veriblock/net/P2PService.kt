@@ -15,7 +15,7 @@ class P2PService(
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val networkParameters: NetworkParameters
 ) {
-    fun onTransactionRequest(txIds: List<Sha256Hash>, sender: Peer) {
+    fun onTransactionRequest(txIds: List<Sha256Hash>, sender: SpvPeer) {
         for (txId in txIds) {
             val transaction = pendingTransactionContainer.getTransaction(txId)
             if (transaction != null) {

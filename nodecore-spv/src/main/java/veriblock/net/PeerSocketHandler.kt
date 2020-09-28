@@ -23,7 +23,6 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.EOFException
 import java.io.IOException
-import java.lang.Thread.sleep
 import java.net.Socket
 import java.net.SocketException
 import java.util.concurrent.BlockingQueue
@@ -33,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = createLogger {}
 
 class PeerSocketHandler(
-    private val peer: Peer
+    private val peer: SpvPeer
 ) {
     private val socket = Socket(peer.address, peer.port)
     private val inputStream = DataInputStream(socket.getInputStream())
