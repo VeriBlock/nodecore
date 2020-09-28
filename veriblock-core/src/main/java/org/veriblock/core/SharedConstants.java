@@ -42,6 +42,8 @@ public final class SharedConstants {
     public static final byte STANDARD_TRANSACTION_ID           = (byte)0x01;
     public static final byte MULTISIG_TRANSACTION_ID           = (byte)0x03;
 
+    public static final int SPV_PROTOCOL_VERSION = 1;
+
     public final static class Errors {
         public static final int ERROR_NO_ELLIPTICAL_CRYPTOGRAPHY = -2;
         public static final int ERROR_NO_SECP_256_K_1_ELLIPTICAL_CRYPTOGRAPHY = -3;
