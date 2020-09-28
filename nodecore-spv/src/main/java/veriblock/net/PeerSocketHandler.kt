@@ -107,6 +107,9 @@ class PeerSocketHandler(
             } catch (e: CancellationException) {
                 logger.info("Output stream thread shutting down")
                 break
+            } catch (e: SocketException) {
+                logger.info("Socket closed")
+                break
             } catch (e: Exception) {
                 logger.error("Error in output stream thread!", e)
                 break

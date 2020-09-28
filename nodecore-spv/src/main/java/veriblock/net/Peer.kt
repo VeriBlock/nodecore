@@ -16,6 +16,7 @@ import kotlinx.coroutines.withTimeout
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.KeystoneQuery
+import nodecore.p2p.PeerCapabilities
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
@@ -82,6 +83,13 @@ class Peer(
             ResultsCase.ANNOUNCE -> {
                 // Set a status to "Open"
                 // Extract peer info
+                val info = message.announce.nodeInfo
+                val capabilities = PeerCapabilities.parse(info.capabilities)
+                if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
+                    logger.warn { "Peer $address has no SPV support. Disconnecting..." }
+                    closeConnection()
+                    return
+                }
                 EventBus.peerConnectedEvent.trigger(this)
             }
             ResultsCase.ADVERTISE_BLOCKS -> {

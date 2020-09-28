@@ -20,16 +20,18 @@ public class PeerCapabilities {
         NetworkInfo,
         BatchSync,
         Advertise,
-        AdvertiseTx
+        AdvertiseTx,
+        SpvRequests
     }
 
-    private static final EnumSet<Capabilities> DEFAULT_CAPABILITIES = EnumSet.of(
-            Capabilities.Transaction,
-            Capabilities.Block,
-            Capabilities.Query,
-            Capabilities.Sync,
-            Capabilities.NetworkInfo,
-            Capabilities.BatchSync);
+    private static final EnumSet<Capabilities> INITIAL_CAPABILITIES = EnumSet.of(
+        Capabilities.Transaction,
+        Capabilities.Block,
+        Capabilities.Query,
+        Capabilities.Sync,
+        Capabilities.NetworkInfo,
+        Capabilities.BatchSync
+    );
 
     private static final EnumSet<Capabilities> ALL = EnumSet.allOf(Capabilities.class);
 
@@ -56,7 +58,7 @@ public class PeerCapabilities {
     }
 
     public static PeerCapabilities defaultCapabilities() {
-        return new PeerCapabilities(DEFAULT_CAPABILITIES);
+        return new PeerCapabilities(INITIAL_CAPABILITIES);
     }
 
     public static PeerCapabilities parse(long bitVector) {
