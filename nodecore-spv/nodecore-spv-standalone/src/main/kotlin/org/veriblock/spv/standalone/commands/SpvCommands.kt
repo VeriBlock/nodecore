@@ -34,7 +34,7 @@ fun CommandFactory.spvCommands(
         val addresses = address?.let {
             listOf(address.asLightAddress())
         } ?: emptyList()
-        val result = context.adminApiService.getBalance(addresses)
+        val result = context.spvService.getBalance(addresses)
 
         displayResult(result)
         success()
@@ -46,7 +46,7 @@ fun CommandFactory.spvCommands(
         description = "Returns blockchain, operating, and network state information",
         suggestedCommands = { listOf("getbalance") }
     ) {
-        val result = context.adminApiService.getStateInfo()
+        val result = context.spvService.getStateInfo()
         displayResult(result)
         success()
     }
@@ -67,7 +67,7 @@ fun CommandFactory.spvCommands(
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
 
-        val result = context.adminApiService.sendCoins(
+        val result = context.spvService.sendCoins(
             sourceAddress = sourceAddress?.asLightAddress(),
             outputs = listOf(
                 Output(
@@ -88,7 +88,7 @@ fun CommandFactory.spvCommands(
         description = "Disables the temporary unlock on the NodeCore wallet",
         suggestedCommands = { listOf("unlockwallet") }
     ) {
-        context.adminApiService.lockWallet()
+        context.spvService.lockWallet()
         success()
     }
 
@@ -99,7 +99,7 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        context.adminApiService.unlockWallet(passphrase)
+        context.spvService.unlockWallet(passphrase)
         success()
     }
 
@@ -110,7 +110,7 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("encryptwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        context.adminApiService.decryptWallet(passphrase)
+        context.spvService.decryptWallet(passphrase)
         printInfo("Wallet has been decrypted")
         success()
     }
@@ -127,7 +127,7 @@ fun CommandFactory.spvCommands(
         } else {
             val confirmation = shell.passwordPrompt("Confirm passphrase: ")
             if (passphrase == confirmation) {
-                context.adminApiService.encryptWallet(passphrase)
+                context.spvService.encryptWallet(passphrase)
                 printInfo("Wallet has been encrypted with supplied passphrase")
                 success()
             } else {
@@ -147,7 +147,7 @@ fun CommandFactory.spvCommands(
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
         val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
-        context.adminApiService.importWallet(sourceLocation, passphrase)
+        context.spvService.importWallet(sourceLocation, passphrase)
         success()
     }
 
@@ -161,7 +161,7 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("importwallet") }
     ) {
         val targetLocation: String = getParameter("targetLocation")
-        context.adminApiService.backupWallet(targetLocation)
+        context.spvService.backupWallet(targetLocation)
         printInfo("Note: The backed-up wallet file is saved on the computer where SPV is running.")
         printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
         success()
@@ -178,7 +178,7 @@ fun CommandFactory.spvCommands(
     ) {
         val count = getOptionalParameter<Int>("count")?.coerceAtLeast(1) ?: 1
 
-        val result = context.adminApiService.getNewAddress(count)
+        val result = context.spvService.getNewAddress(count)
         printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
         displayResult(result.map { it.hash })
         success()
@@ -190,7 +190,7 @@ fun CommandFactory.spvCommands(
         description = "Tests"
     ) {
         runBlocking {
-            val response = context.adminApiService.getVeriBlockPublications(VeriBlockMessages.GetVeriBlockPublicationsRequest.getDefaultInstance())
+            val response = context.spvService.getVeriBlockPublications(VeriBlockMessages.GetVeriBlockPublicationsRequest.getDefaultInstance())
             println(response)
         }
         success()

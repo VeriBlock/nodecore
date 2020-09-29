@@ -10,6 +10,7 @@ package veriblock.util
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
@@ -19,11 +20,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 object Threading {
-    val LISTENER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
-        ThreadFactoryBuilder()
-            .setNameFormat("event-listener")
-            .build()
-    )
     val PEER_TABLE_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("peer-table-thread")
@@ -55,7 +51,6 @@ object Threading {
     @Throws(ExecutionException::class, InterruptedException::class)
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
-            CompletableFuture.runAsync { shutdown(LISTENER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_TABLE_THREAD) },
             CompletableFuture.runAsync { shutdown(MESSAGE_HANDLER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_OUTPUT_POOL) },
@@ -85,7 +80,7 @@ inline fun CoroutineScope.launchWithFixedDelay(
     crossinline block: suspend CoroutineScope.() -> Unit
 ) = launch {
     delay(initialDelayMillis)
-    while (true) {
+    while (isActive) {
         block()
         delay(periodMillis)
     }

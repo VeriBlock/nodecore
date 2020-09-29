@@ -49,7 +49,7 @@ import java.util.ArrayList
 
 private val logger = createLogger {}
 
-class AdminApiService(
+class SpvService(
     private val spvContext: SpvContext,
     private val peerTable: SpvPeerTable,
     private val transactionService: TransactionService,

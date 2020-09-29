@@ -8,10 +8,11 @@
 package veriblock.net
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.GlobalScope
+import io.ktor.network.sockets.Socket
+import io.ktor.util.network.hostname
+import io.ktor.util.network.port
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
@@ -37,10 +38,12 @@ class SpvPeer(
     private val spvContext: SpvContext,
     private val blockchain: Blockchain,
     self: NodeMetadata,
-    val address: String,
-    val port: Int
+    socket: Socket
 ) {
-    private val handler = PeerSocketHandler(this)
+    val address: String = socket.remoteAddress.hostname
+    val port: Int = socket.remoteAddress.port
+
+    private val handler = PeerSocketHandler(this, socket)
 
     var bestBlockHeight = 0
         private set
@@ -71,10 +74,6 @@ class SpvPeer(
         handler.write(message)
     }
 
-    fun sendMessage(buildBlock: VeriBlockMessages.Event.Builder.() -> Unit) = sendMessage(
-        buildMessage(buildBlock = buildBlock)
-    )
-
     fun processMessage(message: VeriBlockMessages.Event) {
         // Handle as an expected response if possible
         expectedResponses[message.requestId]?.offer(message)
@@ -85,33 +84,26 @@ class SpvPeer(
                 // Extract peer info
                 val info = message.announce.nodeInfo
                 val capabilities = PeerCapabilities.parse(info.capabilities)
-                //if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
-                //    logger.warn { "Peer $address has no SPV support. Disconnecting..." }
-                //    closeConnection()
-                //    return
-                //}
+                if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
+                    logger.warn { "Peer $address has no SPV support. Disconnecting..." }
+                    closeConnection()
+                    return
+                }
                 EventBus.peerConnectedEvent.trigger(this)
             }
             ResultsCase.ADVERTISE_BLOCKS -> {
                 if (message.advertiseBlocks.headersCount >= 1000) {
                     logger.debug("Received advertisement of {} blocks", message.advertiseBlocks.headersCount)
 
-                    // TODO create a proper coroutine scope for this
-                    GlobalScope.launch {
-                        // Extract latest keystones and ask for more
-                        val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
-                            .map {
-                                SerializeDeserializeService.parseVeriBlockBlock(
-                                    it.header.toByteArray()
-                                )
-                            }
-                            .filter { it.height % 20 == 0 }
-                            .sortedByDescending { it.height }
-                            .take(10)
-                            .toList()
-                        logger.debug { "Received keystones ${extractedKeystones.map { it.height }}"}
-                        requestBlockDownload(extractedKeystones)
-                    }
+                    // Extract latest keystones and ask for more
+                    val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
+                        .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray()) }
+                        .filter { it.height % 20 == 0 }
+                        .sortedByDescending { it.height }
+                        .take(10)
+                        .toList()
+                    logger.debug { "Received keystones ${extractedKeystones.map { it.height }}"}
+                    requestBlockDownload(extractedKeystones)
                 } else if (bestBlockHeight == 0) { // FIXME: Remove after we're able to retrieve best block height
                     val lastHeader = message.advertiseBlocks.headersList.last().header.toByteArray()
                     val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
@@ -142,7 +134,6 @@ class SpvPeer(
                 notifyMessageReceived(message)
             }
             ResultsCase.TX_REQUEST -> notifyMessageReceived(message)
-            ResultsCase.LEDGER_PROOF_REPLY -> notifyMessageReceived(message)
             ResultsCase.TRANSACTION_REPLY -> notifyMessageReceived(message)
             ResultsCase.DEBUG_VTB_REPLY -> notifyMessageReceived(message)
             ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> notifyMessageReceived(message)
@@ -232,3 +223,15 @@ class SpvPeer(
         EventBus.peerDisconnectedEvent.trigger(this)
     }
 }
+
+inline fun SpvPeer.sendMessage(crossinline buildBlock: VeriBlockMessages.Event.Builder.() -> Unit) = sendMessage(
+    buildMessage(buildBlock = buildBlock)
+)
+
+suspend inline fun SpvPeer.requestMessage(
+    timeoutInMillis: Long = 5000L,
+    crossinline buildBlock: VeriBlockMessages.Event.Builder.() -> Unit
+) = requestMessage(
+    buildMessage(buildBlock = buildBlock),
+    timeoutInMillis
+)

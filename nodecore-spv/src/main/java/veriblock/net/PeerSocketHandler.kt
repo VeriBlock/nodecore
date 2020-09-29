@@ -7,44 +7,44 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net
 
+import io.ktor.network.sockets.Socket
+import io.ktor.network.sockets.isClosed
+import io.ktor.network.sockets.openReadChannel
+import io.ktor.network.sockets.openWriteChannel
+import io.ktor.util.network.hostname
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.VeriBlockMessages
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import veriblock.serialization.MessageSerializer.deserialize
 import veriblock.util.Threading.PEER_INPUT_POOL
-import java.io.DataInputStream
-import java.io.DataOutputStream
 import java.io.EOFException
 import java.io.IOException
-import java.net.Socket
 import java.net.SocketException
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val logger = createLogger {}
 
 class PeerSocketHandler(
-    private val peer: SpvPeer
+    private val peer: SpvPeer,
+    private val socket: Socket
 ) {
-    private val socket = Socket(peer.address, peer.port)
-    private val inputStream = DataInputStream(socket.getInputStream())
-    private val outputStream = DataOutputStream(socket.getOutputStream())
+    private val coroutineDispatcher = PEER_INPUT_POOL.asCoroutineDispatcher()
+    private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
-    private val coroutineScope = CoroutineScope(PEER_INPUT_POOL.asCoroutineDispatcher())
+    private val readChannel = socket.openReadChannel()
+    private val writeChannel = socket.openWriteChannel()
+
     private lateinit var inputJob: Job
     private lateinit var outputJob: Job
 
-    private val writeQueue: BlockingQueue<VeriBlockMessages.Event> = LinkedTransferQueue()
+    private val writeQueue: Channel<VeriBlockMessages.Event> = Channel(1100)
     private val running = AtomicBoolean(false)
-    private val errored = AtomicBoolean(false)
 
     fun isRunning(): Boolean {
         return running.get()
@@ -63,7 +63,7 @@ class PeerSocketHandler(
         if (isRunning()) {
             running.set(false)
             coroutineScope.cancel()
-            writeQueue.clear()
+            writeQueue.close()
             if (!socket.isClosed) {
                 try {
                     socket.close()
@@ -78,28 +78,26 @@ class PeerSocketHandler(
     fun write(message: VeriBlockMessages.Event) {
         logger.debug { "Sending ${message.resultsCase.name} message to ${peer.address}" }
         try {
-            if (writeQueue.size < 1100) {
-                writeQueue.put(message)
-            } else {
+            val wasAdded = writeQueue.offer(message)
+            if (!wasAdded) {
                 logger.warn(
                     "Not writing event {} to peer {} because write queue is full.", message.resultsCase.name,
-                    socket.inetAddress.hostAddress
+                    socket.remoteAddress.hostname
                 )
             }
         } catch (e: InterruptedException) {
-            logger.warn { "Output stream thread shutting down for peer ${socket.inetAddress.hostAddress}" }
+            logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress.hostname}" }
         }
     }
 
     suspend fun runOutput() {
         while (isRunning()) {
             try {
-                val event = writeQueue.take()
+                val event = writeQueue.receive()
                 val message = event.toByteArray()
-                val messageSize = Utility.intToByteArray(message.size)
-                outputStream.write(messageSize)
-                outputStream.write(message)
-                outputStream.flush()
+                writeChannel.writeInt(message.size)
+                writeChannel.writeFully(message, 0, message.size)
+                writeChannel.flush()
             } catch (e: InterruptedException) {
                 logger.info("Output stream thread shutting down")
                 break
@@ -113,16 +111,16 @@ class PeerSocketHandler(
                 logger.error("Error in output stream thread!", e)
                 break
             }
-            delay(10L)
+            //delay(10L)
         }
     }
 
     private suspend fun runInput() {
         while (isRunning()) {
             try {
-                val nextMessageSize = inputStream.readInt()
+                val nextMessageSize = readChannel.readInt()
                 val raw = ByteArray(nextMessageSize)
-                inputStream.readFully(raw)
+                readChannel.readFully(raw, 0, nextMessageSize)
                 val message = deserialize(raw)
                 if (message == null) {
                     // Handle bad messages
@@ -137,11 +135,14 @@ class PeerSocketHandler(
             } catch (e: EOFException) {
                 logger.info("Disconnected from peer ${peer.address}.")
                 break
+            } catch (e: CancellationException) {
+                logger.info("Input stream thread shutting down")
+                break
             } catch (e: Exception) {
                 logger.error("Socket error: ", e)
                 break
             }
-            delay(10)
+            //delay(10L)
         }
     }
 }

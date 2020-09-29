@@ -28,6 +28,8 @@ dependencies {
     implementation(project(":nodecore-grpc"))
     implementation(project(":nodecore-p2p"))
 
+    implementation("io.ktor:ktor-network-jvm:$ktorVersion")
+
     runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
 
     implementation("ch.qos.logback:logback-classic:1.2.3")

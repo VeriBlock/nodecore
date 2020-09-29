@@ -32,7 +32,7 @@ import veriblock.model.Transaction
 import veriblock.model.asLightAddress
 import veriblock.net.LocalhostDiscovery
 import veriblock.net.SpvPeerTable
-import veriblock.service.AdminApiService
+import veriblock.service.SpvService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
@@ -44,7 +44,7 @@ class AdminApiServiceTest {
     private lateinit var transactionService: TransactionService
     private lateinit var addressManager: AddressManager
     private lateinit var peerTable: SpvPeerTable
-    private lateinit var adminApiService: AdminApiService
+    private lateinit var spvService: SpvService
     private lateinit var transactionContainer: PendingTransactionContainer
     private lateinit var blockchain: Blockchain
 
@@ -57,7 +57,7 @@ class AdminApiServiceTest {
         addressManager = mockk(relaxed = true)
         transactionContainer = mockk(relaxed = true)
         blockchain = mockk(relaxed = true)
-        adminApiService = AdminApiService(
+        spvService = SpvService(
             spvContext, peerTable, transactionService, addressManager, transactionContainer, blockchain
         )
     }
@@ -77,7 +77,7 @@ class AdminApiServiceTest {
         every { transactionContainer.getPendingSignatureIndexForAddress(any())}
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
 
-        val reply = adminApiService.sendCoins(
+        val reply = spvService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
                 Output(
@@ -106,7 +106,7 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        adminApiService.sendCoins(
+        spvService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
                 Output(
@@ -129,7 +129,7 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        adminApiService.sendCoins(
+        spvService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
                 Output(
@@ -152,7 +152,7 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        adminApiService.sendCoins(
+        spvService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
                 Output(
@@ -171,7 +171,7 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns null
-        adminApiService.sendCoins(
+        spvService.sendCoins(
             "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
             listOf(
                 Output(
@@ -186,21 +186,21 @@ class AdminApiServiceTest {
     @Test
     fun unlockWalletWhenWalletIsLockThenTrue() {
         every { addressManager.unlock(any()) } returns true
-        adminApiService.unlockWallet("123")
+        spvService.unlockWallet("123")
         verify(exactly = 1) { addressManager.unlock(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun unlockWalletWhenWalletIsUnlockThenFalse() {
         every { addressManager.unlock(any()) } returns false
-        adminApiService.unlockWallet("123")
+        spvService.unlockWallet("123")
         verify(exactly = 1) { addressManager.unlock(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun importWalletWhenWalletIsLockThenFalse() {
         every { addressManager.isLocked } returns true
-        adminApiService.importWallet("test/source", "123")
+        spvService.importWallet("test/source", "123")
         verify(exactly = 1) { addressManager.isLocked }
     }
 
@@ -211,7 +211,7 @@ class AdminApiServiceTest {
             false, "test_string"
         )
         every { addressManager.importWallet(any()) } returns result
-        adminApiService.importWallet("test/source")
+        spvService.importWallet("test/source")
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
     }
@@ -221,7 +221,7 @@ class AdminApiServiceTest {
         every { addressManager.isLocked } returns false
         val result = Pair(true, "test_string")
         every { addressManager.importWallet(any()) } returns result
-        adminApiService.importWallet("test/source")
+        spvService.importWallet("test/source")
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
     }
@@ -230,66 +230,66 @@ class AdminApiServiceTest {
     fun importWalletWhenThrowExceptionThenFalse() {
         every { addressManager.isLocked  } returns false
         every { addressManager.importWallet(any()) } throws RuntimeException()
-        adminApiService.importWallet("test/source")
+        spvService.importWallet("test/source")
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importWallet(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun encryptWalletWhenNoPassphraseThenFalse() {
-        adminApiService.encryptWallet("")
+        spvService.encryptWallet("")
     }
 
     @Test(expected = WalletException::class)
     fun encryptWalletWhenEncryptFalseThenFalse() {
         every { addressManager.encryptWallet(any()) } returns false
-        adminApiService.encryptWallet("passphrase")
+        spvService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun encryptWalletWhenExceptionThenFalse() {
         every { addressManager.encryptWallet(any()) } throws IllegalStateException()
-        adminApiService.encryptWallet("passphrase")
+        spvService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
     }
 
     @Test(expected = Test.None::class)
     fun encryptWalletWhenEncryptTrueThenTrue() {
         every { addressManager.encryptWallet(any()) } returns true
-        adminApiService.encryptWallet("passphrase")
+        spvService.encryptWallet("passphrase")
         verify(exactly = 1) { addressManager.encryptWallet(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun decryptWalletWhenNoPassphraseThenFalse() {
-        adminApiService.decryptWallet("")
+        spvService.decryptWallet("")
     }
 
     @Test(expected = WalletException::class)
     fun decryptWalletWhenEncryptFalseThenFalse() {
         every { addressManager.decryptWallet(any()) } returns false
-        adminApiService.decryptWallet("passphrase")
+        spvService.decryptWallet("passphrase")
         verify(exactly = 1) { addressManager.decryptWallet(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun decryptWalletWhenExceptionThenFalse() {
         every { addressManager.decryptWallet(any()) } throws IllegalStateException()
-        adminApiService.decryptWallet("passphrase")
+        spvService.decryptWallet("passphrase")
         verify(exactly = 1) { addressManager.decryptWallet(any()) }
     }
 
     @Test(expected = Test.None::class)
     fun decryptWalletWhenEncryptTrueThenTrue() {
         every { addressManager.decryptWallet(any()) } returns true
-        adminApiService.decryptWallet("passphrase")
+        spvService.decryptWallet("passphrase")
         verify(exactly = 1) { addressManager.decryptWallet(any()) }
     }
 
     @Test
     fun lockWallet() {
-        adminApiService.lockWallet()
+        spvService.lockWallet()
         verify(exactly = 1) { addressManager.lock() }
     }
 
@@ -299,14 +299,14 @@ class AdminApiServiceTest {
             false, "Result"
         )
         every { addressManager.saveWalletToFile(any()) } returns saveWalletResult
-        adminApiService.backupWallet("target/location/path")
+        spvService.backupWallet("target/location/path")
         verify { addressManager.saveWalletToFile(any()) }
     }
 
     @Test(expected = WalletException::class)
     fun backupWalletWhenExceptionThenFalse() {
         every { addressManager.saveWalletToFile(any()) } throws RuntimeException()
-        adminApiService.backupWallet("target/location/path")
+        spvService.backupWallet("target/location/path")
         verify(exactly = 1) { addressManager.saveWalletToFile(any()) }
     }
 
@@ -316,7 +316,7 @@ class AdminApiServiceTest {
             true, "Result"
         )
         every { addressManager.saveWalletToFile(any()) } returns saveWalletResult
-        adminApiService.backupWallet("target/location/path")
+        spvService.backupWallet("target/location/path")
         verify(exactly = 1) { addressManager.saveWalletToFile(any()) }
     }
 
@@ -327,7 +327,7 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.getPublicKeyForAddress(any()) } returns null
         every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
-        adminApiService.dumpPrivateKey(validAddress.asLightAddress())
+        spvService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
@@ -339,7 +339,7 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
         every { addressManager.getPrivateKeyForAddress(any()) } returns null
-        adminApiService.dumpPrivateKey(validAddress.asLightAddress())
+        spvService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
@@ -351,7 +351,7 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.getPublicKeyForAddress(any()) } returns keyPair.public
         every { addressManager.getPrivateKeyForAddress(any()) } returns keyPair.private
-        adminApiService.dumpPrivateKey(validAddress.asLightAddress())
+        spvService.dumpPrivateKey(validAddress.asLightAddress())
         verify(exactly = 1) { addressManager.getPublicKeyForAddress(validAddress) }
         verify(exactly = 1) { addressManager.getPrivateKeyForAddress(validAddress) }
     }
@@ -359,7 +359,7 @@ class AdminApiServiceTest {
     @Test(expected = ImportException::class)
     fun importPrivateKeyWhenWalletLockedThenFalse() {
         every { addressManager.isLocked } returns true
-        adminApiService.importPrivateKey(byteArrayOf())
+        spvService.importPrivateKey(byteArrayOf())
         verify(exactly = 1) { addressManager.isLocked }
     }
 
@@ -369,7 +369,7 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         every { addressManager.isLocked } returns false
         every { addressManager.importKeyPair(any(), any()) } returns null
-        adminApiService.importPrivateKey(keyPair.private.encoded)
+        spvService.importPrivateKey(keyPair.private.encoded)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
     }
@@ -383,7 +383,7 @@ class AdminApiServiceTest {
         )
         every { addressManager.isLocked } returns false
         every { addressManager.importKeyPair(any(), any()) } returns importedAddress
-        adminApiService.importPrivateKey(keyPair.private.encoded)
+        spvService.importPrivateKey(keyPair.private.encoded)
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.importKeyPair(any(), any()) }
     }
@@ -391,7 +391,7 @@ class AdminApiServiceTest {
     @Test(expected = AddressCreationException::class)
     fun newAddressWhenWalletLockedThenFalse() {
         every { addressManager.isLocked } returns true
-        adminApiService.getNewAddress()
+        spvService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
     }
 
@@ -399,7 +399,7 @@ class AdminApiServiceTest {
     fun newAddressWhenGetNewAddressNullThenFalse() {
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns null
-        adminApiService.getNewAddress()
+        spvService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
     }
@@ -408,7 +408,7 @@ class AdminApiServiceTest {
     fun newAddressWhenIOExceptionThenFalse() {
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } throws IOException()
-        adminApiService.getNewAddress()
+        spvService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
     }
@@ -417,7 +417,7 @@ class AdminApiServiceTest {
     fun newAddressWhenWalletLockedExceptionThenFalse() {
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } throws WalletLockedException("Exception")
-        adminApiService.getNewAddress()
+        spvService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
     }
@@ -429,7 +429,7 @@ class AdminApiServiceTest {
         val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.isLocked } returns false
         every { addressManager.newAddress } returns address
-        adminApiService.getNewAddress()
+        spvService.getNewAddress()
         verify(exactly = 1) { addressManager.isLocked }
         verify(exactly = 1) { addressManager.newAddress }
     }
@@ -438,7 +438,7 @@ class AdminApiServiceTest {
     fun submitTransactionsWhenTxSignedButNotAddToContainerThenFalse() {
         val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns false
-        adminApiService.submitTransactions(listOf(transaction))
+        spvService.submitTransactions(listOf(transaction))
         verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
     }
 
@@ -446,7 +446,7 @@ class AdminApiServiceTest {
     fun submitTransactionsWhenTxSignedThenTrue() {
         val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         every { transactionContainer.addTransaction(any()) } returns true
-        adminApiService.submitTransactions(listOf(transaction))
+        spvService.submitTransactions(listOf(transaction))
         verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
     }
 
@@ -458,7 +458,7 @@ class AdminApiServiceTest {
         every { addressManager.defaultAddress } returns address
         every { peerTable.getSignatureIndex(any()) } returns 1L
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        adminApiService.getSignatureIndex(emptyList())
+        spvService.getSignatureIndex(emptyList())
         verify(exactly = 1) { addressManager.defaultAddress }
         verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
@@ -471,7 +471,7 @@ class AdminApiServiceTest {
         val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { peerTable.getSignatureIndex(any()) } returns 1L
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        adminApiService.getSignatureIndex(listOf(address.hash.asLightAddress()))
+        spvService.getSignatureIndex(listOf(address.hash.asLightAddress()))
         verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
     }
@@ -486,7 +486,7 @@ class AdminApiServiceTest {
 
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = adminApiService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 1000L)
+        val reply = spvService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 1000L)
         Assert.assertNotNull(reply)
     }
 
@@ -494,7 +494,7 @@ class AdminApiServiceTest {
     fun createAltChainEndorsementWhenThrowException() {
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } throws RuntimeException()
 
-        val reply = adminApiService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
+        val reply = spvService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
         Assert.assertNotNull(reply)
     }
 
@@ -507,7 +507,7 @@ class AdminApiServiceTest {
         }
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = adminApiService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
+        val reply = spvService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
         Assert.assertNotNull(reply)
     }
 }

@@ -16,7 +16,7 @@ fun nextMessageId(): String {
     return identity.incrementAndGet().toString()
 }
 
-fun buildMessage(
+inline fun buildMessage(
     id: String = nextMessageId(),
     acknowledge: Boolean = false,
     buildBlock: VeriBlockMessages.Event.Builder.() -> Unit

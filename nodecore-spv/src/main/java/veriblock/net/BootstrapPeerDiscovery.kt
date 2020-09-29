@@ -7,11 +7,11 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net
 
+import io.ktor.util.network.NetworkAddress
 import nodecore.p2p.DnsResolver
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.xbill.DNS.TextParseException
-import veriblock.model.PeerAddress
 import java.util.ArrayList
 
 private val logger = createLogger {}
@@ -20,7 +20,7 @@ private val logger = createLogger {}
  * Discovery peers from bootstrap nodes.
  */
 class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscovery {
-    private val peers: MutableList<PeerAddress> = ArrayList()
+    private val peers: MutableList<NetworkAddress> = ArrayList()
 
     init {
         val dnsResolver = DnsResolver()
@@ -28,7 +28,7 @@ class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscove
         val port = networkParameters.p2pPort
         try {
             peers.addAll(dnsResolver.query(dns).map {
-                PeerAddress(it, port)
+                NetworkAddress(it, port)
             })
         } catch (e: TextParseException) {
             logger.error(e.message, e)
@@ -36,7 +36,7 @@ class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscove
         }
     }
 
-    override fun getPeers(count: Int): Collection<PeerAddress> {
+    override fun getPeers(count: Int): Collection<NetworkAddress> {
         return peers.shuffled().take(count)
     }
 }

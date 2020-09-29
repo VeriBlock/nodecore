@@ -21,7 +21,7 @@ import veriblock.model.TransactionPool
 import veriblock.net.P2PService
 import veriblock.net.PeerDiscovery
 import veriblock.net.SpvPeerTable
-import veriblock.service.AdminApiService
+import veriblock.service.SpvService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
@@ -54,7 +54,7 @@ class SpvContext {
         private set
     lateinit var blockchain: Blockchain
         private set
-    lateinit var adminApiService: AdminApiService
+    lateinit var spvService: SpvService
         private set
     lateinit var peerTable: SpvPeerTable
         private set
@@ -108,7 +108,7 @@ class SpvContext {
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
             peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
             transactionService = TransactionService(addressManager, networkParameters)
-            adminApiService = AdminApiService(
+            spvService = SpvService(
                 this, peerTable, transactionService, addressManager,
                 pendingTransactionContainer, blockchain
             )

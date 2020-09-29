@@ -7,9 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock.net
 
+import io.ktor.util.network.NetworkAddress
 import org.veriblock.core.params.LOCALHOST
 import org.veriblock.core.params.NetworkParameters
-import veriblock.model.PeerAddress
 
 /**
  * Discovery peer locally.
@@ -17,7 +17,7 @@ import veriblock.model.PeerAddress
 class LocalhostDiscovery(
     private val networkParameters: NetworkParameters
 ) : PeerDiscovery {
-    override fun getPeers(count: Int): Collection<PeerAddress> {
-        return listOf(PeerAddress(LOCALHOST, networkParameters.p2pPort))
+    override fun getPeers(count: Int): Collection<NetworkAddress> {
+        return listOf(NetworkAddress(LOCALHOST, networkParameters.p2pPort))
     }
 }

@@ -8,9 +8,18 @@
 package veriblock.net
 
 import com.google.protobuf.ByteString
+import io.ktor.network.selector.ActorSelectorManager
+import io.ktor.network.sockets.Socket
+import io.ktor.network.sockets.aSocket
+import io.ktor.util.network.NetworkAddress
+import io.ktor.util.network.hostname
+import io.ktor.util.network.port
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
@@ -35,7 +44,6 @@ import veriblock.model.DownloadStatusResponse
 import veriblock.model.LedgerContext
 import veriblock.model.NetworkMessage
 import veriblock.model.NodeMetadata
-import veriblock.model.PeerAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
 import veriblock.model.TransactionTypeIdentifier
@@ -57,9 +65,7 @@ import veriblock.validator.LedgerProofReplyValidator
 import java.io.IOException
 import java.sql.SQLException
 import java.util.Collections
-import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -90,7 +96,12 @@ class SpvPeerTable(
 
     private val peers = ConcurrentHashMap<String, SpvPeer>()
     private val pendingPeers = ConcurrentHashMap<String, SpvPeer>()
-    private val incomingQueue: BlockingQueue<NetworkMessage> = LinkedTransferQueue()
+    private val incomingQueue: Channel<NetworkMessage> = Channel(UNLIMITED)
+
+    private val coroutineDispatcher = Threading.PEER_TABLE_THREAD.asCoroutineDispatcher()
+    private val coroutineScope = CoroutineScope(coroutineDispatcher)
+
+    private val selectorManager = ActorSelectorManager(coroutineDispatcher)
 
     init {
         bloomFilter = createBloomFilter()
@@ -113,15 +124,13 @@ class SpvPeerTable(
             onMessageReceived(it.message, it.peer)
         }
 
-        val executorScope = CoroutineScope(Threading.PEER_TABLE_THREAD.asCoroutineDispatcher())
-        executorScope.launchWithFixedDelay(5_000L, 20_000L) {
+        coroutineScope.launchWithFixedDelay(5_000L, 20_000L) {
             requestAddressState()
         }
-        discoverPeers()
-        executorScope.launchWithFixedDelay(5_000L, 20_000L) {
+        coroutineScope.launchWithFixedDelay(200L, 20_000L) {
             discoverPeers()
         }
-        executorScope.launchWithFixedDelay(5_000L, 20_000L) {
+        coroutineScope.launchWithFixedDelay(5_000L, 20_000L) {
             requestPendingTransactions()
         }
 
@@ -136,32 +145,34 @@ class SpvPeerTable(
         running.set(false)
 
         // Close peer connections
-        incomingQueue.clear()
+        incomingQueue.close()
         pendingPeers.clear()
         peers.forEachValue(4) {
             it.closeConnection()
         }
     }
 
-    fun connectTo(address: PeerAddress): SpvPeer {
-        peers[address.address]?.let {
+    suspend fun connectTo(address: NetworkAddress): SpvPeer {
+        peers[address.hostname]?.let {
             return it
         }
-        lock.lock()
-        return try {
-            val peer = createPeer(address)
-            pendingPeers[address.address] = peer
-            peer
+        val socket = try {
+            aSocket(selectorManager)
+                .tcp()
+                .connect(address)
         } catch (e: IOException) {
             logger.error("Unable to open connection", e)
             throw e
-        } finally {
-            lock.unlock()
         }
+        val peer = createPeer(socket)
+        lock.withLock {
+            pendingPeers[address.hostname] = peer
+        }
+        return peer
     }
 
-    fun createPeer(address: PeerAddress): SpvPeer {
-        return SpvPeer(spvContext, blockchain, NodeMetadata, address.address, address.port)
+    fun createPeer(socket: Socket): SpvPeer {
+        return SpvPeer(spvContext, blockchain, NodeMetadata, socket)
     }
 
     fun startBlockchainDownload(peer: SpvPeer) {
@@ -182,7 +193,7 @@ class SpvPeerTable(
         ))
     }
 
-    private fun requestAddressState() {
+    private suspend fun requestAddressState() {
         val addresses = spvContext.addressManager.getAll()
         if (addresses.isEmpty()) {
             return
@@ -195,31 +206,34 @@ class SpvPeerTable(
                 }
             }.build()
         }
-        logger.debug("Request address state.")
-        for (peer in peers.values) {
-            peer.sendMessage(request)
-        }
+        val response = requestMessage(request)
+        val proofReply = response.ledgerProofReply.proofsList
+        val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
+            addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
+        }.filter {
+            LedgerProofReplyValidator.validate(it)
+        }.map {
+            LedgerProofReplyMapper.map(it)
+        }.toList()
+        updateAddressState(ledgerContexts)
     }
 
-    private fun requestPendingTransactions() {
+    private suspend fun requestPendingTransactions() {
         val pendingTransactionIds = pendingTransactionContainer.getPendingTransactionIds()
         for (sha256Hash in pendingTransactionIds) {
-            val request = VeriBlockMessages.Event.newBuilder()
-                .setId(nextMessageId())
-                .setAcknowledge(false)
-                .setTransactionRequest(
-                    VeriBlockMessages.GetTransactionRequest.newBuilder()
-                        .setId(ByteString.copyFrom(sha256Hash.bytes))
-                        .build()
-                )
-                .build()
-            for (peer in peers.values) {
-                peer.sendMessage(request)
+            val request = buildMessage {
+                transactionRequest = VeriBlockMessages.GetTransactionRequest.newBuilder()
+                    .setId(ByteString.copyFrom(sha256Hash.bytes))
+                    .build()
             }
+            val response = requestMessage(request)
+            // TODO: Different Transaction types
+            val standardTransaction = deserializeNormalTransaction(response.transaction)
+            notifyPendingTransactionDownloaded(standardTransaction)
         }
     }
 
-    private fun discoverPeers() {
+    private suspend fun discoverPeers() {
         val maxConnections = maximumPeers
         if (maxConnections > 0 && countConnectedPeers() >= maxConnections) {
             return
@@ -228,10 +242,10 @@ class SpvPeerTable(
         if (needed > 0) {
             val candidates = discovery.getPeers(needed)
             for (address in candidates) {
-                if (peers.containsKey(address.address) || pendingPeers.containsKey(address.address)) {
+                if (peers.containsKey(address.hostname) || pendingPeers.containsKey(address.hostname)) {
                     continue
                 }
-                logger.debug("Attempting connection to {}:{}", address.address, address.port)
+                logger.debug("Attempting connection to {}:{}", address.hostname, address.port)
                 val peer = try {
                     connectTo(address)
                 } catch (e: IOException) {
@@ -242,79 +256,63 @@ class SpvPeerTable(
         }
     }
 
-    private fun processIncomingMessages() {
+    private suspend fun processIncomingMessages() {
         try {
-            while (running.get()) {
-                try {
-                    val (sender, message) = incomingQueue.take()
-                    logger.debug { "Processing ${message.resultsCase.name} message from ${sender.address}" }
-                    when (message.resultsCase) {
-                        ResultsCase.HEARTBEAT -> {
-                            val heartbeat = message.heartbeat
-                            // Copy reference to local scope
-                            val downloadPeer = downloadPeer
-                            if (downloadPeer == null && heartbeat.block.number > 0) {
-                                startBlockchainDownload(sender)
-                            } else if (downloadPeer != null &&
-                                heartbeat.block.number - downloadPeer.bestBlockHeight > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER
-                            ) {
-                                startBlockchainDownload(sender)
-                            }
-                        }
-                        ResultsCase.ADVERTISE_BLOCKS -> {
-                            val advertiseBlocks = message.advertiseBlocks
-                            logger.debug {
-                                "Received advertisement of ${advertiseBlocks.headersList.size} blocks, height ${blockchain.getChainHead().height}"
-                            }
-                            val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
-                                MessageSerializer.deserialize(it)
-                            }
-                            if (downloadPeer == null && veriBlockBlocks.last().height > 0) {
-                                startBlockchainDownload(sender)
-                            }
-                            try {
-                                blockchain.addAll(veriBlockBlocks)
-                            } catch (e: SQLException) {
-                                logger.error("Unable to add block to blockchain", e)
-                            }
-                        }
-                        ResultsCase.TRANSACTION -> {
-                            // TODO: Different Transaction types
-                            val standardTransaction = deserializeNormalTransaction(
-                                message.transaction
-                            )
-                            notifyPendingTransactionDownloaded(standardTransaction)
-                        }
-                        ResultsCase.TX_REQUEST -> {
-                            val txIds = message.txRequest.transactionsList.map {
-                                Sha256Hash.wrap(
-                                    ByteStringUtility.byteStringToHex(it.txId)
-                                )
-                            }
-                            p2PService.onTransactionRequest(txIds, sender)
-                        }
-                        ResultsCase.LEDGER_PROOF_REPLY -> {
-                            val proofReply = message.ledgerProofReply.proofsList
-                            val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
-                                addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
-                            }.filter {
-                                LedgerProofReplyValidator.validate(it)
-                            }.map {
-                                LedgerProofReplyMapper.map(it)
-                            }.toList()
-                            updateAddressState(ledgerContexts)
-                        }
-                        ResultsCase.TRANSACTION_REPLY -> if (message.transactionReply.success) {
-                            pendingTransactionContainer.updateTransactionInfo(message.transactionReply.transaction.toModel())
-                        }
-                        else -> {
-                            // Ignore the other message types as they are irrelevant for SPV
+            for ((sender, message) in incomingQueue) {
+                logger.debug { "Processing ${message.resultsCase.name} message from ${sender.address}" }
+                when (message.resultsCase) {
+                    ResultsCase.HEARTBEAT -> {
+                        val heartbeat = message.heartbeat
+                        // Copy reference to local scope
+                        val downloadPeer = downloadPeer
+                        if (downloadPeer == null && heartbeat.block.number > 0) {
+                            startBlockchainDownload(sender)
+                        } else if (downloadPeer != null &&
+                            heartbeat.block.number - downloadPeer.bestBlockHeight > BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER
+                        ) {
+                            startBlockchainDownload(sender)
                         }
                     }
-                } catch (e: InterruptedException) {
-                    break
+                    ResultsCase.ADVERTISE_BLOCKS -> {
+                        val advertiseBlocks = message.advertiseBlocks
+                        logger.debug {
+                            "Received advertisement of ${advertiseBlocks.headersList.size} blocks, height ${blockchain.getChainHead().height}"
+                        }
+                        val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
+                            MessageSerializer.deserialize(it)
+                        }
+                        if (downloadPeer == null && veriBlockBlocks.last().height > 0) {
+                            startBlockchainDownload(sender)
+                        }
+                        try {
+                            blockchain.addAll(veriBlockBlocks)
+                        } catch (e: SQLException) {
+                            logger.error("Unable to add block to blockchain", e)
+                        }
+                    }
+                    ResultsCase.TRANSACTION -> {
+                        // TODO: Different Transaction types
+                        val standardTransaction = deserializeNormalTransaction(message.transaction)
+                        notifyPendingTransactionDownloaded(standardTransaction)
+                    }
+                    ResultsCase.TX_REQUEST -> {
+                        val txIds = message.txRequest.transactionsList.map {
+                            Sha256Hash.wrap(
+                                ByteStringUtility.byteStringToHex(it.txId)
+                            )
+                        }
+                        p2PService.onTransactionRequest(txIds, sender)
+                    }
+                    ResultsCase.TRANSACTION_REPLY -> if (message.transactionReply.success) {
+                        pendingTransactionContainer.updateTransactionInfo(message.transactionReply.transaction.toModel())
+                    }
+                    else -> {
+                        // Ignore the other message types as they are irrelevant for SPV
+                    }
                 }
             }
+        } catch (ignored: ClosedReceiveChannelException) {
+            return
         } catch (t: Throwable) {
             logger.error("An unhandled exception occurred processing message queue", t)
         }
@@ -354,11 +352,9 @@ class SpvPeerTable(
         // Attach listeners
         peer.setFilter(bloomFilter)
 
-        peer.sendMessage(
-            VeriBlockMessages.Event.newBuilder()
-                .setStateInfoRequest(VeriBlockMessages.GetStateInfoRequest.getDefaultInstance())
-                .build()
-        )
+        peer.sendMessage {
+            stateInfoRequest = VeriBlockMessages.GetStateInfoRequest.getDefaultInstance()
+        }
 
         if (downloadPeer == null) {
             startBlockchainDownload(peer)
@@ -376,7 +372,7 @@ class SpvPeerTable(
     fun onMessageReceived(message: VeriBlockMessages.Event, sender: SpvPeer) {
         try {
             logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
-            incomingQueue.put(NetworkMessage(sender, message))
+            incomingQueue.offer(NetworkMessage(sender, message))
         } catch (e: InterruptedException) {
             logger.error("onMessageReceived interrupted", e)
         }

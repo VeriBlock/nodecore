@@ -11,7 +11,6 @@ package org.veriblock.core.crypto;
 import java.nio.charset.Charset;
 import java.util.BitSet;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class BloomFilter {
     private final static double LN2 = Math.log(2.0);
@@ -19,7 +18,6 @@ public class BloomFilter {
     private final static int MAX_SIZE = 36000;
     private final static int MAX_HASHES = 50;
     private final static int SEED = 0xFBA4C795;
-
 
     // DO NOT REORDER
     public enum Flags {
