@@ -257,39 +257,42 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VBK Context for ${chain.name}")
         val subscription = SpvEventBus.newBestBlockChannel.openSubscription()
         for (newBlock in subscription) {
-            val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
-            val bestKnownBlock = nodeCoreLiteKit.gateway.getBlock(bestKnownBlockHash)
-            if (bestKnownBlock == null) {
-                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                // Let's try again after a while
-                delay(300_000L)
-                continue
+            try {
+                val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
+                val bestKnownBlock = nodeCoreLiteKit.gateway.getBlock(bestKnownBlockHash)
+                if (bestKnownBlock == null) {
+                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                    // Let's try again after a while
+                    delay(300_000L)
+                    continue
+                }
+
+                if (bestKnownBlock.height == newBlock.height) {
+                    continue
+                }
+
+                val contextBlocks = generateSequence(newBlock) {
+                    nodeCoreLiteKit.gateway.getBlock(it.previousBlock)
+                }.takeWhile {
+                    it.hash != bestKnownBlockHash
+                }.sortedBy {
+                    it.height
+                }.toList()
+
+                val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+                val contextBlocksToSubmit = contextBlocks.filter {
+                    it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
+                }
+
+                if (contextBlocksToSubmit.isEmpty()) {
+                    continue
+                }
+
+                chain.submitContext(contextBlocksToSubmit)
+                logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
+            } catch (e: Exception) {
+                logger.debugWarn(e) { "Unable to submit VBK context" }
             }
-
-            val bestBlock = nodeCoreLiteKit.gateway.getLastBlock()
-            if (bestKnownBlock.height == bestBlock.height) {
-                continue
-            }
-
-            val contextBlocks = generateSequence(bestBlock) {
-                nodeCoreLiteKit.gateway.getBlock(it.previousBlock)
-            }.takeWhile {
-                it.hash != bestKnownBlockHash
-            }.sortedBy {
-                it.height
-            }.toList()
-
-            val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-            val contextBlocksToSubmit = contextBlocks.filter {
-                it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
-            }
-
-            if (contextBlocksToSubmit.isEmpty()) {
-                continue
-            }
-
-            chain.submitContext(contextBlocksToSubmit)
-            logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
         }
     }
 
