@@ -36,6 +36,7 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
 import veriblock.SpvContext
@@ -56,7 +57,7 @@ import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionData
 import veriblock.service.TransactionInfo
 import veriblock.service.TransactionType
-import veriblock.util.EventBus
+import veriblock.util.SpvEventBus
 import veriblock.util.Threading
 import veriblock.util.buildMessage
 import veriblock.util.nextMessageId
@@ -109,7 +110,7 @@ class SpvPeerTable(
         discovery = peerDiscovery
         this.pendingTransactionContainer = pendingTransactionContainer
 
-        EventBus.pendingTransactionDownloadedEvent.register(
+        SpvEventBus.pendingTransactionDownloadedEvent.register(
             spvContext.pendingTransactionDownloadedListener,
             spvContext.pendingTransactionDownloadedListener::onPendingTransactionDownloaded
         )
@@ -118,9 +119,9 @@ class SpvPeerTable(
     fun start() {
         running.set(true)
 
-        EventBus.peerConnectedEvent.register(this, ::onPeerConnected)
-        EventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
-        EventBus.messageReceivedEvent.register(this) {
+        SpvEventBus.peerConnectedEvent.register(this, ::onPeerConnected)
+        SpvEventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
+        SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
 
@@ -198,38 +199,46 @@ class SpvPeerTable(
         if (addresses.isEmpty()) {
             return
         }
-        val request = buildMessage {
-            ledgerProofRequest = LedgerProofRequest.newBuilder().apply {
-                for (address in addresses) {
-                    acknowledgeAddress(address)
-                    addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
-                }
-            }.build()
+        try {
+            val request = buildMessage {
+                ledgerProofRequest = LedgerProofRequest.newBuilder().apply {
+                    for (address in addresses) {
+                        acknowledgeAddress(address)
+                        addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
+                    }
+                }.build()
+            }
+            val response = requestMessage(request)
+            val proofReply = response.ledgerProofReply.proofsList
+            val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
+                addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
+            }.filter {
+                LedgerProofReplyValidator.validate(it)
+            }.map {
+                LedgerProofReplyMapper.map(it)
+            }.toList()
+            updateAddressState(ledgerContexts)
+        } catch (e: Exception) {
+            logger.debugWarn(e) { "Unable to request address state" }
         }
-        val response = requestMessage(request)
-        val proofReply = response.ledgerProofReply.proofsList
-        val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
-            addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
-        }.filter {
-            LedgerProofReplyValidator.validate(it)
-        }.map {
-            LedgerProofReplyMapper.map(it)
-        }.toList()
-        updateAddressState(ledgerContexts)
     }
 
     private suspend fun requestPendingTransactions() {
         val pendingTransactionIds = pendingTransactionContainer.getPendingTransactionIds()
-        for (sha256Hash in pendingTransactionIds) {
-            val request = buildMessage {
-                transactionRequest = VeriBlockMessages.GetTransactionRequest.newBuilder()
-                    .setId(ByteString.copyFrom(sha256Hash.bytes))
-                    .build()
+        try {
+            for (sha256Hash in pendingTransactionIds) {
+                val request = buildMessage {
+                    transactionRequest = VeriBlockMessages.GetTransactionRequest.newBuilder()
+                        .setId(ByteString.copyFrom(sha256Hash.bytes))
+                        .build()
+                }
+                val response = requestMessage(request)
+                if (response.transactionReply.success) {
+                    pendingTransactionContainer.updateTransactionInfo(response.transactionReply.transaction.toModel())
+                }
             }
-            val response = requestMessage(request)
-            // TODO: Different Transaction types
-            val standardTransaction = deserializeNormalTransaction(response.transaction)
-            notifyPendingTransactionDownloaded(standardTransaction)
+        } catch (e: Exception) {
+            logger.debugWarn(e) { "Unable to request pending transactions" }
         }
     }
 
@@ -303,9 +312,6 @@ class SpvPeerTable(
                         }
                         p2PService.onTransactionRequest(txIds, sender)
                     }
-                    ResultsCase.TRANSACTION_REPLY -> if (message.transactionReply.success) {
-                        pendingTransactionContainer.updateTransactionInfo(message.transactionReply.transaction.toModel())
-                    }
                     else -> {
                         // Ignore the other message types as they are irrelevant for SPV
                     }
@@ -339,7 +345,7 @@ class SpvPeerTable(
     }
 
     private fun notifyPendingTransactionDownloaded(tx: StandardTransaction) {
-        EventBus.pendingTransactionDownloadedEvent.trigger(tx)
+        SpvEventBus.pendingTransactionDownloadedEvent.trigger(tx)
     }
 
     fun onPeerConnected(peer: SpvPeer) = lock.withLock {
@@ -480,7 +486,7 @@ private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
     endorsedBlockHash = endorsedBlockHash.toHex(),
     bitcoinBlockHash = bitcoinBlockHash.toHex(),
     bitcoinTxId = bitcoinTxId.toHex(),
-    bitcoinConfiormations = bitcoinConfirmations,
+    bitcoinConfirmations = bitcoinConfirmations,
     blockHash = blockHash.toHex(),
     merklePath = merklePath
 )

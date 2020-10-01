@@ -1,8 +1,10 @@
 package veriblock.service
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.sdk.models.Coin
 import veriblock.model.AddressLight
 import veriblock.model.Output
+import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
 
 enum class BlockchainState {
@@ -61,9 +63,9 @@ data class AddressSignatureIndex(
 
 data class AddressBalance(
     val address: AddressLight,
-    val unlockedAmount: String,
-    val lockedAmount: String,
-    val totalAmount: String
+    val unlockedAmount: Coin,
+    val lockedAmount: Coin,
+    val totalAmount: Coin
 )
 
 data class WalletBalance(
@@ -72,7 +74,7 @@ data class WalletBalance(
 )
 
 data class AltChainEndorsement(
-    val transaction: Transaction,
+    val transaction: StandardTransaction,
     val signatureIndex: Long
 )
 
@@ -84,7 +86,7 @@ data class TransactionInfo(
     val endorsedBlockHash: String,
     val bitcoinBlockHash: String,
     val bitcoinTxId: String,
-    val bitcoinConfiormations: Int,
+    val bitcoinConfirmations: Int,
     val blockHash: String,
     val merklePath: String
 )

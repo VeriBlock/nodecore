@@ -27,6 +27,7 @@ import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
+import veriblock.model.StandardTransaction
 
 private val logger = createLogger {}
 
@@ -74,6 +75,22 @@ fun VeriBlockMessages.SignedTransaction.deserializePoPTransaction(transactionPre
         },
         signature.toByteArray(),
         publicKey.toByteArray(),
+        transactionPrefix
+    )
+}
+
+fun StandardTransaction.deserializeStandardTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
+    return VeriBlockTransaction(
+        1, // STANDARD
+        Address(inputAddress!!.get()),
+        inputAmount!!,
+        getOutputs().map { o ->
+            Output.of(o.address.get(), o.amount.atomicUnits)
+        },
+        getSignatureIndex(),
+        SerializeDeserializeService.parsePublicationData(data!!),
+        signature!!,
+        publicKey!!,
         transactionPrefix
     )
 }

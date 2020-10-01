@@ -14,20 +14,13 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.lite.store.VERIBLOCK_BLOCK_STORE_CAPACITY
-import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.info
-import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
@@ -35,6 +28,7 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.getSynchronizedMessage
+import veriblock.util.SpvEventBus
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -44,7 +38,6 @@ class NodeCoreNetwork(
     private val config: MinerConfig,
     private val context: Context,
     private val gateway: NodeCoreGateway,
-    private val blockChain: BlockChain,
     private val transactionMonitor: TransactionMonitor,
     private val addressManager: AddressManager
 ) {
@@ -95,15 +88,15 @@ class NodeCoreNetwork(
         return transaction
     }
 
-    fun getBlock(hash: VBlakeHash): FullBlock? {
-        return gateway.getBlock(hash.toString())
+    fun getBlock(hash: VBlakeHash): VeriBlockBlock? {
+        return gateway.getBlock(hash)
     }
 
     private fun poll() {
         try {
             var nodeCoreStateInfo: StateInfo? = null
             // Verify if we can make a connection with NodeCore
-            if (gateway.ping()) {
+            if (gateway.isConnected()) {
                 // At this point the APM<->NodeCore connection is fine
                 if (!isAccessible()) {
                     accessible.set(true)
@@ -228,15 +221,6 @@ class NodeCoreNetwork(
                     }
                     return
                 }
-                try {
-                    val currentChainHead = blockChain.getChainHead()
-                    if (currentChainHead == null || currentChainHead != lastBlock) {
-                        logger.debug { "New chain head detected!" }
-                        reconcileBlockChain(currentChainHead, lastBlock)
-                    }
-                } catch (e: BlockStoreException) {
-                    logger.debugError(e) { "VeriBlockBlock store exception" }
-                }
             } else {
                 if (isReady()) {
                     ready.set(false)
@@ -271,7 +255,7 @@ class NodeCoreNetwork(
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
-        val newBlockChannel = EventBus.newBestBlockChannel.openSubscription()
+        val newBlockChannel = SpvEventBus.newBestBlockChannel.openSubscription()
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
@@ -304,43 +288,6 @@ class NodeCoreNetwork(
         }
         // The new block channel never ends, so this will never happen
         error("Unable to retrieve VeriBlock publications: the subscription to new blocks has been interrupted")
-    }
-
-    private fun reconcileBlockChain(previousHead: VeriBlockBlock?, latestBlock: VeriBlockBlock) {
-        logger.debug { "Reconciling VBK blockchain..." }
-        try {
-            val tooFarBehind = previousHead != null && latestBlock.height - previousHead.height > 2900
-            if (tooFarBehind) {
-                logger.warn { "Attempting to reconcile VBK blockchain with a too long block gap. All blocks will be skipped." }
-                blockChain.reset()
-            }
-            if (previousHead != null && latestBlock.previousBlock == previousHead.hash.trimToPreviousBlockSize() || tooFarBehind) {
-                val downloaded = getBlock(latestBlock.hash)
-                if (downloaded != null) {
-                    blockChain.handleNewBestChain(emptyList(), listOf(downloaded))
-                }
-                return
-            }
-
-            val startBlockHeight = (latestBlock.height - 2900).coerceAtLeast(0)
-            val startBlock = previousHead
-                ?: gateway.getBlock(startBlockHeight)
-                ?: error("Unable to find block @ $startBlockHeight")
-
-            val blockChainDelta = gateway.listChangesSince(startBlock.hash.toString())
-
-            val added = ArrayList<FullBlock>(blockChainDelta.added.size)
-            for (block in blockChainDelta.added) {
-                val downloaded = gateway.getBlock(block.hash.toString())
-                    ?: throw BlockDownloadException("Unable to download VBK block " + block.hash.toString())
-
-                added.add(downloaded)
-            }
-
-            blockChain.handleNewBestChain(blockChainDelta.removed, added)
-        } catch (e: Exception) {
-            logger.debugWarn(e) { "NodeCore Error" }
-        }
     }
 
     fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
