@@ -96,6 +96,7 @@ open class VeriBlockBlockchain(
         val storedBlock = StoredVeriBlockBlock(
             block,
             work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())),
+            block.hash,
             blockOfProof
         )
         store.put(storedBlock)
@@ -342,7 +343,7 @@ open class VeriBlockBlockchain(
             for (block in blocks) {
                 val work = BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())
                 val storedBlock = StoredVeriBlockBlock(
-                    block, work, Sha256Hash.ZERO_HASH
+                    block, work, block.hash, Sha256Hash.ZERO_HASH
                 )
                 store.put(storedBlock)
                 store.setChainHead(storedBlock)

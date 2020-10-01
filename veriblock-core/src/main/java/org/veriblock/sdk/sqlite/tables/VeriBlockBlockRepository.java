@@ -47,7 +47,7 @@ public class VeriBlockBlockRepository extends GenericBlockRepository<StoredVeriB
             Sha256Hash blockOfProof = Sha256Hash.wrap(Utility.hexToBytes(result.getString("blockOfProof")));
 
             VeriBlockBlock block = SerializeDeserializeService.INSTANCE.parseVeriBlockBlock(ByteBuffer.wrap(data));
-            StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(block, work, blockOfProof);
+            StoredVeriBlockBlock storedBlock = new StoredVeriBlockBlock(block, work, block.getHash(), blockOfProof);
             return storedBlock;
         }
 

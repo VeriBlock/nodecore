@@ -22,10 +22,9 @@ import java.util.Objects
 class StoredVeriBlockBlock @JvmOverloads constructor(
     val block: VeriBlockBlock,
     val work: BigInteger,
+    val hash: VBlakeHash,
     private var blockOfProof: Sha256Hash = Sha256Hash.ZERO_HASH
 ) {
-    val hash: VBlakeHash = block.hash
-
     val height: Int
         get() = block.height
 
@@ -87,6 +86,9 @@ class StoredVeriBlockBlock @JvmOverloads constructor(
 
         @JvmStatic
         fun deserialize(buffer: ByteBuffer): StoredVeriBlockBlock {
+            val hashBytes = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
+            buffer.get(hashBytes)
+            val hash = VBlakeHash.wrap(hashBytes)
             val workBytes = ByteArray(CHAIN_WORK_BYTES)
             buffer.get(workBytes)
             val work = BigInteger(1, workBytes)
@@ -95,19 +97,18 @@ class StoredVeriBlockBlock @JvmOverloads constructor(
             val blockOfProof = Sha256Hash.wrap(blockOfProofBytes)
             val blockBytes = BlockUtility.getBlockHeader(buffer)
             val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
-            return StoredVeriBlockBlock(block, work, blockOfProof)
+            return StoredVeriBlockBlock(block, work, hash, blockOfProof)
         }
 
         @JvmStatic
         fun deserialize(bytes: ByteArray): StoredVeriBlockBlock {
             Preconditions.notNull(bytes, "Raw VeriBlock Block cannot be null")
-            Preconditions.argument<Any>(bytes.size >= SIZE) {
+            Preconditions.argument<Any>(bytes.size > SIZE) {
                 "Invalid raw VeriBlock Block: " + Utility.bytesToHex(bytes)
             }
             val local = ByteBuffer.allocateDirect(SIZE)
             local.put(bytes, bytes.size - SIZE, SIZE)
             local.flip()
-            local.position(VBlakeHash.VERIBLOCK_LENGTH)
             return deserialize(local)
         }
     }

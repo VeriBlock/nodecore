@@ -20,6 +20,7 @@ import java.sql.SQLException
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
+import kotlin.jvm.Throws
 import kotlin.math.pow
 
 private val logger = createLogger {}
@@ -50,7 +51,7 @@ class Blockchain(
             ?: // Nothing to build on
             return
         val storedBlock = StoredVeriBlockBlock(
-            block, previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong()))
+            block, previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())), block.hash
         )
 
         // TODO: Make the put(...) and setChainHead(...) atomic
@@ -133,7 +134,7 @@ class Blockchain(
             val workOfCurrentBlock = work.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.difficulty.toLong()))
             blockWorks[veriBlockBlock.hash.toString().substring(24)] = workOfCurrentBlock
             val block = StoredVeriBlockBlock(
-                veriBlockBlock, workOfCurrentBlock
+                veriBlockBlock, workOfCurrentBlock, veriBlockBlock.hash
             )
             storedBlocks.add(block)
         }

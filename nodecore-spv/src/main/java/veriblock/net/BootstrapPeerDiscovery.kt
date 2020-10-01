@@ -28,6 +28,7 @@ class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscove
         val port = networkParameters.p2pPort
         try {
             peers.addAll(dnsResolver.query(dns).map {
+                logger.info("Found peer ${it}:${port}")
                 NetworkAddress(it, port)
             })
         } catch (e: TextParseException) {

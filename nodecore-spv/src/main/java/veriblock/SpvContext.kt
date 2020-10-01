@@ -138,7 +138,8 @@ class SpvContext {
             if (veriBlockStore.getChainHead() == null) {
                 val genesis = params.genesisBlock
                 val storedBlock = StoredVeriBlockBlock(
-                    genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong())
+                    genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong()),
+                    genesis.hash
                 )
                 veriBlockStore.put(storedBlock)
                 veriBlockStore.setChainHead(storedBlock)
