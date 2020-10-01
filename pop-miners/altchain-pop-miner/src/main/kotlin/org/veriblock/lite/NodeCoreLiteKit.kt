@@ -24,6 +24,7 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import veriblock.SpvContext
 import veriblock.model.DownloadStatusResponse
+import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
 import veriblock.util.SpvEventBus
 import java.io.File
@@ -98,7 +99,11 @@ class NodeCoreLiteKit(
         val spvContext = SpvContext()
         spvContext.init(
             networkParameters,
-            LocalhostDiscovery(networkParameters)
+            if (config.connectToLocalNode) {
+                LocalhostDiscovery(networkParameters)
+            } else {
+                BootstrapPeerDiscovery(networkParameters)
+            }
         )
         spvContext.peerTable.start()
         GlobalScope.launch {
