@@ -15,6 +15,7 @@ import org.veriblock.miners.pop.core.MiningOperationStatus
 class MinerConfig(
     var feePerByte: Long = 1_000,
     var maxFee: Long = 10_000_000,
+    var connectToLocalNode: Boolean = false,
     val mock: Boolean = false
 )
 
