@@ -9,8 +9,7 @@ package veriblock.model
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
-import org.veriblock.core.utilities.AsyncEvent
-import veriblock.util.EventBus
+import veriblock.util.SpvEventBus
 import java.util.ArrayList
 import java.util.HashSet
 
@@ -53,11 +52,11 @@ class TransactionMeta(
     }
 
     private fun informListenersStateChanged() {
-        EventBus.transactionStateChangedEvent.trigger(this)
+        SpvEventBus.transactionStateChangedEvent.trigger(this)
     }
 
     private fun informListenersDepthChanged() {
-        EventBus.transactionDepthChangedEvent.trigger(this)
+        SpvEventBus.transactionDepthChangedEvent.trigger(this)
     }
 
     fun setState(state: MetaState) {

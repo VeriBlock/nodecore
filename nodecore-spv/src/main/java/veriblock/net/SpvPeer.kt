@@ -27,7 +27,7 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.NodeMetadata
 import veriblock.service.Blockchain
-import veriblock.util.EventBus
+import veriblock.util.SpvEventBus
 import veriblock.util.MessageReceivedEvent
 import veriblock.util.buildMessage
 import java.util.concurrent.ConcurrentHashMap
@@ -89,7 +89,7 @@ class SpvPeer(
                     closeConnection()
                     return
                 }
-                EventBus.peerConnectedEvent.trigger(this)
+                SpvEventBus.peerConnectedEvent.trigger(this)
             }
             ResultsCase.ADVERTISE_BLOCKS -> {
                 if (message.advertiseBlocks.headersCount >= 1000) {
@@ -129,14 +129,10 @@ class SpvPeer(
             }
             ResultsCase.TRANSACTION -> notifyMessageReceived(message)
             ResultsCase.HEARTBEAT -> {
-                // TODO: Need a way to request this or get it sooner than the current cycle time
                 bestBlockHeight = message.heartbeat.block.number
                 notifyMessageReceived(message)
             }
             ResultsCase.TX_REQUEST -> notifyMessageReceived(message)
-            ResultsCase.TRANSACTION_REPLY -> notifyMessageReceived(message)
-            ResultsCase.DEBUG_VTB_REPLY -> notifyMessageReceived(message)
-            ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> notifyMessageReceived(message)
             ResultsCase.STATE_INFO_REPLY -> {
                 bestBlockHeight = message.stateInfoReply.localBlockchainHeight
             }
@@ -215,12 +211,12 @@ class SpvPeer(
     }
 
     private fun notifyMessageReceived(message: VeriBlockMessages.Event) {
-        EventBus.messageReceivedEvent.trigger(MessageReceivedEvent(this, message))
+        SpvEventBus.messageReceivedEvent.trigger(MessageReceivedEvent(this, message))
     }
 
     fun onPeerSocketClosed() {
         // Set a status to "Closed"
-        EventBus.peerDisconnectedEvent.trigger(this)
+        SpvEventBus.peerDisconnectedEvent.trigger(this)
     }
 }
 

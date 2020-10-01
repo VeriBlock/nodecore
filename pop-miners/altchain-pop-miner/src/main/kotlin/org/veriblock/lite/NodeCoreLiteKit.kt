@@ -8,40 +8,36 @@
 
 package org.veriblock.lite
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.wallet.AddressManager
-import org.veriblock.core.wallet.AddressPubKey
-import org.veriblock.lite.core.BlockChain
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.lite.net.NodeCoreNetwork
-import org.veriblock.lite.store.VeriBlockBlockStore
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
-import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import veriblock.SpvContext
 import veriblock.model.DownloadStatusResponse
 import veriblock.net.LocalhostDiscovery
+import veriblock.util.SpvEventBus
 import java.io.File
 import java.io.IOException
 
 val logger = createLogger {}
 
-private const val WALLET_FILE_EXTENSION = ".wallet"
-
 class NodeCoreLiteKit(
     private val config: MinerConfig,
     private val context: Context
 ) {
-    lateinit var blockStore: VeriBlockBlockStore
-    lateinit var blockChain: BlockChain
-    lateinit var addressManager: AddressManager
+    lateinit var spvContext: SpvContext
     lateinit var transactionMonitor: TransactionMonitor
+    lateinit var gateway: NodeCoreGateway
     lateinit var network: NodeCoreNetwork
 
     var beforeNetworkStart: () -> Unit = {}
@@ -51,38 +47,25 @@ class NodeCoreLiteKit(
             throw IOException("Unable to create directory")
         }
 
-        blockStore = createBlockStore()
-        addressManager = loadAddressManager()
+        spvContext = initSpvContext(context.networkParameters)
+        gateway = NodeCoreGateway(context.networkParameters, spvContext.spvService)
         transactionMonitor = createOrLoadTransactionMonitor()
-        blockChain = BlockChain(context.networkParameters, blockStore)
 
         network = NodeCoreNetwork(
             config,
             context,
-            NodeCoreGateway(context.networkParameters),
-            blockChain,
+            gateway,
             transactionMonitor,
-            addressManager
+            spvContext.addressManager
         )
+
+        transactionMonitor.start()
     }
 
     fun start() {
         logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
 
-        EventBus.newBestBlockEvent.register(transactionMonitor) {
-            transactionMonitor.onNewBestBlock(it)
-        }
-        EventBus.blockChainReorganizedEvent.register(transactionMonitor) {
-            transactionMonitor.onBlockChainReorganized(it.oldBlocks, it.newBlocks)
-        }
-        EventBus.blockChainReorganizedEvent.register(this) {
-            for (newBlock in it.newBlocks) {
-                EventBus.newBestBlockEvent.trigger(newBlock)
-                EventBus.newBestBlockChannel.offer(newBlock)
-            }
-        }
-
-        logger.info { "Send funds to the ${context.vbkTokenName} wallet ${addressManager.defaultAddress.hash}" }
+        logger.info { "Send funds to the ${context.vbkTokenName} wallet ${spvContext.addressManager.defaultAddress.hash}" }
         logger.info { "Connecting to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}..." }
         beforeNetworkStart()
         network.startAsync()
@@ -94,66 +77,45 @@ class NodeCoreLiteKit(
         }
     }
 
-    fun getAddress(): String = addressManager.defaultAddress.hash
-
-    private fun createBlockStore(): VeriBlockBlockStore = try {
-        val chainFile = File(context.directory, context.filePrefix + ".spvchain")
-        VeriBlockBlockStore(chainFile)
-    } catch (e: BlockStoreException) {
-        throw IOException("Unable to initialize VBK block store: ${e.cause?.message}", e)
-    }
+    fun getAddress(): String = spvContext.addressManager.defaultAddress.hash
 
     private fun createOrLoadTransactionMonitor(): TransactionMonitor {
         val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
         return if (file.exists()) {
             try {
-                file.loadTransactionMonitor(context)
+                file.loadTransactionMonitor(context, gateway)
             } catch (e: Exception) {
                 throw IOException("Unable to load the transaction monitoring data", e)
             }
         } else {
-            val address = Address(addressManager.defaultAddress.hash)
-            TransactionMonitor(context, address)
+            val address = Address(spvContext.addressManager.defaultAddress.hash)
+            TransactionMonitor(context, gateway, address)
         }
     }
 
-    private fun loadAddressManager(): AddressManager = try {
-        val addressManager = AddressManager()
-        val file = File(context.directory, context.filePrefix + WALLET_FILE_EXTENSION)
-        addressManager.load(file)
-        if (!file.exists()) {
-            addressManager.save()
-        }
-        addressManager
-    } catch (e: Exception) {
-        throw IOException("Unable to load the address manager", e)
-    }
-
-    private fun initSpvContext(networkParameters: NetworkParameters, addresses: Collection<AddressPubKey>): SpvContext {
+    private fun initSpvContext(networkParameters: NetworkParameters): SpvContext {
+        logger.info { "Initializing SPV..." }
         val spvContext = SpvContext()
         spvContext.init(
             networkParameters,
             LocalhostDiscovery(networkParameters)
         )
         spvContext.peerTable.start()
-
-        for (address in addresses) {
-            spvContext.addressManager.monitor(address)
-        }
-
-        logger.info { "Initialize SPV: " }
-        while (true) {
-            val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
-            if (status.downloadStatus.isDiscovering()) {
-                logger.info { "Waiting for peers response." }
-            } else if (status.downloadStatus.isDownloading()) {
-                logger.info { "Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
-            } else {
-                logger.info { "Blockchain is ready. Current height " + status.currentHeight }
-                break
+        GlobalScope.launch {
+            while (true) {
+                val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
+                if (status.downloadStatus.isDiscovering()) {
+                    logger.info { "SPV: Waiting for peers response." }
+                } else if (status.downloadStatus.isDownloading()) {
+                    logger.info { "SPV: Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
+                } else {
+                    logger.info { "SPV: Blockchain is ready. Current height " + status.currentHeight }
+                    break
+                }
+                delay(5000L)
             }
-            Thread.sleep(5000L)
         }
+
         return spvContext
     }
 }

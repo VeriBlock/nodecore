@@ -14,6 +14,7 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
+import veriblock.util.SpvEventBus
 import java.math.BigInteger
 import java.sql.SQLException
 import java.util.ArrayList
@@ -62,17 +63,19 @@ class Blockchain(
         }
 
         // TODO: Broadcast events: new best block, reorganize, new block
+        SpvEventBus.newBestBlockEvent.trigger(block)
+        SpvEventBus.newBestBlockChannel.offer(block)
     }
 
     @Throws(SQLException::class)
     fun addAll(blocks: List<VeriBlockBlock>) {
-        val sortedBlock = blocks.sortedBy { it.height }
-        logger.debug { "Adding ${sortedBlock.size} blocks, height ${sortedBlock.first().height} - ${sortedBlock.last().height}" }
-        if (!areBlocksSequential(sortedBlock)) {
+        val sortedBlocks = blocks.sortedBy { it.height }
+        logger.debug { "Adding ${sortedBlocks.size} blocks, height ${sortedBlocks.first().height} - ${sortedBlocks.last().height}" }
+        if (!areBlocksSequential(sortedBlocks)) {
             // todo throw Exception
             return
         }
-        val listToStore = listToStore(sortedBlock)
+        val listToStore = listToStore(sortedBlocks)
         if (listToStore.isEmpty()) {
             // todo throw Exception
             // Nothing to build on
@@ -85,6 +88,13 @@ class Blockchain(
         // TODO: PoP fork resolution additional
         if (storedBlocks[storedBlocks.size - 1].work > blockStore.getChainHead()!!.work) {
             blockStore.setChainHead(storedBlocks[storedBlocks.size - 1])
+        }
+
+        if (blocks.size < 100) {
+            for (block in blocks) {
+                SpvEventBus.newBestBlockEvent.trigger(block)
+                SpvEventBus.newBestBlockChannel.offer(block)
+            }
         }
     }
 

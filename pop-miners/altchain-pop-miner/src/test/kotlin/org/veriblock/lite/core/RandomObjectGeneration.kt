@@ -22,6 +22,7 @@ import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
@@ -127,12 +128,6 @@ fun randomSha256Hash(): Sha256Hash {
     val randomBytes = randomAlphabeticString().toByteArray()
     return Sha256Hash.wrap(messageDigest.digest(randomBytes))
 }
-
-fun randomTransactionMonitor(
-    context: Context,
-    address: Address = randomAddress(),
-    walletTransactions: List<WalletTransaction> = (0..randomInt(20)).map { randomWalletTransaction(context) }
-) = TransactionMonitor(context, address, walletTransactions)
 
 fun randomVeriBlockMerklePath(
     treeIndex: Int = randomInt(1, 65535),

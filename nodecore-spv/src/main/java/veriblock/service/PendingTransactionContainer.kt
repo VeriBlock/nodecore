@@ -31,7 +31,7 @@ class PendingTransactionContainer {
 
     fun updateTransactionInfo(transactionInfo: TransactionInfo) {
         val transaction = transactionInfo.transaction
-        if (pendingTxIdTransaction.containsKey(transaction.txId)) {
+        if (pendingTxIdTransaction.containsKey(transaction.txId) || transactionsForMonitoring.contains(transaction.txId)) {
             confirmedTxIdTransactionReply[transaction.txId] = transactionInfo
             if (transactionInfo.confirmations > 0) {
                 pendingTxIdTransaction.remove(transaction.txId)
