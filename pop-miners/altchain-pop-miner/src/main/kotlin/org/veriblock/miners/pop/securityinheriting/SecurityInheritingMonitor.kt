@@ -256,47 +256,51 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VBK Context for ${chain.name}")
         val subscription = EventBus.newBestBlockChannel.openSubscription()
         for (newBlock in subscription) {
-            val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
-            val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
-            if (bestKnownBlock == null) {
-                val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(bestKnownBlockHash)
+            try {
+                val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
+                val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
+                if (bestKnownBlock == null) {
+                    val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(bestKnownBlockHash)
+                        ?: continue
+
+                    val gap = newBlock.height - networkBestKnownBlock.height
+                    logger.warn {
+                        "Unable to find ${chain.name}'s best known VeriBlock block $bestKnownBlockHash in the local blockchain store." +
+                            " There's a context gap of $gap blocks. Skipping VBK block context submission..."
+                    }
+                    subscription.cancel()
+                    continue
+                }
+
+                val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
                     ?: continue
 
-                val gap = newBlock.height - networkBestKnownBlock.height
-                logger.warn {
-                    "Unable to find ${chain.name}'s best known VeriBlock block $bestKnownBlockHash in the local blockchain store." +
-                        " There's a context gap of $gap blocks. Skipping VBK block context submission..."
+                if (bestKnownBlock.height == bestBlock.height) {
+                    continue
                 }
-                subscription.cancel()
-                continue
+
+                val contextBlocks = generateSequence(bestBlock) {
+                    nodeCoreLiteKit.blockChain.get(it.previousBlock)
+                }.takeWhile {
+                    it.hash != bestKnownBlockHash
+                }.sortedBy {
+                    it.height
+                }.toList()
+
+                val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+                val contextBlocksToSubmit = contextBlocks.filter {
+                    it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
+                }
+
+                if (contextBlocksToSubmit.isEmpty()) {
+                    continue
+                }
+
+                chain.submitContext(contextBlocksToSubmit)
+                logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
+            } catch (e: Exception) {
+                logger.warn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
-
-            val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
-                ?: continue
-
-            if (bestKnownBlock.height == bestBlock.height) {
-                continue
-            }
-
-            val contextBlocks = generateSequence(bestBlock) {
-                nodeCoreLiteKit.blockChain.get(it.previousBlock)
-            }.takeWhile {
-                it.hash != bestKnownBlockHash
-            }.sortedBy {
-                it.height
-            }.toList()
-
-            val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-            val contextBlocksToSubmit = contextBlocks.filter {
-                it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
-            }
-
-            if (contextBlocksToSubmit.isEmpty()) {
-                continue
-            }
-
-            chain.submitContext(contextBlocksToSubmit)
-            logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
         }
     }
 
