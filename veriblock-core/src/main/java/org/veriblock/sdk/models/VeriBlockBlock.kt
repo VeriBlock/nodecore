@@ -8,6 +8,7 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VBlake
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -34,9 +35,8 @@ open class VeriBlockBlock(
     val difficulty: Int
     val nonce: Long
 
-    val raw: ByteArray by lazy {
-        SerializeDeserializeService.serializeHeaders(this)
-    }
+    val raw: ByteArray
+        get() = SerializeDeserializeService.serializeHeaders(this)
 
     val hash: VBlakeHash by lazy {
         VBlakeHash.wrap(
