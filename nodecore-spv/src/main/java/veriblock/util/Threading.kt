@@ -68,7 +68,8 @@ object Threading {
             CompletableFuture.runAsync { shutdown(MESSAGE_HANDLER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_OUTPUT_POOL) },
             CompletableFuture.runAsync { shutdown(PEER_INPUT_POOL) },
-            CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) }
+            CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) },
+            CompletableFuture.runAsync { shutdown(HASH_EXECUTOR) },
         )
         shutdownTasks.get()
     }
