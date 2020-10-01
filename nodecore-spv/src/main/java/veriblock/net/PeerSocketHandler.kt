@@ -133,7 +133,7 @@ class PeerSocketHandler(
                 logger.info("Attempted to read from a socket that has been closed.")
                 // Disconnect?
                 break
-            } catch (e: EOFException) {
+            } catch (e: ClosedReceiveChannelException) {
                 logger.info("Disconnected from peer ${peer.address}.")
                 break
             } catch (e: ClosedReceiveChannelException) {

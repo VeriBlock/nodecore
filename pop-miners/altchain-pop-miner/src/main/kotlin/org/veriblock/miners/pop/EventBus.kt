@@ -38,11 +38,6 @@ object EventBus {
     val insufficientBalanceEvent = EmptyEvent("Insufficient balance")
     val balanceChangeEvent = Event<Balance>("Balance changed")
 
-    // Block Events
-    val newBestBlockEvent = AsyncEvent<FullBlock>("New Best Block", Threading.LISTENER_THREAD)
-    val newBestBlockChannel = BroadcastChannel<FullBlock>(Channel.CONFLATED)
-    val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", Threading.LISTENER_THREAD)
-
     // Operation Events
     val operationStateChangedEvent = AsyncEvent<ApmOperation>("Operation State Changed", Threading.MINER_THREAD)
     val operationFinishedEvent = AsyncEvent<ApmOperation>("Operation Finished", Threading.MINER_THREAD)

@@ -20,6 +20,11 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 object Threading {
+    val LISTENER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("event-listener")
+            .build()
+    )
     val PEER_TABLE_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("peer-table-thread")
@@ -51,6 +56,7 @@ object Threading {
     @Throws(ExecutionException::class, InterruptedException::class)
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
+            CompletableFuture.runAsync { shutdown(LISTENER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_TABLE_THREAD) },
             CompletableFuture.runAsync { shutdown(MESSAGE_HANDLER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_OUTPUT_POOL) },

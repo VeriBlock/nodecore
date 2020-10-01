@@ -44,6 +44,7 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.util.checkSuccess
+import veriblock.util.SpvEventBus
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
@@ -254,38 +255,29 @@ class SecurityInheritingMonitor(
 
     private suspend fun submitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK Context for ${chain.name}")
-        val subscription = EventBus.newBestBlockChannel.openSubscription()
+        val subscription = SpvEventBus.newBestBlockChannel.openSubscription()
         for (newBlock in subscription) {
-            try {
-                val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
-                val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
-                if (bestKnownBlock == null) {
-                    val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(bestKnownBlockHash)
-                        ?: continue
+            val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
+            val bestKnownBlock = nodeCoreLiteKit.gateway.getBlock(bestKnownBlockHash)
+            if (bestKnownBlock == null) {
+                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                // Let's try again after a while
+                delay(300_000L)
+                continue
+            }
 
-                    val gap = newBlock.height - networkBestKnownBlock.height
-                    logger.warn {
-                        "Unable to find ${chain.name}'s best known VeriBlock block $bestKnownBlockHash in the local blockchain store." +
-                            " There's a context gap of $gap blocks. Skipping VBK block context submission..."
-                    }
-                    subscription.cancel()
-                    continue
-                }
+            val bestBlock = nodeCoreLiteKit.gateway.getLastBlock()
+            if (bestKnownBlock.height == bestBlock.height) {
+                continue
+            }
 
-                val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
-                    ?: continue
-
-                if (bestKnownBlock.height == bestBlock.height) {
-                    continue
-                }
-
-                val contextBlocks = generateSequence(bestBlock) {
-                    nodeCoreLiteKit.blockChain.get(it.previousBlock)
-                }.takeWhile {
-                    it.hash != bestKnownBlockHash
-                }.sortedBy {
-                    it.height
-                }.toList()
+            val contextBlocks = generateSequence(bestBlock) {
+                nodeCoreLiteKit.gateway.getBlock(it.previousBlock)
+            }.takeWhile {
+                it.hash != bestKnownBlockHash
+            }.sortedBy {
+                it.height
+            }.toList()
 
                 val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
                 val contextBlocksToSubmit = contextBlocks.filter {
@@ -310,34 +302,18 @@ class SecurityInheritingMonitor(
             try {
                 val instruction = chain.getMiningInstruction()
                 val vbkContextBlockHash = VBlakeHash.wrap(instruction.context.first())
-                val vbkContextBlock = nodeCoreLiteKit.blockChain.get(vbkContextBlockHash)
+                val vbkContextBlock = nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash)
                 if (vbkContextBlock == null) {
-                    val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(vbkContextBlockHash)
-                    if (networkBestKnownBlock == null) {
-                        // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                        // Let's try again after a while
-                        delay(300_000L)
-                        continue
-                    }
-
-                    val latestBlock = nodeCoreLiteKit.blockStore.getChainHead()
-                    if (latestBlock == null) {
-                        delay(20_000L)
-                        continue
-                    }
-
-                    val gap = latestBlock.height - networkBestKnownBlock.height
-                    logger.warn {
-                        "Unable to find ${chain.name}'s best known VeriBlock block $vbkContextBlock in the local blockchain store." +
-                            " There's a context gap of $gap blocks. Skipping VTB submission..."
-                    }
-                    return@coroutineScope
+                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                    // Let's try again after a while
+                    delay(300_000L)
+                    continue
                 }
                 logger.info {
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
-                    "Bitcoin context block: ${instruction.btcContext.first()}. Waiting for next VBK keystone..."
+                    " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
-                val newKeystone = EventBus.newBestBlockChannel.asFlow().filter {
+                val newKeystone = SpvEventBus.newBestBlockChannel.asFlow().filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()
 

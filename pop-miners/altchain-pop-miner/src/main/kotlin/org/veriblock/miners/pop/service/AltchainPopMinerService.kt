@@ -190,7 +190,7 @@ class AltchainPopMinerService(
                 PoP wallet does not contain sufficient funds, 
                 Current balance: ${nodeCoreLiteKit.network.latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
                 Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - nodeCoreLiteKit.network.latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
-                Send ${context.vbkTokenName} coins to: ${nodeCoreLiteKit.addressManager.defaultAddress.hash}
+                Send ${context.vbkTokenName} coins to: ${nodeCoreLiteKit.spvContext.addressManager.defaultAddress.hash}
             """.trimIndent()))
         }
         // Verify the synchronized status
