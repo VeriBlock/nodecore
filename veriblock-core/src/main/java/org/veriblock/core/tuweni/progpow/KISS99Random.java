@@ -13,33 +13,30 @@
 
 package org.veriblock.core.tuweni.progpow;
 
-import org.veriblock.core.tuweni.units.bigints.UInt32;
-
 public final class KISS99Random {
 
-    private static final UInt32 FILTER = UInt32.valueOf(65535);
+    private static final int FILTER = 65535;
 
-    public UInt32 z;
-    public UInt32 w;
-    public UInt32 jsr;
-    public UInt32 jcong;
+    public int z;
+    public int w;
+    public int jsr;
+    public int jcong;
 
-    KISS99Random(UInt32 z, UInt32 w, UInt32 jsr, UInt32 jcong) {
+    KISS99Random(int z, int w, int jsr, int jcong) {
         this.z = z;
         this.w = w;
         this.jsr = jsr;
         this.jcong = jcong;
     }
 
-    UInt32 generate() {
-        z = (z.and(FILTER).multiply(UInt32.valueOf(36969))).add(z.shiftRight(16));
-        w = (w.and(FILTER).multiply(UInt32.valueOf(18000))).add(w.shiftRight(16));
-        UInt32 mwc = z.shiftLeft(16).add(w);
-        jsr = jsr.xor(jsr.shiftLeft(17));
-        jsr = jsr.xor(jsr.shiftRight(13));
-        jsr = jsr.xor(jsr.shiftLeft(5));
-        jcong = (jcong.multiply(UInt32.valueOf(69069))).add(UInt32.valueOf(1234567));
-        return mwc.xor(jcong).add(jsr);
+    int generate() {
+        z = ((z & (FILTER)) * (36969)) + (z >>> 16);
+        w = ((w & (FILTER)) * 18000) + (w >>> 16);
+        int mwc = (z << (16)) + (w);
+        jsr = jsr ^ (jsr << (17));
+        jsr = jsr ^ (jsr >>> (13));
+        jsr = jsr ^ (jsr << (5));
+        jcong = (jcong * 69069) + (1234567);
+        return (mwc ^ (jcong)) + (jsr);
     }
 }
-
