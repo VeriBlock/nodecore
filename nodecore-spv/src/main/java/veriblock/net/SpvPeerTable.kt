@@ -14,17 +14,13 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.util.network.NetworkAddress
 import io.ktor.util.network.hostname
 import io.ktor.util.network.port
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withTimeout
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
@@ -69,6 +65,7 @@ import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import java.util.stream.Collector
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -287,8 +284,16 @@ class SpvPeerTable(
                         logger.debug {
                             "Received advertisement of ${advertiseBlocks.headersList.size} blocks, height ${blockchain.getChainHead().height}"
                         }
-                        val veriBlockBlocks: List<VeriBlockBlock> = advertiseBlocks.headersList.map {
-                            MessageSerializer.deserialize(it)
+                        val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {
+                            advertiseBlocks.headersList.map {
+                                async(Threading.HASH_EXECUTOR.asCoroutineDispatcher()) {
+                                    val block = MessageSerializer.deserialize(it)
+                                    // pre-calculate hash in parallel
+                                    block.hash
+                                    block
+                                }
+                            }
+                                .awaitAll()
                         }
                         if (downloadPeer == null && veriBlockBlocks.last().height > 0) {
                             startBlockchainDownload(sender)

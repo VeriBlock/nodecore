@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.lang.Runtime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
@@ -45,6 +46,12 @@ object Threading {
         25,
         ThreadFactoryBuilder()
             .setNameFormat("peer-input-%d")
+            .build()
+    )
+    val HASH_EXECUTOR: ExecutorService = Executors.newFixedThreadPool(
+        4, // TODO: how to get number of CPUs here?
+        ThreadFactoryBuilder()
+            .setNameFormat("progpow-%d")
             .build()
     )
     val EVENT_EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor(
