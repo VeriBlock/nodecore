@@ -19,7 +19,8 @@ import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.util.Objects
 
-class StoredVeriBlockBlock @JvmOverloads constructor(
+class StoredVeriBlockBlock
+@JvmOverloads constructor(
     val block: VeriBlockBlock,
     val work: BigInteger,
     val hash: VBlakeHash,

@@ -12,8 +12,8 @@ import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.crypto.VBlakeHash
-import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.extensions.asBase64Bytes
+import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.deserialize
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.math.BigInteger
@@ -26,8 +26,8 @@ class StoredVeriBlockBlockTest {
 
     @Before
     fun setUp() {
-        Context.create(defaultTestNetParameters)
-        raw = "AAATiAAClOfcPjviGpbszw+99fYqMzHcmVw2sJNWN4YGed3V2w8TUxKywnhnyag+8bmbmFyblJMHAjrWcrr9dw==".asBase64Bytes()
+        Context.create(getDefaultNetworkParameters("mainnet"))
+        raw = Utility.hexToBytes("00001388000294e7dc3e3be21a96eccf0fbdf5f62a3331dc995c36b0935637860679ddd5db0f135312b2c27867c9a83ef1b99b985c9b949307023ad672bafd77")
         val block = SerializeDeserializeService.parseVeriBlockBlock(raw)
         storedVeriBlockBlockExpected = StoredVeriBlockBlock(
             block, BigInteger.TEN, block.hash
@@ -48,7 +48,6 @@ class StoredVeriBlockBlockTest {
         val buffer = ByteBuffer.allocateDirect(StoredVeriBlockBlock.SIZE)
         storedVeriBlockBlockExpected.serialize(buffer)
         buffer.flip()
-        buffer.position(buffer.position() + VBlakeHash.VERIBLOCK_LENGTH)
         val storedVeriBlockBlockActual = deserialize(
             buffer
         )

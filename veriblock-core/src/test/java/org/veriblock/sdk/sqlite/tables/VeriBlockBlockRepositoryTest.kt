@@ -14,6 +14,7 @@ import org.junit.Test
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import java.io.IOException
@@ -33,26 +34,27 @@ class VeriBlockBlockRepositoryTest {
     @Before
     @Throws(SQLException::class)
     fun init() {
+        var block: VeriBlockBlock
         val raw = Utility.hexToBytes(
             "0001998300029690ACA425987B8B529BEC04654A16FCCE708F3F0DEED25E1D2513D05A3B17C49D8B3BCFEFC10CB2E9C4D473B2E25DB7F1BD040098960DE0E313"
         )
-        val block = SerializeDeserializeService.parseVeriBlockBlock(raw)
+        block = SerializeDeserializeService.parseVeriBlockBlock(raw)
         newBlock = StoredVeriBlockBlock(
             block, BigInteger.TEN, block.hash
         )
         val raw2 = Utility.hexToBytes(
             "000199840002A69BF9FE9B06E641B61699A9654A16FCCE708F3F0DEED25E1D2513D05A3B7D7F80EB5E94D01C6B3796DDE5647F135DB7F1DD040098960EA12045"
         )
-        val block2 = SerializeDeserializeService.parseVeriBlockBlock(raw2)
+        block = SerializeDeserializeService.parseVeriBlockBlock(raw2)
         newBlock2 = StoredVeriBlockBlock(
-            block2, BigInteger.ONE, block2.hash
+            block, BigInteger.ONE, block.hash
         )
         val raw3 = Utility.hexToBytes(
             "000199850002461DB458CD6258D3571D4A2A654A16FCCE708F3F0DEED25E1D2513D05A3BB0B8A658CBFFCFBE9185AFDE789841EC5DB7F2360400989610B1662B"
         )
-        val block3 = SerializeDeserializeService.parseVeriBlockBlock(raw3)
+        block = SerializeDeserializeService.parseVeriBlockBlock(raw3)
         newBlock3 = StoredVeriBlockBlock(
-            block3, BigInteger.ZERO, block3.hash
+            block, BigInteger.ZERO, block.hash
         )
         connection = ConnectionSelector.setConnectionInMemory()
         repo = VeriBlockBlockRepository(connection)
