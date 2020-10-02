@@ -10,7 +10,9 @@ package org.veriblock.sdk.blockchain.store
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.extensions.asBase64Bytes
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.deserialize
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -24,9 +26,11 @@ class StoredVeriBlockBlockTest {
 
     @Before
     fun setUp() {
+        Context.create(defaultTestNetParameters)
         raw = "AAATiAAClOfcPjviGpbszw+99fYqMzHcmVw2sJNWN4YGed3V2w8TUxKywnhnyag+8bmbmFyblJMHAjrWcrr9dw==".asBase64Bytes()
+        val block = SerializeDeserializeService.parseVeriBlockBlock(raw)
         storedVeriBlockBlockExpected = StoredVeriBlockBlock(
-            SerializeDeserializeService.parseVeriBlockBlock(raw), BigInteger.TEN
+            block, BigInteger.TEN, block.hash
         )
     }
 

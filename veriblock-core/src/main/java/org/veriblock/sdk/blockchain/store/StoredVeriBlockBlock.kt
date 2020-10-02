@@ -103,7 +103,7 @@ class StoredVeriBlockBlock @JvmOverloads constructor(
         @JvmStatic
         fun deserialize(bytes: ByteArray): StoredVeriBlockBlock {
             Preconditions.notNull(bytes, "Raw VeriBlock Block cannot be null")
-            Preconditions.argument<Any>(bytes.size > SIZE) {
+            Preconditions.argument<Any>(bytes.size >= SIZE) {
                 "Invalid raw VeriBlock Block: " + Utility.bytesToHex(bytes)
             }
             val local = ByteBuffer.allocateDirect(SIZE)
