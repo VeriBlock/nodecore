@@ -115,16 +115,25 @@ class MockMinerService(
         val lastKnownBtcBlock = bitcoinBlockchain.get(Sha256Hash.wrap(lastKnownBtcBlockHash))!!
         val lastKnownVbkBlock = veriBlockBlockchain.get(VBlakeHash.wrap(lastKnownVbkBlockHash))!!
 
-        try {
+        val vtb = vpm.mine(
+            vbkTip,
+            lastKnownVbkBlock,
+            lastKnownBtcBlock,
+            key
+        )
+        val vtbs = listOf(vtb)
+        operation.setContext(vtbs)
+
+        val submissionResult = try {
             runBlocking {
-                chain.submitAtvs(listOf(atv))
+                chain.submit(atv, vtbs)
             }
         } catch (e: Exception) {
             operation.fail(e.message ?: "Unknown reason")
             throw e
         }
-        operation.setAtvId(atv.getId().toHex())
-        logger.info { "Mock mine operation completed successfully!" }
+        operation.setPopTxId(submissionResult)
+        logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
         operation.setPayoutData("", 0)

@@ -116,14 +116,6 @@ class TestChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
-        return getLastVeriBlockBlockHash()
-    }
-
-    override suspend fun getPopMempool(): PopMempool {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
         val lastVbkHash = getLastVeriBlockBlockHash().asHexBytes()
@@ -149,14 +141,9 @@ class TestChain(
         return ApmInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        val atv = atvs.firstOrNull()
-            ?: return
-        val publicationData = atv.transaction.publicationData
+
+    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+        val publicationData = proofOfProof.transaction.publicationData
             ?: error("Proof of proof does not have publication data!")
         val publicationDataHeader = publicationData.header.toHex()
         val publicationDataContextInfo = publicationData.contextInfo.toHex()
@@ -165,7 +152,8 @@ class TestChain(
         if (publicationDataContextInfo != expectedContextInfo) {
             error("Expected publication data context differs from the one PoP supplied back")
         }
-        publishedAtvs += atvs
+        val block = createBlock((System.currentTimeMillis() / 10000).toInt())
+        return block.data.coinbaseTransactionId
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {

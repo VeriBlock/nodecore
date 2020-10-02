@@ -84,14 +84,6 @@ class NxtFamilyChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getPopMempool(): PopMempool {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
@@ -138,15 +130,11 @@ class NxtFamilyChain(
         )
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
+    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
         logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
         val jsonBody = NxtSubmitData(
-            atv = SerializeDeserializeService.serialize(atvs.first()).toHex(),
-            vtb = vtbs.map { SerializeDeserializeService.serialize(it).toHex() }
+            atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
+            vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ).toJson()
         val submitResponse: NxtSubmitResponse = httpClient.get("${config.host}/nxt") {
             parameter("requestType", "submitPop")
@@ -156,6 +144,9 @@ class NxtFamilyChain(
         if (submitResponse.error != null) {
             error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
         }
+
+        return submitResponse.transaction?.signature
+            ?: error("Unable to retrieve $key's submission response data")
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String = TODO()

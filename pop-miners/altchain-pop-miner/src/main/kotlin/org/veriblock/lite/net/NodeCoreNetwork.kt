@@ -267,6 +267,7 @@ class NodeCoreNetwork(
 
     // FIXME This implementation not good enough. Use channels.
     suspend fun getVeriBlockPublications(
+        operation: ApmOperation,
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
@@ -276,10 +277,11 @@ class NodeCoreNetwork(
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
                 |   - BTC Context Hash: $btcContextHash""".trimMargin()
-        logger.debug {
+        logger.info(
+            operation,
             "Successfully subscribed to VTB retrieval event!\n$extraLogData"
-        }
-        logger.debug("Waiting for VTBs...")
+        )
+        logger.info(operation, "Waiting for this operation's VTBs...")
         try {
             // Loop through each new block until we get a not-empty publication list
             for (newBlock in newBlockChannel) {
@@ -293,12 +295,7 @@ class NodeCoreNetwork(
                 }
             }
         } catch (e: Exception) {
-            try {
-                val lastBlock = gateway.getLastBlock()
-                logger.info { "Current last block: ${lastBlock.hash} @ ${lastBlock.height}" }
-            } catch (ignored: Exception) {
-            }
-            throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", e)
+            logger.warn(operation, e, "Error while retrieving VTBs!\n$extraLogData")
         } finally {
             newBlockChannel.cancel()
         }

@@ -193,15 +193,6 @@ class BitcoinFamilyChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
-        return rpcRequest("getvbkbestblockhash")
-    }
-
-    override suspend fun getPopMempool(): PopMempool {
-        val response: BtcPopMempool = rpcRequest("getrawpopmempool")
-        return PopMempool(response.vbkblocks, response.atvs, response.vtbs)
-    }
-
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
         val actualBlockHeight = blockHeight
         // Retrieve top block height from API if not supplied
@@ -237,28 +228,12 @@ class BitcoinFamilyChain(
         )
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        logger.info { "Submitting PoP data to $name daemon at ${config.host}..." }
-        val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            contextBlocks.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            },
-            vtbs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            },
-            atvs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            }
+    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
+        return rpcRequest("submitpop", listOf(
+            SerializeDeserializeService.serialize(proofOfProof).toHex(),
+            veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
         ))
-        logger.debug { "SubmitPoP Response: $submitPopResponse" }
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
