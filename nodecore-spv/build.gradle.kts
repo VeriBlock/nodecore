@@ -30,9 +30,12 @@ dependencies {
 
     implementation("io.ktor:ktor-network-jvm:$ktorVersion")
 
-    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
+    // Logging
+    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
-    implementation("ch.qos.logback:logback-classic:1.2.3")
+    // Database
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
 
     implementation("com.google.protobuf:protobuf-java:3.6.1")

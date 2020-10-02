@@ -8,8 +8,8 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
+import org.apache.logging.log4j.Level
 import org.veriblock.core.CommandException
 import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation

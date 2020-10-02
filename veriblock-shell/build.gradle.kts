@@ -28,18 +28,28 @@ dependencies {
     // Json serialization
     implementation("com.google.code.gson:gson:2.8.2")
 
-    compile("ch.qos.logback:logback-classic:1.2.3")
-    compile("com.diogonunes:JCDP:2.0.3.1")
+    // Logging
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
-    compile("org.jline:jline:3.13.1")
-    compile("org.jline:jline-terminal:3.13.1")
-    compile("org.jline:jline-terminal-jansi:3.13.1")
+    implementation("com.diogonunes:JCDP:2.0.3.1")
 
-    compile("com.google.guava:guava:20.0")
+    implementation("org.jline:jline:3.13.1")
+    implementation("org.jline:jline-terminal:3.13.1")
+    implementation("org.jline:jline-terminal-jansi:3.13.1")
+
+    implementation("com.google.guava:guava:20.0")
     implementation("com.opencsv:opencsv:4.3.2")
 
     testImplementation("junit:junit:4.12")
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.0")
+}
+
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
 }
 
 setupJar("VeriBlock Shell", "org.veriblock.shell")

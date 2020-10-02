@@ -27,8 +27,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
-
     api(project(":veriblock-core"))
     api(project(":nodecore-grpc"))
     api(project(":pop-miners:pop-miners-common"))
@@ -44,7 +42,8 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
     implementation("org.apache.commons:commons-lang3:3.0")
     implementation("com.google.guava:guava:26.0-jre")
@@ -57,6 +56,13 @@ dependencies {
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
+}
+
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
 }
 
 setupJar("VeriBlock PoP Miners Common Library", "org.veriblock.miners.pop")

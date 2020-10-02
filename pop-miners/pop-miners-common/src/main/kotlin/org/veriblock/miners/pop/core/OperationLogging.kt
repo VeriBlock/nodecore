@@ -1,18 +1,15 @@
 package org.veriblock.miners.pop.core
 
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Level.DEBUG
-import ch.qos.logback.classic.Level.ERROR
-import ch.qos.logback.classic.Level.INFO
-import ch.qos.logback.classic.Level.TRACE
-import ch.qos.logback.classic.Level.WARN
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.parse
-import kotlinx.serialization.stringify
 import mu.KLogger
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.Level.DEBUG
+import org.apache.logging.log4j.Level.ERROR
+import org.apache.logging.log4j.Level.INFO
+import org.apache.logging.log4j.Level.TRACE
+import org.apache.logging.log4j.Level.WARN
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -41,7 +38,7 @@ private fun KLogger.log(
     msg: String,
     t: Throwable? = null
 ) {
-    val log = OperationLog(System.currentTimeMillis(), level.levelStr, msg)
+    val log = OperationLog(System.currentTimeMillis(), level.name(), msg)
     operation.addLog(log)
     if (operation.isLoggingEnabled(level)) {
         val loggerMsg = "[${operation.id}] $msg"

@@ -130,6 +130,9 @@ class SecurityInheritingMonitor(
             // Start submitting context and VTBs
             launch { submitContext() }
             launch { submitVtbs() }
+            SpvEventBus.newBestBlockEvent.register(this) {
+                println(it)
+            }
         }
     }
 

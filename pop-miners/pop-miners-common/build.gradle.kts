@@ -28,8 +28,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
-
     implementation(project(":veriblock-core"))
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-grpc"))
@@ -48,7 +46,7 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
     // Persistence
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")

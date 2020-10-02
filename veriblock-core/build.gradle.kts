@@ -33,8 +33,9 @@ dependencies {
     api("org.xerial:sqlite-jdbc:$sqliteVersion")
 
     // Logging
-    api("ch.qos.logback:logback-classic:1.2.3")
     api("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
     api("io.netty:netty-buffer:4.1.30.Final")
     api("io.vertx:vertx-core:3.6.2")
