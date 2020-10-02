@@ -96,6 +96,7 @@ class SpvPeerTable(
     private val pendingPeers = ConcurrentHashMap<String, SpvPeer>()
     private val incomingQueue: Channel<NetworkMessage> = Channel(UNLIMITED)
 
+    private val hashDispatcher = Threading.HASH_EXECUTOR.asCoroutineDispatcher();
     private val coroutineDispatcher = Threading.PEER_TABLE_THREAD.asCoroutineDispatcher()
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
@@ -286,7 +287,7 @@ class SpvPeerTable(
                         }
                         val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {
                             advertiseBlocks.headersList.map {
-                                async(Threading.HASH_EXECUTOR.asCoroutineDispatcher()) {
+                                async(hashDispatcher) {
                                     val block = MessageSerializer.deserialize(it)
                                     // pre-calculate hash in parallel
                                     block.hash

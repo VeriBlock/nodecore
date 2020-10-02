@@ -49,7 +49,7 @@ object Threading {
             .build()
     )
     val HASH_EXECUTOR: ExecutorService = Executors.newFixedThreadPool(
-        4, // TODO: how to get number of CPUs here?
+        Runtime.getRuntime().availableProcessors(),
         ThreadFactoryBuilder()
             .setNameFormat("progpow-%d")
             .build()
