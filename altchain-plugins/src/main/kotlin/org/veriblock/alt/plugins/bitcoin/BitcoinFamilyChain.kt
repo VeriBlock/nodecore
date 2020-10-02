@@ -229,11 +229,29 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
-        logger.info { "Submitting PoP and VeriBlock publications to $name daemon at ${config.host}..." }
-        return rpcRequest("submitpop", listOf(
-            SerializeDeserializeService.serialize(proofOfProof).toHex(),
-            veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
+        val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
+            veriBlockPublications.asSequence().flatMap {
+                it.getBlocks()
+            }.distinctBy {
+                it.height
+            }.sortedBy {
+                it.height
+            }.map {
+                SerializeDeserializeService.serialize(it).toHex()
+            },
+            veriBlockPublications.map {
+                SerializeDeserializeService.serialize(
+                    it.copy(context = emptyList())
+                ).toHex()
+            },
+            listOf(
+                SerializeDeserializeService.serialize(
+                    proofOfProof.copy(context = emptyList())
+                ).toHex()
+            )
         ))
+        logger.debug { "SubmitPoP Response: $submitPopResponse" }
+        return proofOfProof.getId().toHex()
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
