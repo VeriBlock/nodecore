@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.lang.Runtime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
@@ -47,6 +48,12 @@ object Threading {
             .setNameFormat("peer-input-%d")
             .build()
     )
+    val HASH_EXECUTOR: ExecutorService = Executors.newFixedThreadPool(
+        Runtime.getRuntime().availableProcessors(),
+        ThreadFactoryBuilder()
+            .setNameFormat("progpow-%d")
+            .build()
+    )
     val EVENT_EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("event-listener")
@@ -61,7 +68,8 @@ object Threading {
             CompletableFuture.runAsync { shutdown(MESSAGE_HANDLER_THREAD) },
             CompletableFuture.runAsync { shutdown(PEER_OUTPUT_POOL) },
             CompletableFuture.runAsync { shutdown(PEER_INPUT_POOL) },
-            CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) }
+            CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) },
+            CompletableFuture.runAsync { shutdown(HASH_EXECUTOR) },
         )
         shutdownTasks.get()
     }
