@@ -101,7 +101,7 @@ class VpmTaskService(
             taskName = "Confirm Bitcoin Endorsement Transaction",
             targetState = VpmOperationState.CONFIRMED,
             //timeout = 2.hr
-            timeout = 100_000.hr // Very long timeout to make sure we never leave a dangling transaction
+            timeout = 10.hr // Very long timeout to make sure we never leave a dangling transaction
         ) {
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("The operation has no transaction set!")
@@ -128,7 +128,8 @@ class VpmTaskService(
         operation.runTask(
             taskName = "Determine Block of Proof",
             targetState = VpmOperationState.BLOCK_OF_PROOF,
-            timeout = 90.sec
+            //timeout = 90.sec
+            timeout = 2.hr // Very long timeout to make sure we never leave a dangling transaction
         ) {
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("The operation has no transaction set!")
