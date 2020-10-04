@@ -11,14 +11,12 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
-import org.veriblock.core.crypto.VBlakeHash
-import org.veriblock.core.utilities.extensions.asBase64Bytes
-import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.params.getDefaultNetworkParameters
+import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.deserialize
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.math.BigInteger
 import java.nio.ByteBuffer
-import java.util.Base64
 
 class StoredVeriBlockBlockTest {
     private lateinit var storedVeriBlockBlockExpected: StoredVeriBlockBlock
