@@ -8,7 +8,6 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
-import ch.qos.logback.classic.Logger
 import io.ktor.http.ContentType
 import mu.KLogger
 import org.bouncycastle.util.Arrays
@@ -68,7 +67,7 @@ class BitcoinFamilyChain(
     )
 
     override val requestsLogger = config.requestLogsPath?.let {
-        createLoggerFor(it, "http-calls-$key")
+        createLoggerFor(key)
     }
 
     init {

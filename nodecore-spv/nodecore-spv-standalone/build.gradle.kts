@@ -29,8 +29,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
-
     implementation(project(":veriblock-core"))
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-grpc"))
@@ -42,13 +40,22 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
 
     // Other
     implementation("me.tongfei:progressbar:0.8.1")
 
     testImplementation("junit:junit:4.12")
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
+}
+
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
 }
 
 tasks.test {

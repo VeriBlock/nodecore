@@ -7,7 +7,6 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import ch.qos.logback.classic.Level
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
@@ -16,6 +15,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.api.model.MineRequest
 import org.veriblock.miners.pop.api.model.MineResultResponse
 import org.veriblock.miners.pop.api.model.MinerInfoResponse

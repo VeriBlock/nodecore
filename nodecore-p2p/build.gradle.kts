@@ -12,15 +12,24 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    compile(project(":veriblock-core"))
-    compile(project(":nodecore-grpc"))
+    implementation(project(":veriblock-core"))
+    implementation(project(":nodecore-grpc"))
 
-    compile("ch.qos.logback:logback-classic:1.2.3")
-    compile("org.apache.commons:commons-lang3:3.7")
-    compile("com.google.guava:guava:24.1-jre")
-    compile("dnsjava:dnsjava:2.1.8")
+    // Logging
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+
+    implementation("org.apache.commons:commons-lang3:3.7")
+    implementation("com.google.guava:guava:24.1-jre")
+    implementation("dnsjava:dnsjava:2.1.8")
 }
 
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
+}
 
 setupJar("VeriBlock NodeCore P2P", "nodecore.p2p")
 

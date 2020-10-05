@@ -30,7 +30,7 @@ class StoredVeriBlockBlock
         get() = block.height
 
     init {
-        require (work >= BigInteger.ZERO) {
+        require(work >= BigInteger.ZERO) {
             "Work must be positive"
         }
     }

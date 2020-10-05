@@ -282,7 +282,7 @@ class SpvPeerTable(
                     }
                     ResultsCase.ADVERTISE_BLOCKS -> {
                         val advertiseBlocks = message.advertiseBlocks
-                        logger.debug {
+                        logger.error {
                             "Received advertisement of ${advertiseBlocks.headersList.size} blocks, height ${blockchain.getChainHead().height}"
                         }
                         val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {

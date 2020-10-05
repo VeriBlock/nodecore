@@ -34,8 +34,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    runtimeOnly("org.codehaus.groovy:groovy:2.4.12")
-
     implementation(project(":veriblock-core"))
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-grpc"))
@@ -68,9 +66,9 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
-    implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5")
-    implementation("ch.qos.logback.contrib:logback-jackson:0.1.5")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
 
     // Protobuf Serialization
@@ -97,6 +95,13 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.14.1")
     testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
     testImplementation("io.ktor:ktor-client-gson:$ktorVersion")
+}
+
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
 }
 
 tasks.test {
