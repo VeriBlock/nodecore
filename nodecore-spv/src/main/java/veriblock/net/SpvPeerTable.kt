@@ -160,7 +160,7 @@ class SpvPeerTable(
                 .tcp()
                 .connect(address)
         } catch (e: IOException) {
-            logger.error("Unable to open connection", e)
+            logger.debug("Unable to open connection to $address", e)
             throw e
         }
         val peer = createPeer(socket)
@@ -282,7 +282,7 @@ class SpvPeerTable(
                     }
                     ResultsCase.ADVERTISE_BLOCKS -> {
                         val advertiseBlocks = message.advertiseBlocks
-                        logger.error {
+                        logger.debug {
                             "Received advertisement of ${advertiseBlocks.headersList.size} blocks, height ${blockchain.getChainHead().height}"
                         }
                         val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {
