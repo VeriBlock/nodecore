@@ -58,7 +58,7 @@
 		</logger>
 		<logger name="Exposed" level="ERROR" />
 
-		<root level="${logLevel}">
+		<root level="ERROR">
 			<appender-ref ref="consoleAppender" />
 			<appender-ref ref="fileAppenderRouter" />
 			<appender-ref ref="errorFileAppender" />
