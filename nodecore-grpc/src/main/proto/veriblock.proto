@@ -1592,7 +1592,18 @@ message RebroadcastTransactionReply {
     repeated bytes txids_not_rebroadcast = 4;
 }
 
+message GenerateBlocksRequest {
+    int32 blocks = 1;
+}
+
+message GenerateBlocksReply {
+    bool success = 1;
+    repeated bytes hashes = 2;
+}
+
 service Admin {
+    rpc GenerateBlocks(GenerateBlocksRequest) returns (GenerateBlocksReply) {}
+
     rpc GetPop(GetPopRequest) returns (GetPopReply) {}
 
     rpc AddNode (NodeRequest) returns (ProtocolReply) {}
