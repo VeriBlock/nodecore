@@ -1598,7 +1598,8 @@ message GenerateBlocksRequest {
 
 message GenerateBlocksReply {
     bool success = 1;
-    repeated bytes hashes = 2;
+    Result result = 2;
+    repeated bytes hashes = 3;
 }
 
 service Admin {
