@@ -61,6 +61,10 @@ allprojects {
         })
     }
 
+    tasks.withType<Test> {
+        jvmArgs = listOf("-Xmx3g")
+        println(jvmArgs)
+    }
 }
 
 subprojects {

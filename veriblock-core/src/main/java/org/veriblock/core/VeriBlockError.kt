@@ -1,5 +1,7 @@
 package org.veriblock.core
 
+import org.veriblock.core.tuweni.ethash.EthHash
+
 enum class VeriBlockError(
     val code: Int,
     val title: String
