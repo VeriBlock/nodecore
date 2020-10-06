@@ -1594,12 +1594,12 @@ message RebroadcastTransactionReply {
 
 message GenerateBlocksRequest {
     int32 blocks = 1;
+    string address = 2;
 }
 
 message GenerateBlocksReply {
-    bool success = 1;
-    Result result = 2;
-    repeated bytes hashes = 3;
+    Result results = 1;
+    repeated bytes hashes = 2 [(hex_encoded)=true];
 }
 
 service Admin {
