@@ -1598,7 +1598,7 @@ message GenerateBlocksRequest {
 }
 
 message GenerateBlocksReply {
-    Result results = 1;
+    Result result = 1;
     repeated bytes hashes = 2 [(hex_encoded)=true];
 }
 
