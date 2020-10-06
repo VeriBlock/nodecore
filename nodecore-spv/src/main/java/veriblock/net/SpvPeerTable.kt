@@ -293,8 +293,7 @@ class SpvPeerTable(
                                     block.hash
                                     block
                                 }
-                            }
-                                .awaitAll()
+                            }.awaitAll()
                         }
                         if (downloadPeer == null && veriBlockBlocks.last().height > 0) {
                             startBlockchainDownload(sender)
