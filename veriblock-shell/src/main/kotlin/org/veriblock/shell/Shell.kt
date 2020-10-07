@@ -236,7 +236,7 @@ open class Shell(
         for (msg in result.getMessages()) {
             formatted.add(
                 ShellMessage(
-                    if (msg.isError) ActivityLevel.ERROR else ActivityLevel.INFO,
+                    if (msg.isError) ActivityLevel.ERROR else ActivityLevel.SUCCESS,
                     "[${msg.code}] ${msg.message}",
                     msg.details
                 )
