@@ -13,6 +13,7 @@ import org.veriblock.core.bitcoinj.Base59;
 import org.veriblock.core.crypto.Sha256Hash;
 import org.veriblock.core.utilities.Preconditions;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -157,6 +158,12 @@ public class Address {
     public byte[] getPoPBytes() {
         byte[] bytes = Base58.decode(address.substring(1));
         return Arrays.copyOfRange(bytes, 0, 16);
+    }
+
+    static public Address fromPoPBytes(ByteBuffer buf) {
+        byte[] bytes = new byte[16];
+        buf.get(bytes);
+        return new Address(STARTING_CHAR + Base58.encode(bytes));
     }
 
 

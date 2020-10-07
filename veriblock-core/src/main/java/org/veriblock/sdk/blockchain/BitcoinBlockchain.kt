@@ -68,7 +68,7 @@ open class BitcoinBlockchain(
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
-    fun add(block: BitcoinBlock) {
+    fun add(block: BitcoinBlock): StoredBitcoinBlock? {
         Preconditions.state(!hasTemporaryModifications(), "Cannot add a block while having temporary modifications")
 
         // Lightweight verification of the header
@@ -80,7 +80,7 @@ open class BitcoinBlockchain(
             // Further verification requiring context
             val previous = checkConnectivity(block)!!
             if (!verifyBlock(block, previous)) {
-                return
+                return null
             }
             work = work.add(previous.work)
             currentHeight = previous.height + 1
@@ -91,6 +91,11 @@ open class BitcoinBlockchain(
             currentHeight
         )
         store.put(storedBlock)
+        if (storedBlock.work > getChainHeadInternal()!!.work) {
+            store.setChainHead(storedBlock)
+        }
+
+        return storedBlock
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
