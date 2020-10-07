@@ -10,6 +10,8 @@ import org.veriblock.core.types.Triple;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ProgPoWCache {
     private static final Logger _logger = LoggerFactory.getLogger(ProgPoWCache.class);
@@ -18,6 +20,7 @@ public class ProgPoWCache {
 
     // Maps epochs to pairs of DAG caches and cDags
     private static final Map<Integer, Triple<int[], int[], Long>> cachedPairs = new HashMap<>();
+    private static final Lock cacheLock = new ReentrantLock();
 
     private static Integer MAX_CACHED_PAIRS = 10 + new Random().nextInt(4);
 
@@ -27,24 +30,28 @@ public class ProgPoWCache {
 
     public static Pair<int[], int[]> getDAGCache(int blockHeight) {
         int epoch = (int)EthHash.epoch(blockHeight);
+        cacheLock.lock();
+        try {
+            if (!(cachedPairs.containsKey(epoch))) {
+                _logger.info("Generating DAG cache for epoch " + epoch + " on demand...");
+                // Generate both DAG cache and cDag
+                int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(blockHeight)), blockHeight);
 
-        if (!(cachedPairs.containsKey(epoch))) {
-            _logger.info("Generating DAG cache for epoch " + epoch + " on demand...");
-            // Generate both DAG cache and cDag
-            int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(blockHeight)), blockHeight);
+                int[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
-            int[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
-
-            cachedPairs.put(epoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
+                cachedPairs.put(epoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
+            }
+        } finally {
+            cacheLock.unlock();
         }
 
         Triple<int[], int[], Long> fetched = cachedPairs.get(epoch);
         fetched.setThird(System.currentTimeMillis());
 
         pruneCache();
-
         return new Pair<>(fetched.getFirst(), fetched.getSecond());
     }
+
 
     public static void bufferCache(int currentBlockHeight) {
         int currentEpoch = (int)EthHash.epoch(currentBlockHeight);
