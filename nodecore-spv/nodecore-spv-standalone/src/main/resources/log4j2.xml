@@ -8,7 +8,7 @@
 
 	<appenders>
 
-		<shell name="consoleAppender" target="SYSTEM_OUT">
+		<shell name="consoleAppender">
 			<thresholdFilter level="${consoleLogLevel}" />
 			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %style{%-10.-10thread}{bright,white} %highlight{%-5level}{INFO=blue} %style{%-25.-25logger{0}}{bright,black} - %msg%n"/>
 		</shell>
@@ -22,7 +22,6 @@
 
 		<file name="jsonFileAppender" fileName="logs/${appName}.json" append="false" createOnDemand="true">
 			<jsonLayout complete="true" compact="true" eventEol="true" />
-			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
 		</file>
 
 		<routing name="fileAppenderRouter">
