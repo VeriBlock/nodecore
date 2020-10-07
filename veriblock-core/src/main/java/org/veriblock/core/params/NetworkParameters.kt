@@ -105,7 +105,6 @@ class NetworkParameters(
         minimumDifficulty = template.minimumDifficulty
         powNoRetargeting = template.powNoRetargeting
         blockTimeSeconds = template.blocktimeSeconds
-        // TODO: make progpow height configurable from config
         progPowForkHeight = template.progPowForkHeight
         progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
