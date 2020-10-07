@@ -187,6 +187,13 @@ object SerializeDeserializeService {
         val buffer = ByteBuffer.allocateDirect(raw.size)
         buffer.put(raw)
         buffer.flip()
+        return parseVeriBlockBlockStream(buffer)
+    }
+
+    fun parseVeriBlockBlockStream(buffer: ByteBuffer): VeriBlockBlock {
+        check(buffer.remaining() >= Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
+            "Invalid VeriBlock raw data"
+        }
         val height = buffer.readBEInt32()
         val version = buffer.readBEInt16()
         val previousBlock = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_BLOCK_LENGTH)
