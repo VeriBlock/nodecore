@@ -151,7 +151,7 @@ class VpmTaskService(
         operation.runTask(
             taskName = "Prove Transaction",
             targetState = VpmOperationState.PROVEN,
-            timeout = 90.sec
+            timeout = 30.min
         ) {
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("Trying to prove transaction without the actual transaction!")
@@ -213,7 +213,7 @@ class VpmTaskService(
         operation.runTask(
             taskName = "Build Publication Context",
             targetState = VpmOperationState.CONTEXT,
-            timeout = 2.min
+            timeout = 10.min
         ) {
             verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
@@ -246,7 +246,7 @@ class VpmTaskService(
         operation.runTask(
             taskName = "Submit PoP Endorsement",
             targetState = VpmOperationState.SUBMITTED_POP_DATA,
-            timeout = 30.sec
+            timeout = 10.min
         ) {
             verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
