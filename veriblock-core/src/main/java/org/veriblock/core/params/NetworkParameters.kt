@@ -317,18 +317,19 @@ object RegTestParameters : NetworkParametersTemplate() {
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
         0
     )
-    override val bitcoinOriginBlockHeight = 1780693
+    // regtest BTC genesis block:
+    override val bitcoinOriginBlockHeight = 0
     override val bitcoinOriginBlock = BitcoinBlock(
-        536870912,
-        Sha256Hash.wrap("00000000000000b345b7bbf29bda1507a679b97967f99a10ab0088899529def7"),
-        Sha256Hash.wrap("5e16e6cef738a2eba1fe7409318e3f558bec325392427aa3d8eaf46b028654f8"),
-        1555501858,
-        436279940,
-        2599551022L.toInt()
+        1,
+        Sha256Hash.wrap("0000000000000000000000000000000000000000000000000000000000000000"),
+        Sha256Hash.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"),
+        1296688602,
+        0x207fffff,
+        2
     )
     override val protocolVersion: Int = 3
 
-    override val transactionPrefix = 0xBB.toByte()
+    override val transactionPrefix = 0xEE.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = true
 }
