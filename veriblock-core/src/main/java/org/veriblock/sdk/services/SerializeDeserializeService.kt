@@ -188,10 +188,10 @@ object SerializeDeserializeService {
         val buffer = ByteBuffer.allocateDirect(raw.size)
         buffer.put(raw)
         buffer.flip()
-        return parseVeriBlockBlockStream(buffer)
+        return parseVeriBlockBlockStream(buffer, precomputedHash)
     }
 
-    fun parseVeriBlockBlockStream(buffer: ByteBuffer): VeriBlockBlock {
+    fun parseVeriBlockBlockStream(buffer: ByteBuffer, precomputedHash: VBlakeHash? = null): VeriBlockBlock {
         check(buffer.remaining() >= Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
             "Invalid VeriBlock raw data"
         }
