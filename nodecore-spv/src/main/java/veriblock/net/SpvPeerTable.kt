@@ -32,6 +32,7 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -60,6 +61,7 @@ import veriblock.util.nextMessageId
 import veriblock.util.launchWithFixedDelay
 import veriblock.validator.LedgerProofReplyValidator
 import java.io.IOException
+import java.nio.channels.ClosedChannelException
 import java.sql.SQLException
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -74,7 +76,7 @@ const val DEFAULT_CONNECTIONS = 12
 const val BLOOM_FILTER_TWEAK = 710699166
 const val BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.02
 const val BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER = 200
-const val AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 50
+const val AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 4//50
 
 class SpvPeerTable(
     private val spvContext: SpvContext,
@@ -283,7 +285,9 @@ class SpvPeerTable(
                     ResultsCase.ADVERTISE_BLOCKS -> {
                         val advertiseBlocks = message.advertiseBlocks
                         logger.debug {
-                            "Received advertisement of ${advertiseBlocks.headersList.size} blocks, height ${blockchain.getChainHead().height}"
+                            val lastBlock = MessageSerializer.deserialize(advertiseBlocks.headersList.last())
+                            "Received advertisement of ${advertiseBlocks.headersList.size} blocks," +
+                                " height: ${lastBlock.height}"
                         }
                         val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {
                             advertiseBlocks.headersList.map {
@@ -375,7 +379,7 @@ class SpvPeerTable(
     fun onPeerDisconnected(peer: SpvPeer) = lock.withLock {
         pendingPeers.remove(peer.address)
         peers.remove(peer.address)
-        if (downloadPeer != null && downloadPeer!!.address.equals(peer.address, ignoreCase = true)) {
+        if (downloadPeer?.address?.equals(peer.address, ignoreCase = true) == true) {
             downloadPeer = null
         }
     }
@@ -385,6 +389,8 @@ class SpvPeerTable(
             logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.offer(NetworkMessage(sender, message))
         } catch (e: InterruptedException) {
+            logger.error("onMessageReceived interrupted", e)
+        } catch (e: ClosedChannelException) {
             logger.error("onMessageReceived interrupted", e)
         }
     }

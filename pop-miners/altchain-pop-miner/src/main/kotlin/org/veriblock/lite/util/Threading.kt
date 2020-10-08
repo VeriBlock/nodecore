@@ -27,7 +27,8 @@ object Threading {
             .setNameFormat("nc-poll")
             .build()
     )
-    val SI_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+    val SI_MONITOR_POOL: ExecutorService = Executors.newFixedThreadPool(
+        16,
         ThreadFactoryBuilder()
             .setNameFormat("si-poll")
             .build()

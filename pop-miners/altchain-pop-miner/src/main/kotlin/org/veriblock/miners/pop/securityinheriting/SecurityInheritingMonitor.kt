@@ -107,7 +107,7 @@ class SecurityInheritingMonitor(
     fun start(miner: MinerService) {
         this.miner = miner
 
-        val coroutineScope = CoroutineScope(Threading.SI_POLL_THREAD.asCoroutineDispatcher())
+        val coroutineScope = CoroutineScope(Threading.SI_MONITOR_POOL.asCoroutineDispatcher())
         coroutineScope.launch {
             // Wait for nodeCore to be ready
             while (!nodeCoreLiteKit.network.isReady()) {
@@ -260,12 +260,8 @@ class SecurityInheritingMonitor(
             try {
                 val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
                 val bestKnownBlock = nodeCoreLiteKit.gateway.getBlock(bestKnownBlockHash)
-                if (bestKnownBlock == null) {
                     // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                    // Let's try again after a while
-                    delay(300_000L)
-                    continue
-                }
+                    ?: continue
 
                 if (bestKnownBlock.height == newBlock.height) {
                     continue
@@ -302,11 +298,14 @@ class SecurityInheritingMonitor(
             try {
                 val instruction = chain.getMiningInstruction()
                 val vbkContextBlockHash = VBlakeHash.wrap(instruction.context.first())
-                val vbkContextBlock = nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash)
+                val vbkContextBlock = nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash) ?: run {
+                    // Maybe our peer doesn't know about that block yet. Let's wait a few seconds and give it another chance
+                    delay(30_000L)
+                    nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash)
+                }
                 if (vbkContextBlock == null) {
-                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                    // Let's try again after a while
-                    delay(300_000L)
+                    // The altchain has knowledge of a block we don't even know. Let's try again after a while
+                    delay(30_000L)
                     continue
                 }
                 logger.info {

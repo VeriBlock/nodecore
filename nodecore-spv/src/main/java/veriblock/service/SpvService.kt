@@ -384,7 +384,7 @@ class SpvService(
             .setAcknowledge(false)
             .setVeriblockPublicationsRequest(getVeriBlockPublicationsRequest)
             .build()
-        val reply = peerTable.requestMessage(advertise, timeoutInMillis = 20_000L)
+        val reply = peerTable.requestMessage(advertise, timeoutInMillis = 300_000L)
         return reply.veriblockPublicationsReply
     }
 

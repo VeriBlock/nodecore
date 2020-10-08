@@ -23,7 +23,8 @@ open class VeriBlockBlock(
     merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
-    nonce: Long
+    nonce: Long,
+    private val precomputedHash: VBlakeHash? = null
 ) {
     val height: Int
     val version: Short
@@ -39,7 +40,7 @@ open class VeriBlockBlock(
         get() = SerializeDeserializeService.serializeHeaders(this)
 
     val hash: VBlakeHash by lazy {
-        VBlakeHash.wrap(
+        precomputedHash ?: VBlakeHash.wrap(
             if (height == 0) {
                 BlockUtility.hashVBlakeBlock(raw)
             } else {

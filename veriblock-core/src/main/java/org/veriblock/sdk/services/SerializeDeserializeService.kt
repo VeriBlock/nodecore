@@ -173,14 +173,15 @@ object SerializeDeserializeService {
     }
 
     // VeriBlockBlock
-    fun parseVeriBlockBlock(buffer: ByteBuffer): VeriBlockBlock {
+    @JvmOverloads
+    fun parseVeriBlockBlock(buffer: ByteBuffer, precomputedHash: VBlakeHash? = null): VeriBlockBlock {
         val raw = buffer.getSingleByteLengthValue(
             Constants.HEADER_SIZE_VeriBlockBlock_VBlake, Constants.HEADER_SIZE_VeriBlockBlock
         )
-        return parseVeriBlockBlock(raw)
+        return parseVeriBlockBlock(raw, precomputedHash)
     }
 
-    fun parseVeriBlockBlock(raw: ByteArray): VeriBlockBlock {
+    fun parseVeriBlockBlock(raw: ByteArray, precomputedHash: VBlakeHash? = null): VeriBlockBlock {
         check(raw.size == Constants.HEADER_SIZE_VeriBlockBlock || raw.size == Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
             "Invalid VeriBlock raw data: " + Utility.bytesToHex(raw)
         }
@@ -211,7 +212,7 @@ object SerializeDeserializeService {
         }
         return VeriBlockBlock(
             height, version, previousBlock, previousKeystone, secondPreviousKeystone, merkleRoot,
-            timestamp, difficulty, nonce
+            timestamp, difficulty, nonce, precomputedHash
         )
     }
 

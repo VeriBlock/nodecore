@@ -49,7 +49,7 @@ class NodeCoreGateway(
     fun getLastBlock(): VeriBlockBlock {
         return try {
             val lastBlock = spvService.getLastVBKBlockHeader()
-            SerializeDeserializeService.parseVeriBlockBlock(lastBlock.header)
+            SerializeDeserializeService.parseVeriBlockBlock(lastBlock.header, VBlakeHash.wrap(lastBlock.hash))
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to get last VBK block" }
             throw e
@@ -60,7 +60,7 @@ class NodeCoreGateway(
         logger.debug { "Requesting VBK block with hash $hash..." }
 
         return spvService.getVbkBlockHeader(hash)?.let {
-            SerializeDeserializeService.parseVeriBlockBlock(it.header)
+            SerializeDeserializeService.parseVeriBlockBlock(it.header, VBlakeHash.wrap(it.hash))
         }
     }
 
