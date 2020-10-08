@@ -12,14 +12,18 @@ import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
+import org.veriblock.miners.pop.service.BitcoinService
 import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.NodeCoreService
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val logger = createLogger {}
 
 class AutoMineEngine(
     configuration: VpmConfig,
-    private val minerService: MinerService
+    private val minerService: MinerService,
+    private val nodeCoreService: NodeCoreService,
+    private val bitcoinService: BitcoinService
 ) {
     private val running = AtomicBoolean(false)
 
@@ -35,7 +39,7 @@ class AutoMineEngine(
     fun run() {
         EventBus.newVeriBlockFoundEvent.register(this, ::onNewVeriBlockFound)
         running.set(true)
-        logger.info { "AutoMine engine is now running" }
+        logger.info { "AutoMine engine is now running, waiting for the miner to be ready" }
     }
 
     fun shutdown() {
@@ -43,6 +47,11 @@ class AutoMineEngine(
     }
 
     private fun onNewVeriBlockFound(event: NewVeriBlockFoundEventDto) {
+        if (!nodeCoreService.isReady() || !bitcoinService.isServiceReady() || !bitcoinService.isBlockchainDownloaded()
+            || !bitcoinService.isSufficientlyFunded()) {
+            logger.debug { "The miner is not ready, skipping the auto mine for the block height ${event.block.getHeight()}" }
+            return
+        }
         try {
             val previousHead = event.previousHead
             val latestBlock = event.block
