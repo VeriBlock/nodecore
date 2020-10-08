@@ -221,7 +221,8 @@ data class DownloaderConfig(
     val network: String = "mainnet",
     val url: String = "https://mirror.veriblock.org/bootstrap",
     val dataDir: String = getDefaultNodecoreDataDir(),
-    val localUrl: Boolean = false
+    val localUrl: Boolean = false,
+    val displayHelp: Boolean = false
 )
 
 fun getDefaultNodecoreDataDir(): String {
@@ -247,41 +248,60 @@ fun main(args: Array<String>) {
         println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
         println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Bootstrap_Downloader")}\n")
 
-        val config = Configuration(
-            bootOptions = bootOptions(
-                listOf(
-                    bootOption(
-                        opt = "n",
-                        longOpt = "network",
-                        desc = "The network",
-                        argName = "network",
-                        configMapping = "downloader.network"
-                    ),
-                    bootOption(
-                        opt = "u",
-                        longOpt = "url",
-                        desc = "The download url",
-                        argName = "url",
-                        configMapping = "downloader.url"
-                    ),
-                    bootOption(
-                        opt = "d",
-                        longOpt = "dataDir",
-                        desc = "The data directory where NodeCore generated files reside",
-                        argName = "dataDir",
-                        configMapping = "downloader.dataDir"
-                    ),
-                    bootOption(
-                        opt = "l",
-                        longOpt = "localUrl",
-                        desc = "Specifies if the url is local or not",
-                        argName = "localUrl",
-                        configMapping = "downloader.localUrl"
-                    )
-                ),
-                args
+        val options = listOf(
+            bootOption(
+                opt = "n",
+                longOpt = "network",
+                desc = "Specify the target network (testnet / mainnet)",
+                argName = "network",
+                configMapping = "downloader.network"
+            ),
+            bootOption(
+                opt = "u",
+                longOpt = "url",
+                desc = "Specify the download url",
+                argName = "url",
+                configMapping = "downloader.url"
+            ),
+            bootOption(
+                opt = "d",
+                longOpt = "dataDir",
+                desc = "Specify the data directory where NodeCore generated files reside",
+                argName = "dataDir",
+                configMapping = "downloader.dataDir"
+            ),
+            bootOption(
+                opt = "l",
+                longOpt = "localUrl",
+                desc = "Specify if the download url is a local url (true / false)",
+                argName = "localUrl",
+                configMapping = "downloader.localUrl"
+            ),
+            bootOption(
+                opt = "h",
+                desc = "Display all the program arguments",
+                configMapping = "downloader.displayHelp"
             )
+        )
+
+        val bootOptions = try {
+            bootOptions(options, args)
+        } catch (e: Exception) {
+            logger.error { "Unable to parse the program arguments: ${e.message}, use the -h argument to display the available arguments" }
+            return@runBlocking
+        }
+
+        val config = Configuration(
+            bootOptions = bootOptions
         ).extract<DownloaderConfig>("downloader") ?: DownloaderConfig()
+
+        if (config.displayHelp) {
+            logger.info { "Available program arguments:" }
+            options.forEach {
+                logger.info { "-${it.opt}: ${it.desc}" }
+            }
+            return@runBlocking
+        }
 
         val networkDirectory = Paths.get(config.dataDir, config.network).toFile()
         try {
