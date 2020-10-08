@@ -246,7 +246,7 @@ class BitcoinService(
     }
 
     fun verifyBalance(ignoreCondition: Boolean = false) {
-        val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+        val balance = getBalance()
         if (balance != latestBalance) {
             if (balance.isLessThan(getMaximumTransactionFee())) {
                 if (ignoreCondition || isSufficientlyFunded()) {
