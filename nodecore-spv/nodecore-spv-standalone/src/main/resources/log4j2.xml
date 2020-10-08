@@ -40,7 +40,7 @@
 
 	<loggers>
 
-		<logger name="org.veriblock.miners.pop" level="${logLevel}" />
+		<logger name="org.veriblock.spv" level="${logLevel}" />
 
 		<logger name="shell-printing" level="INFO" additivity="false">
 			<appender-ref ref="fileAppenderRouter" />
