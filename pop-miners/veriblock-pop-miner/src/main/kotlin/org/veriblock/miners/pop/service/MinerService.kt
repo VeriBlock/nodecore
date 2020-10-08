@@ -77,13 +77,11 @@ class MinerService(
         }
         EventBus.insufficientFundsEvent.register(this) { balance ->
             val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
-            logger.info("PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
-                balance.formatBTCFriendlyString() + System.lineSeparator() + String.format(
-                "  Minimum required: %1\$s, need %2\$s more",
-                maximumTransactionFee.formatBTCFriendlyString(),
-                maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
-            ) + System.lineSeparator() + "  Send Bitcoin to: " +
-                bitcoinService.currentReceiveAddress())
+            logger.info("""PoP wallet does not contain sufficient funds
+                        Current balance: ${balance.formatBTCFriendlyString()}
+                        Minimum required: ${maximumTransactionFee.formatBTCFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBTCFriendlyString()} more",
+                        Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}
+            """.trimIndent())
             verifyMinerIsReady()
         }
         EventBus.balanceChangedEvent.register(this) { balance ->
@@ -94,6 +92,7 @@ class MinerService(
         // Bitcoin Events
         EventBus.bitcoinServiceReadyEvent.register(this) {
             logger.info { "Bitcoin service is ready" }
+            logger.info { "Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}" }
             verifyMinerIsReady()
         }
         EventBus.bitcoinServiceNotReadyEvent.register(this) {
