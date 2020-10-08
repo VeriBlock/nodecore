@@ -21,7 +21,7 @@ dependencies {
 
     implementation("org.apache.commons:commons-lang3:3.7")
     implementation("com.google.guava:guava:24.1-jre")
-    implementation("dnsjava:dnsjava:2.1.8")
+    implementation("dnsjava:dnsjava:3.3.0")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning
