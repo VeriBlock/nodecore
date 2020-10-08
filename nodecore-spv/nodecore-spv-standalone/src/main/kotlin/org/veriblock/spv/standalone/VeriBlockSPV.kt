@@ -62,7 +62,7 @@ private fun run(): Int {
     shell.initialize()
 
     print(SharedConstants.LICENSE)
-    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock", "")))
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock ", "")))
     println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
     println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
