@@ -38,7 +38,7 @@ import javax.sql.DataSource
 @JvmField
 val bootstrapModule = module {
     single { BlockStore() }
-    single { AutoMineEngine(get(), get()) }
+    single { AutoMineEngine(get(), get(), get(), get()) }
     single { VpmTaskService(get(), get(), get()) }
     single { ProcessManager(get(), get()) }
     single { ChannelBuilder(get()) }
