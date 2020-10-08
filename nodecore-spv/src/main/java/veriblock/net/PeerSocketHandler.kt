@@ -18,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.createLogger
@@ -133,6 +134,9 @@ class PeerSocketHandler(
                 // Disconnect?
                 break
             } catch (e: EOFException) {
+                logger.info("Disconnected from peer ${peer.address}.")
+                break
+            } catch (e: ClosedReceiveChannelException) {
                 logger.info("Disconnected from peer ${peer.address}.")
                 break
             } catch (e: CancellationException) {

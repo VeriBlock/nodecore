@@ -443,9 +443,9 @@ class SpvPeerTable(
         val currentHeight = blockchain.getChainHead().height
         val bestBlockHeight = downloadPeer?.bestBlockHeight ?: 0
         status = when {
-            downloadPeer == null || bestBlockHeight == 0 ->
+            downloadPeer == null || (currentHeight == 0 && bestBlockHeight == 0) ->
                 DownloadStatus.DISCOVERING
-            bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
+            bestBlockHeight > 0 && bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
                 DownloadStatus.READY
             else ->
                 DownloadStatus.DOWNLOADING

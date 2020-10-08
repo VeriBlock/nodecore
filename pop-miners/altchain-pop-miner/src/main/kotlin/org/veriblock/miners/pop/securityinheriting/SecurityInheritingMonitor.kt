@@ -299,7 +299,7 @@ class SecurityInheritingMonitor(
                 chain.submitContext(contextBlocksToSubmit)
                 logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
             } catch (e: Exception) {
-                logger.warn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
+                logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
         }
     }
@@ -357,7 +357,7 @@ class SecurityInheritingMonitor(
                 chain.submitVtbs(vtbs)
                 logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
             } catch (e: Exception) {
-                logger.warn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
+                logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
             }
         }

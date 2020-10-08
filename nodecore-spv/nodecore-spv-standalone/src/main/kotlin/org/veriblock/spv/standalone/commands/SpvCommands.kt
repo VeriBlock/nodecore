@@ -1,11 +1,14 @@
 package org.veriblock.spv.standalone.commands
 
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import kotlinx.coroutines.runBlocking
 import nodecore.api.grpc.VeriBlockMessages
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.shell.CommandContext
 import org.veriblock.shell.CommandFactory
@@ -197,7 +200,12 @@ fun CommandFactory.spvCommands(
     }
 }
 
-private val prettyPrintGson = GsonBuilder().setPrettyPrinting().create()
+private val prettyPrintGson = GsonBuilder().apply {
+    setPrettyPrinting()
+    registerTypeAdapter(Coin::class.java, JsonSerializer<Coin> { src, _, _ ->
+        JsonPrimitive(src.toString())
+    })
+}.create()
 
 fun CommandContext.displayResult(
     result: Any

@@ -10,17 +10,16 @@
 
 package org.veriblock.spv.standalone
 
-import com.google.gson.GsonBuilder
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
-import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
@@ -30,7 +29,6 @@ import veriblock.SpvContext
 import veriblock.model.DownloadStatus
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
-import java.lang.Thread.sleep
 import java.security.Security
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -76,26 +74,47 @@ private fun run(): Int {
         Context.create(networkParameters)
         spvContext.init(networkParameters, peerDiscovery)
         spvContext.peerTable.start()
-        ProgressBarBuilder().apply {
-            setTaskName("Loading SPV")
-            setInitialMax(1)
-            setStyle(ProgressBarStyle.COLORFUL_UNICODE_BLOCK)
-        }.build().use { progressBar ->
+        logger.info { "Looking for peers..." }
+        runBlocking {
             var status = spvContext.peerTable.getDownloadStatus()
-            val initialHeight = status.currentHeight
-            progressBar.extraMessage = "Looking for peers..."
-            while (status.downloadStatus != DownloadStatus.READY) {
-                if (status.downloadStatus == DownloadStatus.DOWNLOADING) {
-                    progressBar.extraMessage = "Downloading blocks..."
-                    progressBar.maxHint(status.bestHeight.toLong() - initialHeight)
-                    progressBar.stepTo(status.currentHeight.toLong() - initialHeight)
-                }
-                sleep(1000L)
+            while (status.downloadStatus == DownloadStatus.DISCOVERING) {
+                delay(1000L)
                 status = spvContext.peerTable.getDownloadStatus()
             }
-            progressBar.extraMessage = "Ready!"
-            progressBar.maxHint(status.bestHeight.toLong())
-            progressBar.stepTo(status.bestHeight.toLong())
+            if (status.downloadStatus == DownloadStatus.DOWNLOADING) {
+                val progPowHeight = Context.get().networkParameters.progPowForkHeight.toLong()
+                val initialHeight = status.currentHeight
+                if (status.currentHeight < progPowHeight) {
+                    ProgressBarBuilder().apply {
+                        setTaskName("Downloading vBlake Blocks")
+                        setInitialMax(progPowHeight - initialHeight)
+                        setStyle(ProgressBarStyle.COLORFUL_UNICODE_BLOCK)
+                    }.build().use { progressBar ->
+                        while (status.downloadStatus == DownloadStatus.DOWNLOADING && status.currentHeight < progPowHeight) {
+                            progressBar.stepTo(status.currentHeight.toLong() - initialHeight)
+                            delay(1000L)
+                            status = spvContext.peerTable.getDownloadStatus()
+                        }
+                        progressBar.stepTo(progPowHeight)
+                    }
+                }
+                logger.info { "Proceeding to download vProgPoW blocks. This operation is highly CPU-intensive and will take some time." }
+                val progPowInitialHeight = initialHeight.toLong().coerceAtLeast(progPowHeight)
+                ProgressBarBuilder().apply {
+                    setTaskName("Downloading vProgPow Blocks")
+                    setInitialMax((status.bestHeight - progPowInitialHeight).coerceAtLeast(1))
+                    setStyle(ProgressBarStyle.COLORFUL_UNICODE_BLOCK)
+                }.build().use { progressBar ->
+                    while (status.downloadStatus == DownloadStatus.DOWNLOADING) {
+                        progressBar.maxHint(status.bestHeight.toLong() - progPowInitialHeight)
+                        progressBar.stepTo(status.currentHeight.toLong() - progPowInitialHeight)
+                        delay(1000L)
+                        status = spvContext.peerTable.getDownloadStatus()
+                    }
+                    progressBar.maxHint(status.bestHeight.toLong() - progPowInitialHeight)
+                    progressBar.stepTo(status.bestHeight.toLong() - progPowInitialHeight)
+                }
+            }
         }
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
         logger.info { """Type "help" to display a list of available commands""" }
