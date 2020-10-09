@@ -389,8 +389,8 @@ public class AddressManager {
 
         try {
             KeyPair keyPair = new KeyPair(
-                    AddressKeyGenerator.getPublicKey(publicKey),
-                    AddressKeyGenerator.getPrivateKey(privateKey));
+                AddressKeyGenerator.getPublicKey(publicKey),
+                AddressKeyGenerator.getPrivateKey(privateKey));
 
             StoredAddress storedAddress = createFromKeyPair(keyPair, key);
             if (storedAddress == null) return null;
@@ -415,10 +415,13 @@ public class AddressManager {
             throw new WalletLockedException("Wallet must be unlocked before creating a new address");
         }
 
+        logger.info("Generating keypair...");
         KeyPair pair = AddressKeyGenerator.generate();
+        logger.info("Generating storedaddress...");
         StoredAddress storedAddress = createFromKeyPair(pair, key);
         if (storedAddress == null) return null;
 
+        logger.info("Adding pair...");
         return add(pair, storedAddress);
     }
 
