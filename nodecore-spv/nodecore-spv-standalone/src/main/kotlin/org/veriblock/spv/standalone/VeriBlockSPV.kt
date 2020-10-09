@@ -19,6 +19,7 @@ import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.tuweni.progpow.ProgPoWCache
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
@@ -54,6 +55,7 @@ private fun run(): Int {
         shutdownSignal.countDown()
     })
 
+    ProgPoWCache.setMaxCachedPairs(2); // Fewer cached pairs for SPV
     val spvContext = SpvContext()
     val shell = Shell(CommandFactory().apply {
         standardCommands()

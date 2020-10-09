@@ -7,13 +7,8 @@
 package nodecore.p2p
 
 import org.xbill.DNS.Lookup
-import org.xbill.DNS.Record
-import org.xbill.DNS.TextParseException
-import java.util.Arrays
-import java.util.stream.Collectors
 
 class DnsResolver {
-    @Throws(TextParseException::class)
     fun query(dns: String?): List<String> {
         val dnsLookup = Lookup(dns)
         val aRecords = dnsLookup.run()
