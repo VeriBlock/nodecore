@@ -238,7 +238,7 @@ class BitcoinFamilyChain(
                 it.height
             }.map {
                 SerializeDeserializeService.serialize(it).toHex()
-            },
+            }.toList(),
             veriBlockPublications.map {
                 SerializeDeserializeService.serialize(
                     it.copy(context = emptyList())
