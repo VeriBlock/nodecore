@@ -20,7 +20,7 @@ public class Debug {
 
         AddressManager manager = new AddressManager();
         manager.load(new File("wallet.dat"));
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100_000; i++) {
             int entropyBefore = Integer.parseInt(getEntropy().replaceAll("\"", "").trim());
             long start = System.currentTimeMillis();
             String address = manager.getNewAddress().getHash();

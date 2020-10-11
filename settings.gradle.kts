@@ -33,4 +33,6 @@ include("nodecore-spv:nodecore-spv-standalone")
 
 include("bootstrap-downloader")
 
+include("veriblock-core:debug")
+
 rootProject.name = "nodecore-suite"
