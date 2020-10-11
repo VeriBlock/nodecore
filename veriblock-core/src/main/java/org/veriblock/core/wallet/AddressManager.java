@@ -415,13 +415,13 @@ public class AddressManager {
             throw new WalletLockedException("Wallet must be unlocked before creating a new address");
         }
 
-        logger.info("Generating keypair...");
+        logger.debug("Generating keypair...");
         KeyPair pair = AddressKeyGenerator.generate();
-        logger.info("Generating storedaddress...");
+        logger.debug("Generating storedaddress...");
         StoredAddress storedAddress = createFromKeyPair(pair, key);
         if (storedAddress == null) return null;
 
-        logger.info("Adding pair...");
+        logger.debug("Adding pair...");
         return add(pair, storedAddress);
     }
 
