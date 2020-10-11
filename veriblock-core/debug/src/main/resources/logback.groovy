@@ -10,7 +10,7 @@ statusListener(NopStatusListener)
 
 appender("TERMINAL", ConsoleAppender) {
     encoder(PatternLayoutEncoder) {
-        pattern = "%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"
+        pattern = "%d{HH:mm:ss} %highlight(%-5level) %gray(%-15.-15logger{0}) - %msg%n"
     }
 }
 
