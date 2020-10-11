@@ -15,13 +15,9 @@ import org.redline_rpm.header.Flags.GREATER
 plugins {
     java
     kotlin("jvm")
+    kotlin("plugin.serialization") version kotlinVersion
     idea
     application
-}
-
-configurations.all {
-    // check for updates every build for changing modules
-    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 dependencies {
@@ -32,20 +28,15 @@ dependencies {
 
     implementation(project(":veriblock-core"))
 
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0")
+
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.60")
-}
-
-tasks.named<JavaExec>("run") {
-    standardInput = System.`in`
-    standardOutput = System.out
-
-    if (project.hasProperty("appArgs")) {
-        args = Eval.me(properties["appArgs"] as String) as List<String>
-    }
 }
 
 application.applicationName = "debug"
@@ -58,9 +49,4 @@ tasks.distZip {
 }
 tasks.distTar {
     archiveFileName.set("${application.applicationName}-${prettyVersion()}.tar")
-}
-
-tasks.startScripts {
-    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template =
-        resources.text.fromFile("windowsStartScript.txt")
 }

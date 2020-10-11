@@ -10,11 +10,10 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import kotlin.system.measureTimeMillis
 
-private val logger = createLogger {}
+val logger = createLogger {}
 
 fun main() {
-    logger.info("Installed packages (Ubuntu):")
-    logger.info(getInstalledPackagesUbuntu())
+    printDiagnostics()
     val manager = AddressManager().apply {
         load(File("wallet.dat"))
     }
