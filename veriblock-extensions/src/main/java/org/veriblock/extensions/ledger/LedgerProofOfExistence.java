@@ -73,10 +73,10 @@ public class LedgerProofOfExistence {
                     "array of vertical proof layers!");
         }
 
-        for (int i = 0; i < verticalProofLayers.length; i++) {
-            if (verticalProofLayers[i] == null) {
+        for (LedgerProofNode verticalProofLayer : verticalProofLayers) {
+            if (verticalProofLayer == null) {
                 throw new IllegalArgumentException("A LedgerProofOfExistence cannot be constructed with a null " +
-                        "vertical proof layer!");
+                    "vertical proof layer!");
             }
         }
 
@@ -119,14 +119,18 @@ public class LedgerProofOfExistence {
     }
 
     public static LedgerProofOfExistence parseFrom(VeriBlockMessages.LedgerProofOfExistence message) {
-        return new LedgerProofOfExistence(message.getVerticalProofLayersList().stream().map(LedgerProofNode::parseFrom)
-                .collect(Collectors.toList()).toArray(new LedgerProofNode[message.getVerticalProofLayersCount()]));
+        return new LedgerProofOfExistence(message
+            .getVerticalProofLayersList()
+            .stream()
+            .map(LedgerProofNode::parseFrom)
+            .collect(Collectors.toList())
+            .toArray(new LedgerProofNode[message.getVerticalProofLayersCount()]));
     }
 
     public VeriBlockMessages.LedgerProofOfExistence.Builder getMessageBuilder() {
         VeriBlockMessages.LedgerProofOfExistence.Builder builder = VeriBlockMessages.LedgerProofOfExistence.newBuilder();
-        for (int i = 0; i < verticalProofLayers.length; i++) {
-            builder.addVerticalProofLayers(verticalProofLayers[i].getMessageBuilder());
+        for (LedgerProofNode verticalProofLayer : verticalProofLayers) {
+            builder.addVerticalProofLayers(verticalProofLayer.getMessageBuilder());
         }
 
         return builder;

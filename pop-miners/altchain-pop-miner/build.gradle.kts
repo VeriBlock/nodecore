@@ -20,6 +20,7 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     id("com.github.node-gradle.node") version "2.0.0"
     id("nebula.ospackage")
+    `maven-publish`
 }
 
 configurations.all {
@@ -194,5 +195,13 @@ distributions {
         }
     }
 }
+
+setupJar("Altchain POP Miner", "org.veriblock")
+val sourcesJar = setupSourcesJar()
+
+publish(
+    artifactName = "altchain-pop-miner",
+    sourcesJar = sourcesJar
+)
 
 customTests("integration")
