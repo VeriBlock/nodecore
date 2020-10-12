@@ -2647,7 +2647,7 @@ public class EthHash {
      * @param block Block Number to generate cache for
      * @return EthHash Cache
      */
-    public static UInt32[] mkCache(int cacheSize, long block) {
+    public static int[] mkCache(int cacheSize, long block) {
         int rows = cacheSize / HASH_BYTES;
         List<Bytes> cache = new ArrayList<>(rows);
         cache.add(Hash.keccak512(dagSeed(block)));
@@ -2672,9 +2672,9 @@ public class EthHash {
                 System.arraycopy(temp, 0, completeCache.toArrayUnsafe(), offset, HASH_BYTES);
             }
         }
-        UInt32[] result = new UInt32[completeCache.size() / 4];
+        int[] result = new int[completeCache.size() / 4];
         for (int i = 0; i < result.length; i++) {
-            result[i] = UInt32.fromBytes(completeCache.slice(i * 4, 4).reverse());
+            result[i] = completeCache.slice(i * 4, 4).reverse().toInt();
         }
 
         return result;

@@ -513,13 +513,8 @@ public final class BlockUtility {
         long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
 
         // TODO: Move to crypto
-        Pair<UInt32[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
-        UInt32[] cache = cachePair.getFirst();
-
-        int[] trueCache = new int[cache.length];
-        for (int i = 0; i < cache.length; i++) {
-            trueCache[i] = cache[i].intValue();
-        }
+        Pair<int[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
+        int[] cache = cachePair.getFirst();
 
         UInt32[] cDag = cachePair.getSecond();
         Bytes32 digest = ProgPoW.progPowHash(
@@ -527,7 +522,7 @@ public final class BlockUtility {
             converted,
             Bytes32.wrap(headerHash),
             cDag,
-            (ind) -> EthHash.calcDatasetItem(trueCache, ind)
+            (ind) -> EthHash.calcDatasetItem(cache, ind)
         );
 
         String blockHash = digest.toUnprefixedHexString().toUpperCase();

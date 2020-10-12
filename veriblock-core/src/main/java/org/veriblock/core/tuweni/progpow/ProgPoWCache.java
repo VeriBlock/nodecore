@@ -18,7 +18,7 @@ public class ProgPoWCache {
     private static final int BUFFER_FOR_CALCULATION = 100;
 
     // Maps epochs to pairs of DAG caches and cDags
-    private static final Map<Integer, Triple<UInt32[], UInt32[], Long>> cachedPairs = new HashMap<>();
+    private static final Map<Integer, Triple<int[], UInt32[], Long>> cachedPairs = new HashMap<>();
 
     private static Integer MAX_CACHED_PAIRS = 10 + new Random().nextInt(4);
 
@@ -26,25 +26,20 @@ public class ProgPoWCache {
         MAX_CACHED_PAIRS = limit;
     }
 
-    public static Pair<UInt32[], UInt32[]> getDAGCache(int blockHeight) {
+    public static Pair<int[], UInt32[]> getDAGCache(int blockHeight) {
         int epoch = (int)EthHash.epoch(blockHeight);
 
         if (!(cachedPairs.containsKey(epoch))) {
             _logger.info("Generating DAG cache for epoch " + epoch + " on demand...");
             // Generate both DAG cache and cDag
-            UInt32[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(blockHeight)), blockHeight);
+            int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(blockHeight)), blockHeight);
 
-            int[] trueCache = new int[cache.length];
-            for (int i = 0; i < cache.length; i++) {
-                trueCache[i] = cache[i].intValue();
-            }
-
-            UInt32[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(trueCache, ind));
+            UInt32[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(epoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }
 
-        Triple<UInt32[], UInt32[], Long> fetched = cachedPairs.get(epoch);
+        Triple<int[], UInt32[], Long> fetched = cachedPairs.get(epoch);
         fetched.setThird(System.currentTimeMillis());
 
         pruneCache();
@@ -56,14 +51,9 @@ public class ProgPoWCache {
         int currentEpoch = (int)EthHash.epoch(currentBlockHeight);
         if (!cachedPairs.containsKey(currentEpoch)) {
             _logger.info("Generating DAG cache for current epoch " + currentEpoch + "...");
-            UInt32[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(currentBlockHeight)), currentBlockHeight);
+            int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(currentBlockHeight)), currentBlockHeight);
 
-            int[] trueCache = new int[cache.length];
-            for (int i = 0; i < cache.length; i++) {
-                trueCache[i] = cache[i].intValue();
-            }
-
-            UInt32[] cDag = ProgPoW.createDagCache(currentBlockHeight, (ind) -> EthHash.calcDatasetItem(trueCache, ind));
+            UInt32[] cDag = ProgPoW.createDagCache(currentBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(currentEpoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }
@@ -72,14 +62,9 @@ public class ProgPoWCache {
         int futureEpoch = (int)EthHash.epoch(futureBlockHeight);
         if (!cachedPairs.containsKey(futureEpoch)) {
             _logger.info("Pre-generating DAG cache for future epoch " + futureEpoch + "...");
-            UInt32[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(futureBlockHeight)), futureBlockHeight);
+            int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(futureBlockHeight)), futureBlockHeight);
 
-            int[] trueCache = new int[cache.length];
-            for (int i = 0; i < cache.length; i++) {
-                trueCache[i] = cache[i].intValue();
-            }
-
-            UInt32[] cDag = ProgPoW.createDagCache(futureBlockHeight, (ind) -> EthHash.calcDatasetItem(trueCache, ind));
+            UInt32[] cDag = ProgPoW.createDagCache(futureBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(futureEpoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }
