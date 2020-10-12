@@ -168,16 +168,14 @@ public class Peer {
                 }
 
                 logger.debug("Next message size: {}", nextMessageSize);
-                // Create the read buffer and reset the read size
-                readBuffer = ByteBuffer.allocate(nextMessageSize);
-
                 if (nextMessageSize > Constants.PEER_BAN_MESSAGE_SIZE_LIMIT) {
                     InternalEventBus.getInstance().post(new PeerMisbehaviorEvent(this, PeerMisbehaviorEvent.Reason.MESSAGE_SIZE_EXCESSIVE));
-
                     disconnect();
-
                     return;
                 }
+
+                // Create the read buffer and reset the read size
+                readBuffer = ByteBuffer.allocate(nextMessageSize);
             }
 
             // Read the packet content to the read buffer
