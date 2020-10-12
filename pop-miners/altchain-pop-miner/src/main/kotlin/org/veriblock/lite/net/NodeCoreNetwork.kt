@@ -21,7 +21,7 @@ import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.models.VeriBlockBlock

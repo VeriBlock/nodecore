@@ -19,7 +19,7 @@ import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.Shell
 import java.security.Security
@@ -30,7 +30,7 @@ private val logger = createLogger {}
 
 private val shutdownSignal: CountDownLatch = CountDownLatch(1)
 private lateinit var shell: Shell
-private lateinit var minerService: MinerService
+private lateinit var minerService: AltchainPopMinerService
 private val eventRegistrar = Any()
 var externalQuit = false
 

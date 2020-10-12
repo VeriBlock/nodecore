@@ -29,11 +29,11 @@ import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.ApmOperationExplainer
-import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 
 class MiningController(
-    private val miner: MinerService,
+    private val miner: AltchainPopMinerService,
     private val operationExplainer: ApmOperationExplainer,
     private val pluginService: PluginService
 ) : ApiController {

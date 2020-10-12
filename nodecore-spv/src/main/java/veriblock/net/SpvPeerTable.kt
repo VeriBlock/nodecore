@@ -125,7 +125,7 @@ class SpvPeerTable(
             onMessageReceived(it.message, it.peer)
         }
 
-        coroutineScope.launchWithFixedDelay(5_000L, 20_000L) {
+        coroutineScope.launchWithFixedDelay(5_000L, 40_000L) {
             requestAddressState()
         }
         coroutineScope.launchWithFixedDelay(200L, 20_000L) {
@@ -208,7 +208,7 @@ class SpvPeerTable(
                     }
                 }.build()
             }
-            val response = requestMessage(request)
+            val response = requestMessage(request, 30_000L)
             val proofReply = response.ledgerProofReply.proofsList
             val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
                 addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
@@ -289,10 +289,11 @@ class SpvPeerTable(
                             "Received advertisement of ${advertiseBlocks.headersList.size} blocks," +
                                 " height: ${lastBlock.height}"
                         }
+                        val trustHashes = spvContext.trustPeerHashes && advertiseBlocks.headersList.size > 10
                         val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {
                             advertiseBlocks.headersList.map {
                                 async(hashDispatcher) {
-                                    val block = MessageSerializer.deserialize(it)
+                                    val block = MessageSerializer.deserialize(it, trustHashes)
                                     // pre-calculate hash in parallel
                                     block.hash
                                     block

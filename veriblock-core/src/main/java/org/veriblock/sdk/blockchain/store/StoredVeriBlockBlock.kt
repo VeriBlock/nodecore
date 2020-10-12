@@ -23,8 +23,7 @@ class StoredVeriBlockBlock
 @JvmOverloads constructor(
     val block: VeriBlockBlock,
     val work: BigInteger,
-    val hash: VBlakeHash,
-    private var blockOfProof: Sha256Hash = Sha256Hash.ZERO_HASH
+    val hash: VBlakeHash
 ) {
     val height: Int
         get() = block.height
@@ -35,24 +34,11 @@ class StoredVeriBlockBlock
         }
     }
 
-    fun getBlockOfProof(): Sha256Hash {
-        return blockOfProof
-    }
-
-    fun setBlockOfProof(blockOfProof: Sha256Hash) {
-        Preconditions.notNull(blockOfProof, "Block of proof cannot be null")
-        Preconditions.argument<Any>(
-            blockOfProof.length == Sha256Hash.BITCOIN_LENGTH
-        ) { "Invalid block of proof: $blockOfProof" }
-        this.blockOfProof = blockOfProof
-    }
-
     fun serialize(buffer: ByteBuffer) {
         buffer.put(hash.bytes)
         buffer.put(
             Utility.toBytes(work, CHAIN_WORK_BYTES)
         )
-        buffer.put(blockOfProof.bytes)
         buffer.put(SerializeDeserializeService.serializeHeaders(block))
     }
 
@@ -73,12 +59,11 @@ class StoredVeriBlockBlock
         val that = other as StoredVeriBlockBlock
         return hash == that.hash &&
             block == that.block &&
-            work == that.work &&
-            blockOfProof == that.blockOfProof
+            work == that.work
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(hash, block, work, blockOfProof)
+        return Objects.hash(hash, block, work)
     }
 
     companion object {
@@ -98,7 +83,7 @@ class StoredVeriBlockBlock
             val blockOfProof = Sha256Hash.wrap(blockOfProofBytes)
             val blockBytes = BlockUtility.getBlockHeader(buffer)
             val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
-            return StoredVeriBlockBlock(block, work, hash, blockOfProof)
+            return StoredVeriBlockBlock(block, work, hash)
         }
 
         @JvmStatic

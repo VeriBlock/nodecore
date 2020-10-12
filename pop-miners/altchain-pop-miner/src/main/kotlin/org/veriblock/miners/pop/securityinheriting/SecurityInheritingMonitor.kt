@@ -33,7 +33,7 @@ import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.ApmInstruction
@@ -66,7 +66,7 @@ class SecurityInheritingMonitor(
 
     private val lock = ReentrantLock()
 
-    private lateinit var miner: MinerService
+    private lateinit var miner: AltchainPopMinerService
 
     private var firstPoll: Boolean = true
 
@@ -104,7 +104,7 @@ class SecurityInheritingMonitor(
     /**
      * Starts monitoring the corresponding chain with a polling schedule
      */
-    fun start(miner: MinerService) {
+    fun start(miner: AltchainPopMinerService) {
         this.miner = miner
 
         val coroutineScope = CoroutineScope(Threading.SI_MONITOR_POOL.asCoroutineDispatcher())

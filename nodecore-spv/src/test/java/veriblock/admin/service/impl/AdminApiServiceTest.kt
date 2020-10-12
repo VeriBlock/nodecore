@@ -15,12 +15,12 @@ import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
+import veriblock.SpvConfig
 import veriblock.SpvContext
 import veriblock.model.LedgerContext
 import veriblock.model.LedgerProofStatus
@@ -30,7 +30,6 @@ import veriblock.model.StandardAddress
 import veriblock.model.StandardTransaction
 import veriblock.model.Transaction
 import veriblock.model.asLightAddress
-import veriblock.net.LocalhostDiscovery
 import veriblock.net.SpvPeerTable
 import veriblock.service.SpvService
 import veriblock.service.Blockchain
@@ -50,8 +49,7 @@ class AdminApiServiceTest {
 
     @Before
     fun setUp() {
-        Context.create(defaultTestNetParameters)
-        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
+        spvContext.init(SpvConfig("testnet", useLocalNode = true))
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)

@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -15,12 +16,11 @@ import org.veriblock.sdk.models.getSynchronizedMessage
 class DiagnosticService(
     private val context: Context,
     private val minerConfig: MinerConfig,
-    private val minerService: MinerService,
+    private val minerService: AltchainPopMinerService,
     private val pluginService: PluginService,
     private val nodeCoreLiteKit: NodeCoreLiteKit,
     private val securityInheritingService: SecurityInheritingService
 ) {
-
     fun collectDiagnosticInformation(): DiagnosticInformation {
         val information = ArrayList<String>()
 

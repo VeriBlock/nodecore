@@ -10,6 +10,7 @@ import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
+import veriblock.SpvConfig
 import veriblock.SpvContext
 import veriblock.model.Output
 import veriblock.model.StandardAddress
@@ -27,8 +28,7 @@ class StandardTransactionTest {
         if (dbFile.exists()) {
             dbFile.delete()
         }
-        Context.create(defaultMainNetParameters)
-        spvContext.init(defaultMainNetParameters, LocalhostDiscovery(defaultMainNetParameters))
+        spvContext.init(SpvConfig(useLocalNode = true))
     }
 
     @Test

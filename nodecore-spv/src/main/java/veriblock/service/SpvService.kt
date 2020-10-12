@@ -346,8 +346,7 @@ class SpvService(
     }
 
     fun getLastVBKBlockHeader(): BlockHeader {
-        val lastBlock = blockchain.blockStore.getChainHead()!!
-        val block = lastBlock.block
+        val block = blockchain.getChainHead()
         return BlockHeader(
             SerializeDeserializeService.serializeHeaders(block),
             block.hash.bytes
