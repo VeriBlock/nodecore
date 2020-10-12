@@ -48,7 +48,7 @@ suspend fun main(args: Array<String>) {
     logger.info { "Testing tx creation on downloaded wallet..." }
     testWalletFile(downloadedWalletFile)
 
-    logger.info { "Tests finished! You can find the logs at ${File(".").absolutePath}/debug.log" }
+    logger.info { "Tests finished! You can find the logs at ${File(".").canonicalPath}/debug.log" }
 }
 
 private fun testWalletFile(file: File) {
