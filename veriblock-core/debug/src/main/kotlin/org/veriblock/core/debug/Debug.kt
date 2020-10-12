@@ -22,12 +22,12 @@ val logger = createLogger {}
 private val httpClient = HttpClient(CIO)
 
 suspend fun main(args: Array<String>) {
-    if (args.size < 2) {
+    if (args.isEmpty()) {
         logger.error { "The program requires to be passed a wallet file URL as an argument" }
         exitProcess(1)
     }
 
-    val fileUrl = args[1]
+    val fileUrl = args[0]
 
     printDiagnostics()
 
@@ -55,7 +55,7 @@ private fun testWalletFile(file: File) {
     val manager = AddressManager().apply {
         load(file)
     }
-    repeat(100) {
+    repeat(10) {
         val entropyBefore = getEntropy().replace("\"", "").trim().toInt()
         val timeTaken = measureTimeMillis { manager.getNewAddress() }
         val entropyAfter = getEntropy().replace("\"", "").trim().toInt()
