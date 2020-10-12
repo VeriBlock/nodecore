@@ -16,6 +16,8 @@ plugins {
     java
     kotlin("jvm")
     idea
+    `java-library`
+    `maven-publish`
     id("com.jfrog.artifactory")
 }
 

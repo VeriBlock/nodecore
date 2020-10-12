@@ -20,6 +20,8 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     id("com.github.node-gradle.node") version "2.0.0"
     id("nebula.ospackage")
+    `java-library`
+    `maven-publish`
     id("com.jfrog.artifactory")
 }
 
@@ -180,7 +182,7 @@ artifactory {
 }
 
 publish(
-    artifactName = "altchain-pop-miners",
+    artifactName = "altchain-pop-miner",
     sourcesJar = sourcesJar
 )
 
