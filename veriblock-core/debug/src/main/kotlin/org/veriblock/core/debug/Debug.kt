@@ -3,21 +3,59 @@
 
 package org.veriblock.core.debug
 
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
+import io.ktor.utils.io.jvm.javaio.copyTo
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.AddressManager
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.nio.file.Paths
+import kotlin.system.exitProcess
 import kotlin.system.measureTimeMillis
 
 val logger = createLogger {}
 
-fun main() {
-    printDiagnostics()
-    val manager = AddressManager().apply {
-        load(File("wallet.dat"))
+private val httpClient = HttpClient(CIO)
+
+suspend fun main(args: Array<String>) {
+    if (args.size < 2) {
+        logger.error { "The program requires to be passed a wallet file URL as an argument" }
+        exitProcess(1)
     }
-    repeat(100_000) {
+
+    val fileUrl = args[1]
+
+    printDiagnostics()
+
+    val downloadedWalletFile = File("downloaded_wallet.dat")
+    downloadedWalletFile.delete()
+    try {
+        httpClient.get<HttpResponse>(fileUrl).content.copyTo(
+            downloadedWalletFile.outputStream()
+        )
+    } catch (e: Exception) {
+        logger.error { "Unable to download wallet file $fileUrl" }
+        exitProcess(1)
+    }
+
+    logger.info { "Testing tx creation on default wallet..." }
+    testWalletFile(File("wallet.dat"))
+
+    logger.info { "Testing tx creation on downloaded wallet..." }
+    testWalletFile(downloadedWalletFile)
+
+    logger.info { "Tests finished! You can find the logs at ${File(".").absolutePath}/debug.log" }
+}
+
+private fun testWalletFile(file: File) {
+    val manager = AddressManager().apply {
+        load(file)
+    }
+    repeat(100) {
         val entropyBefore = getEntropy().replace("\"", "").trim().toInt()
         val timeTaken = measureTimeMillis { manager.getNewAddress() }
         val entropyAfter = getEntropy().replace("\"", "").trim().toInt()

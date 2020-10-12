@@ -32,6 +32,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0")
 
+    // HTTP Client
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
     implementation("ch.qos.logback:logback-classic:1.2.3")
