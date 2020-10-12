@@ -1,10 +1,9 @@
 package org.veriblock.core.tuweni.progpow;
 
 import com.google.common.primitives.Ints;
-import org.veriblock.core.tuweni.ethash.EthHash;
-import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.veriblock.core.tuweni.ethash.EthHash;
 import org.veriblock.core.types.Pair;
 import org.veriblock.core.types.Triple;
 
@@ -18,7 +17,7 @@ public class ProgPoWCache {
     private static final int BUFFER_FOR_CALCULATION = 100;
 
     // Maps epochs to pairs of DAG caches and cDags
-    private static final Map<Integer, Triple<int[], UInt32[], Long>> cachedPairs = new HashMap<>();
+    private static final Map<Integer, Triple<int[], int[], Long>> cachedPairs = new HashMap<>();
 
     private static Integer MAX_CACHED_PAIRS = 10 + new Random().nextInt(4);
 
@@ -26,7 +25,7 @@ public class ProgPoWCache {
         MAX_CACHED_PAIRS = limit;
     }
 
-    public static Pair<int[], UInt32[]> getDAGCache(int blockHeight) {
+    public static Pair<int[], int[]> getDAGCache(int blockHeight) {
         int epoch = (int)EthHash.epoch(blockHeight);
 
         if (!(cachedPairs.containsKey(epoch))) {
@@ -34,12 +33,12 @@ public class ProgPoWCache {
             // Generate both DAG cache and cDag
             int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(blockHeight)), blockHeight);
 
-            UInt32[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
+            int[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(epoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }
 
-        Triple<int[], UInt32[], Long> fetched = cachedPairs.get(epoch);
+        Triple<int[], int[], Long> fetched = cachedPairs.get(epoch);
         fetched.setThird(System.currentTimeMillis());
 
         pruneCache();
@@ -53,7 +52,7 @@ public class ProgPoWCache {
             _logger.info("Generating DAG cache for current epoch " + currentEpoch + "...");
             int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(currentBlockHeight)), currentBlockHeight);
 
-            UInt32[] cDag = ProgPoW.createDagCache(currentBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
+            int[] cDag = ProgPoW.createDagCache(currentBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(currentEpoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }
@@ -64,7 +63,7 @@ public class ProgPoWCache {
             _logger.info("Pre-generating DAG cache for future epoch " + futureEpoch + "...");
             int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(futureBlockHeight)), futureBlockHeight);
 
-            UInt32[] cDag = ProgPoW.createDagCache(futureBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
+            int[] cDag = ProgPoW.createDagCache(futureBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(futureEpoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }

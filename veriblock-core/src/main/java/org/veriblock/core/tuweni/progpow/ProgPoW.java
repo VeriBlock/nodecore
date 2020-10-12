@@ -62,7 +62,7 @@ public final class ProgPoW {
         long blockNumber,
         long nonce,
         Bytes32 header,
-        UInt32[] dag, // gigabyte DAG located in framebuffer - the first portion gets cached
+        int[] dag, // gigabyte DAG located in framebuffer - the first portion gets cached
         Function<Integer, byte[]> dagLookupFunction) {
         int[][] mix = new int[PROGPOW_LANES][PROGPOW_REGS];
 
@@ -125,19 +125,19 @@ public final class ProgPoW {
      * @param datasetLookup the function generating elements of the DAG
      * @return a cache of the DAG up to the block number
      */
-    public static UInt32[] createDagCache(long blockNumber, Function<Integer, byte[]> datasetLookup) {
+    public static int[] createDagCache(long blockNumber, Function<Integer, byte[]> datasetLookup) {
         // TODO size of cache should be function of blockNumber - and DAG should be stored in its own memory structure.
         // cache the first 16KB of the dag
-        UInt32[] cdag = new UInt32[HASH_BYTES * DATASET_PARENTS];
+        int[] cdag = new int[HASH_BYTES * DATASET_PARENTS];
         for (int i = 0; i < cdag.length; i++) {
             // this could be sped up 16x
             byte[] lookup = datasetLookup.apply(i >> 4);
 
             int startIndex = (i & 0xf) << 2;
-            cdag[i] = new UInt32(lookup[startIndex] & 0x000000FF |
+            cdag[i] = lookup[startIndex] & 0x000000FF |
                 ((lookup[startIndex + 1] & 0x000000FF) << 8) |
                 ((lookup[startIndex + 2] & 0x000000FF) << 16) |
-                ((lookup[startIndex + 3] & 0x000000FF) << 24));
+                ((lookup[startIndex + 3] & 0x000000FF) << 24);
         }
         return cdag;
     }
@@ -210,7 +210,7 @@ public final class ProgPoW {
         long blockNumber,
         int loop,
         int[][] mix,
-        UInt32[] dag,
+        int[] dag,
         Function<Integer, byte[]> dagLookupFunction) {
 
         long dagBytes = EthHash.getFullSize(blockNumber);
@@ -275,7 +275,7 @@ public final class ProgPoW {
                 int sel = prog_rnd.generate();
                 for (int l = 0; l < PROGPOW_LANES; l++) {
                     int offset = (int)((((long)(mix[l][src])) & 0x00000000FFFFFFFFL) % ((PROGPOW_CACHE_BYTES / 4)));
-                    int result = merge(mix[l][dst], dag[offset].intValue(), sel);
+                    int result = merge(mix[l][dst], dag[offset], sel);
                     mix[l][dst] = result;
                 }
             }

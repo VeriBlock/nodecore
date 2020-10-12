@@ -16,7 +16,6 @@ import org.veriblock.core.tuweni.bytes.Bytes32;
 import org.veriblock.core.tuweni.ethash.EthHash;
 import org.veriblock.core.tuweni.progpow.ProgPoW;
 import org.veriblock.core.tuweni.progpow.ProgPoWCache;
-import org.veriblock.core.tuweni.units.bigints.UInt32;
 import org.veriblock.core.types.Pair;
 
 import java.math.BigInteger;
@@ -513,10 +512,10 @@ public final class BlockUtility {
         long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
 
         // TODO: Move to crypto
-        Pair<int[], UInt32[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
+        Pair<int[], int[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
         int[] cache = cachePair.getFirst();
 
-        UInt32[] cDag = cachePair.getSecond();
+        int[] cDag = cachePair.getSecond();
         Bytes32 digest = ProgPoW.progPowHash(
             blockNum,
             converted,
