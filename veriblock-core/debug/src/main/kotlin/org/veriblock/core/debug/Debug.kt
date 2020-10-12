@@ -31,6 +31,9 @@ suspend fun main(args: Array<String>) {
 
     printDiagnostics()
 
+    logger.info("cgroup output:")
+    logger.info(getCommandResult("cat /proc/1/cgroup"))
+
     val downloadedWalletFile = File("downloaded_wallet.dat")
     downloadedWalletFile.delete()
     try {
@@ -64,8 +67,6 @@ private fun testWalletFile(file: File) {
 }
 
 fun getEntropy() = getCommandResult("cat /proc/sys/kernel/random/entropy_avail")
-
-fun getInstalledPackagesUbuntu() = getCommandResult("dpkg -l")
 
 fun getCommandResult(command: String): String = try {
     val cmd = arrayOf("/bin/sh", "-c", command)

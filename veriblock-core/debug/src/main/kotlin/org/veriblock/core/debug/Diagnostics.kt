@@ -15,7 +15,7 @@ fun printDiagnostics() {
     printDiagnosticInfo()
 
     logger.info("Installed packages (Ubuntu):")
-    logger.info(getInstalledPackagesUbuntu())
+    logger.info(getCommandResult("dpkg -l"))
 }
 
 fun printDiagnosticInfo() {
