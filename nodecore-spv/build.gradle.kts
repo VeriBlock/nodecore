@@ -15,6 +15,9 @@ plugins {
     idea
     id("java-library")
     id("com.google.protobuf")
+    `java-library`
+    `maven-publish`
+    id("com.jfrog.artifactory")
 }
 
 configurations.all {
@@ -73,5 +76,12 @@ tasks.test {
 }
 
 setupJar("VeriBlock Lite Toolkit", "veriblock.lite")
+
+val sourcesJar = setupSourcesJar()
+
+publish(
+    artifactName = "nodecore-spv",
+    sourcesJar = sourcesJar
+)
 
 setupJacoco()

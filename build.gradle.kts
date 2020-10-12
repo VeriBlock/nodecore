@@ -40,6 +40,27 @@ allprojects {
     tasks.withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
     }
+
+    val plArtifactory = this.pluginManager.findPlugin("com.jfrog.artifactory")
+    if(plArtifactory != null) {
+        artifactory {
+            setContextUrl(properties["artifactory_url"])
+            publish(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig> {
+                repository(delegateClosureOf<groovy.lang.GroovyObject> {
+                    setProperty("repoKey", properties["artifactory_repoKey"] as String)
+                    setProperty("username", properties["artifactory_user"])
+                    setProperty("password", properties["artifactory_password"])
+                    setProperty("maven", true)
+                })
+
+                defaults(delegateClosureOf<groovy.lang.GroovyObject> {
+                    invokeMethod("publications", "mavenJava")
+                    setProperty("publishArtifacts", true)
+                })
+            })
+        }
+    }
+
 }
 
 subprojects {
