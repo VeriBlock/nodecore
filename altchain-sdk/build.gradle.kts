@@ -40,23 +40,6 @@ dependencies {
 setupJar("VeriBlock Altchain SDK", "org.veriblock.alt.sdk")
 val sourcesJar = setupSourcesJar()
 
-artifactory {
-    setContextUrl(properties["artifactory_url"])
-    publish(closureOf<PublisherConfig> {
-        repository(delegateClosureOf<GroovyObject> {
-            setProperty("repoKey", properties["artifactory_repoKey"] as String)
-            setProperty("username", properties["artifactory_user"])
-            setProperty("password", properties["artifactory_password"])
-            setProperty("maven", true)
-        })
-
-        defaults(delegateClosureOf<GroovyObject> {
-            invokeMethod("publications", "mavenJava")
-            setProperty("publishArtifacts", true)
-        })
-    })
-}
-
 publish(
     artifactName = "altchain-sdk",
     sourcesJar = sourcesJar
