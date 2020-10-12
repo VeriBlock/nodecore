@@ -16,6 +16,7 @@ plugins {
     java
     kotlin("jvm")
     idea
+    id("com.jfrog.artifactory")
 }
 
 configurations.all {
@@ -44,4 +45,31 @@ tasks.test {
 }
 
 setupJar("VPM Mock", "org.nodecore.vpmmock.mockmining")
+
+val sourcesJar = setupSourcesJar()
+
+artifactory {
+    setContextUrl(properties["artifactory_url"])
+    publish(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig> {
+        repository(delegateClosureOf<groovy.lang.GroovyObject> {
+            setProperty("repoKey", properties["artifactory_repoKey"] as String)
+            setProperty("username", properties["artifactory_user"])
+            setProperty("password", properties["artifactory_password"])
+            setProperty("maven", true)
+        })
+
+        defaults(delegateClosureOf<groovy.lang.GroovyObject> {
+            invokeMethod("publications", "mavenJava")
+            setProperty("publishArtifacts", true)
+        })
+    })
+}
+
+publish(
+    artifactName = "vpm-mock",
+    sourcesJar = sourcesJar
+)
+
+setupJacoco()
+
 setupJacoco()

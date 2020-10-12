@@ -20,6 +20,7 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     id("com.github.node-gradle.node") version "2.0.0"
     id("nebula.ospackage")
+    id("com.jfrog.artifactory")
 }
 
 configurations.all {
@@ -157,6 +158,31 @@ tasks.register<Deb>("createDeb") {
     }
     link("/usr/local/bin/$packageName", "/opt/nodecore/$packageName/bin/$packageName")
 }
+
+setupJar("Altchain PoP Miner", "org.veriblock.miners.pop")
+val sourcesJar = setupSourcesJar()
+
+artifactory {
+    setContextUrl(properties["artifactory_url"])
+    publish(closureOf<org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig> {
+        repository(delegateClosureOf<groovy.lang.GroovyObject> {
+            setProperty("repoKey", properties["artifactory_repoKey"] as String)
+            setProperty("username", properties["artifactory_user"])
+            setProperty("password", properties["artifactory_password"])
+            setProperty("maven", true)
+        })
+
+        defaults(delegateClosureOf<groovy.lang.GroovyObject> {
+            invokeMethod("publications", "mavenJava")
+            setProperty("publishArtifacts", true)
+        })
+    })
+}
+
+publish(
+    artifactName = "altchain-pop-miners",
+    sourcesJar = sourcesJar
+)
 
 setupJacoco()
 
