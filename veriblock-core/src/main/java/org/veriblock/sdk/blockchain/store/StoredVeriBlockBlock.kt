@@ -67,7 +67,7 @@ class StoredVeriBlockBlock
     }
 
     companion object {
-        const val SIZE = 24 + 12 + 32 + 64
+        const val SIZE = 24 + 64 + 12
         const val CHAIN_WORK_BYTES = 12
 
         @JvmStatic
@@ -78,9 +78,6 @@ class StoredVeriBlockBlock
             val workBytes = ByteArray(CHAIN_WORK_BYTES)
             buffer.get(workBytes)
             val work = BigInteger(1, workBytes)
-            val blockOfProofBytes = ByteArray(Sha256Hash.BITCOIN_LENGTH)
-            buffer.get(blockOfProofBytes)
-            val blockOfProof = Sha256Hash.wrap(blockOfProofBytes)
             val blockBytes = BlockUtility.getBlockHeader(buffer)
             val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
             return StoredVeriBlockBlock(block, work, hash)

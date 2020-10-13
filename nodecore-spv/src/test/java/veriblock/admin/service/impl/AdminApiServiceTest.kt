@@ -15,6 +15,8 @@ import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.defaultMainNetParameters
+import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
@@ -49,6 +51,7 @@ class AdminApiServiceTest {
 
     @Before
     fun setUp() {
+        Context.set(defaultTestNetParameters)
         spvContext.init(SpvConfig("testnet", useLocalNode = true))
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
