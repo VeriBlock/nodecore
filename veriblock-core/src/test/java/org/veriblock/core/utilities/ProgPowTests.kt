@@ -15,19 +15,24 @@ class ProgPowTests {
 
     @Test
     fun testProgPowHash() {
-        Context.create(defaultTestNetParameters)
+        Context.set(defaultTestNetParameters)
         Security.addProvider(BouncyCastleProvider())
         val headerHex = "000D532B00020F2F1A55A6523A39EB7DC08CFD0B88C6E6AC5C79FB12D2F9E527B45D57FE18D30532FB0694DFA136EAAA2594D31F5F6608FB04257C501003A12C2C"
         val header = headerHex.asHexBytes()
         val height = BlockUtility.extractBlockHeightFromBlockHeader(header)
         val hash = BlockUtility.hashProgPowBlock(header, height)
+        if (hash != "00000000AC2178C652A1051DB63637340BB251424E9DCE8C") {
+            repeat(100) {
+                println(BlockUtility.hashProgPowBlock(header, height))
+            }
+        }
         Assert.assertEquals("00000000AC2178C652A1051DB63637340BB251424E9DCE8C", hash)
     }
 
     @Ignore
     @Test
     fun performanceTest() {
-        Context.create(defaultTestNetParameters)
+        Context.set(defaultTestNetParameters)
         Security.addProvider(BouncyCastleProvider())
         val blocksString = """
             000D5AD30002CBB1B687FA791BC1951930C49C5C31AF725D249C8CE4DB5DF468002F8582E6B67E5A5BF65ECDC38FA4B09714C8985F6750680427E4D420026A399E

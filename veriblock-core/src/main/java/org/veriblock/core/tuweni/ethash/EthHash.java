@@ -24,9 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -121,7 +119,8 @@ public class EthHash {
         return (int) sz;
     }
 
-    static Map<Long, Long> fullSizeCache = new HashMap<>();
+    private static final int FULL_SIZE_CACHE_SIZE = 2500;
+    private static final Long[] fullSizeCache = new Long[FULL_SIZE_CACHE_SIZE];
     static {
         InputStream stream = EthHash.class.getResourceAsStream("/initialFullSizeCache");
         if (stream == null) {
@@ -129,12 +128,11 @@ public class EthHash {
             throw new IllegalStateException("Unable to find initial full size cache data file");
         }
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            reader.lines().forEach(line -> {
-                String[] split = line.split(" ");
-                long blockNum = Long.parseLong(split[0]);
-                long fullSize = Long.parseLong(split[1]);
-                fullSizeCache.put(blockNum, fullSize);
-            });
+            for (int i = 0; i < FULL_SIZE_CACHE_SIZE; i++) {
+                String line = reader.readLine();
+                long fullSize = Long.parseLong(line);
+                fullSizeCache[i] = fullSize;
+            }
         } catch (IOException e) {
             // This should never happen either
             throw new IllegalStateException("Critical error: failed to read initial full size cache data", e);
@@ -148,8 +146,8 @@ public class EthHash {
      * @return the size of the full dataset at the block number, in bytes
      */
     public static long getFullSize(long block_number) {
-        if (fullSizeCache.containsKey(block_number - (block_number % EPOCH_LENGTH))) {
-            return fullSizeCache.get(block_number - (block_number % EPOCH_LENGTH));
+        if (block_number / EPOCH_LENGTH < FULL_SIZE_CACHE_SIZE) {
+            return fullSizeCache[(int)(block_number / EPOCH_LENGTH)];
         }
 
         long sz = DATASET_BYTES_INIT + DATASET_BYTES_GROWTH * (epoch(block_number));
