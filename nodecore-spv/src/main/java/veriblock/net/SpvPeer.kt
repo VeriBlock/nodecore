@@ -21,13 +21,14 @@ import nodecore.p2p.PeerCapabilities
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.NodeMetadata
 import veriblock.service.Blockchain
-import veriblock.util.EventBus
+import veriblock.util.SpvEventBus
 import veriblock.util.MessageReceivedEvent
 import veriblock.util.buildMessage
 import java.util.concurrent.ConcurrentHashMap
@@ -89,7 +90,7 @@ class SpvPeer(
                     closeConnection()
                     return
                 }
-                EventBus.peerConnectedEvent.trigger(this)
+                SpvEventBus.peerConnectedEvent.trigger(this)
             }
             ResultsCase.ADVERTISE_BLOCKS -> {
                 if (message.advertiseBlocks.headersCount >= 1000) {
@@ -97,7 +98,7 @@ class SpvPeer(
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
-                        .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray()) }
+                        .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), VBlakeHash.wrap(it.hash.toByteArray())) }
                         .filter { it.height % 20 == 0 }
                         .sortedByDescending { it.height }
                         .take(10)
@@ -129,14 +130,10 @@ class SpvPeer(
             }
             ResultsCase.TRANSACTION -> notifyMessageReceived(message)
             ResultsCase.HEARTBEAT -> {
-                // TODO: Need a way to request this or get it sooner than the current cycle time
                 bestBlockHeight = message.heartbeat.block.number
                 notifyMessageReceived(message)
             }
             ResultsCase.TX_REQUEST -> notifyMessageReceived(message)
-            ResultsCase.TRANSACTION_REPLY -> notifyMessageReceived(message)
-            ResultsCase.DEBUG_VTB_REPLY -> notifyMessageReceived(message)
-            ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY -> notifyMessageReceived(message)
             ResultsCase.STATE_INFO_REPLY -> {
                 bestBlockHeight = message.stateInfoReply.localBlockchainHeight
             }
@@ -215,12 +212,12 @@ class SpvPeer(
     }
 
     private fun notifyMessageReceived(message: VeriBlockMessages.Event) {
-        EventBus.messageReceivedEvent.trigger(MessageReceivedEvent(this, message))
+        SpvEventBus.messageReceivedEvent.trigger(MessageReceivedEvent(this, message))
     }
 
     fun onPeerSocketClosed() {
         // Set a status to "Closed"
-        EventBus.peerDisconnectedEvent.trigger(this)
+        SpvEventBus.peerDisconnectedEvent.trigger(this)
     }
 }
 

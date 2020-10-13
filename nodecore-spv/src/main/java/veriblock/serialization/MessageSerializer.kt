@@ -33,8 +33,12 @@ import veriblock.model.asLightAddress
 private val logger = createLogger {}
 
 object MessageSerializer {
-    fun deserialize(blockHeaderMessage: VeriBlockMessages.BlockHeader): VeriBlockBlock {
-        return SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray())
+    fun deserialize(blockHeaderMessage: VeriBlockMessages.BlockHeader, trustHash: Boolean = false): VeriBlockBlock {
+        return if (trustHash) {
+            SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray(), VBlakeHash.wrap(blockHeaderMessage.hash.toByteArray()))
+        } else {
+            SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray())
+        }
     }
 
     @JvmStatic

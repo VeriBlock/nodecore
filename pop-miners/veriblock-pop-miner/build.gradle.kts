@@ -30,16 +30,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    implementation("org.codehaus.groovy:groovy:2.4.12")
-
     implementation(project(":nodecore-ucp"))
     implementation(project(":veriblock-shell"))
     implementation(project(":pop-miners:veriblock-pop-miners-common"))
 
-    implementation("ch.qos.logback:logback-classic:1.2.3")
-    implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5")
-    implementation("ch.qos.logback.contrib:logback-jackson:0.1.5")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
     implementation("org.apache.commons:commons-lang3:3.0")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.8.6")
     implementation("org.reflections:reflections:0.9.11")
@@ -66,6 +60,7 @@ dependencies {
     implementation("io.ktor:ktor-locations:$ktorVersion")
     // Serialization
     implementation("io.ktor:ktor-jackson:$ktorVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8")
     // Metrics
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
@@ -79,6 +74,9 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
 
     // Test
     testImplementation("junit:junit:4.12")
@@ -88,6 +86,13 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
     // Better assertions
     testImplementation("io.kotlintest:kotlintest-assertions:3.4.2")
+}
+
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
 }
 
 tasks.test {

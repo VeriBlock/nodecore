@@ -54,6 +54,7 @@ poolshares.txt
 poolshares-normal.txt
 poolshares-solo.txt
 *.wallet
+*.vbkwallet
 *.spvchain
 *.state
 
@@ -61,6 +62,7 @@ poolshares-solo.txt
 
 *.orig
 *.log
+**/logs/*.json
 status_log.txt
 classes/
 out/

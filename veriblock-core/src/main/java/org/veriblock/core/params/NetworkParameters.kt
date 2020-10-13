@@ -108,6 +108,9 @@ class NetworkParameters(
         progPowForkHeight = template.progPowForkHeight
         progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
+
+    override fun toString() =
+        name
 }
 
 /**

@@ -19,16 +19,16 @@ import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.MainNetParameters
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.tuweni.progpow.ProgPoWCache
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import org.veriblock.spv.standalone.commands.spvCommands
 import org.veriblock.spv.standalone.commands.standardCommands
+import veriblock.SpvConfig
 import veriblock.SpvContext
 import veriblock.model.DownloadStatus
-import veriblock.net.BootstrapPeerDiscovery
-import veriblock.net.LocalhostDiscovery
 import java.security.Security
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -38,15 +38,7 @@ private val logger = createLogger {}
 private val shutdownSignal = CountDownLatch(1)
 
 private val config = Configuration()
-
-private val networkParameters = NetworkParameters {
-    network = config.getString("network") ?: MainNetParameters.NETWORK
-}
-private val peerDiscovery = if (config.getBoolean("useLocalNode") == true) {
-    LocalhostDiscovery(networkParameters)
-} else {
-    BootstrapPeerDiscovery(networkParameters)
-}
+private val spvConfig: SpvConfig = config.extract("spv") ?: SpvConfig()
 
 private fun run(): Int {
     Security.addProvider(BouncyCastleProvider())
@@ -54,6 +46,7 @@ private fun run(): Int {
         shutdownSignal.countDown()
     })
 
+    ProgPoWCache.setMaxCachedPairs(2); // Fewer cached pairs for SPV
     val spvContext = SpvContext()
     val shell = Shell(CommandFactory().apply {
         standardCommands()
@@ -62,19 +55,18 @@ private fun run(): Int {
     shell.initialize()
 
     print(SharedConstants.LICENSE)
-    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock ", "")))
     println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
     println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
-    logger.info { "Initializing SPV Context (${networkParameters.name})..." }
+    logger.info { "Initializing SPV Context (${spvConfig.network})..." }
     var errored = false
     try {
-        Context.create(networkParameters)
-        spvContext.init(networkParameters, peerDiscovery)
-        spvContext.peerTable.start()
+        spvContext.init(spvConfig)
         logger.info { "Looking for peers..." }
+        spvContext.peerTable.start()
         runBlocking {
             var status = spvContext.peerTable.getDownloadStatus()
             while (status.downloadStatus == DownloadStatus.DISCOVERING) {
@@ -95,7 +87,7 @@ private fun run(): Int {
                             delay(1000L)
                             status = spvContext.peerTable.getDownloadStatus()
                         }
-                        progressBar.stepTo(progPowHeight)
+                        progressBar.stepTo(progPowHeight - initialHeight)
                     }
                 }
                 logger.info { "Proceeding to download vProgPoW blocks. This operation is highly CPU-intensive and will take some time." }

@@ -8,13 +8,13 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
+import org.apache.logging.log4j.Level
 import org.veriblock.core.CommandException
 import org.veriblock.core.MineException
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.MiningOperationStatus
-import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
@@ -25,7 +25,7 @@ import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.miningCommands(
-    minerService: MinerService,
+    minerService: AltchainPopMinerService,
     pluginService: PluginService,
     apmOperationExplainer: ApmOperationExplainer
 ) {

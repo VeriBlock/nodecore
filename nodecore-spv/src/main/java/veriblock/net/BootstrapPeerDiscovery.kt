@@ -11,7 +11,6 @@ import io.ktor.util.network.NetworkAddress
 import nodecore.p2p.DnsResolver
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.xbill.DNS.TextParseException
 import java.util.ArrayList
 
 private val logger = createLogger {}
@@ -28,9 +27,10 @@ class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscove
         val port = networkParameters.p2pPort
         try {
             peers.addAll(dnsResolver.query(dns).map {
+                logger.debug("Found peer ${it}:${port}")
                 NetworkAddress(it, port)
             })
-        } catch (e: TextParseException) {
+        } catch (e: Exception) {
             logger.error(e.message, e)
             throw RuntimeException(e)
         }

@@ -1,0 +1,29 @@
+<configuration>
+
+	<properties>
+		<property name="appName" value="nodecore-cli" />
+	</properties>
+
+	<appenders>
+
+		<!--<console name="consoleAppender">
+			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %style{%-10.-10thread}{bright,white} %highlight{%-5level}{INFO=blue} %style{%-25.-25logger{0}}{bright,black} - %msg%n"/>
+		</console>-->
+
+		<file name="fileAppender" fileName="logs/${appName}.log">
+			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
+		</file>
+
+	</appenders>
+
+	<loggers>
+
+		<logger name="com.veriblock.nodecore.cli" level="TRACE" />
+		<root level="INFO">
+			<!--<appender-ref ref="consoleAppender" />-->
+			<appender-ref ref="fileAppender" />
+		</root>
+
+	</loggers>
+
+</configuration>

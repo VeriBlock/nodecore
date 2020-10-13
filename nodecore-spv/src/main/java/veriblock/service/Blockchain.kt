@@ -11,28 +11,29 @@ import com.google.common.collect.EvictingQueue
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
-import org.veriblock.sdk.blockchain.store.VeriBlockStore
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
+import veriblock.util.SpvEventBus
 import java.math.BigInteger
 import java.sql.SQLException
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
+import kotlin.jvm.Throws
 import kotlin.math.pow
 
 private val logger = createLogger {}
 
 class Blockchain(
     private val genesisBlock: VeriBlockBlock,
-    val blockStore: VeriBlockStore
+    private val blockStore: BlockStore
 ) {
     //TODO SPV-124
     private val blocksCache = EvictingQueue.create<StoredVeriBlockBlock>(1000)
 
     fun getChainHead(): VeriBlockBlock {
         try {
-            return blockStore.getChainHead()!!.block
+            return blockStore.getTip().block
         } catch (e: SQLException) {
             throw IllegalStateException("Unable to get chain head", e)
         }
@@ -40,16 +41,17 @@ class Blockchain(
 
     @Throws(SQLException::class)
     fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
-        return blockStore.get(hash)
+        return blockStore.readBlock(hash)
+        //return blockStore.get(hash)
     }
 
-    @Throws(SQLException::class)
+    /*@Throws(SQLException::class)
     fun add(block: VeriBlockBlock) {
         val previous = blockStore.get(block.previousBlock)
             ?: // Nothing to build on
             return
         val storedBlock = StoredVeriBlockBlock(
-            block, previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong()))
+            block, previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())), block.hash
         )
 
         // TODO: Make the put(...) and setChainHead(...) atomic
@@ -62,29 +64,39 @@ class Blockchain(
         }
 
         // TODO: Broadcast events: new best block, reorganize, new block
-    }
+        SpvEventBus.newBestBlockEvent.trigger(block)
+        SpvEventBus.newBestBlockChannel.offer(block)
+    }*/
 
     @Throws(SQLException::class)
     fun addAll(blocks: List<VeriBlockBlock>) {
-        val sortedBlock = blocks.sortedBy { it.height }
-        logger.debug { "Adding ${sortedBlock.size} blocks, height ${sortedBlock.first().height} - ${sortedBlock.last().height}" }
-        if (!areBlocksSequential(sortedBlock)) {
+        val sortedBlocks = blocks.sortedBy { it.height }
+        logger.debug { "Adding ${sortedBlocks.size} blocks, height ${sortedBlocks.first().height} - ${sortedBlocks.last().height}" }
+        if (!areBlocksSequential(sortedBlocks)) {
             // todo throw Exception
             return
         }
-        val listToStore = listToStore(sortedBlock)
+        val listToStore = listToStore(sortedBlocks)
         if (listToStore.isEmpty()) {
             // todo throw Exception
             // Nothing to build on
             return
         }
         val storedBlocks = convertToStoreVeriBlocks(listToStore)
-        blockStore.put(storedBlocks)
+        //blockStore.put(storedBlocks)
+        blockStore.writeBlocks(storedBlocks)
         blocksCache.addAll(storedBlocks)
 
         // TODO: PoP fork resolution additional
-        if (storedBlocks[storedBlocks.size - 1].work > blockStore.getChainHead()!!.work) {
-            blockStore.setChainHead(storedBlocks[storedBlocks.size - 1])
+        if (storedBlocks[storedBlocks.size - 1].work > blockStore.getTip().work) {
+            blockStore.setTip(storedBlocks[storedBlocks.size - 1])
+        }
+
+        if (blocks.size < 100) {
+            for (block in blocks) {
+                SpvEventBus.newBestBlockEvent.trigger(block)
+                SpvEventBus.newBestBlockChannel.offer(block)
+            }
         }
     }
 
@@ -97,7 +109,7 @@ class Blockchain(
     @Throws(SQLException::class)
     private fun listToStore(veriBlockBlocks: List<VeriBlockBlock>): List<VeriBlockBlock> {
         for (i in veriBlockBlocks.indices) {
-            val previous = blockStore.get(veriBlockBlocks[i].previousBlock)
+            val previous = blockStore.readBlock(veriBlockBlocks[i].previousBlock)
             if (previous != null) {
                 return veriBlockBlocks.subList(i, veriBlockBlocks.size)
             }
@@ -109,13 +121,13 @@ class Blockchain(
     private fun convertToStoreVeriBlocks(veriBlockBlocks: List<VeriBlockBlock>): List<StoredVeriBlockBlock> {
         val blockWorks: MutableMap<String, BigInteger> = HashMap()
         val storedBlocks: MutableList<StoredVeriBlockBlock> = ArrayList()
-        val commonBlock = blockStore.get(veriBlockBlocks[0].previousBlock)!!
+        val commonBlock = blockStore.readBlock(veriBlockBlocks[0].previousBlock)!!
         blockWorks[commonBlock.hash.toString().substring(24)] = commonBlock.work
         for (veriBlockBlock in veriBlockBlocks) {
             var work = blockWorks[veriBlockBlock.previousBlock.toString()]
             //This block is from fork, our Blockchain doesn't have this previousBlock.
             if (work == null) {
-                val storedVeriBlockBlock = blockStore.get(veriBlockBlock.previousBlock)
+                val storedVeriBlockBlock = blockStore.readBlock(veriBlockBlock.previousBlock)
                     ?: //There is no such block.
                     continue
                 work = storedVeriBlockBlock.work
@@ -123,7 +135,7 @@ class Blockchain(
             val workOfCurrentBlock = work.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.difficulty.toLong()))
             blockWorks[veriBlockBlock.hash.toString().substring(24)] = workOfCurrentBlock
             val block = StoredVeriBlockBlock(
-                veriBlockBlock, workOfCurrentBlock
+                veriBlockBlock, workOfCurrentBlock, veriBlockBlock.hash
             )
             storedBlocks.add(block)
         }
@@ -133,8 +145,7 @@ class Blockchain(
     fun getPeerQuery(): List<VeriBlockBlock> {
         val blocks: MutableList<VeriBlockBlock> = ArrayList(16)
         try {
-            var cursor = blockStore.getChainHead()
-                ?: return listOf(genesisBlock)
+            var cursor = blockStore.getTip()
 
             blocks.add(cursor.block)
             // TODO 16 is too much for bigDb with current approach. It takes a lot of time. Try to get amount of blocks by height and process in memory.
@@ -147,7 +158,7 @@ class Blockchain(
                 }
 
                 while (cursor.block.height != seek) {
-                    cursor = blockStore.get(cursor.block.previousBlock)
+                    cursor = blockStore.readBlock(cursor.block.previousBlock)
                         ?: break@outer
                 }
                 blocks.add(cursor.block)

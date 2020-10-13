@@ -1,5 +1,6 @@
 
 generated
+logs
 
 mock
 mock.dat
@@ -8,6 +9,7 @@ mock-wal
 altchain-pop-miner.db
 *.spvchain
 *.wallet
+*.vbkwallet
 *.txmon
 *.dat-shm
 *.dat-wal

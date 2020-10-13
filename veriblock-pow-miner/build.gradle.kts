@@ -15,9 +15,18 @@ plugins {
 dependencies {
     compile(project(":veriblock-core"))
     compile(project(":nodecore-ucp"))
-    compile("ch.qos.logback:logback-classic:1.2.3")
+    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
 
     testImplementation("junit:junit:4.12")
+}
+
+// Exclude logback from everywhere to avoid the slf4j warning
+configurations {
+    all {
+        exclude("ch.qos.logback")
+    }
 }
 
 tasks.test {

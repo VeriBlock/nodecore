@@ -7,7 +7,6 @@
 
 package org.veriblock.miners.pop.api.controller
 
-import ch.qos.logback.classic.Level
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
@@ -17,6 +16,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
@@ -29,11 +29,11 @@ import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.ApmOperationExplainer
-import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 
 class MiningController(
-    private val miner: MinerService,
+    private val miner: AltchainPopMinerService,
     private val operationExplainer: ApmOperationExplainer,
     private val pluginService: PluginService
 ) : ApiController {

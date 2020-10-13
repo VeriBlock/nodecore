@@ -12,7 +12,7 @@ import org.veriblock.miners.pop.api.dto.AutoMineConfigDto
 import org.veriblock.miners.pop.api.dto.AutoMineRound
 import org.veriblock.miners.pop.api.dto.SetConfigRequest
 import org.veriblock.miners.pop.api.dto.VbkFeeConfigDto
-import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.sdk.alt.plugin.PluginService
 
 class ConfigurationController(

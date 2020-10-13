@@ -27,14 +27,17 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
+import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.AddressLight
 import veriblock.model.BlockHeader
+import veriblock.model.DownloadStatus
 import veriblock.model.LedgerContext
 import veriblock.model.Output
 import veriblock.model.StandardTransaction
@@ -58,15 +61,16 @@ class SpvService(
     private val blockchain: Blockchain
 ) {
     fun getStateInfo(): StateInfo {
-        val blockchainState = BlockchainState.LOADED
+        val downloadStatus = peerTable.getDownloadStatus()
+        val blockchainState = if (downloadStatus.downloadStatus == DownloadStatus.READY) BlockchainState.LOADED else BlockchainState.LOADING
         val operatingState = OperatingState.STARTED
-        val networkState = NetworkState.CONNECTED
+        val networkState = if (downloadStatus.downloadStatus == DownloadStatus.DISCOVERING) NetworkState.DISCONNECTED else NetworkState.CONNECTED
         return StateInfo(
             blockchainState = blockchainState,
             operatingState = operatingState,
             networkState = networkState,
             connectedPeerCount = peerTable.getAvailablePeers(),
-            networkHeight = peerTable.getBestBlockHeight(),
+            networkHeight = peerTable.getBestBlockHeight().coerceAtLeast(blockchain.getChainHead().height),
             localBlockchainHeight = blockchain.getChainHead().height,
             networkVersion = spvContext.networkParameters.name,
             dataDirectory = spvContext.directory.path,
@@ -316,7 +320,7 @@ class SpvService(
                     } else {
                         addressManager.monitor(AddressPubKey(address.get(), null))
 
-                        AddressBalance(address, "0", "0", "0")
+                        AddressBalance(address, Coin.ZERO, Coin.ZERO, Coin.ZERO)
                     }
                 },
                 unconfirmed = emptyList()
@@ -342,20 +346,19 @@ class SpvService(
     }
 
     fun getLastVBKBlockHeader(): BlockHeader {
-        val lastBlock = blockchain.blockStore.getChainHead()!!
-        val block = lastBlock.block
+        val block = blockchain.getChainHead()
         return BlockHeader(
-            block.hash.bytes,
-            SerializeDeserializeService.serializeHeaders(block)
+            SerializeDeserializeService.serializeHeaders(block),
+            block.hash.bytes
         )
     }
 
-    fun getVbkBlockHeader(hash: ByteString): BlockHeader? {
-        val block = blockchain.get(VBlakeHash.wrap(hash.toByteArray()))
+    fun getVbkBlockHeader(hash: VBlakeHash): BlockHeader? {
+        val block = blockchain.get(hash)
             ?: return null
         return BlockHeader(
-            block.hash.bytes,
-            SerializeDeserializeService.serializeHeaders(block.block)
+            SerializeDeserializeService.serializeHeaders(block.block),
+            block.hash.bytes
         )
     }
 
@@ -380,7 +383,7 @@ class SpvService(
             .setAcknowledge(false)
             .setVeriblockPublicationsRequest(getVeriBlockPublicationsRequest)
             .build()
-        val reply = peerTable.requestMessage(advertise, timeoutInMillis = 20_000L)
+        val reply = peerTable.requestMessage(advertise, timeoutInMillis = 300_000L)
         return reply.veriblockPublicationsReply
     }
 
@@ -418,9 +421,9 @@ class SpvService(
         val lockedCoins = ledgerContext.ledgerValue?.frozenAtomicUnits ?: 0L
         return AddressBalance(
             address = address,
-            unlockedAmount = (balance - lockedCoins).asCoin().toString(),
-            lockedAmount = lockedCoins.asCoin().toString(),
-            totalAmount = balance.asCoin().toString()
+            unlockedAmount = (balance - lockedCoins).asCoin(),
+            lockedAmount = lockedCoins.asCoin(),
+            totalAmount = balance.asCoin()
         )
     }
 

@@ -8,9 +8,9 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import ch.qos.logback.classic.Level
 import com.google.gson.GsonBuilder
 import io.grpc.StatusRuntimeException
+import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.toShellResult

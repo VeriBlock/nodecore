@@ -30,6 +30,7 @@ import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -61,8 +62,6 @@ class ApmTaskService(
             val vbkContextBlockHash = publicationData.context[0]
             nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
                 ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
-            nodeCoreLiteKit.blockChain.getChainHead()
-                ?: failOperation("Unable to get VBK's chain head!")
         }
 
         operation.runTask(
@@ -139,7 +138,7 @@ class ApmTaskService(
                 ?: failTask("Unable to retrieve block of proof from transaction")
 
             try {
-                val block = nodeCoreLiteKit.blockChain.get(blockHash)
+                val block = nodeCoreLiteKit.gateway.getBlock(blockHash)
                     ?: failTask("Unable to retrieve VBK block $blockHash")
                 operation.setBlockOfProof(block)
             } catch (e: BlockStoreException) {

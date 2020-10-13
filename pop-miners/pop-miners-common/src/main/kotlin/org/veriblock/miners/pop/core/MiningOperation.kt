@@ -1,7 +1,7 @@
 package org.veriblock.miners.pop.core
 
-import ch.qos.logback.classic.Level
 import kotlinx.coroutines.Job
+import org.apache.logging.log4j.Level
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
@@ -89,7 +89,7 @@ abstract class MiningOperation(
 
     fun getLogs(level: Level = Level.TRACE): List<OperationLog> {
         return logs.filter {
-            Level.toLevel(it.level).isGreaterOrEqual(level)
+            Level.toLevel(it.level).isLessSpecificThan(level)
         }
     }
 

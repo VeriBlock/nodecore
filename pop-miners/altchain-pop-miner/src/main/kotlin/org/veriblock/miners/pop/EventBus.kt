@@ -1,13 +1,9 @@
 package org.veriblock.miners.pop
 
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
-import org.veriblock.lite.core.BlockChainReorganizedEventData
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
 
@@ -37,11 +33,6 @@ object EventBus {
     val sufficientBalanceEvent = Event<Balance>("Sufficient balance")
     val insufficientBalanceEvent = EmptyEvent("Insufficient balance")
     val balanceChangeEvent = Event<Balance>("Balance changed")
-
-    // Block Events
-    val newBestBlockEvent = AsyncEvent<FullBlock>("New Best Block", Threading.LISTENER_THREAD)
-    val newBestBlockChannel = BroadcastChannel<FullBlock>(Channel.CONFLATED)
-    val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", Threading.LISTENER_THREAD)
 
     // Operation Events
     val operationStateChangedEvent = AsyncEvent<ApmOperation>("Operation State Changed", Threading.MINER_THREAD)

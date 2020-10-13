@@ -1,0 +1,69 @@
+<configuration packages="org.veriblock.shell">
+
+	<properties>
+		<property name="appName" value="apm" />
+		<property name="logLevel" value="${env:APM_LOG_LEVEL:-DEBUG}" />
+		<property name="consoleLogLevel" value="${env:APM_CONSOLE_LOG_LEVEL:-INFO}" />
+		<property name="enableJsonLog" value="${env:APM_ENABLE_JSON_LOG:-false}" />
+	</properties>
+
+	<appenders>
+
+		<shell name="consoleAppender">
+			<thresholdFilter level="${consoleLogLevel}" />
+			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %style{%-10.-10thread}{bright,white} %highlight{%-5level}{INFO=blue} %style{%-25.-25logger{0}}{bright,black} - %msg%n"/>
+		</shell>
+
+		<rollingFile name="fileAppender" fileName="logs/${appName}.log" filePattern="logs/${appName}.%d{yyyy-MM-dd}.%i.log">
+			<policies>
+				<sizeBasedTriggeringPolicy size="20MB" />
+			</policies>
+			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
+		</rollingFile>
+
+		<file name="jsonFileAppender" fileName="logs/${appName}.json" append="false" createOnDemand="true">
+			<jsonLayout complete="true" compact="true" eventEol="true" />
+		</file>
+
+		<routing name="fileAppenderRouter">
+			<routes pattern="${enableJsonLog}">
+				<route ref="fileAppender" key="false" />
+				<route ref="jsonFileAppender" key="true" />
+			</routes>
+		</routing>
+
+		<file name="errorFileAppender" fileName="logs/${appName}-error.log">
+			<thresholdFilter level="ERROR" />
+			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
+		</file>
+
+		<rollingFile name="altchainHttpCallsFileAppender" fileName="logs/altchain-http-calls.log" filePattern="logs/altchain-http-calls.%d{yyyy-MM-dd}.%i.log">
+			<policies>
+				<sizeBasedTriggeringPolicy size="50MB" />
+			</policies>
+			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %-5.-5logger{0} %msg%n"/>
+		</rollingFile>
+
+	</appenders>
+
+	<loggers>
+
+		<logger name="org.veriblock" level="${logLevel}" />
+
+		<logger name="shell-printing" level="INFO" additivity="false">
+			<appender-ref ref="fileAppenderRouter" />
+		</logger>
+		<logger name="altchain-http-calls" level="INFO" additivity="false">
+			<appender-ref ref="altchainHttpCallsFileAppender" />
+		</logger>
+		<logger name="Exposed" level="ERROR" />
+
+		<root level="ERROR">
+			<appender-ref ref="consoleAppender" />
+			<appender-ref ref="fileAppenderRouter" />
+			<appender-ref ref="errorFileAppender" />
+		</root>
+
+	</loggers>
+
+</configuration>

@@ -4,22 +4,23 @@ import io.mockk.mockk
 import junit.framework.TestCase
 import org.junit.Assert
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.models.asCoinDecimal
+import veriblock.SpvConfig
 import veriblock.SpvContext
 import veriblock.model.AddressCoinsIndex
 import veriblock.model.Output
 import veriblock.model.StandardAddress
-import veriblock.net.LocalhostDiscovery
 import veriblock.service.TransactionService
 
 class TransactionServiceTest : TestCase() {
     private val spvContext = SpvContext()
 
     public override fun setUp() {
-        spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
+        Context.set(defaultTestNetParameters)
+        spvContext.init(SpvConfig("testnet", useLocalNode = true))
     }
 
     @Test
