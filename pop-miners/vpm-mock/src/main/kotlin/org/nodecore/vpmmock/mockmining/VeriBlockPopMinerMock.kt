@@ -21,6 +21,16 @@ import org.veriblock.sdk.sqlite.ConnectionSelector
 import java.nio.ByteBuffer
 import java.security.*
 
+fun serializePublicationData(header: ByteArray, address: Address): ByteArray {
+    val buffer = ByteBuffer.allocateDirect(80)
+    buffer.put(header)
+    buffer.put(address.poPBytes)
+    buffer.flip()
+    val payoutInfo = ByteArray(80)
+    buffer.get(payoutInfo)
+    return payoutInfo
+}
+
 class VeriBlockPopMinerMock(
     val veriBlockParameters: NetworkParameters = defaultRegTestParameters,
     val bitcoinBlockchain: BitcoinMockBlockchain = BitcoinMockBlockchain(
@@ -36,6 +46,10 @@ class VeriBlockPopMinerMock(
 
     fun createBtcTx(publishedBlock: VeriBlockBlock, address: Address): BitcoinTransaction {
         return BitcoinTransaction(PublicationData(publishedBlock, address).serialize())
+    }
+
+    fun createBtcTx(publishedBlock: ByteArray, address: Address): BitcoinTransaction {
+        return BitcoinTransaction(serializePublicationData(publishedBlock, address))
     }
 
     /**
@@ -113,15 +127,9 @@ class VeriBlockPopMinerMock(
         val publishedBlock: VeriBlockBlock,
         val address: Address
     ) {
-        fun serialize(): ByteArray {
-            val buffer = ByteBuffer.allocateDirect(80)
-            buffer.put(SerializeDeserializeService.serializeHeaders(publishedBlock))
-            buffer.put(address.poPBytes)
-            buffer.flip()
-            val payoutInfo = ByteArray(80)
-            buffer.get(payoutInfo)
-            return payoutInfo
-        }
+        fun serialize(): ByteArray = serializePublicationData(
+            SerializeDeserializeService.serializeHeaders(publishedBlock), address
+        )
     }
 
     @Throws(SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
