@@ -129,7 +129,7 @@ class SpvContext {
 
         if (!Context.isCreated()) {
             Context.create(networkParameters)
-        } else if (Context.get().networkParameters != networkParameters) {
+        } else if (Context.get().networkParameters.name != networkParameters.name) {
             throw IllegalStateException("Attempting to create $networkParameters SPV context while on ${Context.get().networkParameters}")
         }
 
