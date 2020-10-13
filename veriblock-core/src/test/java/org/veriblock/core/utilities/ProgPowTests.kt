@@ -11,22 +11,29 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import java.security.Security
 import kotlin.system.measureTimeMillis
 
-@Ignore
 class ProgPowTests {
 
     @Test
     fun testProgPowHash() {
+        Context.set(defaultTestNetParameters)
         Security.addProvider(BouncyCastleProvider())
         val headerHex = "000D532B00020F2F1A55A6523A39EB7DC08CFD0B88C6E6AC5C79FB12D2F9E527B45D57FE18D30532FB0694DFA136EAAA2594D31F5F6608FB04257C501003A12C2C"
         val header = headerHex.asHexBytes()
         val height = BlockUtility.extractBlockHeightFromBlockHeader(header)
         val hash = BlockUtility.hashProgPowBlock(header, height)
+        if (hash != "00000000AC2178C652A1051DB63637340BB251424E9DCE8C") {
+            repeat(100) {
+                println(BlockUtility.hashProgPowBlock(header, height))
+            }
+        }
         Assert.assertEquals("00000000AC2178C652A1051DB63637340BB251424E9DCE8C", hash)
     }
 
     @Ignore
     @Test
     fun performanceTest() {
+        Context.set(defaultTestNetParameters)
+        Security.addProvider(BouncyCastleProvider())
         val blocksString = """
             000D5AD30002CBB1B687FA791BC1951930C49C5C31AF725D249C8CE4DB5DF468002F8582E6B67E5A5BF65ECDC38FA4B09714C8985F6750680427E4D420026A399E
             000D5AD40002530956716D6B835734B090439C5C31AF725D249C8CE4DB5DF468002F85828F3F63CE7441A46AA73C1FFCF2CD25455F675070042863E4300100B699
@@ -132,8 +139,6 @@ class ProgPowTests {
             000D5B380002D3395B9C2AC189D2616580D60BE9D660C9C516ABD12E16B30A871B1F981C4A8D1C3601DBB047D1E29F8ECD0873625F675CD5042523A62001CA9BF8
             000D5B390002ADCAE5BAB1227729B3536E830BE9D660C9C516ABD12E16B30A871B1F981CCA4E4D9B2D8BFE27D994AB9FBA90F1975F675CEF0424FF50008EAF803B
         """.trimIndent()
-        Context.create(defaultTestNetParameters)
-        Security.addProvider(BouncyCastleProvider())
         val blocks = blocksString.split("\n").map { SerializeDeserializeService.parseVeriBlockBlock(it.asHexBytes()) }
         for (block in blocks) {
             val time = measureTimeMillis {
