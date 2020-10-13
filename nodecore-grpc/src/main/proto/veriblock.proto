@@ -846,6 +846,14 @@ message GetBalanceReply {
     int64 total_unconfirmed = 6;
 }
 
+message SubmitRawTransactionRequest {
+    // pre-created, signed transaction body
+    // (serialized with byte[] Transaction.serialize())
+    bytes transaction = 1 [(hex_encoded)=true];
+    // transaction type
+    Transaction.Type type = 2;
+}
+
 message SubmitPopRequest {
     bytes endorsed_block_header = 1 [(hex_encoded)=true];
     bytes bitcoin_transaction = 2 [(hex_encoded)=true];
@@ -1603,6 +1611,8 @@ message GenerateBlocksReply {
 }
 
 service Admin {
+    rpc SubmitRawTransaction(SubmitRawTransactionRequest) returns (ProtocolReply) {}
+
     rpc GenerateBlocks(GenerateBlocksRequest) returns (GenerateBlocksReply) {}
 
     rpc GetPop(GetPopRequest) returns (GetPopReply) {}
