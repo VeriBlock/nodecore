@@ -38,6 +38,10 @@ class VeriBlockPopMinerMock(
         return BitcoinTransaction(PublicationData(publishedBlock, address).serialize())
     }
 
+    fun createBtcTx(publishedBlock: ByteArray, address: Address): BitcoinTransaction {
+        return BitcoinTransaction(PublicationData(publishedBlock, address).serialize())
+    }
+
     /**
      * Mines 'number' of blocks. If mempool is not empty, first block will contain
      * all transactions from mempool. Mempool will be cleared after this call.
@@ -113,15 +117,22 @@ class VeriBlockPopMinerMock(
         val publishedBlock: VeriBlockBlock,
         val address: Address
     ) {
-        fun serialize(): ByteArray {
-            val buffer = ByteBuffer.allocateDirect(80)
-            buffer.put(SerializeDeserializeService.serializeHeaders(publishedBlock))
-            buffer.put(address.poPBytes)
-            buffer.flip()
-            val payoutInfo = ByteArray(80)
-            buffer.get(payoutInfo)
-            return payoutInfo
+        companion object {
+            fun serialize(header: ByteArray, address: Address): ByteArray {
+                val buffer = ByteBuffer.allocateDirect(80)
+                buffer.put(header)
+                buffer.put(address.poPBytes)
+                buffer.flip()
+                val payoutInfo = ByteArray(80)
+                buffer.get(payoutInfo)
+                return payoutInfo
+            }
         }
+
+        fun serialize(): ByteArray = Companion.serialize(
+            SerializeDeserializeService.serializeHeaders(publishedBlock), address
+        )
+
     }
 
     @Throws(SignatureException::class, InvalidKeyException::class, NoSuchAlgorithmException::class)
