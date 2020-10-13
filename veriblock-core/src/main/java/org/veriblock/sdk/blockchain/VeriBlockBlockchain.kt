@@ -70,16 +70,8 @@ open class VeriBlockBlockchain(
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
     fun add(block: VeriBlockBlock) {
         Preconditions.state(!hasTemporaryModifications(), "Cannot add a block while having temporary modifications")
-        addWithProof(block, Sha256Hash.ZERO_HASH)
-    }
-
-    @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
-    fun addWithProof(
-        block: VeriBlockBlock,
-        blockOfProof: Sha256Hash
-    ) {
         check(!hasTemporaryModifications()) {
-            "Cannot add a block with proof while having temporary modifications"
+            "Cannot add a block while having temporary modifications"
         }
 
         // Lightweight verification of the header
@@ -96,8 +88,7 @@ open class VeriBlockBlockchain(
         val storedBlock = StoredVeriBlockBlock(
             block,
             work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())),
-            block.hash,
-            blockOfProof
+            block.hash
         )
         store.put(storedBlock)
     }
@@ -154,25 +145,6 @@ open class VeriBlockBlockchain(
             blocks.addAll(store.get(head, count))
         }
         return blocks
-    }
-
-    @Throws(BlockStoreException::class, SQLException::class)
-    private fun trySetBlockProofTemporarily(hash: VBlakeHash, blockOfProof: Sha256Hash) {
-        if (blockOfProof == Sha256Hash.ZERO_HASH) return
-        val storedBlock = getInternal(hash) ?: return
-        if (storedBlock.getBlockOfProof() == Sha256Hash.ZERO_HASH) {
-            storedBlock.setBlockOfProof(blockOfProof)
-            temporalStore[hash.trimToPreviousKeystoneSize()] = storedBlock
-            return
-        }
-
-        // Is it better?
-        val incumbent = bitcoinStore.scanBestChain(storedBlock.getBlockOfProof())
-        val candidate = bitcoinStore.get(blockOfProof)!!
-        if (incumbent == null || incumbent.height > candidate.height) {
-            storedBlock.setBlockOfProof(candidate.hash)
-            temporalStore[hash.trimToPreviousKeystoneSize()] = storedBlock
-        }
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
@@ -343,7 +315,7 @@ open class VeriBlockBlockchain(
             for (block in blocks) {
                 val work = BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())
                 val storedBlock = StoredVeriBlockBlock(
-                    block, work, block.hash, Sha256Hash.ZERO_HASH
+                    block, work, block.hash
                 )
                 store.put(storedBlock)
                 store.setChainHead(storedBlock)

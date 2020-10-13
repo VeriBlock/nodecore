@@ -12,7 +12,7 @@ import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.lite.core.Context
-import org.veriblock.miners.pop.service.MinerService
+import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 
 private val logger = createLogger {}
@@ -29,7 +29,7 @@ class SecurityInheritingService(
         }
     }
 
-    fun start(miner: MinerService) {
+    fun start(miner: AltchainPopMinerService) {
         for ((chainId, monitor) in monitors) {
             logger.debug { "Starting $chainId monitor..." }
             monitor.start(miner)

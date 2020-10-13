@@ -19,14 +19,11 @@ import org.veriblock.lite.net.NodeCoreNetwork
 import org.veriblock.lite.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
-import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.BlockStoreException
+import veriblock.SpvConfig
 import veriblock.SpvContext
 import veriblock.model.DownloadStatusResponse
-import veriblock.net.BootstrapPeerDiscovery
-import veriblock.net.LocalhostDiscovery
-import veriblock.util.SpvEventBus
 import java.io.File
 import java.io.IOException
 
@@ -98,12 +95,7 @@ class NodeCoreLiteKit(
         logger.info { "Initializing SPV..." }
         val spvContext = SpvContext()
         spvContext.init(
-            networkParameters,
-            if (config.connectToLocalNode) {
-                LocalhostDiscovery(networkParameters)
-            } else {
-                BootstrapPeerDiscovery(networkParameters)
-            }
+            SpvConfig(networkParameters.name, useLocalNode = config.connectToLocalNode)
         )
         spvContext.peerTable.start()
         GlobalScope.launch {

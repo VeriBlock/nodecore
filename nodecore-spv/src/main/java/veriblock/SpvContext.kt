@@ -7,27 +7,25 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package veriblock
 
+import org.veriblock.core.Context
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.sdk.blockchain.store.BitcoinStore
-import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
-import org.veriblock.sdk.blockchain.store.VeriBlockStore
-import org.veriblock.sdk.sqlite.ConnectionSelector
-import org.veriblock.sdk.sqlite.FileManager
 import veriblock.model.TransactionPool
+import veriblock.net.BootstrapPeerDiscovery
+import veriblock.net.LocalhostDiscovery
 import veriblock.net.P2PService
 import veriblock.net.PeerDiscovery
 import veriblock.net.SpvPeerTable
+import veriblock.service.BlockStore
 import veriblock.service.SpvService
 import veriblock.service.Blockchain
 import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
 import veriblock.wallet.PendingTransactionDownloadedListener
 import java.io.File
-import java.nio.file.Paths
 import java.sql.SQLException
 import java.time.Instant
 
@@ -48,9 +46,7 @@ class SpvContext {
         private set
     lateinit var transactionPool: TransactionPool
         private set
-    lateinit var veriBlockStore: VeriBlockStore
-        private set
-    lateinit var bitcoinStore: BitcoinStore
+    lateinit var blockStore: BlockStore
         private set
     lateinit var blockchain: Blockchain
         private set
@@ -69,6 +65,7 @@ class SpvContext {
     lateinit var pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
         private set
 
+    var trustPeerHashes = true
     val startTime: Instant = Instant.now()
 
     /**
@@ -91,15 +88,9 @@ class SpvContext {
             networkParameters = networkParam
             directory = baseDir
             filePrefix = filePr
-            val databasePath = Paths.get(
-                FileManager.getDataDirectory(), networkParam.databaseName
-            ).toString()
-            veriBlockStore = VeriBlockStore(ConnectionSelector.setConnection(databasePath))
-            bitcoinStore = BitcoinStore(ConnectionSelector.setConnection(databasePath))
-            init(veriBlockStore, networkParameters)
-            init(bitcoinStore, networkParameters)
+            blockStore = BlockStore(networkParameters, directory)
             transactionPool = TransactionPool()
-            blockchain = Blockchain(networkParameters.genesisBlock, veriBlockStore)
+            blockchain = Blockchain(networkParameters.genesisBlock, blockStore)
             pendingTransactionContainer = PendingTransactionContainer()
             p2PService = P2PService(pendingTransactionContainer, networkParameters)
             addressManager = AddressManager()
@@ -125,40 +116,38 @@ class SpvContext {
      * @param peerDiscovery     discovery peers.
      */
     @Synchronized
-    fun init(networkParameters: NetworkParameters, peerDiscovery: PeerDiscovery) {
-        init(networkParameters, File("."), String.format("vbk-%s", networkParameters.name), peerDiscovery)
+    fun init(config: SpvConfig) {
+        val networkParameters = NetworkParameters {
+            network = config.network
+        }
+
+        val peerDiscovery = if (config.useLocalNode) {
+            LocalhostDiscovery(networkParameters)
+        } else {
+            BootstrapPeerDiscovery(networkParameters)
+        }
+
+        if (!Context.isCreated()) {
+            Context.create(networkParameters)
+        } else if (Context.get().networkParameters.name != networkParameters.name) {
+            throw IllegalStateException("Attempting to create $networkParameters SPV context while on ${Context.get().networkParameters}")
+        }
+
+        val baseDir = File(config.dataDir)
+        baseDir.mkdirs()
+
+        trustPeerHashes = config.trustPeerHashes
+        init(networkParameters, baseDir, networkParameters.name, peerDiscovery)
     }
 
     fun shutdown() {
         peerTable.shutdown()
     }
-
-    private fun init(veriBlockStore: VeriBlockStore, params: NetworkParameters) {
-        try {
-            if (veriBlockStore.getChainHead() == null) {
-                val genesis = params.genesisBlock
-                val storedBlock = StoredVeriBlockBlock(
-                    genesis, BitcoinUtilities.decodeCompactBits(genesis.difficulty.toLong()),
-                    genesis.hash
-                )
-                veriBlockStore.put(storedBlock)
-                veriBlockStore.setChainHead(storedBlock)
-            }
-        } catch (e: SQLException) {
-            logger.error(e.message, e)
-        }
-    }
-
-    private fun init(bitcoinStore: BitcoinStore, params: NetworkParameters) {
-        try {
-            if (bitcoinStore.getChainHead() == null) {
-                val origin = params.bitcoinOriginBlock
-                val storedBlock = StoredBitcoinBlock(origin, BitcoinUtilities.decodeCompactBits(origin.difficulty.toLong()), 0)
-                bitcoinStore.put(storedBlock)
-                bitcoinStore.setChainHead(storedBlock)
-            }
-        } catch (e: SQLException) {
-            logger.error(e.message, e)
-        }
-    }
 }
+
+class SpvConfig(
+    val network: String = "mainnet",
+    val dataDir: String = ".",
+    val useLocalNode: Boolean = false,
+    val trustPeerHashes: Boolean = true
+)

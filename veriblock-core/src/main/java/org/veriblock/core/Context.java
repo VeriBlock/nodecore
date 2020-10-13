@@ -46,6 +46,10 @@ public class Context {
         }
     }
 
+    public static boolean isCreated() {
+        return instance != null;
+    }
+
     public static void set(NetworkParameters networkParameters) {
         lock.lock();
         try {

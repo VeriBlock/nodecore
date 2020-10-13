@@ -28,6 +28,7 @@ import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
@@ -47,13 +48,13 @@ class AltchainPopMinerService(
     private val operationService: OperationService,
     private val pluginService: PluginService,
     private val securityInheritingService: SecurityInheritingService
-) : MinerService {
+) {
     private val operations = ConcurrentHashMap<String, ApmOperation>()
     private var isShuttingDown: Boolean = false
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
-    override fun initialize() {
+    fun initialize() {
         nodeCoreLiteKit.initialize()
 
         // Restore & submit operations (including re-attach listeners) before the network starts
@@ -118,7 +119,7 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun start() {
+    fun start() {
         logger.info("Starting miner...")
         try {
             nodeCoreLiteKit.start()
@@ -127,7 +128,7 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getOperations(status: MiningOperationStatus, limit: Int, offset: Int): List<ApmOperation> {
+    fun getOperations(status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Int = 0): List<ApmOperation> {
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.values.asSequence().sortedBy {
                 it.createdAt
@@ -146,7 +147,7 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getOperationsCount(status: MiningOperationStatus): Int {
+    fun getOperationsCount(status: MiningOperationStatus = MiningOperationStatus.ACTIVE): Int {
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.size
         } else {
@@ -154,16 +155,16 @@ class AltchainPopMinerService(
         }
     }
 
-    override fun getOperation(id: String): ApmOperation? {
+    fun getOperation(id: String): ApmOperation? {
         return operations[id] ?: operationService.getOperation(id) { txId ->
             val hash = Sha256Hash.wrap(txId)
             nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
         }
     }
 
-    override fun getAddress(): String = nodeCoreLiteKit.getAddress()
+    fun getAddress(): String = nodeCoreLiteKit.getAddress()
 
-    override fun getBalance(): Balance = nodeCoreLiteKit.network.latestBalance
+    fun getBalance(): Balance = nodeCoreLiteKit.network.latestBalance
 
     private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
         // Check the last operation time
@@ -216,7 +217,7 @@ class AltchainPopMinerService(
         return CheckResult.Success()
     }
 
-    override fun mine(chainId: String, block: Int?): String {
+    fun mine(chainId: String, block: Int?): String {
         val chain = pluginService[chainId]
             ?: throw MineException("Unable to find altchain plugin '$chainId'")
         val chainMonitor = securityInheritingService.getMonitor(chainId)
@@ -243,17 +244,17 @@ class AltchainPopMinerService(
         return operation.id
     }
 
-    override fun cancelOperation(id: String) {
+    fun cancelOperation(id: String) {
         val operation = operations[id]
             ?: error(String.format("Could not find operation with id '%s'", id))
         cancel(operation)
     }
 
-    override fun shutdown() {
+    fun shutdown() {
         nodeCoreLiteKit.shutdown()
     }
 
-    override fun setIsShuttingDown(b: Boolean) {
+    fun setIsShuttingDown(b: Boolean) {
         isShuttingDown = b
     }
 

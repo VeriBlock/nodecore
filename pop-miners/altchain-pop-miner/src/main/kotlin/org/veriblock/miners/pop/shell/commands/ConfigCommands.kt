@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.shell.commands
 
 import org.veriblock.core.CommandException
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.miners.pop.service.MinerConfig
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
