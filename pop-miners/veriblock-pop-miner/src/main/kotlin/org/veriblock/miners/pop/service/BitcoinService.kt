@@ -8,13 +8,9 @@ package org.veriblock.miners.pop.service
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.*
 import kotlinx.coroutines.guava.asDeferred
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.tuple.Pair
 import org.bitcoinj.core.*
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener
@@ -29,6 +25,7 @@ import org.bitcoinj.store.SPVBlockStore
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
+import org.veriblock.core.launchWithFixedDelay
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
@@ -47,7 +44,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.schedule
 
 private val logger = createLogger {}
 
@@ -110,7 +106,7 @@ class BitcoinService(
                 it.endorsementTransaction?.confidence?.removeEventListener(it.transactionListener)
             }
         }
-        Timer().schedule(10000) {
+        GlobalScope.launchWithFixedDelay(10_000, 10_000) {
             verifyBalance(true)
         }
         logger.info("BitcoinService constructor finished")
@@ -246,21 +242,25 @@ class BitcoinService(
     }
 
     fun verifyBalance(ignoreCondition: Boolean = false) {
-        val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
-        if (balance != latestBalance) {
-            if (balance.isLessThan(getMaximumTransactionFee())) {
-                if (ignoreCondition || isSufficientlyFunded()) {
-                    funded.set(false)
-                    EventBus.insufficientFundsEvent.trigger(balance)
+        try {
+            val balance = wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
+            if (balance != latestBalance) {
+                if (balance.isLessThan(getMaximumTransactionFee())) {
+                    if (ignoreCondition || isSufficientlyFunded()) {
+                        funded.set(false)
+                        EventBus.insufficientFundsEvent.trigger(balance)
+                    }
+                } else {
+                    if (ignoreCondition || !isSufficientlyFunded()) {
+                        funded.set(true)
+                        EventBus.sufficientFundsEvent.trigger(balance)
+                    }
                 }
-            } else {
-                if (ignoreCondition || !isSufficientlyFunded()) {
-                    funded.set(true)
-                    EventBus.sufficientFundsEvent.trigger(balance)
-                }
+                EventBus.balanceChangedEvent.trigger(balance)
+                latestBalance = balance
             }
-            EventBus.balanceChangedEvent.trigger(balance)
-            latestBalance = balance
+        } catch (e: Exception) {
+            logger.error(e) { "Unable to verify the balance" }
         }
     }
 

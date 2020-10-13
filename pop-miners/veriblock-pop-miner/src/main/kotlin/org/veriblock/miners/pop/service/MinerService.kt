@@ -244,14 +244,11 @@ class MinerService(
             val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
             val balance = bitcoinService.getBalance()
             return CheckResult.Failure(
-                MineException(
-                    "PoP wallet does not contain sufficient funds" + System.lineSeparator() + "  Current balance: " +
-                        balance.formatBTCFriendlyString() + System.lineSeparator() + String.format(
-                        "  Minimum required: %1\$s, need %2\$s more",
-                        maximumTransactionFee.formatBTCFriendlyString(),
-                        maximumTransactionFee.subtract(balance).formatBTCFriendlyString()
-                    ) + System.lineSeparator() + "  Send Bitcoin to: " +
-                        bitcoinService.currentReceiveAddress()
+                MineException("""PoP wallet does not contain sufficient funds
+                        Current balance: ${balance.formatBTCFriendlyString()}
+                        Minimum required: ${maximumTransactionFee.formatBTCFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBTCFriendlyString()} more",
+                        Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}
+                        """.trimIndent()
                 )
             )
         }
