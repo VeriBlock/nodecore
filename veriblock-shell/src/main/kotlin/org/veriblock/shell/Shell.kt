@@ -117,7 +117,7 @@ open class Shell(
         startRunning()
 
         while (running) {
-            val input = readLine()
+            val input = readLine()?.trim()
                 ?: break // Reached EOF/interrupt
             if (input.isEmpty())
                 continue
