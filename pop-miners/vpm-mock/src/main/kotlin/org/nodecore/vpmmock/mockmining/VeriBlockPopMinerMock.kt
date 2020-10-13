@@ -49,7 +49,7 @@ class VeriBlockPopMinerMock(
     }
 
     fun createBtcTx(publishedBlock: ByteArray, address: Address): BitcoinTransaction {
-        return BitcoinTransaction(PublicationData(publishedBlock, address).serialize())
+        return BitcoinTransaction(serializePublicationData(publishedBlock, address))
     }
 
     /**
