@@ -106,7 +106,10 @@ class NetworkParameters(
         minimumDifficulty = template.minimumDifficulty
         powNoRetargeting = template.powNoRetargeting
         blockTimeSeconds = template.blocktimeSeconds
-        progPowForkHeight = config.progPowForkHeight ?: template.progPowForkHeight
+        progPowForkHeight = when (config.network.toLowerCase()) {
+            "regtest" -> config.progPowForkHeight ?: template.progPowForkHeight
+            else -> template.progPowForkHeight
+        }
         progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
 
