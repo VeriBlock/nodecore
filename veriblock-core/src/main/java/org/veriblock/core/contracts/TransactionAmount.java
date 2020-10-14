@@ -11,6 +11,7 @@ import org.veriblock.core.utilities.SerializerUtility;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 public class TransactionAmount {
     private final Long amount;
@@ -27,6 +28,11 @@ public class TransactionAmount {
 
     public void serializeToStream(OutputStream stream) throws IOException {
         SerializerUtility.writeVariableLengthValueToStream(stream, amount);
+    }
+
+    public static TransactionAmount deserialize(ByteBuffer stream) {
+        long val = SerializerUtility.readSingleBEValue(stream, 8);
+        return new TransactionAmount(val);
     }
 
     @Override
