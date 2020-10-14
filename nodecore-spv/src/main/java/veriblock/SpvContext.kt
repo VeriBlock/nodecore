@@ -8,6 +8,7 @@
 package veriblock
 
 import org.veriblock.core.Context
+import org.veriblock.core.params.LOCALHOST
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
@@ -119,7 +120,8 @@ class SpvContext {
             network = config.network
         }
 
-        val peerDiscovery = if (config.useLocalNode) {
+        assert (networkParameters.fileTag == config.network);
+        val peerDiscovery = if (config.useLocalNode || networkParameters.fileTag == "regtest") {
             LocalhostDiscovery(networkParameters)
         } else {
             BootstrapPeerDiscovery(networkParameters)

@@ -255,7 +255,7 @@ class NodeCoreNetwork(
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
-        val newBlockChannel = SpvEventBus.newBestBlockChannel.openSubscription()
+        val newBlockChannel = SpvEventBus.newBlockChannel.openSubscription()
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash

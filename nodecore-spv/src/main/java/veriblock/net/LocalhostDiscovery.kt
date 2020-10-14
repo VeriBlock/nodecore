@@ -10,6 +10,7 @@ package veriblock.net
 import io.ktor.util.network.NetworkAddress
 import org.veriblock.core.params.LOCALHOST
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.utilities.createLogger
 
 /**
  * Discovery peer locally.
@@ -17,6 +18,11 @@ import org.veriblock.core.params.NetworkParameters
 class LocalhostDiscovery(
     private val networkParameters: NetworkParameters
 ) : PeerDiscovery {
+    init {
+        val logger = createLogger { }
+        logger.info { "Doing local peer discovery. Using peer ${LOCALHOST}:${networkParameters.p2pPort}." }
+    }
+
     override fun getPeers(count: Int): Collection<NetworkAddress> {
         return listOf(NetworkAddress(LOCALHOST, networkParameters.p2pPort))
     }

@@ -42,31 +42,7 @@ class Blockchain(
     @Throws(SQLException::class)
     fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
         return blockStore.readBlock(hash)
-        //return blockStore.get(hash)
     }
-
-    /*@Throws(SQLException::class)
-    fun add(block: VeriBlockBlock) {
-        val previous = blockStore.get(block.previousBlock)
-            ?: // Nothing to build on
-            return
-        val storedBlock = StoredVeriBlockBlock(
-            block, previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())), block.hash
-        )
-
-        // TODO: Make the put(...) and setChainHead(...) atomic
-        blockStore.put(storedBlock)
-        blocksCache.add(storedBlock)
-
-        // TODO: PoP fork resolution additional
-        if (storedBlock.work.compareTo(blockStore.getChainHead()!!.work) > 0) {
-            blockStore.setChainHead(storedBlock)
-        }
-
-        // TODO: Broadcast events: new best block, reorganize, new block
-        SpvEventBus.newBestBlockEvent.trigger(block)
-        SpvEventBus.newBestBlockChannel.offer(block)
-    }*/
 
     @Throws(SQLException::class)
     fun addAll(blocks: List<VeriBlockBlock>) {
@@ -83,21 +59,19 @@ class Blockchain(
             return
         }
         val storedBlocks = convertToStoreVeriBlocks(listToStore)
-        //blockStore.put(storedBlocks)
         blockStore.writeBlocks(storedBlocks)
         blocksCache.addAll(storedBlocks)
 
         // TODO: PoP fork resolution additional
-        if (storedBlocks[storedBlocks.size - 1].work > blockStore.getTip().work) {
+        val lastBlock = storedBlocks[storedBlocks.size - 1]
+        if (lastBlock.work > blockStore.getTip().work) {
             // TODO: Verify they were stored
-            blockStore.setTip(storedBlocks[storedBlocks.size - 1])
+            blockStore.setTip(lastBlock)
+            SpvEventBus.newBestBlockEvent.trigger(lastBlock.block)
         }
 
-        if (blocks.size < 100) {
-            for (block in blocks) {
-                SpvEventBus.newBestBlockEvent.trigger(block)
-                SpvEventBus.newBestBlockChannel.offer(block)
-            }
+        for (block in blocks) {
+            SpvEventBus.newBlockChannel.offer(block)
         }
     }
 
@@ -145,6 +119,7 @@ class Blockchain(
 
     fun getPeerQuery(): List<VeriBlockBlock> {
         val blocks: MutableList<VeriBlockBlock> = ArrayList(16)
+        blocks.add(genesisBlock)
         try {
             var cursor = blockStore.getTip()
 
@@ -167,7 +142,6 @@ class Blockchain(
         } catch (e: Exception) {
             logger.error("Unable to build peer query", e)
         }
-        blocks.add(genesisBlock)
         return blocks
     }
 
