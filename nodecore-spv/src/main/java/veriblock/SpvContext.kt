@@ -8,11 +8,10 @@
 package veriblock
 
 import org.veriblock.core.Context
-import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import veriblock.model.TransactionPool
 import veriblock.net.BootstrapPeerDiscovery
 import veriblock.net.LocalhostDiscovery
@@ -26,7 +25,6 @@ import veriblock.service.PendingTransactionContainer
 import veriblock.service.TransactionService
 import veriblock.wallet.PendingTransactionDownloadedListener
 import java.io.File
-import java.sql.SQLException
 import java.time.Instant
 
 const val FILE_EXTENSION = ".vbkwallet"
@@ -104,7 +102,7 @@ class SpvContext {
                 pendingTransactionContainer, blockchain
             )
         } catch (e: Exception) {
-            logger.error("Could not initialize VeriBlock security", e)
+            logger.debugWarn(e) { "Could not initialize SPV Context" }
             throw RuntimeException(e)
         }
     }

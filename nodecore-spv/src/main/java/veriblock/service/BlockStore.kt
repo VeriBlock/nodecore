@@ -5,16 +5,21 @@ import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
+import java.io.IOException
 import java.io.RandomAccessFile
 import java.math.BigInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+private val logger = createLogger {}
+
 class BlockStore(
-    networkParameters: NetworkParameters,
+    private val networkParameters: NetworkParameters,
     baseDir: File
 ) {
     private val lock = ReentrantLock()
@@ -31,32 +36,38 @@ class BlockStore(
         }.toMutableMap()
     }
 
-    val index = initializeIndex(networkParameters)
+    val index = initializeIndex()
 
-    private fun initializeIndex(networkParameters: NetworkParameters): BlockIndex {
+    private fun initializeIndex(): BlockIndex {
         return if (!indexFile.exists()) {
-            val genesisBlock = StoredVeriBlockBlock(
-                networkParameters.genesisBlock,
-                BitcoinUtilities.decodeCompactBits(networkParameters.genesisBlock.difficulty.toLong()),
-                networkParameters.genesisBlock.hash
-            )
-            RandomAccessFile(blocksFile, "rw").use { file ->
-                file.seek(0)
-                file.writeInt(genesisBlock.height)
-                file.write(genesisBlock.hash.bytes)
-                file.write(Utility.toBytes(genesisBlock.work, StoredVeriBlockBlock.CHAIN_WORK_BYTES))
-                file.write(genesisBlock.block.raw)
-            }
-            RandomAccessFile(indexFile, "rw").use {
-                it.writeInt(1)
-                it.write(genesisBlock.hash.bytes)
-                it.write(genesisBlock.hash.bytes)
-                it.writeLong(0L)
-            }
-            BlockIndex(genesisBlock, mutableMapOf(VBlakeHash.EMPTY_HASH to 0L))
+            createGenesisIndex()
         } else {
             readIndex()
         }
+    }
+
+    private fun createGenesisIndex(): BlockIndex {
+        indexFile.delete()
+        blocksFile.delete()
+        val genesisBlock = StoredVeriBlockBlock(
+            networkParameters.genesisBlock,
+            BitcoinUtilities.decodeCompactBits(networkParameters.genesisBlock.difficulty.toLong()),
+            networkParameters.genesisBlock.hash
+        )
+        RandomAccessFile(blocksFile, "rw").use { file ->
+            file.seek(0)
+            file.writeInt(genesisBlock.height)
+            file.write(genesisBlock.hash.bytes)
+            file.write(Utility.toBytes(genesisBlock.work, StoredVeriBlockBlock.CHAIN_WORK_BYTES))
+            file.write(genesisBlock.block.raw)
+        }
+        RandomAccessFile(indexFile, "rw").use {
+            it.writeInt(1)
+            it.write(genesisBlock.hash.bytes)
+            it.write(genesisBlock.hash.bytes)
+            it.writeLong(0L)
+        }
+        return BlockIndex(genesisBlock, mutableMapOf(VBlakeHash.EMPTY_HASH to 0L))
     }
 
     fun readIndex(): BlockIndex = RandomAccessFile(indexFile, "r").use { file ->
@@ -64,12 +75,22 @@ class BlockStore(
         val tipHash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
         file.read(tipHash)
         val tip = VBlakeHash.wrap(tipHash)
-        val fileIndex = (0 until count).associate {
-            val hash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
-            file.read(hash)
-            VBlakeHash.wrap(hash) to file.readLong()
-        }.toMutableMap()
-        BlockIndex(readBlock(fileIndex.getValue(tip)), fileIndex)
+
+        val fileIndex = try {
+            (0 until count).associate {
+                val hash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
+                file.read(hash)
+                VBlakeHash.wrap(hash) to file.readLong()
+            }.toMutableMap()
+        } catch (e: IOException) {
+            logger.debugWarn(e) { "Error while loading blockchain index file. Redownloading blockchain from scratch..." }
+            return createGenesisIndex()
+        }
+        val tipFileIndex = fileIndex[tip] ?: run {
+            logger.warn { "Invalid blockchain tip! Redownloading blockchain from scratch..." }
+            return createGenesisIndex()
+        }
+        BlockIndex(readBlock(tipFileIndex), fileIndex)
     }
 
     fun getTip(): StoredVeriBlockBlock = index.tip
@@ -150,7 +171,7 @@ class BlockStore(
             val blockCount = file.readInt()
             file.seek(0)
             file.writeInt(blockCount + blocks.size)
-            file.seek(file.length())
+            file.seek(blockCount.toLong() * (VBlakeHash.VERIBLOCK_LENGTH + 8))
             var cumulativeFilePosition = blockFilePosition
             for (block in blocks) {
                 index.fileIndex[block.hash] = cumulativeFilePosition

@@ -15,7 +15,6 @@ import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
@@ -76,7 +75,7 @@ private fun run(): Int {
         shell.run()
     } catch (e: Exception) {
         errored = true
-        logger.debugWarn(e) { "Fatal error" }
+        logger.debugError(e) { "Fatal error" }
     } finally {
         shutdownSignal.countDown()
     }

@@ -32,7 +32,6 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -67,7 +66,6 @@ import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import java.util.stream.Collector
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}

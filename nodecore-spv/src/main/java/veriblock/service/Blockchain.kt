@@ -89,6 +89,7 @@ class Blockchain(
 
         // TODO: PoP fork resolution additional
         if (storedBlocks[storedBlocks.size - 1].work > blockStore.getTip().work) {
+            // TODO: Verify they were stored
             blockStore.setTip(storedBlocks[storedBlocks.size - 1])
         }
 

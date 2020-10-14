@@ -17,11 +17,10 @@ import me.tongfei.progressbar.ProgressBarStyle
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
-import org.veriblock.core.params.MainNetParameters
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.tuweni.progpow.ProgPoWCache
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import org.veriblock.spv.standalone.commands.spvCommands
@@ -113,7 +112,7 @@ private fun run(): Int {
         shell.run()
     } catch (e: Exception) {
         errored = true
-        logger.warn(e) { "Fatal error: ${e.message}" }
+        logger.debugError(e) { "Fatal error" }
     } finally {
         if (!shell.running) {
             shutdownSignal.countDown()

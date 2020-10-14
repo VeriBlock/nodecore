@@ -24,7 +24,6 @@ import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.createLogger
 import veriblock.serialization.MessageSerializer.deserialize
 import veriblock.util.Threading.PEER_INPUT_POOL
-import java.io.EOFException
 import java.io.IOException
 import java.net.SocketException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -105,6 +104,9 @@ class PeerSocketHandler(
             } catch (e: CancellationException) {
                 logger.info("Output stream thread shutting down")
                 break
+            } catch (e: IOException) {
+                logger.info("Socket closed")
+                break
             } catch (e: SocketException) {
                 logger.info("Socket closed")
                 break
@@ -132,6 +134,9 @@ class PeerSocketHandler(
             } catch (e: SocketException) {
                 logger.info("Attempted to read from a socket that has been closed.")
                 // Disconnect?
+                break
+            } catch (e: IOException) {
+                logger.info("Disconnected from peer ${peer.address}.")
                 break
             } catch (e: ClosedReceiveChannelException) {
                 logger.info("Disconnected from peer ${peer.address}.")
