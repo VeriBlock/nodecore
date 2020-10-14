@@ -29,7 +29,7 @@ public class SerializerUtility {
         int zeroes = size - val.length;
 
         byte[] ret = new byte[size];
-        System.arraycopy(ret, 0, ret, zeroes, val.length);
+        System.arraycopy(val, 0, ret, zeroes, val.length);
         return ret;
     }
 

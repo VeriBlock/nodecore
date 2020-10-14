@@ -31,7 +31,7 @@ public class TransactionAmount {
     }
 
     public static TransactionAmount deserialize(ByteBuffer stream) {
-        long val =  SerializerUtility.readSingleBEValue(stream, 8);
+        long val = SerializerUtility.readSingleBEValue(stream, 8);
         return new TransactionAmount(val);
     }
 
