@@ -86,12 +86,6 @@ public class VBlakeHash {
         return VBlakeHash.wrap(output, length);
     }
 
-    public boolean probablyEquals(VBlakeHash other) {
-        if (other == null) return false;
-
-        return this.hashCode() == other.hashCode();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
