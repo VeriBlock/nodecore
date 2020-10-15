@@ -27,7 +27,7 @@ class BlockStore(
     private val blocksCache = LRUCache<VBlakeHash, StoredVeriBlockBlock>(VBK_MAX_REORG_DISTANCE + 1)
 
     private val indexFile = File(baseDir, "$networkParameters-block-index.db")
-    private val blocksFile = File("$networkParameters-blocks.db")
+    private val blocksFile = File(baseDir,"$networkParameters-blocks.db")
 
     private fun writeBlockBody(file: RandomAccessFile, block: StoredVeriBlockBlock) {
         file.writeInt(block.height)
