@@ -113,6 +113,7 @@ private fun run(): Int {
     } catch (e: Exception) {
         errored = true
         logger.debugError(e) { "Fatal error" }
+        e.printStackTrace()
     } finally {
         if (!shell.running) {
             shutdownSignal.countDown()

@@ -7,12 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.blockchain.store
 
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.math.BigInteger
@@ -21,12 +19,12 @@ import java.util.Objects
 
 class StoredVeriBlockBlock
 @JvmOverloads constructor(
-    val block: VeriBlockBlock,
+    val header: VeriBlockBlock,
     val work: BigInteger,
     val hash: VBlakeHash
 ) {
     val height: Int
-        get() = block.height
+        get() = header.height
 
     init {
         require(work >= BigInteger.ZERO) {
@@ -39,7 +37,7 @@ class StoredVeriBlockBlock
         buffer.put(
             Utility.toBytes(work, CHAIN_WORK_BYTES)
         )
-        buffer.put(SerializeDeserializeService.serializeHeaders(block))
+        buffer.put(SerializeDeserializeService.serializeHeaders(header))
     }
 
     fun serialize(): ByteArray {
@@ -51,19 +49,19 @@ class StoredVeriBlockBlock
         return serialized
     }
 
-    fun getKeystoneIndex(): Int = block.height / 20 * 20
+    fun getKeystoneIndex(): Int = header.height / 20 * 20
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val that = other as StoredVeriBlockBlock
         return hash == that.hash &&
-            block == that.block &&
+            header == that.header &&
             work == that.work
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(hash, block, work)
+        return Objects.hash(hash, header, work)
     }
 
     companion object {

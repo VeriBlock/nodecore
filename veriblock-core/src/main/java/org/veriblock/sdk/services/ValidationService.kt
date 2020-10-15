@@ -17,6 +17,10 @@ import java.math.BigInteger
 import java.util.Locale
 
 object ValidationService {
+    fun checkBlock(block: VeriBlockBlock): Boolean {
+        return isProofOfWorkValid(block) && isBlockTimeValid(block)
+    }
+
     // VeriBlockBlock
     @Throws(VerificationException::class)
     fun verify(veriBlockBlock: VeriBlockBlock) {
@@ -31,8 +35,15 @@ object ValidationService {
 
     fun isProofOfWorkValid(block: VeriBlockBlock): Boolean {
         val hash = block.hash.toBigInteger()
-        return hash.compareTo(getEmbeddedTarget(block)) <= 0
+        return hash <= getEmbeddedTarget(block)
     }
+
+    fun isBlockTimeValid(block: VeriBlockBlock): Boolean {
+        val currentTime = Utility.getCurrentTimestamp()
+        return block.timestamp <= currentTime + Constants.ALLOWED_TIME_DRIFT
+    }
+
+
 
     fun checkProofOfWork(block: VeriBlockBlock) {
         if (!isProofOfWorkValid(block)) {
@@ -47,8 +58,7 @@ object ValidationService {
     }
 
     fun checkMaximumDrift(veriBlockBlock: VeriBlockBlock) {
-        val currentTime = Utility.getCurrentTimestamp()
-        if (veriBlockBlock.timestamp > currentTime + Constants.ALLOWED_TIME_DRIFT) {
+        if(!isBlockTimeValid(veriBlockBlock)) {
             throw VerificationException("Block is too far in the future")
         }
     }

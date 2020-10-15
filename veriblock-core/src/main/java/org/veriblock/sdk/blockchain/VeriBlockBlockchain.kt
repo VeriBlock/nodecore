@@ -23,7 +23,6 @@ import org.veriblock.sdk.services.ValidationService
 import java.math.BigInteger
 import java.sql.SQLException
 import java.util.ArrayList
-import java.util.Comparator
 import java.util.HashMap
 import java.util.OptionalInt
 
@@ -52,7 +51,7 @@ open class VeriBlockBlockchain(
     @Throws(BlockStoreException::class, SQLException::class)
     fun get(hash: VBlakeHash): VeriBlockBlock? {
         val storedBlock = getInternal(hash)
-        return storedBlock?.block
+        return storedBlock?.header
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
@@ -64,7 +63,7 @@ open class VeriBlockBlockchain(
         } else {
             store.scanBestChain(hash)
         }
-        return storedBlock?.block
+        return storedBlock?.header
     }
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
@@ -109,7 +108,7 @@ open class VeriBlockBlockchain(
     @Throws(SQLException::class)
     fun getChainHead(): VeriBlockBlock? {
         val chainHead = store.getChainHead()
-        return chainHead?.block
+        return chainHead?.header
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
@@ -136,11 +135,11 @@ open class VeriBlockBlockchain(
             if (blocks.size == count) {
                 break
             }
-            cursor = tempBlock.block.previousBlock.trimToPreviousKeystoneSize()
+            cursor = tempBlock.header.previousBlock.trimToPreviousKeystoneSize()
         }
         if (blocks.size > 0) {
             val last = blocks[blocks.size - 1]
-            blocks.addAll(store.get(last.block.previousBlock, count - blocks.size))
+            blocks.addAll(store.get(last.header.previousBlock, count - blocks.size))
         } else {
             blocks.addAll(store.get(head, count))
         }
@@ -231,7 +230,7 @@ open class VeriBlockBlockchain(
         val median = context.asSequence()
             .sortedByDescending { it.height }
             .take(MINIMUM_TIMESTAMP_BLOCK_COUNT)
-            .map { it.block.timestamp }
+            .map { it.header.timestamp }
             .sorted()
             .drop(MINIMUM_TIMESTAMP_BLOCK_COUNT / 2 - 1)
             .firstOrNull()
@@ -268,7 +267,7 @@ open class VeriBlockBlockchain(
         val storedContext = getChainInternal(
             previous.hash, VeriBlockDifficultyCalculator.RETARGET_PERIOD
         )
-        val context: List<VeriBlockBlock> = storedContext.map { it.block }
+        val context: List<VeriBlockBlock> = storedContext.map { it.header }
         return getNextDifficulty(previous, context)
     }
 
@@ -281,8 +280,8 @@ open class VeriBlockBlockchain(
         if (!isValidateBlocksDifficulty) {
             return
         }
-        val contextBlocks: List<VeriBlockBlock> = context.map { it.block }
-        val difficulty = getNextDifficulty(previous.block, contextBlocks)
+        val contextBlocks: List<VeriBlockBlock> = context.map { it.header }
+        val difficulty = getNextDifficulty(previous.header, contextBlocks)
         if (difficulty.isPresent) {
             if (block.difficulty != difficulty.asInt) {
                 throw VerificationException("Block does not conform to expected difficulty")

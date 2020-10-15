@@ -7,192 +7,83 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.service
 
-import com.google.common.collect.EvictingQueue
 import org.veriblock.core.bitcoinj.BitcoinUtilities
+import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
-import java.math.BigInteger
-import java.sql.SQLException
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
-import kotlin.jvm.Throws
-import kotlin.math.pow
 
 private val logger = createLogger {}
 
 class Blockchain(
-    private val genesisBlock: VeriBlockBlock,
     private val blockStore: BlockStore
 ) {
-    //TODO SPV-124
-    private val blocksCache = EvictingQueue.create<StoredVeriBlockBlock>(1000)
+    val activeChain = TruncatedChain(blockStore)
 
-    fun getChainHead(): VeriBlockBlock {
-        try {
-            return blockStore.getTip().block
-        } catch (e: SQLException) {
-            throw IllegalStateException("Unable to get chain head", e)
-        }
+    val size: Int
+        get() = this.blockStore.index.fileIndex.size
+
+    fun getChainHead(): StoredVeriBlockBlock {
+        return activeChain.tip()
     }
 
-    @Throws(SQLException::class)
     fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
         return blockStore.readBlock(hash)
-        //return blockStore.get(hash)
     }
 
-    /*@Throws(SQLException::class)
-    fun add(block: VeriBlockBlock) {
-        val previous = blockStore.get(block.previousBlock)
-            ?: // Nothing to build on
-            return
-        val storedBlock = StoredVeriBlockBlock(
-            block, previous.work.add(BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())), block.hash
+    fun acceptBlock(block: VeriBlockBlock): Boolean {
+        if (blockStore.exists(block.hash)) {
+            // block is valid, we already have it
+            return true
+        }
+
+        // does block connect to blockchain?
+        val prev = blockStore.readBlock(block.previousBlock)
+            ?: return false
+
+        // is block statelessly valid?
+        if (!ValidationService.checkBlock(block)) {
+            return false
+        }
+
+        // all ok, we can add block to blockchain
+        val stored = StoredVeriBlockBlock(
+            header = block,
+            work = prev.work + BitcoinUtilities.decodeCompactBits(block.difficulty.toLong()),
+            hash = block.hash
         )
 
-        // TODO: Make the put(...) and setChainHead(...) atomic
-        blockStore.put(storedBlock)
-        blocksCache.add(storedBlock)
+        // TODO: contextually check block: get difficulty, get median time past, get keystones
 
-        // TODO: PoP fork resolution additional
-        if (storedBlock.work.compareTo(blockStore.getChainHead()!!.work) > 0) {
-            blockStore.setChainHead(storedBlock)
+        // write block on disk
+        blockStore.writeBlock(stored)
+
+        activeChain.findFork(stored)
+            ?:
+            // this block does not connect to active chain
+            // do not consider it for fork resolution
+            return true
+
+        // do fork resolution
+        if (stored.work > activeChain.tip().work) {
+            // new block wins
+            activeChain.setTip(stored)
+            SpvEventBus.newBestBlockEvent.trigger(block)
         }
 
-        // TODO: Broadcast events: new best block, reorganize, new block
-        SpvEventBus.newBestBlockEvent.trigger(block)
-        SpvEventBus.newBestBlockChannel.offer(block)
-    }*/
+        // add new block to a queue
+        SpvEventBus.newBlockChannel.offer(block)
 
-    @Throws(SQLException::class)
-    fun addAll(blocks: List<VeriBlockBlock>) {
-        val sortedBlocks = blocks.sortedBy { it.height }
-        logger.debug { "Adding ${sortedBlocks.size} blocks, height ${sortedBlocks.first().height} - ${sortedBlocks.last().height}" }
-        if (!areBlocksSequential(sortedBlocks)) {
-            // todo throw Exception
-            return
-        }
-        val listToStore = listToStore(sortedBlocks)
-        if (listToStore.isEmpty()) {
-            // todo throw Exception
-            // Nothing to build on
-            return
-        }
-        val storedBlocks = convertToStoreVeriBlocks(listToStore)
-        //blockStore.put(storedBlocks)
-        blockStore.writeBlocks(storedBlocks)
-        blocksCache.addAll(storedBlocks)
-
-        // TODO: PoP fork resolution additional
-        if (storedBlocks[storedBlocks.size - 1].work > blockStore.getTip().work) {
-            // TODO: Verify they were stored
-            blockStore.setTip(storedBlocks[storedBlocks.size - 1])
-        }
-
-        if (blocks.size < 100) {
-            for (block in blocks) {
-                SpvEventBus.newBestBlockEvent.trigger(block)
-                SpvEventBus.newBestBlockChannel.offer(block)
-            }
-        }
+        return true
     }
 
     fun getBlockByHeight(height: Int): StoredVeriBlockBlock? {
-        return blocksCache.find {
-            it.height == height
-        }
-    }
-
-    @Throws(SQLException::class)
-    private fun listToStore(veriBlockBlocks: List<VeriBlockBlock>): List<VeriBlockBlock> {
-        for (i in veriBlockBlocks.indices) {
-            val previous = blockStore.readBlock(veriBlockBlocks[i].previousBlock)
-            if (previous != null) {
-                return veriBlockBlocks.subList(i, veriBlockBlocks.size)
-            }
-        }
-        return emptyList()
-    }
-
-    @Throws(SQLException::class)
-    private fun convertToStoreVeriBlocks(veriBlockBlocks: List<VeriBlockBlock>): List<StoredVeriBlockBlock> {
-        val blockWorks: MutableMap<String, BigInteger> = HashMap()
-        val storedBlocks: MutableList<StoredVeriBlockBlock> = ArrayList()
-        val commonBlock = blockStore.readBlock(veriBlockBlocks[0].previousBlock)!!
-        blockWorks[commonBlock.hash.toString().substring(24)] = commonBlock.work
-        for (veriBlockBlock in veriBlockBlocks) {
-            var work = blockWorks[veriBlockBlock.previousBlock.toString()]
-            //This block is from fork, our Blockchain doesn't have this previousBlock.
-            if (work == null) {
-                val storedVeriBlockBlock = blockStore.readBlock(veriBlockBlock.previousBlock)
-                    ?: //There is no such block.
-                    continue
-                work = storedVeriBlockBlock.work
-            }
-            val workOfCurrentBlock = work.add(BitcoinUtilities.decodeCompactBits(veriBlockBlock.difficulty.toLong()))
-            blockWorks[veriBlockBlock.hash.toString().substring(24)] = workOfCurrentBlock
-            val block = StoredVeriBlockBlock(
-                veriBlockBlock, workOfCurrentBlock, veriBlockBlock.hash
-            )
-            storedBlocks.add(block)
-        }
-        return storedBlocks
+        return activeChain.get(height)
     }
 
     fun getPeerQuery(): List<VeriBlockBlock> {
-        val blocks: MutableList<VeriBlockBlock> = ArrayList(16)
-        try {
-            var cursor = blockStore.getTip()
-
-            blocks.add(cursor.block)
-            // TODO 16 is too much for bigDb with current approach. It takes a lot of time. Try to get amount of blocks by height and process in memory.
-            // for (int i = 0; i < 16; i++) {
-            outer@
-            for (i in 0..4) {
-                val seek = cursor.block.height - 2.0.pow(i.toDouble()).toInt()
-                if (seek < 0) {
-                    break
-                }
-
-                while (cursor.block.height != seek) {
-                    cursor = blockStore.readBlock(cursor.block.previousBlock)
-                        ?: break@outer
-                }
-                blocks.add(cursor.block)
-            }
-        } catch (e: Exception) {
-            logger.error("Unable to build peer query", e)
-        }
-        blocks.add(genesisBlock)
-        return blocks
-    }
-
-    private fun remove(block: VeriBlockBlock) {
-        try {
-            // TODO: Update affected transactions
-        } catch (e: Exception) {
-            // TODO: Handle
-        }
-    }
-
-    private fun areBlocksSequential(blocks: List<VeriBlockBlock>): Boolean {
-        if (blocks.isEmpty()) {
-            return false
-        }
-        val hashes: MutableSet<String> = HashSet()
-        val firstHeight = blocks[0].height
-        for (veriBlockBlock in blocks) {
-            if (firstHeight < veriBlockBlock.height) {
-                if (!hashes.contains(veriBlockBlock.previousBlock.toString())) {
-                    return false
-                }
-            }
-            hashes.add(veriBlockBlock.hash.toString().substring(24))
-        }
-        return true
+        return activeChain.getLast(16).map { it.header }
     }
 }

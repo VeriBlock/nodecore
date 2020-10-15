@@ -25,15 +25,21 @@ class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscove
         val dnsResolver = DnsResolver()
         val dns = networkParameters.bootstrapDns
         val port = networkParameters.p2pPort
-        try {
-            peers.addAll(dnsResolver.query(dns).map {
-                logger.debug("Found peer ${it}:${port}")
-                NetworkAddress(it, port)
-            })
-        } catch (e: Exception) {
-            logger.error(e.message, e)
-            throw RuntimeException(e)
+        if(dns == null) {
+            logger.info { "Not doing DNS peer discovery, because bootstrapDns is null" }
+        } else {
+            logger.info { "Doing DNS peer discovery from $dns" }
+            try {
+                peers.addAll(dnsResolver.query(dns).map {
+                    logger.debug("Found peer ${it}:${port}")
+                    NetworkAddress(it, port)
+                })
+            } catch (e: Exception) {
+                logger.error(e.message, e)
+                throw RuntimeException(e)
+            }
         }
+
     }
 
     override fun getPeers(count: Int): Collection<NetworkAddress> {

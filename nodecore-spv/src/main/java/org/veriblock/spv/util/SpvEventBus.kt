@@ -23,7 +23,7 @@ object SpvEventBus {
 
     // Block Events
     val newBestBlockEvent = AsyncEvent<VeriBlockBlock>("New Best Block", Threading.LISTENER_THREAD)
-    val newBestBlockChannel = BroadcastChannel<VeriBlockBlock>(Channel.CONFLATED)
+    val newBlockChannel = BroadcastChannel<VeriBlockBlock>(Channel.CONFLATED)
     //val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", Threading.LISTENER_THREAD)
 }
 

@@ -255,7 +255,7 @@ class SecurityInheritingMonitor(
 
     private suspend fun submitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK Context for ${chain.name}")
-        val subscription = SpvEventBus.newBestBlockChannel.openSubscription()
+        val subscription = SpvEventBus.newBlockChannel.openSubscription()
         for (newBlock in subscription) {
             try {
                 val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
@@ -312,7 +312,7 @@ class SecurityInheritingMonitor(
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
                     " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
-                val newKeystone = SpvEventBus.newBestBlockChannel.asFlow().filter {
+                val newKeystone = SpvEventBus.newBlockChannel.asFlow().filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()
 

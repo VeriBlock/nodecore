@@ -34,7 +34,7 @@ open class VeriBlockBlock(
     val merkleRoot: Sha256Hash
     val timestamp: Int
     val difficulty: Int
-    val nonce: Long
+    var nonce: Long
 
     val raw: ByteArray
         get() = SerializeDeserializeService.serializeHeaders(this)
