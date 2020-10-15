@@ -2,6 +2,7 @@
 
 	<properties>
 		<property name="appName" value="apm" />
+		<property name="logPath" value="${env:APM_LOG_PATH:-logs}" />
 		<property name="logLevel" value="${env:APM_LOG_LEVEL:-DEBUG}" />
 		<property name="consoleLogLevel" value="${env:APM_CONSOLE_LOG_LEVEL:-INFO}" />
 		<property name="enableJsonLog" value="${env:APM_ENABLE_JSON_LOG:-false}" />
@@ -14,14 +15,14 @@
 			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %style{%-10.-10thread}{bright,white} %highlight{%-5level}{INFO=blue} %style{%-25.-25logger{0}}{bright,black} - %msg%n"/>
 		</shell>
 
-		<rollingFile name="fileAppender" fileName="logs/${appName}.log" filePattern="logs/${appName}.%d{yyyy-MM-dd}.%i.log">
+		<rollingFile name="fileAppender" fileName="${logPath}/${appName}.log" filePattern="${logPath}/${appName}.%d{yyyy-MM-dd}.%i.log">
 			<policies>
 				<sizeBasedTriggeringPolicy size="20MB" />
 			</policies>
 			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
 		</rollingFile>
 
-		<file name="jsonFileAppender" fileName="logs/${appName}.json" append="false" createOnDemand="true">
+		<file name="jsonFileAppender" fileName="${logPath}/${appName}.json" append="false" createOnDemand="true">
 			<jsonLayout complete="true" compact="true" eventEol="true" />
 		</file>
 
@@ -32,12 +33,12 @@
 			</routes>
 		</routing>
 
-		<file name="errorFileAppender" fileName="logs/${appName}-error.log">
+		<file name="errorFileAppender" fileName="${logPath}/${appName}-error.log">
 			<thresholdFilter level="ERROR" />
 			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
 		</file>
 
-		<rollingFile name="altchainHttpCallsFileAppender" fileName="logs/altchain-http-calls.log" filePattern="logs/altchain-http-calls.%d{yyyy-MM-dd}.%i.log">
+		<rollingFile name="altchainHttpCallsFileAppender" fileName="${logPath}/altchain-http-calls.log" filePattern="${logPath}/altchain-http-calls.%d{yyyy-MM-dd}.%i.log">
 			<policies>
 				<sizeBasedTriggeringPolicy size="50MB" />
 			</policies>
