@@ -8,7 +8,6 @@ import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.service.BlockStore
 import org.veriblock.spv.service.Blockchain
-import org.veriblock.spv.service.asStateful
 
 class BlockchainTest {
     val regtest = getDefaultNetworkParameters("regtest")
@@ -19,7 +18,7 @@ class BlockchainTest {
 
     val tmpDir = createTempDir()
     val blockStore = BlockStore(regtest, tmpDir)
-    val blockchain = Blockchain(blockStore)
+    val blockchain = Blockchain(regtest, blockStore)
 
     fun generateBlock(prev: VeriBlockBlock) = vbkBlockGenerator(prev, regtest) {
         // return previous block header

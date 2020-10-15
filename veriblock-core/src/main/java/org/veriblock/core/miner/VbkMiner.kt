@@ -8,7 +8,6 @@ import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -20,6 +19,7 @@ fun getNextWorkRequired(
     context: List<VeriBlockBlock>
 ): Int {
     assert(context[context.size - 1] == prev)
+    assert(context.size <= 100)
 
     return BitcoinUtilities.encodeCompactBits(
         VeriBlockDifficultyCalculator.calculate(networkParams, prev, context)
@@ -54,7 +54,6 @@ fun getBlockTemplate(
     merkleRoot: Sha256Hash,
     networkParams: NetworkParameters,
     context: List<VeriBlockBlock>,
-    // a function which returns direct ancestor of `block` at `height` or null if no ancestor at that height
     getPreviousBlock: (block: VeriBlockBlock) -> VeriBlockBlock?
 ): VeriBlockBlock {
     val version = prev.version
@@ -136,6 +135,7 @@ fun mineVbkChain(
     return vbkBlockGenerator(prev, networkParams, getPreviousBlock).take(size).toList()
 }
 
+// yielding generator which generates blocks
 fun vbkBlockGenerator(
     prev: VeriBlockBlock,
     networkParams: NetworkParameters,

@@ -89,7 +89,7 @@ class SpvContext {
             filePrefix = filePr
             blockStore = BlockStore(networkParameters, directory)
             transactionPool = TransactionPool()
-            blockchain = Blockchain(blockStore)
+            blockchain = Blockchain(networkParam, blockStore)
             pendingTransactionContainer = PendingTransactionContainer()
             p2PService = P2PService(pendingTransactionContainer, networkParameters)
             addressManager = AddressManager()

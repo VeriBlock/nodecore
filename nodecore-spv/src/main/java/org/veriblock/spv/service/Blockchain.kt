@@ -9,6 +9,9 @@ package org.veriblock.spv.service
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.miner.getMiningContext
+import org.veriblock.core.miner.getNextWorkRequired
+import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -18,6 +21,7 @@ import org.veriblock.spv.util.SpvEventBus
 private val logger = createLogger {}
 
 class Blockchain(
+    private val networkParameters: NetworkParameters,
     private val blockStore: BlockStore
 ) {
     val activeChain = TruncatedChain(blockStore)
@@ -55,7 +59,15 @@ class Blockchain(
             hash = block.hash
         )
 
-        // TODO: contextually check block: get difficulty, get median time past, get keystones
+        val ctx = getMiningContext(prev.header, 100) {
+            blockStore.readBlock(it.previousBlock)?.header
+        }
+        if(getNextWorkRequired(prev.header, networkParameters, ctx) != block.difficulty) {
+            // bad difficulty
+            return false
+        }
+
+        // TODO: contextually check block: validate median time past, validate keystones
 
         // write block on disk
         blockStore.writeBlock(stored)
