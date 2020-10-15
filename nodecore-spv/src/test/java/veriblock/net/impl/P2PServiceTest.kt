@@ -6,6 +6,7 @@ import io.mockk.verify
 import nodecore.api.grpc.VeriBlockMessages
 import org.junit.Before
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
@@ -26,6 +27,7 @@ class P2PServiceTest {
 
     @Before
     fun setUp() {
+        Context.set(defaultTestNetParameters)
         spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
         pendingTransactionContainer = mockk(relaxed = true)
         peer = mockk(relaxed = true)

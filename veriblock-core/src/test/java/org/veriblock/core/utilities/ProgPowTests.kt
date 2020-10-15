@@ -16,6 +16,7 @@ class ProgPowTests {
 
     @Test
     fun testProgPowHash() {
+        Context.create(defaultTestNetParameters)
         Security.addProvider(BouncyCastleProvider())
         val headerHex = "000D532B00020F2F1A55A6523A39EB7DC08CFD0B88C6E6AC5C79FB12D2F9E527B45D57FE18D30532FB0694DFA136EAAA2594D31F5F6608FB04257C501003A12C2C"
         val header = headerHex.asHexBytes()

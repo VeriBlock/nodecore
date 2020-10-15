@@ -4,6 +4,7 @@ import io.mockk.mockk
 import junit.framework.TestCase
 import org.junit.Assert
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
@@ -19,6 +20,7 @@ class TransactionServiceTest : TestCase() {
     private val spvContext = SpvContext()
 
     public override fun setUp() {
+        Context.set(defaultTestNetParameters)
         spvContext.init(defaultTestNetParameters, LocalhostDiscovery(defaultTestNetParameters))
     }
 
