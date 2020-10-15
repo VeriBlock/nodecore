@@ -85,3 +85,4 @@ commit.bat
 .scannerwork
 .idea
 *.db
+*.txmon

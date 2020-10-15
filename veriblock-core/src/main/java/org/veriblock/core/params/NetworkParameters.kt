@@ -23,7 +23,8 @@ class NetworkConfig(
     var certificateChainPath: String? = null,
     var isSsl: Boolean = false,
     var adminPassword: String? = null,
-    var bitcoinOriginBlock: BitcoinOriginBlockConfig? = null
+    var bitcoinOriginBlock: BitcoinOriginBlockConfig? = null,
+    var progPowForkHeight: Int? = null
 )
 
 class BitcoinOriginBlockConfig(
@@ -105,7 +106,10 @@ class NetworkParameters(
         minimumDifficulty = template.minimumDifficulty
         powNoRetargeting = template.powNoRetargeting
         blockTimeSeconds = template.blocktimeSeconds
-        progPowForkHeight = template.progPowForkHeight
+        progPowForkHeight = when (config.network.toLowerCase()) {
+            "regtest" -> config.progPowForkHeight ?: template.progPowForkHeight
+            else -> template.progPowForkHeight
+        }
         progPowStartTimeEpoch = template.progPowStartTimeEpoch
     }
 
