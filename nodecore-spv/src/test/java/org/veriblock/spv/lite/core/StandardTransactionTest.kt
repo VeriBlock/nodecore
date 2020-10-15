@@ -31,7 +31,6 @@ class StandardTransactionTest {
         Context.create(defaultMainNetParameters)
         spvContext.init(
             SpvConfig(
-                network = "mainnet",
                 useLocalNode = true
             )
         )
