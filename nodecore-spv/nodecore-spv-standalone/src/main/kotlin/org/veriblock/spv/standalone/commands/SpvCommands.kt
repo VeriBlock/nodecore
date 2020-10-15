@@ -15,9 +15,9 @@ import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
-import veriblock.SpvContext
-import veriblock.model.Output
-import veriblock.model.asLightAddress
+import org.veriblock.spv.SpvContext
+import org.veriblock.spv.model.Output
+import org.veriblock.spv.model.asLightAddress
 
 fun CommandFactory.spvCommands(
     context: SpvContext

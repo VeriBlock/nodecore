@@ -13,7 +13,7 @@ import nodecore.api.grpc.AdminRpcConfiguration
 import nodecore.api.grpc.utilities.ChannelBuilder
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.lite.net.impl.GatewayStrategyGrpcImpl
-import veriblock.SpvContext
+import org.veriblock.spv.SpvContext
 
 fun createFullNode(networkParameters: NetworkParameters): GatewayStrategy {
     val rpcConfiguration = configure(networkParameters)

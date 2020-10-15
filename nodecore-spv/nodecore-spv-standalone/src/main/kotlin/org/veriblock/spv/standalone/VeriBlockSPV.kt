@@ -25,9 +25,9 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import org.veriblock.spv.standalone.commands.spvCommands
 import org.veriblock.spv.standalone.commands.standardCommands
-import veriblock.SpvConfig
-import veriblock.SpvContext
-import veriblock.model.DownloadStatus
+import org.veriblock.spv.SpvConfig
+import org.veriblock.spv.SpvContext
+import org.veriblock.spv.model.DownloadStatus
 import java.security.Security
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess

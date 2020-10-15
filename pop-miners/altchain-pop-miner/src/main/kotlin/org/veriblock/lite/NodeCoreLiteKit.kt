@@ -21,9 +21,9 @@ import org.veriblock.lite.transactionmonitor.TransactionMonitor
 import org.veriblock.lite.transactionmonitor.loadTransactionMonitor
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.sdk.models.Address
-import veriblock.SpvConfig
-import veriblock.SpvContext
-import veriblock.model.DownloadStatusResponse
+import org.veriblock.spv.SpvConfig
+import org.veriblock.spv.SpvContext
+import org.veriblock.spv.model.DownloadStatusResponse
 import java.io.File
 import java.io.IOException
 

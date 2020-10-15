@@ -22,7 +22,7 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
-import veriblock.util.SpvEventBus
+import org.veriblock.spv.util.SpvEventBus
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

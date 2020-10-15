@@ -28,7 +28,7 @@ import org.veriblock.shell.CommandFactory;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
-import veriblock.SpvContext;
+import org.veriblock.spv.SpvContext;
 
 import javax.net.ssl.SSLException;
 import java.util.Set;

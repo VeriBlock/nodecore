@@ -25,11 +25,11 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
-import veriblock.model.StandardAddress
-import veriblock.model.StandardTransaction
-import veriblock.service.NetworkState
-import veriblock.service.SpvService
-import veriblock.service.TransactionInfo
+import org.veriblock.spv.model.StandardAddress
+import org.veriblock.spv.model.StandardTransaction
+import org.veriblock.spv.service.NetworkState
+import org.veriblock.spv.service.SpvService
+import org.veriblock.spv.service.TransactionInfo
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.math.abs

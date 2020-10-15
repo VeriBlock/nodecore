@@ -27,7 +27,7 @@ import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
-import veriblock.model.StandardTransaction
+import org.veriblock.spv.model.StandardTransaction
 
 private val logger = createLogger {}
 

@@ -28,7 +28,7 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.getSynchronizedMessage
-import veriblock.util.SpvEventBus
+import org.veriblock.spv.util.SpvEventBus
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 

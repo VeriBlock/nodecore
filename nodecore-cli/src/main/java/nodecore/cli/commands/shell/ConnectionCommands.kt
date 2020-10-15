@@ -11,9 +11,9 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
-import veriblock.net.BootstrapPeerDiscovery
-import veriblock.net.LocalhostDiscovery
-import veriblock.net.PeerDiscovery
+import org.veriblock.spv.net.BootstrapPeerDiscovery
+import org.veriblock.spv.net.LocalhostDiscovery
+import org.veriblock.spv.net.PeerDiscovery
 import java.awt.GraphicsEnvironment
 
 fun CommandFactory.connectionCommands() {
