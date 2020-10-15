@@ -28,8 +28,13 @@ class StandardTransactionTest {
         if (dbFile.exists()) {
             dbFile.delete()
         }
-        Context.set(defaultMainNetParameters)
-        spvContext.init(SpvConfig(useLocalNode = true))
+        Context.create(defaultMainNetParameters)
+        spvContext.init(
+            SpvConfig(
+                network = "mainnet",
+                useLocalNode = true
+            )
+        )
     }
 
     @Test
