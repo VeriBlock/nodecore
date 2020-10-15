@@ -171,7 +171,7 @@ class BlockStore(
             val blockCount = file.readInt()
             file.seek(0)
             file.writeInt(blockCount + blocks.size)
-            file.seek(blockCount.toLong() * (VBlakeHash.VERIBLOCK_LENGTH + 8))
+            file.seek(4 + VBlakeHash.VERIBLOCK_LENGTH + blockCount.toLong() * (VBlakeHash.VERIBLOCK_LENGTH + 8))
             var cumulativeFilePosition = blockFilePosition
             for (block in blocks) {
                 index.fileIndex[block.hash] = cumulativeFilePosition

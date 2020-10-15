@@ -139,7 +139,9 @@ class SpvContext {
     }
 
     fun shutdown() {
-        peerTable.shutdown()
+        if (::peerTable.isInitialized) {
+            peerTable.shutdown()
+        }
     }
 }
 
