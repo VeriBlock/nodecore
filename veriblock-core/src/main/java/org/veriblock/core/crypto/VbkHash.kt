@@ -108,3 +108,20 @@ fun ByteArray.asAnyVbkHash(): AnyVbkHash = when (size) {
 }
 
 fun String.asAnyVbkHash(): AnyVbkHash = asHexBytes().asAnyVbkHash()
+
+// TODO: Delete me after it is no longer used
+object VbkHashUtil {
+    @JvmStatic
+    fun wrap(bytes: ByteArray): VbkHash = VbkHash(bytes)
+    @JvmStatic
+    fun wrapPreviousBlockHash(bytes: ByteArray): PreviousBlockVbkHash = PreviousBlockVbkHash(bytes)
+    @JvmStatic
+    fun wrapPreviousKeystoneHash(bytes: ByteArray): PreviousKeystoneVbkHash = PreviousKeystoneVbkHash(bytes)
+
+    @JvmStatic
+    fun wrap(hex: String): VbkHash = wrap(hex.asHexBytes())
+    @JvmStatic
+    fun wrapPreviousBlockHash(hex: String): PreviousBlockVbkHash = wrapPreviousBlockHash(hex.asHexBytes())
+    @JvmStatic
+    fun wrapPreviousKeystoneHash(hex: String): PreviousKeystoneVbkHash = wrapPreviousKeystoneHash(hex.asHexBytes())
+}
