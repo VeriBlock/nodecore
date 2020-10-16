@@ -3,10 +3,11 @@ package org.veriblock.spv.service
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
-import org.veriblock.core.crypto.VBK_EMPTY_HASH
 import org.veriblock.core.crypto.VBK_HASH_LENGTH
+import org.veriblock.core.crypto.VBK_PREVIOUS_BLOCK_HASH_LENGTH
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
+import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.*
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
@@ -25,7 +26,7 @@ class BlockStore(
     baseDir: File
 ) {
     private val lock = ReentrantLock()
-    private val blocksCache = LRUCache<VBlakeHash, StoredVeriBlockBlock>(VBK_MAX_REORG_DISTANCE + 1)
+    private val blocksCache = LRUCache<PreviousBlockVbkHash, StoredVeriBlockBlock>(VBK_MAX_REORG_DISTANCE + 1)
 
     private val indexFile = File(baseDir, "$networkParameters-block-index.db")
     private val blocksFile = File(baseDir, "$networkParameters-blocks.db")
@@ -65,9 +66,9 @@ class BlockStore(
             writeBlockBody(file, genesisBlock)
         }
         RandomAccessFile(indexFile, "rw").use {
+            it.write(genesisBlock.hash.trimToPreviousBlockSize().bytes)
             it.writeInt(1)
-            it.write(genesisBlock.hash.bytes)
-            it.write(genesisBlock.hash.bytes)
+            it.write(genesisBlock.hash.trimToPreviousBlockSize().bytes)
             it.writeLong(0L)
         }
         return BlockIndex(genesisBlock, mutableMapOf(genesisBlock.hash.trimToPreviousBlockSize() to 0L))
@@ -90,8 +91,8 @@ class BlockStore(
     fun setTip(tip: StoredVeriBlockBlock) = lock.withLock {
         index.tip = tip
         RandomAccessFile(indexFile, "rw").use { file ->
-            file.seek(4)
-            file.write(tip.hash.bytes)
+            file.seek(0)
+            file.write(tip.hash.trimToPreviousBlockSize().bytes)
         }
     }
 
@@ -148,11 +149,15 @@ class BlockStore(
 
         index.fileIndex[smallHash] = blockFilePosition
         RandomAccessFile(indexFile, "rw").use { file ->
+            // Read current count
+            file.seek(VBK_PREVIOUS_BLOCK_HASH_LENGTH.toLong())
             val blockCount = file.readInt()
-            file.seek(0)
+            // Write current count
+            file.seek(VBK_PREVIOUS_BLOCK_HASH_LENGTH.toLong())
             file.writeInt(blockCount + 1)
-            file.seek(file.length())
-            file.write(block.hash.bytes)
+            // Write block index
+            file.seek(4 + VBK_PREVIOUS_BLOCK_HASH_LENGTH + blockCount.toLong() * (VBK_PREVIOUS_BLOCK_HASH_LENGTH + 8))
+            file.write(smallHash.bytes)
             file.writeLong(blockFilePosition)
         }
 
@@ -171,15 +176,19 @@ class BlockStore(
         }
 
         RandomAccessFile(indexFile, "rw").use { file ->
+            // Read current count
+            file.seek(VBK_PREVIOUS_BLOCK_HASH_LENGTH.toLong())
             val blockCount = file.readInt()
-            file.seek(0)
+            // Write current count
+            file.seek(VBK_PREVIOUS_BLOCK_HASH_LENGTH.toLong())
             file.writeInt(blockCount + blocks.size)
-            file.seek(4 + VBK_HASH_LENGTH + blockCount.toLong() * (VBK_HASH_LENGTH + 8))
+            // Write indices
+            file.seek(4 + VBK_PREVIOUS_BLOCK_HASH_LENGTH + blockCount.toLong() * (VBK_PREVIOUS_BLOCK_HASH_LENGTH + 8))
             var cumulativeFilePosition = blockFilePosition
             for (block in blocks) {
                 val smallHash = block.hash.trimToPreviousBlockSize()
                 index.fileIndex[smallHash] = cumulativeFilePosition
-                file.write(block.hash.bytes)
+                file.write(smallHash.bytes)
                 file.writeLong(cumulativeFilePosition)
                 cumulativeFilePosition += 4 + VBK_HASH_LENGTH + StoredVeriBlockBlock.CHAIN_WORK_BYTES + block.header.raw.size
             }
@@ -187,23 +196,22 @@ class BlockStore(
     }
 
     private fun readIndex(): BlockIndex = RandomAccessFile(indexFile, "r").use { file ->
-        val count = file.readInt()
-        val tipHash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
+        val tipHash = ByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH)
         file.read(tipHash)
-        val tip = VBlakeHash.wrap(tipHash)
+        val tip = tipHash.asVbkPreviousBlockHash()
 
+        val count = file.readInt()
         val fileIndex = try {
             (0 until count).associate {
-                val hash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
+                val hash = ByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH)
                 file.read(hash)
-                VBlakeHash.wrap(hash) to file.readLong()
+                hash.asVbkPreviousBlockHash() to file.readLong()
             }.toMutableMap()
         } catch (e: IOException) {
             logger.debugWarn(e) { "Error while loading blockchain index file. Redownloading blockchain from scratch..." }
             return createGenesisIndex()
         }
-        val tipSmallHash = tip.trimToPreviousBlockSize()
-        val tipFileIndex = fileIndex[tipSmallHash] ?: run {
+        val tipFileIndex = fileIndex[tip] ?: run {
             logger.warn { "Invalid blockchain tip! Redownloading blockchain from scratch..." }
             return createGenesisIndex()
         }

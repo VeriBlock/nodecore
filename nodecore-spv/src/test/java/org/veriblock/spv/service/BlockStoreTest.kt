@@ -4,8 +4,16 @@ import io.kotest.matchers.shouldBe
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.*
 import org.veriblock.core.Context
+import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VBK_HASH_LENGTH
+import org.veriblock.core.crypto.VBK_PREVIOUS_BLOCK_HASH_LENGTH
+import org.veriblock.core.crypto.VBK_PREVIOUS_KEYSTONE_HASH_LENGTH
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asVbkHash
+import org.veriblock.core.crypto.asVbkPreviousBlockHash
+import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
 import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -46,7 +54,7 @@ class BlockStoreTest {
             StoredVeriBlockBlock(
                 randomVeriBlockBlock(height = it),
                 BigInteger.ONE,
-                randomVBlakeHash()
+                randomVbkHash()
             )
         }
         // When
@@ -63,7 +71,7 @@ class BlockStoreTest {
         val storedVeriBlockBlock = StoredVeriBlockBlock(
             randomVeriBlockBlock(),
             BigInteger.ONE,
-            randomVBlakeHash()
+            randomVbkHash()
         )
         // When
         blockStore.writeBlock(storedVeriBlockBlock)
@@ -77,7 +85,7 @@ class BlockStoreTest {
         val storedVeriBlockBlock = StoredVeriBlockBlock(
             randomVeriBlockBlock(),
             BigInteger.ONE,
-            randomVBlakeHash()
+            randomVbkHash()
         )
         // When
         blockStore.setTip(storedVeriBlockBlock)
@@ -91,12 +99,12 @@ class BlockStoreTest {
         val storedVeriBlockBlock = StoredVeriBlockBlock(
             randomVeriBlockBlock(),
             BigInteger.ONE,
-            randomVBlakeHash()
+            randomVbkHash()
         )
         // When
         blockStore.writeBlock(storedVeriBlockBlock)
         // Then
-        blockStore.readBlock(randomVBlakeHash()) shouldBe null
+        blockStore.readBlock(randomVbkHash()) shouldBe null
     }
 
     @Ignore
@@ -107,7 +115,7 @@ class BlockStoreTest {
             StoredVeriBlockBlock(
                 randomVeriBlockBlock(height = it),
                 BigInteger.ONE,
-                randomVBlakeHash()
+                randomVbkHash()
             )
         }
         blockStore.writeBlocks(storedVeriBlockBlocks)
@@ -126,18 +134,21 @@ private fun randomInt(bound: Int) = Random.nextInt(bound)
 private fun randomInt(min: Int, max: Int) = Random.nextInt(max - min) + min
 private fun randomLong(min: Long, max: Long) = (Random.nextDouble() * (max - min)).toLong() + min
 private fun randomAlphabeticString(length: Int = 10): String = RandomStringUtils.randomAlphabetic(length)
-private fun randomVBlakeHash(): VBlakeHash = VBlakeHash.wrap(randomByteArray(VBlakeHash.VERIBLOCK_LENGTH))
+private fun randomVbkHash(): VbkHash = randomByteArray(VBK_HASH_LENGTH).asVbkHash()
+private fun randomPreviousBlockVbkHash(): PreviousBlockVbkHash = randomByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH).asVbkPreviousBlockHash()
+private fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash = randomByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH).asVbkPreviousKeystoneHash()
 private fun randomSha256Hash(): Sha256Hash = Sha256Hash.wrap(messageDigest.digest(randomAlphabeticString().toByteArray()))
 private fun randomVeriBlockBlock(
     height: Int = randomInt(1, 65535),
     version: Short = randomInt(1, Short.MAX_VALUE.toInt()).toShort(),
-    previousBlock: VBlakeHash = randomVBlakeHash(),
-    previousKeystone: VBlakeHash = randomVBlakeHash(),
-    secondPreviousKeystone: VBlakeHash = randomVBlakeHash(),
+    previousBlock: PreviousBlockVbkHash = randomPreviousBlockVbkHash(),
+    previousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
+    secondPreviousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
     merkleRoot: Sha256Hash = randomSha256Hash(),
     timestamp: Int = randomInt(1, 65535),
     difficulty: Int = randomInt(1, 65535),
-    nonce: Long = randomLong(1, 35535)
+    nonce: Long = randomLong(1, 35535),
+    precomputedHash: VbkHash = randomVbkHash()
 ): VeriBlockBlock {
     return VeriBlockBlock(
         height,
@@ -148,6 +159,7 @@ private fun randomVeriBlockBlock(
         merkleRoot,
         timestamp,
         difficulty,
-        nonce
+        nonce,
+        precomputedHash
     )
 }

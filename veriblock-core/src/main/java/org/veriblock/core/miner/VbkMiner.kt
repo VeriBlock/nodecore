@@ -2,7 +2,7 @@ package org.veriblock.core.miner
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VBK_EMPTY_HASH
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -80,7 +80,7 @@ fun getBlockTemplate(
     val timestamp = max(prev.timestamp, System.currentTimeMillis().toInt())
     val difficulty = getNextWorkRequired(prev, networkParams, context)
 
-    val zeroKeystone = VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize()
+    val zeroKeystone = VBK_EMPTY_HASH.trimToPreviousKeystoneSize()
 
     return VeriBlockBlock(
         height = height,
