@@ -199,7 +199,6 @@ class BlockStore(
             }.toMutableMap()
         } catch (e: IOException) {
             logger.debugWarn(e) { "Error while loading blockchain index file. Redownloading blockchain from scratch..." }
-            e.printStackTrace()
             return createGenesisIndex()
         }
         val tipFileIndex = fileIndex[tip.trimToPreviousBlockSize()] ?: run {
