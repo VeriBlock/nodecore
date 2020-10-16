@@ -29,7 +29,11 @@ class StandardTransactionTest {
             dbFile.delete()
         }
         Context.set(defaultMainNetParameters)
-        spvContext.init(SpvConfig(useLocalNode = true))
+        spvContext.init(
+            SpvConfig(
+                useLocalNode = true
+            )
+        )
     }
 
     @Test

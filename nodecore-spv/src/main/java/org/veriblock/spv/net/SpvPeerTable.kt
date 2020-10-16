@@ -122,10 +122,11 @@ class SpvPeerTable(
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
-
-        coroutineScope.launchWithFixedDelay(5_000L, 40_000L) {
+        SpvEventBus.newBestBlockEvent.register(this) {
+            // request new address state only if best block changes
             requestAddressState()
         }
+
         coroutineScope.launchWithFixedDelay(200L, 20_000L) {
             discoverPeers()
         }
@@ -187,9 +188,11 @@ class SpvPeerTable(
     }
 
     fun acknowledgeAddress(address: AddressPubKey) {
-        addressesState.putIfAbsent(address.hash, LedgerContext(
+        addressesState.putIfAbsent(
+            address.hash, LedgerContext(
             null, null, null, null
-        ))
+        )
+        )
     }
 
     private suspend fun requestAddressState() {
@@ -301,11 +304,13 @@ class SpvPeerTable(
                         if (downloadPeer == null && veriBlockBlocks.last().height > 0) {
                             startBlockchainDownload(sender)
                         }
-                        try {
-                            blockchain.addAll(veriBlockBlocks)
-                        } catch (e: SQLException) {
-                            logger.error("Unable to add block to blockchain", e)
-                        }
+
+                        val allBlocksAccepted = veriBlockBlocks
+                            .sortedBy { it.height }
+                            .all { blockchain.acceptBlock(it) }
+
+                        // TODO(warchant): if allBlocksAccepted == false here, block can not be connected or invalid
+                        // maybe ban peer? for now, do nothing
                     }
                     ResultsCase.TRANSACTION -> {
                         // TODO: Different Transaction types

@@ -35,7 +35,8 @@ object VeriBlockDifficultyCalculator {
         var t: Long = 0
         var j: Long = 0
         val contextToCheck = if (context.size > N) {
-            context.subList(0, N)
+            // take last N elements
+            context.subList(context.size - N, context.size)
         } else {
             context
         }
@@ -51,14 +52,14 @@ object VeriBlockDifficultyCalculator {
             sumTarget = sumTarget.add(BigDecimal(BitcoinUtilities.decodeCompactBits(contextToCheck[i].difficulty.toLong())))
         }
         sumTarget = sumTarget.divide(BigDecimal.valueOf(N - 1.toLong()), 8, RoundingMode.HALF_UP)
-        if (t < K.divide(BigInteger.valueOf(10)).intValueExact()) {
-            t = K.divide(BigInteger.valueOf(10)).intValueExact().toLong()
+        if (t < K.toLong() / 10) {
+            t = K.toLong() / 10
         }
         val nextTarget = (sumTarget * (
             K.toBigDecimal().divide(t.toBigDecimal(), 8, RoundingMode.HALF_UP))
-        ).toBigInteger()
+            ).toBigInteger()
         return if (nextTarget < networkParameters.minimumDifficulty) {
-            networkParameters.minimumDifficulty
+            networkParameters.minimumDifficulty + BigInteger.valueOf(500000L)
         } else {
             nextTarget
         }

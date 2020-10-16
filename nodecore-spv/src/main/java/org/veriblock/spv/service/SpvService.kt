@@ -7,7 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.service
 
-import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
@@ -27,9 +26,9 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -346,9 +345,9 @@ class SpvService(
     }
 
     fun getLastVBKBlockHeader(): BlockHeader {
-        val block = blockchain.getChainHead()
+        val block: StoredVeriBlockBlock = blockchain.getChainHead()
         return BlockHeader(
-            SerializeDeserializeService.serializeHeaders(block),
+            SerializeDeserializeService.serializeHeaders(block.header),
             block.hash.bytes
         )
     }
@@ -357,7 +356,7 @@ class SpvService(
         val block = blockchain.get(hash)
             ?: return null
         return BlockHeader(
-            SerializeDeserializeService.serializeHeaders(block.block),
+            SerializeDeserializeService.serializeHeaders(block.header),
             block.hash.bytes
         )
     }
@@ -367,7 +366,7 @@ class SpvService(
             ?: return null
         return BlockHeader(
             block.hash.bytes,
-            SerializeDeserializeService.serializeHeaders(block.block)
+            SerializeDeserializeService.serializeHeaders(block.header)
         )
     }
 
