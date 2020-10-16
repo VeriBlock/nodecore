@@ -59,13 +59,14 @@ class Blockchain(
             hash = block.hash
         )
 
-        val ctx = getMiningContext(prev.header, 100) {
-            blockStore.readBlock(it.previousBlock)?.header
-        }
-        if(getNextWorkRequired(prev.header, networkParameters, ctx) != block.difficulty) {
-            // bad difficulty
-            return false
-        }
+//        val ctx = getMiningContext(prev.header, 100) {
+//            blockStore.readBlock(it.previousBlock)?.header
+//        }
+        // TODO: test this algo against real data
+//        if(getNextWorkRequired(prev.header, networkParameters, ctx) != block.difficulty) {
+//            // bad difficulty
+//            return false
+//        }
 
         // TODO: contextually check block: validate median time past, validate keystones
 
