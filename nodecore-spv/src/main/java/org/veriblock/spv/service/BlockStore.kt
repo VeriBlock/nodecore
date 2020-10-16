@@ -1,7 +1,12 @@
 package org.veriblock.spv.service
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.VBK_EMPTY_HASH
+import org.veriblock.core.crypto.VBK_HASH_LENGTH
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.*
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
@@ -34,7 +39,7 @@ class BlockStore(
 
     class BlockIndex(
         var tip: StoredVeriBlockBlock,
-        val fileIndex: MutableMap<VBlakeHash, Long>
+        val fileIndex: MutableMap<PreviousBlockVbkHash, Long>
     )
 
     val index = initializeIndex()
@@ -68,7 +73,7 @@ class BlockStore(
         return BlockIndex(genesisBlock, mutableMapOf(genesisBlock.hash.trimToPreviousBlockSize() to 0L))
     }
 
-    fun readChainWithTip(hash: VBlakeHash, size: Int): ArrayList<StoredVeriBlockBlock> {
+    fun readChainWithTip(hash: VbkHash, size: Int): ArrayList<StoredVeriBlockBlock> {
         val ret = ArrayList<StoredVeriBlockBlock>()
         var i = 0
         var cursor = readBlock(hash)
@@ -90,10 +95,10 @@ class BlockStore(
         }
     }
 
-    private fun getFileIndex(hash: VBlakeHash) =
+    private fun getFileIndex(hash: AnyVbkHash) =
         index.fileIndex[hash.trimToPreviousBlockSize()]
 
-    fun readBlock(hash: VBlakeHash): StoredVeriBlockBlock? {
+    fun readBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
         val shortHash = hash.trimToPreviousBlockSize()
         val entry = blocksCache[shortHash]
         if (entry != null) {
@@ -108,7 +113,7 @@ class BlockStore(
         return block
     }
 
-    fun exists(hash: VBlakeHash): Boolean {
+    fun exists(hash: AnyVbkHash): Boolean {
         return getFileIndex(hash) != null
     }
 
@@ -116,14 +121,14 @@ class BlockStore(
         return RandomAccessFile(blocksFile, "r").use { file ->
             file.seek(filePosition)
             val blockHeight = file.readInt()
-            val blockHash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
+            val blockHash = ByteArray(VBK_HASH_LENGTH)
             file.read(blockHash)
             val workBytes = ByteArray(StoredVeriBlockBlock.CHAIN_WORK_BYTES)
             file.read(workBytes)
             val work = BigInteger(1, workBytes)
             val blockHeader = ByteArray(BlockUtility.getBlockHeaderLength(blockHeight))
             file.read(blockHeader)
-            val fullHash = VBlakeHash.wrap(blockHash)
+            val fullHash = blockHash.asVbkHash()
             StoredVeriBlockBlock(
                 SerializeDeserializeService.parseVeriBlockBlock(blockHeader, fullHash),
                 work,
@@ -169,14 +174,14 @@ class BlockStore(
             val blockCount = file.readInt()
             file.seek(0)
             file.writeInt(blockCount + blocks.size)
-            file.seek(4 + VBlakeHash.VERIBLOCK_LENGTH + blockCount.toLong() * (VBlakeHash.VERIBLOCK_LENGTH + 8))
+            file.seek(4 + VBK_HASH_LENGTH + blockCount.toLong() * (VBK_HASH_LENGTH + 8))
             var cumulativeFilePosition = blockFilePosition
             for (block in blocks) {
                 val smallHash = block.hash.trimToPreviousBlockSize()
                 index.fileIndex[smallHash] = cumulativeFilePosition
                 file.write(block.hash.bytes)
                 file.writeLong(cumulativeFilePosition)
-                cumulativeFilePosition += 4 + VBlakeHash.VERIBLOCK_LENGTH + StoredVeriBlockBlock.CHAIN_WORK_BYTES + block.header.raw.size
+                cumulativeFilePosition += 4 + VBK_HASH_LENGTH + StoredVeriBlockBlock.CHAIN_WORK_BYTES + block.header.raw.size
             }
         }
     }

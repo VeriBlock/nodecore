@@ -10,9 +10,10 @@ package org.veriblock.spv.lite.core
 import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.Context
+import org.veriblock.core.crypto.VBlake
 import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.params.defaultTestNetParameters
+import org.veriblock.core.utilities.extensions.toHex
 
 class VBlakeHashTests {
 
@@ -30,7 +31,7 @@ class VBlakeHashTests {
             50431648,
             53011
         )
-        val hash = VBlakeHash.hash(header)
-        Assert.assertEquals("000060CB002FB9F2A1F6CAB0662FE96521138AD1FF6ABB89", hash.toString())
+        val hash = VBlake.hash(header).toHex()
+        Assert.assertEquals("000060CB002FB9F2A1F6CAB0662FE96521138AD1FF6ABB89", hash)
     }
 }

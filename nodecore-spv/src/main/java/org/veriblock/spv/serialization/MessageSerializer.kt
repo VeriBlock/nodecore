@@ -14,11 +14,13 @@ import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
+import nodecore.api.grpc.utilities.extensions.asVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -35,7 +37,7 @@ private val logger = createLogger {}
 object MessageSerializer {
     fun deserialize(blockHeaderMessage: VeriBlockMessages.BlockHeader, trustHash: Boolean = false): VeriBlockBlock {
         return if (trustHash) {
-            SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray(), VBlakeHash.wrap(blockHeaderMessage.hash.toByteArray()))
+            SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray(), blockHeaderMessage.hash.toByteArray().asVbkHash())
         } else {
             SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray())
         }
@@ -79,9 +81,9 @@ object MessageSerializer {
         val block = FullBlock(
             blockMessage.number,
             blockMessage.version.toShort(),
-            VBlakeHash.wrap(ByteStringUtility.byteStringToHex(blockMessage.previousHash)),
-            VBlakeHash.wrap(ByteStringUtility.byteStringToHex(blockMessage.secondPreviousHash)),
-            VBlakeHash.wrap(ByteStringUtility.byteStringToHex(blockMessage.thirdPreviousHash)),
+            blockMessage.previousHash.asVbkPreviousBlockHash(),
+            blockMessage.secondPreviousHash.asVbkPreviousKeystoneHash(),
+            blockMessage.thirdPreviousHash.asVbkPreviousKeystoneHash(),
             Sha256Hash.wrap(ByteStringUtility.byteStringToHex(blockMessage.merkleRoot)),
             blockMessage.timestamp,
             blockMessage.encodedDifficulty,

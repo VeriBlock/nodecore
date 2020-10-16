@@ -7,9 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.services
 
-import org.veriblock.core.Context
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.readVbkPreviousBlockHash
+import org.veriblock.core.crypto.readVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
@@ -174,14 +175,14 @@ object SerializeDeserializeService {
 
     // VeriBlockBlock
     @JvmOverloads
-    fun parseVeriBlockBlock(buffer: ByteBuffer, precomputedHash: VBlakeHash? = null): VeriBlockBlock {
+    fun parseVeriBlockBlock(buffer: ByteBuffer, precomputedHash: VbkHash? = null): VeriBlockBlock {
         val raw = buffer.getSingleByteLengthValue(
             Constants.HEADER_SIZE_VeriBlockBlock_VBlake, Constants.HEADER_SIZE_VeriBlockBlock
         )
         return parseVeriBlockBlock(raw, precomputedHash)
     }
 
-    fun parseVeriBlockBlock(raw: ByteArray, precomputedHash: VBlakeHash? = null): VeriBlockBlock {
+    fun parseVeriBlockBlock(raw: ByteArray, precomputedHash: VbkHash? = null): VeriBlockBlock {
         check(raw.size == Constants.HEADER_SIZE_VeriBlockBlock || raw.size == Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
             "Invalid VeriBlock raw data: " + Utility.bytesToHex(raw)
         }
@@ -191,15 +192,15 @@ object SerializeDeserializeService {
         return parseVeriBlockBlockStream(buffer, precomputedHash)
     }
 
-    fun parseVeriBlockBlockStream(buffer: ByteBuffer, precomputedHash: VBlakeHash? = null): VeriBlockBlock {
+    fun parseVeriBlockBlockStream(buffer: ByteBuffer, precomputedHash: VbkHash? = null): VeriBlockBlock {
         check(buffer.remaining() >= Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
             "Invalid VeriBlock raw data"
         }
         val height = buffer.readBEInt32()
         val version = buffer.readBEInt16()
-        val previousBlock = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_BLOCK_LENGTH)
-        val previousKeystone = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_KEYSTONE_LENGTH)
-        val secondPreviousKeystone = VBlakeHash.extract(buffer, VBlakeHash.PREVIOUS_KEYSTONE_LENGTH)
+        val previousBlock = buffer.readVbkPreviousBlockHash()
+        val previousKeystone = buffer.readVbkPreviousKeystoneHash()
+        val secondPreviousKeystone = buffer.readVbkPreviousKeystoneHash()
         val merkleRoot = Sha256Hash.extract(
             buffer, Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH, ByteOrder.BIG_ENDIAN
         )

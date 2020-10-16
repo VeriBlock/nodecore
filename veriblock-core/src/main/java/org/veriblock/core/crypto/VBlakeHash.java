@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+@Deprecated
 public class VBlakeHash {
     public static final int VERIBLOCK_LENGTH = 24;
     public static final int PREVIOUS_BLOCK_LENGTH = 12;

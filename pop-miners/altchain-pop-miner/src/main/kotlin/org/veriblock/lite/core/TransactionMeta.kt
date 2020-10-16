@@ -10,8 +10,8 @@ package org.veriblock.lite.core
 
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
 import java.util.ArrayList
 
 class TransactionMeta(
@@ -22,9 +22,9 @@ class TransactionMeta(
     var state = MetaState.UNKNOWN
         private set
 
-    var appearsInBestChainBlock: VBlakeHash? = null
+    var appearsInBestChainBlock: AnyVbkHash? = null
 
-    private val appearsInBlock: MutableList<VBlakeHash> = ArrayList()
+    private val appearsInBlock: MutableList<AnyVbkHash> = ArrayList()
 
     var appearsAtChainHeight = -1
 
@@ -51,11 +51,11 @@ class TransactionMeta(
         }
     }
 
-    fun getAppearsInBlock(): List<VBlakeHash> {
+    fun getAppearsInBlock(): List<AnyVbkHash> {
         return appearsInBlock
     }
 
-    fun addBlockAppearance(hash: VBlakeHash) {
+    fun addBlockAppearance(hash: AnyVbkHash) {
         appearsInBlock.add(hash)
     }
 

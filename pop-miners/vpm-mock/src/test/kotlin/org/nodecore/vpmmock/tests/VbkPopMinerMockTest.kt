@@ -4,11 +4,9 @@ import io.kotlintest.shouldBe
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
-import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VBK_EMPTY_HASH
 import org.veriblock.core.params.defaultRegTestParameters
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.service.mockmining.VeriBlockPopMinerMock
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -49,9 +47,9 @@ class VbkPopMinerMockTest {
         val vbk = VeriBlockBlock(
             1,
             2,
-            VBlakeHash.EMPTY_HASH,
-            VBlakeHash.EMPTY_HASH,
-            VBlakeHash.EMPTY_HASH,
+            VBK_EMPTY_HASH.trimToPreviousBlockSize(),
+            VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
+            VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
             Sha256Hash.ZERO_HASH,
             3,
             4,

@@ -3,6 +3,7 @@ package org.veriblock.core.crypto
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
+import java.math.BigInteger
 import java.nio.ByteBuffer
 
 const val VBK_HASH_LENGTH = 24
@@ -14,20 +15,12 @@ val VBK_EMPTY_HASH = VbkHash(ByteArray(VBK_HASH_LENGTH))
 sealed class AnyVbkHash(
     val bytes: ByteArray
 ) {
-    open fun trimToPreviousBlockSize(): PreviousBlockVbkHash {
-        check(bytes.size >= VBK_PREVIOUS_BLOCK_HASH_LENGTH) {
-            "Length should be higher than previous block length"
-        }
-        val trimmedBytes = trimBytes(VBK_PREVIOUS_BLOCK_HASH_LENGTH)
-        return PreviousBlockVbkHash(trimmedBytes)
-    }
+    abstract fun trimToPreviousBlockSize(): PreviousBlockVbkHash
 
-    open fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash {
-        check(bytes.size >= VBK_PREVIOUS_KEYSTONE_HASH_LENGTH) {
-            "Length should be higher than previous keystone length"
-        }
-        val trimmedBytes = trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH)
-        return PreviousKeystoneVbkHash(trimmedBytes)
+    abstract fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash
+
+    fun toBigInteger(): BigInteger {
+        return BigInteger(1, bytes)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -49,34 +42,46 @@ private fun AnyVbkHash.trimBytes(size: Int): ByteArray {
     }
 }
 
-class VbkHash(
-    bytes: ByteArray
-) : AnyVbkHash(bytes) {
+class VbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
-        check(bytes.size != VBK_HASH_LENGTH) {
+        check(bytes.size == VBK_HASH_LENGTH) {
             "Trying to create a VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
+
+    override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
+        PreviousBlockVbkHash(trimBytes(VBK_PREVIOUS_BLOCK_HASH_LENGTH))
+
+    override fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash =
+        PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
 }
 
-class PreviousBlockVbkHash(
-    bytes: ByteArray
-) : AnyVbkHash(bytes) {
+class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
-        check(bytes.size != VBK_PREVIOUS_BLOCK_HASH_LENGTH) {
+        check(bytes.size == VBK_PREVIOUS_BLOCK_HASH_LENGTH) {
             "Trying to create a previous block VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
+
+    override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
+        this
+
+    override fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash =
+        PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
 }
 
-class PreviousKeystoneVbkHash(
-    bytes: ByteArray
-) : AnyVbkHash(bytes) {
+class PreviousKeystoneVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
-        check(bytes.size != VBK_PREVIOUS_KEYSTONE_HASH_LENGTH) {
+        check(bytes.size == VBK_PREVIOUS_KEYSTONE_HASH_LENGTH) {
             "Trying to create a previous keystone VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
+
+    override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
+        error("Trying to trim a previous keystone VBK hash down to a previous block VBK hash")
+
+    override fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash =
+        this
 }
 
 fun ByteArray.asVbkHash(): VbkHash = VbkHash(this)
@@ -108,6 +113,26 @@ fun ByteArray.asAnyVbkHash(): AnyVbkHash = when (size) {
 }
 
 fun String.asAnyVbkHash(): AnyVbkHash = asHexBytes().asAnyVbkHash()
+
+/**
+ * TODO: "Easy-going" hashes: these always return true when their last 9 bytes are equal.
+ * Use case: BFI
+ */
+/*class EgVbkHash(bytes: ByteArray) : VbkHash(bytes) {
+    override fun equals(other: Any?): Boolean {
+        return other is AnyVbkHash && trimToPreviousKeystoneSize() == other.trimToPreviousKeystoneSize()
+    }
+}
+class EgPreviousBlockVbkHash(bytes: ByteArray) : PreviousKeystoneVbkHash(bytes) {
+    override fun equals(other: Any?): Boolean {
+        return other is AnyVbkHash && trimToPreviousKeystoneSize() == other.trimToPreviousKeystoneSize()
+    }
+}
+class EgPreviousKeystoneVbkHash(bytes: ByteArray) : PreviousKeystoneVbkHash(bytes) {
+    override fun equals(other: Any?): Boolean {
+        return other is AnyVbkHash && trimToPreviousKeystoneSize() == other.trimToPreviousKeystoneSize()
+    }
+}*/
 
 // TODO: Delete me after it is no longer used
 object VbkHashUtil {

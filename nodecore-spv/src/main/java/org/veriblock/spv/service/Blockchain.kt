@@ -8,7 +8,7 @@
 package org.veriblock.spv.service
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.miner.getMiningContext
 import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.params.NetworkParameters
@@ -33,7 +33,7 @@ class Blockchain(
         return activeChain.tip()
     }
 
-    fun get(hash: VBlakeHash): StoredVeriBlockBlock? {
+    fun get(hash: AnyVbkHash): StoredVeriBlockBlock? {
         return blockStore.readBlock(hash)
     }
 

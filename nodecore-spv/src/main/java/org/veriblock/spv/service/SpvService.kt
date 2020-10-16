@@ -18,10 +18,10 @@ import org.veriblock.core.SendCoinsException
 import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
@@ -352,7 +352,7 @@ class SpvService(
         )
     }
 
-    fun getVbkBlockHeader(hash: VBlakeHash): BlockHeader? {
+    fun getVbkBlockHeader(hash: AnyVbkHash): BlockHeader? {
         val block = blockchain.get(hash)
             ?: return null
         return BlockHeader(

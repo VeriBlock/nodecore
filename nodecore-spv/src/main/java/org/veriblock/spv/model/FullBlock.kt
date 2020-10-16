@@ -7,16 +7,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
+import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 
 class FullBlock(
     height: Int,
     version: Short,
-    previousBlock: VBlakeHash,
-    previousKeystone: VBlakeHash,
-    secondPreviousKeystone: VBlakeHash,
+    previousBlock: PreviousBlockVbkHash,
+    previousKeystone: PreviousKeystoneVbkHash,
+    secondPreviousKeystone: PreviousKeystoneVbkHash,
     merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,

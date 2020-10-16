@@ -28,8 +28,8 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.miners.pop.core.ApmOperationState
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.models.getSynchronizedMessage
@@ -60,7 +60,7 @@ class ApmTaskService(
             operation.setMiningInstruction(publicationData)
             logger.info(operation, "Successfully retrieved the mining instruction!")
             val vbkContextBlockHash = publicationData.context[0]
-            nodeCoreLiteKit.network.getBlock(VBlakeHash.wrap(vbkContextBlockHash))
+            nodeCoreLiteKit.network.getBlock(vbkContextBlockHash.asVbkHash())
                 ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
         }
 

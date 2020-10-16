@@ -9,7 +9,7 @@
 package org.veriblock.lite.transactionmonitor
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -19,7 +19,6 @@ import org.veriblock.lite.core.MerkleTree
 import org.veriblock.lite.core.TransactionMeta
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.spv.util.SpvEventBus
@@ -75,7 +74,7 @@ class TransactionMonitor(
                     ?: error("Unable to retrieve pending transactions")
                 tx.transactionMeta.depth = it.confirmations
                 tx.transactionMeta.appearsAtChainHeight = it.blockNumber
-                tx.transactionMeta.appearsInBestChainBlock = VBlakeHash.wrap(it.blockHash.asHexBytes())
+                tx.transactionMeta.appearsInBestChainBlock = it.blockHash.asAnyVbkHash()
                 tx.merklePath = VeriBlockMerklePath(it.merklePath)
                 tx.transactionMeta.setState(TransactionMeta.MetaState.CONFIRMED)
             }

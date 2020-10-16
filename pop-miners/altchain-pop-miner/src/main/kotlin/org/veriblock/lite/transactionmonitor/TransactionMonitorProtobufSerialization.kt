@@ -17,7 +17,8 @@ import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.asAnyVbkHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.lite.net.NodeCoreGateway
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.asCoin
@@ -112,10 +113,10 @@ private fun TxmonProto.TransactionMeta.toModel(): TransactionMeta = TransactionM
 ).also {
     it.setState(TransactionMeta.MetaState.forNumber(state))
     if (appearsInBestChainBlock.isNotEmpty()) {
-        it.appearsInBestChainBlock = VBlakeHash.wrap(appearsInBestChainBlock)
+        it.appearsInBestChainBlock = appearsInBestChainBlock.asAnyVbkHash()
     }
 
-    appearsInBlocks.forEach { bytes -> it.addBlockAppearance(VBlakeHash.wrap(bytes)) }
+    appearsInBlocks.forEach { bytes -> it.addBlockAppearance(bytes.asAnyVbkHash()) }
 
     it.appearsAtChainHeight = appearsAtHeight
     it.depth = depth

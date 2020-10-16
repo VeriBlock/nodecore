@@ -7,9 +7,13 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
+import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlake
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.Arrays
@@ -17,20 +21,20 @@ import java.util.Arrays
 open class VeriBlockBlock(
     height: Int,
     version: Short,
-    previousBlock: VBlakeHash,
-    previousKeystone: VBlakeHash,
-    secondPreviousKeystone: VBlakeHash,
+    previousBlock: PreviousBlockVbkHash,
+    previousKeystone: PreviousKeystoneVbkHash,
+    secondPreviousKeystone: PreviousKeystoneVbkHash,
     merkleRoot: Sha256Hash,
     timestamp: Int,
     difficulty: Int,
     nonce: Long,
-    private val precomputedHash: VBlakeHash? = null
+    private val precomputedHash: VbkHash? = null
 ) {
     val height: Int
     val version: Short
-    val previousBlock: VBlakeHash
-    val previousKeystone: VBlakeHash
-    val secondPreviousKeystone: VBlakeHash
+    val previousBlock: PreviousBlockVbkHash
+    val previousKeystone: PreviousKeystoneVbkHash
+    val secondPreviousKeystone: PreviousKeystoneVbkHash
     val merkleRoot: Sha256Hash
     val timestamp: Int
     val difficulty: Int
@@ -39,34 +43,23 @@ open class VeriBlockBlock(
     val raw: ByteArray
         get() = SerializeDeserializeService.serializeHeaders(this)
 
-    val hash: VBlakeHash by lazy {
-        precomputedHash ?: VBlakeHash.wrap(
-            if (height == 0) {
-                BlockUtility.hashVBlakeBlock(raw)
-            } else {
-                BlockUtility.hashBlock(raw)
-            }
-        )
+    val hash: VbkHash by lazy {
+        precomputedHash ?: if (height == 0) {
+            BlockUtility.hashVBlakeBlock(raw)
+        } else {
+            BlockUtility.hashBlock(raw)
+        }.asVbkHash()
     }
 
     init {
-        require(previousBlock.length >= VBlakeHash.PREVIOUS_BLOCK_LENGTH) {
-            "Invalid previous block: $previousBlock"
-        }
-        require(previousKeystone.length >= VBlakeHash.PREVIOUS_KEYSTONE_LENGTH) {
-            "Invalid previous keystone: $previousKeystone"
-        }
-        require(secondPreviousKeystone.length >= VBlakeHash.PREVIOUS_KEYSTONE_LENGTH) {
-            "Invalid second previous keystone: $secondPreviousKeystone"
-        }
         require(merkleRoot.length >= Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH) {
             "Invalid merkle root: $merkleRoot"
         }
         this.height = height
         this.version = version
-        this.previousBlock = previousBlock.trimToPreviousBlockSize()
-        this.previousKeystone = previousKeystone.trimToPreviousKeystoneSize()
-        this.secondPreviousKeystone = secondPreviousKeystone.trimToPreviousKeystoneSize()
+        this.previousBlock = previousBlock
+        this.previousKeystone = previousKeystone
+        this.secondPreviousKeystone = secondPreviousKeystone
         this.merkleRoot = merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
         this.timestamp = timestamp
         this.difficulty = difficulty
@@ -79,7 +72,7 @@ open class VeriBlockBlock(
     fun isKeystone(): Boolean =
         height % Constants.KEYSTONE_INTERVAL == 0
 
-    fun getEffectivePreviousKeystone(): VBlakeHash =
+    fun getEffectivePreviousKeystone(): AnyVbkHash =
         if (height % Constants.KEYSTONE_INTERVAL == 1) previousBlock else previousKeystone
 
     override fun equals(other: Any?): Boolean {

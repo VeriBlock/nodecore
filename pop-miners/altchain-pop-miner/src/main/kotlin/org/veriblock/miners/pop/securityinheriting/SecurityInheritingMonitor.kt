@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
@@ -258,7 +258,7 @@ class SecurityInheritingMonitor(
         val subscription = SpvEventBus.newBlockChannel.openSubscription()
         for (newBlock in subscription) {
             try {
-                val bestKnownBlockHash = VBlakeHash.wrap(chain.getBestKnownVbkBlockHash())
+                val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
                 val bestKnownBlock = nodeCoreLiteKit.gateway.getBlock(bestKnownBlockHash)
                     // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
                     ?: continue
@@ -297,7 +297,7 @@ class SecurityInheritingMonitor(
         while (true) {
             try {
                 val instruction = chain.getMiningInstruction()
-                val vbkContextBlockHash = VBlakeHash.wrap(instruction.context.first())
+                val vbkContextBlockHash = instruction.context.first().asVbkHash()
                 val vbkContextBlock = nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash) ?: run {
                     // Maybe our peer doesn't know about that block yet. Let's wait a few seconds and give it another chance
                     delay(30_000L)

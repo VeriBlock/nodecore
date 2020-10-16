@@ -8,7 +8,7 @@
 package org.veriblock.spv.model
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VbkHash
 import org.veriblock.spv.util.SpvEventBus
 import java.util.ArrayList
 import java.util.HashSet
@@ -16,19 +16,19 @@ import java.util.HashSet
 class TransactionMeta(
     val txId: Sha256Hash
 ) {
-    private val appearsInBlock: MutableList<VBlakeHash> = ArrayList()
+    private val appearsInBlock: MutableList<VbkHash> = ArrayList()
     var appearsAtChainHeight = -1
     var depth = 0
     private val seenByPeers: MutableSet<String> = HashSet()
     var state = MetaState.UNKNOWN
         private set
-    var appearsInBestChainBlock: VBlakeHash? = null
+    var appearsInBestChainBlock: VbkHash? = null
 
-    fun getAppearsInBlock(): List<VBlakeHash> {
+    fun getAppearsInBlock(): List<VbkHash> {
         return appearsInBlock
     }
 
-    fun addBlockAppearance(hash: VBlakeHash) {
+    fun addBlockAppearance(hash: VbkHash) {
         appearsInBlock.add(hash)
     }
 
