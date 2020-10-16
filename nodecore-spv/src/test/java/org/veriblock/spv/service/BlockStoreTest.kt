@@ -1,8 +1,8 @@
 package org.veriblock.spv.service
 
+import io.kotest.matchers.shouldBe
 import org.apache.commons.lang3.RandomStringUtils
-import org.junit.Assert
-import org.junit.Test
+import org.junit.*
 import org.veriblock.core.Context
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VBlakeHash
@@ -18,16 +18,30 @@ import kotlin.random.Random
 
 class BlockStoreTest {
     private val spvContext = SpvContext()
+    private lateinit var blockStore: BlockStore
+    private lateinit var baseDir: File
 
     init {
         Context.set(defaultMainNetParameters)
         spvContext.init(SpvConfig(useLocalNode = true))
     }
 
+    @Before
+    fun beforeTest() {
+        baseDir = File("blockStoreTests").also {
+            it.mkdir()
+        }
+        blockStore = BlockStore(spvContext.networkParameters, baseDir)
+    }
+
+    @After
+    fun after() {
+        baseDir.deleteRecursively()
+    }
+
     @Test
     fun `should store and restore the given list of blocks`() {
         // Given
-        val blockStore = BlockStore(spvContext.networkParameters, File("."))
         val storedVeriBlockBlocks = (1..100).map {
             StoredVeriBlockBlock(
                 randomVeriBlockBlock(height = it),
@@ -36,56 +50,73 @@ class BlockStoreTest {
             )
         }
         // When
-        blockStore.writeBlocks(storedVeriBlockBlocks)
+        blockStore?.writeBlocks(storedVeriBlockBlocks)
         // Then
         storedVeriBlockBlocks.forEach {
-            Assert.assertEquals(blockStore.readBlock(it.hash), it)
+            blockStore?.readBlock(it.hash) shouldBe it
         }
     }
 
     @Test
     fun `should store and restore the given block`() {
         // Given
-        val blockStore = BlockStore(spvContext.networkParameters, File("."))
         val storedVeriBlockBlock = StoredVeriBlockBlock(
             randomVeriBlockBlock(),
             BigInteger.ONE,
             randomVBlakeHash()
         )
         // When
-        blockStore.writeBlock(storedVeriBlockBlock)
+        blockStore?.writeBlock(storedVeriBlockBlock)
         // Then
-        Assert.assertEquals(blockStore.readBlock(storedVeriBlockBlock.hash), storedVeriBlockBlock)
+        blockStore?.readBlock(storedVeriBlockBlock.hash) shouldBe storedVeriBlockBlock
     }
 
     @Test
     fun `should properly update the block store tip`() {
         // Given
-        val blockStore = BlockStore(spvContext.networkParameters, File("."))
         val storedVeriBlockBlock = StoredVeriBlockBlock(
             randomVeriBlockBlock(),
             BigInteger.ONE,
             randomVBlakeHash()
         )
         // When
-        blockStore.setTip(storedVeriBlockBlock)
+        blockStore?.setTip(storedVeriBlockBlock)
         // Then
-        Assert.assertEquals(blockStore.getTip(), storedVeriBlockBlock)
+        blockStore?.getTip() shouldBe storedVeriBlockBlock
     }
 
     @Test
     fun `shouldn't be able to restore a block with a wrong hash`() {
         // Given
-        val blockStore = BlockStore(spvContext.networkParameters, File("."))
         val storedVeriBlockBlock = StoredVeriBlockBlock(
             randomVeriBlockBlock(),
             BigInteger.ONE,
             randomVBlakeHash()
         )
         // When
-        blockStore.writeBlock(storedVeriBlockBlock)
+        blockStore?.writeBlock(storedVeriBlockBlock)
         // Then
-        Assert.assertEquals(blockStore.readBlock(VBlakeHash.EMPTY_HASH), null)
+        blockStore?.readBlock(randomVBlakeHash()) shouldBe null
+    }
+
+    @Ignore
+    @Test
+    fun `should restore the blocks which were stored by a previous block store object`() {
+        // Given
+        val storedVeriBlockBlocks = (1..100).map {
+            StoredVeriBlockBlock(
+                randomVeriBlockBlock(height = it),
+                BigInteger.ONE,
+                randomVBlakeHash()
+            )
+        }
+        blockStore.writeBlocks(storedVeriBlockBlocks)
+        // When
+        val blockStore2 = BlockStore(spvContext.networkParameters, baseDir)
+        // Then
+        storedVeriBlockBlocks.forEach {
+            blockStore2.readBlock(it.hash) shouldBe it
+        }
     }
 }
 

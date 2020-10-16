@@ -50,6 +50,7 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "$projectDir/../lib/", "include" to listOf("*.jar"))))
 
     testImplementation("junit:junit:4.12")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.0")
     // required if you want to use Mockito for unit tests
     testCompile("org.mockito:mockito-core:2.7.22")
     testImplementation("io.mockk:mockk:1.9.3")

@@ -90,7 +90,8 @@ class BlockStore(
         }
     }
 
-    private fun getFileIndex(hash: VBlakeHash) = index.fileIndex[hash.trimToPreviousBlockSize()]
+    private fun getFileIndex(hash: VBlakeHash) =
+        index.fileIndex[hash.trimToPreviousBlockSize()]
 
     fun readBlock(hash: VBlakeHash): StoredVeriBlockBlock? {
         val shortHash = hash.trimToPreviousBlockSize()
