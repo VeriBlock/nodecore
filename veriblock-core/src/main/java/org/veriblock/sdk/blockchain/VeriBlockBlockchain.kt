@@ -9,8 +9,8 @@ package org.veriblock.sdk.blockchain
 
 import org.slf4j.LoggerFactory
 import org.veriblock.core.bitcoinj.BitcoinUtilities
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Preconditions
 import org.veriblock.sdk.blockchain.store.BlockStore
@@ -28,12 +28,12 @@ import java.util.OptionalInt
 
 open class VeriBlockBlockchain(
     networkParameters: NetworkParameters,
-    store: BlockStore<StoredVeriBlockBlock, VBlakeHash>,
+    store: BlockStore<StoredVeriBlockBlock, AnyVbkHash>,
     bitcoinStore: BlockStore<StoredBitcoinBlock, Sha256Hash>
 ) {
-    private val store: BlockStore<StoredVeriBlockBlock, VBlakeHash>
+    private val store: BlockStore<StoredVeriBlockBlock, AnyVbkHash>
     private val bitcoinStore: BlockStore<StoredBitcoinBlock, Sha256Hash>
-    private val temporalStore: MutableMap<VBlakeHash, StoredVeriBlockBlock>
+    private val temporalStore: MutableMap<AnyVbkHash, StoredVeriBlockBlock>
     val networkParameters: NetworkParameters
     private var temporaryChainHead: StoredVeriBlockBlock? = null
     private var skipValidateBlocksDifficulty = false
@@ -49,13 +49,13 @@ open class VeriBlockBlockchain(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    fun get(hash: VBlakeHash): VeriBlockBlock? {
+    fun get(hash: AnyVbkHash): VeriBlockBlock? {
         val storedBlock = getInternal(hash)
         return storedBlock?.header
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    fun searchBestChain(hash: VBlakeHash): VeriBlockBlock? {
+    fun searchBestChain(hash: AnyVbkHash): VeriBlockBlock? {
         // Look at the temporal store first
         val storedBlock: StoredVeriBlockBlock?
         storedBlock = if (temporaryChainHead != null) {
@@ -112,7 +112,7 @@ open class VeriBlockBlockchain(
     }
 
     @Throws(BlockStoreException::class, SQLException::class)
-    private fun getInternal(hash: VBlakeHash): StoredVeriBlockBlock? {
+    private fun getInternal(hash: AnyVbkHash): StoredVeriBlockBlock? {
         val trimmed = hash.trimToPreviousKeystoneSize()
         return if (temporalStore.containsKey(trimmed)) {
             temporalStore[trimmed]
@@ -126,7 +126,7 @@ open class VeriBlockBlockchain(
         temporaryChainHead ?: store.getChainHead()
 
     @Throws(BlockStoreException::class, SQLException::class)
-    private fun getChainInternal(head: VBlakeHash, count: Int): List<StoredVeriBlockBlock> {
+    private fun getChainInternal(head: AnyVbkHash, count: Int): List<StoredVeriBlockBlock> {
         val blocks: MutableList<StoredVeriBlockBlock> = ArrayList()
         var cursor = head.trimToPreviousKeystoneSize()
         while (temporalStore.containsKey(cursor)) {
@@ -216,7 +216,7 @@ open class VeriBlockBlockchain(
 
     // return the earliest valid timestamp for a block that follows the blockHash block
     @Throws(SQLException::class)
-    fun getNextEarliestTimestamp(blockHash: VBlakeHash): Int? {
+    fun getNextEarliestTimestamp(blockHash: AnyVbkHash): Int? {
         val context = getChainInternal(
             blockHash, DIFFICULTY_ADJUST_BLOCK_COUNT
         )
@@ -304,7 +304,7 @@ open class VeriBlockBlockchain(
                 blocks[0].hash.toString(),
                 blocks[blocks.size - 1].hash.toString()
             )
-            var prevHash: VBlakeHash? = null
+            var prevHash: AnyVbkHash? = null
             for (block in blocks) {
                 if (prevHash != null && block.previousBlock != prevHash) throw VerificationException(
                     "VeriBlock bootstrap blocks must be contiguous"

@@ -11,6 +11,8 @@ package org.veriblock.lite.serialization
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
+import nodecore.api.grpc.utilities.extensions.asVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.BlockMetaPackage
 import org.veriblock.lite.core.FullBlock
@@ -19,7 +21,6 @@ import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
@@ -49,9 +50,9 @@ fun VeriBlockMessages.Block.deserialize(transactionPrefix: Byte?): FullBlock {
     return FullBlock(
         number,
         version.toShort(),
-        VBlakeHash.wrap(ByteStringUtility.byteStringToHex(previousHash)),
-        VBlakeHash.wrap(ByteStringUtility.byteStringToHex(secondPreviousHash)),
-        VBlakeHash.wrap(ByteStringUtility.byteStringToHex(thirdPreviousHash)),
+        previousHash.asVbkPreviousBlockHash(),
+        secondPreviousHash.asVbkPreviousKeystoneHash(),
+        thirdPreviousHash.asVbkPreviousKeystoneHash(),
         Sha256Hash.wrap(ByteStringUtility.byteStringToHex(merkleRoot), 24),
         timestamp,
         encodedDifficulty,

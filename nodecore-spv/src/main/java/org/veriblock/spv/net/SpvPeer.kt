@@ -21,7 +21,7 @@ import nodecore.p2p.PeerCapabilities
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -98,7 +98,7 @@ class SpvPeer(
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
-                        .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), VBlakeHash.wrap(it.hash.toByteArray())) }
+                        .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), it.hash.toByteArray().asVbkHash()) }
                         .filter { it.height % 20 == 0 }
                         .sortedByDescending { it.height }
                         .take(10)

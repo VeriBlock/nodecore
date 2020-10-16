@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+@Deprecated
 public class VBlakeHash {
     public static final int VERIBLOCK_LENGTH = 24;
     public static final int PREVIOUS_BLOCK_LENGTH = 12;
@@ -84,12 +85,6 @@ public class VBlakeHash {
         byte[] output = new byte[length];
         System.arraycopy(input.bytes, input.bytes.length - length, output, 0, length);
         return VBlakeHash.wrap(output, length);
-    }
-
-    public boolean probablyEquals(VBlakeHash other) {
-        if (other == null) return false;
-
-        return this.hashCode() == other.hashCode();
     }
 
     @Override

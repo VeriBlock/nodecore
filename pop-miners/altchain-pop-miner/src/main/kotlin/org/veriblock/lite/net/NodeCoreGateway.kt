@@ -11,8 +11,9 @@ package org.veriblock.lite.net
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.Balance
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
@@ -49,18 +50,18 @@ class NodeCoreGateway(
     fun getLastBlock(): VeriBlockBlock {
         return try {
             val lastBlock = spvService.getLastVBKBlockHeader()
-            SerializeDeserializeService.parseVeriBlockBlock(lastBlock.header, VBlakeHash.wrap(lastBlock.hash))
+            SerializeDeserializeService.parseVeriBlockBlock(lastBlock.header, lastBlock.hash.asVbkHash())
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to get last VBK block" }
             throw e
         }
     }
 
-    fun getBlock(hash: VBlakeHash): VeriBlockBlock? {
+    fun getBlock(hash: AnyVbkHash): VeriBlockBlock? {
         logger.debug { "Requesting VBK block with hash $hash..." }
 
         return spvService.getVbkBlockHeader(hash)?.let {
-            SerializeDeserializeService.parseVeriBlockBlock(it.header, VBlakeHash.wrap(it.hash))
+            SerializeDeserializeService.parseVeriBlockBlock(it.header, it.hash.asVbkHash())
         }
     }
 

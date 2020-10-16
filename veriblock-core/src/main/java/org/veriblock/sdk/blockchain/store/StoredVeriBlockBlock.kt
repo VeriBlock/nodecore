@@ -7,9 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.blockchain.store
 
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.readVbkHash
 import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -17,11 +17,10 @@ import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.util.Objects
 
-class StoredVeriBlockBlock
-@JvmOverloads constructor(
+class StoredVeriBlockBlock(
     val header: VeriBlockBlock,
     val work: BigInteger,
-    val hash: VBlakeHash
+    val hash: VbkHash
 ) {
     val height: Int
         get() = header.height
@@ -70,9 +69,7 @@ class StoredVeriBlockBlock
 
         @JvmStatic
         fun deserialize(buffer: ByteBuffer): StoredVeriBlockBlock {
-            val hashBytes = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
-            buffer.get(hashBytes)
-            val hash = VBlakeHash.wrap(hashBytes)
+            val hash = buffer.readVbkHash()
             val workBytes = ByteArray(CHAIN_WORK_BYTES)
             buffer.get(workBytes)
             val work = BigInteger(1, workBytes)
@@ -83,8 +80,7 @@ class StoredVeriBlockBlock
 
         @JvmStatic
         fun deserialize(bytes: ByteArray): StoredVeriBlockBlock {
-            Preconditions.notNull(bytes, "Raw VeriBlock Block cannot be null")
-            Preconditions.argument<Any>(bytes.size >= SIZE) {
+            check(bytes.size >= SIZE) {
                 "Invalid raw VeriBlock Block: " + Utility.bytesToHex(bytes)
             }
             val local = ByteBuffer.allocateDirect(SIZE)

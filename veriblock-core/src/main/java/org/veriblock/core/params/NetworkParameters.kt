@@ -9,9 +9,11 @@
 package org.veriblock.core.params
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
+import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH
-import org.veriblock.core.crypto.VBlakeHash
+import org.veriblock.core.crypto.VBK_EMPTY_HASH
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
@@ -158,9 +160,9 @@ object MainNetParameters : NetworkParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         0,
         2.toShort(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
         Sha256Hash.wrap("A7E5F2B7EC94291767B4D67B4A33682D", VERIBLOCK_MERKLE_ROOT_LENGTH),
         1553497611,
         BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1_000_000_000_000L)).toInt(),
@@ -198,9 +200,9 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         0,
         2.toShort(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
         Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
         1570649416,
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
@@ -238,9 +240,9 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         0,
         2.toShort(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
         Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
         1570649416,
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
@@ -279,9 +281,9 @@ object AlphaNetParameters : NetworkParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         0,
         1.toShort(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
         Sha256Hash.wrap("CF2025EC0EB8A8A325495FEB59500B50", VERIBLOCK_MERKLE_ROOT_LENGTH),
         1551465474,
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
@@ -316,9 +318,9 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         0,
         2.toShort(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousBlockSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBlakeHash.EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
+        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
         Sha256Hash.ZERO_HASH,
         1577367966,
         BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),

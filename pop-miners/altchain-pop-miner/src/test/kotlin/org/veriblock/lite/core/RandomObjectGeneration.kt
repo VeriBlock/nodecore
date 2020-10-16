@@ -9,6 +9,8 @@
 package org.veriblock.lite.core
 
 import org.apache.commons.lang3.RandomStringUtils
+import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.wallet.AddressKeyGenerator
 import org.veriblock.lite.transactionmonitor.TransactionMonitor
@@ -21,8 +23,13 @@ import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlakeHash
-import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.core.crypto.VBK_HASH_LENGTH
+import org.veriblock.core.crypto.VBK_PREVIOUS_BLOCK_HASH_LENGTH
+import org.veriblock.core.crypto.VBK_PREVIOUS_KEYSTONE_HASH_LENGTH
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asVbkHash
+import org.veriblock.core.crypto.asVbkPreviousBlockHash
+import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
@@ -113,14 +120,22 @@ fun randomTransactionMeta(
     depthCount: Int = 0
 ): TransactionMeta {
     return TransactionMeta(transactionId).apply {
-        appearsInBestChainBlock = randomVBlakeHash()
+        appearsInBestChainBlock = randomVbkHash()
         setState(metaState)
         depth = depthCount
     }
 }
 
-fun randomVBlakeHash(): VBlakeHash {
-    return VBlakeHash.wrap(randomByteArray(VBlakeHash.VERIBLOCK_LENGTH))
+fun randomVbkHash(): VbkHash {
+    return randomByteArray(VBK_HASH_LENGTH).asVbkHash()
+}
+
+fun randomPreviousBlockVbkHash(): PreviousBlockVbkHash {
+    return randomByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH).asVbkPreviousBlockHash()
+}
+
+fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash {
+    return randomByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH).asVbkPreviousKeystoneHash()
 }
 
 private var messageDigest = MessageDigest.getInstance("SHA-256")
@@ -179,9 +194,9 @@ fun randomFullBlock(
     context: Context,
     height: Int = randomInt(0, Int.MAX_VALUE),
     version: Short = randomInt(0, Short.MAX_VALUE.toInt()).toShort(),
-    previousBlock: VBlakeHash = randomVBlakeHash(),
-    previousKeystone: VBlakeHash = randomVBlakeHash(),
-    secondPreviousKeystone: VBlakeHash = randomVBlakeHash(),
+    previousBlock: PreviousBlockVbkHash = randomPreviousBlockVbkHash(),
+    previousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
+    secondPreviousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
     merkleRoot: Sha256Hash = randomSha256Hash(),
     timestamp: Int = randomInt(0, Int.MAX_VALUE),
     difficulty: Int = randomInt(0, Int.MAX_VALUE),
@@ -240,9 +255,9 @@ fun randomVeriBlockPoPTransaction(
 fun randomVeriBlockBlock(
     height: Int = randomInt(1, 65535),
     version: Short = randomInt(1, Short.MAX_VALUE.toInt()).toShort(),
-    previousBlock: VBlakeHash = randomVBlakeHash(),
-    previousKeystone: VBlakeHash = randomVBlakeHash(),
-    secondPreviousKeystone: VBlakeHash = randomVBlakeHash(),
+    previousBlock: PreviousBlockVbkHash = randomPreviousBlockVbkHash(),
+    previousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
+    secondPreviousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
     merkleRoot: Sha256Hash = randomSha256Hash(),
     timestamp: Int = randomInt(1, 65535),
     difficulty: Int = randomInt(1, 65535),
