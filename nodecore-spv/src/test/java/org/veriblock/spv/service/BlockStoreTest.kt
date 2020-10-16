@@ -17,13 +17,11 @@ import java.security.MessageDigest
 import kotlin.random.Random
 
 class BlockStoreTest {
-    private val spvContext = SpvContext()
     private lateinit var blockStore: BlockStore
     private lateinit var baseDir: File
 
     init {
         Context.set(defaultMainNetParameters)
-        spvContext.init(SpvConfig(useLocalNode = true))
     }
 
     @Before
@@ -31,7 +29,7 @@ class BlockStoreTest {
         baseDir = File("blockStoreTests").also {
             it.mkdir()
         }
-        blockStore = BlockStore(spvContext.networkParameters, baseDir)
+        blockStore = BlockStore(defaultMainNetParameters, baseDir)
     }
 
     @After
@@ -50,10 +48,10 @@ class BlockStoreTest {
             )
         }
         // When
-        blockStore?.writeBlocks(storedVeriBlockBlocks)
+        blockStore.writeBlocks(storedVeriBlockBlocks)
         // Then
         storedVeriBlockBlocks.forEach {
-            blockStore?.readBlock(it.hash) shouldBe it
+            blockStore.readBlock(it.hash) shouldBe it
         }
     }
 
@@ -66,9 +64,9 @@ class BlockStoreTest {
             randomVBlakeHash()
         )
         // When
-        blockStore?.writeBlock(storedVeriBlockBlock)
+        blockStore.writeBlock(storedVeriBlockBlock)
         // Then
-        blockStore?.readBlock(storedVeriBlockBlock.hash) shouldBe storedVeriBlockBlock
+        blockStore.readBlock(storedVeriBlockBlock.hash) shouldBe storedVeriBlockBlock
     }
 
     @Test
@@ -80,9 +78,9 @@ class BlockStoreTest {
             randomVBlakeHash()
         )
         // When
-        blockStore?.setTip(storedVeriBlockBlock)
+        blockStore.setTip(storedVeriBlockBlock)
         // Then
-        blockStore?.getTip() shouldBe storedVeriBlockBlock
+        blockStore.getTip() shouldBe storedVeriBlockBlock
     }
 
     @Test
@@ -94,12 +92,11 @@ class BlockStoreTest {
             randomVBlakeHash()
         )
         // When
-        blockStore?.writeBlock(storedVeriBlockBlock)
+        blockStore.writeBlock(storedVeriBlockBlock)
         // Then
-        blockStore?.readBlock(randomVBlakeHash()) shouldBe null
+        blockStore.readBlock(randomVBlakeHash()) shouldBe null
     }
 
-    @Ignore
     @Test
     fun `should restore the blocks which were stored by a previous block store object`() {
         // Given
@@ -112,21 +109,23 @@ class BlockStoreTest {
         }
         blockStore.writeBlocks(storedVeriBlockBlocks)
         // When
-        val blockStore2 = BlockStore(spvContext.networkParameters, baseDir)
+        val blockStore2 = BlockStore(defaultMainNetParameters, baseDir)
         // Then
+        blockStore.size shouldBe 101 /* 100 + genesis */
+        blockStore2.size shouldBe 101 /* 100 + genesis */
         storedVeriBlockBlocks.forEach {
             blockStore2.readBlock(it.hash) shouldBe it
         }
     }
 }
 
+private var rng = Random(0)
 private var messageDigest = MessageDigest.getInstance("SHA-256")
-private fun randomByteArray(size: Int): ByteArray = ByteArray(size) { randomInt(256).toByte() }
 private fun randomInt(bound: Int) = Random.nextInt(bound)
 private fun randomInt(min: Int, max: Int) = Random.nextInt(max - min) + min
 private fun randomLong(min: Long, max: Long) = (Random.nextDouble() * (max - min)).toLong() + min
 private fun randomAlphabeticString(length: Int = 10): String = RandomStringUtils.randomAlphabetic(length)
-private fun randomVBlakeHash(): VBlakeHash = VBlakeHash.wrap(randomByteArray(VBlakeHash.VERIBLOCK_LENGTH))
+private fun randomVBlakeHash(): VBlakeHash = VBlakeHash.wrap(rng.nextBytes(24))
 private fun randomSha256Hash(): Sha256Hash = Sha256Hash.wrap(messageDigest.digest(randomAlphabeticString().toByteArray()))
 private fun randomVeriBlockBlock(
     height: Int = randomInt(1, 65535),

@@ -68,6 +68,9 @@ class BlockStore(
         return BlockIndex(genesisBlock, mutableMapOf(genesisBlock.hash.trimToPreviousBlockSize() to 0L))
     }
 
+    val size: Int
+        get() = index.fileIndex.size
+
     fun readChainWithTip(hash: VBlakeHash, size: Int): ArrayList<StoredVeriBlockBlock> {
         val ret = ArrayList<StoredVeriBlockBlock>()
         var i = 0
@@ -182,6 +185,7 @@ class BlockStore(
     }
 
     private fun readIndex(): BlockIndex = RandomAccessFile(indexFile, "r").use { file ->
+        file.seek(0)
         val count = file.readInt()
         val tipHash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
         file.read(tipHash)
@@ -191,14 +195,14 @@ class BlockStore(
             (0 until count).associate {
                 val hash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
                 file.read(hash)
-                VBlakeHash.wrap(hash) to file.readLong()
+                VBlakeHash.wrap(hash).trimToPreviousBlockSize() to file.readLong()
             }.toMutableMap()
         } catch (e: IOException) {
             logger.debugWarn(e) { "Error while loading blockchain index file. Redownloading blockchain from scratch..." }
+            e.printStackTrace()
             return createGenesisIndex()
         }
-        val tipSmallHash = tip.trimToPreviousBlockSize()
-        val tipFileIndex = fileIndex[tipSmallHash] ?: run {
+        val tipFileIndex = fileIndex[tip.trimToPreviousBlockSize()] ?: run {
             logger.warn { "Invalid blockchain tip! Redownloading blockchain from scratch..." }
             return createGenesisIndex()
         }
