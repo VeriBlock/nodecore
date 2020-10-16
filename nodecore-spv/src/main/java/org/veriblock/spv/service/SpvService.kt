@@ -361,15 +361,6 @@ class SpvService(
         )
     }
 
-    fun getVbkBlockHeader(height: Int): BlockHeader? {
-        val block = blockchain.getBlockByHeight(height)
-            ?: return null
-        return BlockHeader(
-            block.hash.bytes,
-            SerializeDeserializeService.serializeHeaders(block.header)
-        )
-    }
-
     fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
     fun getTransactions(ids: List<Sha256Hash>) = ids.mapNotNull {

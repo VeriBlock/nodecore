@@ -26,7 +26,7 @@ class BlockStore(
     baseDir: File
 ) {
     private val lock = ReentrantLock()
-    private val blocksCache = LRUCache<PreviousBlockVbkHash, StoredVeriBlockBlock>(VBK_MAX_REORG_DISTANCE + 1)
+    private val blocksCache = LRUCache<PreviousBlockVbkHash, StoredVeriBlockBlock>(2000)
 
     private val indexFile = File(baseDir, "$networkParameters-block-index.db")
     private val blocksFile = File(baseDir, "$networkParameters-blocks.db")

@@ -17,6 +17,8 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
+import java.io.IOException
+import java.lang.IllegalStateException
 
 private val logger = createLogger {}
 
@@ -24,13 +26,15 @@ class Blockchain(
     private val networkParameters: NetworkParameters,
     private val blockStore: BlockStore
 ) {
-    val activeChain = TruncatedChain(blockStore)
-
     val size: Int
         get() = this.blockStore.index.fileIndex.size
 
     fun getChainHead(): StoredVeriBlockBlock {
-        return activeChain.tip()
+        try {
+            return blockStore.getTip()
+        } catch (e: Exception) {
+            throw IllegalStateException("Can not get tip: $e")
+        }
     }
 
     fun get(hash: AnyVbkHash): StoredVeriBlockBlock? {
@@ -73,16 +77,10 @@ class Blockchain(
         // write block on disk
         blockStore.writeBlock(stored)
 
-        activeChain.findFork(stored)
-            ?:
-            // this block does not connect to active chain
-            // do not consider it for fork resolution
-            return true
-
         // do fork resolution
-        if (stored.work > activeChain.tip().work) {
+        if (stored.work > getChainHead().work) {
             // new block wins
-            activeChain.setTip(stored)
+            blockStore.setTip(stored)
             SpvEventBus.newBestBlockEvent.trigger(block)
         }
 
@@ -92,11 +90,7 @@ class Blockchain(
         return true
     }
 
-    fun getBlockByHeight(height: Int): StoredVeriBlockBlock? {
-        return activeChain.get(height)
-    }
-
     fun getPeerQuery(): List<VeriBlockBlock> {
-        return activeChain.getLast(16).map { it.header }
+        return blockStore.readChainWithTip(getChainHead().hash, 100).map { it.header }.filter { it.isKeystone() }
     }
 }

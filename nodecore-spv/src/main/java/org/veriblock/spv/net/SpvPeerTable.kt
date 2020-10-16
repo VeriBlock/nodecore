@@ -122,11 +122,9 @@ class SpvPeerTable(
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
-        SpvEventBus.newBestBlockEvent.register(this) {
-            // request new address state only if best block changes
+        coroutineScope.launchWithFixedDelay (30_000L, 60_000L){
             requestAddressState()
         }
-
         coroutineScope.launchWithFixedDelay(200L, 20_000L) {
             discoverPeers()
         }

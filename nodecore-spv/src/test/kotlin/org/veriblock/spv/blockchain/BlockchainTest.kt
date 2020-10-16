@@ -85,40 +85,4 @@ class BlockchainTest {
         Assert.assertEquals(/*genesis=*/1 + 2100 + 2001, blockchain.size)
         Assert.assertEquals(tipB.header, blockchain.activeChain.tip().header)
     }
-
-    @Test
-    fun `reorg with fork block MORE than 2000 blocks behind`() {
-        var lastBlock: VeriBlockBlock? = null
-        // initially, have 2100 blocks
-        generateBlock(blockchain.activeChain.tip().header)
-            .take(2100)
-            .forEach {
-                lastBlock = it
-                val isValid = blockchain.acceptBlock(it)
-                Assert.assertTrue(isValid)
-            }
-
-        // total size - elements stored in active chain + genesis
-        Assert.assertEquals(2100 - 2001 + 1, blockchain.activeChain.first().height)
-
-        val tipA = blockchain.activeChain.tip()
-        Assert.assertEquals(tipA.height, 2100)
-        Assert.assertEquals(tipA.header, lastBlock)
-
-        // starting from height 99, generate 2001 blocks. Chain B should win, as it has
-        // higher chainwork
-        val blockBeforeFirst = blockStore.readBlock(blockchain.activeChain.first().header.previousBlock)!!
-        generateBlock(blockBeforeFirst.header)
-            .take(2500) // mine significantly larger chain
-            .forEach {
-                lastBlock = it
-                val isValid = blockchain.acceptBlock(it)
-                Assert.assertTrue(isValid)
-            }
-
-        Assert.assertEquals(/*genesis=*/1 + 2100 + 2500, blockchain.size)
-
-        // tipA is still a winner
-        Assert.assertEquals(tipA.header, blockchain.activeChain.tip().header)
-    }
 }
