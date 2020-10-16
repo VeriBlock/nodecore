@@ -107,7 +107,6 @@ class BlockStoreTest {
         blockStore.readBlock(randomVbkHash()) shouldBe null
     }
 
-    @Ignore
     @Test
     fun `should restore the blocks which were stored by a previous block store object`() {
         // Given
@@ -118,12 +117,12 @@ class BlockStoreTest {
                 randomVbkHash()
             )
         }
-        blockStore.writeBlocks(storedVeriBlockBlocks)
         // When
-        val blockStore2 = BlockStore(spvContext.networkParameters, baseDir)
+        blockStore.writeBlocks(storedVeriBlockBlocks)
+        blockStore = BlockStore(spvContext.networkParameters, baseDir)
         // Then
         storedVeriBlockBlocks.forEach {
-            blockStore2.readBlock(it.hash) shouldBe it
+            blockStore.readBlock(it.hash) shouldBe it
         }
     }
 }
