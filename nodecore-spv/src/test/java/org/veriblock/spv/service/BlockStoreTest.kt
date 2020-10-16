@@ -50,10 +50,10 @@ class BlockStoreTest {
             )
         }
         // When
-        blockStore?.writeBlocks(storedVeriBlockBlocks)
+        blockStore.writeBlocks(storedVeriBlockBlocks)
         // Then
         storedVeriBlockBlocks.forEach {
-            blockStore?.readBlock(it.hash) shouldBe it
+            blockStore.readBlock(it.hash) shouldBe it
         }
     }
 
@@ -66,9 +66,9 @@ class BlockStoreTest {
             randomVBlakeHash()
         )
         // When
-        blockStore?.writeBlock(storedVeriBlockBlock)
+        blockStore.writeBlock(storedVeriBlockBlock)
         // Then
-        blockStore?.readBlock(storedVeriBlockBlock.hash) shouldBe storedVeriBlockBlock
+        blockStore.readBlock(storedVeriBlockBlock.hash) shouldBe storedVeriBlockBlock
     }
 
     @Test
@@ -80,9 +80,9 @@ class BlockStoreTest {
             randomVBlakeHash()
         )
         // When
-        blockStore?.setTip(storedVeriBlockBlock)
+        blockStore.setTip(storedVeriBlockBlock)
         // Then
-        blockStore?.getTip() shouldBe storedVeriBlockBlock
+        blockStore.getTip() shouldBe storedVeriBlockBlock
     }
 
     @Test
@@ -94,9 +94,9 @@ class BlockStoreTest {
             randomVBlakeHash()
         )
         // When
-        blockStore?.writeBlock(storedVeriBlockBlock)
+        blockStore.writeBlock(storedVeriBlockBlock)
         // Then
-        blockStore?.readBlock(randomVBlakeHash()) shouldBe null
+        blockStore.readBlock(randomVBlakeHash()) shouldBe null
     }
 
     @Ignore
