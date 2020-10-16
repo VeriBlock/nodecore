@@ -70,7 +70,7 @@ class BlockStore(
         return BlockIndex(genesisBlock, mutableMapOf(VBlakeHash.EMPTY_HASH to 0L))
     }
 
-    fun readIndex(): BlockIndex = RandomAccessFile(indexFile, "r").use { file ->
+    private fun readIndex(): BlockIndex = RandomAccessFile(indexFile, "r").use { file ->
         val count = file.readInt()
         val tipHash = ByteArray(VBlakeHash.VERIBLOCK_LENGTH)
         file.read(tipHash)
@@ -103,7 +103,7 @@ class BlockStore(
         }
     }
 
-    fun getFileIndex(hash: VBlakeHash) = index.fileIndex[hash] ?: index.truncatedFileIndex[hash]
+    private fun getFileIndex(hash: VBlakeHash) = index.fileIndex[hash] ?: index.truncatedFileIndex[hash]
 
     fun readBlock(hash: VBlakeHash): StoredVeriBlockBlock? {
         val filePosition = getFileIndex(hash)
@@ -112,7 +112,7 @@ class BlockStore(
         return readBlock(filePosition)
     }
 
-    fun readBlock(filePosition: Long): StoredVeriBlockBlock {
+    private fun readBlock(filePosition: Long): StoredVeriBlockBlock {
         return RandomAccessFile(blocksFile, "r").use { file ->
             file.seek(filePosition)
             val blockHeight = file.readInt()

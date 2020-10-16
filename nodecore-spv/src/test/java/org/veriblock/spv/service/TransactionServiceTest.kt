@@ -1,4 +1,4 @@
-package org.veriblock.spv.service.impl
+package org.veriblock.spv.service
 
 import io.mockk.mockk
 import junit.framework.TestCase
@@ -13,7 +13,6 @@ import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.AddressCoinsIndex
 import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardAddress
-import org.veriblock.spv.service.TransactionService
 
 class TransactionServiceTest : TestCase() {
     private val spvContext = SpvContext()
