@@ -188,9 +188,11 @@ class SpvPeerTable(
     }
 
     fun acknowledgeAddress(address: AddressPubKey) {
-        addressesState.putIfAbsent(address.hash, LedgerContext(
+        addressesState.putIfAbsent(
+            address.hash, LedgerContext(
             null, null, null, null
-        ))
+        )
+        )
     }
 
     private suspend fun requestAddressState() {
@@ -303,13 +305,12 @@ class SpvPeerTable(
                             startBlockchainDownload(sender)
                         }
 
-                        veriBlockBlocks
+                        val allBlocksAccepted = veriBlockBlocks
                             .sortedBy { it.height }
-                            .forEach {
-                                // TODO(warchant): if returned false here, block can not be connected or invalid
-                                // maybe ban peer?
-                                /* ignore = */ blockchain.acceptBlock(it)
-                            }
+                            .all { blockchain.acceptBlock(it) }
+
+                        // TODO(warchant): if allBlocksAccepted == false here, block can not be connected or invalid
+                        // maybe ban peer? for now, do nothing
                     }
                     ResultsCase.TRANSACTION -> {
                         // TODO: Different Transaction types

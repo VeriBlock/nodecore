@@ -1,13 +1,9 @@
 package org.veriblock.spv.service
 
-import io.ktor.utils.io.*
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.params.NetworkParameters
-import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.core.utilities.Utility
-import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugWarn
+import org.veriblock.core.utilities.*
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.io.File
@@ -27,7 +23,7 @@ class BlockStore(
     private val blocksCache = LRUCache<VBlakeHash, StoredVeriBlockBlock>(VBK_MAX_REORG_DISTANCE + 1)
 
     private val indexFile = File(baseDir, "$networkParameters-block-index.db")
-    private val blocksFile = File(baseDir,"$networkParameters-blocks.db")
+    private val blocksFile = File(baseDir, "$networkParameters-blocks.db")
 
     private fun writeBlockBody(file: RandomAccessFile, block: StoredVeriBlockBlock) {
         file.writeInt(block.height)
@@ -72,7 +68,7 @@ class BlockStore(
         return BlockIndex(genesisBlock, mutableMapOf(genesisBlock.hash.trimToPreviousBlockSize() to 0L))
     }
 
-    private fun readChainWithTip(hash: VBlakeHash, size: Int): ArrayList<StoredVeriBlockBlock> {
+    fun readChainWithTip(hash: VBlakeHash, size: Int): ArrayList<StoredVeriBlockBlock> {
         val ret = ArrayList<StoredVeriBlockBlock>()
         var i = 0
         var cursor = readBlock(hash)

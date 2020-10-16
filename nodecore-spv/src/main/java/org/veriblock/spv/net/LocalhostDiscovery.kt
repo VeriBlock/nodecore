@@ -12,6 +12,8 @@ import org.veriblock.core.params.LOCALHOST
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 
+private val logger = createLogger { }
+
 /**
  * Discovery peer locally.
  */
@@ -19,7 +21,6 @@ class LocalhostDiscovery(
     private val networkParameters: NetworkParameters
 ) : PeerDiscovery {
     init {
-        val logger = createLogger { }
         logger.info { "Doing local peer discovery. Using peer ${LOCALHOST}:${networkParameters.p2pPort}." }
     }
 

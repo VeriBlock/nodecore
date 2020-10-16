@@ -120,7 +120,9 @@ class SpvContext {
             network = config.network
         }
 
-        assert (networkParameters.name == config.network);
+        check (networkParameters.name == config.network) {
+            "SPV configured to ${config.network}, and network to ${networkParameters.name}. They must be same."
+        }
         val peerDiscovery = if (config.useLocalNode || networkParameters.fileTag == "regtest") {
             LocalhostDiscovery(networkParameters)
         } else {

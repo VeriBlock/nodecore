@@ -26,9 +26,9 @@ class BootstrapPeerDiscovery(networkParameters: NetworkParameters) : PeerDiscove
         val dns = networkParameters.bootstrapDns
         val port = networkParameters.p2pPort
         if(dns == null) {
-            logger.info { "Not doing DNS peer discovery, because bootstrapDns is null" }
+            logger.info { "Not doing DNS peer discovery, because the network $networkParameters doesn't have a bootstrap DNS" }
         } else {
-            logger.info { "Doing DNS peer discovery from $dns" }
+            logger.debug { "Doing DNS peer discovery from $dns" }
             try {
                 peers.addAll(dnsResolver.query(dns).map {
                     logger.debug("Found peer ${it}:${port}")

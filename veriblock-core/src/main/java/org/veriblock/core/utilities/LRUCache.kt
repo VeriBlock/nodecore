@@ -1,4 +1,4 @@
-package org.veriblock.spv.service
+package org.veriblock.core.utilities
 
 class LRUCache<K, V>(private val cacheSize: Int) :
     LinkedHashMap<K, V>(
