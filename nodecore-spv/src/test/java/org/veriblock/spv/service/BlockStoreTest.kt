@@ -25,13 +25,11 @@ import java.security.MessageDigest
 import kotlin.random.Random
 
 class BlockStoreTest {
-    private val spvContext = SpvContext()
     private lateinit var blockStore: BlockStore
     private lateinit var baseDir: File
 
     init {
         Context.set(defaultMainNetParameters)
-        spvContext.init(SpvConfig(useLocalNode = true))
     }
 
     @Before
@@ -39,7 +37,7 @@ class BlockStoreTest {
         baseDir = File("blockStoreTests").also {
             it.mkdir()
         }
-        blockStore = BlockStore(spvContext.networkParameters, baseDir)
+        blockStore = BlockStore(defaultMainNetParameters, baseDir)
     }
 
     @After
@@ -119,7 +117,7 @@ class BlockStoreTest {
         }
         // When
         blockStore.writeBlocks(storedVeriBlockBlocks)
-        blockStore = BlockStore(spvContext.networkParameters, baseDir)
+        blockStore = BlockStore(defaultMainNetParameters, baseDir)
         // Then
         storedVeriBlockBlocks.forEach {
             blockStore.readBlock(it.hash) shouldBe it
