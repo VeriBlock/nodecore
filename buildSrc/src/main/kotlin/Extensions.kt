@@ -17,8 +17,8 @@ fun Project.prettyVersion(): String {
     var version = rootProject.version.toString()
     if (version.contains("+")) {
         version = version.substring(0, version.length - 8).replace("+", ".")
-        if (version.endsWith("develop")) {
-            version = version.substring(0, version.length - 8)
+        if (version.endsWith("master")) {
+            version = version.substring(0, version.length - 7)
         }
     }
     return version
