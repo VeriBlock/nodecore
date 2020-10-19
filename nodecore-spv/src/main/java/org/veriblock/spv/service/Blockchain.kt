@@ -9,18 +9,12 @@ package org.veriblock.spv.service
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.crypto.PreviousBlockVbkHash
-import org.veriblock.core.miner.getMiningContext
-import org.veriblock.core.miner.getNextWorkRequired
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
-import java.io.IOException
 import java.lang.IllegalStateException
-import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
 
@@ -30,9 +24,10 @@ class Blockchain(
 
     val activeChain get() = blockStore.activeChain
     val blockIndex get() = blockStore.blockIndex
+    val size get() = blockIndex.size
 
     fun getChainHeadBlock(): StoredVeriBlockBlock {
-        return blockStore.readBlock(activeChain.tip.position)!!
+        return blockStore.getChainHeadBlock()
     }
 
     fun getBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
@@ -80,12 +75,12 @@ class Blockchain(
         // TODO: contextually check block: validate median time past, validate keystones
 
         // write block on disk
-        blockStore.appendBlock(stored)
+        val index = blockStore.appendBlock(stored)
 
         // do fork resolution
         if (stored.work > blockStore.activeChain.tipWork) {
             // new block wins
-            blockStore.activeChain.setTip(prevIndex, stored.work)
+            blockStore.activeChain.setTip(index, stored.work)
             SpvEventBus.newBestBlockEvent.trigger(block)
         }
 
@@ -97,7 +92,7 @@ class Blockchain(
 
     fun getPeerQuery(): List<VeriBlockBlock> {
         return blockStore
-            .readChainWithTip(blockStore.activeChain.tip.hash, 100)
+            .readChainWithTip(blockStore.activeChain.tip.smallHash, 100)
             .map { it.header }
             .filter { it.isKeystone() }
     }

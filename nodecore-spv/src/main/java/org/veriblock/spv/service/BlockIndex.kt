@@ -4,7 +4,7 @@ import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 
 data class BlockIndex(
-    val hash: PreviousBlockVbkHash,
+    val smallHash: PreviousBlockVbkHash,
     val position: Long,
     val height: Int,
     // for fast access of previous block

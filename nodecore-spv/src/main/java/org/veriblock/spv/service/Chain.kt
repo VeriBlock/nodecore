@@ -14,7 +14,7 @@ class Chain(
     }
 
     // get by height
-    fun get(index: Int): BlockIndex? {
+    operator fun get(index: Int): BlockIndex? {
         if (index < 0 || index >= chain.size) return null
         return chain[index]
     }
@@ -40,7 +40,7 @@ class Chain(
         chain.ensureCapacity(block.height + 1)
 
         // FIXME: workaround for ArrayList to allow usage of operator[] in next while loop
-        while(chain.size <= block.height) {
+        while (chain.size <= block.height) {
             // this `block` will be overwritten in the next loop anyway
             chain.add(block)
         }

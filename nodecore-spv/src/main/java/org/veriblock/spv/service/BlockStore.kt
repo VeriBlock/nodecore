@@ -82,7 +82,7 @@ class BlockStore(
                 // prev index exists! this is valid block
                 val smallHash = block.hash.trimToPreviousBlockSize()
                 val index = BlockIndex(
-                    hash = smallHash,
+                    smallHash = smallHash,
                     position = position,
                     height = block.height,
                     prev = prevIndex
@@ -108,24 +108,25 @@ class BlockStore(
         return blockIndex[hash.trimToPreviousBlockSize()]
     }
 
-    fun getChainHead(): StoredVeriBlockBlock? {
-        return readBlock(activeChain.tip.position)
+    fun getChainHeadBlock(): StoredVeriBlockBlock {
+        return readBlock(activeChain.tip.position)!!
     }
 
     /**
      * @invariant should be called on valid unique connecting blocks
      */
-    fun appendBlock(block: StoredVeriBlockBlock) = lock.withLock {
+    fun appendBlock(block: StoredVeriBlockBlock): BlockIndex = lock.withLock {
         val smallHash = block.hash.trimToPreviousBlockSize()
-        if (blockIndex.containsKey(smallHash)) {
+        val index = blockIndex[smallHash]
+        if (index != null) {
             // block already exists
-            return
+            return index
         }
 
         val position = blocksFile.length()
         blocksFile.seek(position)
         writeBlockToFile(block)
-        appendToBlockIndex(position, block)
+        return appendToBlockIndex(position, block)
     }
 
     fun readBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
@@ -156,7 +157,7 @@ class BlockStore(
         return ret
     }
 
-    private fun appendToBlockIndex(position: Long, block: StoredVeriBlockBlock) {
+    private fun appendToBlockIndex(position: Long, block: StoredVeriBlockBlock): BlockIndex {
         val smallHash = block.hash.trimToPreviousBlockSize()
         val prev = blockIndex[block.header.previousBlock]
         // this invariant should never fail with correct usage of this func
@@ -165,12 +166,13 @@ class BlockStore(
             )
 
         val index = BlockIndex(
-            hash = smallHash,
+            smallHash = smallHash,
             position = position,
             height = block.height,
             prev = prev
         )
         blockIndex[smallHash] = index
+        return index
     }
 
     // should seek to correct position before use
@@ -224,7 +226,7 @@ class BlockStore(
 
         // block index always contains genesis block on start
         val index = BlockIndex(
-            hash = smallHash,
+            smallHash = smallHash,
             position = 0, // gb is at position 0
             height = 0,
             prev = null
