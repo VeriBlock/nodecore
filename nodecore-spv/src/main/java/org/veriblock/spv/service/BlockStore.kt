@@ -22,6 +22,10 @@ import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
+/**
+ * @invariant blocks.db file contains only connected blocks. I.e. store never
+ * contains a block whose previousBlock does not exist in this store **before** this block.
+ */
 class BlockStore(
     private val networkParameters: NetworkParameters,
     baseDir: File
