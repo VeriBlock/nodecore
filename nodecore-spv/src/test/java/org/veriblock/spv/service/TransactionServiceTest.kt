@@ -19,7 +19,7 @@ class TransactionServiceTest : TestCase() {
 
     public override fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext.init(SpvConfig("testnet", useLocalNode = true))
+        spvContext.init(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
     }
 
     @Test

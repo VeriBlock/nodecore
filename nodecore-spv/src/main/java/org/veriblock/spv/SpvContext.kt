@@ -7,15 +7,15 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv
 
+import io.ktor.util.network.*
 import org.veriblock.core.Context
-import org.veriblock.core.params.LOCALHOST
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.spv.model.TransactionPool
 import org.veriblock.spv.net.BootstrapPeerDiscovery
-import org.veriblock.spv.net.LocalhostDiscovery
+import org.veriblock.spv.net.DirectDiscovery
 import org.veriblock.spv.net.P2PService
 import org.veriblock.spv.net.PeerDiscovery
 import org.veriblock.spv.net.SpvPeerTable
@@ -110,9 +110,6 @@ class SpvContext {
 
     /**
      * Initialise context. This method should be call on the start app.
-     *
-     * @param networkParameters Config for particular network.
-     * @param peerDiscovery     discovery peers.
      */
     @Synchronized
     fun init(config: SpvConfig) {
@@ -123,8 +120,10 @@ class SpvContext {
         check (networkParameters.name == config.network) {
             "SPV configured to ${config.network}, and network to ${networkParameters.name}. They must be same."
         }
-        val peerDiscovery = if (config.useLocalNode || networkParameters.fileTag == "regtest") {
-            LocalhostDiscovery(networkParameters)
+        val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
+            DirectDiscovery(config.connectDirectlyTo.map {
+                NetworkAddress(it, networkParameters.p2pPort)
+            })
         } else {
             BootstrapPeerDiscovery(networkParameters)
         }
@@ -152,6 +151,6 @@ class SpvContext {
 class SpvConfig(
     val network: String = "mainnet",
     val dataDir: String = ".",
-    val useLocalNode: Boolean = false,
+    val connectDirectlyTo: List<String> = emptyList(),
     val trustPeerHashes: Boolean = true
 )

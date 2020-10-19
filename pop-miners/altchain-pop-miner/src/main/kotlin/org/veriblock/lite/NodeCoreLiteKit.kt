@@ -95,7 +95,7 @@ class NodeCoreLiteKit(
         logger.info { "Initializing SPV..." }
         val spvContext = SpvContext()
         spvContext.init(
-            SpvConfig(networkParameters.name, useLocalNode = config.connectToLocalNode)
+            SpvConfig(networkParameters.name, connectDirectlyTo = config.connectDirectlyTo)
         )
         spvContext.peerTable.start()
         GlobalScope.launch {
