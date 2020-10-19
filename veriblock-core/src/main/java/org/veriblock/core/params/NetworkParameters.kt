@@ -321,11 +321,12 @@ object RegTestParameters : NetworkParametersTemplate() {
         VBK_EMPTY_HASH.trimToPreviousBlockSize(),
         VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
         VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        Sha256Hash.ZERO_HASH,
-        1577367966,
-        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        Sha256Hash.wrap("84E710F30BB8CFC9AF12622A8F39B917", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        1603044490,
+        BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
         0
     )
+
     // regtest BTC genesis block:
     override val bitcoinOriginBlockHeight = 0
     override val bitcoinOriginBlock = BitcoinBlock(
@@ -341,16 +342,27 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val transactionPrefix = 0xEE.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = true
+
+    init {
+        val hash = genesisBlock.hash.toString()
+        check(hash == "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977") {
+            "Regtest Genesis Block does not match expected hash!"
+        }
+    }
 }
 
 @JvmField
 val defaultMainNetParameters = NetworkParameters { network = MainNetParameters.NETWORK }
+
 @JvmField
 val defaultTestNetParameters = NetworkParameters { network = TestNetParameters.NETWORK }
+
 @JvmField
 val defaultTestNetProgPoWParameters = NetworkParameters { network = TestNetProgPoWParameters.NETWORK }
+
 @JvmField
 val defaultAlphaNetParameters = NetworkParameters { network = AlphaNetParameters.NETWORK }
+
 @JvmField
 val defaultRegTestParameters = NetworkParameters { network = RegTestParameters.NETWORK }
 
