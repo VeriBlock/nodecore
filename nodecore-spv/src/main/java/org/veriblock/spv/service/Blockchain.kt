@@ -9,6 +9,7 @@ package org.veriblock.spv.service
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.getMiningContext
 import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.params.NetworkParameters
@@ -19,37 +20,41 @@ import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
 import java.io.IOException
 import java.lang.IllegalStateException
+import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
 
 class Blockchain(
-    private val networkParameters: NetworkParameters,
     private val blockStore: BlockStore
 ) {
-    val size: Int
-        get() = this.blockStore.index.fileIndex.size
 
-    fun getChainHead(): StoredVeriBlockBlock {
-        try {
-            return blockStore.getTip()
-        } catch (e: Exception) {
-            throw IllegalStateException("Can not get tip: $e")
-        }
+    val activeChain get() = blockStore.activeChain
+    val blockIndex get() = blockStore.blockIndex
+
+    fun getChainHeadBlock(): StoredVeriBlockBlock {
+        return blockStore.readBlock(activeChain.tip.position)!!
     }
 
-    fun get(hash: AnyVbkHash): StoredVeriBlockBlock? {
+    fun getBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
         return blockStore.readBlock(hash)
     }
 
+    fun getBlockIndex(hash: AnyVbkHash): BlockIndex? {
+        return blockStore.getBlockIndex(hash)
+    }
+
     fun acceptBlock(block: VeriBlockBlock): Boolean {
-        if (blockStore.exists(block.hash)) {
+        if (getBlockIndex(block.hash) != null) {
             // block is valid, we already have it
             return true
         }
 
         // does block connect to blockchain?
-        val prev = blockStore.readBlock(block.previousBlock)
+        val prevIndex = getBlockIndex(block.previousBlock)
             ?: return false
+
+        val prev = prevIndex.readBlock(blockStore)
+            ?: throw IllegalStateException("Found index with hash=${block.previousBlock} but could not read its block")
 
         // is block statelessly valid?
         if (!ValidationService.checkBlock(block)) {
@@ -75,12 +80,12 @@ class Blockchain(
         // TODO: contextually check block: validate median time past, validate keystones
 
         // write block on disk
-        blockStore.writeBlock(stored)
+        blockStore.appendBlock(stored)
 
         // do fork resolution
-        if (stored.work > getChainHead().work) {
+        if (stored.work > blockStore.activeChain.tipWork) {
             // new block wins
-            blockStore.setTip(stored)
+            blockStore.activeChain.setTip(prevIndex, stored.work)
             SpvEventBus.newBestBlockEvent.trigger(block)
         }
 
@@ -91,6 +96,9 @@ class Blockchain(
     }
 
     fun getPeerQuery(): List<VeriBlockBlock> {
-        return blockStore.readChainWithTip(getChainHead().hash, 100).map { it.header }.filter { it.isKeystone() }
+        return blockStore
+            .readChainWithTip(blockStore.activeChain.tip.hash, 100)
+            .map { it.header }
+            .filter { it.isKeystone() }
     }
 }
