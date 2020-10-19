@@ -90,6 +90,9 @@ class BlockStore(
 
     fun setTip(tip: StoredVeriBlockBlock) = lock.withLock {
         index.tip = tip
+        if (getFileIndex(tip.hash) == null) {
+            error("Trying to set block store tip to a block that's not stored in the index!")
+        }
         RandomAccessFile(indexFile, "rw").use { file ->
             file.seek(0)
             file.write(tip.hash.bytes)

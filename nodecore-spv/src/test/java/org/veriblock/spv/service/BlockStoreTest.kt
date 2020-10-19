@@ -86,6 +86,7 @@ class BlockStoreTest {
             randomVbkHash()
         )
         // When
+        blockStore.writeBlock(storedVeriBlockBlock)
         blockStore.setTip(storedVeriBlockBlock)
         // Then
         blockStore.getTip() shouldBe storedVeriBlockBlock
