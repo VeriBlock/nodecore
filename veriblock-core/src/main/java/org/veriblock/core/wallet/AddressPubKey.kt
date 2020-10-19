@@ -4,25 +4,11 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.core.wallet
 
-package org.veriblock.core.wallet;
+import java.security.PublicKey
 
-import java.security.PublicKey;
-
-public class AddressPubKey {
-    private final String hash;
-    private final PublicKey publicKey;
-
-    public AddressPubKey(String hash, PublicKey publicKey) {
-        this.hash = hash;
-        this.publicKey = publicKey;
-    }
-
-    public String getHash() {
-        return hash;
-    }
-
-    public PublicKey getPublicKey() {
-        return publicKey;
-    }
-}
+class AddressPubKey(
+    val hash: String,
+    val publicKey: PublicKey
+)

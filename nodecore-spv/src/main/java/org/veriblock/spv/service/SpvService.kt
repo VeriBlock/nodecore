@@ -317,7 +317,8 @@ class SpvService(
                     if (ledgerContext != null) {
                         getAddressBalance(address, ledgerContext)
                     } else {
-                        addressManager.monitor(AddressPubKey(address.get(), null))
+                        // FIXME: this breaks SPV standalone, but fixes APM for now
+                        //addressManager.monitor(AddressPubKey(address.get(), null))
 
                         AddressBalance(address, Coin.ZERO, Coin.ZERO, Coin.ZERO)
                     }

@@ -157,7 +157,7 @@ class BlockStore(
             file.writeInt(blockCount + 1)
             // Write block index
             file.seek(4 + VBK_HASH_LENGTH + blockCount.toLong() * (VBK_HASH_LENGTH + 8))
-            file.write(smallHash.bytes)
+            file.write(block.hash.bytes)
             file.writeLong(blockFilePosition)
         }
 
