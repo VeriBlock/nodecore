@@ -41,55 +41,46 @@ class BlockchainTest {
 
     @Test
     fun `mine single chain`() {
-        var lastBlock: VeriBlockBlock? = null
         val lastBlock = generateBlock(blockchain.getChainHeadBlock().header).take(2100).onEach {
-          blockchain.acceptBlock(it) shouldBe true
+            blockchain.acceptBlock(it) shouldBe true
         }.last()
-            lastBlock = it
-            val isValid = blockchain.acceptBlock(it)
-            Assert.assertTrue(isValid)
-        }
+
 
         blockchain.size shouldBe 2100 + 1 /*genesis*/
-        blockStore.getChainHeadBlock().header shouldBe lastBlock!!
+        blockStore.getChainHeadBlock().header shouldBe lastBlock
 
         // blocks are accessible by height in O(1)
         (0..2100).forEach {
-            val index = blockchain.activeChain.get(it)!!
+            val index = blockchain.activeChain[it]!!
             index.height shouldBe it
         }
     }
 
     @Test
-    fun `reorg with fork block LESS than 2000 blocks behind`() {
-        var lastBlock: VeriBlockBlock? = null
+    fun `reorg of size 1100`() {
         // initially, have 2100 blocks
-        generateBlock(blockchain.getChainHeadBlock().header)
+        val lastBlock1 = generateBlock(blockchain.getChainHeadBlock().header)
             .take(2100)
-            .forEach {
-                lastBlock = it
-                val isValid = blockchain.acceptBlock(it)
-                Assert.assertTrue(isValid)
+            .onEach {
+                blockchain.acceptBlock(it) shouldBe true
             }
+            .last()
 
         blockchain.activeChain.first.height shouldBe 0
         blockchain.activeChain.tip.height shouldBe 2100
 
         val tipA = blockchain.activeChain.tip
         tipA.height shouldBe 2100
-        tipA.smallHash shouldBe lastBlock!!.hash.trimToPreviousBlockSize()
+        tipA.smallHash shouldBe lastBlock1.hash.trimToPreviousBlockSize()
 
         // starting from height 1000, generate 2001 blocks. Chain B should win, as it has
         // higher chainwork
-        generateBlock(blockchain.activeChain[1000]!!.readBlock(blockStore)!!.header)
+        val lastBlock2 = generateBlock(blockchain.activeChain[1000]!!.readBlock(blockStore)!!.header)
             .take(2001)
-            .forEach {
-                lastBlock = it
-                val isValid = blockchain.acceptBlock(it)
-                Assert.assertTrue(isValid)
-            }
+            .onEach { blockchain.acceptBlock(it) shouldBe true }
+            .last()
 
-        val tipB = blockStore.readBlock(lastBlock!!.hash)!!
+        val tipB = blockStore.readBlock(lastBlock2.hash)!!
 
         blockchain.size shouldBe /*genesis=*/1 + 2100 + 2001
         blockchain.activeChain.tip.readBlock(blockStore)!!.header shouldBe tipB.header
