@@ -84,6 +84,7 @@ class SpvPeerTable(
 ) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
+    private val requestingLedgerProof = AtomicBoolean(false)
     private val discovery: PeerDiscovery
     private val blockchain: Blockchain
     var maximumPeers = DEFAULT_CONNECTIONS
@@ -122,7 +123,7 @@ class SpvPeerTable(
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
-        coroutineScope.launchWithFixedDelay (30_000L, 60_000L){
+        coroutineScope.launchWithFixedDelay(10_000L, 10_000L) {
             requestAddressState()
         }
         coroutineScope.launchWithFixedDelay(200L, 20_000L) {
@@ -194,11 +195,19 @@ class SpvPeerTable(
     }
 
     private suspend fun requestAddressState() {
-        val addresses = spvContext.addressManager.getAll()
-        if (addresses.isEmpty()) {
+        // if requestingLedgerProof is true, then we already started requesting our balance, skip this call.
+        // this prevents SPV from sending too many requests when new block is changed very quickly.
+        if (requestingLedgerProof.get()) {
             return
         }
+        requestingLedgerProof.set(true)
+
         try {
+            val addresses = spvContext.addressManager.all
+            if (addresses.isEmpty()) {
+                return
+            }
+
             val request = buildMessage {
                 ledgerProofRequest = LedgerProofRequest.newBuilder().apply {
                     for (address in addresses) {
@@ -220,6 +229,8 @@ class SpvPeerTable(
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to request address state" }
         }
+
+        requestingLedgerProof.set(false)
     }
 
     private suspend fun requestPendingTransactions() {
@@ -459,7 +470,7 @@ class SpvPeerTable(
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus
-        val currentHeight = blockchain.getChainHead().height
+        val currentHeight = blockchain.activeChain.tip.height
         val bestBlockHeight = downloadPeer?.bestBlockHeight ?: 0
         status = when {
             downloadPeer == null || (currentHeight == 0 && bestBlockHeight == 0) ->

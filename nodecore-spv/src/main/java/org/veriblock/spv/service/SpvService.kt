@@ -69,13 +69,13 @@ class SpvService(
             operatingState = operatingState,
             networkState = networkState,
             connectedPeerCount = peerTable.getAvailablePeers(),
-            networkHeight = peerTable.getBestBlockHeight().coerceAtLeast(blockchain.getChainHead().height),
-            localBlockchainHeight = blockchain.getChainHead().height,
+            networkHeight = peerTable.getBestBlockHeight().coerceAtLeast(blockchain.activeChain.tip.height),
+            localBlockchainHeight = blockchain.activeChain.tip.height,
             networkVersion = spvContext.networkParameters.name,
             dataDirectory = spvContext.directory.path,
             programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",
             nodecoreStartTime = spvContext.startTime.epochSecond,
-            walletCacheSyncHeight = blockchain.getChainHead().height,
+            walletCacheSyncHeight = blockchain.activeChain.tip.height,
             walletState = when {
                 addressManager.isEncrypted -> WalletState.DEFAULT
                 addressManager.isLocked -> WalletState.LOCKED
@@ -346,7 +346,7 @@ class SpvService(
     }
 
     fun getLastVBKBlockHeader(): BlockHeader {
-        val block: StoredVeriBlockBlock = blockchain.getChainHead()
+        val block: StoredVeriBlockBlock = blockchain.getChainHeadBlock()
         return BlockHeader(
             SerializeDeserializeService.serializeHeaders(block.header),
             block.hash.bytes
@@ -354,7 +354,7 @@ class SpvService(
     }
 
     fun getVbkBlockHeader(hash: AnyVbkHash): BlockHeader? {
-        val block = blockchain.get(hash)
+        val block = blockchain.getBlock(hash)
             ?: return null
         return BlockHeader(
             SerializeDeserializeService.serializeHeaders(block.header),
