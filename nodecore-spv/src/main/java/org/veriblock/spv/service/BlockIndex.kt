@@ -31,9 +31,7 @@ data class BlockIndex(
     }
 
     val isKeystone: Boolean
-        get() {
-            return height % KEYSTONE_INTERVAL == 0
-        }
+        get() = height % KEYSTONE_INTERVAL == 0
 
     val previousKeystone: BlockIndex?
         get() {
