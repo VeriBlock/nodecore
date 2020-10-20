@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.veriblock.sdk.models.Address;
 
+import java.nio.ByteBuffer;
 import java.util.Base64;
 
 public class AddressTests {
@@ -59,5 +60,14 @@ public class AddressTests {
         } catch(IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().startsWith("The address"));
         }
+    }
+
+    @Test
+    public void roundtrip() {
+        final String address = "VFFDWUMLJwLRuNzH4NX8Rm32E59n6d";
+        Address test = new Address(address);
+        byte[] bytes = test.serialize();
+        Address decoded = Address.parse(ByteBuffer.wrap(bytes));
+        Assert.assertEquals(test, decoded);
     }
 }
