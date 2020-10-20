@@ -9,6 +9,9 @@ package org.veriblock.sdk.models
 
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.util.getSingleByteLengthValue
+import org.veriblock.sdk.util.writeSingleByteLengthValue
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.nio.ByteBuffer
 import kotlin.math.roundToLong
 
@@ -57,6 +60,22 @@ class Coin(
         const val COIN_VALUE: Long = 100000000L
         val ZERO = 0.asCoin()
         val ONE = COIN_VALUE.asCoin()
+
+        @JvmStatic
+        fun parse(buffer: ByteBuffer): Coin {
+            return buffer.parseCoin()
+        }
+    }
+
+    fun serialize(): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serialize(stream)
+            return stream.toByteArray()
+        }
+    }
+
+    fun serialize(stream: OutputStream) {
+        stream.writeSingleByteLengthValue(atomicUnits)
     }
 }
 

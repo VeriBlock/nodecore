@@ -7,8 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-import org.veriblock.sdk.services.SerializeDeserializeService
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.nio.ByteBuffer
 
 class Output(
     val address: Address,
@@ -18,7 +19,7 @@ class Output(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val obj = other as Output
-        return address == obj.address && amount.equals(obj.amount)
+        return address == obj.address && amount == obj.amount
     }
 
     override fun hashCode(): Int {
@@ -32,10 +33,24 @@ class Output(
         fun of(address: String, amount: Long): Output {
             return Output(Address(address), amount.asCoin())
         }
+
+        @JvmStatic
+        fun parse(buffer: ByteBuffer): Output {
+            val address = Address.parse(buffer)
+            val amount = Coin.parse(buffer)
+            return Output(address, amount)
+        }
+    }
+
+    fun serialize(): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serialize(stream)
+            return stream.toByteArray()
+        }
     }
 
     fun serialize(stream: OutputStream) {
         address.serialize(stream)
-        SerializeDeserializeService.serialize(amount, stream)
+        amount.serialize(stream)
     }
 }
