@@ -1,14 +1,17 @@
 package org.veriblock.spv.blockchain
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import org.junit.*
+import org.junit.After
+import org.junit.Test
 import org.veriblock.core.Context
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.vbkBlockGenerator
 import org.veriblock.core.params.getDefaultNetworkParameters
+import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.service.BlockStore
 import org.veriblock.spv.service.Blockchain
+import java.math.BigInteger
 
 class BlockchainTest {
     val regtest = getDefaultNetworkParameters("regtest")
@@ -28,7 +31,7 @@ class BlockchainTest {
 
     fun generateBlock(prev: VeriBlockBlock) = vbkBlockGenerator(prev, regtest) {
         // return previous block header
-        blockStore.readBlock(it.previousBlock)?.header
+        blockchain.getBlock(it.previousBlock)?.header
     }
 
     @Test
@@ -36,7 +39,8 @@ class BlockchainTest {
         // upon start there must be at least 1 block - genesis block
         blockchain.size shouldBe 1
         blockchain.activeChain.tip.smallHash shouldBe regtest.genesisBlock.hash.trimToPreviousBlockSize()
-        blockchain.getBlock(blockchain.activeChain.tip.smallHash)!!.header shouldBe regtest.genesisBlock
+        blockchain.getBlock(0)?.header shouldBe regtest.genesisBlock
+        blockchain.getBlock(blockchain.activeChain.tip.smallHash)?.header shouldBe regtest.genesisBlock
     }
 
     @Test
@@ -47,7 +51,7 @@ class BlockchainTest {
 
 
         blockchain.size shouldBe 2100 + 1 /*genesis*/
-        blockStore.getChainHeadBlock().header shouldBe lastBlock
+        blockchain.getChainHeadBlock().header shouldBe lastBlock
 
         // blocks are accessible by height in O(1)
         (0..2100).forEach {
@@ -80,9 +84,47 @@ class BlockchainTest {
             .onEach { blockchain.acceptBlock(it) shouldBe true }
             .last()
 
-        val tipB = blockStore.readBlock(lastBlock2.hash)!!
+        val tipB = blockchain.getBlock(lastBlock2.hash)!!
 
         blockchain.size shouldBe /*genesis=*/1 + 2100 + 2001
         blockchain.activeChain.tip.readBlock(blockStore)!!.header shouldBe tipB.header
+    }
+
+    @Test
+    fun `during blockchain loading, invalid block found`() {
+        val chainGen = generateBlock(regtest.genesisBlock)
+            .take(100)
+            .onEach { blockchain.acceptBlock(it) shouldBe true }
+            .toList()
+        chainGen.size shouldBe 100
+        blockchain.activeChain.tip.height shouldBe 100
+
+        val headerGenerated = chainGen.take(1).last()
+        val headerCorrupted = VeriBlockBlock(
+            headerGenerated.height,
+            headerGenerated.version,
+            PreviousBlockVbkHash(),
+            headerGenerated.previousKeystone,
+            headerGenerated.secondPreviousKeystone,
+            headerGenerated.merkleRoot,
+            headerGenerated.timestamp,
+            headerGenerated.difficulty,
+            headerGenerated.nonce
+        )
+
+        val positionAfterLastValidBlock = blockStore.appendBlock(
+            StoredVeriBlockBlock(
+                header = headerCorrupted,
+                work = BigInteger.valueOf(999999999L),
+                hash = headerCorrupted.hash
+            )
+        )
+
+        val store = BlockStore(regtest, tmpdir)
+        val bchain2 = Blockchain(store)
+
+        bchain2.getBlock(headerCorrupted.hash) shouldBe null
+        blockStore.size shouldBe positionAfterLastValidBlock
+        bchain2.size shouldBe 101
     }
 }

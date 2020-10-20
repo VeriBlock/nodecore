@@ -1,5 +1,6 @@
 package org.veriblock.spv.service
 
+import kotlinx.coroutines.yield
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
@@ -11,6 +12,7 @@ import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.CHAIN_WORK_BYTES
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
@@ -23,134 +25,79 @@ import kotlin.concurrent.withLock
 private val logger = createLogger {}
 
 /**
- * @invariant blocks.db file contains only connected blocks. I.e. store never
+ * @invariant blocks.db file should contain only connected blocks with correct work. I.e. store never
  * contains a block whose previousBlock does not exist in this store **before** this block.
  */
 class BlockStore(
-    private val networkParameters: NetworkParameters,
+    val networkParameters: NetworkParameters,
     baseDir: File
-) {
+) : Closeable, AutoCloseable {
+
+    val path = File(baseDir, "$networkParameters-blocks.db")
     private val lock = ReentrantLock()
-    private val blocksFile = RandomAccessFile(File(baseDir, "$networkParameters-blocks.db"), "rw")
+    private val blocksFile = RandomAccessFile(path, "rw")
 
-    // in-memory block index
-    val blockIndex = ConcurrentHashMap<PreviousBlockVbkHash, BlockIndex>()
-    lateinit var activeChain: Chain
-
-    init {
-        // reads blocks file and builds block index
-        reindex()
-    }
+    val size: Long get() = blocksFile.length()
 
     /**
-     * Refresh block index by reading blocks file block-by-block and building index on top of that.
+     * Reads all blocks one-by-one from blocks file.
+     * Executes `onBlock` on every new block found.
+     *
+     * If `onBlock` returns false, current block is invalid - truncates blocks file and returns.
      */
-    fun reindex() = lock.withLock {
-        logger.info { "Reading $networkParameters blocks..." }
-
-        // drop previous block index
-        blockIndex.clear()
-
-        // write genesis block to block index and block storage
-        writeGenesisBlock(networkParameters.genesisBlock)
-
+    fun forEach(
+        onBlock: (position: Long, block: StoredVeriBlockBlock) -> Boolean
+    ) = lock.withLock {
         val size = blocksFile.length()
         blocksFile.seek(0)
-
         var position = 0L
 
-        // all blocks in block store must connect to their previousBlocks.
-        // if block does not connect to prev block, we truncate blocksFile to
-        // last valid block.
+        // blocks are written in sequentially.
+        // read all indices
         while (blocksFile.filePointer < size) {
             try {
                 position = blocksFile.filePointer
                 // this moves filePointer forward
                 val block = readBlockFromFile()
-                if (block.height == 0) {
-                    // skip genesis block
-                    continue
-                }
-                // we were able to read a block from blocks file.
-                // this block must connect to previous block, i.e.
-                // previous block must exist in index
-                val prevHash = block.header.previousBlock
-                val prevIndex = blockIndex[prevHash]
-                if (prevIndex == null) {
-                    logger.warn { "Found block that does not connect to blockchain: height=${block.height} hash=${block.hash} " }
-                    // this block does not connect to previous, move file
+                if (!onBlock(position, block)) {
+                    // this block is invalid, move file
                     // pointer to position "before" this block and truncate the file.
                     // this removes all next blocks, as we can not rely on their validity anymore.
-                    blocksFile.channel.truncate(position)
+                    truncate(position)
                     // we no longer interested in reading
                     break
-                }
-
-                // prev index exists! this is valid block
-                val smallHash = block.hash.trimToPreviousBlockSize()
-                val index = BlockIndex(
-                    smallHash = smallHash,
-                    position = position,
-                    height = block.height,
-                    prev = prevIndex
-                )
-                blockIndex[smallHash] = index
-
-                // update active chain
-                if (activeChain.tipWork < block.work) {
-                    activeChain.setTip(index, block.work)
                 }
             } catch (e: IOException) {
                 // we tried to read a block, but we were not able to do so.
                 // move ptr to last valid block position and truncate the rest
-                blocksFile.channel.truncate(position)
+                truncate(position)
                 break
             }
-        }
-
-        logger.info { "Successfully initialized Blockchain with ${blockIndex.size} blocks" }
+        }  // end while
     }
 
     /**
-     * Getter for block index.
+     * Writes a block to a given position.
+     * @return end of written block
      */
-    fun getBlockIndex(hash: AnyVbkHash): BlockIndex? {
-        return blockIndex[hash.trimToPreviousBlockSize()]
-    }
-
-    /**
-     * Getter for full block at current active chain tip.
-     */
-    fun getChainHeadBlock(): StoredVeriBlockBlock {
-        return readBlock(activeChain.tip.position)!!
-    }
-
-    /**
-     * Adds new block to block storage.
-     *
-     * @invariant should be called on valid unique connecting blocks
-     */
-    fun appendBlock(block: StoredVeriBlockBlock): BlockIndex = lock.withLock {
-        val smallHash = block.hash.trimToPreviousBlockSize()
-        val index = blockIndex[smallHash]
-        if (index != null) {
-            // block already exists
-            return index
-        }
-
-        val position = blocksFile.length()
+    fun writeBlock(position: Long, block: StoredVeriBlockBlock): Long = lock.withLock {
         blocksFile.seek(position)
         writeBlockToFile(block)
-        return appendToBlockIndex(position, block)
+        return blocksFile.filePointer
     }
 
     /**
-     * Reads block with given hash.
+     * Appends new block at the end of block storage.
+     * @return its position in a file
      */
-    fun readBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
-        val smallHash = hash.trimToPreviousBlockSize()
-        val index = blockIndex[smallHash] ?: return null
-        return readBlock(index.position)
+    fun appendBlock(block: StoredVeriBlockBlock): Long = lock.withLock {
+        val position = blocksFile.length()
+        writeBlock(position, block)
+        return position
+    }
+
+    fun truncate(position: Long) {
+        blocksFile.channel.truncate(position)
     }
 
     /**
@@ -164,39 +111,6 @@ class BlockStore(
             logger.error { "Can not read block at position ${position}: $e" }
             null
         }
-    }
-
-    /**
-     * Reads a chain of blocks from active chain of given `size` ending with `hash`
-     */
-    fun readChainWithTip(hash: AnyVbkHash, size: Int): ArrayList<StoredVeriBlockBlock> {
-        val ret = ArrayList<StoredVeriBlockBlock>()
-        var i = 0
-        var cursor = readBlock(hash)
-        while (cursor != null && i++ < size) {
-            ret.add(cursor)
-            cursor = readBlock(cursor.header.previousBlock)
-        }
-        ret.reverse()
-        return ret
-    }
-
-    private fun appendToBlockIndex(position: Long, block: StoredVeriBlockBlock): BlockIndex {
-        val smallHash = block.hash.trimToPreviousBlockSize()
-        val prev = blockIndex[block.header.previousBlock]
-        // this invariant should never fail with correct usage of this func
-            ?: throw IllegalStateException(
-                "Invariant failed! The block $block does not connect to the block index."
-            )
-
-        val index = BlockIndex(
-            smallHash = smallHash,
-            position = position,
-            height = block.height,
-            prev = prev
-        )
-        blockIndex[smallHash] = index
-        return index
     }
 
     /**
@@ -240,29 +154,7 @@ class BlockStore(
         )
     }
 
-    private fun writeGenesisBlock(genesis: VeriBlockBlock) {
-        val smallHash = genesis.hash.trimToPreviousBlockSize()
-        val work = BitcoinUtilities.decodeCompactBits(networkParameters.genesisBlock.difficulty.toLong())
-
-        blocksFile.seek(0)
-        // write gb to position 0
-        writeBlockToFile(
-            block = StoredVeriBlockBlock(
-                header = networkParameters.genesisBlock,
-                work = work,
-                hash = networkParameters.genesisBlock.hash
-            )
-        )
-
-        // block index always contains genesis block on start
-        val index = BlockIndex(
-            smallHash = smallHash,
-            position = 0, // gb is at position 0
-            height = 0,
-            prev = null
-        )
-
-        blockIndex[smallHash] = index
-        activeChain = Chain(index, work)
+    override fun close() {
+        blocksFile.close()
     }
 }
