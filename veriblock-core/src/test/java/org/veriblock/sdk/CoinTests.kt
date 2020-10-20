@@ -12,6 +12,7 @@ import org.junit.Test
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.parseCoin
 import org.veriblock.sdk.util.writeSingleByteLengthValue
 import java.io.ByteArrayOutputStream
@@ -41,5 +42,13 @@ class CoinTests {
         } catch (e: IllegalArgumentException) {
             Assert.assertTrue(e.message!!.startsWith("Unexpected length"))
         }
+    }
+
+    @Test
+    fun roundtrip() {
+        val input = 123456789L.asCoin()
+        val bytes = input.serialize()
+        val decoded = Coin.parse(ByteBuffer.wrap(bytes))
+        Assert.assertEquals(input, decoded)
     }
 }
