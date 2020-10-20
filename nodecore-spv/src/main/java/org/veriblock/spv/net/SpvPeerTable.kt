@@ -118,16 +118,12 @@ class SpvPeerTable(
     fun start() {
         running.set(true)
 
-        SpvEventBus.newBestBlockEvent.register(this) {
-            // on every best block change, attempt to request our balance
-            requestAddressState()
-        }
         SpvEventBus.peerConnectedEvent.register(this, ::onPeerConnected)
         SpvEventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
-        coroutineScope.launchWithFixedDelay(30_000L, 20_000L) {
+        coroutineScope.launchWithFixedDelay(10_000L, 10_000L) {
             requestAddressState()
         }
         coroutineScope.launchWithFixedDelay(200L, 20_000L) {
