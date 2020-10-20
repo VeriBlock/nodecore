@@ -166,7 +166,7 @@ class BlockStore(
         val prev = blockIndex[block.header.previousBlock]
         // this invariant should never fail with correct usage of this func
             ?: throw IllegalStateException(
-                "Invariant failed! Can append to block index blocks that connect to block index."
+                "Invariant failed! The block $block does not connect to the block index."
             )
 
         val index = BlockIndex(
