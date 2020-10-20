@@ -42,7 +42,9 @@ class BlockchainTest {
     @Test
     fun `mine single chain`() {
         var lastBlock: VeriBlockBlock? = null
-        generateBlock(blockchain.getChainHeadBlock().header).take(2100).forEach {
+        val lastBlock = generateBlock(blockchain.getChainHeadBlock().header).take(2100).onEach {
+          blockchain.acceptBlock(it) shouldBe true
+        }.last()
             lastBlock = it
             val isValid = blockchain.acceptBlock(it)
             Assert.assertTrue(isValid)
