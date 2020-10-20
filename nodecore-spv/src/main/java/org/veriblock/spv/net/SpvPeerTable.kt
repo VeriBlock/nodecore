@@ -84,7 +84,6 @@ class SpvPeerTable(
 ) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
-    private val requestingLedgerProof = AtomicBoolean(false)
     private val discovery: PeerDiscovery
     private val blockchain: Blockchain
     var maximumPeers = DEFAULT_CONNECTIONS
@@ -195,13 +194,6 @@ class SpvPeerTable(
     }
 
     private suspend fun requestAddressState() {
-        // if requestingLedgerProof is true, then we already started requesting our balance, skip this call.
-        // this prevents SPV from sending too many requests when new block is changed very quickly.
-        if (requestingLedgerProof.get()) {
-            return
-        }
-        requestingLedgerProof.set(true)
-
         try {
             val addresses = spvContext.addressManager.all
             if (addresses.isEmpty()) {
@@ -216,7 +208,7 @@ class SpvPeerTable(
                     }
                 }.build()
             }
-            val response = requestMessage(request, 30_000L)
+            val response = requestMessage(request, 5_000L)
             val proofReply = response.ledgerProofReply.proofsList
             val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
                 addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
@@ -229,8 +221,6 @@ class SpvPeerTable(
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to request address state" }
         }
-
-        requestingLedgerProof.set(false)
     }
 
     private suspend fun requestPendingTransactions() {
