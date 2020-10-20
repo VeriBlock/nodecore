@@ -276,16 +276,14 @@ class SecurityInheritingMonitor(
                 }.toList()
 
                 val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-                val contextBlocksToSubmit = contextBlocks.filter {
+                val totalSubmitted = contextBlocks.filter {
                     it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
-                }
+                }.onEach {
+                    chain.submitContext(listOf(it))
+                }.count()
 
-                if (contextBlocksToSubmit.isEmpty()) {
-                    continue
-                }
+                logger.info { "Submitted ${totalSubmitted} VBK context block(s) to ${chain.name}." }
 
-                chain.submitContext(contextBlocksToSubmit)
-                logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
