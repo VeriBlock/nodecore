@@ -162,7 +162,7 @@ object SerializeDeserializeService {
         serialize(veriBlockTransaction.sourceAmount, stream)
         stream.write(veriBlockTransaction.outputs.size.toByte().toInt())
         for (o in veriBlockTransaction.outputs) {
-            serialize(o, stream)
+            o.serialize(stream)
         }
         val publicationDataBytes = veriBlockTransaction.publicationData?.let { serialize(it) } ?: ByteArray(0)
         stream.writeSingleByteLengthValue(veriBlockTransaction.signatureIndex)
@@ -362,6 +362,7 @@ object SerializeDeserializeService {
     }
 
     // Address
+    @Deprecated("See Address.serialize()", ReplaceWith("address.serialize()"))
     fun serialize(address: Address): ByteArray {
         try {
             ByteArrayOutputStream().use { stream ->
@@ -374,6 +375,7 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
+    @Deprecated("See Address.serialize()", ReplaceWith("address.serialize()"))
     fun serialize(address: Address, stream: OutputStream) {
         val bytes = address.bytes
         if (address.isMultisig) {
@@ -402,6 +404,7 @@ object SerializeDeserializeService {
     }
 
     // Output
+    @Deprecated("See Output.serialize()")
     fun serialize(output: Output, stream: OutputStream) {
         serialize(output.address, stream)
         serialize(output.amount, stream)

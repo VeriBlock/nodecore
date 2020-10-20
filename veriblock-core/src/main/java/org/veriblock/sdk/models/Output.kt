@@ -7,6 +7,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
+import org.veriblock.sdk.services.SerializeDeserializeService
+import java.io.OutputStream
+
 class Output(
     val address: Address,
     val amount: Coin
@@ -29,5 +32,10 @@ class Output(
         fun of(address: String, amount: Long): Output {
             return Output(Address(address), amount.asCoin())
         }
+    }
+
+    fun serialize(stream: OutputStream) {
+        address.serialize(stream)
+        SerializeDeserializeService.serialize(amount, stream)
     }
 }
