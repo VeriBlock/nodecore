@@ -10,8 +10,11 @@ package org.veriblock.spv.service
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.miner.getMiningContext
+import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
@@ -33,6 +36,7 @@ class Blockchain(
     val blockIndex = ConcurrentHashMap<PreviousBlockVbkHash, BlockIndex>()
     lateinit var activeChain: Chain
     val size get() = blockIndex.size
+    val networkParameters get() = blockStore.networkParameters
 
     init {
         reindex()
@@ -59,6 +63,11 @@ class Blockchain(
             // ignore genesis block
             if (block.height != 0 && prevIndex == null) {
                 logger.warn { "Found block that does not connect to blockchain: height=${block.height} hash=${block.hash} " }
+                return@forEach false
+            }
+
+            // validate block
+            if (!ValidationService.checkBlock(block.header)) {
                 return@forEach false
             }
 
@@ -145,23 +154,25 @@ class Blockchain(
             return false
         }
 
+        val ctx = getMiningContext(prev.header) {
+            getBlock(it.previousBlock)?.header
+        }
+
+        val expectedDifficulty = getNextWorkRequired(prev.header, networkParameters, ctx)
+        if (expectedDifficulty != block.difficulty) {
+            // bad difficulty
+            logger.warn { "Rejecting block=$block, because of bad difficulty. Expected=$expectedDifficulty, got=${block.difficulty}" }
+            return false
+        }
+
+        // TODO: contextually check block: validate median time past, validate keystones
+
         // all ok, we can add block to blockchain
         val stored = StoredVeriBlockBlock(
             header = block,
             work = prev.work + BitcoinUtilities.decodeCompactBits(block.difficulty.toLong()),
             hash = block.hash
         )
-
-//        val ctx = getMiningContext(prev.header, 100) {
-//            blockStore.readBlock(it.previousBlock)?.header
-//        }
-        // TODO: test this algo against real data
-//        if(getNextWorkRequired(prev.header, networkParameters, ctx) != block.difficulty) {
-//            // bad difficulty
-//            return false
-//        }
-
-        // TODO: contextually check block: validate median time past, validate keystones
 
         // write block on disk
         val position = blockStore.appendBlock(stored)
