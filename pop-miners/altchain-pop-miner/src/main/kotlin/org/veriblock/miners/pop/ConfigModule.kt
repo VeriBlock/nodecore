@@ -26,7 +26,7 @@ fun configModule(): Module {
         }
         single { Context(get(), get()) }
 
-        single { NodeCoreLiteKit(get(), get()) }
+        single { NodeCoreLiteKit(get(), get(), get()) }
         single { AltchainPopMinerService(get(), get(), get(), get(), get(), get(), get()) }
     }
 }

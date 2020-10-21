@@ -12,6 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.lite.core.Context
 import org.veriblock.lite.net.NodeCoreGateway
@@ -30,6 +31,7 @@ import java.io.IOException
 val logger = createLogger {}
 
 class NodeCoreLiteKit(
+    private val globalConfig: Configuration,
     private val config: MinerConfig,
     private val context: Context
 ) {
@@ -95,7 +97,7 @@ class NodeCoreLiteKit(
         logger.info { "Initializing SPV..." }
         val spvContext = SpvContext()
         spvContext.init(
-            SpvConfig(networkParameters.name, connectDirectlyTo = config.connectDirectlyTo)
+            SpvConfig(networkParameters.name, dataDir = globalConfig.getDataDirectory(), connectDirectlyTo = config.connectDirectlyTo)
         )
         spvContext.peerTable.start()
         GlobalScope.launch {
