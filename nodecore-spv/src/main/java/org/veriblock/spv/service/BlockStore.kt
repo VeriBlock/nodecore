@@ -36,6 +36,7 @@ class BlockStore(
     val path = File(baseDir, "$networkParameters-blocks.db")
     private val lock = ReentrantLock()
     private val blocksFile = RandomAccessFile(path, "rw")
+    private val blocksCache = LRUCache<Long, StoredVeriBlockBlock>(2000)
 
     val size: Long get() = blocksFile.length()
 
@@ -58,6 +59,7 @@ class BlockStore(
             try {
                 position = blocksFile.filePointer
                 // this moves filePointer forward
+                // do not use cache here, as LRU cache hit will be 0 in this scenario
                 val block = readBlockFromFile()
                 if (!onBlock(position, block)) {
                     // this block is invalid, move file
@@ -83,6 +85,7 @@ class BlockStore(
     fun writeBlock(position: Long, block: StoredVeriBlockBlock): Long = lock.withLock {
         blocksFile.seek(position)
         writeBlockToFile(block)
+        blocksCache[position] = block
         return blocksFile.filePointer
     }
 
@@ -98,18 +101,27 @@ class BlockStore(
 
     fun truncate(position: Long) {
         blocksFile.channel.truncate(position)
+        blocksCache.keys.removeIf {
+            // remove all keys after `position`
+            it >= position
+        }
     }
 
     /**
      * Reads block at given position in blocks file.
      */
-    fun readBlock(position: Long): StoredVeriBlockBlock? = lock.withLock {
-        blocksFile.seek(position)
-        return try {
-            readBlockFromFile()
-        } catch (e: IOException) {
-            logger.error { "Can not read block at position ${position}: $e" }
-            null
+    fun readBlock(position: Long): StoredVeriBlockBlock? {
+        return blocksCache.getOrPut(position) {
+            try {
+                return lock.withLock {
+                    blocksFile.seek(position)
+                    readBlockFromFile()
+                }
+            } catch (e: IOException) {
+                logger.error { "Can not read block at position ${position}: $e" }
+            }
+
+            return null
         }
     }
 

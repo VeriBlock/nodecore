@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
+import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
@@ -16,6 +17,7 @@ import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.math.BigInteger
 import java.util.Arrays
 
 open class VeriBlockBlock(
@@ -74,6 +76,8 @@ open class VeriBlockBlock(
 
     fun getEffectivePreviousKeystone(): AnyVbkHash =
         if (height % Constants.KEYSTONE_INTERVAL == 1) previousBlock else previousKeystone
+
+    fun getDecodedDifficulty(): BigInteger = BitcoinUtilities.decodeCompactBits(this.difficulty.toLong())
 
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass && Arrays.equals(

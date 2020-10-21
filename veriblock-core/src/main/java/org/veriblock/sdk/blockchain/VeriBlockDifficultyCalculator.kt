@@ -10,13 +10,16 @@ package org.veriblock.sdk.blockchain
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
+import java.lang.IllegalArgumentException
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 
 object VeriBlockDifficultyCalculator {
+    const val PROGPOW_INITIAL_DIFFICULTY = 100_000_000_000L
     const val RETARGET_PERIOD = 100 // In blocks
-    private const val T = 30 // 30 seconds
+    const val TARGET_BLOCKTIME = 30 // seconds
+    private const val T = TARGET_BLOCKTIME
     private const val N = RETARGET_PERIOD
     private val K = BigInteger.valueOf(N.toLong())
         .multiply(BigInteger.valueOf(N.toLong()).add(BigInteger.valueOf(-1)))
@@ -31,16 +34,29 @@ object VeriBlockDifficultyCalculator {
         if (lastBlock.height < N || networkParameters.powNoRetargeting) {
             return BitcoinUtilities.decodeCompactBits(lastBlock.difficulty.toLong())
         }
+
+        if (lastBlock.height >= networkParameters.progPowForkHeight - 1 &&
+            lastBlock.height < networkParameters.progPowForkHeight + N - 1
+        ) {
+            return BigInteger.valueOf(PROGPOW_INITIAL_DIFFICULTY)
+        }
+
         var sumTarget = BigDecimal.valueOf(0)
         var t: Long = 0
         var j: Long = 0
+
         val contextToCheck = if (context.size > N) {
             // take last N elements
-            context.subList(context.size - N, context.size)
+            context.subList(0, N)
         } else {
             context
         }
-        for (i in contextToCheck.size - 1 downTo 1) {
+
+        if(lastBlock.height > N && contextToCheck.size != N) {
+            throw IllegalArgumentException("Invariant failed! Block height is=${lastBlock.height} but context size is ${contextToCheck.size} != $N")
+        }
+
+        (contextToCheck.size - 1 downTo 1).forEach { i ->
             var solveTime = contextToCheck[i - 1].timestamp - contextToCheck[i].timestamp
             if (solveTime > T * 6) {
                 solveTime = T * 6
@@ -55,11 +71,15 @@ object VeriBlockDifficultyCalculator {
         if (t < K.toLong() / 10) {
             t = K.toLong() / 10
         }
-        val nextTarget = (sumTarget * (
-            K.toBigDecimal().divide(t.toBigDecimal(), 8, RoundingMode.HALF_UP))
+        val nextTarget = (
+            sumTarget * (K.toBigDecimal().divide(t.toBigDecimal(), 8, RoundingMode.HALF_UP))
             ).toBigInteger()
         return if (nextTarget < networkParameters.minimumDifficulty) {
-            networkParameters.minimumDifficulty + BigInteger.valueOf(500000L)
+            if(lastBlock.height < 906439) {
+                networkParameters.minimumDifficulty
+            } else {
+                networkParameters.minimumDifficulty.add(BigInteger.valueOf(500000))
+            }
         } else {
             nextTarget
         }

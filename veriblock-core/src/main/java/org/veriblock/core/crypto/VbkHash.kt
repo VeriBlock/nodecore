@@ -70,7 +70,7 @@ class PreviousBlockVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_BLOCK_HASH_
         PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
 }
 
-class PreviousKeystoneVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
+class PreviousKeystoneVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH)) : AnyVbkHash(bytes) {
     init {
         check(bytes.size == VBK_PREVIOUS_KEYSTONE_HASH_LENGTH) {
             "Trying to create a previous keystone VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
