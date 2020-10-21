@@ -8,6 +8,15 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.SerializerUtility
+import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.Constants.MAX_LAYER_COUNT_MERKLE
+import org.veriblock.sdk.util.writeSingleByteLengthValue
+import org.veriblock.sdk.util.writeSingleIntLengthValue
+import org.veriblock.sdk.util.writeVariableLengthValue
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.nio.ByteBuffer
 
 class MerklePath {
     private val compactFormat: String
@@ -18,7 +27,7 @@ class MerklePath {
     /**
      * The Merkle root produced by following the layers up to the top of the tree.
      */
-    var merkleRoot: Sha256Hash
+    val merkleRoot: Sha256Hash
 
     constructor(
         index: Int,
@@ -73,5 +82,65 @@ class MerklePath {
 
     override fun hashCode(): Int {
         return compactFormat.hashCode()
+    }
+
+    companion object {
+        @JvmStatic
+        fun parseRaw(buffer: ByteBuffer, subject: Sha256Hash): MerklePath {
+            val index = SerializerUtility.readSingleBEValue(buffer, 4)
+            val numLayers = SerializerUtility.readSingleBEValue(buffer, 4).toInt()
+            SerializerUtility.checkRange(numLayers, 0, MAX_LAYER_COUNT_MERKLE,
+                "Merkle path has $numLayers layers. Should contain at most $MAX_LAYER_COUNT_MERKLE")
+            val sizeOfSizeBottomData = SerializerUtility.readSingleBEValue(buffer, 4)
+            require(sizeOfSizeBottomData == 4L) {
+                "Bad sizeOfSizeBottomData ($sizeOfSizeBottomData). Should be 4."
+            }
+            val sizeBottomData = buffer.int
+            require(sizeBottomData == Sha256Hash.BITCOIN_LENGTH) {
+                "Bad sizeBottomData ($sizeBottomData). Should be ${Sha256Hash.BITCOIN_LENGTH}."
+            }
+            val layers = List(numLayers) {
+                val layer = SerializerUtility.readSingleByteLenValue(buffer, Sha256Hash.BITCOIN_LENGTH, Sha256Hash.BITCOIN_LENGTH)
+                Sha256Hash.wrap(layer)
+            }
+            return MerklePath(index.toInt(), subject, layers)
+        }
+
+        @JvmStatic
+        fun parse(buffer: ByteBuffer, subject: Sha256Hash): MerklePath {
+            val bytes = SerializerUtility.readVariableLengthValueFromStream(buffer, 0, Constants.MAX_MERKLE_BYTES)
+            return parseRaw(ByteBuffer.wrap(bytes), subject)
+        }
+    }
+
+    fun serializeRaw(): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serializeRaw(stream)
+            return stream.toByteArray()
+        }
+    }
+
+    fun serializeRaw(stream: OutputStream) {
+        stream.writeSingleIntLengthValue(index)
+        stream.writeSingleIntLengthValue(layers.size)
+        val sizeBottomData = Utility.toByteArray(subject.length)
+        // Write size of the int describing the size of the bottom layer of data
+        stream.writeSingleIntLengthValue(sizeBottomData.size)
+        stream.write(sizeBottomData)
+        for (hash in layers) {
+            val layer = hash.bytes
+            stream.writeSingleByteLengthValue(layer)
+        }
+    }
+
+    fun serialize(): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serialize(stream)
+            return stream.toByteArray()
+        }
+    }
+
+    fun serialize(stream: OutputStream) {
+        stream.writeVariableLengthValue(serializeRaw())
     }
 }

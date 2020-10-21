@@ -8,7 +8,7 @@
 
 package org.veriblock.sdk.models
 
-import org.veriblock.core.AddressConstants
+import org.veriblock.core.AddressConstants.*
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.bitcoinj.Base59
@@ -35,21 +35,27 @@ class Address(val address: String) {
     val multisig: Boolean
 
     @Deprecated("See Address.multisig", ReplaceWith("getMultisig()"))
-    val isMultisig get() = multisig
+    val isMultisig
+        get() = multisig
+
     @Deprecated("See Address.getBytes()", ReplaceWith("getBytes()"))
     val bytes: ByteArray
         get() = getBytes()
 
     init {
         Preconditions.notNull(address, "Address cannot be null")
-        Preconditions.argument<Any>(address.length == SIZE && address[0] == STARTING_CHAR,
-            "The address $address is not a valid VBK address")
+        Preconditions.argument<Any>(
+            address.length == ADDRESS_LENGTH && address[0] == ADDRESS_STARTING_CHAR,
+            "The address $address is not a valid VBK address"
+        )
         this.data = getDataPortionFromAddress(address)
-        this.multisig = (address[SIZE - 1] == MULTISIG_ENDING_CHAR)
+        this.multisig = (address[ADDRESS_LENGTH - 1] == ADDRESS_MULTISIG_ENDING_CHAR)
         this.checksum = getChecksumPortionFromAddress(address, multisig)
         if (multisig) {
-            Preconditions.argument<Any>(Base59.isBase59String(address),
-                "The address $address is not a base59 string")
+            Preconditions.argument<Any>(
+                Base59.isBase59String(address),
+                "The address $address is not a base59 string"
+            )
 
             /* To make the addresses 'human-readable' we add 1 to the decoded value (1 in Base58 is 0,
              * but we want an address with a '1' in the m slot to represent m=1, for example).
@@ -58,21 +64,29 @@ class Address(val address: String) {
              * rather than what would have otherwise been 0 to 57. */
             val m = Base58.decode("" + address[MULTISIG_ADDRESS_M_VALUE])[0] + 1
             val n = Base58.decode("" + address[MULTISIG_ADDRESS_N_VALUE])[0] + 1
-            Preconditions.argument<Any>(n >= MULTISIG_ADDRESS_MIN_N_VALUE,
-                "The address $address does not have enough addresses to be multisig")
-            Preconditions.argument<Any>(m <= n,
-                "The address $address has more signatures than addresses")
-            Preconditions.argument<Any>(n <= MULTISIG_ADDRESS_MAX_N_VALUE && m <= MULTISIG_ADDRESS_MAX_M_VALUE,
-                "The address $address has too many addresses/signatures")
+            Preconditions.argument<Any>(
+                n >= MULTISIG_ADDRESS_MIN_N_VALUE,
+                "The address $address does not have enough addresses to be multisig"
+            )
+            Preconditions.argument<Any>(
+                m <= n,
+                "The address $address has more signatures than addresses"
+            )
+            Preconditions.argument<Any>(
+                n <= MULTISIG_ADDRESS_MAX_N_VALUE && m <= MULTISIG_ADDRESS_MAX_M_VALUE,
+                "The address $address has too many addresses/signatures"
+            )
 
 
             Preconditions.argument<Any>(
-                Base58.isBase58String(address.substring(0, SIZE - 1)),
-                "The address $address's remainder is not a base58 string")
+                Base58.isBase58String(address.substring(0, ADDRESS_LENGTH - 1)),
+                "The address $address's remainder is not a base58 string"
+            )
         } else {
             Preconditions.argument<Any>(
                 Base58.isBase58String(address),
-                "The address $address is not a base58 string")
+                "The address $address is not a base58 string"
+            )
         }
         require(calculateChecksum(data, multisig) == checksum) {
             "Address checksum does not match"
@@ -107,7 +121,7 @@ class Address(val address: String) {
 
     @JvmName("getBytesJava")
     fun getBytes(): ByteArray {
-        return if(multisig) Base59.decode(address) else Base58.decode(address)
+        return if (multisig) Base59.decode(address) else Base58.decode(address)
     }
 
     @Deprecated("See Address.multisig", ReplaceWith("getMultisig()"))
@@ -139,22 +153,13 @@ class Address(val address: String) {
     }
 
     companion object {
-        const val SIZE = 30
-        const val STARTING_CHAR = 'V'
-        const val MULTISIG_ENDING_CHAR = '0'
-        const val MULTISIG_ADDRESS_M_VALUE = 1
-        const val MULTISIG_ADDRESS_N_VALUE = 2
-        const val MULTISIG_ADDRESS_MIN_N_VALUE = 2
-        const val  MULTISIG_ADDRESS_MAX_M_VALUE = 58
-        const val  MULTISIG_ADDRESS_MAX_N_VALUE = 58
-
         @JvmStatic
         fun parse(buffer: ByteBuffer): Address {
             val type = buffer.get()
             require(type == SharedConstants.MULTISIG_ADDRESS_ID || type == SharedConstants.STANDARD_ADDRESS_ID) {
                 "Address type ($type) is neither multisig, nor standard"
             }
-            val bytes = buffer.getSingleByteLengthValue(0, AddressConstants.ADDRESS_LENGTH)
+            val bytes = buffer.getSingleByteLengthValue(0, ADDRESS_LENGTH)
             return if (type == SharedConstants.STANDARD_ADDRESS_ID) {
                 Address(Base58.encode(bytes))
             } else {
@@ -162,6 +167,7 @@ class Address(val address: String) {
             }
         }
 
+        // TODO: remove hardcoded values - use AddressConstants instead
         @JvmStatic
         fun fromPublicKey(publicKey: ByteArray): Address {
             val keyHash = Sha256Hash.of(publicKey).bytes
@@ -175,15 +181,15 @@ class Address(val address: String) {
         fun fromPoPBytes(buf: ByteBuffer): Address {
             val bytes = ByteArray(16)
             buf.get(bytes)
-            return Address(STARTING_CHAR + Base58.encode(bytes))
+            return Address(ADDRESS_STARTING_CHAR + Base58.encode(bytes))
         }
 
         @JvmStatic
         private fun getDataPortionFromAddress(address: String): String {
             Preconditions.notNull(address, "The address cannot be null")
             Preconditions.argument<Any>(
-                address.length == SIZE,
-                "The address $address should be of size $SIZE"
+                address.length == ADDRESS_LENGTH,
+                "The address $address should be of size $ADDRESS_LENGTH"
             )
 
             return address.substring(0, 24 + 1)
@@ -192,8 +198,10 @@ class Address(val address: String) {
         @JvmStatic
         private fun getChecksumPortionFromAddress(address: String, multisig: Boolean): String {
             Preconditions.notNull(address, "The address cannot be null")
-            Preconditions.argument<Any>(address.length == SIZE,
-                "The address $address should be of size $SIZE")
+            Preconditions.argument<Any>(
+                address.length == ADDRESS_LENGTH,
+                "The address $address should be of size $ADDRESS_LENGTH"
+            )
 
             if (multisig) {
                 return address.substring(25, 28 + 1)

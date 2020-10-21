@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk
 
+import io.kotlintest.shouldBe
 import org.junit.Assert
 import org.junit.Test
 import org.veriblock.sdk.models.asCoin
@@ -25,7 +26,7 @@ class CoinTests {
         val input = 123456789L.asCoin()
         val serialized = SerializeDeserializeService.serialize(input)
         val deserialized = ByteBuffer.wrap(serialized).parseCoin()
-        Assert.assertEquals(input, deserialized)
+        input shouldBe deserialized
     }
 
     @Test
@@ -49,6 +50,6 @@ class CoinTests {
         val input = 123456789L.asCoin()
         val bytes = input.serialize()
         val decoded = Coin.parse(ByteBuffer.wrap(bytes))
-        Assert.assertEquals(input, decoded)
+        input shouldBe decoded
     }
 }
