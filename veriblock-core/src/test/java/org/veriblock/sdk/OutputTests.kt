@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk
 
+import io.kotlintest.shouldBe
 import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.utilities.Utility
@@ -20,8 +21,8 @@ class OutputTests {
     fun parse() {
         val input = Utility.hexToBytes("01166772F51AB208D32771AB1506970EEB664462730B838E020539")
         val decoded = Output.parse(ByteBuffer.wrap(input))
-        Assert.assertEquals(decoded.address, Address("V5Ujv72h4jEBcKnALGc4fKqs6CDAPX"))
-        Assert.assertEquals(decoded.amount, Coin(1337))
+        decoded.address shouldBe Address("V5Ujv72h4jEBcKnALGc4fKqs6CDAPX")
+        decoded.amount shouldBe Coin(1337)
     }
 
     @Test
@@ -29,6 +30,6 @@ class OutputTests {
         val input = Output.of("V5Ujv72h4jEBcKnALGc4fKqs6CDAPX", 1337)
         val bytes = input.serialize()
         val decoded = Output.parse(ByteBuffer.wrap(bytes))
-        Assert.assertEquals(input, decoded)
+        input shouldBe decoded
     }
 }

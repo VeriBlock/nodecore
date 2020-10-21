@@ -37,4 +37,6 @@ public final class AddressConstants {
     public static final int MULTISIG_ADDRESS_SIGNING_GROUP_LENGTH = MULTISIG_ADDRESS_SIGNING_GROUP_END - MULTISIG_ADDRESS_SIGNING_GROUP_START;
 
     public static final int MULTISIG_ADDRESS_IDENTIFIER_INDEX = 30;
+    public static final char ADDRESS_STARTING_CHAR = 'V';
+    public static final char ADDRESS_MULTISIG_ENDING_CHAR = '0';
 }

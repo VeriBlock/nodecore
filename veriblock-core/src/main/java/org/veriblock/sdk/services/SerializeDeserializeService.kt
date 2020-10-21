@@ -260,6 +260,7 @@ object SerializeDeserializeService {
     }
 
     //MerklePath
+    @Deprecated("See MerklePath.serialize()", ReplaceWith("merkle.serialize()"))
     fun serialize(merklePath: MerklePath, stream: OutputStream) {
         stream.writeVariableLengthValue(serializeComponents(merklePath))
     }
@@ -276,6 +277,7 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
+    @Deprecated("See MerklePath.serializeRaw()", ReplaceWith("merkle.serializeRaw()"))
     fun serializeComponentsToStream(merklePath: MerklePath, stream: OutputStream) {
         // Index
         stream.writeSingleIntLengthValue(merklePath.index)
@@ -294,6 +296,7 @@ object SerializeDeserializeService {
     }
 
     // VeriBlockMerklePath
+    @Deprecated("See VeriBlockMerklePath.serialize()", ReplaceWith("merkle.serialize()"))
     fun serialize(blockMerklePath: VeriBlockMerklePath, stream: OutputStream) {
         // Tree index
         stream.writeSingleIntLengthValue(blockMerklePath.treeIndex)

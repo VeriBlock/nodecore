@@ -8,6 +8,8 @@
 
 package org.veriblock.sdk.models;
 
+import org.veriblock.core.crypto.Sha256Hash;
+
 import java.math.BigInteger;
 
 public class Constants {
@@ -29,4 +31,9 @@ public class Constants {
     public static final int MAX_PAYOUT_SIZE_PUBLICATION_DATA = 100;
     // usually it contains ContextInfoContainer which has height, previousKeystone, secondKeystone and merkle root
     public static final int MAX_CONTEXT_SIZE_PUBLICATION_DATA = 100;
+
+    // merkle tree is limited to this amount of layers
+    public static final int MAX_LAYER_COUNT_MERKLE = 40;
+    public static final int MAX_MERKLE_BYTES =
+        (Sha256Hash.BITCOIN_LENGTH + 1) * MAX_LAYER_COUNT_MERKLE + 5 + 5 + 5 + 5 + 4;
 }

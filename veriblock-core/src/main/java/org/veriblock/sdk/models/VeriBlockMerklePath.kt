@@ -8,6 +8,12 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.SerializerUtility
+import org.veriblock.sdk.util.writeSingleByteLengthValue
+import org.veriblock.sdk.util.writeSingleIntLengthValue
+import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.nio.ByteBuffer
 
 class VeriBlockMerklePath {
     val treeIndex: Int
@@ -25,7 +31,7 @@ class VeriBlockMerklePath {
         treeIndex: Int,
         index: Int,
         subject: Sha256Hash,
-        layers: MutableList<Sha256Hash>
+        layers: List<Sha256Hash>
     ) {
         this.treeIndex = treeIndex
         this.index = index
@@ -81,6 +87,23 @@ class VeriBlockMerklePath {
         return compactFormat
     }
 
+    companion object {
+        @JvmStatic
+        fun parse(buffer: ByteBuffer): VeriBlockMerklePath {
+            val treeIndex = SerializerUtility.readSingleBEValue(buffer, 4)
+            val index = SerializerUtility.readSingleBEValue(buffer, 4)
+            val subject = SerializerUtility.readSingleByteLenValue(buffer, Sha256Hash.BITCOIN_LENGTH, Sha256Hash.BITCOIN_LENGTH)
+            val numLayers = SerializerUtility.readSingleBEValue(buffer, 4).toInt()
+            SerializerUtility.checkRange(numLayers, 0, Constants.MAX_LAYER_COUNT_MERKLE,
+                "Merkle path has $numLayers layers. Should contain at most ${Constants.MAX_LAYER_COUNT_MERKLE}")
+            val layers = List(numLayers) {
+                val layer = SerializerUtility.readSingleByteLenValue(buffer, Sha256Hash.BITCOIN_LENGTH, Sha256Hash.BITCOIN_LENGTH)
+                Sha256Hash.wrap(layer)
+            }
+            return VeriBlockMerklePath(treeIndex.toInt(), index.toInt(), Sha256Hash.wrap(subject), layers)
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass &&
             toCompactString() == (other as VeriBlockMerklePath).toCompactString()
@@ -90,5 +113,22 @@ class VeriBlockMerklePath {
         var result = super.hashCode()
         result = 31 * result + treeIndex
         return result
+    }
+
+    fun serialize(): ByteArray {
+        ByteArrayOutputStream().use { stream ->
+            serialize(stream)
+            return stream.toByteArray()
+        }
+    }
+
+    fun serialize(stream: OutputStream) {
+        stream.writeSingleIntLengthValue(treeIndex)
+        stream.writeSingleIntLengthValue(index)
+        stream.writeSingleByteLengthValue(subject.bytes)
+        stream.writeSingleIntLengthValue(layers.size)
+        for (hash in layers) {
+            stream.writeSingleByteLengthValue(hash.bytes)
+        }
     }
 }

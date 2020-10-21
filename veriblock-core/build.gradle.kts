@@ -46,6 +46,8 @@ dependencies {
 
     // Unit testing
     testImplementation("junit:junit:4.12")
+     // Test assertions
+    testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
 
 }
 
