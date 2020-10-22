@@ -124,7 +124,14 @@ class SpvContext {
         val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
             DirectDiscovery(config.connectDirectlyTo.mapNotNull {
                 try {
-                    val uri = URI.create(it)
+
+                    val input = if (it.contains("://")) {
+                        it
+                    } else {
+                        // workaround: add p2p:// scheme, because URI must contain it
+                        "p2p://${it}"
+                    }
+                    val uri = URI.create(input)
                     NetworkAddress(uri.host, uri.port)
                 } catch (e: Exception) {
                     logger.warn { "Wrong format for peer address=${it}, should be host:port" }
