@@ -26,6 +26,7 @@ import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.service.TransactionService
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
 import java.io.File
+import java.net.URI
 import java.time.Instant
 
 const val FILE_EXTENSION = ".vbkwallet"
@@ -117,12 +118,18 @@ class SpvContext {
             network = config.network
         }
 
-        check (networkParameters.name == config.network) {
+        check(networkParameters.name == config.network) {
             "SPV configured to ${config.network}, and network to ${networkParameters.name}. They must be same."
         }
         val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
-            DirectDiscovery(config.connectDirectlyTo.map {
-                NetworkAddress(it, networkParameters.p2pPort)
+            DirectDiscovery(config.connectDirectlyTo.mapNotNull {
+                try {
+                    val uri = URI.create(it)
+                    NetworkAddress(uri.host, uri.port)
+                } catch (e: Exception) {
+                    logger.warn { "Wrong format for peer address=${it}, should be host:port" }
+                    null
+                }
             })
         } else {
             BootstrapPeerDiscovery(networkParameters)
