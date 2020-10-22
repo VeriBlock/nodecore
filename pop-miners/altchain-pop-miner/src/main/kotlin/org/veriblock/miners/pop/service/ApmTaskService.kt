@@ -37,6 +37,7 @@ import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
+import org.veriblock.sdk.alt.model.SecurityInheritingAtv
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -261,18 +262,31 @@ class ApmTaskService(
                 val proofOfProof = AltPublication(
                     endorsementTransaction.transaction,
                     merklePath,
-                    blockOfProof,
-                    miningInstruction.context.mapNotNull {
-                        nodeCoreLiteKit.blockStore.get(VBlakeHash.wrap(it))?.block
-                    }
+                    blockOfProof
                 )
 
-                val siTxId = operation.chain.submit(proofOfProof, veriBlockPublications)
+                // send atv
+                operation.chain.submit(
+                    atvs = listOf(proofOfProof)
+                )
 
-                val chainName = operation.chain.name
-                logger.info(operation, "VTB submitted to $chainName! $chainName PoP TxId: $siTxId")
+                // send vtb
+                veriBlockPublications.forEach {
+                    operation.chain.submit(
+                        vtbs = listOf(it)
+                    )
+                }
 
-                operation.setPopTxId(siTxId)
+                // send context blocks
+                miningInstruction.context.mapNotNull {
+                    nodeCoreLiteKit.blockStore.get(VBlakeHash.wrap(it))?.block
+                }.forEach {
+                    operation.chain.submit(
+                        contextBlocks = listOf(it)
+                    )
+                }
+
+                operation.setAtvId(proofOfProof.getId().toHex())
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error submitting proof of proof" }
                 failTask("Error submitting proof of proof")
@@ -285,25 +299,27 @@ class ApmTaskService(
             timeout = 5.hr
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-            val endorsementTransactionId = operation.popTxId
+            val id = operation.atvId
                 ?: failTask("Confirm PoP Transaction task called without proof of proof txId!")
 
             val chainName = operation.chain.name
-            logger.info(operation, "Waiting for $chainName PoP Transaction ($endorsementTransactionId) to be confirmed...")
-            val popTransaction = operation.chainMonitor.getTransaction(endorsementTransactionId) { transaction ->
-                if (transaction.confirmations < 0) {
-                    throw AltchainTransactionReorgException(transaction)
+            logger.info(operation, "Waiting for $chainName PoP Transaction ($id) to be confirmed...")
+            val atv = operation.chainMonitor.getRawAtv(id) { atv ->
+                // null means atv is in mempool
+                val confirmations = atv.confirmations ?: 0
+                if (confirmations < 0) {
+                    throw AltchainAtvReorgException(atv)
                 }
-                transaction.confirmations >= operation.chain.config.neededConfirmations
+                confirmations >= operation.chain.config.neededConfirmations
             }
             logger.info(
                 operation,
-                "Successfully confirmed $chainName PoP transaction ${popTransaction.txId}!" +
-                    " Confirmations: ${popTransaction.confirmations}"
+                "Successfully confirmed $chainName PoP transaction ${atv.id}!" +
+                    " Confirmations: ${atv.confirmations}"
             )
 
-            val txBlockHash = popTransaction.blockHash
-                ?: error("The  $chainName PoP transaction ${popTransaction.txId} has no block hash despite having been confirmed!")
+            val txBlockHash = atv.blockHash
+                ?: error("The  $chainName PoP transaction ${atv.id} has no block hash despite having been confirmed!")
 
             operation.setPopTxBlockHash(txBlockHash)
         }
@@ -467,3 +483,7 @@ class AltchainBlockReorgException(
 class AltchainTransactionReorgException(
     val transaction: SecurityInheritingTransaction
 ) : IllegalStateException("There was a reorg leaving transaction ${transaction.txId} out of the main chain!")
+
+class AltchainAtvReorgException(
+    val atv: SecurityInheritingAtv
+) : IllegalStateException("There was a reorg leaving ATV ${atv.id} out of the main chain!")

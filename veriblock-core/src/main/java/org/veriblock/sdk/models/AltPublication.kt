@@ -15,34 +15,22 @@ data class AltPublication(
     val transaction: VeriBlockTransaction,
     val merklePath: VeriBlockMerklePath,
     val containingBlock: VeriBlockBlock,
-    val context: List<VeriBlockBlock> = emptyList()
 ) {
     fun getId(): ByteArray =
         Sha256Hash.hash(transaction.id.bytes + containingBlock.hash.bytes)
-
-    fun getBlocks(): List<VeriBlockBlock> =
-        context + containingBlock
-
-    fun getFirstBlock(): VeriBlockBlock =
-        getBlocks().first()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is AltPublication) return false
 
         return transaction == other.transaction && merklePath == other.merklePath &&
-            containingBlock == other.containingBlock && context == other.context
+            containingBlock == other.containingBlock
     }
 
     override fun hashCode(): Int {
         var result = transaction.hashCode()
         result = 31 * result + merklePath.hashCode()
         result = 31 * result + containingBlock.hashCode()
-        result = 31 * result + context.hashCode()
         return result
-    }
-
-    companion object {
-        const val MAX_CONTEXT_COUNT = 15000
     }
 }

@@ -23,10 +23,7 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.alt.model.PopMempool
-import org.veriblock.sdk.alt.model.SecurityInheritingBlock
-import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
-import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.model.*
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
@@ -112,6 +109,10 @@ class TestChain(
         return transactions[txId]
     }
 
+    override suspend fun getRawAtv(id: String, verbosity: Int): SecurityInheritingAtv? {
+        TODO("Not yet implemented")
+    }
+
     override fun getPayoutDelay(): Int {
         return config.payoutDelay
     }
@@ -142,18 +143,21 @@ class TestChain(
     }
 
 
-    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
-        val publicationData = proofOfProof.transaction.publicationData
-            ?: error("Proof of proof does not have publication data!")
-        val publicationDataHeader = publicationData.header.toHex()
-        val publicationDataContextInfo = publicationData.contextInfo.toHex()
-        val expectedContextInfo = operations[publicationDataHeader]
-            ?: error("Couldn't find operation with initial header $publicationDataHeader")
-        if (publicationDataContextInfo != expectedContextInfo) {
-            error("Expected publication data context differs from the one PoP supplied back")
-        }
-        val block = createBlock((System.currentTimeMillis() / 10000).toInt())
-        return block.data.coinbaseTransactionId
+    override suspend fun submit(contextBlocks: List<VeriBlockBlock>,
+                                atvs: List<AltPublication>,
+                                vtbs: List<VeriBlockPublication>) {
+        TODO("Not yet implemented")
+//        val publicationData = proofOfProof.transaction.publicationData
+//            ?: error("Proof of proof does not have publication data!")
+//        val publicationDataHeader = publicationData.header.toHex()
+//        val publicationDataContextInfo = publicationData.contextInfo.toHex()
+//        val expectedContextInfo = operations[publicationDataHeader]
+//            ?: error("Couldn't find operation with initial header $publicationDataHeader")
+//        if (publicationDataContextInfo != expectedContextInfo) {
+//            error("Expected publication data context differs from the one PoP supplied back")
+//        }
+//        val block = createBlock((System.currentTimeMillis() / 10000).toInt())
+//        return block.data.coinbaseTransactionId
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {

@@ -8,9 +8,7 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
-import ch.qos.logback.classic.Logger
 import io.ktor.http.ContentType
-import mu.KLogger
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
@@ -26,7 +24,7 @@ import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
-import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.SecurityInheritingAtv
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -38,10 +36,8 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.io.File
 import java.nio.ByteBuffer
 import kotlin.math.abs
-import kotlin.math.roundToLong
 
 private val logger = createLogger {}
 
@@ -77,7 +73,9 @@ class BitcoinFamilyChain(
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
         if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
-            error("'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address")
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
         }
         payoutAddressScript = if (config.payoutAddress.isHex()) {
             config.payoutAddress.asHexBytes()
@@ -164,6 +162,25 @@ class BitcoinFamilyChain(
         return header.contentEquals(blockHeaderToCheck)
     }
 
+    override suspend fun getRawAtv(id: String, verbosity: Int): SecurityInheritingAtv? {
+        logger.debug { "Retrieving ATV $id..." }
+        val atv: BtcAtv = try {
+            rpcRequest("getrawatv", listOf(id, verbosity))
+        } catch (e: RpcException) {
+            if (e.errorCode == -5) {
+                // Transaction not found
+                return null
+            } else {
+                throw e
+            }
+        }
+        return SecurityInheritingAtv(
+            atv.atv.id,
+            atv.confirmations,
+            atv.blockhash
+        )
+    }
+
     override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
         val btcTransaction: BtcTransaction = try {
@@ -181,7 +198,7 @@ class BitcoinFamilyChain(
             btcTransaction.confirmations,
             btcTransaction.vout.map {
                 SecurityInheritingTransactionVout(
-                    (it.value * 100000000).roundToLong(),
+                    (it.value * 100000000).toLong(),
                     it.scriptPubKey.hex
                 )
             },
@@ -228,30 +245,28 @@ class BitcoinFamilyChain(
         )
     }
 
-    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+    override suspend fun submit(
+        contextBlocks: List<VeriBlockBlock>,
+        atvs: List<AltPublication>,
+        vtbs: List<VeriBlockPublication>
+    ) {
+        logger.info { "Submitting PoP data to $name daemon at ${config.host}..." }
         val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            veriBlockPublications.asSequence().flatMap {
-                it.getBlocks()
-            }.distinctBy {
-                it.height
-            }.sortedBy {
-                it.height
-            }.map {
+            contextBlocks.map {
                 SerializeDeserializeService.serialize(it).toHex()
-            }.toList(),
-            veriBlockPublications.map {
+            },
+            vtbs.map {
                 SerializeDeserializeService.serialize(
                     it.copy(context = emptyList())
                 ).toHex()
             },
-            listOf(
+            atvs.map {
                 SerializeDeserializeService.serialize(
-                    proofOfProof.copy(context = emptyList())
+                    it.copy()
                 ).toHex()
-            )
+            }
         ))
         logger.debug { "SubmitPoP Response: $submitPopResponse" }
-        return proofOfProof.getId().toHex()
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
@@ -322,6 +337,17 @@ private data class BtcTransaction(
     val txid: String,
     val confirmations: Int,
     val vout: List<BtcTransactionVout>,
+    val blockhash: String?
+)
+
+
+private data class BtcAtvId (
+    val id: String
+)
+
+private data class BtcAtv(
+    val atv: BtcAtvId,
+    val confirmations: Int?,
     val blockhash: String?
 )
 

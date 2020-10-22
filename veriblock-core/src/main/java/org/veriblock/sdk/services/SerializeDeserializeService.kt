@@ -416,12 +416,6 @@ object SerializeDeserializeService {
         serialize(altPublication.transaction, stream)
         serialize(altPublication.merklePath, stream)
         serialize(altPublication.containingBlock, stream)
-
-        // Write number of context Bitcoin block headers (can be 0)
-        stream.writeSingleByteLengthValue(altPublication.context.size)
-        for (block in altPublication.context) {
-            serialize(block, stream)
-        }
     }
 
     // PublicationData

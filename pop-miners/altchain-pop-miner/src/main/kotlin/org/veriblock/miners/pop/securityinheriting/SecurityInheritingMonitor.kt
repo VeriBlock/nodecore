@@ -28,6 +28,7 @@ import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.SecurityInheritingAtv
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.StateInfo
@@ -70,7 +71,7 @@ class SecurityInheritingMonitor(
     private val newBlockHeightBroadcastChannel = BroadcastChannel<Int>(CONFLATED)
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
-    private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
+    private val atvListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingAtv>>>()
 
     fun isReady(): Boolean =
         ready.get()
@@ -203,7 +204,7 @@ class SecurityInheritingMonitor(
                     newBlockHeightBroadcastChannel.offer(bestBlockHeight)
 
                     handleBlockHeightListeners()
-                    handleTransactionListeners()
+                    handleAtvListeners()
                 }
             } else {
                 if (isReady()) {
@@ -234,9 +235,9 @@ class SecurityInheritingMonitor(
             ?: throw IllegalStateException("Unable to find block with height $height while the best chain height is $bestBlockHeight!")
     }
 
-    private suspend fun getTransaction(txId: String): SecurityInheritingTransaction? = try {
+    private suspend fun getRawAtv(txId: String): SecurityInheritingAtv? = try {
         // Retrieve block from SI chain
-        chain.getTransaction(txId)
+        chain.getRawAtv(txId)
     } catch (e: Exception) {
         logger.debugWarn(e) { "Error when polling for transaction $txId" }
         null
@@ -253,12 +254,12 @@ class SecurityInheritingMonitor(
         }
     }
 
-    private suspend fun handleTransactionListeners() {
-        for ((txId, listeners) in transactionListeners) {
-            val transaction = getTransaction(txId)
-            if (transaction != null) {
+    private suspend fun handleAtvListeners() {
+        for ((txId, listeners) in atvListeners) {
+            val atv = getRawAtv(txId)
+            if (atv != null) {
                 for (listener in listeners) {
-                    listener.offer(transaction)
+                    listener.offer(atv)
                 }
             }
         }
@@ -277,14 +278,14 @@ class SecurityInheritingMonitor(
         }
     }
 
-    suspend fun getTransaction(txId: String, predicate: (SecurityInheritingTransaction) -> Boolean = { true }): SecurityInheritingTransaction {
+    suspend fun getRawAtv(txId: String, predicate: (SecurityInheritingAtv) -> Boolean = { true }): SecurityInheritingAtv {
         // Check if we can skip the subscription
-        val transaction = getTransaction(txId)
-        if (transaction != null && predicate(transaction)) {
-            return transaction
+        val atv = getRawAtv(txId)
+        if (atv != null && predicate(atv)) {
+            return atv
         }
 
-        val channel = subscribe(transactionListeners, txId)
+        val channel = subscribe(atvListeners, txId)
         return channel.consumeAsFlow().first {
             predicate(it)
         }

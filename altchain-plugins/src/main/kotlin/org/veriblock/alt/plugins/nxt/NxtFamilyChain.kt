@@ -21,6 +21,7 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.SecurityInheritingAtv
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.plugin.PluginConfig
@@ -80,6 +81,10 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
+    override suspend fun getRawAtv(id: String, verbosity: Int): SecurityInheritingAtv? {
+        TODO("Not yet implemented")
+    }
+
     override fun getPayoutDelay(): Int {
         return config.payoutDelay
     }
@@ -130,24 +135,28 @@ class NxtFamilyChain(
         )
     }
 
-    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
-        logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
-        val jsonBody = NxtSubmitData(
-            atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
-            vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
-        ).toJson()
-        val submitResponse: NxtSubmitResponse = httpClient.get("${config.host}/nxt") {
-            parameter("requestType", "submitPop")
-            body = jsonBody
-        }
-
-        if (submitResponse.error != null) {
-            error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
-        }
-
-        return submitResponse.transaction?.signature
-            ?: error("Unable to retrieve $key's submission response data")
+    override suspend fun submit(contextBlocks: List<VeriBlockBlock>, atvs: List<AltPublication>, vtbs: List<VeriBlockPublication>) {
+        TODO("Not yet implemented")
     }
+
+//    override suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String {
+//        logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
+//        val jsonBody = NxtSubmitData(
+//            atv = SerializeDeserializeService.serialize(proofOfProof).toHex(),
+//            vtb = veriBlockPublications.map { SerializeDeserializeService.serialize(it).toHex() }
+//        ).toJson()
+//        val submitResponse: NxtSubmitResponse = httpClient.get("${config.host}/nxt") {
+//            parameter("requestType", "submitPop")
+//            body = jsonBody
+//        }
+//
+//        if (submitResponse.error != null) {
+//            error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
+//        }
+//
+//        return submitResponse.transaction?.signature
+//            ?: error("Unable to retrieve $key's submission response data")
+//    }
 
     override fun extractAddressDisplay(addressData: ByteArray): String = TODO()
 

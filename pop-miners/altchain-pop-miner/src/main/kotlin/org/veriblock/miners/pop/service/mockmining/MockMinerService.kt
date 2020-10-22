@@ -126,13 +126,16 @@ class MockMinerService(
 
         val submissionResult = try {
             runBlocking {
-                chain.submit(atv, vtbs)
+                chain.submit(
+                    atvs = listOf(atv),
+                    vtbs = vtbs
+                )
             }
         } catch (e: Exception) {
             operation.fail(e.message ?: "Unknown reason")
             throw e
         }
-        operation.setPopTxId(submissionResult)
+        operation.setAtvId(atv.getId().toHex())
         logger.info { "Mock mine operation completed successfully! Result: $submissionResult" }
 
         // TODO: Rework mock miner so that it actually just mocks the nodecore gateway and then delete this whole class
@@ -200,12 +203,10 @@ class MockMinerService(
         blockData.regularTransactions.add(endorsementTx)
         val block = veriBlockBlockchain.mine(blockData)
         // create an ATV
-        val context = createVeriBlockContext(lastKnownVBKBlock)
         return AltPublication(
             endorsementTx,
             blockData.getRegularMerklePath(0),
-            block,
-            context
+            block
         )
     }
 

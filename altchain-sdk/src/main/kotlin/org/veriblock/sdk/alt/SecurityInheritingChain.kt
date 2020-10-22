@@ -10,10 +10,12 @@ package org.veriblock.sdk.alt
 
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEndorsement
+import org.veriblock.sdk.alt.model.SecurityInheritingAtv
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.StateInfo
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 
 interface SecurityInheritingChain {
@@ -68,6 +70,8 @@ interface SecurityInheritingChain {
      */
     suspend fun getTransaction(txId: String): SecurityInheritingTransaction?
 
+    suspend fun getRawAtv(id: String, verbosity: Int = 2): SecurityInheritingAtv?
+
     /**
      * Returns this security inheriting chain's payout delay, in blocks.
      */
@@ -80,10 +84,14 @@ interface SecurityInheritingChain {
     suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction
 
     /**
-     * Submits ATV ([proofOfProof]) and VTBs ([veriBlockPublications]) to the altchain
-     * @return The submission's resulting pop transaction hash
+     * Submits VeriBlock context blocks ([contextBlocks]), ATVs ([atvs]) and VTBs ([vtbs]) to the altchain
+     * @return The submission's resulting first ATV id
      */
-    suspend fun submit(proofOfProof: AltPublication, veriBlockPublications: List<VeriBlockPublication>): String
+    suspend fun submit(
+        contextBlocks: List<VeriBlockBlock> = emptyList(),
+        atvs: List<AltPublication> = emptyList(),
+        vtbs: List<VeriBlockPublication> = emptyList()
+    )
 
     /**
      * Extracts an address' display string from the given data (coming from the Mining Instruction)

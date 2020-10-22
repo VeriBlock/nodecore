@@ -49,7 +49,7 @@ class ApmOperation(
         private set
     var publicationData: List<VeriBlockPublication>? = null
         private set
-    var popTxId: String? = null
+    var atvId: String? = null
         private set
     var popTxBlockHash: String? = null
         private set
@@ -131,11 +131,11 @@ class ApmOperation(
         setState(ApmOperationState.CONTEXT)
     }
 
-    fun setPopTxId(popTxId: String) {
+    fun setAtvId(id: String) {
         if (state != ApmOperationState.CONTEXT) {
             error("Trying to set PoP transaction id without having the context")
         }
-        this.popTxId = popTxId
+        this.atvId = id
         setState(ApmOperationState.SUBMITTED_POP_DATA)
     }
 
@@ -185,8 +185,8 @@ class ApmOperation(
             result["vtbTransactions"] = context.joinToString { it.transaction.id.bytes.toHex() }
             result["vtbBtcBlocks"] = context.mapNotNull { it.getFirstBitcoinBlock() }.joinToString { it.hash.bytes.toHex() }
         }
-        popTxId?.let {
-            result["altProofOfProofTxId"] = it
+        atvId?.let {
+            result["atvId"] = it
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it
