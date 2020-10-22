@@ -40,6 +40,24 @@ fun OutputStream.writeVariableLengthValue(value: ByteArray) {
     write(value)
 }
 
+fun OutputStream.putBEInt16(value: Short) {
+    val buffer = ByteBuffer.allocate(Short.SIZE_BYTES)
+    buffer.putBEInt16(value)
+    write(buffer.array())
+}
+
+fun OutputStream.putBEInt32(value: Int) {
+    val buffer = ByteBuffer.allocate(Int.SIZE_BYTES)
+    buffer.putBEInt32(value)
+    write(buffer.array())
+}
+
+fun OutputStream.putLEInt32(value: Int) {
+    val buffer = ByteBuffer.allocate(Int.SIZE_BYTES)
+    buffer.putLEInt32(value)
+    write(buffer.array())
+}
+
 fun ByteBuffer.getSingleByteLengthValue(minLength: Int, maxLength: Int): ByteArray {
     val length = get().toInt()
     length.checkLength(minLength, maxLength)
