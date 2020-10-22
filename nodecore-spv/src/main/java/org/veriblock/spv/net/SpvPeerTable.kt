@@ -92,8 +92,8 @@ class SpvPeerTable(
     private val addressesState: MutableMap<String, LedgerContext> = ConcurrentHashMap()
     private val pendingTransactionContainer: PendingTransactionContainer
 
-    private val peers = ConcurrentHashMap<String, SpvPeer>()
-    private val pendingPeers = ConcurrentHashMap<String, SpvPeer>()
+    private val peers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
+    private val pendingPeers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
     private val incomingQueue: Channel<NetworkMessage> = Channel(UNLIMITED)
 
     private val hashDispatcher = Threading.HASH_EXECUTOR.asCoroutineDispatcher();
@@ -151,7 +151,7 @@ class SpvPeerTable(
     }
 
     suspend fun connectTo(address: NetworkAddress): SpvPeer {
-        peers[address.hostname]?.let {
+        peers[address]?.let {
             return it
         }
         val socket = try {
@@ -164,7 +164,7 @@ class SpvPeerTable(
         }
         val peer = createPeer(socket)
         lock.withLock {
-            pendingPeers[address.hostname] = peer
+            pendingPeers[address] = peer
         }
         return peer
     }
@@ -251,16 +251,16 @@ class SpvPeerTable(
         if (needed > 0) {
             val candidates = discovery.getPeers(needed)
             for (address in candidates) {
-                if (peers.containsKey(address.hostname) || pendingPeers.containsKey(address.hostname)) {
+                if (peers.containsKey(address) || pendingPeers.containsKey(address)) {
                     continue
                 }
-                logger.debug("Attempting connection to {}:{}", address.hostname, address.port)
+                logger.debug("Attempting connection to $address")
                 val peer = try {
                     connectTo(address)
                 } catch (e: IOException) {
                     continue
                 }
-                logger.debug("Discovered peer connected {}:{}", peer.address, peer.port)
+                logger.debug("Discovered peer connected $address")
             }
         }
     }
@@ -382,14 +382,14 @@ class SpvPeerTable(
     fun onPeerDisconnected(peer: SpvPeer) = lock.withLock {
         pendingPeers.remove(peer.address)
         peers.remove(peer.address)
-        if (downloadPeer?.address?.equals(peer.address, ignoreCase = true) == true) {
+        if (downloadPeer?.address?.equals(peer.address) == true) {
             downloadPeer = null
         }
     }
 
     fun onMessageReceived(message: VeriBlockMessages.Event, sender: SpvPeer) {
         try {
-            logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
+            logger.debug("Message Received messageId: ${message.id}, from: ${sender.address}")
             incomingQueue.offer(NetworkMessage(sender, message))
         } catch (e: InterruptedException) {
             logger.error("onMessageReceived interrupted", e)

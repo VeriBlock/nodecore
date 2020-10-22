@@ -9,8 +9,7 @@ package org.veriblock.spv.net
 
 import com.google.protobuf.ByteString
 import io.ktor.network.sockets.Socket
-import io.ktor.util.network.hostname
-import io.ktor.util.network.port
+import io.ktor.util.network.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.withTimeout
@@ -41,8 +40,7 @@ class SpvPeer(
     self: NodeMetadata,
     socket: Socket
 ) {
-    val address: String = socket.remoteAddress.hostname
-    val port: Int = socket.remoteAddress.port
+    val address: NetworkAddress = socket.remoteAddress
 
     private val handler = PeerSocketHandler(this, socket)
 

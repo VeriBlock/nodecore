@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
+import io.ktor.util.network.*
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.spv.util.SpvEventBus
@@ -19,7 +20,7 @@ class TransactionMeta(
     private val appearsInBlock: MutableList<VbkHash> = ArrayList()
     var appearsAtChainHeight = -1
     var depth = 0
-    private val seenByPeers: MutableSet<String> = HashSet()
+    private val seenByPeers: MutableSet<NetworkAddress> = HashSet()
     var state = MetaState.UNKNOWN
         private set
     var appearsInBestChainBlock: VbkHash? = null
@@ -40,7 +41,7 @@ class TransactionMeta(
     val broadcastPeerCount: Int
         get() = seenByPeers.size
 
-    fun recordBroadcast(peer: String): Boolean {
+    fun recordBroadcast(peer: NetworkAddress): Boolean {
         val added = seenByPeers.add(peer)
         if (!added) {
             return false
