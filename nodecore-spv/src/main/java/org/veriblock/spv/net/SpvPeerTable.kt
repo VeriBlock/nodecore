@@ -361,7 +361,7 @@ class SpvPeerTable(
     }
 
     fun onPeerConnected(peer: SpvPeer) = lock.withLock {
-        logger.debug("Peer {} connected", peer.address)
+        logger.info("Peer {} connected", peer.address)
         pendingPeers.remove(peer.address)
         peers[peer.address] = peer
 
