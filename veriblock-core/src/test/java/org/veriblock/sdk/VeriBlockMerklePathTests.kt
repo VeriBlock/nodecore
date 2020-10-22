@@ -8,11 +8,9 @@
 package org.veriblock.sdk
 
 import io.kotlintest.shouldBe
-import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import java.nio.ByteBuffer
 

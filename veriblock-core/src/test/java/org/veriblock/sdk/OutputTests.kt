@@ -8,7 +8,6 @@
 package org.veriblock.sdk
 
 import io.kotlintest.shouldBe
-import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Address

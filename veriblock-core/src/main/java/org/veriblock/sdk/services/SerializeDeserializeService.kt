@@ -174,6 +174,7 @@ object SerializeDeserializeService {
     }
 
     // VeriBlockBlock
+    @Deprecated("See VeriBlockBlock.parse()", ReplaceWith("VeriBlockBlock.parse()"))
     @JvmOverloads
     fun parseVeriBlockBlock(buffer: ByteBuffer, precomputedHash: VbkHash? = null): VeriBlockBlock {
         val raw = buffer.getSingleByteLengthValue(
@@ -182,6 +183,7 @@ object SerializeDeserializeService {
         return parseVeriBlockBlock(raw, precomputedHash)
     }
 
+    @Deprecated("See VeriBlockBlock.parseRaw()", ReplaceWith("VeriBlockBlock.parseRaw()"))
     fun parseVeriBlockBlock(raw: ByteArray, precomputedHash: VbkHash? = null): VeriBlockBlock {
         check(raw.size == Constants.HEADER_SIZE_VeriBlockBlock || raw.size == Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
             "Invalid VeriBlock raw data: " + Utility.bytesToHex(raw)
@@ -192,6 +194,7 @@ object SerializeDeserializeService {
         return parseVeriBlockBlockStream(buffer, precomputedHash)
     }
 
+    @Deprecated("See VeriBlockBlock.parseRaw()", ReplaceWith("VeriBlockBlock.parseRaw()"))
     fun parseVeriBlockBlockStream(buffer: ByteBuffer, precomputedHash: VbkHash? = null): VeriBlockBlock {
         check(buffer.remaining() >= Constants.HEADER_SIZE_VeriBlockBlock_VBlake) {
             "Invalid VeriBlock raw data"
@@ -217,10 +220,12 @@ object SerializeDeserializeService {
         )
     }
 
+    @Deprecated("See VeriBlockBlock.serialize()", ReplaceWith("block.serialize()"))
     fun serialize(veriBlockBlock: VeriBlockBlock, stream: OutputStream) {
         stream.writeSingleByteLengthValue(serializeHeaders(veriBlockBlock))
     }
 
+    @Deprecated("See VeriBlockBlock.serialize()", ReplaceWith("block.serialize()"))
     fun serialize(veriBlockBlock: VeriBlockBlock): ByteArray {
         try {
             ByteArrayOutputStream().use { stream ->
@@ -233,6 +238,7 @@ object SerializeDeserializeService {
         return byteArrayOf()
     }
 
+    @Deprecated("See VeriBlockBlock.serializeRaw()", ReplaceWith("block.serializeRaw()"))
     fun serializeHeaders(veriBlockBlock: VeriBlockBlock): ByteArray {
         // Hardcode 0 length hash size for network param serialization
         val headerSize = if (veriBlockBlock.height == 0) {
