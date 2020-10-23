@@ -6,20 +6,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.transactionmonitor
+package org.veriblock.miners.pop.transactionmonitor
 
 
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.lite.proto.TxmonProto
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.TransactionMeta
+import org.veriblock.miners.pop.proto.TxmonProto
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.asAnyVbkHash
-import org.veriblock.core.crypto.asVbkHash
-import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -31,7 +29,7 @@ fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor)
     write(data)
 }
 
-fun InputStream.readTransactionMonitor(context: Context, gateway: NodeCoreGateway): TransactionMonitor {
+fun InputStream.readTransactionMonitor(context: ApmContext, gateway: SpvGateway): TransactionMonitor {
     val data = ProtoBuf.decodeFromByteArray(TxmonProto.TransactionMonitor.serializer(), readBytes())
     return data.toModel(context, gateway)
 }
@@ -70,7 +68,7 @@ private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
     depth = depth
 )
 
-private fun TxmonProto.TransactionMonitor.toModel(context: Context, gateway: NodeCoreGateway): TransactionMonitor {
+private fun TxmonProto.TransactionMonitor.toModel(context: ApmContext, gateway: SpvGateway): TransactionMonitor {
     check(context.networkParameters.name == network) {
         "Network ${context.networkParameters.name} attempting to read ${context.vbkTokenName} wallet for $network"
     }
@@ -84,7 +82,7 @@ private fun TxmonProto.TransactionMonitor.toModel(context: Context, gateway: Nod
     )
 }
 
-private fun TxmonProto.WalletTransaction.toModel(context: Context): WalletTransaction = WalletTransaction(
+private fun TxmonProto.WalletTransaction.toModel(context: ApmContext): WalletTransaction = WalletTransaction(
     0x01.toByte(),
     Address(input.address),
     input.amount.asCoin(),

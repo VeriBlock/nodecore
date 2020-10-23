@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.serialization
+package org.veriblock.miners.pop.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
@@ -14,8 +14,8 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
 import nodecore.api.grpc.utilities.extensions.asVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.lite.core.BlockMetaPackage
-import org.veriblock.lite.core.FullBlock
+import org.veriblock.miners.pop.core.BlockMetaPackage
+import org.veriblock.miners.pop.core.FullBlock
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath

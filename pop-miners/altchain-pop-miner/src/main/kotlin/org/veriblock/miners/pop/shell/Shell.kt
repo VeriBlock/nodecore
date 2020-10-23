@@ -9,7 +9,7 @@
 package org.veriblock.miners.pop.shell
 
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.DiagnosticService
@@ -25,7 +25,7 @@ import org.veriblock.shell.CommandFactory
 fun CommandFactory.configure(
     configuration: Configuration,
     minerConfig: MinerConfig,
-    context: Context,
+    context: ApmContext,
     minerService: AltchainPopMinerService,
     pluginService: PluginService,
     diagnosticService: DiagnosticService,

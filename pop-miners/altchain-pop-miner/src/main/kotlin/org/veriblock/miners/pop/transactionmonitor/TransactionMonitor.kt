@@ -6,18 +6,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.transactionmonitor
+package org.veriblock.miners.pop.transactionmonitor
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.extensions.asHexBytes
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.FullBlock
-import org.veriblock.lite.core.MerkleTree
-import org.veriblock.lite.core.TransactionMeta
-import org.veriblock.lite.net.NodeCoreGateway
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.FullBlock
+import org.veriblock.miners.pop.core.MerkleTree
+import org.veriblock.miners.pop.core.TransactionMeta
+import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
@@ -36,8 +35,8 @@ const val TM_FILE_EXTENSION = ".txmon"
 const val MIN_TX_CONFIRMATIONS: Int = 1
 
 class TransactionMonitor(
-    val context: Context,
-    val gateway: NodeCoreGateway,
+    val context: ApmContext,
+    val gateway: SpvGateway,
     val address: Address,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
@@ -179,7 +178,7 @@ class TransactionMonitor(
     }
 }
 
-fun File.loadTransactionMonitor(context: Context, gateway: NodeCoreGateway): TransactionMonitor = try {
+fun File.loadTransactionMonitor(context: ApmContext, gateway: SpvGateway): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
         stream.readTransactionMonitor(context, gateway)
     }

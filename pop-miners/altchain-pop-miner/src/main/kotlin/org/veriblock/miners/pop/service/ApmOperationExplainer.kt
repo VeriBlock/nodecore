@@ -1,7 +1,7 @@
 package org.veriblock.miners.pop.service
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.api.dto.OperationWorkflow
 import org.veriblock.miners.pop.api.dto.OperationWorkflowStage
 import org.veriblock.miners.pop.core.ApmOperation
@@ -10,7 +10,7 @@ import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
 
 class ApmOperationExplainer(
-    val context: Context
+    val context: ApmContext
 ) {
     fun explainOperation(operation: ApmOperation): OperationWorkflow {
         val currentState = if (!operation.isFailed()) {

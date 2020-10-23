@@ -9,8 +9,8 @@
 package org.veriblock.miners.pop.service
 
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.veriblock.lite.proto.OperationProto
-import org.veriblock.lite.transactionmonitor.WalletTransaction
+import org.veriblock.miners.pop.proto.OperationProto
+import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.core.parseOperationLogs

@@ -29,9 +29,8 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.util.VTBDebugUtility
@@ -54,11 +53,10 @@ import kotlin.concurrent.withLock
 private val logger = createLogger {}
 
 class SecurityInheritingMonitor(
-    val context: Context,
+    val context: ApmContext,
     configuration: Configuration,
     private val chainId: String,
-    private val chain: SecurityInheritingChain,
-    private val nodeCoreLiteKit: NodeCoreLiteKit
+    private val chain: SecurityInheritingChain
 ) {
     private val pollingPeriodSeconds = configuration.getLong(
         "securityInheriting.$chainId.pollingPeriodSeconds"
@@ -110,7 +108,7 @@ class SecurityInheritingMonitor(
         val coroutineScope = CoroutineScope(Threading.SI_MONITOR_POOL.asCoroutineDispatcher())
         coroutineScope.launch {
             // Wait for nodeCore to be ready
-            while (!nodeCoreLiteKit.network.isReady()) {
+            while (!miner.network.isReady()) {
                 delay(5_000L)
             }
 
@@ -259,7 +257,7 @@ class SecurityInheritingMonitor(
         for (newBlock in subscription) {
             try {
                 val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
-                val bestKnownBlock = nodeCoreLiteKit.gateway.getBlock(bestKnownBlockHash)
+                val bestKnownBlock = miner.gateway.getBlock(bestKnownBlockHash)
                     // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
                     ?: continue
 
@@ -268,7 +266,7 @@ class SecurityInheritingMonitor(
                 }
 
                 val contextBlocks = generateSequence(newBlock) {
-                    nodeCoreLiteKit.gateway.getBlock(it.previousBlock)
+                    miner.gateway.getBlock(it.previousBlock)
                 }.takeWhile {
                     it.hash != bestKnownBlockHash
                 }.sortedBy {
@@ -298,10 +296,10 @@ class SecurityInheritingMonitor(
             try {
                 val instruction = chain.getMiningInstruction()
                 val vbkContextBlockHash = instruction.context.first().asVbkHash()
-                val vbkContextBlock = nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash) ?: run {
+                val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash) ?: run {
                     // Maybe our peer doesn't know about that block yet. Let's wait a few seconds and give it another chance
                     delay(30_000L)
-                    nodeCoreLiteKit.gateway.getBlock(vbkContextBlockHash)
+                    miner.gateway.getBlock(vbkContextBlockHash)
                 }
                 if (vbkContextBlock == null) {
                     // The altchain has knowledge of a block we don't even know. Let's try again after a while
@@ -318,7 +316,7 @@ class SecurityInheritingMonitor(
 
                 logger.info { "Got keystone for ${chain.name}'s VTBs: ${newKeystone.hash} @ ${newKeystone.height}. Retrieving publication data..." }
                 // Fetch and wait for veriblock publications (VTBs)
-                val vtbs = nodeCoreLiteKit.network.getVeriBlockPublications(
+                val vtbs = miner.network.getVeriBlockPublications(
                     newKeystone.hash.toString(),
                     instruction.context.first().toHex(),
                     instruction.btcContext.first().toHex()

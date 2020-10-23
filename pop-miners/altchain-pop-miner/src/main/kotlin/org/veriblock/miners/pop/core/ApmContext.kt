@@ -6,18 +6,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.core
+package org.veriblock.miners.pop.core
 
+import org.veriblock.core.Context
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
 import java.io.File
 
-class Context(
+class ApmContext(
     configuration: Configuration,
     val networkParameters: NetworkParameters
 ) {
     init {
-        org.veriblock.core.Context.create(networkParameters)
+        Context.create(networkParameters)
     }
 
     val dataDir = System.getenv("DATA_DIR")

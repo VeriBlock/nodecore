@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.net
+package org.veriblock.miners.pop.net
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -20,8 +20,8 @@ import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.lite.serialization.deserialize
-import org.veriblock.lite.serialization.deserializeStandardTransaction
+import org.veriblock.miners.pop.serialization.deserialize
+import org.veriblock.miners.pop.serialization.deserializeStandardTransaction
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -37,7 +37,7 @@ import kotlin.math.abs
 
 private val logger = createLogger {}
 
-class NodeCoreGateway(
+class SpvGateway(
     private val params: NetworkParameters,
     private val spvService: SpvService
 ) {
@@ -99,15 +99,12 @@ class NodeCoreGateway(
             val errors = if (reply.resultsList.isNotEmpty()) {
                 reply.resultsList.joinToString(
                     separator = "\n",
-                    prefix = " NodeCore Errors:\n"
+                    prefix = " External Full Node errors:\n"
                 ) {
                     "${it.message} | ${it.details}"
                 }
             } else {
                 ""
-            }
-            for (error in reply.resultsList) {
-                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
             }
             error(
                 "Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash$errors"
@@ -115,37 +112,11 @@ class NodeCoreGateway(
         }
     }
 
-    fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String): List<VeriBlockPublication> {
-        TODO()
-        //logger.debug { "Requesting debug veriblock publications..." }
-        //val request = VeriBlockMessages.GetDebugVTBsRequest
-        //    .newBuilder()
-        //    .setVbkContextHash(ByteStringUtility.hexToByteString(vbkContextHash))
-        //    .setBtcContextHash(ByteStringUtility.hexToByteString(btcContextHash))
-        //    .build()
-
-        //val reply = spvService.getDebugVeriBlockPublications(request)
-
-        //if (reply.success) {
-        //    val publications = ArrayList<VeriBlockPublication>()
-        //    for (pubMsg in reply.publicationsList) {
-        //        publications.add(pubMsg.deserialize(params.transactionPrefix))
-        //    }
-        //    return publications
-        //} else {
-        //    for (error in reply.resultsList) {
-        //        logger.error { "NodeCore error: ${error.message} | ${error.details}" }
-        //    }
-        //}
-
-        //return emptyList()
-    }
-
     /**
-     * Retrieve the 'state info' from NodeCore
-     * This function will return an empty StateInfo if NodeCore is not accessible or if NodeCore still loading (networkHeight = 0)
+     * Retrieve the 'state info' from SPV
+     * This function will return an empty StateInfo if SPV is not accessible or if SPV is still loading (networkHeight = 0)
      */
-    fun getNodeCoreStateInfo(): StateInfo {
+    fun getSpvStateInfo(): StateInfo {
         val stateInfo = spvService.getStateInfo()
         val blockDifference = abs(stateInfo.networkHeight - stateInfo.localBlockchainHeight)
         return StateInfo(

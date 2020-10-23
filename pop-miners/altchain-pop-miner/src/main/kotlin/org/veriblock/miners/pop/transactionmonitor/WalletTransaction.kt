@@ -6,10 +6,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.transactionmonitor
+package org.veriblock.miners.pop.transactionmonitor
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.Output
