@@ -1,220 +1,172 @@
 package org.veriblock.spv.service
 
+import kotlinx.coroutines.yield
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.VBK_HASH_LENGTH
-import org.veriblock.core.crypto.VBK_PREVIOUS_BLOCK_HASH_LENGTH
 import org.veriblock.core.crypto.VbkHash
-import org.veriblock.core.crypto.asVbkHash
-import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.*
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
+import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.CHAIN_WORK_BYTES
+import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
+import java.lang.IllegalStateException
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
+/**
+ * @invariant blocks.db file should contain only connected blocks with correct work. I.e. store never
+ * contains a block whose previousBlock does not exist in this store **before** this block.
+ */
 class BlockStore(
-    private val networkParameters: NetworkParameters,
+    val networkParameters: NetworkParameters,
     baseDir: File
-) {
+) : Closeable, AutoCloseable {
+
+    val path = File(baseDir, "$networkParameters-blocks.db")
     private val lock = ReentrantLock()
-    private val blocksCache = LRUCache<PreviousBlockVbkHash, StoredVeriBlockBlock>(2000)
+    private val blocksFile = RandomAccessFile(path, "rw")
+    private val blocksCache = LRUCache<Long, StoredVeriBlockBlock>(2000)
 
-    private val indexFile = File(baseDir, "$networkParameters-block-index.db")
-    private val blocksFile = File(baseDir, "$networkParameters-blocks.db")
+    val size: Long get() = blocksFile.length()
 
-    private fun writeBlockBody(file: RandomAccessFile, block: StoredVeriBlockBlock) {
-        file.writeInt(block.height)
-        file.write(block.hash.bytes)
-        file.write(Utility.toBytes(block.work, StoredVeriBlockBlock.CHAIN_WORK_BYTES))
-        file.write(block.header.raw)
+    /**
+     * Reads all blocks one-by-one from blocks file.
+     * Executes `onBlock` on every new block found.
+     *
+     * If `onBlock` returns false, current block is invalid - truncates blocks file and returns.
+     */
+    fun forEach(
+        onBlock: (position: Long, block: StoredVeriBlockBlock) -> Boolean
+    ) = lock.withLock {
+        val size = blocksFile.length()
+        blocksFile.seek(0)
+        var position = 0L
+
+        // blocks are written in sequentially.
+        // read all indices
+        while (blocksFile.filePointer < size) {
+            try {
+                position = blocksFile.filePointer
+                // this moves filePointer forward
+                // do not use cache here, as LRU cache hit will be 0 in this scenario
+                val block = readBlockFromFile()
+                if (!onBlock(position, block)) {
+                    // this block is invalid, move file
+                    // pointer to position "before" this block and truncate the file.
+                    // this removes all next blocks, as we can not rely on their validity anymore.
+                    truncate(position)
+                    // we no longer interested in reading
+                    break
+                }
+            } catch (e: IOException) {
+                // we tried to read a block, but we were not able to do so.
+                // move ptr to last valid block position and truncate the rest
+                truncate(position)
+                break
+            }
+        }  // end while
     }
 
-    class BlockIndex(
-        var tip: StoredVeriBlockBlock,
-        val fileIndex: MutableMap<PreviousBlockVbkHash, Long>
-    )
+    /**
+     * Writes a block to a given position.
+     * @return end of written block
+     */
+    fun writeBlock(position: Long, block: StoredVeriBlockBlock): Long = lock.withLock {
+        blocksFile.seek(position)
+        writeBlockToFile(block)
+        blocksCache[position] = block
+        return blocksFile.filePointer
+    }
 
-    val index = initializeIndex()
+    /**
+     * Appends new block at the end of block storage.
+     * @return its position in a file
+     */
+    fun appendBlock(block: StoredVeriBlockBlock): Long = lock.withLock {
+        val position = blocksFile.length()
+        writeBlock(position, block)
+        return position
+    }
 
-    private fun initializeIndex(): BlockIndex {
-        return if (!indexFile.exists()) {
-            createGenesisIndex()
-        } else {
-            readIndex()
+    fun truncate(position: Long) {
+        blocksFile.channel.truncate(position)
+        blocksCache.keys.removeIf {
+            // remove all keys after `position`
+            it >= position
         }
     }
 
-    private fun createGenesisIndex(): BlockIndex {
-        indexFile.delete()
-        blocksFile.delete()
-        val genesisBlock = StoredVeriBlockBlock(
-            networkParameters.genesisBlock,
-            BitcoinUtilities.decodeCompactBits(networkParameters.genesisBlock.difficulty.toLong()),
-            networkParameters.genesisBlock.hash
+    /**
+     * Reads block at given position in blocks file.
+     */
+    fun readBlock(position: Long): StoredVeriBlockBlock? {
+        return blocksCache.getOrPut(position) {
+            try {
+                return lock.withLock {
+                    blocksFile.seek(position)
+                    readBlockFromFile()
+                }
+            } catch (e: IOException) {
+                logger.error { "Can not read block at position ${position}: $e" }
+            }
+
+            return null
+        }
+    }
+
+    /**
+     * @invariant should seek to correct position before use
+     */
+    private fun writeBlockToFile(block: StoredVeriBlockBlock) {
+        writeBlockToFile(block.height, block.hash, block.work, block.header)
+    }
+
+    /**
+     * @invariant should seek to correct position before use
+     */
+    private fun writeBlockToFile(height: Int, hash: VbkHash, work: BigInteger, header: VeriBlockBlock) {
+        check(lock.isLocked)
+
+        blocksFile.writeInt(height)
+        blocksFile.write(hash.bytes)
+        blocksFile.write(Utility.toBytes(work, CHAIN_WORK_BYTES))
+        blocksFile.write(header.raw)
+    }
+
+    /**
+     * @invariant should seek to correct position before use
+     */
+    private fun readBlockFromFile(): StoredVeriBlockBlock {
+        check(lock.isLocked)
+
+        val height = blocksFile.readInt()
+        val hash = ByteArray(VBK_HASH_LENGTH)
+        blocksFile.read(hash)
+        val work = ByteArray(CHAIN_WORK_BYTES)
+        blocksFile.read(work)
+        val header = ByteArray(BlockUtility.getBlockHeaderLength(height))
+        blocksFile.read(header)
+
+        val vbkhash = VbkHash(hash)
+        return StoredVeriBlockBlock(
+            header = SerializeDeserializeService.parseVeriBlockBlock(header, vbkhash),
+            work = BigInteger(1, work),
+            hash = vbkhash
         )
-        RandomAccessFile(blocksFile, "rw").use { file ->
-            file.seek(0)
-            writeBlockBody(file, genesisBlock)
-        }
-        RandomAccessFile(indexFile, "rw").use {
-            it.write(genesisBlock.hash.bytes)
-            it.writeInt(1)
-            it.write(genesisBlock.hash.bytes)
-            it.writeLong(0L)
-        }
-        return BlockIndex(genesisBlock, mutableMapOf(genesisBlock.hash.trimToPreviousBlockSize() to 0L))
     }
 
-    fun readChainWithTip(hash: VbkHash, size: Int): ArrayList<StoredVeriBlockBlock> {
-        val ret = ArrayList<StoredVeriBlockBlock>()
-        var i = 0
-        var cursor = readBlock(hash)
-        while (cursor != null && i++ < size) {
-            ret.add(cursor)
-            cursor = readBlock(cursor.header.previousBlock)
-        }
-        ret.reverse()
-        return ret
-    }
-
-    fun getTip(): StoredVeriBlockBlock = index.tip
-
-    fun setTip(tip: StoredVeriBlockBlock) = lock.withLock {
-        index.tip = tip
-        RandomAccessFile(indexFile, "rw").use { file ->
-            file.seek(0)
-            file.write(tip.hash.bytes)
-        }
-    }
-
-    private fun getFileIndex(hash: AnyVbkHash) =
-        index.fileIndex[hash.trimToPreviousBlockSize()]
-
-    fun readBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
-        val shortHash = hash.trimToPreviousBlockSize()
-        val entry = blocksCache[shortHash]
-        if (entry != null) {
-            return entry
-        }
-
-        val filePosition = getFileIndex(shortHash)
-            ?: return null
-
-        val block = readBlock(filePosition)
-        blocksCache[shortHash] = block
-        return block
-    }
-
-    fun exists(hash: AnyVbkHash): Boolean {
-        return getFileIndex(hash) != null
-    }
-
-    private fun readBlock(filePosition: Long): StoredVeriBlockBlock {
-        return RandomAccessFile(blocksFile, "r").use { file ->
-            file.seek(filePosition)
-            val blockHeight = file.readInt()
-            val blockHash = ByteArray(VBK_HASH_LENGTH)
-            file.read(blockHash)
-            val workBytes = ByteArray(StoredVeriBlockBlock.CHAIN_WORK_BYTES)
-            file.read(workBytes)
-            val work = BigInteger(1, workBytes)
-            val blockHeader = ByteArray(BlockUtility.getBlockHeaderLength(blockHeight))
-            file.read(blockHeader)
-            val fullHash = blockHash.asVbkHash()
-            StoredVeriBlockBlock(
-                SerializeDeserializeService.parseVeriBlockBlock(blockHeader, fullHash),
-                work,
-                fullHash
-            )
-        }
-    }
-
-    fun writeBlock(block: StoredVeriBlockBlock) = lock.withLock {
-        val blockFilePosition = RandomAccessFile(blocksFile, "rw").use { file ->
-            val filePosition = file.length()
-            file.seek(filePosition)
-            writeBlockBody(file, block)
-            filePosition
-        }
-        val smallHash = block.hash.trimToPreviousBlockSize()
-
-        index.fileIndex[smallHash] = blockFilePosition
-        RandomAccessFile(indexFile, "rw").use { file ->
-            // Read current count
-            file.seek(VBK_HASH_LENGTH.toLong())
-            val blockCount = file.readInt()
-            // Write current count
-            file.seek(VBK_HASH_LENGTH.toLong())
-            file.writeInt(blockCount + 1)
-            // Write block index
-            file.seek(4 + VBK_HASH_LENGTH + blockCount.toLong() * (VBK_HASH_LENGTH + 8))
-            file.write(smallHash.bytes)
-            file.writeLong(blockFilePosition)
-        }
-
-        // block that is "just written" is very likely to be accessed very soon
-        blocksCache[smallHash] = block
-    }
-
-    fun writeBlocks(blocks: List<StoredVeriBlockBlock>) = lock.withLock {
-        val blockFilePosition = RandomAccessFile(blocksFile, "rw").use { file ->
-            val filePosition = file.length()
-            file.seek(filePosition)
-            blocks.forEach { block ->
-                writeBlockBody(file, block)
-            }
-            filePosition
-        }
-
-        RandomAccessFile(indexFile, "rw").use { file ->
-            // Read current count
-            file.seek(VBK_HASH_LENGTH.toLong())
-            val blockCount = file.readInt()
-            // Write current count
-            file.seek(VBK_HASH_LENGTH.toLong())
-            file.writeInt(blockCount + blocks.size)
-            // Write indices
-            file.seek(4 + VBK_HASH_LENGTH + blockCount.toLong() * (VBK_HASH_LENGTH + 8))
-            var cumulativeFilePosition = blockFilePosition
-            for (block in blocks) {
-                val smallHash = block.hash.trimToPreviousBlockSize()
-                index.fileIndex[smallHash] = cumulativeFilePosition
-                file.write(block.hash.bytes)
-                file.writeLong(cumulativeFilePosition)
-                cumulativeFilePosition += 4 + VBK_HASH_LENGTH + StoredVeriBlockBlock.CHAIN_WORK_BYTES + block.header.raw.size
-            }
-        }
-    }
-
-    private fun readIndex(): BlockIndex = RandomAccessFile(indexFile, "r").use { file ->
-        val tipHash = ByteArray(VBK_HASH_LENGTH)
-        file.read(tipHash)
-        val tip = tipHash.asVbkHash().trimToPreviousBlockSize()
-
-        val count = file.readInt()
-        val fileIndex = try {
-            (0 until count).associate {
-                val hash = ByteArray(VBK_HASH_LENGTH)
-                file.read(hash)
-                hash.asVbkHash().trimToPreviousBlockSize() to file.readLong()
-            }.toMutableMap()
-        } catch (e: IOException) {
-            logger.debugWarn(e) { "Error while loading blockchain index file. Redownloading blockchain from scratch..." }
-            return createGenesisIndex()
-        }
-        val tipFileIndex = fileIndex[tip] ?: run {
-            logger.warn { "Invalid blockchain tip! Redownloading blockchain from scratch..." }
-            return createGenesisIndex()
-        }
-        BlockIndex(readBlock(tipFileIndex), fileIndex)
+    override fun close() {
+        blocksFile.close()
     }
 }

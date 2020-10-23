@@ -6,17 +6,13 @@ import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.params.defaultMainNetParameters
-import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.StandardAddress
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.asStandardAddress
-import org.veriblock.spv.net.LocalhostDiscovery
 import java.io.File
 
 class StandardTransactionTest {
@@ -31,7 +27,7 @@ class StandardTransactionTest {
         Context.set(defaultMainNetParameters)
         spvContext.init(
             SpvConfig(
-                useLocalNode = true
+                connectDirectlyTo = listOf("localhost")
             )
         )
     }

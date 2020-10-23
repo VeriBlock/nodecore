@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
+import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.*
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.SerializerUtility
@@ -14,6 +15,7 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.*
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -40,7 +42,7 @@ open class VeriBlockBlock(
     var nonce: Long
     val isProgPow: Boolean
 
-    @Deprecated("See VeriBlockBlock.serializeRaw()", ReplaceWith("serializeRaw()"))
+    @Deprecated("See VeriBlockBlock.serializeRaw()", ReplaceWith("serializeRaw"))
     val raw: ByteArray
         get() = SerializeDeserializeService.serializeHeaders(this)
 
@@ -78,6 +80,8 @@ open class VeriBlockBlock(
 
     fun getEffectivePreviousKeystone(): AnyVbkHash =
         if (height % Constants.KEYSTONE_INTERVAL == 1) previousBlock else previousKeystone
+
+    fun getDecodedDifficulty(): BigInteger = BitcoinUtilities.decodeCompactBits(this.difficulty.toLong())
 
     companion object {
         @JvmStatic

@@ -17,14 +17,14 @@ private val logger = createLogger { }
 /**
  * Discovery peer locally.
  */
-class LocalhostDiscovery(
-    private val networkParameters: NetworkParameters
+class DirectDiscovery(
+    private val addresses: List<NetworkAddress>
 ) : PeerDiscovery {
     init {
-        logger.info { "Doing local peer discovery. Using peer ${LOCALHOST}:${networkParameters.p2pPort}." }
+        logger.info { "Doing direct peer discovery. Using peers $addresses" }
     }
 
     override fun getPeers(count: Int): Collection<NetworkAddress> {
-        return listOf(NetworkAddress(LOCALHOST, networkParameters.p2pPort))
+        return addresses.take(count)
     }
 }

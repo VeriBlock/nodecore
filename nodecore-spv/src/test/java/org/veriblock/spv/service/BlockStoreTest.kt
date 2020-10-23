@@ -1,6 +1,7 @@
 package org.veriblock.spv.service
 
 import io.kotest.matchers.shouldBe
+import io.ktor.utils.io.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.*
 import org.veriblock.core.Context
@@ -14,7 +15,9 @@ import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
+import org.veriblock.core.miner.vbkBlockGenerator
 import org.veriblock.core.params.defaultMainNetParameters
+import org.veriblock.core.params.defaultRegTestParameters
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvConfig
@@ -25,20 +28,15 @@ import java.security.MessageDigest
 import kotlin.random.Random
 
 class BlockStoreTest {
-    private lateinit var blockStore: BlockStore
-    private lateinit var baseDir: File
+    private val regtest = defaultRegTestParameters
 
     init {
-        Context.set(defaultMainNetParameters)
+        Context.create(regtest)
     }
 
-    @Before
-    fun beforeTest() {
-        baseDir = File("blockStoreTests").also {
-            it.mkdir()
-        }
-        blockStore = BlockStore(defaultMainNetParameters, baseDir)
-    }
+    private val baseDir: File = createTempDir()
+    private var blockStore = BlockStore(regtest, baseDir)
+
 
     @After
     fun after() {
@@ -48,19 +46,25 @@ class BlockStoreTest {
     @Test
     fun `should store and restore the given list of blocks`() {
         // Given
-        val storedVeriBlockBlocks = (1..100).map {
+        (1..100).map {
             StoredVeriBlockBlock(
                 randomVeriBlockBlock(height = it),
                 BigInteger.ONE,
                 randomVbkHash()
             )
         }
-        // When
-        blockStore.writeBlocks(storedVeriBlockBlocks)
+            // When
+            .map {
+                blockStore.appendBlock(it)
+            }
         // Then
-        storedVeriBlockBlocks.forEach {
-            blockStore.readBlock(it.hash) shouldBe it
+        var count = 0
+        blockStore.forEach { _, _ ->
+            count++
+            true
         }
+
+        count shouldBe 100
     }
 
     @Test
@@ -72,55 +76,30 @@ class BlockStoreTest {
             randomVbkHash()
         )
         // When
-        blockStore.writeBlock(storedVeriBlockBlock)
+        blockStore.writeBlock(0, storedVeriBlockBlock)
         // Then
-        blockStore.readBlock(storedVeriBlockBlock.hash) shouldBe storedVeriBlockBlock
-    }
-
-    @Test
-    fun `should properly update the block store tip`() {
-        // Given
-        val storedVeriBlockBlock = StoredVeriBlockBlock(
-            randomVeriBlockBlock(),
-            BigInteger.ONE,
-            randomVbkHash()
-        )
-        // When
-        blockStore.setTip(storedVeriBlockBlock)
-        // Then
-        blockStore.getTip() shouldBe storedVeriBlockBlock
-    }
-
-    @Test
-    fun `shouldn't be able to restore a block with a wrong hash`() {
-        // Given
-        val storedVeriBlockBlock = StoredVeriBlockBlock(
-            randomVeriBlockBlock(),
-            BigInteger.ONE,
-            randomVbkHash()
-        )
-        // When
-        blockStore.writeBlock(storedVeriBlockBlock)
-        // Then
-        blockStore.readBlock(randomVbkHash()) shouldBe null
+        blockStore.readBlock(0) shouldBe storedVeriBlockBlock
     }
 
     @Test
     fun `should restore the blocks which were stored by a previous block store object`() {
         // Given
-        val storedVeriBlockBlocks = (1..100).map {
+        val list = (1..100).map {
             StoredVeriBlockBlock(
                 randomVeriBlockBlock(height = it),
                 BigInteger.ONE,
                 randomVbkHash()
             )
         }
+
+        val pos = list.map {
+            blockStore.appendBlock(it)
+        }
         // When
-        blockStore.writeBlocks(storedVeriBlockBlocks)
-        blockStore = BlockStore(defaultMainNetParameters, baseDir)
+        blockStore = BlockStore(regtest, baseDir)
         // Then
-        storedVeriBlockBlocks.forEach {
-            blockStore.readBlock(it.hash) shouldBe it
+        list.zip(pos).forEach { (block, position) ->
+            blockStore.readBlock(position) shouldBe block
         }
     }
 }

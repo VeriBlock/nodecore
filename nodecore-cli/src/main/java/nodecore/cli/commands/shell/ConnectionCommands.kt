@@ -6,14 +6,10 @@ import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
 import nodecore.cli.contracts.ProtocolEndpointType
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.core.success
-import org.veriblock.spv.net.BootstrapPeerDiscovery
-import org.veriblock.spv.net.LocalhostDiscovery
-import org.veriblock.spv.net.PeerDiscovery
 import java.awt.GraphicsEnvironment
 
 fun CommandFactory.connectionCommands() {

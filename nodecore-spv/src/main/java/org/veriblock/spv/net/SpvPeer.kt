@@ -152,7 +152,8 @@ class SpvPeer(
          * 6. Allow the advertise to pass through to the handler for adding to blockchain
          * 7. If it was the maximum number of advertisements though, send another keystone query
          */
-        requestBlockDownload(blockchain.getPeerQuery())
+        val query = blockchain.getPeerQuery()
+        requestBlockDownload(query)
     }
 
     fun setFilter(filter: BloomFilter) {
@@ -172,6 +173,9 @@ class SpvPeer(
     }
 
     private fun requestBlockDownload(keystones: List<VeriBlockBlock>) {
+        if(keystones.isEmpty()) {
+            throw IllegalArgumentException("Trying to request block download with empty keystones!")
+        }
         val queryBuilder = KeystoneQuery.newBuilder()
         for (block in keystones) {
             logger.debug { "Preparing keystone ${block.height}..." }

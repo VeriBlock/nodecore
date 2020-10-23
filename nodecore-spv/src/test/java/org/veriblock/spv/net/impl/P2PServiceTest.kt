@@ -15,7 +15,6 @@ import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.asStandardAddress
-import org.veriblock.spv.net.LocalhostDiscovery
 import org.veriblock.spv.net.P2PService
 import org.veriblock.spv.net.SpvPeer
 import org.veriblock.spv.service.PendingTransactionContainer
@@ -29,7 +28,7 @@ class P2PServiceTest {
     @Before
     fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext.init(SpvConfig("testnet", useLocalNode = true))
+        spvContext.init(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
         pendingTransactionContainer = mockk(relaxed = true)
         peer = mockk(relaxed = true)
         p2PService = P2PService(pendingTransactionContainer, spvContext.networkParameters)

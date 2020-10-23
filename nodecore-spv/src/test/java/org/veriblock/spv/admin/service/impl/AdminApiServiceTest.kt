@@ -52,7 +52,7 @@ class AdminApiServiceTest {
     @Before
     fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext.init(SpvConfig("testnet", useLocalNode = true))
+        spvContext.init(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)

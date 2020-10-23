@@ -9,52 +9,163 @@ package org.veriblock.spv.service
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.getMiningContext
 import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
+import java.io.File
 import java.io.IOException
+import java.io.RandomAccessFile
 import java.lang.IllegalStateException
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
 class Blockchain(
-    private val networkParameters: NetworkParameters,
-    private val blockStore: BlockStore
+    val blockStore: BlockStore
 ) {
-    val size: Int
-        get() = this.blockStore.index.fileIndex.size
+    // in-memory block index
+    val blockIndex = ConcurrentHashMap<PreviousBlockVbkHash, BlockIndex>()
+    lateinit var activeChain: Chain
+    val size get() = blockIndex.size
+    val networkParameters get() = blockStore.networkParameters
 
-    fun getChainHead(): StoredVeriBlockBlock {
-        try {
-            return blockStore.getTip()
-        } catch (e: Exception) {
-            throw IllegalStateException("Can not get tip: $e")
+    init {
+        reindex()
+    }
+
+    /**
+     * Drop existing block index, and re-generate one from disk.
+     */
+    fun reindex() {
+        logger.info { "Reading $${blockStore.networkParameters} blocks..." }
+
+        // drop previous block index
+        blockIndex.clear()
+        writeGenesisBlock(blockStore.networkParameters.genesisBlock)
+
+        // reads blocks file and builds block index
+        blockStore.forEach { position, block ->
+            // we were able to read a block from blocks file.
+            // this block must connect to previous block, i.e.
+            // previous block must exist in index
+
+            val prevHash = block.header.previousBlock
+            val prevIndex = blockIndex[prevHash]
+            // ignore genesis block
+            if (block.height != 0 && prevIndex == null) {
+                logger.warn { "Found block that does not connect to blockchain: height=${block.height} hash=${block.hash} " }
+                return@forEach false
+            }
+
+            // validate block
+            if (!ValidationService.checkBlock(block.header)) {
+                return@forEach false
+            }
+
+            // prev index exists! this is valid block
+            val index = appendToBlockIndex(position, block)
+
+            // update active chain
+            if (activeChain.tipWork < block.work) {
+                activeChain.setTip(index, block.work)
+            }
+
+            true
         }
+
+        logger.info { "Successfully initialized Blockchain with ${blockIndex.size} blocks" }
     }
 
-    fun get(hash: AnyVbkHash): StoredVeriBlockBlock? {
-        return blockStore.readBlock(hash)
+
+    /**
+     * Getter for block index.
+     */
+    fun getBlockIndex(hash: AnyVbkHash): BlockIndex? = blockIndex[hash.trimToPreviousBlockSize()]
+    fun getBlockIndex(height: Int): BlockIndex? = activeChain[height]
+
+    /**
+     * Getter for tip.
+     */
+    fun getChainHeadBlock(): StoredVeriBlockBlock = blockStore.readBlock(activeChain.tip.position)!!
+    fun getChainHeadIndex(): BlockIndex = activeChain.tip
+
+    /**
+     * Reads block with given hash.
+     */
+    fun getBlock(hash: AnyVbkHash): StoredVeriBlockBlock? {
+        val smallHash = hash.trimToPreviousBlockSize()
+        val index = blockIndex[smallHash] ?: return null
+        return blockStore.readBlock(index.position)
     }
 
-    fun acceptBlock(block: VeriBlockBlock): Boolean {
-        if (blockStore.exists(block.hash)) {
+    /**
+     * Reads block with given height on active chain.
+     */
+    fun getBlock(height: Int): StoredVeriBlockBlock? {
+        val index = activeChain[height] ?: return null
+        return blockStore.readBlock(index.position)
+    }
+
+    /**
+     * Reads a chain of blocks from active chain of given `size` ending with `hash`
+     */
+    fun getChainWithTip(hash: AnyVbkHash, size: Int): ArrayList<StoredVeriBlockBlock> {
+        val ret = ArrayList<StoredVeriBlockBlock>()
+        var i = 0
+        var cursor = getBlock(hash)
+        while (cursor != null && i++ < size) {
+            ret.add(cursor)
+            cursor = getBlock(cursor.header.previousBlock)
+        }
+        ret.reverse()
+        return ret
+    }
+
+    /**
+     * Adds new block to Blockchain.
+     * @return true if block is valid, false otherwise
+     */
+    fun acceptBlock(
+        block: VeriBlockBlock
+    ): Boolean {
+        if (getBlockIndex(block.hash) != null) {
             // block is valid, we already have it
             return true
         }
 
         // does block connect to blockchain?
-        val prev = blockStore.readBlock(block.previousBlock)
+        val prevIndex = getBlockIndex(block.previousBlock)
             ?: return false
+
+        val prev = prevIndex.readBlock(blockStore)
+            ?: throw IllegalStateException("Found index with hash=${block.previousBlock} but could not read its block")
 
         // is block statelessly valid?
         if (!ValidationService.checkBlock(block)) {
             return false
         }
+
+        val ctx = getMiningContext(prev.header) {
+            getBlock(it.previousBlock)?.header
+        }
+
+        val expectedDifficulty = getNextWorkRequired(prev.header, networkParameters, ctx)
+        if (expectedDifficulty != block.difficulty) {
+            // bad difficulty
+            logger.warn { "Rejecting block=$block, because of bad difficulty. Expected=$expectedDifficulty, got=${block.difficulty}" }
+            return false
+        }
+
+        // TODO: contextually check block: validate median time past, validate keystones
 
         // all ok, we can add block to blockchain
         val stored = StoredVeriBlockBlock(
@@ -63,24 +174,14 @@ class Blockchain(
             hash = block.hash
         )
 
-//        val ctx = getMiningContext(prev.header, 100) {
-//            blockStore.readBlock(it.previousBlock)?.header
-//        }
-        // TODO: test this algo against real data
-//        if(getNextWorkRequired(prev.header, networkParameters, ctx) != block.difficulty) {
-//            // bad difficulty
-//            return false
-//        }
-
-        // TODO: contextually check block: validate median time past, validate keystones
-
         // write block on disk
-        blockStore.writeBlock(stored)
+        val position = blockStore.appendBlock(stored)
+        val index = appendToBlockIndex(position, stored)
 
         // do fork resolution
-        if (stored.work > getChainHead().work) {
+        if (stored.work > activeChain.tipWork) {
             // new block wins
-            blockStore.setTip(stored)
+            activeChain.setTip(index, stored.work)
             SpvEventBus.newBestBlockEvent.trigger(block)
         }
 
@@ -91,6 +192,50 @@ class Blockchain(
     }
 
     fun getPeerQuery(): List<VeriBlockBlock> {
-        return blockStore.readChainWithTip(getChainHead().hash, 100).map { it.header }.filter { it.isKeystone() }
+        return getChainWithTip(activeChain.tip.smallHash, 100)
+            .map { it.header }
+            .filter { it.isKeystone() }
+    }
+
+    private fun appendToBlockIndex(position: Long, block: StoredVeriBlockBlock): BlockIndex {
+        val smallHash = block.hash.trimToPreviousBlockSize()
+        val prev = blockIndex[block.header.previousBlock]
+        val index = BlockIndex(
+            smallHash = smallHash,
+            position = position,
+            height = block.height,
+            prev = prev
+        )
+        blockIndex[smallHash] = index
+        return index
+    }
+
+    private fun writeGenesisBlock(genesis: VeriBlockBlock) {
+        val smallHash = genesis.hash.trimToPreviousBlockSize()
+        val param = blockStore.networkParameters
+        val work = BitcoinUtilities.decodeCompactBits(
+            param.genesisBlock.difficulty.toLong()
+        )
+
+        // write gb to position 0
+        blockStore.writeBlock(
+            position = 0,
+            block = StoredVeriBlockBlock(
+                header = param.genesisBlock,
+                work = work,
+                hash = param.genesisBlock.hash
+            )
+        )
+
+        // block index always contains genesis block on start
+        val index = BlockIndex(
+            smallHash = smallHash,
+            position = 0, // gb is at position 0
+            height = 0,
+            prev = null
+        )
+
+        blockIndex[smallHash] = index
+        activeChain = Chain(index, work)
     }
 }

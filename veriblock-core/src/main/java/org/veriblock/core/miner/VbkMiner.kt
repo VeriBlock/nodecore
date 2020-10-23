@@ -18,9 +18,6 @@ fun getNextWorkRequired(
     // can be less than 100 ONLY if blockchain contains less than 100 blocks
     context: List<VeriBlockBlock>
 ): Int {
-    assert(context[context.size - 1] == prev)
-    assert(context.size <= 100)
-
     return BitcoinUtilities.encodeCompactBits(
         VeriBlockDifficultyCalculator.calculate(networkParams, prev, context)
     ).toInt()
@@ -79,7 +76,6 @@ fun getBlockTemplate(
 
     val timestamp = max(prev.timestamp, System.currentTimeMillis().toInt())
     val difficulty = getNextWorkRequired(prev, networkParams, context)
-
     val zeroKeystone = VBK_EMPTY_HASH.trimToPreviousKeystoneSize()
 
     return VeriBlockBlock(
@@ -110,18 +106,17 @@ fun mineVbkBlock(template: VeriBlockBlock): VeriBlockBlock {
 
 // helper to generate mining context (e.g. `context` argument in mineVbkChain)
 fun getMiningContext(
-    lastBlock: VeriBlockBlock,
+    block: VeriBlockBlock,
     size: Int = 100,
     getPreviousBlock: (block: VeriBlockBlock) -> VeriBlockBlock?
 ): LinkedList<VeriBlockBlock> {
     val ctx = LinkedList<VeriBlockBlock>()
-    var cursor: VeriBlockBlock? = lastBlock
+    var cursor: VeriBlockBlock? = block
     var i = 0
     while (cursor != null && i++ < size) {
         ctx.add(cursor)
         cursor = getPreviousBlock(cursor)
     }
-    ctx.reverse()
     return ctx
 }
 

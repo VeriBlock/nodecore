@@ -12,7 +12,6 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath("com.netflix.nebula:nebula-release-plugin:6.0.0")
         classpath("com.netflix.nebula:gradle-ospackage-plugin:1.12.2")
         classpath("org.ajoberstar:grgit:1.1.0")
         classpath("org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1")
@@ -68,10 +67,6 @@ allprojects {
 
 subprojects {
     version = version
-}
-
-nebulaRelease {
-    addReleaseBranchPattern("""(release(-|\/))?\d+(.\d+)?(.\d+)?""")
 }
 
 tasks.named("releaseCheck").configure {

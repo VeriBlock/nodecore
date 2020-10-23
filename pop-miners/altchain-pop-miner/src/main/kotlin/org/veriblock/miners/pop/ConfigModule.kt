@@ -26,7 +26,7 @@ fun configModule(): Module {
         }
         single { Context(get(), get()) }
 
-        single { NodeCoreLiteKit(get(), get()) }
+        single { NodeCoreLiteKit(get(), get(), get()) }
         single { AltchainPopMinerService(get(), get(), get(), get(), get(), get(), get()) }
     }
 }
@@ -34,6 +34,6 @@ fun configModule(): Module {
 class MinerConfig(
     var feePerByte: Long = 1_000,
     var maxFee: Long = 10_000_000,
-    var connectToLocalNode: Boolean = false,
+    val connectDirectlyTo: List<String> = emptyList(),
     val mock: Boolean = false
 )

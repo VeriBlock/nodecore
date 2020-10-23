@@ -538,14 +538,9 @@ public class AddressManager {
             key = passphrase;
             unlocked = true;
 
-            for (StoredAddress a : wallet.addresses) {
-                byte[] encoded = EncryptionManager.decrypt(a.cipher, passphrase);
-                privateKeys.put(a.address, AddressKeyGenerator.getPrivateKey(encoded));
-            }
-
             // TODO: Implement a timer so that it locks automatically
             return true;
-        } catch (InvalidKeySpecException | WalletLockedException e) {
+        } catch (WalletLockedException e) {
             logger.warn("Unable to unlock wallet", e.getMessage(), e);
             lock();
 
@@ -685,9 +680,17 @@ public class AddressManager {
     private PrivateKey getPrivateKey(String address, char[] passphrase) {
         try {
             lock.lock();
-
             if (unlocked) {
-                return privateKeys.get(address);
+                if (isEncrypted()) {
+                    for (StoredAddress a : wallet.addresses) {
+                        if (a.address.equalsIgnoreCase(address)) {
+                            byte[] encoded = EncryptionManager.decrypt(a.cipher, passphrase);
+                            return AddressKeyGenerator.getPrivateKey(encoded);
+                        }
+                    }
+                } else {
+                    return privateKeys.get(address);
+                }
             } else {
                 for (StoredAddress a : wallet.addresses) {
                     if (a.address.equals(address)) {

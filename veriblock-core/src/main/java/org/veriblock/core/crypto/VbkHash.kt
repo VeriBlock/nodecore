@@ -42,7 +42,7 @@ private fun AnyVbkHash.trimBytes(size: Int): ByteArray {
     }
 }
 
-class VbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
+class VbkHash(bytes: ByteArray = ByteArray(VBK_HASH_LENGTH)) : AnyVbkHash(bytes) {
     init {
         check(bytes.size == VBK_HASH_LENGTH) {
             "Trying to create a VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
@@ -56,7 +56,7 @@ class VbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
         PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
 }
 
-class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
+class PreviousBlockVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH)) : AnyVbkHash(bytes) {
     init {
         check(bytes.size == VBK_PREVIOUS_BLOCK_HASH_LENGTH) {
             "Trying to create a previous block VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
@@ -70,7 +70,7 @@ class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
         PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
 }
 
-class PreviousKeystoneVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
+class PreviousKeystoneVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH)) : AnyVbkHash(bytes) {
     init {
         check(bytes.size == VBK_PREVIOUS_KEYSTONE_HASH_LENGTH) {
             "Trying to create a previous keystone VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
@@ -96,10 +96,12 @@ fun ByteBuffer.readVbkHash(): VbkHash = ByteArray(VBK_HASH_LENGTH).let {
     get(it)
     VbkHash(it)
 }
+
 fun ByteBuffer.readVbkPreviousBlockHash(): PreviousBlockVbkHash = ByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH).let {
     get(it)
     PreviousBlockVbkHash(it)
 }
+
 fun ByteBuffer.readVbkPreviousKeystoneHash(): PreviousKeystoneVbkHash = ByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH).let {
     get(it)
     PreviousKeystoneVbkHash(it)
@@ -138,15 +140,19 @@ class EgPreviousKeystoneVbkHash(bytes: ByteArray) : PreviousKeystoneVbkHash(byte
 object VbkHashUtil {
     @JvmStatic
     fun wrap(bytes: ByteArray): VbkHash = VbkHash(bytes)
+
     @JvmStatic
     fun wrapPreviousBlockHash(bytes: ByteArray): PreviousBlockVbkHash = PreviousBlockVbkHash(bytes)
+
     @JvmStatic
     fun wrapPreviousKeystoneHash(bytes: ByteArray): PreviousKeystoneVbkHash = PreviousKeystoneVbkHash(bytes)
 
     @JvmStatic
     fun wrap(hex: String): VbkHash = wrap(hex.asHexBytes())
+
     @JvmStatic
     fun wrapPreviousBlockHash(hex: String): PreviousBlockVbkHash = wrapPreviousBlockHash(hex.asHexBytes())
+
     @JvmStatic
     fun wrapPreviousKeystoneHash(hex: String): PreviousKeystoneVbkHash = wrapPreviousKeystoneHash(hex.asHexBytes())
 }

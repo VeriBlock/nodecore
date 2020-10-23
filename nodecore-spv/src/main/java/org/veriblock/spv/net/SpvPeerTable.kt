@@ -122,7 +122,7 @@ class SpvPeerTable(
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
-        coroutineScope.launchWithFixedDelay (30_000L, 60_000L){
+        coroutineScope.launchWithFixedDelay(10_000L, 10_000L) {
             requestAddressState()
         }
         coroutineScope.launchWithFixedDelay(200L, 20_000L) {
@@ -194,11 +194,12 @@ class SpvPeerTable(
     }
 
     private suspend fun requestAddressState() {
-        val addresses = spvContext.addressManager.getAll()
-        if (addresses.isEmpty()) {
-            return
-        }
         try {
+            val addresses = spvContext.addressManager.all
+            if (addresses.isEmpty()) {
+                return
+            }
+
             val request = buildMessage {
                 ledgerProofRequest = LedgerProofRequest.newBuilder().apply {
                     for (address in addresses) {
@@ -207,7 +208,7 @@ class SpvPeerTable(
                     }
                 }.build()
             }
-            val response = requestMessage(request, 30_000L)
+            val response = requestMessage(request, 5_000L)
             val proofReply = response.ledgerProofReply.proofsList
             val ledgerContexts: List<LedgerContext> = proofReply.asSequence().filter { lpr: LedgerProofResult ->
                 addressesState.containsKey(Base58.encode(lpr.address.toByteArray()))
@@ -459,7 +460,7 @@ class SpvPeerTable(
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val status: DownloadStatus
-        val currentHeight = blockchain.getChainHead().height
+        val currentHeight = blockchain.activeChain.tip.height
         val bestBlockHeight = downloadPeer?.bestBlockHeight ?: 0
         status = when {
             downloadPeer == null || (currentHeight == 0 && bestBlockHeight == 0) ->
