@@ -82,11 +82,11 @@ class PeerSocketHandler(
             if (!wasAdded) {
                 logger.warn(
                     "Not writing event {} to peer {} because write queue is full.", message.resultsCase.name,
-                    socket.remoteAddress.hostname
+                    socket.remoteAddress
                 )
             }
         } catch (e: InterruptedException) {
-            logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress.hostname}" }
+            logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress}: $e" }
         }
     }
 

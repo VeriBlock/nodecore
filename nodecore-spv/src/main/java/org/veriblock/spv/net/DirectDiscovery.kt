@@ -7,12 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.net
 
-import io.ktor.util.network.NetworkAddress
+import io.ktor.util.network.*
 import org.veriblock.core.params.LOCALHOST
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-
-private val logger = createLogger { }
 
 /**
  * Discovery peer locally.
@@ -20,11 +18,13 @@ private val logger = createLogger { }
 class DirectDiscovery(
     private val addresses: List<NetworkAddress>
 ) : PeerDiscovery {
-    init {
-        logger.info { "Doing direct peer discovery. Using peers $addresses" }
+
+    override fun getPeers(): Sequence<NetworkAddress> {
+        return addresses.asSequence()
     }
 
-    override fun getPeers(count: Int): Collection<NetworkAddress> {
-        return addresses.take(count)
+    override fun name(): String {
+        val addrs = if (addresses.isEmpty()) "empty" else "${addresses.joinToString { "$it" } }}"
+        return "direct=[$addrs]"
     }
 }

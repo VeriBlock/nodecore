@@ -8,6 +8,7 @@
 package org.veriblock.spv.model
 
 import com.google.common.base.Preconditions
+import io.ktor.util.network.*
 import org.veriblock.core.crypto.Sha256Hash
 import java.lang.ref.Reference
 import java.lang.ref.ReferenceQueue
@@ -32,7 +33,7 @@ class TransactionPool {
         }
     }
 
-    fun record(txId: Sha256Hash, peerAddress: String): Int = lock.withLock {
+    fun record(txId: Sha256Hash, peerAddress: NetworkAddress): Int = lock.withLock {
         purge()
         val tx = getOrCreate(txId)
         val wasNew = tx.recordBroadcast(peerAddress)
