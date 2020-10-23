@@ -260,7 +260,7 @@ class SpvPeerTable(
                 } catch (e: IOException) {
                     continue
                 }
-                logger.debug("Discovered peer connected $address")
+                logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
             }
         }
     }
