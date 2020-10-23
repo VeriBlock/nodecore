@@ -29,18 +29,24 @@ import java.util.*
  * an m or n value of 0 makes no sense, so this allows multisig to range from 1 to 58,
  * rather than what would have otherwise been 0 to 57.
  */
-class Address(val address: String) {
+class Address(
+    val address: String
+) {
     val data: String
     val checksum: String
     val multisig: Boolean
 
-    @Deprecated("See Address.multisig", ReplaceWith("getMultisig()"))
+    @Deprecated("See Address.multisig", ReplaceWith("multisig"))
     val isMultisig
         get() = multisig
 
     @Deprecated("See Address.getBytes()", ReplaceWith("getBytes()"))
     val bytes: ByteArray
         get() = getBytes()
+
+    @Deprecated("See Address.getPoPBytes()", ReplaceWith("getPoPBytes()"))
+    val poPBytes: ByteArray
+        get() = getPoPBytes()
 
     init {
         Preconditions.notNull(address, "Address cannot be null")
@@ -124,12 +130,13 @@ class Address(val address: String) {
         return if (multisig) Base59.decode(address) else Base58.decode(address)
     }
 
-    @Deprecated("See Address.multisig", ReplaceWith("getMultisig()"))
+    @Deprecated("See Address.multisig", ReplaceWith("multisig"))
     @JvmName("isMultisigJava")
     fun isMultisig(): Boolean {
         return multisig
     }
 
+    @JvmName("getPoPBytesJava")
     fun getPoPBytes(): ByteArray {
         val bytes = Base58.decode(address.substring(1))
         return Arrays.copyOfRange(bytes, 0, 16)
