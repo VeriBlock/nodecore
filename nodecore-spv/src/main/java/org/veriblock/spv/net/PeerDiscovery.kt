@@ -13,5 +13,6 @@ import io.ktor.util.network.NetworkAddress
  * Discovery peers depends on strategy.
  */
 interface PeerDiscovery {
-    fun getPeers(count: Int): Collection<NetworkAddress>
+    fun getPeers(): Sequence<NetworkAddress>
+    fun name(): String
 }

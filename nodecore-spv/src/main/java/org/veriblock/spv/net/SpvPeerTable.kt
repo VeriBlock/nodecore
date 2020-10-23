@@ -249,19 +249,23 @@ class SpvPeerTable(
         }
         val needed = maxConnections - (countConnectedPeers() + countPendingPeers())
         if (needed > 0) {
-            val candidates = discovery.getPeers(needed)
-            for (address in candidates) {
-                if (peers.containsKey(address) || pendingPeers.containsKey(address)) {
-                    continue
+            discovery.getPeers()
+                // first, filter out known peers
+                .filter { !peers.containsKey(it) }
+                .filter { !pendingPeers.containsKey(it) }
+                // shuffle ALL new peers
+                .shuffled()
+                // then take needed amount
+                .take(needed)
+                .forEach { address ->
+                    logger.debug("Attempting connection to $address")
+                    val peer = try {
+                        connectTo(address)
+                    } catch (e: IOException) {
+                        return
+                    }
+                    logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
                 }
-                logger.debug("Attempting connection to $address")
-                val peer = try {
-                    connectTo(address)
-                } catch (e: IOException) {
-                    continue
-                }
-                logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
-            }
         }
     }
 

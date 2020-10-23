@@ -24,7 +24,11 @@ class DirectDiscovery(
         logger.info { "Doing direct peer discovery. Using peers $addresses" }
     }
 
-    override fun getPeers(count: Int): Collection<NetworkAddress> {
-        return addresses.take(count)
+    override fun getPeers(): Sequence<NetworkAddress> {
+        return addresses.asSequence()
+    }
+
+    override fun name(): String {
+        return "direct[$addresses]"
     }
 }

@@ -14,11 +14,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.spv.model.TransactionPool
-import org.veriblock.spv.net.BootstrapPeerDiscovery
-import org.veriblock.spv.net.DirectDiscovery
-import org.veriblock.spv.net.P2PService
-import org.veriblock.spv.net.PeerDiscovery
-import org.veriblock.spv.net.SpvPeerTable
+import org.veriblock.spv.net.*
 import org.veriblock.spv.service.BlockStore
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.Blockchain
@@ -121,10 +117,9 @@ class SpvContext {
         check(networkParameters.name == config.network) {
             "SPV configured to ${config.network}, and network to ${networkParameters.name}. They must be same."
         }
-        val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
+        val direct = if (config.connectDirectlyTo.isEmpty()) null else
             DirectDiscovery(config.connectDirectlyTo.mapNotNull {
                 try {
-
                     val input =
                         // workaround: add p2p:// scheme, because URI must contain (any) scheme
                         if (it.contains("://")) it else "p2p://${it}"
@@ -138,9 +133,12 @@ class SpvContext {
                     null
                 }
             })
-        } else {
-            BootstrapPeerDiscovery(networkParameters)
-        }
+
+        val dns = if (networkParameters.bootstrapDns == null) null else
+            DnsDiscovery(networkParameters.bootstrapDns!!, networkParameters.p2pPort)
+
+        val peerDiscovery = MixedDiscovery(listOf(direct, dns))
+        logger.info { "Using ${peerDiscovery.name()} discovery" }
 
         if (!Context.isCreated()) {
             Context.create(networkParameters)
