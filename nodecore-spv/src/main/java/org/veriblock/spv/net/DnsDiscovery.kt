@@ -26,7 +26,6 @@ class DnsDiscovery(
 
     init {
         val dnsResolver = DnsResolver()
-        logger.debug { "Doing DNS peer discovery from $dns" }
         try {
             peers.addAll(dnsResolver.query(dns).map {
                 logger.debug("Found peer ${it}:${port}")
@@ -44,6 +43,6 @@ class DnsDiscovery(
     }
 
     override fun name(): String {
-        return "DNS[${dns}]"
+        return "DNS=[${dns}]"
     }
 }
