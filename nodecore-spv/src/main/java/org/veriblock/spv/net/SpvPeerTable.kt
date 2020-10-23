@@ -27,6 +27,7 @@ import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofRequest
 import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
@@ -226,15 +227,20 @@ class SpvPeerTable(
     private suspend fun requestPendingTransactions() {
         val pendingTransactionIds = pendingTransactionContainer.getPendingTransactionIds()
         try {
-            for (sha256Hash in pendingTransactionIds) {
+            for (txId in pendingTransactionIds) {
                 val request = buildMessage {
                     transactionRequest = VeriBlockMessages.GetTransactionRequest.newBuilder()
-                        .setId(ByteString.copyFrom(sha256Hash.bytes))
+                        .setId(txId.bytes.toByteString())
                         .build()
                 }
                 val response = requestMessage(request)
                 if (response.transactionReply.success) {
                     pendingTransactionContainer.updateTransactionInfo(response.transactionReply.transaction.toModel())
+                } else {
+                    val transaction = pendingTransactionContainer.getTransaction(txId)
+                    if (transaction != null) {
+                        advertise(transaction)
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -387,7 +393,7 @@ class SpvPeerTable(
         }
     }
 
-    fun onMessageReceived(message: VeriBlockMessages.Event, sender: SpvPeer) {
+    private fun onMessageReceived(message: VeriBlockMessages.Event, sender: SpvPeer) {
         try {
             logger.debug("Message Received messageId: {}, from: {}:{}", message.id, sender.address, sender.port)
             incomingQueue.offer(NetworkMessage(sender, message))
@@ -399,22 +405,20 @@ class SpvPeerTable(
     }
 
     fun advertise(transaction: Transaction) {
-        val advertise = VeriBlockMessages.Event.newBuilder()
-            .setId(nextMessageId())
-            .setAcknowledge(false)
-            .setAdvertiseTx(
-                VeriBlockMessages.AdvertiseTransaction.newBuilder()
-                    .addTransactions(
-                        TransactionAnnounce.newBuilder()
-                            .setType(
-                                if (transaction.transactionTypeIdentifier === TransactionTypeIdentifier.PROOF_OF_PROOF) TransactionAnnounce.Type.PROOF_OF_PROOF else TransactionAnnounce.Type.NORMAL
-                            )
-                            .setTxId(ByteString.copyFrom(transaction.txId.bytes))
-                            .build()
-                    )
-                    .build()
-            )
-            .build()
+        val advertise = buildMessage {
+            advertiseTx = VeriBlockMessages.AdvertiseTransaction.newBuilder()
+                .addTransactions(
+                    TransactionAnnounce.newBuilder()
+                        .setType(if (transaction.transactionTypeIdentifier === TransactionTypeIdentifier.PROOF_OF_PROOF) {
+                            TransactionAnnounce.Type.PROOF_OF_PROOF
+                        } else {
+                            TransactionAnnounce.Type.NORMAL
+                        })
+                        .setTxId(ByteString.copyFrom(transaction.txId.bytes))
+                        .build()
+                )
+                .build()
+        }
         for (peer in peers.values) {
             try {
                 peer.sendMessage(advertise)

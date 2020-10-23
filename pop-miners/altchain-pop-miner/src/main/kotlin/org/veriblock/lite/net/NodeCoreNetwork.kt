@@ -80,7 +80,7 @@ class NodeCoreNetwork(
         gateway.shutdown()
     }
 
-    fun submitEndorsement(publicationData: ByteArray, feePerByte: Long, maxFee: Long): VeriBlockTransaction {
+    suspend fun submitEndorsement(publicationData: ByteArray, feePerByte: Long, maxFee: Long): VeriBlockTransaction {
         val transaction = gateway.submitEndorsementTransaction(
             publicationData, addressManager, feePerByte, maxFee
         )

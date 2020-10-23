@@ -7,6 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.service
 
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
@@ -84,7 +88,7 @@ class SpvService(
         )
     }
 
-    fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {
+    suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {
         val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
         val totalOutputAmount = outputs.map {
             it.amount.atomicUnits
@@ -120,7 +124,7 @@ class SpvService(
         val transactions = transactionService.createTransactionsByOutputList(
             addressCoinsIndexList, outputs
         )
-        return transactions.asSequence().onEach {
+        return transactions.asFlow().onEach {
             pendingTransactionContainer.addTransaction(it)
             peerTable.advertise(it)
         }.map {
@@ -142,13 +146,10 @@ class SpvService(
         }
     }
 
-    fun submitTransactions(transactions: List<Transaction>) {
+    suspend fun submitTransactions(transactions: List<Transaction>) {
         for (transaction in transactions) {
+            pendingTransactionContainer.addTransaction(transaction)
             peerTable.advertise(transaction)
-            val added = pendingTransactionContainer.addTransaction(transaction)
-            if (!added) {
-                throw TransactionSubmissionException("The transaction was not added to the pool")
-            }
         }
     }
 
@@ -345,7 +346,7 @@ class SpvService(
         }
     }
 
-    fun getLastVBKBlockHeader(): BlockHeader {
+    fun getLastVbkBlockHeader(): BlockHeader {
         val block: StoredVeriBlockBlock = blockchain.getChainHeadBlock()
         return BlockHeader(
             SerializeDeserializeService.serializeHeaders(block.header),

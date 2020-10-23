@@ -1,22 +1,28 @@
 package org.veriblock.spv.service
 
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.spv.model.Transaction
 import java.util.ArrayList
 import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 
+private const val MIN_TX_SEND_PERIOD_MS = 5_000
+
 class PendingTransactionContainer {
-    private val pendingAddressTransaction: MutableMap<String, ArrayList<Transaction>> = ConcurrentHashMap()
-    private val pendingTxIdTransaction: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
+    private val pendingAddressTransaction: MutableMap<String, MutableList<Transaction>> = ConcurrentHashMap()
     private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
+    private val pendingTxIdTransaction: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
     private val transactionsForMonitoring: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
 
     fun getPendingTransactionIds(): Set<Sha256Hash> {
-        val allPendingTx: MutableSet<Sha256Hash> = HashSet()
-        allPendingTx.addAll(pendingTxIdTransaction.keys)
-        allPendingTx.addAll(transactionsForMonitoring)
-        return allPendingTx
+        val pendingTransactions = pendingTxIdTransaction.entries.asSequence()
+            .sortedBy { it.value.getSignatureIndex() }
+            .map { it.key }
+            .toSortedSet()
+        return pendingTransactions + transactionsForMonitoring
     }
 
     fun getTransactionInfo(txId: Sha256Hash): TransactionInfo? {
@@ -40,18 +46,32 @@ class PendingTransactionContainer {
         }
     }
 
-    fun addTransaction(transaction: Transaction): Boolean {
-        val transactions = pendingAddressTransaction[transaction.inputAddress.toString()]
+    private val mutex = Mutex()
+    private val lastTransactionTimes = ConcurrentHashMap<String, Long>()
+
+    suspend fun addTransaction(transaction: Transaction) = mutex.withLock {
+        val inputAddress = transaction.inputAddress.toString()
+
+        // Artifically delay tx broadcast when 2 transactions are sent too close to each other
+        val expectedNextTime = (lastTransactionTimes[inputAddress] ?: 0) + MIN_TX_SEND_PERIOD_MS
+        val currentTime = System.currentTimeMillis()
+        if (currentTime > expectedNextTime) {
+            delay(currentTime - expectedNextTime)
+            lastTransactionTimes[inputAddress] = expectedNextTime
+        } else {
+            lastTransactionTimes[inputAddress] = currentTime
+        }
+
+        // Add as pending transaction
+        val transactions = pendingAddressTransaction[inputAddress]
         if (!transactions.isNullOrEmpty()) {
             transactions.add(transaction)
             pendingTxIdTransaction[transaction.txId] = transaction
         } else {
-            val newList = ArrayList<Transaction>()
-            newList.add(transaction)
+            val newList = mutableListOf(transaction)
             pendingTxIdTransaction[transaction.txId] = transaction
             pendingAddressTransaction[transaction.inputAddress.toString()] = newList
         }
-        return true
     }
 
     fun getTransaction(txId: Sha256Hash): Transaction? {

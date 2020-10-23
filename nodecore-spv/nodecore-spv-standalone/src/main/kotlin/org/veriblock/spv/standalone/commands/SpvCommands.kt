@@ -3,6 +3,7 @@ package org.veriblock.spv.standalone.commands
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
+import kotlinx.coroutines.runBlocking
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.Utility
@@ -68,15 +69,17 @@ fun CommandFactory.spvCommands(
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
 
-        val result = context.spvService.sendCoins(
-            sourceAddress = sourceAddress?.asLightAddress(),
-            outputs = listOf(
-                Output(
-                    destinationAddress.asLightAddress(),
-                    atomicAmount.asCoin()
+        val result = runBlocking {
+            context.spvService.sendCoins(
+                sourceAddress = sourceAddress?.asLightAddress(),
+                outputs = listOf(
+                    Output(
+                        destinationAddress.asLightAddress(),
+                        atomicAmount.asCoin()
+                    )
                 )
             )
-        )
+        }
 
         printInfo("Transaction ids:")
         displayResult(result.map { it.toString() })
