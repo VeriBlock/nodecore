@@ -1,8 +1,11 @@
 package org.veriblock.spv.admin.service.impl
 
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -78,15 +81,17 @@ class AdminApiServiceTest {
         every { transactionContainer.getPendingSignatureIndexForAddress(any())}
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
 
-        val reply = spvService.sendCoins(
-            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
-            listOf(
-                Output(
-                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    100.asCoin()
+        val reply = runBlocking {
+            spvService.sendCoins(
+                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                listOf(
+                    Output(
+                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        100.asCoin()
+                    )
                 )
             )
-        )
+        }
 
         verify(exactly = 1) { transactionService.createTransactionsByOutputList(any(), any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
@@ -107,15 +112,17 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        spvService.sendCoins(
-            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
-            listOf(
-                Output(
-                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    100.asCoin()
+        runBlocking {
+            spvService.sendCoins(
+                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                listOf(
+                    Output(
+                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        100.asCoin()
+                    )
                 )
             )
-        )
+        }
         //Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
     }
 
@@ -130,15 +137,17 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        spvService.sendCoins(
-            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
-            listOf(
-                Output(
-                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    100.asCoin()
+        runBlocking {
+            spvService.sendCoins(
+                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                listOf(
+                    Output(
+                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        100.asCoin()
+                    )
                 )
             )
-        )
+        }
         //Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
     }
 
@@ -153,15 +162,17 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns ledgerContext
-        spvService.sendCoins(
-            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
-            listOf(
-                Output(
-                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    100.asCoin()
+        runBlocking {
+            spvService.sendCoins(
+                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                listOf(
+                    Output(
+                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        100.asCoin()
+                    )
                 )
             )
-        )
+        }
         //Assert.assertTrue(reply.getResults(0).message.contains("Available balance is not enough"))
     }
 
@@ -172,15 +183,17 @@ class AdminApiServiceTest {
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
         every { peerTable.getAddressState(any()) } returns null
-        spvService.sendCoins(
-            "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
-            listOf(
-                Output(
-                    "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
-                    100.asCoin()
+        runBlocking {
+            spvService.sendCoins(
+                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                listOf(
+                    Output(
+                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        100.asCoin()
+                    )
                 )
             )
-        )
+        }
         //Assert.assertTrue(reply.getResults(0).message.contains("Information about this address does not exist"))
     }
 
@@ -435,20 +448,13 @@ class AdminApiServiceTest {
         verify(exactly = 1) { addressManager.newAddress }
     }
 
-    @Test(expected = TransactionSubmissionException::class)
-    fun submitTransactionsWhenTxSignedButNotAddToContainerThenFalse() {
-        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
-        every { transactionContainer.addTransaction(any()) } returns false
-        spvService.submitTransactions(listOf(transaction))
-        verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
-    }
-
     @Test
     fun submitTransactionsWhenTxSignedThenTrue() {
         val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
-        every { transactionContainer.addTransaction(any()) } returns true
-        spvService.submitTransactions(listOf(transaction))
-        verify(exactly = 1) { transactionContainer.addTransaction(transaction) }
+        runBlocking {
+            spvService.submitTransactions(listOf(transaction))
+        }
+        coVerify(exactly = 1) { transactionContainer.addTransaction(transaction) }
     }
 
     @Test

@@ -8,6 +8,8 @@
 
 package org.veriblock.lite.net
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.Balance
@@ -31,8 +33,6 @@ import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.service.NetworkState
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.TransactionInfo
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.math.abs
 
 private val logger = createLogger {}
@@ -49,7 +49,7 @@ class NodeCoreGateway(
 
     fun getLastBlock(): VeriBlockBlock {
         return try {
-            val lastBlock = spvService.getLastVBKBlockHeader()
+            val lastBlock = spvService.getLastVbkBlockHeader()
             SerializeDeserializeService.parseVeriBlockBlock(lastBlock.header, lastBlock.hash.asVbkHash())
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to get last VBK block" }
@@ -157,11 +157,11 @@ class NodeCoreGateway(
         )
     }
 
-    private val lock = ReentrantLock()
+    private val mutex = Mutex()
 
-    fun submitEndorsementTransaction(
+    suspend fun submitEndorsementTransaction(
         publicationData: ByteArray, addressManager: AddressManager, feePerByte: Long, maxFee: Long
-    ): VeriBlockTransaction = lock.withLock {
+    ): VeriBlockTransaction = mutex.withLock {
         logger.debug { "Creating endorsement transaction..." }
 
         val createReply = spvService.createAltChainEndorsement(
