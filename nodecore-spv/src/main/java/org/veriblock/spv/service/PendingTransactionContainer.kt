@@ -21,7 +21,7 @@ class PendingTransactionContainer {
         val pendingTransactions = pendingTxIdTransaction.entries.asSequence()
             .sortedBy { it.value.getSignatureIndex() }
             .map { it.key }
-            .toSortedSet()
+            .toSet()
         return pendingTransactions + transactionsForMonitoring
     }
 
