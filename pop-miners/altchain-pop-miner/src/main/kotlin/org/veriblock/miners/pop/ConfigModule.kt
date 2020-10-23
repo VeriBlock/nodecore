@@ -4,9 +4,9 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 
 fun configModule(): Module {
@@ -19,19 +19,15 @@ fun configModule(): Module {
         single { minerConfig }
 
         // Context
-        single {
-            val config = configuration.extract("nodecore")
-                ?: NetworkConfig()
-            NetworkParameters(config)
-        }
-        single { Context(get(), get()) }
+        single { getDefaultNetworkParameters(minerConfig.network) }
+        single { ApmContext(get(), get()) }
 
-        single { NodeCoreLiteKit(get(), get(), get()) }
         single { AltchainPopMinerService(get(), get(), get(), get(), get(), get(), get()) }
     }
 }
 
 class MinerConfig(
+    val network: String = "testnet",
     var feePerByte: Long = 1_000,
     var maxFee: Long = 10_000_000,
     val connectDirectlyTo: List<String> = emptyList(),

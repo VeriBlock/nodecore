@@ -6,15 +6,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.transactionmonitor
+package org.veriblock.miners.pop.transactionmonitor
 
 import io.kotlintest.shouldBe
 import org.junit.Test
-import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.TransactionMeta
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.lite.core.randomAddress
 import org.veriblock.lite.core.randomCoin
 import org.veriblock.lite.core.randomOutput
@@ -26,7 +25,7 @@ import org.veriblock.sdk.models.VeriBlockTransaction
 
 class WalletTransactionTest {
     private val networkParameters = NetworkParameters()
-    private val context = Context(Configuration(), networkParameters)
+    private val context = ApmContext(Configuration(), networkParameters)
 
     @Test
     fun transactionDataByData() {

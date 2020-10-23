@@ -8,24 +8,23 @@
 
 package org.veriblock.miners.pop.securityinheriting
 
+import org.koin.core.KoinComponent
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 
 private val logger = createLogger {}
 
 class SecurityInheritingService(
-    context: Context,
+    context: ApmContext,
     configuration: Configuration,
-    pluginService: PluginService,
-    nodeCoreLiteKit: NodeCoreLiteKit
-) {
+    pluginService: PluginService
+) : KoinComponent {
     private val monitors by lazy {
         pluginService.getPlugins().entries.associate { (chainId, chain) ->
-            chainId to SecurityInheritingMonitor(context, configuration, chainId, chain, nodeCoreLiteKit)
+            chainId to SecurityInheritingMonitor(context, configuration, chainId, chain)
         }
     }
 

@@ -8,9 +8,6 @@ import org.veriblock.core.Context
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBK_HASH_LENGTH
-import org.veriblock.core.crypto.VBK_PREVIOUS_BLOCK_HASH_LENGTH
-import org.veriblock.core.crypto.VBK_PREVIOUS_KEYSTONE_HASH_LENGTH
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkPreviousBlockHash
@@ -110,9 +107,9 @@ private fun randomInt(bound: Int) = Random.nextInt(bound)
 private fun randomInt(min: Int, max: Int) = Random.nextInt(max - min) + min
 private fun randomLong(min: Long, max: Long) = (Random.nextDouble() * (max - min)).toLong() + min
 private fun randomAlphabeticString(length: Int = 10): String = RandomStringUtils.randomAlphabetic(length)
-private fun randomVbkHash(): VbkHash = randomByteArray(VBK_HASH_LENGTH).asVbkHash()
-private fun randomPreviousBlockVbkHash(): PreviousBlockVbkHash = randomByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH).asVbkPreviousBlockHash()
-private fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash = randomByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH).asVbkPreviousKeystoneHash()
+private fun randomVbkHash(): VbkHash = randomByteArray(VbkHash.HASH_LENGTH).asVbkHash()
+private fun randomPreviousBlockVbkHash(): PreviousBlockVbkHash = randomByteArray(PreviousBlockVbkHash.HASH_LENGTH).asVbkPreviousBlockHash()
+private fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash = randomByteArray(PreviousKeystoneVbkHash.HASH_LENGTH).asVbkPreviousKeystoneHash()
 private fun randomSha256Hash(): Sha256Hash = Sha256Hash.wrap(messageDigest.digest(randomAlphabeticString().toByteArray()))
 private fun randomVeriBlockBlock(
     height: Int = randomInt(1, 65535),

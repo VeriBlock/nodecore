@@ -1,10 +1,5 @@
 package org.veriblock.spv.service
 
-import kotlinx.coroutines.yield
-import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.crypto.PreviousBlockVbkHash
-import org.veriblock.core.crypto.VBK_HASH_LENGTH
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.*
@@ -16,9 +11,7 @@ import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
-import java.lang.IllegalStateException
 import java.math.BigInteger
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -151,7 +144,7 @@ class BlockStore(
         check(lock.isLocked)
 
         val height = blocksFile.readInt()
-        val hash = ByteArray(VBK_HASH_LENGTH)
+        val hash = ByteArray(VbkHash.HASH_LENGTH)
         blocksFile.read(hash)
         val work = ByteArray(CHAIN_WORK_BYTES)
         blocksFile.read(work)

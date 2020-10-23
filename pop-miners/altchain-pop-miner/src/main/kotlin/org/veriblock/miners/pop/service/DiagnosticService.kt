@@ -3,46 +3,37 @@ package org.veriblock.miners.pop.service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.DiagnosticUtility
-import org.veriblock.lite.NodeCoreLiteKit
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.DiagnosticInformation
 import org.veriblock.sdk.models.getSynchronizedMessage
 
 class DiagnosticService(
-    private val context: Context,
+    private val context: ApmContext,
     private val minerConfig: MinerConfig,
     private val minerService: AltchainPopMinerService,
     private val pluginService: PluginService,
-    private val nodeCoreLiteKit: NodeCoreLiteKit,
     private val securityInheritingService: SecurityInheritingService
 ) {
     fun collectDiagnosticInformation(): DiagnosticInformation {
         val information = ArrayList<String>()
 
         // Check the NodeCore status
-        if (nodeCoreLiteKit.network.isAccessible()) {
-            information.add("SUCCESS - NodeCore connection: Connected to ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}")
-            // Configured network
-            if (nodeCoreLiteKit.network.isOnSameNetwork()) {
-                information.add("SUCCESS - NodeCore configured network: NodeCore & APM are running on the same configured network (${context.networkParameters.name})")
-            } else {
-                information.add("FAIL - NodeCore configured network: NodeCore (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
-            }
+        if (minerService.network.isAccessible()) {
+            information.add("SUCCESS - SPV connection: Connected")
             // Synchronization
-            if (nodeCoreLiteKit.network.isSynchronized()) {
-                information.add("SUCCESS - NodeCore synchronization status: Synchronized ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
+            if (minerService.network.isSynchronized()) {
+                information.add("SUCCESS - SPV synchronization status: Synchronized ${minerService.network.latestSpvStateInfo.getSynchronizedMessage()}")
             } else {
-                information.add("FAIL - NodeCore synchronization status: Not synchronized. ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
+                information.add("FAIL - SPV synchronization status: Not synchronized. ${minerService.network.latestSpvStateInfo.getSynchronizedMessage()}")
             }
         } else {
-            information.add("FAIL - NodeCore connection: Not connected to ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}")
-            information.add("FAIL - NodeCore unable to determine the synchronization status")
-            information.add("FAIL - NodeCore unable to determine the configured network")
+            information.add("FAIL - SPV connection: Not connected")
+            information.add("FAIL - SPV unable to determine the synchronization status")
+            information.add("FAIL - SPV unable to determine the configured network")
         }
 
         // Check the altchains status
@@ -107,8 +98,8 @@ class DiagnosticService(
 
         // Check the balance
         try {
-            val currentBalance = minerService.getBalance()?.confirmedBalance ?: Coin.ZERO
-            if (nodeCoreLiteKit.network.isAccessible()) {
+            val currentBalance = minerService.getBalance().confirmedBalance
+            if (minerService.network.isAccessible()) {
                 if (currentBalance.atomicUnits > minerConfig.feePerByte) {
                     information.add("SUCCESS - The ${context.vbkTokenName} PoP wallet contains sufficient funds, current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                 } else {

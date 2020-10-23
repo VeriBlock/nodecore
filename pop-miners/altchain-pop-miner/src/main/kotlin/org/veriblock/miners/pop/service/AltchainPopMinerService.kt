@@ -11,29 +11,41 @@
 package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.veriblock.core.MineException
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.lite.NodeCoreLiteKit
 import org.veriblock.core.contracts.Balance
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.debugError
+import org.veriblock.miners.pop.net.SpvGateway
+import org.veriblock.miners.pop.net.VeriBlockNetwork
+import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
+import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
+import org.veriblock.miners.pop.transactionmonitor.loadTransactionMonitor
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.getSynchronizedMessage
+import org.veriblock.spv.SpvConfig
+import org.veriblock.spv.SpvContext
+import org.veriblock.spv.model.DownloadStatusResponse
+import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -41,43 +53,49 @@ import java.util.concurrent.ConcurrentHashMap
 private val logger = createLogger {}
 
 class AltchainPopMinerService(
+    private val globalConfig: Configuration,
     private val config: MinerConfig,
-    private val context: Context,
+    private val context: ApmContext,
     private val taskService: ApmTaskService,
-    private val nodeCoreLiteKit: NodeCoreLiteKit,
     private val operationService: OperationService,
     private val pluginService: PluginService,
     private val securityInheritingService: SecurityInheritingService
 ) {
+    lateinit var spvContext: SpvContext
+    lateinit var transactionMonitor: TransactionMonitor
+    lateinit var gateway: SpvGateway
+    lateinit var network: VeriBlockNetwork
+
     private val operations = ConcurrentHashMap<String, ApmOperation>()
     private var isShuttingDown: Boolean = false
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
 
     fun initialize() {
-        nodeCoreLiteKit.initialize()
+        if (!context.directory.exists() && !context.directory.mkdirs()) {
+            throw IOException("Unable to create directory")
+        }
 
-        // Restore & submit operations (including re-attach listeners) before the network starts
-        nodeCoreLiteKit.beforeNetworkStart = { loadAndSubmitSuspendedOperations() }
+        spvContext = initSpvContext(context.networkParameters)
+        gateway = SpvGateway(context.networkParameters, spvContext.spvService)
+        transactionMonitor = createOrLoadTransactionMonitor()
 
-        // NodeCore Events
-        EventBus.nodeCoreAccessibleEvent.register(this) {
-            logger.info { "Successfully connected to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}" }
+        network = VeriBlockNetwork(
+            config,
+            context,
+            gateway,
+            transactionMonitor,
+            spvContext.addressManager
+        )
+
+        transactionMonitor.start()
+
+        // SPV Events
+        EventBus.spvReadyEvent.register(this) {
+            logger.info { "SPV is ready" }
         }
-        EventBus.nodeCoreNotAccessibleEvent.register(this) {
-            logger.info { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}, trying to reconnect..." }
-        }
-        EventBus.nodeCoreSynchronizedEvent.register(this) { }
-        EventBus.nodeCoreNotSynchronizedEvent.register(this) { }
-        EventBus.nodeCoreSameNetworkEvent.register(this) {
-            logger.info { "The connected NodeCore & APM are running on the same configured network (${context.networkParameters.name})" }
-        }
-        EventBus.nodeCoreNotSameNetworkEvent.register(this) { }
-        EventBus.nodeCoreReadyEvent.register(this) {
-            logger.info { "The connected NodeCore is ready" }
-        }
-        EventBus.nodeCoreNotReadyEvent.register(this) {
-            logger.info { "The connected NodeCore is not ready" }
+        EventBus.spvNotReadyEvent.register(this) {
+            logger.info { "SPV is not ready" }
         }
         // Altchain Events
         EventBus.altChainAccessibleEvent.register(this) {
@@ -122,7 +140,15 @@ class AltchainPopMinerService(
     fun start() {
         logger.info("Starting miner...")
         try {
-            nodeCoreLiteKit.start()
+            logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
+
+            logger.info { "Send funds to the ${context.vbkTokenName} wallet ${spvContext.addressManager.defaultAddress.hash}" }
+            logger.info { "Connecting to peers..." }
+
+            // Restore & submit operations (including re-attach listeners) before the network starts
+            loadAndSubmitSuspendedOperations()
+            // Start the network monitoring
+            network.startAsync()
         } catch (e: IOException) {
             throw IllegalStateException("Miner could not be started", e)
         }
@@ -140,7 +166,7 @@ class AltchainPopMinerService(
         } else {
             operationService.getOperations(status, limit, offset) { txId ->
                 val hash = Sha256Hash.wrap(txId)
-                nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
+                transactionMonitor.getTransaction(hash)
             }.map {
                 it
             }.toList()
@@ -158,13 +184,13 @@ class AltchainPopMinerService(
     fun getOperation(id: String): ApmOperation? {
         return operations[id] ?: operationService.getOperation(id) { txId ->
             val hash = Sha256Hash.wrap(txId)
-            nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
+            transactionMonitor.getTransaction(hash)
         }
     }
 
-    fun getAddress(): String = nodeCoreLiteKit.getAddress()
+    fun getAddress(): String = spvContext.addressManager.defaultAddress.hash
 
-    fun getBalance(): Balance = nodeCoreLiteKit.network.latestBalance
+    fun getBalance(): Balance = network.latestBalance
 
     private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
         // Check the last operation time
@@ -178,25 +204,21 @@ class AltchainPopMinerService(
             return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
         }
         // Specific checks for the NodeCore
-        if (!nodeCoreLiteKit.network.isAccessible()) {
-            return CheckResult.Failure(MineException("Unable to connect to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}, is it reachable?"))
-        }
-        // Verify the NodeCore configured Network
-        if (!nodeCoreLiteKit.network.isOnSameNetwork()) {
-            return CheckResult.Failure(MineException("The connected NodeCore (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network"))
+        if (!network.isAccessible()) {
+            return CheckResult.Failure(MineException("Unable to connect to peers"))
         }
         // Verify the balance
-        if (!nodeCoreLiteKit.network.isSufficientFunded()) {
+        if (!network.isSufficientFunded()) {
             return CheckResult.Failure(MineException("""
                 PoP wallet does not contain sufficient funds, 
-                Current balance: ${nodeCoreLiteKit.network.latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
-                Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - nodeCoreLiteKit.network.latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
-                Send ${context.vbkTokenName} coins to: ${nodeCoreLiteKit.spvContext.addressManager.defaultAddress.hash}
+                Current balance: ${network.latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
+                Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - network.latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
+                Send ${context.vbkTokenName} coins to: ${spvContext.addressManager.defaultAddress.hash}
             """.trimIndent()))
         }
         // Verify the synchronized status
-        if (!nodeCoreLiteKit.network.isSynchronized()) {
-            return CheckResult.Failure(MineException("The connected NodeCore is not synchronized: ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}"))
+        if (!network.isSynchronized()) {
+            return CheckResult.Failure(MineException("SPV is not synchronized: ${network.latestSpvStateInfo.getSynchronizedMessage()}"))
         }
         // Specific checks for the alt chain
         if (!monitor.isAccessible()) {
@@ -251,7 +273,9 @@ class AltchainPopMinerService(
     }
 
     fun shutdown() {
-        nodeCoreLiteKit.shutdown()
+        if (this::network.isInitialized) {
+            network.shutdown()
+        }
     }
 
     fun setIsShuttingDown(b: Boolean) {
@@ -262,7 +286,7 @@ class AltchainPopMinerService(
         try {
             val activeOperations = operationService.getActiveOperations { txId ->
                 val hash = Sha256Hash.wrap(txId)
-                nodeCoreLiteKit.transactionMonitor.getTransaction(hash)
+                transactionMonitor.getTransaction(hash)
             }
             for (state in activeOperations) {
                 operations[state.id] = state
@@ -286,7 +310,7 @@ class AltchainPopMinerService(
         try {
             val operationsToSubmit = ArrayList(activeOperations)
             while (operationsToSubmit.isNotEmpty()) {
-                if (nodeCoreLiteKit.network.isReady()) {
+                if (network.isReady()) {
                     val operationsToRemove = ArrayList<ApmOperation>()
                     for (operation in operationsToSubmit) {
                         if (!operation.state.isDone() && operation.job == null) {
@@ -322,5 +346,44 @@ class AltchainPopMinerService(
             error("Trying to cancel operation [${operation.id}] while it doesn't have a running job!")
         }
         operation.fail("Cancellation requested by the user")
+    }
+
+    private fun createOrLoadTransactionMonitor(): TransactionMonitor {
+        val file = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
+        return if (file.exists()) {
+            try {
+                file.loadTransactionMonitor(context, gateway)
+            } catch (e: Exception) {
+                throw IOException("Unable to load the transaction monitoring data", e)
+            }
+        } else {
+            val address = Address(spvContext.addressManager.defaultAddress.hash)
+            TransactionMonitor(context, gateway, address)
+        }
+    }
+
+    private fun initSpvContext(networkParameters: NetworkParameters): SpvContext {
+        logger.info { "Initializing SPV..." }
+        val spvContext = SpvContext()
+        spvContext.init(
+            SpvConfig(networkParameters.name, dataDir = globalConfig.getDataDirectory(), connectDirectlyTo = config.connectDirectlyTo)
+        )
+        spvContext.peerTable.start()
+        GlobalScope.launch {
+            while (true) {
+                val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
+                if (status.downloadStatus.isDiscovering()) {
+                    logger.info { "SPV: Waiting for peers response." }
+                } else if (status.downloadStatus.isDownloading()) {
+                    logger.info { "SPV: Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
+                } else {
+                    logger.info { "SPV: Blockchain is ready. Current height " + status.currentHeight }
+                    break
+                }
+                delay(5000L)
+            }
+        }
+
+        return spvContext
     }
 }

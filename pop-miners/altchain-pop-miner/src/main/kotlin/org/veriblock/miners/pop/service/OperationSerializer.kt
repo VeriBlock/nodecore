@@ -8,8 +8,8 @@
 
 package org.veriblock.miners.pop.service
 
-import org.veriblock.lite.proto.OperationProto
-import org.veriblock.lite.transactionmonitor.WalletTransaction
+import org.veriblock.miners.pop.proto.OperationProto
+import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmSpTransaction
 import org.veriblock.miners.pop.core.OperationLog

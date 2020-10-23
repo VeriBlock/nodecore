@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.util
+package org.veriblock.miners.pop.util
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import java.util.concurrent.CompletableFuture
@@ -17,12 +17,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 object Threading {
-    val LISTENER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
-        ThreadFactoryBuilder()
-            .setNameFormat("event-listener")
-            .build()
-    )
-    val NODECORE_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+    val SPV_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("nc-poll")
             .build()
@@ -54,8 +49,7 @@ object Threading {
     @Throws(ExecutionException::class, InterruptedException::class)
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
-            CompletableFuture.runAsync { shutdown(LISTENER_THREAD) },
-            CompletableFuture.runAsync { shutdown(NODECORE_POLL_THREAD) },
+            CompletableFuture.runAsync { shutdown(SPV_POLL_THREAD) },
             CompletableFuture.runAsync { shutdown(MINER_THREAD) },
             CompletableFuture.runAsync { shutdown(TASK_POOL) }
         )

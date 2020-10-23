@@ -6,12 +6,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
-const val VBK_HASH_LENGTH = 24
-const val VBK_PREVIOUS_BLOCK_HASH_LENGTH = 12
-const val VBK_PREVIOUS_KEYSTONE_HASH_LENGTH = 9
-
-val VBK_EMPTY_HASH = VbkHash(ByteArray(VBK_HASH_LENGTH))
-
 sealed class AnyVbkHash(
     val bytes: ByteArray
 ) {
@@ -42,23 +36,28 @@ private fun AnyVbkHash.trimBytes(size: Int): ByteArray {
     }
 }
 
-class VbkHash(bytes: ByteArray = ByteArray(VBK_HASH_LENGTH)) : AnyVbkHash(bytes) {
+class VbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
-        check(bytes.size == VBK_HASH_LENGTH) {
+        check(bytes.size == HASH_LENGTH) {
             "Trying to create a VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
 
     override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
-        PreviousBlockVbkHash(trimBytes(VBK_PREVIOUS_BLOCK_HASH_LENGTH))
+        PreviousBlockVbkHash(trimBytes(PreviousBlockVbkHash.HASH_LENGTH))
 
     override fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash =
-        PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
+        PreviousKeystoneVbkHash(trimBytes(PreviousKeystoneVbkHash.HASH_LENGTH))
+
+    companion object {
+        const val HASH_LENGTH = 24
+        val EMPTY_HASH = VbkHash(ByteArray(HASH_LENGTH))
+    }
 }
 
-class PreviousBlockVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH)) : AnyVbkHash(bytes) {
+class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
-        check(bytes.size == VBK_PREVIOUS_BLOCK_HASH_LENGTH) {
+        check(bytes.size == HASH_LENGTH) {
             "Trying to create a previous block VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
@@ -67,12 +66,17 @@ class PreviousBlockVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_BLOCK_HASH_
         this
 
     override fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash =
-        PreviousKeystoneVbkHash(trimBytes(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH))
+        PreviousKeystoneVbkHash(trimBytes(PreviousKeystoneVbkHash.HASH_LENGTH))
+
+    companion object {
+        const val HASH_LENGTH = 12
+        val EMPTY_HASH = PreviousBlockVbkHash(ByteArray(HASH_LENGTH))
+    }
 }
 
-class PreviousKeystoneVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH)) : AnyVbkHash(bytes) {
+class PreviousKeystoneVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
-        check(bytes.size == VBK_PREVIOUS_KEYSTONE_HASH_LENGTH) {
+        check(bytes.size == HASH_LENGTH) {
             "Trying to create a previous keystone VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
@@ -82,6 +86,11 @@ class PreviousKeystoneVbkHash(bytes: ByteArray = ByteArray(VBK_PREVIOUS_KEYSTONE
 
     override fun trimToPreviousKeystoneSize(): PreviousKeystoneVbkHash =
         this
+
+    companion object {
+        const val HASH_LENGTH = 9
+        val EMPTY_HASH = PreviousKeystoneVbkHash(ByteArray(HASH_LENGTH))
+    }
 }
 
 fun ByteArray.asVbkHash(): VbkHash = VbkHash(this)
@@ -92,25 +101,25 @@ fun String.asVbkHash(): VbkHash = asHexBytes().asVbkHash()
 fun String.asVbkPreviousBlockHash(): PreviousBlockVbkHash = asHexBytes().asVbkPreviousBlockHash()
 fun String.asVbkPreviousKeystoneHash(): PreviousKeystoneVbkHash = asHexBytes().asVbkPreviousKeystoneHash()
 
-fun ByteBuffer.readVbkHash(): VbkHash = ByteArray(VBK_HASH_LENGTH).let {
+fun ByteBuffer.readVbkHash(): VbkHash = ByteArray(VbkHash.HASH_LENGTH).let {
     get(it)
     VbkHash(it)
 }
 
-fun ByteBuffer.readVbkPreviousBlockHash(): PreviousBlockVbkHash = ByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH).let {
+fun ByteBuffer.readVbkPreviousBlockHash(): PreviousBlockVbkHash = ByteArray(PreviousBlockVbkHash.HASH_LENGTH).let {
     get(it)
     PreviousBlockVbkHash(it)
 }
 
-fun ByteBuffer.readVbkPreviousKeystoneHash(): PreviousKeystoneVbkHash = ByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH).let {
+fun ByteBuffer.readVbkPreviousKeystoneHash(): PreviousKeystoneVbkHash = ByteArray(PreviousKeystoneVbkHash.HASH_LENGTH).let {
     get(it)
     PreviousKeystoneVbkHash(it)
 }
 
 fun ByteArray.asAnyVbkHash(): AnyVbkHash = when (size) {
-    VBK_HASH_LENGTH -> asVbkHash()
-    VBK_PREVIOUS_BLOCK_HASH_LENGTH -> asVbkPreviousBlockHash()
-    VBK_PREVIOUS_KEYSTONE_HASH_LENGTH -> asVbkPreviousKeystoneHash()
+    VbkHash.HASH_LENGTH -> asVbkHash()
+    PreviousBlockVbkHash.HASH_LENGTH -> asVbkPreviousBlockHash()
+    PreviousKeystoneVbkHash.HASH_LENGTH -> asVbkPreviousKeystoneHash()
     else -> error("Trying to create an arbitrary VBK hash with invalid amount of bytes: $size (${toHex()})")
 }
 

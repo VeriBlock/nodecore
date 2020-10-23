@@ -15,7 +15,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
 import org.koin.dsl.module
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.ApmTaskService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
@@ -35,22 +35,22 @@ import javax.sql.DataSource
 
 val minerModule = module {
     single { ApmOperationExplainer(get()) }
-    single { SecurityInheritingService(get(), get(), get(), get()) }
+    single { SecurityInheritingService(get(), get(), get()) }
     single {
         CommandFactory().apply {
             configure(get(), get(), get(), get(), get(), get(), get())
         }
     }
     single { Shell(get()) }
-    single { ApmTaskService(get(), get()) }
+    single { ApmTaskService(get()) }
     single { OperationSerializer(get(), get()) }
     single { OperationService(get(), get()) }
     single { PluginService(get()) }
-    single { DiagnosticService(get(), get(), get(), get(), get(), get()) }
+    single { DiagnosticService(get(), get(), get(), get(), get()) }
 
     // Storage
     single<DataSource> {
-        val context: Context = get()
+        val context: ApmContext = get()
         val sqliteDbFile = context.directory.resolve("altchain-pop-miner.db")
         val url = "jdbc:sqlite:$sqliteDbFile"
         val hikariConfig = HikariConfig().apply {

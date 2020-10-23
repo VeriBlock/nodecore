@@ -4,8 +4,9 @@ import io.kotlintest.shouldBe
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
+import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBK_EMPTY_HASH
 import org.veriblock.core.params.defaultRegTestParameters
 import org.veriblock.miners.pop.service.mockmining.VeriBlockPopMinerMock
 import org.veriblock.sdk.models.Address
@@ -45,15 +46,15 @@ class VbkPopMinerMockTest {
         val key = generateKeyPair()
         val lastKnown = mock.bitcoinBlockchain.getChainHead()!!
         val vbk = VeriBlockBlock(
-            1,
-            2,
-            VBK_EMPTY_HASH.trimToPreviousBlockSize(),
-            VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-            VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-            Sha256Hash.ZERO_HASH,
-            3,
-            4,
-            5
+            height = 1,
+            version = 2,
+            previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+            previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+            secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+            merkleRoot = Sha256Hash.ZERO_HASH,
+            timestamp = 3,
+            difficulty = 4,
+            nonce = 5
         )
 
         val btctx = mock.createBtcTx(vbk, address)
