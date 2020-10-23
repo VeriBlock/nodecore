@@ -24,7 +24,7 @@ import java.security.*
 fun serializePublicationData(header: ByteArray, address: Address): ByteArray {
     val buffer = ByteBuffer.allocateDirect(80)
     buffer.put(header)
-    buffer.put(address.poPBytes)
+    buffer.put(address.getPoPBytes())
     buffer.flip()
     val payoutInfo = ByteArray(80)
     buffer.get(payoutInfo)
