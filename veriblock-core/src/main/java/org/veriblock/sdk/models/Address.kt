@@ -13,7 +13,6 @@ import org.veriblock.core.SharedConstants
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.bitcoinj.Base59
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.Preconditions
 import org.veriblock.sdk.util.getSingleByteLengthValue
 import org.veriblock.sdk.util.writeSingleByteLengthValue
 import java.io.ByteArrayOutputStream
@@ -34,34 +33,19 @@ class Address(
 ) {
     val data: String
     val checksum: String
-    val multisig: Boolean
-
-    @Deprecated("See Address.multisig", ReplaceWith("multisig"))
-    val isMultisig
-        get() = multisig
-
-    @Deprecated("See Address.getBytes()", ReplaceWith("getBytes()"))
-    val bytes: ByteArray
-        get() = getBytes()
-
-    @Deprecated("See Address.getPoPBytes()", ReplaceWith("getPoPBytes()"))
-    val poPBytes: ByteArray
-        get() = getPoPBytes()
+    val isMultisig: Boolean
 
     init {
-        Preconditions.notNull(address, "Address cannot be null")
-        Preconditions.argument<Any>(
-            address.length == ADDRESS_LENGTH && address[0] == ADDRESS_STARTING_CHAR,
+        require(address.length == ADDRESS_LENGTH && address[0] == ADDRESS_STARTING_CHAR) {
             "The address $address is not a valid VBK address"
-        )
+        }
         this.data = getDataPortionFromAddress(address)
-        this.multisig = (address[ADDRESS_LENGTH - 1] == ADDRESS_MULTISIG_ENDING_CHAR)
-        this.checksum = getChecksumPortionFromAddress(address, multisig)
-        if (multisig) {
-            Preconditions.argument<Any>(
-                Base59.isBase59String(address),
+        this.isMultisig = (address[ADDRESS_LENGTH - 1] == ADDRESS_MULTISIG_ENDING_CHAR)
+        this.checksum = getChecksumPortionFromAddress(address, isMultisig)
+        if (isMultisig) {
+            require(Base59.isBase59String(address)) {
                 "The address $address is not a base59 string"
-            )
+            }
 
             /* To make the addresses 'human-readable' we add 1 to the decoded value (1 in Base58 is 0,
              * but we want an address with a '1' in the m slot to represent m=1, for example).
@@ -70,31 +54,25 @@ class Address(
              * rather than what would have otherwise been 0 to 57. */
             val m = Base58.decode("" + address[MULTISIG_ADDRESS_M_VALUE])[0] + 1
             val n = Base58.decode("" + address[MULTISIG_ADDRESS_N_VALUE])[0] + 1
-            Preconditions.argument<Any>(
-                n >= MULTISIG_ADDRESS_MIN_N_VALUE,
+            require(n >= MULTISIG_ADDRESS_MIN_N_VALUE) {
                 "The address $address does not have enough addresses to be multisig"
-            )
-            Preconditions.argument<Any>(
-                m <= n,
+            }
+            require(m <= n) {
                 "The address $address has more signatures than addresses"
-            )
-            Preconditions.argument<Any>(
-                n <= MULTISIG_ADDRESS_MAX_N_VALUE && m <= MULTISIG_ADDRESS_MAX_M_VALUE,
+            }
+            require(n <= MULTISIG_ADDRESS_MAX_N_VALUE && m <= MULTISIG_ADDRESS_MAX_M_VALUE) {
                 "The address $address has too many addresses/signatures"
-            )
+            }
 
-
-            Preconditions.argument<Any>(
-                Base58.isBase58String(address.substring(0, ADDRESS_LENGTH - 1)),
+            require(Base58.isBase58String(address.substring(0, ADDRESS_LENGTH - 1))) {
                 "The address $address's remainder is not a base58 string"
-            )
+            }
         } else {
-            Preconditions.argument<Any>(
-                Base58.isBase58String(address),
+            require(Base58.isBase58String(address)) {
                 "The address $address is not a base58 string"
-            )
+            }
         }
-        require(calculateChecksum(data, multisig) == checksum) {
+        require(calculateChecksum(data, isMultisig) == checksum) {
             "Address checksum does not match"
         }
     }
@@ -118,26 +96,18 @@ class Address(
         return try {
             val hash = Sha256Hash.of(publicKey)
             val data = "V" + Base58.encode(hash.bytes).substring(0, 24)
-            val checksum = calculateChecksum(data, multisig)
+            val checksum = calculateChecksum(data, isMultisig)
             this.data == data && this.checksum == checksum
         } catch (e: Exception) {
             false
         }
     }
 
-    @JvmName("getBytesJava")
     fun getBytes(): ByteArray {
-        return if (multisig) Base59.decode(address) else Base58.decode(address)
+        return if (isMultisig) Base59.decode(address) else Base58.decode(address)
     }
 
-    @Deprecated("See Address.multisig", ReplaceWith("multisig"))
-    @JvmName("isMultisigJava")
-    fun isMultisig(): Boolean {
-        return multisig
-    }
-
-    @JvmName("getPoPBytesJava")
-    fun getPoPBytes(): ByteArray {
+    fun getPopBytes(): ByteArray {
         val bytes = Base58.decode(address.substring(1))
         return Arrays.copyOfRange(bytes, 0, 16)
     }
@@ -150,7 +120,7 @@ class Address(
     }
 
     fun serialize(stream: OutputStream) {
-        if (multisig) {
+        if (isMultisig) {
             stream.write(SharedConstants.MULTISIG_ADDRESS_ID.toInt())
         } else {
             stream.write(SharedConstants.STANDARD_ADDRESS_ID.toInt())
@@ -193,22 +163,18 @@ class Address(
 
         @JvmStatic
         private fun getDataPortionFromAddress(address: String): String {
-            Preconditions.notNull(address, "The address cannot be null")
-            Preconditions.argument<Any>(
-                address.length == ADDRESS_LENGTH,
+            require(address.length == ADDRESS_LENGTH) {
                 "The address $address should be of size $ADDRESS_LENGTH"
-            )
+            }
 
             return address.substring(0, 24 + 1)
         }
 
         @JvmStatic
         private fun getChecksumPortionFromAddress(address: String, multisig: Boolean): String {
-            Preconditions.notNull(address, "The address cannot be null")
-            Preconditions.argument<Any>(
-                address.length == ADDRESS_LENGTH,
+            require(address.length == ADDRESS_LENGTH) {
                 "The address $address should be of size $ADDRESS_LENGTH"
-            )
+            }
 
             if (multisig) {
                 return address.substring(25, 28 + 1)

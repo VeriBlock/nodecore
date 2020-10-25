@@ -8,7 +8,6 @@
 package org.veriblock.sdk.blockchain.store
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.Constants
@@ -86,10 +85,7 @@ class StoredBitcoinBlock(
 
         @JvmStatic
         fun deserialize(bytes: ByteArray): StoredBitcoinBlock {
-            Preconditions.notNull(bytes, "Raw Bitcoin Block cannot be null")
-            Preconditions.argument<Any>(
-                bytes.size >= SIZE
-            ) { "Invalid raw Bitcoin Block: " + Utility.bytesToHex(bytes) }
+            require(bytes.size >= SIZE) { "Invalid raw Bitcoin Block: " + Utility.bytesToHex(bytes) }
             val local = ByteBuffer.allocateDirect(SIZE)
             local.put(bytes, bytes.size - SIZE, SIZE)
             local.flip()

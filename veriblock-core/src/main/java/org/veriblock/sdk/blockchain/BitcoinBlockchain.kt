@@ -10,7 +10,6 @@ package org.veriblock.sdk.blockchain
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.BitcoinNetworkParameters
-import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.auditor.Change
 import org.veriblock.sdk.auditor.Operation
@@ -69,7 +68,7 @@ open class BitcoinBlockchain(
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
     fun add(block: BitcoinBlock): StoredBitcoinBlock? {
-        Preconditions.state(!hasTemporaryModifications(), "Cannot add a block while having temporary modifications")
+        check(!hasTemporaryModifications()) { "Cannot add a block while having temporary modifications" }
 
         // Lightweight verification of the header
         ValidationService.verify(block)
@@ -100,7 +99,7 @@ open class BitcoinBlockchain(
 
     @Throws(VerificationException::class, BlockStoreException::class, SQLException::class)
     fun addAll(blocks: List<BitcoinBlock>) {
-        Preconditions.state(!hasTemporaryModifications(), "Cannot add blocks whle having temporary modifications")
+        check(!hasTemporaryModifications()) { "Cannot add blocks whle having temporary modifications" }
         for (block in blocks) {
             add(block)
         }

@@ -8,8 +8,6 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.Preconditions
-import java.util.ArrayList
 
 data class AltPublication(
     val transaction: VeriBlockTransaction,

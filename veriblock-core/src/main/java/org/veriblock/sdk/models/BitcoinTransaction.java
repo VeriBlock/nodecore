@@ -29,7 +29,6 @@ public class BitcoinTransaction {
         return raw;
     }
 
-
     public boolean contains(byte[] value) {
         // Search for the whole thing
         for(int i = 0; i < raw.length - value.length + 1; ++i) {

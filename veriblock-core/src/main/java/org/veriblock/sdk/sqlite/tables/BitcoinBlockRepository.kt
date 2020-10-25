@@ -5,79 +5,68 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.sdk.sqlite.tables
 
-package org.veriblock.sdk.sqlite.tables;
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
+import org.veriblock.sdk.services.SerializeDeserializeService.parseBitcoinBlockWithLength
+import org.veriblock.sdk.services.SerializeDeserializeService.serialize
+import java.math.BigInteger
+import java.nio.ByteBuffer
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.util.Arrays
 
-import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock;
-import org.veriblock.sdk.models.BitcoinBlock;
-import org.veriblock.core.crypto.Sha256Hash;
-import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.core.utilities.Utility;
+class BitcoinBlockRepository(connection: Connection) : GenericBlockRepository<StoredBitcoinBlock, Sha256Hash>(connection, TABLE_NAME, serializer) {
+    companion object {
+        const val TABLE_NAME = "bitcoinBlocks"
+        private val serializer: BlockSQLSerializer<StoredBitcoinBlock, Sha256Hash> = object : BlockSQLSerializer<StoredBitcoinBlock, Sha256Hash> {
+            @Throws(SQLException::class)
+            override fun toStmt(block: StoredBitcoinBlock, stmt: PreparedStatement) {
+                var i = 0
+                stmt.setObject(++i, Utility.bytesToHex(block.hash.bytes))
+                stmt.setObject(++i, Utility.bytesToHex(block.block.previousBlock.bytes))
+                stmt.setObject(++i, block.height)
+                stmt.setObject(++i, block.work.toString())
+                stmt.setObject(++i, Utility.bytesToHex(serialize(block.block)))
+            }
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
+            @Throws(SQLException::class)
+            override fun fromResult(result: ResultSet): StoredBitcoinBlock {
+                val data = Utility.hexToBytes(result.getString("data"))
+                val work = BigInteger(result.getString("work"))
+                val height = result.getInt("height")
+                val block = parseBitcoinBlockWithLength(ByteBuffer.wrap(data))
+                return StoredBitcoinBlock(block, work, height)
+            }
 
-public class BitcoinBlockRepository extends GenericBlockRepository<StoredBitcoinBlock, Sha256Hash> {
+            override fun getSchema(): String {
+                return (" db_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + " id TEXT,"
+                    + " previousId TEXT,"
+                    + " height INTEGER,"
+                    + " work TEXT,"
+                    + " data TEXT")
+            }
 
-    public static final String TABLE_NAME = "bitcoinBlocks";
+            override fun addIndexes(): String {
+                return "CREATE UNIQUE INDEX IF NOT EXISTS btc_block_id_index ON " + TABLE_NAME + " (id);"
+            }
 
-    private final static BlockSQLSerializer<StoredBitcoinBlock, Sha256Hash> serializer =
-                     new BlockSQLSerializer<StoredBitcoinBlock, Sha256Hash>() {
+            override fun removeIndexes(): String {
+                return "DROP INDEX btc_block_id_index;"
+            }
 
-        public void toStmt(StoredBitcoinBlock block, PreparedStatement stmt) throws SQLException {
-            int i = 0;
-            stmt.setObject(++i, Utility.bytesToHex(block.getHash().getBytes()));
-            stmt.setObject(++i, Utility.bytesToHex(block.getBlock().getPreviousBlock().getBytes()));
-            stmt.setObject(++i, block.getHeight());
-            stmt.setObject(++i, block.getWork().toString());
-            stmt.setObject(++i, Utility.bytesToHex(SerializeDeserializeService.INSTANCE.serialize(block.getBlock())));
+            override fun getColumns(): List<String> {
+                return Arrays.asList("id", "previousId", "height", "work", "data")
+            }
+
+            override fun idToString(hash: Sha256Hash): String {
+                return Utility.bytesToHex(hash.bytes)
+            }
         }
-
-        public StoredBitcoinBlock fromResult(ResultSet result) throws SQLException {
-            byte[] data = Utility.hexToBytes(result.getString("data"));
-            BigInteger work = new BigInteger(result.getString("work"));
-            int height = result.getInt("height");
-
-            BitcoinBlock block = SerializeDeserializeService.parseBitcoinBlockWithLength(ByteBuffer.wrap(data));
-            StoredBitcoinBlock storedBlock = new StoredBitcoinBlock(block, work, height);
-            return storedBlock;
-        }
-
-        public String getSchema() {
-            return  " db_id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                  + " id TEXT,"
-                  + " previousId TEXT,"
-                  + " height INTEGER,"
-                  + " work TEXT,"
-                  + " data TEXT";
-        }
-
-         @Override
-         public String addIndexes() {
-             return "CREATE UNIQUE INDEX IF NOT EXISTS btc_block_id_index ON " + TABLE_NAME + " (id);";
-         }
-
-         @Override
-         public String removeIndexes() {
-             return "DROP INDEX btc_block_id_index;";
-         }
-
-        public List<String> getColumns() {
-            return Arrays.asList("id", "previousId", "height", "work", "data");
-        }
-
-        public String idToString(Sha256Hash hash) {
-            return Utility.bytesToHex(hash.getBytes());
-        }
-    };
-
-    public BitcoinBlockRepository(Connection connection) throws SQLException {
-        super(connection, TABLE_NAME, serializer);
     }
 }

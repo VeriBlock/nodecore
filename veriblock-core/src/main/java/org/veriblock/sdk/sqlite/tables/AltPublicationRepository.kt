@@ -5,61 +5,52 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.sdk.sqlite.tables
 
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.AltPublication
+import org.veriblock.sdk.services.SerializeDeserializeService.serialize
+import java.sql.Connection
+import java.sql.SQLException
+import java.sql.Statement
 
-package org.veriblock.sdk.sqlite.tables;
-
-import org.veriblock.sdk.models.AltPublication;
-import org.veriblock.core.crypto.Sha256Hash;
-import org.veriblock.sdk.services.SerializeDeserializeService;
-import org.veriblock.core.utilities.Utility;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-public class AltPublicationRepository {
-    private Connection connectionSource;
-
-    public final static String tableName = "alt_publication";
-    public final static String altPublicationHash = "hash";
-    public final static String altPublicationDataColumnName = "data";
-
-    public AltPublicationRepository(Connection connection) throws SQLException {
-        this.connectionSource = connection;
-        try(Statement stmt = connectionSource.createStatement()){
-            stmt.execute("CREATE TABLE IF NOT EXISTS " + tableName
-                    + "(\n "
-                    + altPublicationHash + " TEXT PRIMARY KEY,\n "
-                    + altPublicationDataColumnName + " BLOB NOT NULL\n "
-                    + ");");
-        }
-
-        try(Statement stmt = connectionSource.createStatement()) {
-            stmt.execute("PRAGMA journal_mode=WAL;");
-        }
+class AltPublicationRepository(private val connectionSource: Connection) {
+    @Throws(SQLException::class)
+    fun clear() {
+        connectionSource.createStatement().use { stmt -> stmt.execute("DELETE FROM " + tableName) }
     }
 
-    public void clear() throws SQLException {
-        try(Statement stmt = connectionSource.createStatement()){
-            stmt.execute( "DELETE FROM " + tableName);
+    @Throws(SQLException::class)
+    fun save(publication: AltPublication?): String {
+        var hash: String
+        val sql = " REPLACE INTO " + tableName + " ('" + altPublicationHash + "' , '" + altPublicationDataColumnName + "') " +
+            "VALUES(?, ?) "
+        connectionSource.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
+            val bytes = serialize(publication!!)
+            hash = Utility.bytesToHex(Sha256Hash.hash(bytes))
+            stmt.setString(1, hash)
+            stmt.setBytes(2, bytes)
+            stmt.executeUpdate()
         }
+        return hash
     }
 
-    public String save(AltPublication publication) throws SQLException {
-        String hash;
-        String sql = " REPLACE INTO " + tableName + " ('" + altPublicationHash + "' , '" + altPublicationDataColumnName + "') " +
-                "VALUES(?, ?) ";
-        try(PreparedStatement stmt = connectionSource.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-            byte[] bytes = SerializeDeserializeService.INSTANCE.serialize(publication);
-            hash = Utility.bytesToHex(Sha256Hash.hash(bytes));
-            stmt.setString(1, hash);
-            stmt.setBytes(2, bytes);
-            stmt.executeUpdate();
-        }
-        return hash;
+    companion object {
+        const val tableName = "alt_publication"
+        const val altPublicationHash = "hash"
+        const val altPublicationDataColumnName = "data"
     }
 
-
+    init {
+        connectionSource.createStatement().use { stmt ->
+            stmt.execute(
+                """CREATE TABLE IF NOT EXISTS $tableName(
+ $altPublicationHash TEXT PRIMARY KEY,
+ $altPublicationDataColumnName BLOB NOT NULL
+ );"""
+            )
+        }
+        connectionSource.createStatement().use { stmt -> stmt.execute("PRAGMA journal_mode=WAL;") }
+    }
 }

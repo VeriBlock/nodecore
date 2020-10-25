@@ -8,10 +8,7 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.Preconditions
 import org.veriblock.sdk.services.SerializeDeserializeService.getId
-import java.util.ArrayList
-import java.util.Arrays
 
 class VeriBlockPopTransaction(
     val address: Address,

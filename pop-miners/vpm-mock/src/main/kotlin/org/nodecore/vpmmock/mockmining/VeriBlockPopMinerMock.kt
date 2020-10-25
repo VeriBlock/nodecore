@@ -7,8 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service.mockmining
 
-import io.netty.buffer.ByteBuf
-import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.core.params.NetworkParameters
@@ -24,7 +22,7 @@ import java.security.*
 fun serializePublicationData(header: ByteArray, address: Address): ByteArray {
     val buffer = ByteBuffer.allocateDirect(80)
     buffer.put(header)
-    buffer.put(address.getPoPBytes())
+    buffer.put(address.getPopBytes())
     buffer.flip()
     val payoutInfo = ByteArray(80)
     buffer.get(payoutInfo)

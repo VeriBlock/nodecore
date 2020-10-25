@@ -12,7 +12,6 @@ import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.readVbkPreviousBlockHash
 import org.veriblock.core.crypto.readVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.core.utilities.Preconditions
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.AltPublication
@@ -353,11 +352,9 @@ object SerializeDeserializeService {
     }
 
     fun parseBitcoinBlock(bytes: ByteArray): BitcoinBlock {
-        Preconditions.notNull(bytes, "Raw Bitcoin Block cannot be null")
-        Preconditions.argument<Any>(
-            bytes.size == Constants.HEADER_SIZE_BitcoinBlock,
+        require(bytes.size == Constants.HEADER_SIZE_BitcoinBlock) {
             "Invalid raw Bitcoin Block: " + Utility.bytesToHex(bytes)
-        )
+        }
         val buffer = ByteBuffer.allocateDirect(bytes.size)
         buffer.put(bytes)
         buffer.flip()
@@ -386,7 +383,7 @@ object SerializeDeserializeService {
 
     @Deprecated("See Address.serialize()", ReplaceWith("address.serialize()"))
     fun serialize(address: Address, stream: OutputStream) {
-        val bytes = address.bytes
+        val bytes = address.getBytes()
         if (address.isMultisig) {
             stream.write(3)
         } else {
