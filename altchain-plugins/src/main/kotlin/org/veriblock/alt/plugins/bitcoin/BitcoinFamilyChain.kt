@@ -9,7 +9,6 @@
 package org.veriblock.alt.plugins.bitcoin
 
 import io.ktor.http.ContentType
-import mu.KLogger
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
@@ -37,7 +36,7 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.io.File
+import org.veriblock.sdk.services.serialize
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -244,7 +243,7 @@ class BitcoinFamilyChain(
         logger.info { "Submitting PoP data to $name daemon at ${config.host}..." }
         val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
             contextBlocks.map {
-                SerializeDeserializeService.serialize(it).toHex()
+                it.serialize().toHex()
             },
             vtbs.map {
                 SerializeDeserializeService.serialize(

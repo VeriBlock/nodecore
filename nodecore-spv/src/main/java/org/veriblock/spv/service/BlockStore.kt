@@ -1,9 +1,5 @@
 package org.veriblock.spv.service
 
-import kotlinx.coroutines.yield
-import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.VBK_HASH_LENGTH
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.params.NetworkParameters
@@ -11,14 +7,12 @@ import org.veriblock.core.utilities.*
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.CHAIN_WORK_BYTES
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
-import java.lang.IllegalStateException
 import java.math.BigInteger
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -160,7 +154,7 @@ class BlockStore(
 
         val vbkhash = VbkHash(hash)
         return StoredVeriBlockBlock(
-            header = SerializeDeserializeService.parseVeriBlockBlock(header, vbkhash),
+            header = header.parseVeriBlockBlock(vbkhash),
             work = BigInteger(1, work),
             hash = vbkhash
         )

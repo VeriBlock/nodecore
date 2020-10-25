@@ -12,7 +12,8 @@ import org.veriblock.core.crypto.readVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
+import org.veriblock.sdk.services.serializeHeaders
 import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.util.Objects
@@ -36,7 +37,7 @@ class StoredVeriBlockBlock(
         buffer.put(
             Utility.toBytes(work, CHAIN_WORK_BYTES)
         )
-        buffer.put(SerializeDeserializeService.serializeHeaders(header))
+        buffer.put(header.serializeHeaders())
     }
 
     fun serialize(): ByteArray {
@@ -74,7 +75,7 @@ class StoredVeriBlockBlock(
             buffer.get(workBytes)
             val work = BigInteger(1, workBytes)
             val blockBytes = BlockUtility.getBlockHeader(buffer)
-            val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
+            val block = blockBytes.parseVeriBlockBlock()
             return StoredVeriBlockBlock(block, work, hash)
         }
 

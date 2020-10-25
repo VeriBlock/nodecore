@@ -12,23 +12,25 @@ import org.junit.Test
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.output
+import org.veriblock.sdk.services.parseOutput
+import org.veriblock.sdk.services.serialize
 import java.nio.ByteBuffer
 
 class OutputTests {
     @Test
     fun parse() {
         val input = Utility.hexToBytes("01166772F51AB208D32771AB1506970EEB664462730B838E020539")
-        val decoded = Output.parse(ByteBuffer.wrap(input))
+        val decoded = ByteBuffer.wrap(input).parseOutput()
         decoded.address shouldBe Address("V5Ujv72h4jEBcKnALGc4fKqs6CDAPX")
         decoded.amount shouldBe Coin(1337)
     }
 
     @Test
     fun roundtrip() {
-        val input = Output.of("V5Ujv72h4jEBcKnALGc4fKqs6CDAPX", 1337)
-        val bytes = input.serialize()
-        val decoded = Output.parse(ByteBuffer.wrap(bytes))
-        input shouldBe decoded
+        val output = "V5Ujv72h4jEBcKnALGc4fKqs6CDAPX" output 1337
+        val bytes = output.serialize()
+        val decoded = ByteBuffer.wrap(bytes).parseOutput()
+        output shouldBe decoded
     }
 }

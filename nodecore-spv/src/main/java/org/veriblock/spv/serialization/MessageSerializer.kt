@@ -24,6 +24,7 @@ import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
 import org.veriblock.spv.model.BlockMetaPackage
 import org.veriblock.spv.model.FullBlock
 import org.veriblock.spv.model.MultisigTransaction
@@ -37,9 +38,9 @@ private val logger = createLogger {}
 object MessageSerializer {
     fun deserialize(blockHeaderMessage: VeriBlockMessages.BlockHeader, trustHash: Boolean = false): VeriBlockBlock {
         return if (trustHash) {
-            SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray(), blockHeaderMessage.hash.toByteArray().asVbkHash())
+            blockHeaderMessage.header.toByteArray().parseVeriBlockBlock(blockHeaderMessage.hash.toByteArray().asVbkHash())
         } else {
-            SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray())
+            blockHeaderMessage.header.toByteArray().parseVeriBlockBlock()
         }
     }
 
@@ -63,7 +64,7 @@ object MessageSerializer {
         val txMessage = signed.transaction
         val tx = PopTransactionLight(
             txId = Sha256Hash.wrap(txMessage.txId.toByteArray()),
-            endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray()),
+            endorsedBlock = txMessage.endorsedBlockHeader.toByteArray().parseVeriBlockBlock(),
             bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray()),
             bitcoinMerklePath = MerklePath(txMessage.merklePath),
             blockOfProof = SerializeDeserializeService.parseBitcoinBlock(txMessage.bitcoinBlockHeaderOfProof.header.toByteArray())

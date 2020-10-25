@@ -8,7 +8,7 @@
 package org.veriblock.spv.model
 
 import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.serialize
 import java.io.OutputStream
 import java.util.Objects
 
@@ -18,7 +18,7 @@ class Output(
 ) {
     fun serializeToStream(stream: OutputStream) {
         address.serializeToStream(stream)
-        SerializeDeserializeService.serialize(amount, stream)
+        stream.serialize(amount)
     }
 
     override fun equals(other: Any?): Boolean {

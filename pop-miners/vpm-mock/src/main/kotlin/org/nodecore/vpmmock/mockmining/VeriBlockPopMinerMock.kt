@@ -15,6 +15,8 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlockStream
+import org.veriblock.sdk.services.serializeHeaders
 import org.veriblock.sdk.sqlite.ConnectionSelector
 import java.nio.ByteBuffer
 import java.security.*
@@ -126,7 +128,7 @@ class VeriBlockPopMinerMock(
         val address: Address
     ) {
         fun serialize(): ByteArray = serializePublicationData(
-            SerializeDeserializeService.serializeHeaders(publishedBlock), address
+            publishedBlock.serializeHeaders(), address
         )
     }
 
@@ -150,7 +152,7 @@ class VeriBlockPopMinerMock(
     }
 
     private fun deserializeVbkHeader(bytes: ByteBuffer): VeriBlockBlock {
-        return SerializeDeserializeService.parseVeriBlockBlockStream(bytes)
+        return bytes.parseVeriBlockBlockStream()
     }
 
 }

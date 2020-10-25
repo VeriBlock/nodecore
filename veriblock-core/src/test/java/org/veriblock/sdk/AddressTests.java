@@ -15,6 +15,8 @@ import org.veriblock.sdk.models.Address;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 
+import static org.veriblock.sdk.models.AddressKt.parseAddress;
+
 public class AddressTests {
     @Test
     public void construct_WhenValidStandard() {
@@ -67,7 +69,7 @@ public class AddressTests {
         final String address = "VFFDWUMLJwLRuNzH4NX8Rm32E59n6d";
         Address test = new Address(address);
         byte[] bytes = test.serialize();
-        Address decoded = Address.parse(ByteBuffer.wrap(bytes));
+        Address decoded = parseAddress(ByteBuffer.wrap(bytes));
         Assert.assertEquals(test, decoded);
     }
 }

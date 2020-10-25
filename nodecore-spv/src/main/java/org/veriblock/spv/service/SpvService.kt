@@ -31,7 +31,7 @@ import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.serializeHeaders
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.AddressCoinsIndex
 import org.veriblock.spv.model.AddressLight
@@ -348,7 +348,7 @@ class SpvService(
     fun getLastVBKBlockHeader(): BlockHeader {
         val block: StoredVeriBlockBlock = blockchain.getChainHeadBlock()
         return BlockHeader(
-            SerializeDeserializeService.serializeHeaders(block.header),
+            block.header.serializeHeaders(),
             block.hash.bytes
         )
     }
@@ -357,7 +357,7 @@ class SpvService(
         val block = blockchain.getBlock(hash)
             ?: return null
         return BlockHeader(
-            SerializeDeserializeService.serializeHeaders(block.header),
+            block.header.serializeHeaders(),
             block.hash.bytes
         )
     }

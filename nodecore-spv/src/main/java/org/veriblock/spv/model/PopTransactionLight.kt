@@ -16,6 +16,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.serialize
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
@@ -59,9 +60,9 @@ class PopTransactionLight(
     private fun serializeToStream(stream: OutputStream) {
         stream.write(transactionTypeIdentifier.id.toInt())
         inputAddress!!.serializeToStream(stream)
-        SerializeDeserializeService.serialize(endorsedBlock, stream)
+        stream.serialize(endorsedBlock)
         SerializeDeserializeService.serialize(bitcoinTx, stream)
-        SerializeDeserializeService.serialize(bitcoinMerklePath, stream)
+        stream.serialize(bitcoinMerklePath)
         SerializeDeserializeService.serialize(blockOfProof, stream)
         SerializerUtility.writeVariableLengthValueToStream(stream, getContextBitcoinBlocks().size)
         for (block in getContextBitcoinBlocks()) {

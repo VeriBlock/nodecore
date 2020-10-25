@@ -7,7 +7,7 @@ import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.extensions.asHexBytes
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
 import java.security.Security
 import kotlin.system.measureTimeMillis
 
@@ -139,7 +139,7 @@ class ProgPowTests {
             000D5B380002D3395B9C2AC189D2616580D60BE9D660C9C516ABD12E16B30A871B1F981C4A8D1C3601DBB047D1E29F8ECD0873625F675CD5042523A62001CA9BF8
             000D5B390002ADCAE5BAB1227729B3536E830BE9D660C9C516ABD12E16B30A871B1F981CCA4E4D9B2D8BFE27D994AB9FBA90F1975F675CEF0424FF50008EAF803B
         """.trimIndent()
-        val blocks = blocksString.split("\n").map { SerializeDeserializeService.parseVeriBlockBlock(it.asHexBytes()) }
+        val blocks = blocksString.split("\n").map { it.asHexBytes().parseVeriBlockBlock() }
         for (block in blocks) {
             val time = measureTimeMillis {
                 block.hash

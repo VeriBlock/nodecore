@@ -14,7 +14,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.serialize
 import java.util.Arrays
 
 class FullBlock(
@@ -37,6 +37,6 @@ class FullBlock(
     override fun equals(other: Any?): Boolean {
         return this === other || other != null &&
             (this.javaClass == other.javaClass || VeriBlockBlock::class.java == other.javaClass) &&
-            Arrays.equals(SerializeDeserializeService.serialize(this), SerializeDeserializeService.serialize(other as VeriBlockBlock))
+            Arrays.equals(this.serialize(), (other as VeriBlockBlock).serialize())
     }
 }

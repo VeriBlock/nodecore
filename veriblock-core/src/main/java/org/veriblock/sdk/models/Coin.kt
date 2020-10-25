@@ -60,22 +60,6 @@ class Coin(
         const val COIN_VALUE: Long = 100000000L
         val ZERO = 0.asCoin()
         val ONE = COIN_VALUE.asCoin()
-
-        @JvmStatic
-        fun parse(buffer: ByteBuffer): Coin {
-            return buffer.parseCoin()
-        }
-    }
-
-    fun serialize(): ByteArray {
-        ByteArrayOutputStream().use { stream ->
-            serialize(stream)
-            return stream.toByteArray()
-        }
-    }
-
-    fun serialize(stream: OutputStream) {
-        stream.writeSingleByteLengthValue(atomicUnits)
     }
 }
 

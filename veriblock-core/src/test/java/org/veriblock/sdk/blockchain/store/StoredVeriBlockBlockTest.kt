@@ -14,7 +14,7 @@ import org.veriblock.core.Context
 import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.deserialize
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
@@ -26,7 +26,7 @@ class StoredVeriBlockBlockTest {
     fun setUp() {
         Context.create(getDefaultNetworkParameters("mainnet"))
         raw = Utility.hexToBytes("00001388000294e7dc3e3be21a96eccf0fbdf5f62a3331dc995c36b0935637860679ddd5db0f135312b2c27867c9a83ef1b99b985c9b949307023ad672bafd77")
-        val block = SerializeDeserializeService.parseVeriBlockBlock(raw)
+        val block = raw.parseVeriBlockBlock()
         storedVeriBlockBlockExpected = StoredVeriBlockBlock(
             block, BigInteger.TEN, block.hash
         )

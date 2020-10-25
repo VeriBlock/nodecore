@@ -17,6 +17,8 @@ import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
 import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.services.parseVeriBlockBlock
+import org.veriblock.sdk.services.serialize
 import java.nio.ByteBuffer
 
 private lateinit var defaultBlock: VeriBlockBlock
@@ -45,14 +47,14 @@ class VeriBlockBlockTests {
     @Test
     fun parse() {
         val input = Utility.hexToBytes(defaultBlockEncoded)
-        val decoded = VeriBlockBlock.parse(ByteBuffer.wrap(input), true)
+        val decoded = ByteBuffer.wrap(input).parseVeriBlockBlock()
         decoded shouldBe defaultBlock
     }
 
     @Test
     fun roundtrip() {
         val bytes = defaultBlock.serialize()
-        val decoded = VeriBlockBlock.parse(ByteBuffer.wrap(bytes), defaultBlock.isProgPow)
+        val decoded = ByteBuffer.wrap(bytes).parseVeriBlockBlock()
         defaultBlock shouldBe decoded
     }
 }

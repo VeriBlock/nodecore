@@ -130,19 +130,6 @@ class Address(
     }
 
     companion object {
-        @JvmStatic
-        fun parse(buffer: ByteBuffer): Address {
-            val type = buffer.get()
-            require(type == SharedConstants.MULTISIG_ADDRESS_ID || type == SharedConstants.STANDARD_ADDRESS_ID) {
-                "Address type ($type) is neither multisig, nor standard"
-            }
-            val bytes = buffer.getSingleByteLengthValue(0, ADDRESS_LENGTH)
-            return if (type == SharedConstants.STANDARD_ADDRESS_ID) {
-                Address(Base58.encode(bytes))
-            } else {
-                Address(Base59.encode(bytes))
-            }
-        }
 
         // TODO: remove hardcoded values - use AddressConstants instead
         @JvmStatic
@@ -155,7 +142,7 @@ class Address(
         }
 
         @JvmStatic
-        fun fromPoPBytes(buf: ByteBuffer): Address {
+        fun fromPopBytes(buf: ByteBuffer): Address {
             val bytes = ByteArray(16)
             buf.get(bytes)
             return Address(ADDRESS_STARTING_CHAR + Base58.encode(bytes))
@@ -192,5 +179,18 @@ class Address(
             val checksum = Base58.encode(hash.bytes)
             return checksum.substring(0, 4 + 1)
         }
+    }
+}
+
+fun ByteBuffer.parseAddress(): Address {
+    val type = get()
+    require(type == SharedConstants.MULTISIG_ADDRESS_ID || type == SharedConstants.STANDARD_ADDRESS_ID) {
+        "Address type ($type) is neither multisig, nor standard"
+    }
+    val bytes = getSingleByteLengthValue(0, ADDRESS_LENGTH)
+    return if (type == SharedConstants.STANDARD_ADDRESS_ID) {
+        Address(Base58.encode(bytes))
+    } else {
+        Address(Base59.encode(bytes))
     }
 }

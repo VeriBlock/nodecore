@@ -25,7 +25,7 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
 import org.veriblock.spv.model.StandardAddress
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.service.NetworkState
@@ -50,7 +50,7 @@ class NodeCoreGateway(
     fun getLastBlock(): VeriBlockBlock {
         return try {
             val lastBlock = spvService.getLastVBKBlockHeader()
-            SerializeDeserializeService.parseVeriBlockBlock(lastBlock.header, lastBlock.hash.asVbkHash())
+            lastBlock.header.parseVeriBlockBlock(lastBlock.hash.asVbkHash())
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to get last VBK block" }
             throw e
@@ -61,7 +61,7 @@ class NodeCoreGateway(
         logger.debug { "Requesting VBK block with hash $hash..." }
 
         return spvService.getVbkBlockHeader(hash)?.let {
-            SerializeDeserializeService.parseVeriBlockBlock(it.header, it.hash.asVbkHash())
+            it.header.parseVeriBlockBlock(it.hash.asVbkHash())
         }
     }
 

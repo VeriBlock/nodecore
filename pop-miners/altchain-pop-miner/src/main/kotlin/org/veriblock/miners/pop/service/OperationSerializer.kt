@@ -19,7 +19,8 @@ import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.sdk.models.VeriBlockMerklePath
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
+import org.veriblock.sdk.services.serializeHeaders
 import java.time.LocalDateTime
 
 class OperationSerializer(
@@ -39,7 +40,7 @@ class OperationSerializer(
             publicationBtcContext = operation.miningInstruction?.btcContext ?: emptyList(),
             txId = operation.endorsementTransaction?.txId ?: "",
             blockOfProof = operation.blockOfProof?.let {
-                SerializeDeserializeService.serializeHeaders(it)
+                it.serializeHeaders()
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.toCompactString() ?: "",
             atvId = operation.atvId ?: "",
@@ -93,7 +94,7 @@ class OperationSerializer(
 
             if (serialized.blockOfProof.isNotEmpty()) {
                 setConfirmed()
-                setBlockOfProof(SerializeDeserializeService.parseVeriBlockBlock(serialized.blockOfProof))
+                setBlockOfProof(serialized.blockOfProof.parseVeriBlockBlock())
             }
 
             if (serialized.merklePath.isNotEmpty()) {

@@ -11,10 +11,9 @@ import io.kotlintest.shouldBe
 import org.junit.Assert
 import org.junit.Test
 import org.veriblock.sdk.models.asCoin
-import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.parseCoin
+import org.veriblock.sdk.services.serialize
 import org.veriblock.sdk.util.writeSingleByteLengthValue
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -24,7 +23,7 @@ class CoinTests {
     @Test
     fun parse() {
         val input = 123456789L.asCoin()
-        val serialized = SerializeDeserializeService.serialize(input)
+        val serialized = input.serialize()
         val deserialized = ByteBuffer.wrap(serialized).parseCoin()
         input shouldBe deserialized
     }
@@ -49,7 +48,7 @@ class CoinTests {
     fun roundtrip() {
         val input = 123456789L.asCoin()
         val bytes = input.serialize()
-        val decoded = Coin.parse(ByteBuffer.wrap(bytes))
+        val decoded = ByteBuffer.wrap(bytes).parseCoin()
         input shouldBe decoded
     }
 }

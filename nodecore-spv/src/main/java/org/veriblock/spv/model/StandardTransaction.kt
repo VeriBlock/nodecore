@@ -11,7 +11,6 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.utilities.extensions.asHexByteString
-import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.Utility
@@ -20,7 +19,7 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.asCoin
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.serialize
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
@@ -129,7 +128,7 @@ open class StandardTransaction : Transaction {
         inputAddress!!.serializeToStream(stream)
 
         // Write source amount
-        SerializeDeserializeService.serialize(inputAmount!!, stream)
+        stream.serialize(inputAmount!!)
 
         // Write destinations
         stream.write(getOutputs().size)

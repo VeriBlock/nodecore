@@ -7,10 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-import java.io.ByteArrayOutputStream
-import java.io.OutputStream
-import java.nio.ByteBuffer
-
 class Output(
     val address: Address,
     val amount: Coin
@@ -27,30 +23,8 @@ class Output(
         result = 31 * result + amount.hashCode()
         return result
     }
+}
 
-    companion object {
-        @JvmStatic
-        fun of(address: String, amount: Long): Output {
-            return Output(Address(address), amount.asCoin())
-        }
-
-        @JvmStatic
-        fun parse(buffer: ByteBuffer): Output {
-            val address = Address.parse(buffer)
-            val amount = Coin.parse(buffer)
-            return Output(address, amount)
-        }
-    }
-
-    fun serialize(): ByteArray {
-        ByteArrayOutputStream().use { stream ->
-            serialize(stream)
-            return stream.toByteArray()
-        }
-    }
-
-    fun serialize(stream: OutputStream) {
-        address.serialize(stream)
-        amount.serialize(stream)
-    }
+infix fun String.output(amount: Long): Output {
+    return Output(Address(this), amount.asCoin())
 }

@@ -24,7 +24,8 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
+import org.veriblock.sdk.services.serializeHeaders
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.NodeMetadata
 import org.veriblock.spv.service.Blockchain
@@ -98,7 +99,7 @@ class SpvPeer(
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
-                        .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), it.hash.toByteArray().asVbkHash()) }
+                        .map { it.header.toByteArray().parseVeriBlockBlock(it.hash.toByteArray().asVbkHash()) }
                         .filter { it.height % 20 == 0 }
                         .sortedByDescending { it.height }
                         .take(10)
@@ -182,7 +183,7 @@ class SpvPeer(
             queryBuilder.addHeaders(
                 VeriBlockMessages.BlockHeader.newBuilder()
                     .setHash(ByteString.copyFrom(block.hash.bytes))
-                    .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
+                    .setHeader(ByteString.copyFrom(block.serializeHeaders()))
             )
         }
         logger.debug("Sending keystone query, last block @ {}", keystones[0].height)

@@ -19,7 +19,6 @@ import org.veriblock.lite.core.FullBlock
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
-import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
@@ -27,13 +26,15 @@ import org.veriblock.sdk.models.VeriBlockPopTransaction
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
+import org.veriblock.sdk.models.output
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.sdk.services.parseVeriBlockBlock
 import org.veriblock.spv.model.StandardTransaction
 
 private val logger = createLogger {}
 
 fun VeriBlockMessages.BlockHeader.deserialize(): VeriBlockBlock =
-    SerializeDeserializeService.parseVeriBlockBlock(header.toByteArray())
+    header.toByteArray().parseVeriBlockBlock()
 
 private fun VeriBlockMessages.TransactionUnion.deserializeNormalTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     return when (transactionCase) {
@@ -67,7 +68,7 @@ fun VeriBlockMessages.SignedTransaction.deserializePoPTransaction(transactionPre
     val txMessage = transaction
     return VeriBlockPopTransaction(
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
-        SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray()),
+        txMessage.endorsedBlockHeader.toByteArray().parseVeriBlockBlock(),
         BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray()),
         MerklePath(txMessage.merklePath),
         SerializeDeserializeService.parseBitcoinBlock(txMessage.bitcoinBlockHeaderOfProof.header.toByteArray()),
@@ -86,7 +87,7 @@ fun StandardTransaction.deserializeStandardTransaction(transactionPrefix: Byte?)
         Address(inputAddress!!.get()),
         inputAmount!!,
         getOutputs().map { o ->
-            Output.of(o.address.get(), o.amount.atomicUnits)
+            o.address.get() output o.amount.atomicUnits
         },
         getSignatureIndex(),
         SerializeDeserializeService.parsePublicationData(data!!),
@@ -103,7 +104,7 @@ fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(transacti
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
         txMessage.sourceAmount.asCoin(),
         txMessage.outputsList.map { o ->
-            Output.of(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address), o.amount)
+            ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address) output o.amount
         },
         signatureIndex,
         SerializeDeserializeService.parsePublicationData(txMessage.data.toByteArray()),
@@ -120,7 +121,7 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(t
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
         txMessage.sourceAmount.asCoin(),
         txMessage.outputsList.map { o ->
-            Output.of(ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address), o.amount)
+            ByteStringAddressUtility.parseProperAddressTypeAutomatically(o.address) output o.amount
         },
         signatureIndex,
         SerializeDeserializeService.parsePublicationData(txMessage.data.toByteArray()),
@@ -133,17 +134,17 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(t
 fun VeriBlockMessages.VeriBlockPublication.deserialize(transactionPrefix: Byte?): VeriBlockPublication {
     val context: List<VeriBlockBlock> =
         contextToEndorsedList.map {
-            SerializeDeserializeService.parseVeriBlockBlock(it.toByteArray())
+            it.toByteArray().parseVeriBlockBlock()
         } +
-            SerializeDeserializeService.parseVeriBlockBlock(popTransaction.transaction.endorsedBlockHeader.toByteArray()) +
+            popTransaction.transaction.endorsedBlockHeader.toByteArray().parseVeriBlockBlock() +
             contextToContainingList.map {
-                SerializeDeserializeService.parseVeriBlockBlock(it.toByteArray())
+                it.toByteArray().parseVeriBlockBlock()
             }
 
     return VeriBlockPublication(
         popTransaction.deserializePoPTransaction(transactionPrefix),
         VeriBlockMerklePath(compactMerklePath),
-        SerializeDeserializeService.parseVeriBlockBlock(containingBlock.toByteArray()),
+        containingBlock.toByteArray().parseVeriBlockBlock(),
         context
     )
 }
