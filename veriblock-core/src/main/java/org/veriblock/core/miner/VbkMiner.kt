@@ -74,7 +74,7 @@ fun getBlockTemplate(
         secondPrevKeystone = getAncestorAtHeight(prev, prev.height - diff, getPreviousBlock)
     }
 
-    val timestamp = max(prev.timestamp, System.currentTimeMillis().toInt())
+    val timestamp = max(prev.timestamp, Utility.getCurrentTimestamp())
     val difficulty = getNextWorkRequired(prev, networkParams, context)
     val zeroKeystone = PreviousKeystoneVbkHash.EMPTY_HASH
 
