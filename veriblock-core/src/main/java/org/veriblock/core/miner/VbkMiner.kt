@@ -8,7 +8,6 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
-import java.time.Instant
 import java.util.*
 import kotlin.math.max
 import kotlin.random.Random
