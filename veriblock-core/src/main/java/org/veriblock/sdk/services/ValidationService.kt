@@ -21,6 +21,13 @@ object ValidationService {
         return isProofOfWorkValid(block) && isBlockTimeValid(block)
     }
 
+    fun checkBlock(block: BitcoinBlock): Boolean = try {
+        verify(block)
+        true
+    } catch (e: Exception) {
+        false
+    }
+
     // VeriBlockBlock
     @Throws(VerificationException::class)
     fun verify(veriBlockBlock: VeriBlockBlock) {
@@ -44,7 +51,6 @@ object ValidationService {
     }
 
 
-
     fun checkProofOfWork(block: VeriBlockBlock) {
         if (!isProofOfWorkValid(block)) {
             throw VerificationException(
@@ -58,7 +64,7 @@ object ValidationService {
     }
 
     fun checkMaximumDrift(veriBlockBlock: VeriBlockBlock) {
-        if(!isBlockTimeValid(veriBlockBlock)) {
+        if (!isBlockTimeValid(veriBlockBlock)) {
             throw VerificationException("Block is too far in the future")
         }
     }

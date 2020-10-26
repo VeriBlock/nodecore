@@ -7,8 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service.mockmining
 
-import io.netty.buffer.ByteBuf
-import org.slf4j.LoggerFactory
+import org.nodecore.vpmmock.mockmining.BitcoinBlockData
+import org.nodecore.vpmmock.mockmining.BtcBlockchain
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.core.params.NetworkParameters
@@ -33,15 +33,12 @@ fun serializePublicationData(header: ByteArray, address: Address): ByteArray {
 
 class VeriBlockPopMinerMock(
     val veriBlockParameters: NetworkParameters = defaultRegTestParameters,
-    val bitcoinBlockchain: BitcoinMockBlockchain = BitcoinMockBlockchain(
+    val bitcoinBlockchain:BtcBlockchain = BtcBlockchain(
         veriBlockParameters.bitcoinOriginBlock,
-        veriBlockParameters.bitcoinOriginBlockHeight,
-        BitcoinRegTestParameters(),
-        BitcoinStore(
-            ConnectionSelector.setConnectionInMemory("vpm-mock")
+        veriBlockParameters.bitcoinOriginBlockHeight
         )
-    ),
-) {
+    )
+{
     val bitcoinMempool = ArrayList<BitcoinTransaction>()
 
     fun createBtcTx(publishedBlock: VeriBlockBlock, address: Address): BitcoinTransaction {
@@ -98,15 +95,15 @@ class VeriBlockPopMinerMock(
         key: KeyPair,
         lastKnownBTCBlock: BitcoinBlock
     ): VeriBlockPopTransaction? {
-        val blockData = bitcoinBlockchain.blockDataStore[hash]
+        val blockData = bitcoinBlockchain.getBody(hash)
             ?: return null
         val publishedBlock = deserializeVbkHeader(ByteBuffer.wrap(blockData[index]))
         val bitcoinProofTx = BitcoinTransaction(blockData[index])
         val address = Address.fromPublicKey(key.public.encoded)
 
-        val blockOfProof = bitcoinBlockchain.get(hash)
+        val blockOfProof = bitcoinBlockchain.getBlockIndex(hash)?.header
             ?: return null
-        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock)
+        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock.hash, blockOfProof.hash)
         return signTransaction(
             VeriBlockPopTransaction(
                 address,
