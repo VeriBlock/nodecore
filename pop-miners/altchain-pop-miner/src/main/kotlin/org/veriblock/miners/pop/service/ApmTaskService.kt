@@ -61,9 +61,17 @@ class ApmTaskService(
             }
             operation.setMiningInstruction(publicationData)
             logger.info(operation, "Successfully retrieved the mining instruction!")
-            val vbkContextBlockHash = publicationData.context[0]
-            miner.network.getBlock(vbkContextBlockHash.asVbkHash())
-                ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
+
+            // verify we know at least single context block
+            val availableContext = publicationData
+                .context
+                .mapNotNull {
+                    miner.network.getBlock(it.asVbkHash())
+                }
+            // we were not able to
+            if (availableContext.isEmpty()) {
+                failOperation("Unable to find the mining instruction's VBK context blocks=${publicationData.context.joinToString { it.toHex() }}")
+            }
         }
 
         operation.runTask(
