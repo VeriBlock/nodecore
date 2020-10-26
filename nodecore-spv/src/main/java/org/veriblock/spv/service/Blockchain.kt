@@ -239,8 +239,8 @@ class Blockchain(
         activeChain = Chain(index, work)
     }
 
-    private fun getContextForBlock(block: VeriBlockBlock) =
-        getChainWithTip(block.previousBlock, Constants.POP_REWARD_PAYMENT_DELAY)
+    private fun getContextForBlock(block: VeriBlockBlock): List<StoredVeriBlockBlock> =
+        getChainWithTip(block.previousBlock, Constants.POP_REWARD_PAYMENT_DELAY).reversed()
 
     private fun calculateMinimumTimestamp(blockchain: List<StoredVeriBlockBlock>): Int {
         val count =
@@ -275,7 +275,7 @@ class Blockchain(
 
     fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock): Int {
         val context = getContextForBlock(blockToAdd)
-        require(context.size > 0) {
+        require(context.isNotEmpty()) {
             "No previous blocks for median time calculation found for $blockToAdd"
         }
         return if(blockToAdd.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
