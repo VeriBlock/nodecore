@@ -49,4 +49,8 @@ class BitcoinBlock(
     override fun hashCode(): Int {
         return raw.contentHashCode()
     }
+
+    override fun toString(): String {
+        return "BtcBlock(hash=${hash} prev=${previousBlock} time=${timestamp})"
+    }
 }
