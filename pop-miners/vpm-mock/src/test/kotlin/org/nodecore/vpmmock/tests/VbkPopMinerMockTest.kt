@@ -37,14 +37,14 @@ class VbkPopMinerMockTest {
     @Test
     fun mineBlocksEmpty() {
         val tip = mock.mineBtcBlocks(50)
-        val head = mock.bitcoinBlockchain.getChainHead()
-        head shouldBe tip
+        val head = mock.bitcoinBlockchain.activeChain.tip
+        head.header shouldBe tip
     }
 
     @Test
     fun createVbkPopTx() {
         val key = generateKeyPair()
-        val lastKnown = mock.bitcoinBlockchain.getChainHead()!!
+        val lastKnown = mock.bitcoinBlockchain.activeChain.tip
         val vbk = VeriBlockBlock(
             height = 1,
             version = 2,
@@ -70,20 +70,20 @@ class VbkPopMinerMockTest {
         val blockOfProof = mock.mineBtcBlocks(1)!!
         // mempool is clear now
         mock.bitcoinMempool.isEmpty() shouldBe true
-        val blockData = mock.bitcoinBlockchain.blockDataStore[blockOfProof.hash]!!
+        val blockData = mock.bitcoinBlockchain.getBody(blockOfProof.hash)!!
         blockData.size shouldBe 1
 
         val vbkpoptx = mock.createVbkPopTx(
             blockOfProof.hash,
             0, // tx at index [0]
             key,
-            lastKnown
+            lastKnown.header
         )!!
 
         vbkpoptx.bitcoinTransaction shouldBe btctx
         vbkpoptx.blockOfProof shouldBe blockOfProof
         vbkpoptx.publishedBlock shouldBe vbk
-        vbkpoptx.blockOfProofContext.size shouldBe 10
         vbkpoptx.blockOfProofContext.last() shouldBe ctxtip
+        vbkpoptx.blockOfProofContext.size shouldBe 10
     }
 }
