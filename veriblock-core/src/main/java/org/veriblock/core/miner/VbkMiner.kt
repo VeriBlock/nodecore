@@ -4,9 +4,11 @@ import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
+import java.time.Instant
 import java.util.*
 import kotlin.math.max
 import kotlin.random.Random
@@ -74,7 +76,7 @@ fun getBlockTemplate(
         secondPrevKeystone = getAncestorAtHeight(prev, prev.height - diff, getPreviousBlock)
     }
 
-    val timestamp = max(prev.timestamp, System.currentTimeMillis().toInt())
+    val timestamp = max(prev.timestamp, Utility.getCurrentTimestamp())
     val difficulty = getNextWorkRequired(prev, networkParams, context)
     val zeroKeystone = PreviousKeystoneVbkHash.EMPTY_HASH
 
