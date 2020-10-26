@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.core
 
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.lite.transactionmonitor.WalletTransaction
+import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.service.Metrics
@@ -19,7 +19,6 @@ import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
-import org.veriblock.sdk.models.VeriBlockPublication
 import java.time.LocalDateTime
 import java.util.UUID
 

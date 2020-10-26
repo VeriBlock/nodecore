@@ -16,14 +16,14 @@ import java.util.*
 class VeriBlockDifficultyCalculatorTests {
     val mainnet = defaultMainNetParameters
 
-    fun createBlockMock(time: Int, height: Int, difficulty: BigInteger? = null): VeriBlockBlock {
+    private fun createBlockMock(time: Int, height: Int, difficulty: BigInteger? = null): VeriBlockBlock {
         val diff = difficulty ?: BigInteger.ONE
         return VeriBlockBlock(
             height = height,
             version = 2,
-            previousBlock = PreviousBlockVbkHash(),
-            previousKeystone = PreviousKeystoneVbkHash(),
-            secondPreviousKeystone = PreviousKeystoneVbkHash(),
+            previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+            previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+            secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
             merkleRoot = Sha256Hash.ZERO_HASH,
             timestamp = time,
             difficulty = BitcoinUtilities.encodeCompactBits(diff).toInt(),

@@ -55,8 +55,8 @@ class PendingTransactionContainer {
         // Artifically delay tx broadcast when 2 transactions are sent too close to each other
         val expectedNextTime = (lastTransactionTimes[inputAddress] ?: 0) + MIN_TX_SEND_PERIOD_MS
         val currentTime = System.currentTimeMillis()
-        if (currentTime > expectedNextTime) {
-            delay(currentTime - expectedNextTime)
+        if (currentTime < expectedNextTime) {
+            delay(expectedNextTime - currentTime)
             lastTransactionTimes[inputAddress] = expectedNextTime
         } else {
             lastTransactionTimes[inputAddress] = currentTime

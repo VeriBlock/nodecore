@@ -8,19 +8,24 @@
 
 package org.veriblock.miners.pop.shell.commands
 
+import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.Utility
-import org.veriblock.lite.core.Context
+import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.util.formatCoinAmount
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
+import org.veriblock.spv.model.AddressLight
+import org.veriblock.spv.model.Output
+import org.veriblock.spv.model.asStandardAddress
 
 fun CommandFactory.walletCommands(
-    context: Context,
+    context: ApmContext,
     miner: AltchainPopMinerService
 ) {
     command(
@@ -40,11 +45,7 @@ fun CommandFactory.walletCommands(
         form = "getbalance",
         description = "Gets the coin balance for the current VeriBlock address"
     ) {
-        val balance = miner.getBalance() ?: run {
-            return@command failure {
-                addMessage("V010", "Unable to retrieve balance", "Connection to NodeCore is not healthy")
-            }
-        }
+        val balance = miner.getBalance()
         printInfo("Confirmed balance: ${balance.confirmedBalance.formatCoinAmount()} ${context.vbkTokenName}")
         printInfo("Pending balance changes: ${balance.pendingBalanceChanges.formatCoinAmount()} ${context.vbkTokenName}")
 
@@ -62,7 +63,9 @@ fun CommandFactory.walletCommands(
     ) {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
         val destinationAddress = getParameter<String>("destinationAddress")
-        printInfo("withdrawvbktoaddress is not implemented yet")
-        failure()
+        runBlocking {
+            miner.spvContext.spvService.sendCoins(null, listOf(Output(destinationAddress.asStandardAddress(), atomicAmount.asCoin())))
+        }
+        success()
     }
 }

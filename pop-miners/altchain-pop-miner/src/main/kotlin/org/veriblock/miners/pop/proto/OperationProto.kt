@@ -1,4 +1,4 @@
-package org.veriblock.lite.proto
+package org.veriblock.miners.pop.proto
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber

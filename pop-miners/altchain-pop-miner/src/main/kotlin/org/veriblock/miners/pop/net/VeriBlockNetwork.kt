@@ -6,7 +6,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.lite.net
+package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
@@ -15,15 +15,14 @@ import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.transactionmonitor.TransactionMonitor
-import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
+import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.util.formatCoinAmount
-import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
@@ -34,10 +33,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private val logger = createLogger {}
 
-class NodeCoreNetwork(
+class VeriBlockNetwork(
     private val config: MinerConfig,
-    private val context: Context,
-    private val gateway: NodeCoreGateway,
+    private val context: ApmContext,
+    private val gateway: SpvGateway,
     private val transactionMonitor: TransactionMonitor,
     private val addressManager: AddressManager
 ) {
@@ -46,12 +45,11 @@ class NodeCoreNetwork(
     private val ready = AtomicBoolean(false)
     private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
-    private val sameNetwork = AtomicBoolean(false)
     private val sufficientFunds = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
 
     var latestBalance: Balance = Balance()
-    var latestNodeCoreStateInfo: StateInfo = StateInfo()
+    var latestSpvStateInfo: StateInfo = StateInfo()
 
     fun isSufficientFunded(): Boolean =
         sufficientFunds.get()
@@ -65,11 +63,8 @@ class NodeCoreNetwork(
     fun isSynchronized(): Boolean =
         synchronized.get()
 
-    fun isOnSameNetwork(): Boolean =
-        sameNetwork.get()
-
     fun startAsync(): ListenableFuture<Boolean> {
-        Threading.NODECORE_POLL_THREAD.scheduleWithFixedDelay({
+        Threading.SPV_POLL_THREAD.scheduleWithFixedDelay({
             this.poll()
         }, 1L, 1L, TimeUnit.SECONDS)
 
@@ -100,11 +95,10 @@ class NodeCoreNetwork(
                 // At this point the APM<->NodeCore connection is fine
                 if (!isAccessible()) {
                     accessible.set(true)
-                    EventBus.nodeCoreAccessibleEvent.trigger()
                 }
                 // Get the latest stats from NodeCore
-                nodeCoreStateInfo = gateway.getNodeCoreStateInfo()
-                latestNodeCoreStateInfo = nodeCoreStateInfo
+                nodeCoreStateInfo = gateway.getSpvStateInfo()
+                latestSpvStateInfo = nodeCoreStateInfo
                 // Get the latest balance from NodeCore
                 val balance = gateway.getBalance(addressManager.defaultAddress.hash)
                 if (balance.confirmedBalance != latestBalance.confirmedBalance) {
@@ -131,108 +125,69 @@ class NodeCoreNetwork(
                     }
                 }
 
-                // Verify the NodeCore configured Network
-                if (nodeCoreStateInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
-                    if (!isOnSameNetwork()) {
-                        sameNetwork.set(true)
-                        EventBus.nodeCoreSameNetworkEvent.trigger()
-                    }
-                } else {
-                    if (isOnSameNetwork() || firstPoll) {
-                        sameNetwork.set(false)
-                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                        logger.warn { "The connected NodeCore (${nodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
-                    }
-                }
-
                 connected.set(true)
 
                 // Verify the NodeCore synchronization status
                 if (nodeCoreStateInfo.isSynchronized) {
                     if (!isSynchronized()) {
                         synchronized.set(true)
-                        EventBus.nodeCoreSynchronizedEvent.trigger()
-                        logger.info { "The connected NodeCore is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                        logger.info { "SPV is synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
                     }
                 } else {
                     if (isSynchronized() || firstPoll) {
                         synchronized.set(false)
-                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
-                        logger.info { "The connected NodeCore is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
+                        logger.info { "SPV is not synchronized: ${nodeCoreStateInfo.getSynchronizedMessage()}" }
                     }
                 }
             } else {
                 // At this point the APM<->NodeCore connection can't be established
-                latestNodeCoreStateInfo = StateInfo()
+                latestSpvStateInfo = StateInfo()
                 latestBalance = Balance()
-                if (isAccessible()) {
-                    accessible.set(false)
-                    EventBus.nodeCoreNotAccessibleEvent.trigger()
-                }
-                if (isSynchronized()) {
-                    synchronized.set(false)
-                    EventBus.nodeCoreNotSynchronizedEvent.trigger()
-                }
-                if (isOnSameNetwork()) {
-                    sameNetwork.set(false)
-                    EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                }
+                accessible.set(false)
+                synchronized.set(false)
                 if (isSufficientFunded()) {
                     sufficientFunds.set(false)
                     EventBus.insufficientBalanceEvent.trigger()
                 }
                 if (isReady()) {
                     ready.set(false)
-                    EventBus.nodeCoreNotReadyEvent.trigger()
+                    EventBus.spvNotReadyEvent.trigger()
                 }
             }
-            if (isAccessible() && isOnSameNetwork() && isSynchronized()) {
+            if (isAccessible() && isSynchronized()) {
                 if (!isReady()) {
                     ready.set(true)
-                    EventBus.nodeCoreReadyEvent.trigger()
+                    EventBus.spvReadyEvent.trigger()
                 }
                 // At this point the APM<->NodeCore connection is fine and the NodeCore is synchronized so
                 // APM can continue with its work
-                val lastBlock: VeriBlockBlock = try {
+                try {
                     gateway.getLastBlock()
                 } catch (e: Exception) {
-                    logger.debugWarn(e) { "Unable to get the last block from NodeCore" }
-                    latestNodeCoreStateInfo = StateInfo()
+                    logger.debugWarn(e) { "Unable to get the last VBK block from SPV" }
+                    latestSpvStateInfo = StateInfo()
                     latestBalance = Balance()
-                    if (isAccessible()) {
-                        accessible.set(false)
-                        EventBus.nodeCoreNotAccessibleEvent.trigger()
-                    }
-                    if (isSynchronized()) {
-                        synchronized.set(false)
-                        EventBus.nodeCoreNotSynchronizedEvent.trigger()
-                    }
-                    if (isOnSameNetwork()) {
-                        sameNetwork.set(false)
-                        EventBus.nodeCoreNotSameNetworkEvent.trigger()
-                    }
+                    accessible.set(false)
+                    synchronized.set(false)
                     if (isSufficientFunded()) {
                         sufficientFunds.set(false)
                         EventBus.insufficientBalanceEvent.trigger()
                     }
                     if (isReady()) {
                         ready.set(false)
-                        EventBus.nodeCoreNotReadyEvent.trigger()
+                        EventBus.spvNotReadyEvent.trigger()
                     }
                     return
                 }
             } else {
                 if (isReady()) {
                     ready.set(false)
-                    EventBus.nodeCoreNotReadyEvent.trigger()
+                    EventBus.spvNotReadyEvent.trigger()
                 }
                 if (!isAccessible()) {
-                    logger.debug { "Unable to connect to NodeCore at ${context.networkParameters.rpcHost}:${context.networkParameters.rpcPort}" }
+                    logger.debug { "Unable to connect to peers" }
                 } else {
                     nodeCoreStateInfo?.let {
-                        if (!isOnSameNetwork()) {
-                            logger.debug { "NodeCore (${nodeCoreStateInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
-                        }
                         if (!isSynchronized()) {
                             if (nodeCoreStateInfo.networkHeight != 0) {
                                 logger.debug { it.getSynchronizedMessage() }
@@ -244,7 +199,7 @@ class NodeCoreNetwork(
                 }
             }
         } catch (e: Exception) {
-            logger.debugError(e) { "Error when polling NodeCore" }
+            logger.debugError(e) { "Error when polling SPV" }
         }
         firstPoll = false
     }
@@ -289,9 +244,6 @@ class NodeCoreNetwork(
         // The new block channel never ends, so this will never happen
         error("Unable to retrieve VeriBlock publications: the subscription to new blocks has been interrupted")
     }
-
-    fun getDebugVeriBlockPublications(vbkContextHash: String, btcContextHash: String) =
-        gateway.getDebugVeriBlockPublications(vbkContextHash, btcContextHash)
 }
 
 class BlockDownloadException(message: String) : Exception(message)

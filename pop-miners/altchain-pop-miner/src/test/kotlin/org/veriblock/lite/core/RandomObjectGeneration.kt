@@ -13,8 +13,7 @@ import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.wallet.AddressKeyGenerator
-import org.veriblock.lite.transactionmonitor.TransactionMonitor
-import org.veriblock.lite.transactionmonitor.WalletTransaction
+import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
@@ -23,13 +22,14 @@ import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBK_HASH_LENGTH
-import org.veriblock.core.crypto.VBK_PREVIOUS_BLOCK_HASH_LENGTH
-import org.veriblock.core.crypto.VBK_PREVIOUS_KEYSTONE_HASH_LENGTH
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.BlockMetaPackage
+import org.veriblock.miners.pop.core.FullBlock
+import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
@@ -78,7 +78,7 @@ fun randomPublicationData() = PublicationData(
 )
 
 fun randomWalletTransaction(
-    context: Context,
+    context: ApmContext,
     type: Byte = 0x01,
     sourceAddress: Address = randomAddress(),
     sourceAmount: Coin = randomCoin(),
@@ -127,15 +127,15 @@ fun randomTransactionMeta(
 }
 
 fun randomVbkHash(): VbkHash {
-    return randomByteArray(VBK_HASH_LENGTH).asVbkHash()
+    return randomByteArray(VbkHash.HASH_LENGTH).asVbkHash()
 }
 
 fun randomPreviousBlockVbkHash(): PreviousBlockVbkHash {
-    return randomByteArray(VBK_PREVIOUS_BLOCK_HASH_LENGTH).asVbkPreviousBlockHash()
+    return randomByteArray(PreviousBlockVbkHash.HASH_LENGTH).asVbkPreviousBlockHash()
 }
 
 fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash {
-    return randomByteArray(VBK_PREVIOUS_KEYSTONE_HASH_LENGTH).asVbkPreviousKeystoneHash()
+    return randomByteArray(PreviousKeystoneVbkHash.HASH_LENGTH).asVbkPreviousKeystoneHash()
 }
 
 private var messageDigest = MessageDigest.getInstance("SHA-256")
@@ -166,7 +166,7 @@ fun randomMerklePath(
 }
 
 fun randomVeriBlockTransaction(
-    context: Context,
+    context: ApmContext,
     type: Byte = 0x01,
     sourceAddress: Address = randomAddress(),
     sourceAmount: Coin = randomCoin(),
@@ -191,7 +191,7 @@ fun randomVeriBlockTransaction(
 }
 
 fun randomFullBlock(
-    context: Context,
+    context: ApmContext,
     height: Int = randomInt(0, Int.MAX_VALUE),
     version: Short = randomInt(0, Short.MAX_VALUE.toInt()).toShort(),
     previousBlock: PreviousBlockVbkHash = randomPreviousBlockVbkHash(),
@@ -228,7 +228,7 @@ fun randomBlockMetaPackage(
 }
 
 fun randomVeriBlockPoPTransaction(
-    context: Context,
+    context: ApmContext,
     address: Address = randomAddress(),
     publishedBlock: VeriBlockBlock = randomVeriBlockBlock(),
     bitcoinTransaction: BitcoinTransaction = randomBitcoinTransaction(),

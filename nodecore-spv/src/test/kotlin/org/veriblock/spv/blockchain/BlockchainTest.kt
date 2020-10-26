@@ -103,7 +103,7 @@ class BlockchainTest {
         val headerCorrupted = VeriBlockBlock(
             headerGenerated.height,
             headerGenerated.version,
-            PreviousBlockVbkHash(),
+            PreviousBlockVbkHash.EMPTY_HASH,
             headerGenerated.previousKeystone,
             headerGenerated.secondPreviousKeystone,
             headerGenerated.merkleRoot,

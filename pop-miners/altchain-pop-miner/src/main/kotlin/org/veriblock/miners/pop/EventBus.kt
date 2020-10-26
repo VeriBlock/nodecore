@@ -4,20 +4,14 @@ import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
-import org.veriblock.lite.util.Threading
+import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
 
 object EventBus {
 
-    // NodeCore Events
-    val nodeCoreAccessibleEvent = EmptyEvent("NodeCore is accessible")
-    val nodeCoreNotAccessibleEvent = EmptyEvent("NodeCore is not accessible")
-    val nodeCoreSynchronizedEvent = EmptyEvent("NodeCore is synchronized")
-    val nodeCoreNotSynchronizedEvent = EmptyEvent("NodeCore is not synchronized")
-    val nodeCoreSameNetworkEvent = EmptyEvent("NodeCore is at the same configured network")
-    val nodeCoreNotSameNetworkEvent = EmptyEvent("NodeCore is not at the same configured network")
-    val nodeCoreReadyEvent = EmptyEvent("NodeCore is ready")
-    val nodeCoreNotReadyEvent = EmptyEvent("NodeCore is not ready")
+    // SPV Events
+    val spvReadyEvent = EmptyEvent("SPV is ready")
+    val spvNotReadyEvent = EmptyEvent("SPV is not ready")
 
     // Altchain Events
     val altChainAccessibleEvent = Event<String>("Altchain is accessible")

@@ -9,11 +9,10 @@
 package org.veriblock.core.params
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
-import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH
-import org.veriblock.core.crypto.VBK_EMPTY_HASH
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
@@ -158,24 +157,24 @@ object MainNetParameters : NetworkParametersTemplate() {
     override val bootstrapDns = "seed.veriblock.org"
     override val fileTag: String? = null
     override val genesisBlock = VeriBlockBlock(
-        0,
-        2.toShort(),
-        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        Sha256Hash.wrap("A7E5F2B7EC94291767B4D67B4A33682D", VERIBLOCK_MERKLE_ROOT_LENGTH),
-        1553497611,
-        BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1_000_000_000_000L)).toInt(),
-        289244493
+        height = 0,
+        version = 2.toShort(),
+        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        merkleRoot = Sha256Hash.wrap("A7E5F2B7EC94291767B4D67B4A33682D", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1553497611,
+        difficulty = BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1_000_000_000_000L)).toInt(),
+        nonce = 289244493
     )
     override val bitcoinOriginBlockHeight = 568690
     override val bitcoinOriginBlock = BitcoinBlock(
-        545259520,
-        Sha256Hash.wrap("00000000000000000018f62f3a9fbec9bce00dca759407649d0ac2eaee34e45e"),
-        Sha256Hash.wrap("11a29ab555186bde5ad5b20c54a3dc176ef9105a066df69934dcfe22f09c0984"),
-        1553493015,
-        388767596,
-        2328158480L.toInt()
+        version = 545259520,
+        previousBlock = Sha256Hash.wrap("00000000000000000018f62f3a9fbec9bce00dca759407649d0ac2eaee34e45e"),
+        merkleRoot = Sha256Hash.wrap("11a29ab555186bde5ad5b20c54a3dc176ef9105a066df69934dcfe22f09c0984"),
+        timestamp = 1553493015,
+        difficulty = 388767596,
+        nonce = 2328158480L.toInt()
     )
     override val protocolVersion: Int = 3
 
@@ -198,24 +197,24 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val bootstrapDns = "seedtestnet.veriblock.org"
     override val fileTag = "test"
     override val genesisBlock = VeriBlockBlock(
-        0,
-        2.toShort(),
-        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
-        1570649416,
-        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
-        14304633
+        height = 0,
+        version = 2.toShort(),
+        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        merkleRoot = Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1570649416,
+        difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        nonce = 14304633
     )
     override val bitcoinOriginBlockHeight = 1580892
     override val bitcoinOriginBlock = BitcoinBlock(
-        536870912,
-        Sha256Hash.wrap("00000000251E9261A15339B4BF0540A44328EC83F3797B9BAC67F47558D5F14E"),
-        Sha256Hash.wrap("CBF519E1DC00F8FFBDC31A6AC3A73109D95890EDD9283EA71AD9BE11639249E9"),
-        1570648139,
-        486604799,
-        203968315
+        version = 536870912,
+        previousBlock = Sha256Hash.wrap("00000000251E9261A15339B4BF0540A44328EC83F3797B9BAC67F47558D5F14E"),
+        merkleRoot = Sha256Hash.wrap("CBF519E1DC00F8FFBDC31A6AC3A73109D95890EDD9283EA71AD9BE11639249E9"),
+        timestamp = 1570648139,
+        difficulty = 486604799,
+        nonce = 203968315
     )
     override val protocolVersion: Int = 2
 
@@ -238,15 +237,15 @@ object TestNetProgPoWParameters : NetworkParametersTemplate() {
     override val bootstrapDns = "seedtestnetprogpow.veriblock.org"
     override val fileTag = "test-progpow"
     override val genesisBlock = VeriBlockBlock(
-        0,
-        2.toShort(),
-        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
-        1570649416,
-        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
-        14304633
+        height = 0,
+        version = 2.toShort(),
+        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        merkleRoot = Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1570649416,
+        difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        nonce = 14304633
     )
     override val bitcoinOriginBlockHeight = 1834502
     override val bitcoinOriginBlock = BitcoinBlock(
@@ -279,24 +278,24 @@ object AlphaNetParameters : NetworkParametersTemplate() {
     override val bootstrapDns: String? = null
     override val fileTag = "alpha"
     override val genesisBlock = VeriBlockBlock(
-        0,
-        1.toShort(),
-        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        Sha256Hash.wrap("CF2025EC0EB8A8A325495FEB59500B50", VERIBLOCK_MERKLE_ROOT_LENGTH),
-        1551465474,
-        BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
-        51184863
+        height = 0,
+        version = 1.toShort(),
+        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        merkleRoot = Sha256Hash.wrap("CF2025EC0EB8A8A325495FEB59500B50", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1551465474,
+        difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        nonce = 51184863
     )
     override val bitcoinOriginBlockHeight = 1489475
     override val bitcoinOriginBlock = BitcoinBlock(
-        536870912,
-        Sha256Hash.wrap("00000000000000b345b7bbf29bda1507a679b97967f99a10ab0088899529def7"),
-        Sha256Hash.wrap("5e16e6cef738a2eba1fe7409318e3f558bec325392427aa3d8eaf46b028654f8"),
-        1555501858,
-        436279940,
-        2599551022L.toInt()
+        version = 536870912,
+        previousBlock = Sha256Hash.wrap("00000000000000b345b7bbf29bda1507a679b97967f99a10ab0088899529def7"),
+        merkleRoot = Sha256Hash.wrap("5e16e6cef738a2eba1fe7409318e3f558bec325392427aa3d8eaf46b028654f8"),
+        timestamp = 1555501858,
+        difficulty = 436279940,
+        nonce = 2599551022L.toInt()
     )
     override val protocolVersion: Int = 3
 
@@ -316,26 +315,26 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val bootstrapDns: String? = null
     override val fileTag = "regtest"
     override val genesisBlock = VeriBlockBlock(
-        0,
-        2.toShort(),
-        VBK_EMPTY_HASH.trimToPreviousBlockSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        VBK_EMPTY_HASH.trimToPreviousKeystoneSize(),
-        Sha256Hash.wrap("84E710F30BB8CFC9AF12622A8F39B917", VERIBLOCK_MERKLE_ROOT_LENGTH),
-        1603044490,
-        BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
-        0
+        height = 0,
+        version = 2.toShort(),
+        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        merkleRoot = Sha256Hash.wrap("84E710F30BB8CFC9AF12622A8F39B917", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1603044490,
+        difficulty = BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
+        nonce = 0
     )
 
     // regtest BTC genesis block:
     override val bitcoinOriginBlockHeight = 0
     override val bitcoinOriginBlock = BitcoinBlock(
-        1,
-        Sha256Hash.wrap("0000000000000000000000000000000000000000000000000000000000000000"),
-        Sha256Hash.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"),
-        1296688602,
-        0x207fffff,
-        2
+        version = 1,
+        previousBlock = Sha256Hash.wrap("0000000000000000000000000000000000000000000000000000000000000000"),
+        merkleRoot = Sha256Hash.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"),
+        timestamp = 1296688602,
+        difficulty = 0x207fffff,
+        nonce = 2
     )
     override val protocolVersion: Int = 3
 
