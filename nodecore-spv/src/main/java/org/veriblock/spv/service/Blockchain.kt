@@ -12,20 +12,13 @@ import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.getMiningContext
 import org.veriblock.core.miner.getNextWorkRequired
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
+import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
-import java.io.File
-import java.io.IOException
-import java.io.RandomAccessFile
-import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
@@ -165,7 +158,14 @@ class Blockchain(
             return false
         }
 
-        // TODO: contextually check block: validate median time past, validate keystones
+        val median = calculateMinimumTimestamp(block)
+        if (block.timestamp < median) {
+            // bad median time past
+            logger.warn { "Rejecting block=$block, because of bad timestamp. Expected at least=$median, got=${block.timestamp}" }
+            return false
+        }
+
+        // TODO: contextually check block: validate keystones
 
         // all ok, we can add block to blockchain
         val stored = StoredVeriBlockBlock(
@@ -237,5 +237,48 @@ class Blockchain(
 
         blockIndex[smallHash] = index
         activeChain = Chain(index, work)
+    }
+
+    private fun getContextForBlock(block: VeriBlockBlock) =
+        getChainWithTip(block.hash, Constants.POP_REWARD_PAYMENT_DELAY)
+
+    private fun calculateMinimumTimestamp(blockchain: List<StoredVeriBlockBlock>): Int {
+        val count =
+            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > blockchain.size) blockchain.size
+            else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+
+        // Calculate the MEDIAN. If there are an even number of elements,
+        // use the lower of the two.
+        return blockchain.asSequence()
+            .sortedByDescending { it.height }
+            .take(count)
+            .map { it.header.timestamp }
+            .sorted()
+            .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
+            .first()
+    }
+
+    private fun calculateMinimumTimestampLegacy(blockchain: List<StoredVeriBlockBlock>): Int {
+        val count =
+            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > blockchain.size) blockchain.size
+            else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+
+        // Calculate the MEDIAN. If there are an even number of elements,
+        // use the lower of the two.
+        return blockchain.asSequence()
+            .drop(blockchain.size - count)
+            .map { it.header.timestamp }
+            .sorted()
+            .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
+            .first()
+    }
+
+    fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock): Int {
+        val context = getContextForBlock(blockToAdd)
+        return if(blockToAdd.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
+            calculateMinimumTimestamp(context)
+        } else {
+            calculateMinimumTimestampLegacy(context)
+        }
     }
 }
