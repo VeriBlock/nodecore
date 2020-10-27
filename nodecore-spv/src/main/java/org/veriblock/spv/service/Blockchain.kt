@@ -241,9 +241,13 @@ class Blockchain(
 
     private fun getValidationContextForBlock(block: VeriBlockBlock): List<VeriBlockBlock> {
         // prepare enough context for difficulty, timestamp and keystones validation
+        val legacyContextSize =
+            if (block.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT)
+                Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+            else Constants.POP_REWARD_PAYMENT_DELAY
         val contextSize = maxOf(
             VeriBlockDifficultyCalculator.RETARGET_PERIOD,
-            Constants.HISTORY_FOR_TIMESTAMP_AVERAGE,
+            legacyContextSize,
             Constants.KEYSTONE_INTERVAL * 3)
         return getChainWithTip(block.previousBlock, contextSize)
             .map { it.header }
