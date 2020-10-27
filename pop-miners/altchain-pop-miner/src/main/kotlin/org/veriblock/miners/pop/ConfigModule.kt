@@ -22,7 +22,7 @@ fun configModule(): Module {
         single { getDefaultNetworkParameters(minerConfig.network) }
         single { ApmContext(get(), get()) }
 
-        single { AltchainPopMinerService(get(), get(), get(), get(), get(), get(), get()) }
+        single { AltchainPopMinerService(get(), get(), get(), get(), get(), get()) }
     }
 }
 

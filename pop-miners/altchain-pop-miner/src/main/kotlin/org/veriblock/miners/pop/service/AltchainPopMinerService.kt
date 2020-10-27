@@ -53,7 +53,6 @@ import java.util.concurrent.ConcurrentHashMap
 private val logger = createLogger {}
 
 class AltchainPopMinerService(
-    private val globalConfig: Configuration,
     private val config: MinerConfig,
     private val context: ApmContext,
     private val taskService: ApmTaskService,
@@ -366,7 +365,7 @@ class AltchainPopMinerService(
         logger.info { "Initializing SPV..." }
         val spvContext = SpvContext()
         spvContext.init(
-            SpvConfig(networkParameters.name, dataDir = globalConfig.getDataDirectory(), connectDirectlyTo = config.connectDirectlyTo)
+            SpvConfig(networkParameters.name, dataDir = context.dataDir, connectDirectlyTo = config.connectDirectlyTo)
         )
         spvContext.peerTable.start()
         GlobalScope.launch {
