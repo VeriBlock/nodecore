@@ -10,9 +10,9 @@ package org.veriblock.spv.service
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
-import org.veriblock.core.miner.getMiningContext
 import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -147,18 +147,13 @@ class Blockchain(
             return false
         }
 
-        val ctx = getMiningContext(prev.header) {
-            getBlock(it.previousBlock)?.header
-        }
-
-        val expectedDifficulty = getNextWorkRequired(prev.header, networkParameters, ctx)
+        val ctxValidation = getValidationContextForBlock(block)
+        val expectedDifficulty = getNextWorkRequired(prev.header, networkParameters, ctxValidation)
         if (expectedDifficulty != block.difficulty) {
             // bad difficulty
             logger.warn { "Rejecting block=$block, because of bad difficulty. Expected=$expectedDifficulty, got=${block.difficulty}" }
             return false
         }
-
-        val ctxValidation = getValidationContextForBlock(block)
 
         val median = calculateMinimumTimestamp(block, ctxValidation)
         if (block.timestamp < median) {
@@ -244,10 +239,16 @@ class Blockchain(
         activeChain = Chain(index, work)
     }
 
-    private fun getValidationContextForBlock(block: VeriBlockBlock): List<VeriBlockBlock> =
-        getChainWithTip(block.previousBlock, Constants.POP_REWARD_PAYMENT_DELAY)
+    private fun getValidationContextForBlock(block: VeriBlockBlock): List<VeriBlockBlock> {
+        // prepare enough context for difficulty, timestamp and keystones validation
+        val contextSize = maxOf(
+            VeriBlockDifficultyCalculator.RETARGET_PERIOD,
+            Constants.HISTORY_FOR_TIMESTAMP_AVERAGE,
+            Constants.KEYSTONE_INTERVAL * 3)
+        return getChainWithTip(block.previousBlock, contextSize)
             .map { it.header }
             .reversed()
+    }
 
     private fun calculateMinimumTimestamp(validationContext: List<VeriBlockBlock>): Int {
         val count =
