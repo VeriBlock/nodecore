@@ -71,7 +71,7 @@ import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
-const val DEFAULT_CONNECTIONS = 12
+const val DEFAULT_CONNECTIONS = 1
 const val BLOOM_FILTER_TWEAK = 710699166
 const val BLOOM_FILTER_FALSE_POSITIVE_RATE = 0.02
 const val BLOCK_DIFFERENCE_TO_SWITCH_ON_ANOTHER_PEER = 200
