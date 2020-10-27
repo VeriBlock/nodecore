@@ -158,14 +158,19 @@ class Blockchain(
             return false
         }
 
-        val median = calculateMinimumTimestamp(block)
+        val ctxValidation = getValidationContextForBlock(block)
+
+        val median = calculateMinimumTimestamp(block, ctxValidation)
         if (block.timestamp < median) {
             // bad median time past
             logger.warn { "Rejecting block=$block, because of bad timestamp. Expected at least=$median, got=${block.timestamp}" }
             return false
         }
 
-        // TODO: contextually check block: validate keystones
+        if (!validateFit(block, ctxValidation)) {
+            logger.warn { "Rejecting block=$block, because of bad keystones (${block.previousKeystone}, ${block.secondPreviousKeystone})" }
+            return false
+        }
 
         // all ok, we can add block to blockchain
         val stored = StoredVeriBlockBlock(
@@ -239,49 +244,102 @@ class Blockchain(
         activeChain = Chain(index, work)
     }
 
-    private fun getContextForBlock(block: VeriBlockBlock): List<StoredVeriBlockBlock> =
-        getChainWithTip(block.previousBlock, Constants.POP_REWARD_PAYMENT_DELAY).reversed()
+    private fun getValidationContextForBlock(block: VeriBlockBlock): List<VeriBlockBlock> =
+        getChainWithTip(block.previousBlock, Constants.POP_REWARD_PAYMENT_DELAY)
+            .map { it.header }
+            .reversed()
 
-    private fun calculateMinimumTimestamp(blockchain: List<StoredVeriBlockBlock>): Int {
+    private fun calculateMinimumTimestamp(validationContext: List<VeriBlockBlock>): Int {
         val count =
-            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > blockchain.size) blockchain.size
+            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > validationContext.size) validationContext.size
             else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
 
         // Calculate the MEDIAN. If there are an even number of elements,
         // use the lower of the two.
-        return blockchain.asSequence()
+        return validationContext.asSequence()
             .sortedByDescending { it.height }
             .take(count)
-            .map { it.header.timestamp }
+            .map { it.timestamp }
             .sorted()
             .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
             .first()
     }
 
-    private fun calculateMinimumTimestampLegacy(blockchain: List<StoredVeriBlockBlock>): Int {
+    private fun calculateMinimumTimestampLegacy(validationContext: List<VeriBlockBlock>): Int {
         val count =
-            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > blockchain.size) blockchain.size
+            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > validationContext.size) validationContext.size
             else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
 
         // Calculate the MEDIAN. If there are an even number of elements,
         // use the lower of the two.
-        return blockchain.asSequence()
-            .drop(blockchain.size - count)
-            .map { it.header.timestamp }
+        // Expects validationContext to be in reversed order (descending block height)
+        return validationContext.asSequence()
+            .drop(validationContext.size - count)
+            .map { it.timestamp }
             .sorted()
             .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
             .first()
     }
 
-    fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock): Int {
-        val context = getContextForBlock(blockToAdd)
-        require(context.isNotEmpty()) {
+    fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Int {
+        require(validationContext.isNotEmpty()) {
             "No previous blocks for median time calculation found for $blockToAdd"
         }
         return if(blockToAdd.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
-            calculateMinimumTimestamp(context)
+            calculateMinimumTimestamp(validationContext)
         } else {
-            calculateMinimumTimestampLegacy(context)
+            calculateMinimumTimestampLegacy(validationContext)
         }
+    }
+
+    fun validateFit(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Boolean {
+        if (validationContext.isEmpty()) {
+            logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+            return false
+        }
+        val bestBlock = validationContext.first()
+        if (bestBlock.height + 1 != blockToAdd.height || bestBlock.hash.trimToPreviousBlockSize() != blockToAdd.previousBlock) {
+            logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+            return false
+        }
+
+        val remainderOverKeystone = blockToAdd.height % Constants.KEYSTONE_INTERVAL
+        val (indexOfSecondPreviousBlock, indexOfThirdPreviousBlock) = when(remainderOverKeystone) {
+                0 -> listOf(Constants.KEYSTONE_INTERVAL - 1, Constants.KEYSTONE_INTERVAL * 2 - 1)
+                1 -> listOf(Constants.KEYSTONE_INTERVAL, Constants.KEYSTONE_INTERVAL * 2)
+                else -> listOf(remainderOverKeystone - 1, remainderOverKeystone - 1 + Constants.KEYSTONE_INTERVAL)
+        }
+
+        if (indexOfSecondPreviousBlock < validationContext.size) {
+            val secondPreviousBlock = validationContext[indexOfSecondPreviousBlock]
+            val calculatedToAddBlockNum = when(remainderOverKeystone) {
+                0 -> secondPreviousBlock.height + Constants.KEYSTONE_INTERVAL
+                1 -> secondPreviousBlock.height + Constants.KEYSTONE_INTERVAL + 1
+                else -> secondPreviousBlock.height + remainderOverKeystone
+            }
+            val hash = secondPreviousBlock.hash
+            if (calculatedToAddBlockNum != blockToAdd.height || hash.trimToPreviousKeystoneSize() != blockToAdd.previousKeystone) {
+                logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+                logger.warn { "second previous block hash or index thereof (${blockToAdd.previousKeystone}) does not match $hash" }
+                return false
+            }
+        }
+
+        if (indexOfThirdPreviousBlock < validationContext.size) {
+            val thirdPreviousBlock = validationContext[indexOfThirdPreviousBlock]
+            val calculatedToAddBlockNum = when(remainderOverKeystone) {
+                0 -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL * 2
+                1 -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL * 2 + 1
+                else -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL + remainderOverKeystone
+            }
+            val hash = thirdPreviousBlock.hash
+            if (calculatedToAddBlockNum != blockToAdd.height || hash.trimToPreviousKeystoneSize() != blockToAdd.secondPreviousKeystone) {
+                logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+                logger.warn { "third previous block hash or index thereof (${blockToAdd.secondPreviousKeystone}) does not match $hash" }
+                return false
+            }
+        }
+
+        return true
     }
 }
