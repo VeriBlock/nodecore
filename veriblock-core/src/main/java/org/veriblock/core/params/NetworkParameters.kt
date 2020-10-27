@@ -12,7 +12,7 @@ import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH
+import org.veriblock.core.crypto.Sha256Hash.Companion.VERIBLOCK_MERKLE_ROOT_LENGTH
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger

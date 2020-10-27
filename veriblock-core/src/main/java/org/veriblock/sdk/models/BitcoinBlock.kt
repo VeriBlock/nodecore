@@ -38,7 +38,7 @@ class BitcoinBlock(
     val hash: Sha256Hash = Sha256Hash.wrapReversed(Sha256Hash.hashTwice(raw))
 
     fun getMerkleRootReversed(): Sha256Hash =
-        Sha256Hash.wrap(merkleRoot.reversedBytes)
+        Sha256Hash.wrap(merkleRoot.reversedBytes())
 
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass && Arrays.equals(

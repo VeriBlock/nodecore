@@ -82,7 +82,7 @@ class BtcBlockchain(
             val newBlock = BitcoinBlock(
                 prev.header.version,
                 prev.header.hash,
-                data.merkleRoot.reversed,
+                data.merkleRoot.reversed(),
                 timestamp,
                 difficulty,
                 nonce
