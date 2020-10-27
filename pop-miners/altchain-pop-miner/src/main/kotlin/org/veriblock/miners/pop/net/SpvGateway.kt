@@ -66,8 +66,6 @@ class SpvGateway(
     }
 
     fun getBalance(address: String): Balance {
-        logger.debug { "Requesting balance for address $address..." }
-
         val balance = spvService.getBalance(listOf(StandardAddress(address)))
 
         return Balance(
@@ -114,16 +112,24 @@ class SpvGateway(
 
     /**
      * Retrieve the 'state info' from SPV
-     * This function will return an empty StateInfo if SPV is not accessible or if SPV is still loading (networkHeight = 0)
+     * This function will return an empty StateInfo if SPV is not accessible or if SPV is still loading (networkHeight == null)
      */
     fun getSpvStateInfo(): StateInfo {
         val stateInfo = spvService.getStateInfo()
-        val blockDifference = abs(stateInfo.networkHeight - stateInfo.localBlockchainHeight)
+
+        val networkHeight = stateInfo.networkHeight
+        val blockDifference = if (networkHeight == null) {
+            Int.MAX_VALUE
+        } else {
+            abs(networkHeight - stateInfo.localBlockchainHeight)
+        }
         return StateInfo(
-            stateInfo.networkHeight,
-            stateInfo.localBlockchainHeight,
-            blockDifference,
-            stateInfo.networkHeight > 0 && blockDifference < 4,
+            networkTipHeight = stateInfo.networkHeight,
+            localBlockchainHash = stateInfo.localBlockchainHash,
+            localBlockchainHeight = stateInfo.localBlockchainHeight,
+            blockDifference = blockDifference,
+            // when networkHeight == null -> isSynchronized=false
+            isSynchronized = networkHeight != null && networkHeight > 0 && blockDifference < 4,
             networkVersion = stateInfo.networkVersion
         )
     }

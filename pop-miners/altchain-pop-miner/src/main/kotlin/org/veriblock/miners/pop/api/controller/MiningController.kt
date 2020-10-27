@@ -83,9 +83,16 @@ class MiningController(
         get<Unit, MinerInfoResponse>(
             info("Get miner data")
         ) {
+            val networkInfo = miner.gateway.getSpvStateInfo()
             val responseModel = MinerInfoResponse(
                 vbkAddress = miner.getAddress(),
-                vbkBalance = miner.getBalance()?.confirmedBalance?.atomicUnits ?: 0
+                vbkBalance = miner.getBalance().confirmedBalance.atomicUnits,
+                vbkTipHash = networkInfo.localBlockchainHash,
+                vbkTipHeight = networkInfo.localBlockchainHeight,
+                synchronized = networkInfo.isSynchronized,
+
+                // if networkTip is unknown, returns -1
+                networkVbkTipHeight = networkInfo.networkTipHeight ?: -1
             )
             respond(responseModel)
         }

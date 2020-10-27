@@ -23,10 +23,7 @@ import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.install
-import io.ktor.features.CORS
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
+import io.ktor.features.*
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.jackson.jackson
@@ -68,6 +65,10 @@ class ApiServer(
 
         server = embeddedServer(Netty, host = host, port = port) {
             install(DefaultHeaders)
+            install(CachingHeaders) {
+                // disable caching headers
+                options { null }
+            }
             install(CallLogging)
             install(CORS) {
                 anyHost()

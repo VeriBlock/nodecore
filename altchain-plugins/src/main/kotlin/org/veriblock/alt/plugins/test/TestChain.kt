@@ -252,7 +252,7 @@ class TestChain(
         return transaction
     }
 
-    override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, 50, 0, true, false, "testnet")
+    override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, "", 50, 0, true, false, "testnet")
 }
 
 

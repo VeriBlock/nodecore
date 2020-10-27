@@ -76,7 +76,9 @@ class BitcoinFamilyChain(
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
         if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
-            error("'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address")
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
         }
         payoutAddressScript = if (config.payoutAddress.isHex()) {
             config.payoutAddress.asHexBytes()
@@ -283,12 +285,13 @@ class BitcoinFamilyChain(
             val response: BlockChainInfo = rpcRequest("getblockchaininfo")
             val blockDifference = abs(response.headers - response.blocks)
             StateInfo(
-                response.headers,
-                response.blocks,
-                blockDifference,
-                (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
-                response.initialblockdownload,
-                response.chain
+                networkTipHeight = response.headers,
+                localBlockchainHash = response.bestblockhash,
+                localBlockchainHeight = response.blocks,
+                blockDifference = blockDifference,
+                isSynchronized = (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
+                initialBlockDownload = response.initialblockdownload,
+                networkVersion = response.chain
             )
         } catch (e: Exception) {
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
@@ -359,6 +362,7 @@ private data class BlockChainInfo(
     val chain: String,
     val blocks: Int,
     val headers: Int,
+    val bestblockhash: String,
     val initialblockdownload: Boolean
 )
 

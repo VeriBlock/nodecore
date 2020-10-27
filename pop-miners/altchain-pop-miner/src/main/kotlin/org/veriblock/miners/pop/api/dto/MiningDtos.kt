@@ -14,7 +14,12 @@ import org.veriblock.miners.pop.core.ApmOperation
 @Response("Basic miner information")
 data class MinerInfoResponse(
     val vbkAddress: String,
-    val vbkBalance: Long
+    val vbkBalance: Long,
+    // SPV tip
+    val vbkTipHash: String,
+    val vbkTipHeight: Int,
+    val synchronized: Boolean,
+    val networkVbkTipHeight: Int,
 )
 
 @Request("Mining request with target altchain symbol and optional endorsed block height")

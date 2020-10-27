@@ -1,7 +1,8 @@
 package org.veriblock.sdk.models
 
 data class StateInfo(
-    val networkHeight: Int = 0,
+    val networkTipHeight: Int? = null,
+    val localBlockchainHash: String = "",
     val localBlockchainHeight: Int = 0,
     val blockDifference: Int = 0,
     val isSynchronized: Boolean = false,
@@ -9,8 +10,8 @@ data class StateInfo(
     val networkVersion: String = ""
 )
 
-fun StateInfo.getSynchronizedMessage(): String = if (networkHeight == 0) {
+fun StateInfo.getSynchronizedMessage(): String = if (networkTipHeight == null) {
     "connecting to the network..."
 } else {
-    "$blockDifference blocks left (LocalHeight=$localBlockchainHeight NetworkHeight=$networkHeight InitialBlockDownload=$initialBlockDownload)"
+    "$blockDifference blocks left (LocalHeight=$localBlockchainHeight NetworkHeight=${networkTipHeight} InitialBlockDownload=$initialBlockDownload)"
 }

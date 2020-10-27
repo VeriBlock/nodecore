@@ -1,12 +1,12 @@
 package org.veriblock.spv.service
 
-import org.veriblock.core.crypto.PreviousBlockVbkHash
+import org.veriblock.core.crypto.VbkHash
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 
 const val KEYSTONE_INTERVAL = 20
 
 data class BlockIndex(
-    val smallHash: PreviousBlockVbkHash,
+    val hash: VbkHash,
     val position: Long,
     val height: Int,
     // for fast access of previous block

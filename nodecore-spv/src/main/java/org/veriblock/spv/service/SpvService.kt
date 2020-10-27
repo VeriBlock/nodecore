@@ -68,13 +68,15 @@ class SpvService(
         val blockchainState = if (downloadStatus.downloadStatus == DownloadStatus.READY) BlockchainState.LOADED else BlockchainState.LOADING
         val operatingState = OperatingState.STARTED
         val networkState = if (downloadStatus.downloadStatus == DownloadStatus.DISCOVERING) NetworkState.DISCONNECTED else NetworkState.CONNECTED
+        val tip = blockchain.activeChain.tip
         return StateInfo(
             blockchainState = blockchainState,
             operatingState = operatingState,
             networkState = networkState,
             connectedPeerCount = peerTable.getAvailablePeers(),
-            networkHeight = peerTable.getBestBlockHeight().coerceAtLeast(blockchain.activeChain.tip.height),
-            localBlockchainHeight = blockchain.activeChain.tip.height,
+            networkHeight = peerTable.getBestBlockHeight()?.coerceAtLeast(blockchain.activeChain.tip.height),
+            localBlockchainHash = tip.hash.toString(),
+            localBlockchainHeight = tip.height,
             networkVersion = spvContext.networkParameters.name,
             dataDirectory = spvContext.directory.path,
             programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",

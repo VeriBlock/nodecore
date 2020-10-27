@@ -192,7 +192,7 @@ class Blockchain(
     }
 
     fun getPeerQuery(): List<VeriBlockBlock> {
-        return getChainWithTip(activeChain.tip.smallHash, 100)
+        return getChainWithTip(activeChain.tip.hash.trimToPreviousBlockSize(), 100)
             .map { it.header }
             .filter { it.isKeystone() }
     }
@@ -201,7 +201,7 @@ class Blockchain(
         val smallHash = block.hash.trimToPreviousBlockSize()
         val prev = blockIndex[block.header.previousBlock]
         val index = BlockIndex(
-            smallHash = smallHash,
+            hash = block.hash,
             position = position,
             height = block.height,
             prev = prev
@@ -229,7 +229,7 @@ class Blockchain(
 
         // block index always contains genesis block on start
         val index = BlockIndex(
-            smallHash = smallHash,
+            hash = param.genesisBlock.hash,
             position = 0, // gb is at position 0
             height = 0,
             prev = null

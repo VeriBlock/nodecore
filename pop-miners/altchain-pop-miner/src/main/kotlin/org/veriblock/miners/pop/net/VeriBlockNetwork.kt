@@ -189,7 +189,7 @@ class VeriBlockNetwork(
                 } else {
                     nodeCoreStateInfo?.let {
                         if (!isSynchronized()) {
-                            if (nodeCoreStateInfo.networkHeight != 0) {
+                            if (nodeCoreStateInfo.networkTipHeight != 0) {
                                 logger.debug { it.getSynchronizedMessage() }
                             } else {
                                 logger.debug { "Still not connected to the network" }
