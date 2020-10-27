@@ -81,10 +81,11 @@ class NodeCoreGateway(
 
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
             StateInfo(
-                request.networkHeight,
-                request.localBlockchainHeight,
-                blockDifference,
-                request.networkHeight > 0 && blockDifference < 4,
+                networkTipHeight = request.networkHeight,
+                localBlockchainHash = "",
+                localBlockchainHeight = request.localBlockchainHeight,
+                blockDifference = blockDifference,
+                isSynchronized = request.networkHeight > 0 && blockDifference < 4,
                 networkVersion = request.networkVersion
             )
         } catch (e: StatusRuntimeException) {

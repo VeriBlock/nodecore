@@ -38,9 +38,9 @@ class BlockchainTest {
     fun emptyBlockchainHasGenesis() {
         // upon start there must be at least 1 block - genesis block
         blockchain.size shouldBe 1
-        blockchain.activeChain.tip.smallHash shouldBe regtest.genesisBlock.hash.trimToPreviousBlockSize()
+        blockchain.activeChain.tip.hash shouldBe regtest.genesisBlock.hash
         blockchain.getBlock(0)?.header shouldBe regtest.genesisBlock
-        blockchain.getBlock(blockchain.activeChain.tip.smallHash)?.header shouldBe regtest.genesisBlock
+        blockchain.getBlock(blockchain.activeChain.tip.hash)?.header shouldBe regtest.genesisBlock
     }
 
     @Test
@@ -75,7 +75,7 @@ class BlockchainTest {
 
         val tipA = blockchain.activeChain.tip
         tipA.height shouldBe 2100
-        tipA.smallHash shouldBe lastBlock1.hash.trimToPreviousBlockSize()
+        tipA.hash shouldBe lastBlock1.hash
 
         // starting from height 1000, generate 2001 blocks. Chain B should win, as it has
         // higher chainwork
