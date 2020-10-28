@@ -16,12 +16,12 @@ interface HttpSecurityInheritingChain : SecurityInheritingChain {
 
 suspend inline fun <reified T> HttpSecurityInheritingChain.rpcRequest(method: String, params: Any? = emptyList<Any>()): T {
     val jsonBody = JsonRpcRequestBody(method, params).toJson()
-    requestsLogger?.info { "-> ${jsonBody.substring(0..10_000)}" }
+    requestsLogger?.info { "-> ${jsonBody.take(10_000)}" }
 
     val response: RpcResponse = httpClient.post(config.host) {
         body = jsonBody
     }
-    requestsLogger?.info { "<- ${response.toJson().substring(0..10_000)}" }
+    requestsLogger?.info { "<- ${response.toJson().take(10_000)}" }
 
     return response.handle()
 }

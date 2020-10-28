@@ -12,8 +12,6 @@ import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
 import io.ktor.util.network.NetworkAddress
-import io.ktor.util.network.hostname
-import io.ktor.util.network.port
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
@@ -57,12 +55,10 @@ import org.veriblock.spv.service.TransactionType
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 import org.veriblock.spv.util.buildMessage
-import org.veriblock.spv.util.nextMessageId
 import org.veriblock.spv.util.launchWithFixedDelay
 import org.veriblock.spv.validator.LedgerProofReplyValidator
 import java.io.IOException
 import java.nio.channels.ClosedChannelException
-import java.sql.SQLException
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -456,6 +452,26 @@ class SpvPeerTable(
         executionOrderFlow.first()
     }
 
+    suspend fun requestMessage(
+        event: VeriBlockMessages.Event,
+        timeoutInMillis: Long = 5000L,
+        quantifier: ((VeriBlockMessages.Event) -> Int)
+    ): VeriBlockMessages.Event = coroutineScope {
+        // Perform the request for all the peers asynchronously
+        peers.values.map {
+            async {
+                try {
+                    it.requestMessage(event, timeoutInMillis)
+                } catch (e: TimeoutCancellationException) {
+                    null
+                }
+            }
+        }.awaitAll()
+            .filterNotNull()
+            .maxByOrNull { quantifier(it) }
+            ?: error("All requests timed out ($timeoutInMillis ms)")
+    }
+
     fun getSignatureIndex(address: String): Long? {
         return addressesState[address]?.ledgerValue?.signatureIndex
     }
@@ -534,3 +550,20 @@ private fun VeriBlockMessages.Output.toModel() = OutputData(
     address = address.toHex(),
     amount = amount
 )
+
+suspend fun main(): Unit = coroutineScope {
+    val executionOrderFlow = (1..10).map {
+        async {
+            withTimeoutOrNull(5000L) {
+                delay(it * 1000L)
+                println("${System.currentTimeMillis()} generating $it")
+                it
+            }
+        }
+    }.awaitAll()
+    // Wait for all responses and choose the best one
+    val x = executionOrderFlow.filterNotNull().maxBy {
+        it
+    }
+    println(x)
+}

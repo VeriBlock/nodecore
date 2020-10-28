@@ -8,6 +8,7 @@
 package org.veriblock.spv
 
 import io.ktor.util.network.*
+import org.veriblock.core.ConfigurationException
 import org.veriblock.core.Context
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
@@ -117,8 +118,11 @@ class SpvContext {
         check(networkParameters.name == config.network) {
             "SPV configured to ${config.network}, and network to ${networkParameters.name}. They must be same."
         }
-        val direct = if (config.connectDirectlyTo.isEmpty()) null else
-            DirectDiscovery(config.connectDirectlyTo.mapNotNull {
+
+        // For now we'll be using either direct discovery or DNS discovery, not a mix.
+        // This will change whenever other use cases appear.
+        val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
+            DirectDiscovery(config.connectDirectlyTo.map {
                 try {
                     val input =
                         // workaround: add p2p:// scheme, because URI must contain (any) scheme
@@ -129,15 +133,15 @@ class SpvContext {
                     val port = if (uri.port == -1) networkParameters.p2pPort else uri.port
                     NetworkAddress(uri.host, port)
                 } catch (e: Exception) {
-                    logger.warn { "Wrong format for peer address=${it}, should be host:port" }
-                    null
+                    throw ConfigurationException("Wrong format for peer address ${it}, it should be host:port")
                 }
             })
+        } else {
+            networkParameters.bootstrapDns?.let {
+                DnsDiscovery(it, networkParameters.p2pPort)
+            } ?: error("Unable to create Peer Discovery for $networkParameters, as doesn't have any configured bootstrap DNS.")
+        }
 
-        val dns = if (networkParameters.bootstrapDns == null) null else
-            DnsDiscovery(networkParameters.bootstrapDns!!, networkParameters.p2pPort)
-
-        val peerDiscovery = MixedDiscovery(listOf(direct, dns))
         logger.info { "Using ${peerDiscovery.name()} discovery" }
 
         if (!Context.isCreated()) {

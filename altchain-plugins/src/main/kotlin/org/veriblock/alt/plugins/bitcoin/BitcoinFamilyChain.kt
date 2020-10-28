@@ -262,10 +262,10 @@ class BitcoinFamilyChain(
             logger.debug { "Submitting VTB with first BTC context block: ${it.getFirstBitcoinBlock()?.hash}" }
             val submitVtbResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
                 emptyList(),
-                emptyList(),
-                listOf(                SerializeDeserializeService.serialize(
+                listOf(SerializeDeserializeService.serialize(
                     it.copy(context = emptyList())
-                ).toHex())
+                ).toHex()),
+                emptyList()
             ))
             logger.debug { "SubmitPoP VTB Partial Response: $submitVtbResponse" }
         }

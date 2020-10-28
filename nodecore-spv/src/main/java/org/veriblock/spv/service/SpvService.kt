@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
-import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
 import nodecore.p2p.Constants
@@ -19,7 +18,6 @@ import org.veriblock.core.AddressCreationException
 import org.veriblock.core.EndorsementCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
-import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
 import org.veriblock.core.crypto.AnyVbkHash
@@ -48,7 +46,7 @@ import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.asLightAddress
 import org.veriblock.spv.net.SpvPeerTable
 import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
-import org.veriblock.spv.util.nextMessageId
+import org.veriblock.spv.util.buildMessage
 import java.io.File
 import java.io.IOException
 import java.util.ArrayList
@@ -370,12 +368,16 @@ class SpvService(
     }
 
     suspend fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest): GetVeriBlockPublicationsReply {
-        val advertise = VeriBlockMessages.Event.newBuilder()
-            .setId(nextMessageId())
-            .setAcknowledge(false)
-            .setVeriblockPublicationsRequest(getVeriBlockPublicationsRequest)
-            .build()
-        val reply = peerTable.requestMessage(advertise, timeoutInMillis = 300_000L)
+        val request = buildMessage {
+            veriblockPublicationsRequest = getVeriBlockPublicationsRequest
+        }
+        val reply = peerTable.requestMessage(request, timeoutInMillis = 300_000L) {
+            if (it.veriblockPublicationsReply.success) {
+                it.veriblockPublicationsReply.publicationsCount
+            } else {
+                -1
+            }
+        }
         return reply.veriblockPublicationsReply
     }
 
