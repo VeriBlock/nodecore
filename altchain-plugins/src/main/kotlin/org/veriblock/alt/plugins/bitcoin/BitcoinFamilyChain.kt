@@ -9,7 +9,6 @@
 package org.veriblock.alt.plugins.bitcoin
 
 import io.ktor.http.ContentType
-import mu.KLogger
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
@@ -37,7 +36,6 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.io.File
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -246,11 +244,12 @@ class BitcoinFamilyChain(
             contextBlocks.map {
                 SerializeDeserializeService.serialize(it).toHex()
             },
-            vtbs.map {
+            // Submit only 1 VTB at most
+            vtbs.asSequence().take(1).map {
                 SerializeDeserializeService.serialize(
                     it.copy(context = emptyList())
                 ).toHex()
-            },
+            }.toList(),
             atvs.map {
                 SerializeDeserializeService.serialize(
                     it.copy(context = emptyList())
@@ -258,6 +257,18 @@ class BitcoinFamilyChain(
             }
         ))
         logger.debug { "SubmitPoP Response: $submitPopResponse" }
+        // Submit extra VTBs one by one
+        vtbs.asSequence().drop(1).forEach {
+            logger.debug { "Submitting VTB with first BTC context block: ${it.getFirstBitcoinBlock()?.hash}" }
+            val submitVtbResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
+                emptyList(),
+                emptyList(),
+                listOf(                SerializeDeserializeService.serialize(
+                    it.copy(context = emptyList())
+                ).toHex())
+            ))
+            logger.debug { "SubmitPoP VTB Partial Response: $submitVtbResponse" }
+        }
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
