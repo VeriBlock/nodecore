@@ -242,22 +242,50 @@ class BitcoinFamilyChain(
         vtbs: List<VeriBlockPublication>
     ) {
         logger.info { "Submitting PoP data to $name daemon at ${config.host}..." }
-        val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            contextBlocks.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            },
-            vtbs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            },
-            atvs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
+
+        if (vtbs.size < 2) {
+            val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
+                contextBlocks.map {
+                    SerializeDeserializeService.serialize(it).toHex()
+                },
+                vtbs.map {
+                    SerializeDeserializeService.serialize(
+                        it.copy(context = emptyList())
+                    ).toHex()
+                },
+                atvs.map {
+                    SerializeDeserializeService.serialize(
+                        it.copy(context = emptyList())
+                    ).toHex()
+                }
+            ))
+            logger.debug { "SubmitPoP Response: $submitPopResponse" }
+        } else {
+            for (x in 1..vtbs.size) {
+
+                val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
+                    contextBlocks.map {
+                        SerializeDeserializeService.serialize(it).toHex()
+                    },
+                    vtbs.subList(x-1, x).map {
+                        SerializeDeserializeService.serialize(
+                            it.copy(context = emptyList())
+                        ).toHex()
+                    },
+                    atvs.map {
+                        SerializeDeserializeService.serialize(
+                            it.copy(context = emptyList())
+                        ).toHex()
+                    }
+                ))
+                var firstBTCContext = "<NULL>";
+                if (vtbs.subList(x - 1, x).get(0).transaction.blockOfProofContext.isNotEmpty()) {
+                    firstBTCContext = vtbs.subList(x-1, x).get(0).transaction.blockOfProofContext.get(0).hash.toString();
+                }
+                logger.info("Submitted VTB with block of proof {}, first BTC context block {}", vtbs.subList(x-1, x).get(0).transaction.blockOfProof.hash, firstBTCContext)
+                logger.debug { "SubmitPoP Partial Response: $submitPopResponse" }
             }
-        ))
-        logger.debug { "SubmitPoP Response: $submitPopResponse" }
+        }
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
