@@ -29,4 +29,11 @@ public class Constants {
     public static final int MAX_PAYOUT_SIZE_PUBLICATION_DATA = 100;
     // usually it contains ContextInfoContainer which has height, previousKeystone, secondKeystone and merkle root
     public static final int MAX_CONTEXT_SIZE_PUBLICATION_DATA = 100;
+
+    public static final int MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT = 110_000;
+    public static final int POP_REWARD_PAYMENT_DELAY = 500;
+    // Bitcoin's policy is 11. Given the test is for the next block, this represents
+    // roughly a 2-hour backward view to mirror the future drift. We target a shorter
+    // 230-minute period, but given the different cycle time, this equates to 60 blocks
+    public static final int HISTORY_FOR_TIMESTAMP_AVERAGE = 20;
 }

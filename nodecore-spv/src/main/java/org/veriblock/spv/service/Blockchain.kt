@@ -10,22 +10,15 @@ package org.veriblock.spv.service
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
-import org.veriblock.core.miner.getMiningContext
 import org.veriblock.core.miner.getNextWorkRequired
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.sdk.blockchain.store.StoredBitcoinBlock
+import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
+import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
-import java.io.File
-import java.io.IOException
-import java.io.RandomAccessFile
-import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
@@ -154,18 +147,25 @@ class Blockchain(
             return false
         }
 
-        val ctx = getMiningContext(prev.header) {
-            getBlock(it.previousBlock)?.header
-        }
-
-        val expectedDifficulty = getNextWorkRequired(prev.header, networkParameters, ctx)
+        val ctxValidation = getValidationContextForBlock(block)
+        val expectedDifficulty = getNextWorkRequired(prev.header, networkParameters, ctxValidation)
         if (expectedDifficulty != block.difficulty) {
             // bad difficulty
             logger.warn { "Rejecting block=$block, because of bad difficulty. Expected=$expectedDifficulty, got=${block.difficulty}" }
             return false
         }
 
-        // TODO: contextually check block: validate median time past, validate keystones
+        val median = calculateMinimumTimestamp(block, ctxValidation)
+        if (block.timestamp < median) {
+            // bad median time past
+            logger.warn { "Rejecting block=$block, because of bad timestamp. Expected at least=$median, got=${block.timestamp}" }
+            return false
+        }
+
+        if (!validateFit(block, ctxValidation)) {
+            logger.warn { "Rejecting block=$block, because of bad keystones (${block.previousKeystone}, ${block.secondPreviousKeystone})" }
+            return false
+        }
 
         // all ok, we can add block to blockchain
         val stored = StoredVeriBlockBlock(
@@ -237,5 +237,114 @@ class Blockchain(
 
         blockIndex[smallHash] = index
         activeChain = Chain(index, work)
+    }
+
+    private fun getValidationContextForBlock(block: VeriBlockBlock): List<VeriBlockBlock> {
+        // prepare enough context for difficulty, timestamp and keystones validation
+        val legacyContextSize =
+            if (block.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT)
+                Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+            else Constants.POP_REWARD_PAYMENT_DELAY
+        val contextSize = maxOf(
+            VeriBlockDifficultyCalculator.RETARGET_PERIOD,
+            legacyContextSize,
+            Constants.KEYSTONE_INTERVAL * 3)
+        return getChainWithTip(block.previousBlock, contextSize)
+            .map { it.header }
+            .reversed()
+    }
+
+    private fun calculateMinimumTimestamp(validationContext: List<VeriBlockBlock>): Int {
+        val count =
+            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > validationContext.size) validationContext.size
+            else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+
+        // Calculate the MEDIAN. If there are an even number of elements,
+        // use the lower of the two.
+        return validationContext.asSequence()
+            .sortedByDescending { it.height }
+            .take(count)
+            .map { it.timestamp }
+            .sorted()
+            .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
+            .first()
+    }
+
+    private fun calculateMinimumTimestampLegacy(validationContext: List<VeriBlockBlock>): Int {
+        val count =
+            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > validationContext.size) validationContext.size
+            else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+
+        // Calculate the MEDIAN. If there are an even number of elements,
+        // use the lower of the two.
+        // Expects validationContext to be in reversed order (descending block height)
+        return validationContext.asSequence()
+            .drop(validationContext.size - count)
+            .map { it.timestamp }
+            .sorted()
+            .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
+            .first()
+    }
+
+    fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Int {
+        require(validationContext.isNotEmpty()) {
+            "No previous blocks for median time calculation found for $blockToAdd"
+        }
+        return if(blockToAdd.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
+            calculateMinimumTimestamp(validationContext)
+        } else {
+            calculateMinimumTimestampLegacy(validationContext)
+        }
+    }
+
+    fun validateFit(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Boolean {
+        if (validationContext.isEmpty()) {
+            logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+            return false
+        }
+        val bestBlock = validationContext.first()
+        if (bestBlock.height + 1 != blockToAdd.height || bestBlock.hash.trimToPreviousBlockSize() != blockToAdd.previousBlock) {
+            logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+            return false
+        }
+
+        val remainderOverKeystone = blockToAdd.height % Constants.KEYSTONE_INTERVAL
+        val (indexOfSecondPreviousBlock, indexOfThirdPreviousBlock) = when(remainderOverKeystone) {
+                0 -> listOf(Constants.KEYSTONE_INTERVAL - 1, Constants.KEYSTONE_INTERVAL * 2 - 1)
+                1 -> listOf(Constants.KEYSTONE_INTERVAL, Constants.KEYSTONE_INTERVAL * 2)
+                else -> listOf(remainderOverKeystone - 1, remainderOverKeystone - 1 + Constants.KEYSTONE_INTERVAL)
+        }
+
+        if (indexOfSecondPreviousBlock < validationContext.size) {
+            val secondPreviousBlock = validationContext[indexOfSecondPreviousBlock]
+            val calculatedToAddBlockNum = when(remainderOverKeystone) {
+                0 -> secondPreviousBlock.height + Constants.KEYSTONE_INTERVAL
+                1 -> secondPreviousBlock.height + Constants.KEYSTONE_INTERVAL + 1
+                else -> secondPreviousBlock.height + remainderOverKeystone
+            }
+            val hash = secondPreviousBlock.hash
+            if (calculatedToAddBlockNum != blockToAdd.height || hash.trimToPreviousKeystoneSize() != blockToAdd.previousKeystone) {
+                logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+                logger.warn { "second previous block hash or index thereof (${blockToAdd.previousKeystone}) does not match $hash" }
+                return false
+            }
+        }
+
+        if (indexOfThirdPreviousBlock < validationContext.size) {
+            val thirdPreviousBlock = validationContext[indexOfThirdPreviousBlock]
+            val calculatedToAddBlockNum = when(remainderOverKeystone) {
+                0 -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL * 2
+                1 -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL * 2 + 1
+                else -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL + remainderOverKeystone
+            }
+            val hash = thirdPreviousBlock.hash
+            if (calculatedToAddBlockNum != blockToAdd.height || hash.trimToPreviousKeystoneSize() != blockToAdd.secondPreviousKeystone) {
+                logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
+                logger.warn { "third previous block hash or index thereof (${blockToAdd.secondPreviousKeystone}) does not match $hash" }
+                return false
+            }
+        }
+
+        return true
     }
 }
