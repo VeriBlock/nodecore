@@ -24,6 +24,8 @@ import nodecore.p2p.events.CreateFilterStreamEvent;
 import nodecore.p2p.events.FilteredBlockRequestStreamEvent;
 import nodecore.p2p.events.GetDebugVTBsReplyStreamEvent;
 import nodecore.p2p.events.GetDebugVTBsRequestStreamEvent;
+import nodecore.p2p.events.GetStateInfoReplyStreamEvent;
+import nodecore.p2p.events.GetStateInfoRequestStreamEvent;
 import nodecore.p2p.events.GetTransactionReplyStreamEvent;
 import nodecore.p2p.events.GetTransactionRequestStreamEvent;
 import nodecore.p2p.events.GetVeriBlockPublicationsReplyStreamEvent;
@@ -144,6 +146,12 @@ public class EventRegistrar {
                 break;
             case DEBUG_VTB_REPLY:
                 InternalEventBus.getInstance().postAsync(new GetDebugVTBsReplyStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getDebugVtbReply()));
+                break;
+            case STATE_INFO_REQUEST:
+                InternalEventBus.getInstance().postAsync(new GetStateInfoRequestStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getStateInfoRequest()));
+                break;
+            case STATE_INFO_REPLY:
+                InternalEventBus.getInstance().postAsync(new GetStateInfoReplyStreamEvent(remote, value.getId(), value.getAcknowledge(), value.getStateInfoReply()));
                 break;
         }
     }
