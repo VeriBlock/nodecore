@@ -16,8 +16,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.selects.select
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
@@ -433,12 +437,11 @@ class SpvPeerTable(
         }
     }
 
-    suspend fun requestMessage(
+    suspend fun requestAllMessages(
         event: VeriBlockMessages.Event,
         timeoutInMillis: Long = 5000L
-    ): VeriBlockMessages.Event = withTimeout(timeoutInMillis) {
-        // Create a flow that emits in execution order
-        val executionOrderFlow = flow {
+    ): Flow<VeriBlockMessages.Event> = coroutineScope {
+        flow {
             // Open a select scope for being able to call onAwait concurrently for all peers
             select {
                 // Perform the request for all the peers asynchronously
@@ -453,8 +456,16 @@ class SpvPeerTable(
                 }
             }
         }
+    }
+
+    suspend fun requestMessage(
+        event: VeriBlockMessages.Event,
+        timeoutInMillis: Long = 5000L
+    ): VeriBlockMessages.Event = withTimeout(timeoutInMillis) {
+        // Create a flow that emits in execution order
+        val allMessagesFlow = requestAllMessages(event, timeoutInMillis)
         // Choose the first one to complete
-        executionOrderFlow.first()
+        allMessagesFlow.first()
     }
 
     suspend fun requestMessage(
