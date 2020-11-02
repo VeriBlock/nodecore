@@ -86,6 +86,7 @@ class SpvPeerTable(
     var maximumPeers = DEFAULT_CONNECTIONS
     var downloadPeer: SpvPeer? = null
     val bloomFilter: BloomFilter
+    private val monitoredAddresses: MutableSet<String> = HashSet()
     private val addressesState: MutableMap<String, LedgerContext> = ConcurrentHashMap()
     private val pendingTransactionContainer: PendingTransactionContainer
 
@@ -182,17 +183,17 @@ class SpvPeerTable(
         }
     }
 
-    fun acknowledgeAddress(address: AddressPubKey) {
+    fun acknowledgeAddress(address: String) {
         addressesState.putIfAbsent(
-            address.hash, LedgerContext(
-            null, null, null, null
-        )
+            address, LedgerContext(null, null, null, null)
         )
     }
 
+    fun acknowledgeAddress(address: AddressPubKey) = acknowledgeAddress(address.hash)
+
     private suspend fun requestAddressState() {
         try {
-            val addresses = spvContext.addressManager.all
+            val addresses = monitoredAddresses + spvContext.addressManager.all.map { it.hash }
             if (addresses.isEmpty()) {
                 return
             }
@@ -201,7 +202,7 @@ class SpvPeerTable(
                 ledgerProofRequest = LedgerProofRequest.newBuilder().apply {
                     for (address in addresses) {
                         acknowledgeAddress(address)
-                        addAddresses(ByteString.copyFrom(Base58.decode(address.hash)))
+                        addAddresses(ByteString.copyFrom(Base58.decode(address)))
                     }
                 }.build()
             }
@@ -218,6 +219,10 @@ class SpvPeerTable(
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to request address state" }
         }
+    }
+
+    fun monitorAddress(address: String) {
+        monitoredAddresses += address
     }
 
     private suspend fun requestPendingTransactions() {

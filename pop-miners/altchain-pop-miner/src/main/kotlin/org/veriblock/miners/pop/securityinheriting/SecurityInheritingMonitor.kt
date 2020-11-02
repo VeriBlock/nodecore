@@ -332,6 +332,9 @@ class SecurityInheritingMonitor(
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
+            } catch (t: Throwable) {
+                logger.error(t) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
+                delay(300_000L)
             }
         }
     }
@@ -477,7 +480,7 @@ private fun verifyPublications(
         )
 
         if (!VTBDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
-            logger.error {
+            logger.info {
                 """Error: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} does not connect to the altchain context!
                                Altchain Bitcoin Context:
                                $serializedAltchainBTCContext
@@ -504,7 +507,7 @@ private fun verifyPublications(
             val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
 
             if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
-                logger.warn {
+                logger.info {
                     """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:
                                    $serializedAnchorBTCBlocks

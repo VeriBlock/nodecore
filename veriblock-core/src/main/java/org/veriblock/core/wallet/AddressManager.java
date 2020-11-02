@@ -558,7 +558,7 @@ public class AddressManager {
         try {
             lock.lock();
 
-            if (!addresses.containsKey(storedAddress.address) || addresses.get(storedAddress.address).getPublicKey() == null) {
+            if (!addresses.containsKey(storedAddress.address)) {
                 wallet.addresses.add(storedAddress);
                 save();
 
@@ -588,7 +588,7 @@ public class AddressManager {
                         String address = AddressUtility.addressFromPublicKey(publicKey);
                         a.address = address;
 
-                        if (!addresses.containsKey(address) || addresses.get(address).getPublicKey() == null) {
+                        if (!addresses.containsKey(address)) {
                             addresses.put(address, new AddressPubKey(address, publicKey));
                             wallet.addresses.add(a);
                             if (wallet.defaultAddress == null) {

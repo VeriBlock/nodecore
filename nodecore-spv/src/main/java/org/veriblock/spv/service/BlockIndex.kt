@@ -52,4 +52,8 @@ data class BlockIndex(
             }
             return cursor
         }
+
+    override fun toString(): String {
+        return "$smallHash @ $height ($position)"
+    }
 }

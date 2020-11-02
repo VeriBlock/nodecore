@@ -116,10 +116,9 @@ class Blockchain(
         var i = 0
         var cursor = getBlock(hash)
         while (cursor != null && i++ < size) {
-            ret.add(cursor)
+            ret.add(0, cursor)
             cursor = getBlock(cursor.header.previousBlock)
         }
-        ret.reverse()
         return ret
     }
 
@@ -241,23 +240,23 @@ class Blockchain(
 
     private fun getValidationContextForBlock(block: VeriBlockBlock): List<VeriBlockBlock> {
         // prepare enough context for difficulty, timestamp and keystones validation
-        val legacyContextSize =
-            if (block.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT)
-                Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
-            else Constants.POP_REWARD_PAYMENT_DELAY
+        val legacyContextSize = if (block.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
+            Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+        } else {
+            Constants.POP_REWARD_PAYMENT_DELAY
+        }
         val contextSize = maxOf(
             VeriBlockDifficultyCalculator.RETARGET_PERIOD,
             legacyContextSize,
-            Constants.KEYSTONE_INTERVAL * 3)
+            Constants.KEYSTONE_INTERVAL * 3
+        )
         return getChainWithTip(block.previousBlock, contextSize)
             .map { it.header }
             .reversed()
     }
 
     private fun calculateMinimumTimestamp(validationContext: List<VeriBlockBlock>): Int {
-        val count =
-            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > validationContext.size) validationContext.size
-            else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+        val count = Constants.HISTORY_FOR_TIMESTAMP_AVERAGE.coerceAtMost(validationContext.size)
 
         // Calculate the MEDIAN. If there are an even number of elements,
         // use the lower of the two.
@@ -266,14 +265,11 @@ class Blockchain(
             .take(count)
             .map { it.timestamp }
             .sorted()
-            .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
-            .first()
+            .elementAt(count / 2 + count % 2 - 1)
     }
 
     private fun calculateMinimumTimestampLegacy(validationContext: List<VeriBlockBlock>): Int {
-        val count =
-            if (Constants.HISTORY_FOR_TIMESTAMP_AVERAGE > validationContext.size) validationContext.size
-            else Constants.HISTORY_FOR_TIMESTAMP_AVERAGE
+        val count = Constants.HISTORY_FOR_TIMESTAMP_AVERAGE.coerceAtMost(validationContext.size)
 
         // Calculate the MEDIAN. If there are an even number of elements,
         // use the lower of the two.
@@ -282,15 +278,14 @@ class Blockchain(
             .drop(validationContext.size - count)
             .map { it.timestamp }
             .sorted()
-            .drop(if (count % 2 == 0) (count / 2) - 1 else count / 2)
-            .first()
+            .elementAt(count / 2 + count % 2 - 1)
     }
 
-    fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Int {
+    private fun calculateMinimumTimestamp(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Int {
         require(validationContext.isNotEmpty()) {
             "No previous blocks for median time calculation found for $blockToAdd"
         }
-        return if(blockToAdd.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
+        return if (blockToAdd.height >= Constants.MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT) {
             calculateMinimumTimestamp(validationContext)
         } else {
             calculateMinimumTimestampLegacy(validationContext)
