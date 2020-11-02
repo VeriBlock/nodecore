@@ -189,7 +189,6 @@ class AdminApiServiceTest {
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { spvContext.getAddressState(any()) } returns null
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),

@@ -65,7 +65,6 @@ class SpvContext {
         private set
 
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
-    val addressStateUpdated: Channel<LedgerContext> = Channel()
 
     var trustPeerHashes = true
     val startTime: Instant = Instant.now()
