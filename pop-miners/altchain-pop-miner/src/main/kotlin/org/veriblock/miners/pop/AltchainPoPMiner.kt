@@ -10,6 +10,9 @@
 
 package org.veriblock.miners.pop
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
@@ -22,6 +25,7 @@ import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.Shell
 import java.security.Security
+import java.time.Duration
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
 
@@ -33,7 +37,7 @@ private lateinit var minerService: AltchainPopMinerService
 private val eventRegistrar = Any()
 var externalQuit = false
 
-private fun run(): Int {
+private fun run(autoRestart: Boolean): Int {
     Security.addProvider(BouncyCastleProvider())
     EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
     EventBus.programQuitEvent.register(eventRegistrar, ::onProgramQuit)
@@ -46,6 +50,17 @@ private fun run(): Int {
     println("${SharedConstants.TYPE_HELP}\n")
 
     Runtime.getRuntime().addShutdownHook(Thread { shutdownSignal.countDown() })
+
+    // Automatic restart code (FIXME remove once APM becomes stable)
+    if (autoRestart) {
+        logger.warn { "Auto Restart enabled! Restarting in 8 hours." }
+        GlobalScope.launch {
+            delay(Duration.ofHours(8))
+            externalQuit = true
+            minerService.setIsShuttingDown(true)
+            shell.interrupt()
+        }
+    }
 
     logger.info { "Starting dependency injection" }
     val koin = startKoin {
@@ -119,8 +134,9 @@ private fun onProgramQuit(quitReason: Int) {
     shell.interrupt()
 }
 
-fun main() {
-    val programExitResult = run()
+fun main(args: Array<String>) {
+    val autoRestart = args.firstOrNull()?.toLowerCase() == "autorestart"
+    val programExitResult = run(autoRestart)
     if (externalQuit) {
         exitProcess(2)
     } else {
