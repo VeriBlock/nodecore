@@ -83,13 +83,18 @@ class SpvService(
         }.sum()
         if (sourceAddress == null) {
             addressCoinsIndexList.addAll(
-                spvContext.getAllAddressesState().values.map {
-                    AddressCoinsIndex(
-                        address = it.address.address,
-                        coins = it.ledgerValue.availableAtomicUnits,
-                        index = it.ledgerValue.signatureIndex
-                    )
-                })
+                spvContext
+                    .getAllAddressesState()
+                    .values
+                    .filter { it.ledgerValue.availableAtomicUnits > 0 }
+                    .sortedByDescending { it.ledgerValue.availableAtomicUnits }
+                    .map {
+                        AddressCoinsIndex(
+                            address = it.address.address,
+                            coins = it.ledgerValue.availableAtomicUnits,
+                            index = it.ledgerValue.signatureIndex
+                        )
+                    })
         } else {
             val address = Address(sourceAddress.get())
             val ledgerContext = getAddressState(address)
