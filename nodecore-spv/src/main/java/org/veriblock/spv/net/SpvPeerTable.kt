@@ -16,13 +16,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.selects.select
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
@@ -440,22 +437,19 @@ class SpvPeerTable(
     suspend fun requestAllMessages(
         event: VeriBlockMessages.Event,
         timeoutInMillis: Long = 5000L
-    ): Flow<VeriBlockMessages.Event> = coroutineScope {
-        flow {
-            // Open a select scope for being able to call onAwait concurrently for all peers
-            select {
-                // Perform the request for all the peers asynchronously
-                // TODO: consider a less expensive approach such as asking a random peer. There can be peer behavior score weighting and/or retries.
-                for (peer in peers.values) {
-                    async {
-                        peer.requestMessage(event, timeoutInMillis)
-                    }.onAwait {
-                        // Emit in the flow on completion, so the first one to complete will get the other jobs cancelled
-                        emit(it)
-                    }
-                }
+    ): Flow<VeriBlockMessages.Event> = channelFlow {
+        // Perform the request for all the peers asynchronously
+        // TODO: consider a less expensive approach such as asking a random peer. There can be peer behavior score weighting and/or retries.
+        for (peer in peers.values) {
+            // Launch each request in a child coroutine
+            launch {
+                val response = peer.requestMessage(event, timeoutInMillis)
+                // "emit" the response to the channel flow
+                send(response)
             }
         }
+        // Wait for requests to be done or flow to be cancelled before closing it
+        awaitClose()
     }
 
     suspend fun requestMessage(
@@ -566,20 +560,3 @@ private fun VeriBlockMessages.Output.toModel() = OutputData(
     address = address.toHex(),
     amount = amount
 )
-
-suspend fun main(): Unit = coroutineScope {
-    val executionOrderFlow = (1..10).map {
-        async {
-            withTimeoutOrNull(5000L) {
-                delay(it * 1000L)
-                println("${System.currentTimeMillis()} generating $it")
-                it
-            }
-        }
-    }.awaitAll()
-    // Wait for all responses and choose the best one
-    val x = executionOrderFlow.filterNotNull().maxBy {
-        it
-    }
-    println(x)
-}
