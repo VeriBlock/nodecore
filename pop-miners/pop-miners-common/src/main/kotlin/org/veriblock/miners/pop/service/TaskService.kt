@@ -95,14 +95,14 @@ class OperationException(override val message: String) : RuntimeException()
 /**
  *  Throw an exception as the task failed. It is inline so that call stack is not polluted.
  */
-inline fun failTask(reason: String): Nothing {
+fun failTask(reason: String): Nothing {
     throw TaskException(reason)
 }
 
 /**
  *  Throw an exception as the task failed. It is inline so that call stack is not polluted.
  */
-inline fun failOperation(reason: String): Nothing {
+fun failOperation(reason: String): Nothing {
     throw OperationException(reason)
 }
 

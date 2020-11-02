@@ -12,7 +12,6 @@ import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.VBlake
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
@@ -88,5 +87,19 @@ open class VeriBlockBlock(
 
     override fun toString(): String {
         return "VeriBlockBlock($hash @ $height)"
+    }
+
+    override fun hashCode(): Int {
+        var result = precomputedHash?.hashCode() ?: 0
+        result = 31 * result + height
+        result = 31 * result + version
+        result = 31 * result + previousBlock.hashCode()
+        result = 31 * result + previousKeystone.hashCode()
+        result = 31 * result + secondPreviousKeystone.hashCode()
+        result = 31 * result + merkleRoot.hashCode()
+        result = 31 * result + timestamp
+        result = 31 * result + difficulty
+        result = 31 * result + nonce.hashCode()
+        return result
     }
 }

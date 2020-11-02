@@ -19,6 +19,8 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.util.SpvEventBus
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
@@ -30,6 +32,7 @@ class Blockchain(
     lateinit var activeChain: Chain
     val size get() = blockIndex.size
     val networkParameters get() = blockStore.networkParameters
+    val lock = ReentrantLock()
 
     init {
         reindex()
@@ -128,7 +131,7 @@ class Blockchain(
      */
     fun acceptBlock(
         block: VeriBlockBlock
-    ): Boolean {
+    ): Boolean = lock.withLock {
         if (getBlockIndex(block.hash) != null) {
             // block is valid, we already have it
             return true
@@ -143,6 +146,7 @@ class Blockchain(
 
         // is block statelessly valid?
         if (!ValidationService.checkBlock(block)) {
+            logger.warn {"Rejecting block=$block, it is statelessly invalid"}
             return false
         }
 
@@ -188,6 +192,12 @@ class Blockchain(
         SpvEventBus.newBlockChannel.offer(block)
 
         return true
+    }
+
+    fun isOnActiveChain(hash: AnyVbkHash): Boolean {
+        val index = getBlockIndex(hash)
+            ?: return false
+        return activeChain.contains(index)
     }
 
     fun getPeerQuery(): List<VeriBlockBlock> {
@@ -304,15 +314,15 @@ class Blockchain(
         }
 
         val remainderOverKeystone = blockToAdd.height % Constants.KEYSTONE_INTERVAL
-        val (indexOfSecondPreviousBlock, indexOfThirdPreviousBlock) = when(remainderOverKeystone) {
-                0 -> listOf(Constants.KEYSTONE_INTERVAL - 1, Constants.KEYSTONE_INTERVAL * 2 - 1)
-                1 -> listOf(Constants.KEYSTONE_INTERVAL, Constants.KEYSTONE_INTERVAL * 2)
-                else -> listOf(remainderOverKeystone - 1, remainderOverKeystone - 1 + Constants.KEYSTONE_INTERVAL)
+        val (indexOfSecondPreviousBlock, indexOfThirdPreviousBlock) = when (remainderOverKeystone) {
+            0 -> listOf(Constants.KEYSTONE_INTERVAL - 1, Constants.KEYSTONE_INTERVAL * 2 - 1)
+            1 -> listOf(Constants.KEYSTONE_INTERVAL, Constants.KEYSTONE_INTERVAL * 2)
+            else -> listOf(remainderOverKeystone - 1, remainderOverKeystone - 1 + Constants.KEYSTONE_INTERVAL)
         }
 
         if (indexOfSecondPreviousBlock < validationContext.size) {
             val secondPreviousBlock = validationContext[indexOfSecondPreviousBlock]
-            val calculatedToAddBlockNum = when(remainderOverKeystone) {
+            val calculatedToAddBlockNum = when (remainderOverKeystone) {
                 0 -> secondPreviousBlock.height + Constants.KEYSTONE_INTERVAL
                 1 -> secondPreviousBlock.height + Constants.KEYSTONE_INTERVAL + 1
                 else -> secondPreviousBlock.height + remainderOverKeystone
@@ -327,7 +337,7 @@ class Blockchain(
 
         if (indexOfThirdPreviousBlock < validationContext.size) {
             val thirdPreviousBlock = validationContext[indexOfThirdPreviousBlock]
-            val calculatedToAddBlockNum = when(remainderOverKeystone) {
+            val calculatedToAddBlockNum = when (remainderOverKeystone) {
                 0 -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL * 2
                 1 -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL * 2 + 1
                 else -> thirdPreviousBlock.height + Constants.KEYSTONE_INTERVAL + remainderOverKeystone

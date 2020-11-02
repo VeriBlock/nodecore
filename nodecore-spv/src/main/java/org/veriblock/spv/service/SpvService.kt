@@ -14,42 +14,29 @@ import kotlinx.coroutines.flow.toList
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
 import nodecore.p2p.Constants
-import org.veriblock.core.AddressCreationException
-import org.veriblock.core.EndorsementCreationException
-import org.veriblock.core.ImportException
-import org.veriblock.core.SendCoinsException
-import org.veriblock.core.WalletException
-import org.veriblock.core.WalletLockedException
+import org.veriblock.core.*
 import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.types.Pair
-import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.types.Pair
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
-import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext
-import org.veriblock.spv.model.AddressCoinsIndex
-import org.veriblock.spv.model.AddressLight
-import org.veriblock.spv.model.BlockHeader
-import org.veriblock.spv.model.DownloadStatus
-import org.veriblock.spv.model.LedgerContext
-import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.StandardTransaction
-import org.veriblock.spv.model.Transaction
-import org.veriblock.spv.model.asLightAddress
+import org.veriblock.spv.model.*
 import org.veriblock.spv.net.SpvPeerTable
 import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
 import org.veriblock.spv.util.buildMessage
 import java.io.File
 import java.io.IOException
-import java.util.ArrayList
+import java.util.*
 
 private val logger = createLogger {}
 
@@ -86,36 +73,38 @@ class SpvService(
         )
     }
 
+    fun getAddressState(addr: Address): LedgerContext? = spvContext.getAddressState(addr)
+
+    // if sourceAddress is null, use all available addresses
     suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {
         val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
         val totalOutputAmount = outputs.map {
             it.amount.atomicUnits
         }.sum()
         if (sourceAddress == null) {
-            for (availableAddress in getAvailableAddresses(totalOutputAmount)) {
-                addressCoinsIndexList.add(
+            addressCoinsIndexList.addAll(
+                spvContext.getAllAddressesState().values.map {
                     AddressCoinsIndex(
-                        availableAddress.address, availableAddress.availableBalance,
-                        getSignatureIndex(availableAddress.address)
+                        address = it.address.address,
+                        coins = it.ledgerValue.availableAtomicUnits,
+                        index = it.ledgerValue.signatureIndex
                     )
-                )
-            }
+                })
         } else {
-            val address = sourceAddress.get()
-            val ledgerContext = peerTable.getAddressState(address)
-            if (ledgerContext == null) {
-                throw SendCoinsException("Information about this address does not exist. Perhaps your node is waiting for this information. Try to do it later.")
-            } else if (!ledgerContext.ledgerProofStatus!!.exists()) {
-                throw SendCoinsException("Address doesn't exist or is invalid. Check the address you used for this operation.")
-            }
+            val address = Address(sourceAddress.get())
+            val ledgerContext = getAddressState(address)
+                ?: throw SendCoinsException(
+                    "Information about this address does not exist. Perhaps your node is waiting for this information. Try to do it later."
+                )
             addressCoinsIndexList.add(
                 AddressCoinsIndex(
-                    address, ledgerContext.ledgerValue!!.availableAtomicUnits,
-                    getSignatureIndex(address)
+                    address = address.address,
+                    coins = ledgerContext.ledgerValue.availableAtomicUnits,
+                    index = getSignatureIndex(address)
                 )
             )
         }
-        val totalAvailableBalance = addressCoinsIndexList.map(AddressCoinsIndex::coins).sum()
+        val totalAvailableBalance = addressCoinsIndexList.sumOf { it.coins }
         if (totalOutputAmount > totalAvailableBalance) {
             throw SendCoinsException("Available balance is not enough. Check your address that you use for this operation.")
         }
@@ -136,10 +125,12 @@ class SpvService(
         } else {
             listOf(addressManager.defaultAddress.hash.asLightAddress())
         }.map { address ->
+            val addr = Address(address.get())
             AddressSignatureIndex(
                 address = address,
-                poolIndex = getSignatureIndex(address.get()),
-                blockchainIndex = peerTable.getSignatureIndex(address.get())!!
+                poolIndex = getSignatureIndex(addr),
+                blockchainIndex = spvContext.getSignatureIndex(addr)
+                    ?: throw IllegalStateException("Invariant failed: can not get signature index - unknown address=$addr")
             )
         }
     }
@@ -261,10 +252,10 @@ class SpvService(
             val success = result.first
             if (!success) {
                 throw WalletException("Unable to load/import wallet file!")
-            } else {
-                spvContext.addressManager.getAll().forEach {
-                    peerTable.acknowledgeAddress(it)
-                }
+            }
+
+            spvContext.addressManager.all.forEach {
+                spvContext.getAddressState(Address(it.hash))
             }
         } catch (e: Exception) {
             logger.debugInfo(e) { "${e.message}" }
@@ -281,10 +272,10 @@ class SpvService(
         }
         try {
             return (1..count).map {
-                val address = addressManager.getNewAddress()
+                val address = addressManager.newAddress
                 if (address != null) {
                     logger.info("New address: {}", address.hash)
-                    peerTable.acknowledgeAddress(address)
+                    spvContext.getAddressState(Address(address.hash))
                     address
                 } else {
                     throw AddressCreationException("Unable to generate new address")
@@ -299,35 +290,18 @@ class SpvService(
         }
     }
 
-    fun getBalance(addresses: List<AddressLight>): WalletBalance {
+    fun getBalance(): WalletBalance {
         // All of the addresses from the normal address manager will be standard
-        val addressLedgerContext = peerTable.getAddressesState()
-        if (addresses.isEmpty()) {
-            return WalletBalance(
-                confirmed = addressLedgerContext.map { (address, ledgerContext) ->
-                    getAddressBalance(address.asLightAddress(), ledgerContext)
-                },
-                unconfirmed = emptyList()
-            )
-        } else {
-            return WalletBalance(
-                confirmed = addresses.map { address ->
-                    val ledgerContext = addressLedgerContext[address.get()]
-                    if (ledgerContext != null) {
-                        getAddressBalance(address, ledgerContext)
-                    } else {
-                        // FIXME: this breaks SPV standalone, but fixes APM for now
-                        peerTable.monitorAddress(address.get())
-
-                        AddressBalance(address, Coin.ZERO, Coin.ZERO, Coin.ZERO)
-                    }
-                },
-                unconfirmed = emptyList()
-            )
-        }
+        val addressLedgerContext = spvContext.getAllAddressesState()
+        return WalletBalance(
+            confirmed = addressLedgerContext.map { (address, ledgerContext) ->
+                getAddressBalance(address.address.asLightAddress(), ledgerContext)
+            },
+            unconfirmed = emptyList()
+        )
     }
 
-    fun createAltChainEndorsement(publicationData: ByteArray, sourceAddress: String, feePerByte: Long, maxFee: Long): AltChainEndorsement {
+    fun createAltChainEndorsement(publicationData: ByteArray, sourceAddress: Address, feePerByte: Long, maxFee: Long): AltChainEndorsement {
         try {
             val signatureIndex = getSignatureIndex(sourceAddress) + 1
             val fee = feePerByte * predictAltChainEndorsementTransactionSize(publicationData.size, signatureIndex)
@@ -335,7 +309,7 @@ class SpvService(
                 throw EndorsementCreationException("Calculated fee $fee was above the maximum configured amount $maxFee")
             }
             val tx = transactionService.createUnsignedAltChainEndorsementTransaction(
-                sourceAddress, fee, publicationData, signatureIndex
+                sourceAddress.address, fee, publicationData, signatureIndex
             )
             return AltChainEndorsement((tx as StandardTransaction), signatureIndex)
         } catch (e: Exception) {
@@ -381,38 +355,9 @@ class SpvService(
         return reply.veriblockPublicationsReply
     }
 
-    private fun getAvailableAddresses(totalOutputAmount: Long): List<AddressAvailableBalance> {
-        //Use default address if there balance is enough.
-        val ledgerContext = peerTable.getAddressState(addressManager.defaultAddress.hash)
-            ?: throw WalletException("Could not find default address' state")
-        if (ledgerContext.ledgerValue == null || ledgerContext.address == null) {
-            throw WalletException("Default address' state's ledger value is unknown! Ledger proof status: ${ledgerContext.ledgerProofStatus}")
-        }
-        if (ledgerContext.ledgerValue.availableAtomicUnits > totalOutputAmount) {
-            return listOf(
-                AddressAvailableBalance(ledgerContext.address.address, ledgerContext.ledgerValue.availableAtomicUnits)
-            )
-        }
-        val addressBalanceList: MutableList<AddressAvailableBalance> = ArrayList()
-        val ledgerContextMap = peerTable.getAddressesState()
-        for (address in addressManager.all) {
-            val lc = ledgerContextMap.getValue(address.hash)
-            if (ledgerContextMap.containsKey(address.hash) && lc.ledgerValue != null) {
-                addressBalanceList.add(
-                    AddressAvailableBalance(address.hash, lc.ledgerValue.availableAtomicUnits)
-                )
-            }
-        }
-        return addressBalanceList.filter {
-            it.availableBalance > 0
-        }.sortedByDescending {
-            it.availableBalance
-        }
-    }
-
     private fun getAddressBalance(address: AddressLight, ledgerContext: LedgerContext): AddressBalance {
-        val balance = ledgerContext.ledgerValue?.availableAtomicUnits ?: 0L
-        val lockedCoins = ledgerContext.ledgerValue?.frozenAtomicUnits ?: 0L
+        val balance = ledgerContext.ledgerValue.availableAtomicUnits
+        val lockedCoins = ledgerContext.ledgerValue.frozenAtomicUnits
         return AddressBalance(
             address = address,
             unlockedAmount = (balance - lockedCoins).asCoin(),
@@ -421,8 +366,11 @@ class SpvService(
         )
     }
 
-    private fun getSignatureIndex(address: String): Long {
-        return pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
-            ?: return peerTable.getSignatureIndex(address)!!
-    }
+    private fun getSignatureIndex(address: Address): Long =
+        pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
+            ?: spvContext.getSignatureIndex(address)
+            ?: throw IllegalStateException(
+                "Requested signature index for address which is not present in AddressState"
+            )
+
 }

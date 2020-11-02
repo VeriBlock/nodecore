@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.sdk.models.Address
 import org.veriblock.spv.model.Transaction
 import java.util.ArrayList
 import java.util.HashSet
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 private const val MIN_TX_SEND_PERIOD_MS = 5_000
 
 class PendingTransactionContainer {
+    // TODO(warchant): use Address as a key, instead of String
     private val pendingAddressTransaction: MutableMap<String, MutableList<Transaction>> = ConcurrentHashMap()
     private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
     private val pendingTxIdTransaction: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
@@ -78,12 +80,11 @@ class PendingTransactionContainer {
         return pendingTxIdTransaction[txId]
     }
 
-    fun getPendingSignatureIndexForAddress(address: String): Long? {
-        val transactions = pendingAddressTransaction[address]
-        return if (!transactions.isNullOrEmpty()) {
-            transactions[transactions.size - 1].getSignatureIndex()
-        } else {
-            null
-        }
+    fun getPendingSignatureIndexForAddress(address: Address): Long? {
+        val transactions = pendingAddressTransaction[address.address]
+            ?: return null
+        return transactions
+            .map { it.getSignatureIndex() }
+            .maxOrNull()
     }
 }

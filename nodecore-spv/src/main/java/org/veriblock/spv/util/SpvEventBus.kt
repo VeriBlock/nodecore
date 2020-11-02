@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.spv.model.LedgerContext
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.TransactionMeta
 import org.veriblock.spv.net.SpvPeer
@@ -15,6 +16,8 @@ object SpvEventBus {
     val peerConnectedEvent = AsyncEvent<SpvPeer>("Peer Connected", EVENT_EXECUTOR)
     val peerDisconnectedEvent = AsyncEvent<SpvPeer>("Peer Disconnected", EVENT_EXECUTOR)
     val messageReceivedEvent = AsyncEvent<MessageReceivedEvent>("Message Received", EVENT_EXECUTOR)
+
+    val addressStateUpdatedEvent = AsyncEvent<LedgerContext>("Address State Updated", EVENT_EXECUTOR)
 
     val pendingTransactionDownloadedEvent = AsyncEvent<StandardTransaction>("Pending Transaction Downloaded", EVENT_EXECUTOR)
 

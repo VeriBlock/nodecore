@@ -3,7 +3,7 @@ package org.veriblock.spv.service
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 
-const val KEYSTONE_INTERVAL = 20
+public const val KEYSTONE_INTERVAL = 20
 
 data class BlockIndex(
     val smallHash: PreviousBlockVbkHash,
