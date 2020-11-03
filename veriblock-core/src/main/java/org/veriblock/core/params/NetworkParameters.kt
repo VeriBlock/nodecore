@@ -350,6 +350,55 @@ object RegTestParameters : NetworkParametersTemplate() {
     }
 }
 
+object RegTestProgPoWParameters : NetworkParametersTemplate() {
+    const val NETWORK = "regtest_progpow"
+    private val MINIMUM_POW_DIFFICULTY: BigInteger = 100_000_000L.toBigInteger()
+
+    override val name = NETWORK
+    override val rpcPort = 10503
+    override val p2pPort = 7503
+
+    override val bootstrapDns: String? = null
+    override val fileTag = "regtest-progpow"
+    override val genesisBlock = VeriBlockBlock(
+        height = 0,
+        version = 2.toShort(),
+        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
+        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
+        merkleRoot = Sha256Hash.wrap("84E710F30BB8CFC9AF12622A8F39B917", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1603044490,
+        difficulty = BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
+        nonce = 0
+    )
+
+    // regtest BTC genesis block:
+    override val bitcoinOriginBlockHeight = 0
+    override val bitcoinOriginBlock = BitcoinBlock(
+        version = 1,
+        previousBlock = Sha256Hash.wrap("0000000000000000000000000000000000000000000000000000000000000000"),
+        merkleRoot = Sha256Hash.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"),
+        timestamp = 1296688602,
+        difficulty = 0x207fffff,
+        nonce = 2
+    )
+    override val protocolVersion: Int = 3
+
+    override val transactionPrefix = 0xEE.toByte()
+    override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
+    override val powNoRetargeting = false
+
+    override val progPowForkHeight = 1 // Only genesis block doesn't use vProgPoW
+    override val progPowStartTimeEpoch: Long = 1604419537L
+
+    init {
+        val hash = genesisBlock.hash.toString()
+        check(hash == "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977") {
+            "Regtest Genesis Block does not match expected hash!"
+        }
+    }
+}
+
 @JvmField
 val defaultMainNetParameters = NetworkParameters { network = MainNetParameters.NETWORK }
 
@@ -365,11 +414,15 @@ val defaultAlphaNetParameters = NetworkParameters { network = AlphaNetParameters
 @JvmField
 val defaultRegTestParameters = NetworkParameters { network = RegTestParameters.NETWORK }
 
+@JvmField
+val defaultRegTestProgPoWParameters = NetworkParameters { network = RegTestProgPoWParameters.NETWORK }
+
 fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
     TestNetProgPoWParameters.NETWORK -> defaultTestNetProgPoWParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
     RegTestParameters.NETWORK -> defaultRegTestParameters
+    RegTestProgPoWParameters.NETWORK -> defaultRegTestProgPoWParameters
     else -> error("Unknown VBK network: $name")
 }
