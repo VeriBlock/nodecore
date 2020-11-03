@@ -82,6 +82,7 @@ class NetworkParameters(
             "testnet_progpow" -> TestNetProgPoWParameters
             "alpha" -> AlphaNetParameters
             "regtest" -> RegTestParameters
+            "regtest_progpow" -> RegTestProgPoWParameters
             else -> error("Invalid network")
         }
         name = template.name
