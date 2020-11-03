@@ -8,7 +8,6 @@
 package org.veriblock.spv
 
 import io.ktor.util.network.*
-import kotlinx.coroutines.channels.Channel
 import org.veriblock.core.ConfigurationException
 import org.veriblock.core.Context
 import org.veriblock.core.params.NetworkParameters

@@ -239,6 +239,7 @@ class BitcoinFamilyChain(
         atvs: List<AltPublication>,
         vtbs: List<VeriBlockPublication>
     ) {
+        logger.debug { "Submitting PoP data to $name daemon at ${config.host}..." }
         val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
             contextBlocks.map {
                 SerializeDeserializeService.serialize(it).toHex()

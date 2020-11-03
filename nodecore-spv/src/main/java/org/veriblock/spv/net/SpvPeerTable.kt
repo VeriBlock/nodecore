@@ -29,6 +29,7 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
@@ -220,7 +221,7 @@ class SpvPeerTable(
                     }
                 }
         } catch (e: Exception) {
-            logger.error { "Unable to request address state: $e" }
+            logger.debugWarn(e) { "Unable to request address state" }
         }
     }
 
