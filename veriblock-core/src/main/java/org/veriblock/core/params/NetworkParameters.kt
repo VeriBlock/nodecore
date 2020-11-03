@@ -394,7 +394,7 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
 
     init {
         val hash = genesisBlock.hash.toString()
-        check(hash == "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977") {
+        check(hash == "00000017EB579EC7D0CDD63379A0615DC3D68032CE248823") {
             "Regtest Genesis Block does not match expected hash!"
         }
     }
