@@ -1,5 +1,6 @@
 package org.veriblock.spv.admin.service.impl
 
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -52,7 +53,7 @@ class AdminApiServiceTest {
     private lateinit var spvService: SpvService
     private lateinit var transactionContainer: PendingTransactionContainer
     private lateinit var blockchain: Blockchain
-    val address = Address("VHoWCZrQB4kqLHm1EoNoU8rih7ohyG")
+    val address = "VHoWCZrQB4kqLHm1EoNoU8rih7ohyG"
     val block = defaultTestNetParameters.genesisBlock
 
     @Before
@@ -76,10 +77,10 @@ class AdminApiServiceTest {
         val ledgerContext = LedgerContext(
             ledgerValue = LedgerValue(100L, 0L, 0L),
             block = defaultTestNetParameters.genesisBlock,
-            address = address
+            address = Address(address)
         )
 
-        every { spvContext.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createTransactionsByOutputList(any(), any()) } returns transactions
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) }
@@ -87,7 +88,7 @@ class AdminApiServiceTest {
 
         val reply = runBlocking {
             spvService.sendCoins(
-                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                address.asLightAddress(),
                 listOf(
                     Output(
                         "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
@@ -110,13 +111,13 @@ class AdminApiServiceTest {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext(
             ledgerValue = LedgerValue(100L, 0L, 0L),
-            address = address,
+            address = Address(address),
             block = defaultTestNetParameters.genesisBlock
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { spvContext.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
@@ -132,17 +133,17 @@ class AdminApiServiceTest {
     }
 
     @Test(expected = SendCoinsException::class)
-    fun sendCoinsWhenAddressDoesntIsInvalid() {
+    fun sendCoinsWhenAddressIsInvalid() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext(
-            address = address,
+            address = Address(address),
             ledgerValue = LedgerValue(100L, 0L, 0L),
             block = block
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { spvContext.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
@@ -161,17 +162,17 @@ class AdminApiServiceTest {
     fun sendCoinsWhenBalanceIsNotEnough() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext(
-            address = address,
+            address = Address(address),
             block = block,
             ledgerValue = LedgerValue(50L, 0L, 0L),
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { spvContext.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
-                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                address.asLightAddress(),
                 listOf(
                     Output(
                         "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
@@ -469,24 +470,15 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.defaultAddress } returns address
-        every { spvContext.getSignatureIndex(any()) } returns 1L
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        spvService.getSignatureIndex(emptyList())
-        verify(exactly = 1) { addressManager.defaultAddress }
-        verify(exactly = 1) { spvContext.getSignatureIndex(any()) }
-        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
-    }
-
-    @Test
-    fun signatureIndexWhenReqHasAddressSuccess() {
-        val kpg = KeyPairGenerator.getInstance("RSA")
-        val keyPair = kpg.generateKeyPair()
-        val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
-        every { spvContext.getSignatureIndex(any()) } returns 1L
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        spvService.getSignatureIndex(listOf(address.hash.asLightAddress()))
-        verify(exactly = 1) { spvContext.getSignatureIndex(any()) }
-        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
+        val index = 101L
+        val ledgerContext = LedgerContext(
+            address = Address(address.hash),
+            block = block,
+            ledgerValue = LedgerValue(50L, 0L, index),
+        )
+        spvContext.setAddressState(ledgerContext)
+        val ctx = spvContext.getSignatureIndex(Address(address.hash))
+        ctx shouldBe index
     }
 
     @Test(expected = EndorsementCreationException::class)
