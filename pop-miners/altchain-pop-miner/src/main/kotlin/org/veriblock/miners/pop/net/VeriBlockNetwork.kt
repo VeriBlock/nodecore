@@ -100,7 +100,7 @@ class VeriBlockNetwork(
                 nodeCoreStateInfo = gateway.getSpvStateInfo()
                 latestSpvStateInfo = nodeCoreStateInfo
                 // Get the latest balance from NodeCore
-                val balance = gateway.getBalance(addressManager.defaultAddress.hash)
+                val balance = gateway.getBalance()
                 if (balance.confirmedBalance != latestBalance.confirmedBalance) {
                     EventBus.balanceChangeEvent.trigger(balance)
                 }

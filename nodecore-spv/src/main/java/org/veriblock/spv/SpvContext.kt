@@ -14,17 +14,18 @@ import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.sdk.models.Address
+import org.veriblock.spv.model.LedgerContext
+import org.veriblock.spv.model.LedgerValue
 import org.veriblock.spv.model.TransactionPool
 import org.veriblock.spv.net.*
-import org.veriblock.spv.service.BlockStore
-import org.veriblock.spv.service.SpvService
-import org.veriblock.spv.service.Blockchain
-import org.veriblock.spv.service.PendingTransactionContainer
-import org.veriblock.spv.service.TransactionService
+import org.veriblock.spv.service.*
+import org.veriblock.spv.util.SpvEventBus.addressStateUpdatedEvent
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
 import java.io.File
 import java.net.URI
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 
 const val FILE_EXTENSION = ".vbkwallet"
 
@@ -61,6 +62,8 @@ class SpvContext {
         private set
     lateinit var pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
         private set
+
+    private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
 
     var trustPeerHashes = true
     val startTime: Instant = Instant.now()
@@ -162,6 +165,27 @@ class SpvContext {
             peerTable.shutdown()
         }
     }
+
+    fun getAddressState(address: Address): LedgerContext = addressState.getOrDefault(
+        key = address,
+        defaultValue = LedgerContext(
+            address = address,
+            ledgerValue = LedgerValue(
+                availableAtomicUnits = 0L,
+                frozenAtomicUnits = 0L,
+                signatureIndex = -1L
+            ),
+            block = blockchain.networkParameters.genesisBlock
+        )
+    )
+
+    fun getAllAddressesState(): Map<Address, LedgerContext> = addressState
+    fun setAddressState(ledgerContext: LedgerContext) {
+        addressState[ledgerContext.address] = ledgerContext
+        addressStateUpdatedEvent.trigger(ledgerContext)
+    }
+
+    fun getSignatureIndex(address: Address): Long? = addressState[address]?.ledgerValue?.signatureIndex
 }
 
 class SpvConfig(

@@ -22,11 +22,7 @@ import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.miners.pop.serialization.deserialize
 import org.veriblock.miners.pop.serialization.deserializeStandardTransaction
-import org.veriblock.sdk.models.Coin
-import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPublication
-import org.veriblock.sdk.models.VeriBlockTransaction
+import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.model.StandardAddress
 import org.veriblock.spv.model.StandardTransaction
@@ -65,14 +61,19 @@ class SpvGateway(
         }
     }
 
-    fun getBalance(address: String): Balance {
-        logger.debug { "Requesting balance for address $address..." }
-
-        val balance = spvService.getBalance(listOf(StandardAddress(address)))
-
+    fun getBalance(): Balance {
+        val balance = spvService.getBalance()
         return Balance(
-            balance.confirmed.first().unlockedAmount,
-            balance.unconfirmed.firstOrNull()?.amount ?: Coin.ZERO
+            confirmedBalance = Coin(
+                balance.confirmed.sumOf {
+                    it.totalAmount.atomicUnits
+                }
+            ),
+            pendingBalanceChanges = Coin(
+                balance.unconfirmed.sumOf {
+                    it.amount.atomicUnits
+                }
+            )
         )
     }
 
@@ -136,7 +137,7 @@ class SpvGateway(
         logger.debug { "Creating endorsement transaction..." }
 
         val createReply = spvService.createAltChainEndorsement(
-            publicationData, addressManager.defaultAddress.hash, feePerByte, maxFee
+            publicationData, Address(addressManager.defaultAddress.hash), feePerByte, maxFee
         )
 
         val signedTransaction = signTransaction(addressManager, createReply.transaction)

@@ -1,6 +1,7 @@
 package org.veriblock.spv.service
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.spv.model.AddressLight
 import org.veriblock.spv.model.Output
@@ -114,6 +115,6 @@ data class OutputData(
 )
 
 data class AddressAvailableBalance(
-    val address: String,
+    val address: Address,
     val availableBalance: Long
 )

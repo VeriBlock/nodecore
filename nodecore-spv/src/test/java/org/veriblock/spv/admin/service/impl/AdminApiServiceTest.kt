@@ -1,5 +1,6 @@
 package org.veriblock.spv.admin.service.impl
 
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,6 +24,7 @@ import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
+import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
@@ -51,6 +53,8 @@ class AdminApiServiceTest {
     private lateinit var spvService: SpvService
     private lateinit var transactionContainer: PendingTransactionContainer
     private lateinit var blockchain: Blockchain
+    val address = "VHoWCZrQB4kqLHm1EoNoU8rih7ohyG"
+    val block = defaultTestNetParameters.genesisBlock
 
     @Before
     fun setUp() {
@@ -72,18 +76,19 @@ class AdminApiServiceTest {
         val transactions = listOf(transaction)
         val ledgerContext = LedgerContext(
             ledgerValue = LedgerValue(100L, 0L, 0L),
-            ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
+            block = defaultTestNetParameters.genesisBlock,
+            address = Address(address)
         )
 
-        every { peerTable.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createTransactionsByOutputList(any(), any()) } returns transactions
-        every { transactionContainer.getPendingSignatureIndexForAddress(any())}
+        every { transactionContainer.getPendingSignatureIndexForAddress(any()) }
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
 
         val reply = runBlocking {
             spvService.sendCoins(
-                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                address.asLightAddress(),
                 listOf(
                     Output(
                         "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
@@ -106,12 +111,13 @@ class AdminApiServiceTest {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext(
             ledgerValue = LedgerValue(100L, 0L, 0L),
-            ledgerProofStatus = LedgerProofStatus.ADDRESS_DOES_NOT_EXIST
+            address = Address(address),
+            block = defaultTestNetParameters.genesisBlock
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
@@ -127,16 +133,17 @@ class AdminApiServiceTest {
     }
 
     @Test(expected = SendCoinsException::class)
-    fun sendCoinsWhenAddressDoesntIsInvalid() {
+    fun sendCoinsWhenAddressIsInvalid() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext(
+            address = Address(address),
             ledgerValue = LedgerValue(100L, 0L, 0L),
-            ledgerProofStatus = LedgerProofStatus.ADDRESS_IS_INVALID
+            block = block
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
@@ -155,16 +162,17 @@ class AdminApiServiceTest {
     fun sendCoinsWhenBalanceIsNotEnough() {
         val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
         val ledgerContext = LedgerContext(
+            address = Address(address),
+            block = block,
             ledgerValue = LedgerValue(50L, 0L, 0L),
-            ledgerProofStatus = LedgerProofStatus.ADDRESS_EXISTS
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable.getAddressState(any()) } returns ledgerContext
+        spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
-                "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
+                address.asLightAddress(),
                 listOf(
                     Output(
                         "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
@@ -182,7 +190,6 @@ class AdminApiServiceTest {
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
-        every { peerTable.getAddressState(any()) } returns null
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
@@ -242,7 +249,7 @@ class AdminApiServiceTest {
 
     @Test(expected = WalletException::class)
     fun importWalletWhenThrowExceptionThenFalse() {
-        every { addressManager.isLocked  } returns false
+        every { addressManager.isLocked } returns false
         every { addressManager.importWallet(any()) } throws RuntimeException()
         spvService.importWallet("test/source")
         verify(exactly = 1) { addressManager.isLocked }
@@ -463,24 +470,15 @@ class AdminApiServiceTest {
         val keyPair = kpg.generateKeyPair()
         val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
         every { addressManager.defaultAddress } returns address
-        every { peerTable.getSignatureIndex(any()) } returns 1L
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        spvService.getSignatureIndex(emptyList())
-        verify(exactly = 1) { addressManager.defaultAddress }
-        verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
-        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
-    }
-
-    @Test
-    fun signatureIndexWhenReqHasAddressSuccess() {
-        val kpg = KeyPairGenerator.getInstance("RSA")
-        val keyPair = kpg.generateKeyPair()
-        val address = AddressPubKey("VcspPDtJNpNmLV8qFTqb2F5157JNHS", keyPair.public)
-        every { peerTable.getSignatureIndex(any()) } returns 1L
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 2L
-        spvService.getSignatureIndex(listOf(address.hash.asLightAddress()))
-        verify(exactly = 1) { peerTable.getSignatureIndex(any()) }
-        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
+        val index = 101L
+        val ledgerContext = LedgerContext(
+            address = Address(address.hash),
+            block = block,
+            ledgerValue = LedgerValue(50L, 0L, index),
+        )
+        spvContext.setAddressState(ledgerContext)
+        val ctx = spvContext.getSignatureIndex(Address(address.hash))
+        ctx shouldBe index
     }
 
     @Test(expected = EndorsementCreationException::class)
@@ -493,7 +491,7 @@ class AdminApiServiceTest {
 
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = spvService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 1000L)
+        val reply = spvService.createAltChainEndorsement(ByteArray(12), Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS"), 10000L, 1000L)
         Assert.assertNotNull(reply)
     }
 
@@ -501,7 +499,7 @@ class AdminApiServiceTest {
     fun createAltChainEndorsementWhenThrowException() {
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } throws RuntimeException()
 
-        val reply = spvService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
+        val reply = spvService.createAltChainEndorsement(ByteArray(12), Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS"), 10000L, 100000000L)
         Assert.assertNotNull(reply)
     }
 
@@ -514,7 +512,7 @@ class AdminApiServiceTest {
         }
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
-        val reply = spvService.createAltChainEndorsement(ByteArray(12), "VcspPDtJNpNmLV8qFTqb2F5157JNHS", 10000L, 100000000L)
+        val reply = spvService.createAltChainEndorsement(ByteArray(12), Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS"), 10000L, 100000000L)
         Assert.assertNotNull(reply)
     }
 }

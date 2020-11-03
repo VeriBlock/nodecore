@@ -145,6 +145,7 @@ class TransactionService(
         return transaction
     }
 
+    // TODO(warchant): use Address instead of String for all addresses
     fun createUnsignedAltChainEndorsementTransaction(
         inputAddress: String, fee: Long, publicationData: ByteArray?, signatureIndex: Long
     ): Transaction {

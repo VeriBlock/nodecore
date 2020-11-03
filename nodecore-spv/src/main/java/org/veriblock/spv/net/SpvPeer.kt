@@ -176,7 +176,6 @@ class SpvPeer(
         }
         val queryBuilder = KeystoneQuery.newBuilder()
         for (block in keystones) {
-            logger.debug { "Preparing keystone ${block.height}..." }
             queryBuilder.addHeaders(
                 VeriBlockMessages.BlockHeader.newBuilder()
                     .setHash(ByteString.copyFrom(block.hash.bytes))

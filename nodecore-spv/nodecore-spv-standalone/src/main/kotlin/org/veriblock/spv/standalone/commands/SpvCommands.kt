@@ -32,12 +32,7 @@ fun CommandFactory.spvCommands(
         ),
         suggestedCommands = { listOf("getnewaddress") }
     ) {
-        val address: String? = getOptionalParameter("address")
-        val addresses = address?.let {
-            listOf(address.asLightAddress())
-        } ?: emptyList()
-        val result = context.spvService.getBalance(addresses)
-
+        val result = context.spvService.getBalance()
         displayResult(result)
         success()
     }

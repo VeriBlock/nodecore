@@ -74,6 +74,10 @@ public class AddressManager {
         wallet.addresses = new ArrayList<>();
     }
 
+    public boolean contains(String address) {
+        return addresses.containsKey(address);
+    }
+
     public void load(File walletFile) throws IOException {
         if (walletFile == null) {
             throw new IllegalArgumentException("walletFile cannot be null");
