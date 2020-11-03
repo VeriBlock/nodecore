@@ -18,6 +18,7 @@ object LedgerProofReplyMapper {
         val status: LedgerProofStatus = LedgerProofStatus.getByOrdinal(ledgerProofResult.result.number)
         val blockHeaderVB = ledgerProofResult.ledgerProofWithContext.blockHeader
 
+        // TODO(warchant): add if(trustPeerHashes). If true -> code below, otherwise do not pass second argument
         val block = try {
             SerializeDeserializeService.parseVeriBlockBlock(
                 blockHeaderVB.header.toByteArray(),
