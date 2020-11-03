@@ -233,6 +233,13 @@ class SpvPeerTable(
                         .setId(txId.bytes.toByteString())
                         .build()
                 }
+                requestAllMessages(request)
+                    .map { it.transactionReply }
+                    .onEach {
+                        if(it.success) {
+                            pendingTransactionContainer.updateTransactionInfo(it.transaction.toModel())
+                        }
+                    }
                 val response = requestMessage(request)
                 if (response.transactionReply.success) {
                     pendingTransactionContainer.updateTransactionInfo(response.transactionReply.transaction.toModel())
