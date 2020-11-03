@@ -367,10 +367,10 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
         previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
         previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
         secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-        merkleRoot = Sha256Hash.wrap("84E710F30BB8CFC9AF12622A8F39B917", VERIBLOCK_MERKLE_ROOT_LENGTH),
-        timestamp = 1603044490,
-        difficulty = BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
-        nonce = 0
+        merkleRoot = Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        timestamp = 1570649416,
+        difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
+        nonce = 14304633
     )
 
     // regtest BTC genesis block:
