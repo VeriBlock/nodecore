@@ -13,7 +13,6 @@ import io.ktor.network.sockets.*
 import io.ktor.util.network.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -29,7 +28,6 @@ import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
@@ -61,7 +59,7 @@ const val AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 4//50
 
 class SpvPeerTable(
     private val spvContext: SpvContext,
-    private val p2PService: P2PService,
+    private val p2pService: P2PService,
     peerDiscovery: PeerDiscovery,
     pendingTransactionContainer: PendingTransactionContainer
 ) {
@@ -207,7 +205,7 @@ class SpvPeerTable(
                 .filter { LedgerProofReplyValidator.validate(it) }
                 // mapper returns null if it can't deserialize block header, so
                 // handle responses with valid blocks
-                .mapNotNull { LedgerProofReplyMapper.map(it) }
+                .mapNotNull { LedgerProofReplyMapper.map(it, spvContext.trustPeerHashes) }
                 // block-of-proof may be new or known. if known or new and it connects, this will return true.
                 .filter { blockchain.acceptBlock(it.block) }
                 // handle responses with block-of-proofs that are on active chain
@@ -334,7 +332,7 @@ class SpvPeerTable(
                                 ByteStringUtility.byteStringToHex(it.txId)
                             )
                         }
-                        p2PService.onTransactionRequest(txIds, sender)
+                        p2pService.onTransactionRequest(txIds, sender)
                     }
                     else -> {
                         // Ignore the other message types as they are irrelevant for SPV

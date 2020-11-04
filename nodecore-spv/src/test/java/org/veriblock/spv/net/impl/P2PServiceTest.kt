@@ -20,7 +20,7 @@ import org.veriblock.spv.net.SpvPeer
 import org.veriblock.spv.service.PendingTransactionContainer
 
 class P2PServiceTest {
-    private val spvContext = SpvContext()
+    private lateinit var spvContext: SpvContext
     private lateinit var pendingTransactionContainer: PendingTransactionContainer
     private lateinit var peer: SpvPeer
     private lateinit var p2PService: P2PService
@@ -28,7 +28,7 @@ class P2PServiceTest {
     @Before
     fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext.init(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
+        spvContext = SpvContext(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
         pendingTransactionContainer = mockk(relaxed = true)
         peer = mockk(relaxed = true)
         p2PService = P2PService(pendingTransactionContainer, spvContext.networkParameters)
