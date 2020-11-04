@@ -105,7 +105,7 @@ open class StandardTransaction : Transaction {
             builder.type = VeriBlockMessages.Transaction.Type.MULTISIG
         }
         builder.sourceAmount = inputAmount!!.atomicUnits
-        builder.sourceAddress = ByteString.copyFrom(inputAddress!!.toByteArray())
+        builder.sourceAddress = ByteString.copyFrom(inputAddress.toByteArray())
         builder.data = ByteString.copyFrom(data)
         builder.size = toByteArray(networkParameters).size
         for (output in getOutputs()) {
