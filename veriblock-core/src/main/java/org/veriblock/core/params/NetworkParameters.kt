@@ -369,7 +369,7 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
         previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
         previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
         secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-        merkleRoot = Sha256Hash.wrap("A2EA7C29EF7915DB412EBD4012A9C617", VERIBLOCK_MERKLE_ROOT_LENGTH),
+        merkleRoot = "A2EA7C29EF7915DB412EBD4012A9C617".asTruncatedMerkleRoot(),
         timestamp = 1570649416,
         difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
         nonce = 14304633
@@ -379,8 +379,8 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
     override val bitcoinOriginBlockHeight = 0
     override val bitcoinOriginBlock = BitcoinBlock(
         version = 1,
-        previousBlock = Sha256Hash.wrap("0000000000000000000000000000000000000000000000000000000000000000"),
-        merkleRoot = Sha256Hash.wrap("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"),
+        previousBlock = "0000000000000000000000000000000000000000000000000000000000000000".asBtcHash(),
+        merkleRoot = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b".asMerkleRoot(),
         timestamp = 1296688602,
         difficulty = 0x207fffff,
         nonce = 2
