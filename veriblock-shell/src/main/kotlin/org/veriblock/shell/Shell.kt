@@ -55,9 +55,7 @@ open class Shell(
         } else {
             system(true)
         }
-    }.build().also {
-        println(it.javaClass)
-    }
+    }.build()
 
     val reader: LineReader = LineReaderBuilder.builder()
         .terminal(terminal)

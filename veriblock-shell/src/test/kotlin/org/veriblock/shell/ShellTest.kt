@@ -63,18 +63,12 @@ class ShellTest {
 
         // Then
         val output = outStream.toString("UTF-8")
-        // Display the output until we find out why it is not captured properly in the CI server
-        println("Test output:")
-        println(output)
-        // Dirty workaround for the fact that we are unable to capture the output from the CI server
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            output shouldContain "[V004] Unknown protocol command"
-            output shouldContain "The command 'test' is not supported"
-            output shouldContain "[V009] Syntax error"
-            output shouldContain "[V004] Unknown protocol command"
-            output shouldContain "Usage: greet <who>"
-            output shouldContain "ERROR: parameter 'who' is required"
-            output shouldContain "Hello World!"
-        }
+        output shouldContain "[V004] Unknown protocol command"
+        output shouldContain "The command 'test' is not supported"
+        output shouldContain "[V009] Syntax error"
+        output shouldContain "[V004] Unknown protocol command"
+        output shouldContain "Usage: greet <who>"
+        output shouldContain "ERROR: parameter 'who' is required"
+        output shouldContain "Hello World!"
     }
 }
