@@ -30,7 +30,7 @@ class ShellTest {
         val inputStream = PipedInputStream()
         val inputOutputPipe = PipedOutputStream(inputStream)
         for (inputCommand in inputCommands) {
-            inputOutputPipe.write("$inputCommand\r\n".toByteArray())
+            inputOutputPipe.write("$inputCommand\n".toByteArray())
         }
         inputOutputPipe.close()
 
@@ -52,7 +52,7 @@ class ShellTest {
         }
         val shell = Shell(
             commandFactory,
-            ShellTestData(
+            ShellCustomStreams(
                 inputStream = inputStream,
                 outputStream = outStream
             )

@@ -40,7 +40,7 @@ private val printLogger = LoggerFactory.getLogger("shell-printing")
 @Suppress("LeakingThis")
 open class Shell(
     private val commandFactory: CommandFactory,
-    testData: ShellTestData? = null
+    customStreams: ShellCustomStreams? = null
 ) {
     private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
@@ -48,12 +48,16 @@ open class Shell(
         private set
 
     private val terminal: Terminal = TerminalBuilder.builder().apply {
-        if (testData != null) {
-            streams(testData.inputStream, testData.outputStream)
+        if (customStreams != null) {
+            jna(false)
+            jansi(false)
+            streams(customStreams.inputStream, customStreams.outputStream)
         } else {
             system(true)
         }
-    }.build()
+    }.build().also {
+        println(it.javaClass)
+    }
 
     val reader: LineReader = LineReaderBuilder.builder()
         .terminal(terminal)
