@@ -149,5 +149,5 @@ class SpvConfig(
     val network: String = "mainnet",
     val dataDir: String = ".",
     val connectDirectlyTo: List<String> = emptyList(),
-    val trustPeerHashes: Boolean = true
+    val trustPeerHashes: Boolean = false
 )

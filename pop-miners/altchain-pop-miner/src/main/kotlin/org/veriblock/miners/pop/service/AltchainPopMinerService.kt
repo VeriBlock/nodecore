@@ -364,7 +364,7 @@ class AltchainPopMinerService(
     private fun initSpvContext(networkParameters: NetworkParameters): SpvContext {
         logger.info { "Initializing SPV..." }
         val spvContext = SpvContext(
-            SpvConfig(networkParameters.name, dataDir = context.dataDir, connectDirectlyTo = config.connectDirectlyTo)
+            SpvConfig(networkParameters.name, dataDir = context.dataDir, connectDirectlyTo = config.connectDirectlyTo, trustPeerHashes = true)
         )
         spvContext.peerTable.start()
         GlobalScope.launch {
