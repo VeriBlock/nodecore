@@ -88,7 +88,6 @@ class SpvPeerTable(
     init {
         bloomFilter = createBloomFilter()
         blockchain = spvContext.blockchain
-        txMgr = TxManager(blockchain)
         discovery = peerDiscovery
 
         SpvEventBus.pendingTransactionDownloadedEvent.register(this) {
