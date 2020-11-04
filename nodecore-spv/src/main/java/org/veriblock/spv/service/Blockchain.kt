@@ -13,10 +13,10 @@ import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.ValidationService
+import org.veriblock.spv.model.StoredVeriBlockBlock
 import org.veriblock.spv.util.SpvEventBus
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -42,7 +42,7 @@ class Blockchain(
      * Drop existing block index, and re-generate one from disk.
      */
     fun reindex() {
-        logger.info { "Reading $${blockStore.networkParameters} blocks..." }
+        logger.info { "Reading ${blockStore.networkParameters} blocks..." }
 
         // drop previous block index
         blockIndex.clear()

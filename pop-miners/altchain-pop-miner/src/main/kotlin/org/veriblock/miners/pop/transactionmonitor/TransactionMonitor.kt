@@ -13,11 +13,11 @@ import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.core.FullBlock
 import org.veriblock.miners.pop.core.MerkleTree
 import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.spv.util.SpvEventBus

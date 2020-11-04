@@ -24,7 +24,7 @@ class VeriBlockDifficultyCalculatorTests {
             previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
             previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
             secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-            merkleRoot = Sha256Hash.ZERO_HASH,
+            merkleRoot = Sha256Hash.EMPTY_TRUNCATED_MERKLE_ROOT,
             timestamp = time,
             difficulty = BitcoinUtilities.encodeCompactBits(diff).toInt(),
             nonce = 0

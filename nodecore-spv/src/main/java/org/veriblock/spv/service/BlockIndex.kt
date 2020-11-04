@@ -1,7 +1,7 @@
 package org.veriblock.spv.service
 
 import org.veriblock.core.crypto.PreviousBlockVbkHash
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
+import org.veriblock.spv.model.StoredVeriBlockBlock
 
 public const val KEYSTONE_INTERVAL = 20
 

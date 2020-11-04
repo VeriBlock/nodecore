@@ -25,9 +25,8 @@ import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.params.NetworkParameters
-import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.miners.pop.net.VeriBlockNetwork
@@ -164,7 +163,7 @@ class AltchainPopMinerService(
             ).toList()
         } else {
             operationService.getOperations(status, limit, offset) { txId ->
-                val hash = Sha256Hash.wrap(txId)
+                val hash = txId.asBtcHash()
                 transactionMonitor.getTransaction(hash)
             }.map {
                 it
@@ -182,7 +181,7 @@ class AltchainPopMinerService(
 
     fun getOperation(id: String): ApmOperation? {
         return operations[id] ?: operationService.getOperation(id) { txId ->
-            val hash = Sha256Hash.wrap(txId)
+            val hash = txId.asBtcHash()
             transactionMonitor.getTransaction(hash)
         }
     }
@@ -284,7 +283,7 @@ class AltchainPopMinerService(
     private fun loadAndSubmitSuspendedOperations() {
         try {
             val activeOperations = operationService.getActiveOperations { txId ->
-                val hash = Sha256Hash.wrap(txId)
+                val hash = txId.asBtcHash()
                 transactionMonitor.getTransaction(hash)
             }
             for (state in activeOperations) {

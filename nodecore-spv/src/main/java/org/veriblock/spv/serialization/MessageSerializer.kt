@@ -19,8 +19,9 @@ import nodecore.api.grpc.utilities.extensions.asVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.asVbkHash
+import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asTruncatedMerkleRoot
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -62,7 +63,7 @@ object MessageSerializer {
         val signed = transactionUnionMessage.signed
         val txMessage = signed.transaction
         val tx = PopTransactionLight(
-            txId = Sha256Hash.wrap(txMessage.txId.toByteArray()),
+            txId = txMessage.txId.toByteArray().asBtcHash(),
             endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray()),
             bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray()),
             bitcoinMerklePath = MerklePath(txMessage.merklePath),
@@ -84,7 +85,7 @@ object MessageSerializer {
             blockMessage.previousHash.asVbkPreviousBlockHash(),
             blockMessage.secondPreviousHash.asVbkPreviousKeystoneHash(),
             blockMessage.thirdPreviousHash.asVbkPreviousKeystoneHash(),
-            Sha256Hash.wrap(ByteStringUtility.byteStringToHex(blockMessage.merkleRoot)),
+            ByteStringUtility.byteStringToHex(blockMessage.merkleRoot).asTruncatedMerkleRoot(),
             blockMessage.timestamp,
             blockMessage.encodedDifficulty,
             blockMessage.winningNonce
@@ -96,14 +97,14 @@ object MessageSerializer {
             deserializePopTransaction(it)
         }
         block.metaPackage = BlockMetaPackage(
-            Sha256Hash.wrap(blockMessage.blockContentMetapackage.hash.toByteArray())
+            blockMessage.blockContentMetapackage.hash.toByteArray().asBtcHash()
         )
         return block
     }
 
     private fun deserializeStandardTransaction(signedTransaction: SignedTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
-        val tx = StandardTransaction(Sha256Hash.wrap(txMessage.txId.toByteArray()))
+        val tx = StandardTransaction(txMessage.txId.toByteArray().asBtcHash())
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
         tx.inputAmount = txMessage.sourceAmount.asCoin()
         txMessage.outputsList.map {
@@ -118,7 +119,7 @@ object MessageSerializer {
 
     private fun deserializeMultisigTransaction(signedTransaction: SignedMultisigTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
-        val tx: StandardTransaction = MultisigTransaction(Sha256Hash.wrap(txMessage.txId.toByteArray()))
+        val tx: StandardTransaction = MultisigTransaction(txMessage.txId.toByteArray().asBtcHash())
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
         tx.inputAmount = txMessage.sourceAmount.asCoin()
         txMessage.outputsList.map {

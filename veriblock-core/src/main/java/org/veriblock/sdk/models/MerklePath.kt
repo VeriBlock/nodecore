@@ -8,6 +8,9 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.doubleSha256HashOf
+import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asSha256Hash
 
 class MerklePath {
     private val compactFormat: String
@@ -39,9 +42,9 @@ class MerklePath {
             "Invalid merkle path: $compactFormat"
         }
         index = parts[0].toInt()
-        subject = Sha256Hash.wrap(parts[1])
+        subject = parts[1].asBtcHash()
         layers = (2 until parts.size).map {
-            Sha256Hash.wrap(parts[it])
+            parts[it].asBtcHash()
         }
         merkleRoot = calculateMerkleRoot()
         this.compactFormat = compactFormat
@@ -54,7 +57,7 @@ class MerklePath {
             // Climb one layer up the tree by concatenating the current state with the next layer in the right order
             val first = if (layerIndex % 2 == 0) cursor.bytes else layer.bytes
             val second = if (layerIndex % 2 == 0) layer.bytes else cursor.bytes
-            cursor = Sha256Hash.twiceOf(first, second)
+            cursor = doubleSha256HashOf(first, second).asSha256Hash()
 
             // The position above on the tree will be floor(currentIndex / 2)
             layerIndex /= 2

@@ -11,13 +11,13 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.utilities.extensions.asHexByteString
-import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -168,7 +168,7 @@ open class StandardTransaction : Transaction {
     private fun calculateTxId(
         networkParameters: NetworkParameters
     ): Sha256Hash {
-        return Sha256Hash.wrap(calculateTxIDBytes(toByteArray(networkParameters)))
+        return calculateTxIDBytes(toByteArray(networkParameters)).asBtcHash()
     }
 
     private fun calculateTxIDBytes(rawTx: ByteArray): ByteArray {

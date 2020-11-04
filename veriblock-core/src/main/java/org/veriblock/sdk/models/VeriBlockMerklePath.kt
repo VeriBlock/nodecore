@@ -7,24 +7,28 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
+import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.merkleRootHashOf
+import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asMerkleRoot
 
 class VeriBlockMerklePath {
     val treeIndex: Int
     private val compactFormat: String
     val layers: List<Sha256Hash>
-    val subject: Sha256Hash
+    val subject: MerkleRoot
     val index: Int
 
     /**
      * The Merkle root produced by following the layers up to the top of the tree.
      */
-    var merkleRoot: Sha256Hash
+    var merkleRoot: MerkleRoot
 
     constructor(
         treeIndex: Int,
         index: Int,
-        subject: Sha256Hash,
+        subject: MerkleRoot,
         layers: MutableList<Sha256Hash>
     ) {
         this.treeIndex = treeIndex
@@ -43,15 +47,15 @@ class VeriBlockMerklePath {
         }
         treeIndex = parts[0].toInt()
         index = parts[1].toInt()
-        subject = Sha256Hash.wrap(parts[2])
+        subject = parts[2].asMerkleRoot()
         layers = (3 until parts.size).map {
-            Sha256Hash.wrap(parts[it])
+            parts[it].asBtcHash()
         }
         this.compactFormat = compactFormat
         merkleRoot = calculateVeriMerkleRoot()
     }
 
-    private fun calculateVeriMerkleRoot(): Sha256Hash {
+    private fun calculateVeriMerkleRoot(): MerkleRoot {
         var cursor = subject
         var layerIndex = index
         for (i in layers.indices) {
@@ -69,7 +73,7 @@ class VeriBlockMerklePath {
             // Climb one layer up the tree by concatenating the current state with the next layer in the right order
             val first = if (layerIndex % 2 == 0) cursor.bytes else layers[i].bytes
             val second = if (layerIndex % 2 == 0) layers[i].bytes else cursor.bytes
-            cursor = Sha256Hash.of(first, second)
+            cursor = merkleRootHashOf(first, second)
 
             // The position above on the tree will be floor(currentIndex / 2)
             layerIndex /= 2

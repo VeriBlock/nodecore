@@ -9,6 +9,11 @@ package org.veriblock.sdk.services
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asSha256Hash
+import org.veriblock.core.crypto.sha256HashOf
+import org.veriblock.core.crypto.readBtcHash
+import org.veriblock.core.crypto.readBtcMerkleRoot
+import org.veriblock.core.crypto.readTruncatedMerkleRoot
 import org.veriblock.core.crypto.readVbkPreviousBlockHash
 import org.veriblock.core.crypto.readVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.BlockUtility
@@ -44,7 +49,6 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 private const val SERIALIZATION_VERSION = 0x01
 private val SERIALIZATION_VERSION_BYTES = Utility.toByteArray(SERIALIZATION_VERSION)
@@ -100,11 +104,11 @@ object SerializeDeserializeService {
     }
 
     fun getId(veriBlockPoPTransaction: VeriBlockPopTransaction): Sha256Hash {
-        return Sha256Hash.of(serializeTransactionEffects(veriBlockPoPTransaction))
+        return sha256HashOf(serializeTransactionEffects(veriBlockPoPTransaction)).asSha256Hash()
     }
 
     fun getHash(veriBlockPoPTransaction: VeriBlockPopTransaction): Sha256Hash {
-        return Sha256Hash.of(serializeTransactionEffects(veriBlockPoPTransaction))
+        return sha256HashOf(serializeTransactionEffects(veriBlockPoPTransaction)).asSha256Hash()
     }
 
     // VeriBlockPublication
@@ -170,7 +174,7 @@ object SerializeDeserializeService {
     }
 
     fun getId(veriBlockTransaction: VeriBlockTransaction): Sha256Hash {
-        return Sha256Hash.of(serializeTransactionEffects(veriBlockTransaction))
+        return sha256HashOf(serializeTransactionEffects(veriBlockTransaction)).asSha256Hash()
     }
 
     // VeriBlockBlock
@@ -201,9 +205,7 @@ object SerializeDeserializeService {
         val previousBlock = buffer.readVbkPreviousBlockHash()
         val previousKeystone = buffer.readVbkPreviousKeystoneHash()
         val secondPreviousKeystone = buffer.readVbkPreviousKeystoneHash()
-        val merkleRoot = Sha256Hash.extract(
-            buffer, Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH, ByteOrder.BIG_ENDIAN
-        )
+        val merkleRoot = buffer.readTruncatedMerkleRoot()
         val timestamp = buffer.readBEInt32()
         val difficulty = buffer.readBEInt32()
         var nonce = buffer.readBEInt32().toLong()
@@ -353,8 +355,8 @@ object SerializeDeserializeService {
         buffer.put(bytes)
         buffer.flip()
         val version = buffer.readLEInt32()
-        val previousBlock = Sha256Hash.extract(buffer)
-        val merkleRoot = Sha256Hash.extract(buffer)
+        val previousBlock = buffer.readBtcHash()
+        val merkleRoot = buffer.readBtcMerkleRoot()
         val timestamp = buffer.readLEInt32()
         val bits = buffer.readLEInt32()
         val nonce = buffer.readLEInt32()

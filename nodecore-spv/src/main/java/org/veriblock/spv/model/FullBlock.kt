@@ -9,7 +9,8 @@ package org.veriblock.spv.model
 
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.MerkleRoot
+import org.veriblock.core.crypto.TruncatedMerkleRoot
 import org.veriblock.sdk.models.VeriBlockBlock
 
 class FullBlock(
@@ -18,7 +19,7 @@ class FullBlock(
     previousBlock: PreviousBlockVbkHash,
     previousKeystone: PreviousKeystoneVbkHash,
     secondPreviousKeystone: PreviousKeystoneVbkHash,
-    merkleRoot: Sha256Hash,
+    merkleRoot: TruncatedMerkleRoot,
     timestamp: Int,
     difficulty: Int,
     nonce: Long

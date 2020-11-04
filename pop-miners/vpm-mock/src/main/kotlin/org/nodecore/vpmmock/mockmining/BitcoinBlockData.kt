@@ -7,14 +7,19 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.nodecore.vpmmock.mockmining
 
+import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asMerkleRoot
+import org.veriblock.core.crypto.asSha256Hash
+import org.veriblock.core.crypto.doubleSha256HashOf
+import org.veriblock.core.utilities.extensions.flip
 import java.util.ArrayList
 import kotlin.math.ln
 
 class BitcoinBlockData : ArrayList<ByteArray>() {
-    val merkleRoot: Sha256Hash
-        get() = calculateSubtreeHash(0, 0)
+    val merkleRoot: MerkleRoot
+        get() = calculateSubtreeHash(0, 0).bytes.flip().asMerkleRoot()
 
     // calculate the number of bits it takes to store size()
     private val maxDepth: Int
@@ -24,11 +29,13 @@ class BitcoinBlockData : ArrayList<ByteArray>() {
     // leaves are at the depth equal to getMaxDepth()
     private fun calculateSubtreeHash(index: Int, depth: Int): Sha256Hash {
         return if (depth >= maxDepth) {
-            Sha256Hash.twiceOf(if (index < size) get(index) else ByteArray(0))
-        } else Sha256Hash.twiceOf(
-            calculateSubtreeHash(index * 2, depth + 1).bytes,
-            calculateSubtreeHash(index * 2 + 1, depth + 1).bytes
-        )
+            doubleSha256HashOf(if (index < size) get(index) else ByteArray(0))
+        } else {
+            doubleSha256HashOf(
+                calculateSubtreeHash(index * 2, depth + 1).bytes,
+                calculateSubtreeHash(index * 2 + 1, depth + 1).bytes
+            )
+        }.asSha256Hash()
     }
 
     fun getMerklePath(index: Int): MerklePath {

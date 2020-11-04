@@ -7,7 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.BtcHash
+import org.veriblock.core.crypto.MerkleRoot
+import org.veriblock.core.crypto.asMerkleRoot
+import org.veriblock.core.crypto.btcHashOf
 import org.veriblock.sdk.util.putLEBytes
 import org.veriblock.sdk.util.putLEInt32
 import java.nio.ByteBuffer
@@ -15,8 +18,8 @@ import java.util.Arrays
 
 class BitcoinBlock(
     val version: Int,
-    val previousBlock: Sha256Hash,
-    val merkleRoot: Sha256Hash,
+    val previousBlock: BtcHash,
+    val merkleRoot: MerkleRoot,
     val timestamp: Int,
     val difficulty: Int,
     val nonce: Int
@@ -35,10 +38,10 @@ class BitcoinBlock(
         bytes
     }
 
-    val hash: Sha256Hash = Sha256Hash.wrapReversed(Sha256Hash.hashTwice(raw))
+    val hash: BtcHash = btcHashOf(raw)
 
-    fun getMerkleRootReversed(): Sha256Hash =
-        Sha256Hash.wrap(merkleRoot.reversedBytes())
+    fun getMerkleRootReversed(): MerkleRoot =
+        merkleRoot.reversedBytes().asMerkleRoot()
 
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass && Arrays.equals(

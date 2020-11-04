@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.core
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 
 class MerkleTree private constructor(
@@ -41,7 +42,6 @@ class MerkleTree private constructor(
 
         return false
     }
-
 
     private class MerkleNode(
         val hash: Sha256Hash,
@@ -88,7 +88,7 @@ class MerkleTree private constructor(
                 val left = nodes[i]
                 val right = if (i + 1 < nodes.size) nodes[i + 1] else left
 
-                val node = MerkleNode(Sha256Hash.of(left.hash.bytes, right.hash.bytes), MerkleNodeLeaves(left, right))
+                val node = MerkleNode(org.veriblock.core.crypto.merkleRootHashOf(left.hash.bytes, right.hash.bytes), MerkleNodeLeaves(left, right))
                 layer.add(node)
                 i += 2
             }

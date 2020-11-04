@@ -10,6 +10,7 @@ package org.veriblock.spv.wallet
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.model.asLightAddress
 import java.io.ByteArrayOutputStream
@@ -60,7 +61,7 @@ class LedgerEntry(
                     SerializeDeserializeService.serialize(debitAmount, stream)
                     SerializeDeserializeService.serialize(creditAmount, stream)
                     SerializerUtility.writeVariableLengthValueToStream(stream, positionIndex)
-                    return Sha256Hash.wrap(stream.toByteArray())
+                    return stream.toByteArray().asBtcHash()
                 }
             } catch (e: IOException) {
                 // Should not happen
