@@ -63,6 +63,7 @@ class SpvPeerTable(
     private val spvContext: SpvContext,
     private val p2pService: P2PService,
     peerDiscovery: PeerDiscovery,
+    val txMgr: TxManager
 ) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
@@ -83,8 +84,6 @@ class SpvPeerTable(
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
     private val selectorManager = ActorSelectorManager(coroutineDispatcher)
-
-    private val txMgr: TxManager
 
     init {
         bloomFilter = createBloomFilter()
