@@ -54,7 +54,7 @@ class ShellTest {
             commandFactory,
             ShellTestData(
                 inputStream = inputStream,
-                outputStream =  outStream
+                outputStream = outStream
             )
         )
 
@@ -64,6 +64,7 @@ class ShellTest {
         // Then
         val output = outStream.toString("UTF-8")
         // Display the output until we find out why it is not captured properly in the CI server
+        println("Test output:")
         println(output)
         // Dirty workaround for the fact that we are unable to capture the output from the CI server
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
