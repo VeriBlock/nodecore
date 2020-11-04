@@ -96,6 +96,7 @@ class SpvPeer(
 
                     // Extract latest keystones and ask for more
                     val extractedKeystones = message.advertiseBlocks.headersList.asSequence()
+                        // Using the peer's supplied hash because we're using it only to request more blocks. No exercise of trust is made here.
                         .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), it.hash.toByteArray().asVbkHash()) }
                         .filter { it.height % 20 == 0 }
                         .sortedByDescending { it.height }

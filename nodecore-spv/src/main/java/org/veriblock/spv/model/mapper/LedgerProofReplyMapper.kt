@@ -13,7 +13,7 @@ import org.veriblock.spv.model.LedgerProofStatus
 import org.veriblock.spv.model.LedgerValue
 
 object LedgerProofReplyMapper {
-    fun map(ledgerProofResult: LedgerProofResult): LedgerContext? {
+    fun map(ledgerProofResult: LedgerProofResult, trustPeerHashes: Boolean): LedgerContext? {
         val address = Address(Base58.encode(ledgerProofResult.address.toByteArray()))
         val status: LedgerProofStatus = LedgerProofStatus.getByOrdinal(ledgerProofResult.result.number)
         val blockHeaderVB = ledgerProofResult.ledgerProofWithContext.blockHeader
@@ -22,7 +22,7 @@ object LedgerProofReplyMapper {
         val block = try {
             SerializeDeserializeService.parseVeriBlockBlock(
                 blockHeaderVB.header.toByteArray(),
-                blockHeaderVB.hash.toByteArray().asVbkHash()
+                if (trustPeerHashes) blockHeaderVB.hash.toByteArray().asVbkHash() else null
             )
         } catch (e: Exception) {
             return null

@@ -151,11 +151,11 @@ class BlockStore(
         val header = ByteArray(BlockUtility.getBlockHeaderLength(height))
         blocksFile.read(header)
 
-        val vbkhash = VbkHash(hash)
+        val vbkHash = VbkHash(hash)
         return StoredVeriBlockBlock(
-            header = SerializeDeserializeService.parseVeriBlockBlock(header, vbkhash),
+            header = SerializeDeserializeService.parseVeriBlockBlock(header, vbkHash),
             work = BigInteger(1, work),
-            hash = vbkhash
+            hash = vbkHash
         )
     }
 
