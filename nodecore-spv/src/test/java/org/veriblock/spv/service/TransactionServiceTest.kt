@@ -15,11 +15,11 @@ import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardAddress
 
 class TransactionServiceTest : TestCase() {
-    private val spvContext = SpvContext()
+    private lateinit var spvContext: SpvContext
 
     public override fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext.init(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
+        spvContext = SpvContext(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
     }
 
     @Test

@@ -33,95 +33,33 @@ private val logger = createLogger {}
 
 /**
  * Initialize and hold beans/classes.
- * Required initialization. Context.init(....)
  */
-class SpvContext {
-    lateinit var networkParameters: NetworkParameters
-        private set
-    lateinit var directory: File
-        private set
-    lateinit var filePrefix: String
-        private set
-    lateinit var transactionPool: TransactionPool
-        private set
-    lateinit var blockStore: BlockStore
-        private set
-    lateinit var blockchain: Blockchain
-        private set
-    lateinit var spvService: SpvService
-        private set
-    lateinit var peerTable: SpvPeerTable
-        private set
-    lateinit var p2PService: P2PService
-        private set
-    lateinit var addressManager: AddressManager
-        private set
-    lateinit var transactionService: TransactionService
-        private set
-    lateinit var pendingTransactionContainer: PendingTransactionContainer
-        private set
-    lateinit var pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
-        private set
+class SpvContext(
+    config: SpvConfig
+) {
+    val networkParameters: NetworkParameters = NetworkParameters {
+        network = config.network
+    }
+
+    val directory: File
+    val filePrefix: String
+    val transactionPool: TransactionPool
+    val blockStore: BlockStore
+    val blockchain: Blockchain
+    val spvService: SpvService
+    val peerTable: SpvPeerTable
+    val p2PService: P2PService
+    val addressManager: AddressManager
+    val transactionService: TransactionService
+    val pendingTransactionContainer: PendingTransactionContainer
+    val pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
 
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
 
-    var trustPeerHashes = true
+    val trustPeerHashes = config.trustPeerHashes
     val startTime: Instant = Instant.now()
 
-    /**
-     * Initialise context. This method should be call on the start app.
-     *
-     * @param networkParam   Config for particular network.
-     * @param baseDir        will use as a start point for inner directories. (db, wallet so on.)
-     * @param filePr         prefix for wallet name. (for example: vbk-MainNet, vbk-TestNet)
-     * @param peerDiscovery  discovery peers.
-     */
-    @Synchronized
-    fun init(
-        networkParam: NetworkParameters,
-        baseDir: File,
-        filePr: String,
-        peerDiscovery: PeerDiscovery
-    ) {
-        try {
-            Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))
-            networkParameters = networkParam
-            directory = baseDir
-            filePrefix = filePr
-            blockStore = BlockStore(networkParameters, directory)
-            transactionPool = TransactionPool()
-            blockchain = Blockchain(blockStore)
-            pendingTransactionContainer = PendingTransactionContainer()
-            p2PService = P2PService(pendingTransactionContainer, networkParameters)
-            addressManager = AddressManager()
-            val walletFile = File(directory, filePrefix + FILE_EXTENSION)
-            addressManager.load(walletFile)
-            pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
-            peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
-            transactionService = TransactionService(addressManager, networkParameters)
-            spvService = SpvService(
-                this, peerTable, transactionService, addressManager,
-                pendingTransactionContainer, blockchain
-            )
-        } catch (e: Exception) {
-            logger.debugWarn(e) { "Could not initialize SPV Context" }
-            throw RuntimeException(e)
-        }
-    }
-
-    /**
-     * Initialise context. This method should be call on the start app.
-     */
-    @Synchronized
-    fun init(config: SpvConfig) {
-        val networkParameters = NetworkParameters {
-            network = config.network
-        }
-
-        check(networkParameters.name == config.network) {
-            "SPV configured to ${config.network}, and network to ${networkParameters.name}. They must be same."
-        }
-
+    init {
         // For now we'll be using either direct discovery or DNS discovery, not a mix.
         // This will change whenever other use cases appear.
         val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
@@ -156,14 +94,33 @@ class SpvContext {
         val baseDir = File(config.dataDir)
         baseDir.mkdirs()
 
-        trustPeerHashes = config.trustPeerHashes
-        init(networkParameters, baseDir, networkParameters.name, peerDiscovery)
+        try {
+            Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))
+            directory = baseDir
+            filePrefix = networkParameters.name
+            blockStore = BlockStore(networkParameters, directory)
+            transactionPool = TransactionPool()
+            blockchain = Blockchain(blockStore)
+            pendingTransactionContainer = PendingTransactionContainer()
+            p2PService = P2PService(pendingTransactionContainer, networkParameters)
+            addressManager = AddressManager()
+            val walletFile = File(directory, filePrefix + FILE_EXTENSION)
+            addressManager.load(walletFile)
+            pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
+            peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
+            transactionService = TransactionService(addressManager, networkParameters)
+            spvService = SpvService(
+                this, peerTable, transactionService, addressManager,
+                pendingTransactionContainer, blockchain
+            )
+        } catch (e: Exception) {
+            logger.debugWarn(e) { "Could not initialize SPV Context" }
+            throw RuntimeException(e)
+        }
     }
 
     fun shutdown() {
-        if (::peerTable.isInitialized) {
-            peerTable.shutdown()
-        }
+        peerTable.shutdown()
     }
 
     fun getAddressState(address: Address): LedgerContext = addressState.getOrDefault(

@@ -85,7 +85,7 @@ class MiningController(
         ) {
             val responseModel = MinerInfoResponse(
                 vbkAddress = miner.getAddress(),
-                vbkBalance = miner.getBalance()?.confirmedBalance?.atomicUnits ?: 0
+                vbkBalance = miner.getBalance().confirmedBalance.atomicUnits
             )
             respond(responseModel)
         }

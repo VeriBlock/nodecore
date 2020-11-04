@@ -28,7 +28,6 @@ import org.veriblock.shell.CommandFactory;
 import org.veriblock.shell.Shell;
 import org.veriblock.shell.core.Result;
 import org.veriblock.shell.core.ResultMessage;
-import org.veriblock.spv.SpvContext;
 
 import javax.net.ssl.SSLException;
 import java.util.Set;
@@ -41,7 +40,6 @@ import static org.veriblock.core.params.NetworkParametersKt.defaultTestNetParame
 public class CliShell extends Shell {
     private static final Logger _logger = LoggerFactory.getLogger(CliShell.class);
 
-    private final SpvContext spvContext = new SpvContext();
     private final ProtocolEndpointContainer _endpointContainer = new ProtocolEndpointContainer();
     private final AtomicBoolean connected = new AtomicBoolean(false);
 
@@ -525,9 +523,5 @@ public class CliShell extends Shell {
 
     public boolean isConnected() {
         return _adminServiceClient != null;
-    }
-
-    public SpvContext getSpvContext() {
-        return spvContext;
     }
 }

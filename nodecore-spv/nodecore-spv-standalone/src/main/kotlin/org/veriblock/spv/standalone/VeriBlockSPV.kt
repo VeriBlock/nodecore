@@ -46,12 +46,6 @@ private fun run(): Int {
     })
 
     ProgPoWCache.setMaxCachedPairs(2); // Fewer cached pairs for SPV
-    val spvContext = SpvContext()
-    val shell = Shell(CommandFactory().apply {
-        standardCommands()
-        spvCommands(spvContext)
-    })
-    shell.initialize()
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock ", "")))
@@ -61,9 +55,15 @@ private fun run(): Int {
     println("${SharedConstants.TYPE_HELP}\n")
 
     logger.info { "Initializing SPV Context (${spvConfig.network})..." }
+    val spvContext = SpvContext(spvConfig)
+    val shell = Shell(CommandFactory().apply {
+        standardCommands()
+        spvCommands(spvContext)
+    })
+    shell.initialize()
+
     var errored = false
     try {
-        spvContext.init(spvConfig)
         logger.info { "Looking for peers..." }
         spvContext.peerTable.start()
         runBlocking {

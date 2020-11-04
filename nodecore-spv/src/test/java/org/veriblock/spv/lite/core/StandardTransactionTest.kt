@@ -16,7 +16,7 @@ import org.veriblock.spv.model.asStandardAddress
 import java.io.File
 
 class StandardTransactionTest {
-    private val spvContext = SpvContext()
+    private lateinit var spvContext: SpvContext
 
     @Before
     fun setUp() {
@@ -25,7 +25,7 @@ class StandardTransactionTest {
             dbFile.delete()
         }
         Context.set(defaultMainNetParameters)
-        spvContext.init(
+        spvContext = SpvContext(
             SpvConfig(
                 connectDirectlyTo = listOf("localhost")
             )

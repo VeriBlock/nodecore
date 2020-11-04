@@ -46,7 +46,7 @@ import java.io.IOException
 import java.security.KeyPairGenerator
 
 class AdminApiServiceTest {
-    private val spvContext = SpvContext()
+    private lateinit var spvContext: SpvContext
     private lateinit var transactionService: TransactionService
     private lateinit var addressManager: AddressManager
     private lateinit var peerTable: SpvPeerTable
@@ -59,7 +59,7 @@ class AdminApiServiceTest {
     @Before
     fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext.init(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
+        spvContext = SpvContext(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
         peerTable = mockk(relaxed = true)
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)
