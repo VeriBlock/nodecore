@@ -27,7 +27,7 @@ class BitcoinBlockData : ArrayList<ByteArray>() {
 
     // at each depth, there are 2**depth subtrees
     // leaves are at the depth equal to getMaxDepth()
-    private fun calculateSubtreeHash(index: Int, depth: Int): Sha256Hash {
+    private fun calculateSubtreeHash(index: Int, depth: Int): MerkleRoot {
         return if (depth >= maxDepth) {
             doubleSha256HashOf(if (index < size) get(index) else ByteArray(0))
         } else {
@@ -35,7 +35,7 @@ class BitcoinBlockData : ArrayList<ByteArray>() {
                 calculateSubtreeHash(index * 2, depth + 1).bytes,
                 calculateSubtreeHash(index * 2 + 1, depth + 1).bytes
             )
-        }.asSha256Hash()
+        }.asMerkleRoot()
     }
 
     fun getMerklePath(index: Int): MerklePath {

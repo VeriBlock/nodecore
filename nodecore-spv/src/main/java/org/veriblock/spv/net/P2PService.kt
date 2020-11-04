@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.service.PendingTransactionContainer
@@ -15,7 +16,7 @@ class P2PService(
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val networkParameters: NetworkParameters
 ) {
-    fun onTransactionRequest(txIds: List<Sha256Hash>, sender: SpvPeer) {
+    fun onTransactionRequest(txIds: List<VbkTxId>, sender: SpvPeer) {
         for (txId in txIds) {
             val transaction = pendingTransactionContainer.getTransaction(txId)
             if (transaction != null) {

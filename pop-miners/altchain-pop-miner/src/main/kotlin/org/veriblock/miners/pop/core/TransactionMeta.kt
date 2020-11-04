@@ -12,10 +12,11 @@ import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import java.util.ArrayList
 
 class TransactionMeta(
-    val txId: Sha256Hash
+    val txId: VbkTxId
 ) {
     val stateChangedBroadcastChannel = BroadcastChannel<MetaState>(CONFLATED)
 

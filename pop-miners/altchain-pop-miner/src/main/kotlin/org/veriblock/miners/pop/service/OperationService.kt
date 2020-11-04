@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.service
 
 import kotlinx.serialization.protobuf.ProtoBuf
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.miners.pop.proto.OperationProto
 import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
@@ -22,14 +23,14 @@ class OperationService(
     private val repository: OperationRepository,
     private val operationSerializer: OperationSerializer
 ) {
-    fun getOperation(id: String, txFactory: (String) -> WalletTransaction): ApmOperation? {
+    fun getOperation(id: String, txFactory: (VbkTxId) -> WalletTransaction): ApmOperation? {
         val operation = repository.getOperation(id)
             ?: return null
         val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), operation.state)
         return operationSerializer.deserialize(protoData, operation.createdAt, operation.logs.parseOperationLogs(), txFactory)
     }
 
-    fun getActiveOperations(txFactory: (String) -> WalletTransaction): List<ApmOperation> {
+    fun getActiveOperations(txFactory: (VbkTxId) -> WalletTransaction): List<ApmOperation> {
         val activeOperations = repository.getActiveOperations()
         return activeOperations.map {
             val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)
@@ -37,7 +38,7 @@ class OperationService(
         }
     }
 
-    fun getOperations(state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (String) -> WalletTransaction): List<ApmOperation> {
+    fun getOperations(state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (VbkTxId) -> WalletTransaction): List<ApmOperation> {
         val operations = repository.getOperations(state, limit, offset)
         return operations.map {
             val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)

@@ -9,7 +9,9 @@ package org.veriblock.sdk.services
 
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.crypto.asSha256Hash
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.crypto.sha256HashOf
 import org.veriblock.core.crypto.readBtcHash
 import org.veriblock.core.crypto.readBtcMerkleRoot
@@ -173,8 +175,8 @@ object SerializeDeserializeService {
         stream.writeVariableLengthValue(publicationDataBytes)
     }
 
-    fun getId(veriBlockTransaction: VeriBlockTransaction): Sha256Hash {
-        return sha256HashOf(serializeTransactionEffects(veriBlockTransaction)).asSha256Hash()
+    fun getId(veriBlockTransaction: VeriBlockTransaction): VbkTxId {
+        return sha256HashOf(serializeTransactionEffects(veriBlockTransaction)).asVbkTxId()
     }
 
     // VeriBlockBlock

@@ -7,7 +7,8 @@ import nodecore.api.grpc.VeriBlockMessages
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
+import org.veriblock.core.crypto.EMPTY_VBK_TX
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
@@ -36,7 +37,7 @@ class P2PServiceTest {
 
     @Test
     fun onTransactionRequestWhenNotFindTx() {
-        val txIds = listOf(Sha256Hash.ZERO_HASH)
+        val txIds = listOf(EMPTY_VBK_TX)
 
         every { pendingTransactionContainer.getTransaction(any()) } returns null
         every { peer.sendMessage((any<VeriBlockMessages.Event>())) } returns Unit
@@ -49,7 +50,7 @@ class P2PServiceTest {
 
     @Test
     fun onTransactionRequestWhenFindTx() {
-        val txIds = listOf(Sha256Hash.ZERO_HASH)
+        val txIds = listOf(EMPTY_VBK_TX)
         val outputs = listOf(
             Output("V7GghFKRA6BKqtHD7LTdT2ao93DRNA".asStandardAddress(), 3499999999L.asCoin())
         )
@@ -61,11 +62,11 @@ class P2PServiceTest {
         standardTransaction.addSignature(sign, pub)
 
         every { pendingTransactionContainer.getTransaction(txIds[0]) } returns standardTransaction
-        every { peer.sendMessage((any<VeriBlockMessages.Event>())) } returns Unit
+        every { peer.sendMessage((any())) } returns Unit
 
         p2PService.onTransactionRequest(txIds, peer)
 
         verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(txIds[0]) }
-        verify(exactly = 1 ) { peer.sendMessage(any<VeriBlockMessages.Event>()) }
+        verify(exactly = 1 ) { peer.sendMessage(any()) }
     }
 }

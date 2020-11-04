@@ -7,8 +7,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.BtcHash
 
 class BlockMetaPackage(
-    val hash: Sha256Hash
+    val hash: BtcHash
 )

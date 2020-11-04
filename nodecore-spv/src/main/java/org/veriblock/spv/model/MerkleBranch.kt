@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
+import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.spv.util.Utils
@@ -15,7 +16,7 @@ import java.util.stream.Collectors
 
 class MerkleBranch(
     index: Int,
-    subject: Sha256Hash,
+    subject: MerkleRoot,
     merklePathHashes: List<Sha256Hash>,
     val isRegular: Boolean
 ) {

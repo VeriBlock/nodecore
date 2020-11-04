@@ -6,8 +6,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-@file:JvmName("AltchainPoPMinerKt")
-
 package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +23,6 @@ import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.net.SpvGateway
@@ -154,20 +151,15 @@ class AltchainPopMinerService(
 
     fun getOperations(status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Int = 0): List<ApmOperation> {
         return if (status == MiningOperationStatus.ACTIVE) {
-            operations.values.asSequence().sortedBy {
-                it.createdAt
-            }.drop(
-                offset.toInt()
-            ).take(
-                limit
-            ).toList()
+            operations.values.asSequence()
+                .sortedBy { it.createdAt }
+                .drop(offset)
+                .take(limit)
+                .toList()
         } else {
             operationService.getOperations(status, limit, offset) { txId ->
-                val hash = txId.asBtcHash()
-                transactionMonitor.getTransaction(hash)
-            }.map {
-                it
-            }.toList()
+                transactionMonitor.getTransaction(txId)
+            }
         }
     }
 
@@ -181,8 +173,7 @@ class AltchainPopMinerService(
 
     fun getOperation(id: String): ApmOperation? {
         return operations[id] ?: operationService.getOperation(id) { txId ->
-            val hash = txId.asBtcHash()
-            transactionMonitor.getTransaction(hash)
+            transactionMonitor.getTransaction(txId)
         }
     }
 
@@ -283,8 +274,7 @@ class AltchainPopMinerService(
     private fun loadAndSubmitSuspendedOperations() {
         try {
             val activeOperations = operationService.getActiveOperations { txId ->
-                val hash = txId.asBtcHash()
-                transactionMonitor.getTransaction(hash)
+                transactionMonitor.getTransaction(txId)
             }
             for (state in activeOperations) {
                 operations[state.id] = state

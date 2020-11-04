@@ -20,7 +20,7 @@ import nodecore.p2p.PeerCapabilities
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkHash
-import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -115,7 +115,7 @@ class SpvPeer(
                 val txRequestBuilder = VeriBlockMessages.TransactionRequest.newBuilder()
                 val transactions = message.advertiseTx.transactionsList
                 for (tx in transactions) {
-                    val txId = tx.txId.toByteArray().asBtcHash()
+                    val txId = tx.txId.toByteArray().asVbkTxId()
                     val broadcastCount = spvContext.transactionPool.record(txId, address)
                     if (broadcastCount == 1) {
                         txRequestBuilder.addTransactions(tx)

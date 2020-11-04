@@ -26,10 +26,12 @@ import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.TruncatedMerkleRoot
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
-import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asSha256Hash
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.miner.randomBtcHash
 import org.veriblock.core.miner.randomMerkleRoot
 import org.veriblock.core.miner.randomTruncatedMerkleRoot
@@ -122,7 +124,7 @@ fun randomOutput(
 }
 
 fun randomTransactionMeta(
-    transactionId: Sha256Hash = randomSha256Hash(),
+    transactionId: VbkTxId = randomVbkTxId(),
     metaState: TransactionMeta.MetaState = TransactionMeta.MetaState.UNKNOWN,
     depthCount: Int = 0
 ): TransactionMeta {
@@ -148,7 +150,12 @@ fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash {
 private var messageDigest = MessageDigest.getInstance("SHA-256")
 fun randomSha256Hash(): Sha256Hash {
     val randomBytes = randomAlphabeticString().toByteArray()
-    return messageDigest.digest(randomBytes).asBtcHash()
+    return messageDigest.digest(randomBytes).asSha256Hash()
+}
+
+fun randomVbkTxId(): VbkTxId {
+    val randomBytes = randomAlphabeticString().toByteArray()
+    return messageDigest.digest(randomBytes).asVbkTxId()
 }
 
 fun randomVeriBlockMerklePath(

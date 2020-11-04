@@ -16,7 +16,8 @@ import org.veriblock.miners.pop.proto.TxmonProto
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.asAnyVbkHash
-import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asVbkTxId
+import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.asCoin
@@ -102,12 +103,12 @@ private fun TxmonProto.WalletTransaction.toModel(context: ApmContext): WalletTra
 }
 
 private fun TxmonProto.MerkleBranch.toModel(): VeriBlockMerklePath = VeriBlockMerklePath(
-    "$merkleSubTree:$index:${subject.asBtcHash()}:" +
-        merklePathHashes.joinToString(":") { it.asBtcHash().toString() }
+    "$merkleSubTree:$index:${subject.toHex()}:" +
+        merklePathHashes.joinToString(":") { it.toHex() }
 )
 
 private fun TxmonProto.TransactionMeta.toModel(): TransactionMeta = TransactionMeta(
-    txId.asBtcHash()
+    txId.asVbkTxId()
 ).also {
     it.setState(TransactionMeta.MetaState.forNumber(state))
     if (appearsInBestChainBlock.isNotEmpty()) {

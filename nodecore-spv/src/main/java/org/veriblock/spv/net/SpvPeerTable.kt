@@ -27,7 +27,7 @@ import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
@@ -328,7 +328,7 @@ class SpvPeerTable(
                     }
                     ResultsCase.TX_REQUEST -> {
                         val txIds = message.txRequest.transactionsList.map {
-                            ByteStringUtility.byteStringToHex(it.txId).asBtcHash()
+                            ByteStringUtility.byteStringToHex(it.txId).asVbkTxId()
                         }
                         p2pService.onTransactionRequest(txIds, sender)
                     }
@@ -532,7 +532,7 @@ private fun VeriBlockMessages.Transaction.toModel() = TransactionData(
     contextBitcoinBlockHeaders = listOf(),
     timestamp = timestamp,
     size = size,
-    txId = txId.toHex().asBtcHash()
+    txId = txId.toByteArray().asVbkTxId()
 )
 
 private fun VeriBlockMessages.Output.toModel() = OutputData(

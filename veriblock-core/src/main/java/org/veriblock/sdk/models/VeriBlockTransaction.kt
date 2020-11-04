@@ -8,6 +8,7 @@
 package org.veriblock.sdk.models
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.utilities.Preconditions
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.Arrays
@@ -24,7 +25,7 @@ open class VeriBlockTransaction(
     publicKey: ByteArray,
     networkByte: Byte?
 ) {
-    val id: Sha256Hash
+    val id: VbkTxId
     val type: Byte
     val sourceAddress: Address
     val sourceAmount: Coin

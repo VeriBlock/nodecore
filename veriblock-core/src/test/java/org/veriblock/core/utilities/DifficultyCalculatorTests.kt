@@ -3,9 +3,9 @@ package org.veriblock.core.utilities
 import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.bitcoinj.BitcoinUtilities
+import org.veriblock.core.crypto.EMPTY_TRUNCATED_MERKLE_ROOT
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -24,7 +24,7 @@ class VeriBlockDifficultyCalculatorTests {
             previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
             previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
             secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-            merkleRoot = Sha256Hash.EMPTY_TRUNCATED_MERKLE_ROOT,
+            merkleRoot = EMPTY_TRUNCATED_MERKLE_ROOT,
             timestamp = time,
             difficulty = BitcoinUtilities.encodeCompactBits(diff).toInt(),
             nonce = 0

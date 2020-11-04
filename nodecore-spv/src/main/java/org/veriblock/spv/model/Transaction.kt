@@ -9,6 +9,7 @@ package org.veriblock.spv.model
 
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
 
 abstract class Transaction {
@@ -20,7 +21,7 @@ abstract class Transaction {
 
     constructor()
 
-    constructor(txId: Sha256Hash) {
+    constructor(txId: VbkTxId) {
         this.txId = txId
         transactionMeta = TransactionMeta(txId)
     }

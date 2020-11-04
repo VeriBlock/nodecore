@@ -12,6 +12,7 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.merkleRootHashOf
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asMerkleRoot
+import org.veriblock.core.crypto.asSha256Hash
 
 class VeriBlockMerklePath {
     val treeIndex: Int
@@ -49,7 +50,7 @@ class VeriBlockMerklePath {
         index = parts[1].toInt()
         subject = parts[2].asMerkleRoot()
         layers = (3 until parts.size).map {
-            parts[it].asBtcHash()
+            parts[it].asSha256Hash()
         }
         this.compactFormat = compactFormat
         merkleRoot = calculateVeriMerkleRoot()

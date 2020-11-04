@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.transactionmonitor
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
@@ -42,7 +43,7 @@ class WalletTransaction(
     var merklePath: VeriBlockMerklePath? = null
 
     constructor(
-        id: Sha256Hash, type: Byte, sourceAddress: Address, sourceAmount: Coin, outputs: List<Output>, signatureIndex: Long,
+        id: VbkTxId, type: Byte, sourceAddress: Address, sourceAmount: Coin, outputs: List<Output>, signatureIndex: Long,
         publicationData: PublicationData?, signature: ByteArray, publicKey: ByteArray, networkByte: Byte?
     ) : this(
         type, sourceAddress, sourceAmount, outputs, signatureIndex, publicationData, signature, publicKey, networkByte, TransactionMeta(id)

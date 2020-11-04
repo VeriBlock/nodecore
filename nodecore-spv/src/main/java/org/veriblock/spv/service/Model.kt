@@ -1,6 +1,7 @@
 package org.veriblock.spv.service
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
 import org.veriblock.spv.model.AddressLight
@@ -106,7 +107,7 @@ data class TransactionData(
     val contextBitcoinBlockHeaders: List<String>,
     val timestamp: Int,
     val size: Int,
-    val txId: Sha256Hash
+    val txId: VbkTxId
 )
 
 data class OutputData(

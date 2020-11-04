@@ -7,25 +7,26 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
+import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.doubleSha256HashOf
-import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asMerkleRoot
 import org.veriblock.core.crypto.asSha256Hash
 
 class MerklePath {
     private val compactFormat: String
     val layers: List<Sha256Hash>
-    val subject: Sha256Hash
+    val subject: MerkleRoot
     val index: Int
 
     /**
      * The Merkle root produced by following the layers up to the top of the tree.
      */
-    var merkleRoot: Sha256Hash
+    var merkleRoot: MerkleRoot
 
     constructor(
         index: Int,
-        subject: Sha256Hash,
+        subject: MerkleRoot,
         layers: List<Sha256Hash>
     ) {
         this.index = index
@@ -42,22 +43,22 @@ class MerklePath {
             "Invalid merkle path: $compactFormat"
         }
         index = parts[0].toInt()
-        subject = parts[1].asBtcHash()
+        subject = parts[1].asMerkleRoot()
         layers = (2 until parts.size).map {
-            parts[it].asBtcHash()
+            parts[it].asSha256Hash()
         }
         merkleRoot = calculateMerkleRoot()
         this.compactFormat = compactFormat
     }
 
-    private fun calculateMerkleRoot(): Sha256Hash {
+    private fun calculateMerkleRoot(): MerkleRoot {
         var layerIndex = index
         var cursor = subject
         for (layer in layers) {
             // Climb one layer up the tree by concatenating the current state with the next layer in the right order
             val first = if (layerIndex % 2 == 0) cursor.bytes else layer.bytes
             val second = if (layerIndex % 2 == 0) layer.bytes else cursor.bytes
-            cursor = doubleSha256HashOf(first, second).asSha256Hash()
+            cursor = doubleSha256HashOf(first, second).asMerkleRoot()
 
             // The position above on the tree will be floor(currentIndex / 2)
             layerIndex /= 2

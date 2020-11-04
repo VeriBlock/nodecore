@@ -9,6 +9,7 @@
 package org.veriblock.miners.pop.transactionmonitor
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -41,7 +42,7 @@ class TransactionMonitor(
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
     private val lock = ReentrantLock(true)
-    private val transactions: MutableMap<Sha256Hash, WalletTransaction> = HashMap()
+    private val transactions: MutableMap<VbkTxId, WalletTransaction> = HashMap()
 
     init {
         for (tx in transactionsToLoad) {
@@ -105,7 +106,7 @@ class TransactionMonitor(
         transactions[transaction.id] = walletTransaction
     }
 
-    fun getTransaction(transactionId: Sha256Hash): WalletTransaction {
+    fun getTransaction(transactionId: VbkTxId): WalletTransaction {
         return transactions[transactionId]
             ?: error("Unable to find transaction $transactionId in the monitored address")
     }

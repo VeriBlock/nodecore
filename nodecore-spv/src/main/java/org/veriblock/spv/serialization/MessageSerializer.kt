@@ -22,6 +22,7 @@ import org.veriblock.sdk.models.MerklePath
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asTruncatedMerkleRoot
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -63,7 +64,7 @@ object MessageSerializer {
         val signed = transactionUnionMessage.signed
         val txMessage = signed.transaction
         val tx = PopTransactionLight(
-            txId = txMessage.txId.toByteArray().asBtcHash(),
+            txId = txMessage.txId.toByteArray().asVbkTxId(),
             endorsedBlock = SerializeDeserializeService.parseVeriBlockBlock(txMessage.endorsedBlockHeader.toByteArray()),
             bitcoinTx = BitcoinTransaction(txMessage.bitcoinTransaction.toByteArray()),
             bitcoinMerklePath = MerklePath(txMessage.merklePath),
@@ -104,7 +105,7 @@ object MessageSerializer {
 
     private fun deserializeStandardTransaction(signedTransaction: SignedTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
-        val tx = StandardTransaction(txMessage.txId.toByteArray().asBtcHash())
+        val tx = StandardTransaction(txMessage.txId.toByteArray().asVbkTxId())
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
         tx.inputAmount = txMessage.sourceAmount.asCoin()
         txMessage.outputsList.map {
@@ -119,7 +120,7 @@ object MessageSerializer {
 
     private fun deserializeMultisigTransaction(signedTransaction: SignedMultisigTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
-        val tx: StandardTransaction = MultisigTransaction(txMessage.txId.toByteArray().asBtcHash())
+        val tx: StandardTransaction = MultisigTransaction(txMessage.txId.toByteArray().asVbkTxId())
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
         tx.inputAmount = txMessage.sourceAmount.asCoin()
         txMessage.outputsList.map {

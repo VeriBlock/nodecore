@@ -8,14 +8,14 @@
 package org.veriblock.spv.model
 
 import io.ktor.util.network.*
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.spv.util.SpvEventBus
 import java.util.ArrayList
 import java.util.HashSet
 
 class TransactionMeta(
-    val txId: Sha256Hash
+    val txId: VbkTxId
 ) {
     private val appearsInBlock: MutableList<VbkHash> = ArrayList()
     var appearsAtChainHeight = -1

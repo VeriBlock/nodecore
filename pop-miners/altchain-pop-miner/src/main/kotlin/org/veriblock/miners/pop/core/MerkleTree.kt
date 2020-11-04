@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.core
 
+import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
@@ -76,7 +77,7 @@ class MerkleTree private constructor(
 
         private fun build(nodes: List<MerkleNode>): MerkleNode {
             if (nodes.isEmpty()) {
-                return MerkleNode(Sha256Hash.ZERO_HASH)
+                return MerkleNode(EMPTY_BITCOIN_HASH)
             }
             if (nodes.size == 1) {
                 return nodes[0]

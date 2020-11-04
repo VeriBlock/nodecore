@@ -16,6 +16,15 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
+const val BITCOIN_HASH_LENGTH = 32 // bytes
+const val TRUNCATED_MERKLE_ROOT_LENGTH = 16
+
+private val EMPTY_ARRAY = ByteArray(BITCOIN_HASH_LENGTH)
+val EMPTY_BITCOIN_HASH = EMPTY_ARRAY.asBtcHash()
+val EMPTY_VBK_TX = EMPTY_ARRAY.asVbkTxId()
+
+val EMPTY_TRUNCATED_MERKLE_ROOT = ByteArray(TRUNCATED_MERKLE_ROOT_LENGTH).asTruncatedMerkleRoot()
+
 open class Sha256Hash(
     val bytes: ByteArray
 ) : Comparable<Sha256Hash> {
@@ -55,7 +64,7 @@ open class Sha256Hash(
     }
 
     override fun compareTo(other: Sha256Hash): Int {
-        for (i in BITCOIN_LENGTH - 1 downTo 0) {
+        for (i in BITCOIN_HASH_LENGTH - 1 downTo 0) {
             val thisByte: Int = bytes[i].toInt() and 0xff
             val otherByte: Int = other.bytes[i].toInt() and 0xff
             if (thisByte > otherByte) return 1
@@ -63,26 +72,27 @@ open class Sha256Hash(
         }
         return 0
     }
-
-    companion object {
-        const val BITCOIN_LENGTH = 32 // bytes
-        const val TRUNCATED_MERKLE_ROOT_LENGTH = 16
-        val ZERO_HASH = ByteArray(BITCOIN_LENGTH).asBtcHash()
-        val EMPTY_TRUNCATED_MERKLE_ROOT = ByteArray(TRUNCATED_MERKLE_ROOT_LENGTH).asTruncatedMerkleRoot()
-    }
 }
 
 class BtcHash(bytes: ByteArray) : Sha256Hash(bytes) {
     init {
-        check(bytes.size == BITCOIN_LENGTH) {
+        check(bytes.size == BITCOIN_HASH_LENGTH) {
             "Trying to create a BTC hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
+        }
+    }
+}
+
+class VbkTxId(bytes: ByteArray) : Sha256Hash(bytes) {
+    init {
+        check(bytes.size == BITCOIN_HASH_LENGTH) {
+            "Trying to create a VBK Transaction id with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
 }
 
 class MerkleRoot(bytes: ByteArray) : Sha256Hash(bytes) {
     init {
-        check(bytes.size == BITCOIN_LENGTH) {
+        check(bytes.size == BITCOIN_HASH_LENGTH) {
             "Trying to create a merkle root hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
@@ -103,11 +113,13 @@ class TruncatedMerkleRoot(bytes: ByteArray) : Sha256Hash(bytes) {
 
 fun ByteArray.asSha256Hash() = Sha256Hash(this)
 fun ByteArray.asBtcHash() = BtcHash(this)
+fun ByteArray.asVbkTxId() = VbkTxId(this)
 fun ByteArray.asMerkleRoot() = MerkleRoot(this)
 fun ByteArray.asTruncatedMerkleRoot() = TruncatedMerkleRoot(this)
 
 fun String.asSha256Hash() = asHexBytes().asSha256Hash()
 fun String.asBtcHash() = asHexBytes().asBtcHash()
+fun String.asVbkTxId() = asHexBytes().asVbkTxId()
 fun String.asMerkleRoot() = asHexBytes().asMerkleRoot()
 fun String.asTruncatedMerkleRoot() = asHexBytes().asTruncatedMerkleRoot()
 
@@ -133,19 +145,19 @@ fun merkleRootHashOf(first: ByteArray, second: ByteArray): MerkleRoot {
 }
 
 fun ByteBuffer.readBtcHash(): BtcHash {
-    val dest = ByteArray(Sha256Hash.BITCOIN_LENGTH)
+    val dest = ByteArray(BITCOIN_HASH_LENGTH)
     get(dest)
     return dest.flip().asBtcHash()
 }
 
 fun ByteBuffer.readBtcMerkleRoot(): MerkleRoot {
-    val dest = ByteArray(Sha256Hash.BITCOIN_LENGTH)
+    val dest = ByteArray(BITCOIN_HASH_LENGTH)
     get(dest)
     return dest.flip().asMerkleRoot()
 }
 
 fun ByteBuffer.readTruncatedMerkleRoot(): TruncatedMerkleRoot {
-    val dest = ByteArray(Sha256Hash.TRUNCATED_MERKLE_ROOT_LENGTH)
+    val dest = ByteArray(TRUNCATED_MERKLE_ROOT_LENGTH)
     get(dest)
     return dest.asTruncatedMerkleRoot()
 }
@@ -230,4 +242,3 @@ fun doubleSha256HashOf(
 fun doubleSha256HashOf(first: ByteArray, second: ByteArray): ByteArray {
     return doubleSha256HashOf(first, 0, first.size, second, 0, second.size)
 }
-

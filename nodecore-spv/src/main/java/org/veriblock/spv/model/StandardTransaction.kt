@@ -17,7 +17,8 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.VbkTxId
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -35,7 +36,7 @@ open class StandardTransaction : Transaction {
     private var transactionFee: Long = 0
     override var data: ByteArray? = null
 
-    constructor(txId: Sha256Hash) : super(txId)
+    constructor(txId: VbkTxId) : super(txId)
 
     constructor(
         inputAddress: String,
@@ -167,8 +168,8 @@ open class StandardTransaction : Transaction {
 
     private fun calculateTxId(
         networkParameters: NetworkParameters
-    ): Sha256Hash {
-        return calculateTxIDBytes(toByteArray(networkParameters)).asBtcHash()
+    ): VbkTxId {
+        return calculateTxIDBytes(toByteArray(networkParameters)).asVbkTxId()
     }
 
     private fun calculateTxIDBytes(rawTx: ByteArray): ByteArray {

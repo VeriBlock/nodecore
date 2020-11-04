@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.wallet
 
+import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
@@ -66,7 +67,7 @@ class LedgerEntry(
             } catch (e: IOException) {
                 // Should not happen
             }
-            return Sha256Hash.ZERO_HASH
+            return EMPTY_BITCOIN_HASH
         }
     }
 }

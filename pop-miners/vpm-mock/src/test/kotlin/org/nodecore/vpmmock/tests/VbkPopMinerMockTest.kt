@@ -6,9 +6,9 @@ import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.defaultRegTestParameters
 import org.nodecore.vpmmock.mockmining.VeriBlockPopMinerMock
+import org.veriblock.core.crypto.EMPTY_TRUNCATED_MERKLE_ROOT
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.security.*
@@ -50,7 +50,7 @@ class VbkPopMinerMockTest {
             previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
             previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
             secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-            merkleRoot = Sha256Hash.EMPTY_TRUNCATED_MERKLE_ROOT,
+            merkleRoot = EMPTY_TRUNCATED_MERKLE_ROOT,
             timestamp = 3,
             difficulty = 4,
             nonce = 5
