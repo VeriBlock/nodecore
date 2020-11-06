@@ -21,7 +21,6 @@ import org.veriblock.spv.model.TransactionPool
 import org.veriblock.spv.net.*
 import org.veriblock.spv.service.*
 import org.veriblock.spv.service.tx.TxManager
-import org.veriblock.spv.service.tx.TxManager
 import org.veriblock.spv.util.SpvEventBus.addressStateUpdatedEvent
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
 import java.io.File

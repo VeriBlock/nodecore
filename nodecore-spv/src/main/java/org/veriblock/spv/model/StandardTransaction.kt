@@ -127,7 +127,7 @@ open class StandardTransaction : Transaction {
         stream.write(transactionTypeIdentifier.id.toInt())
 
         // Write source address
-        inputAddress!!.serializeToStream(stream)
+        inputAddress.serializeToStream(stream)
 
         // Write source amount
         SerializeDeserializeService.serialize(inputAmount!!, stream)

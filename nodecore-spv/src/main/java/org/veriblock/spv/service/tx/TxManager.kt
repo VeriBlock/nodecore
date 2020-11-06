@@ -178,11 +178,8 @@ class TxManager(
             ?: return false
 
         val mp = VeriBlockMerklePath(info.merklePath)
-        check(mp.merkleRoot.length == block.header.merkleRoot.length) {
-            "MerklePath root length=${mp.merkleRoot.length} != header merkleRoot length=${block.header.merkleRoot.length}"
-        }
         // verify merkle proof for this TX
-        if (mp.merkleRoot != block.header.merkleRoot) {
+        if (mp.merkleRoot.truncate() != block.header.merkleRoot) {
             // can't prove that TX is in `block`
             return false
         }

@@ -39,6 +39,7 @@ import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.Blockchain
 import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.service.TransactionService
+import org.veriblock.spv.service.tx.TxManager
 import java.io.IOException
 import java.security.KeyPairGenerator
 
@@ -48,7 +49,7 @@ class AdminApiServiceTest {
     private lateinit var addressManager: AddressManager
     private lateinit var peerTable: SpvPeerTable
     private lateinit var spvService: SpvService
-    private lateinit var transactionContainer: PendingTransactionContainer
+    private lateinit var transactionContainer: TxManager
     private lateinit var blockchain: Blockchain
     val address = "VHoWCZrQB4kqLHm1EoNoU8rih7ohyG"
     val block = defaultTestNetParameters.genesisBlock
