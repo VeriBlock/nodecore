@@ -13,6 +13,7 @@ import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -22,7 +23,7 @@ import java.io.OutputStream
 import java.util.ArrayList
 
 class PopTransactionLight(
-    txId: Sha256Hash,
+    txId: VbkTxId,
     val endorsedBlock: VeriBlockBlock,
     val bitcoinTx: BitcoinTransaction,
     val bitcoinMerklePath: MerklePath,

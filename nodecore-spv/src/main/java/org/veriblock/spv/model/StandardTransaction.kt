@@ -11,13 +11,14 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
 import nodecore.api.grpc.utilities.extensions.asHexByteString
-import org.slf4j.LoggerFactory
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -35,7 +36,7 @@ open class StandardTransaction : Transaction {
     private var transactionFee: Long = 0
     override var data: ByteArray? = null
 
-    constructor(txId: Sha256Hash) : super(txId)
+    constructor(txId: VbkTxId) : super(txId)
 
     constructor(
         inputAddress: String,
@@ -167,8 +168,8 @@ open class StandardTransaction : Transaction {
 
     private fun calculateTxId(
         networkParameters: NetworkParameters
-    ): Sha256Hash {
-        return Sha256Hash.wrap(calculateTxIDBytes(toByteArray(networkParameters)))
+    ): VbkTxId {
+        return calculateTxIDBytes(toByteArray(networkParameters)).asVbkTxId()
     }
 
     private fun calculateTxIDBytes(rawTx: ByteArray): ByteArray {

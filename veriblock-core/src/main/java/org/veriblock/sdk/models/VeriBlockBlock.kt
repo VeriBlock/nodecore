@@ -11,8 +11,9 @@ import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.MerkleRoot
+import org.veriblock.core.crypto.TruncatedMerkleRoot
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -20,27 +21,17 @@ import java.math.BigInteger
 import java.util.Arrays
 
 open class VeriBlockBlock(
-    height: Int,
-    version: Short,
-    previousBlock: PreviousBlockVbkHash,
-    previousKeystone: PreviousKeystoneVbkHash,
-    secondPreviousKeystone: PreviousKeystoneVbkHash,
-    merkleRoot: Sha256Hash,
-    timestamp: Int,
-    difficulty: Int,
-    nonce: Long,
+    val height: Int,
+    val version: Short,
+    val previousBlock: PreviousBlockVbkHash,
+    val previousKeystone: PreviousKeystoneVbkHash,
+    val secondPreviousKeystone: PreviousKeystoneVbkHash,
+    val merkleRoot: TruncatedMerkleRoot,
+    val timestamp: Int,
+    val difficulty: Int,
+    var nonce: Long,
     private val precomputedHash: VbkHash? = null
 ) {
-    val height: Int
-    val version: Short
-    val previousBlock: PreviousBlockVbkHash
-    val previousKeystone: PreviousKeystoneVbkHash
-    val secondPreviousKeystone: PreviousKeystoneVbkHash
-    val merkleRoot: Sha256Hash
-    val timestamp: Int
-    val difficulty: Int
-    var nonce: Long
-
     val raw: ByteArray
         get() = SerializeDeserializeService.serializeHeaders(this)
 
@@ -50,21 +41,6 @@ open class VeriBlockBlock(
         } else {
             BlockUtility.hashBlock(raw)
         }.asVbkHash()
-    }
-
-    init {
-        require(merkleRoot.length >= Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH) {
-            "Invalid merkle root: $merkleRoot"
-        }
-        this.height = height
-        this.version = version
-        this.previousBlock = previousBlock
-        this.previousKeystone = previousKeystone
-        this.secondPreviousKeystone = secondPreviousKeystone
-        this.merkleRoot = merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
-        this.timestamp = timestamp
-        this.difficulty = difficulty
-        this.nonce = nonce
     }
 
     fun getRoundIndex(): Int =

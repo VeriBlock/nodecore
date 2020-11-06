@@ -5,7 +5,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package org.veriblock.sdk.blockchain.store
+package org.veriblock.spv.model
 
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.readVbkHash
@@ -66,27 +66,25 @@ class StoredVeriBlockBlock(
     companion object {
         const val SIZE = 24 + 64 + 12
         const val CHAIN_WORK_BYTES = 12
-
-        @JvmStatic
-        fun deserialize(buffer: ByteBuffer): StoredVeriBlockBlock {
-            val hash = buffer.readVbkHash()
-            val workBytes = ByteArray(CHAIN_WORK_BYTES)
-            buffer.get(workBytes)
-            val work = BigInteger(1, workBytes)
-            val blockBytes = BlockUtility.getBlockHeader(buffer)
-            val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
-            return StoredVeriBlockBlock(block, work, hash)
-        }
-
-        @JvmStatic
-        fun deserialize(bytes: ByteArray): StoredVeriBlockBlock {
-            check(bytes.size >= SIZE) {
-                "Invalid raw VeriBlock Block: " + Utility.bytesToHex(bytes)
-            }
-            val local = ByteBuffer.allocateDirect(SIZE)
-            local.put(bytes, bytes.size - SIZE, SIZE)
-            local.flip()
-            return deserialize(local)
-        }
     }
+}
+
+fun ByteBuffer.deserializeStoredVeriBlockBlock(): StoredVeriBlockBlock {
+    val hash = readVbkHash()
+    val workBytes = ByteArray(StoredVeriBlockBlock.CHAIN_WORK_BYTES)
+    get(workBytes)
+    val work = BigInteger(1, workBytes)
+    val blockBytes = BlockUtility.getBlockHeader(this)
+    val block = SerializeDeserializeService.parseVeriBlockBlock(blockBytes)
+    return StoredVeriBlockBlock(block, work, hash)
+}
+
+fun ByteArray.deserializeStoredVeriBlockBlock(): StoredVeriBlockBlock {
+    check(size >= StoredVeriBlockBlock.SIZE) {
+        "Invalid raw VeriBlock Block: " + Utility.bytesToHex(this)
+    }
+    val local = ByteBuffer.allocateDirect(StoredVeriBlockBlock.SIZE)
+    local.put(this, size - StoredVeriBlockBlock.SIZE, StoredVeriBlockBlock.SIZE)
+    local.flip()
+    return local.deserializeStoredVeriBlockBlock()
 }

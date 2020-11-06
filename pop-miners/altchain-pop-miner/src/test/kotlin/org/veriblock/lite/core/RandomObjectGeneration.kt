@@ -9,6 +9,8 @@
 package org.veriblock.lite.core
 
 import org.apache.commons.lang3.RandomStringUtils
+import org.veriblock.core.crypto.BtcHash
+import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.utilities.AddressUtility
@@ -22,14 +24,21 @@ import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.PublicationData
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.TruncatedMerkleRoot
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
+import org.veriblock.core.crypto.asSha256Hash
+import org.veriblock.core.crypto.asVbkTxId
+import org.veriblock.core.miner.randomBtcHash
+import org.veriblock.core.miner.randomMerkleRoot
+import org.veriblock.core.miner.randomTruncatedMerkleRoot
 import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.core.BlockMetaPackage
-import org.veriblock.miners.pop.core.FullBlock
 import org.veriblock.miners.pop.core.TransactionMeta
+import org.veriblock.sdk.models.BlockMetaPackage
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
@@ -115,7 +124,7 @@ fun randomOutput(
 }
 
 fun randomTransactionMeta(
-    transactionId: Sha256Hash = randomSha256Hash(),
+    transactionId: VbkTxId = randomVbkTxId(),
     metaState: TransactionMeta.MetaState = TransactionMeta.MetaState.UNKNOWN,
     depthCount: Int = 0
 ): TransactionMeta {
@@ -141,7 +150,12 @@ fun randomPreviousKeystoneVbkHash(): PreviousKeystoneVbkHash {
 private var messageDigest = MessageDigest.getInstance("SHA-256")
 fun randomSha256Hash(): Sha256Hash {
     val randomBytes = randomAlphabeticString().toByteArray()
-    return Sha256Hash.wrap(messageDigest.digest(randomBytes))
+    return messageDigest.digest(randomBytes).asSha256Hash()
+}
+
+fun randomVbkTxId(): VbkTxId {
+    val randomBytes = randomAlphabeticString().toByteArray()
+    return messageDigest.digest(randomBytes).asVbkTxId()
 }
 
 fun randomVeriBlockMerklePath(
@@ -197,12 +211,12 @@ fun randomFullBlock(
     previousBlock: PreviousBlockVbkHash = randomPreviousBlockVbkHash(),
     previousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
     secondPreviousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
-    merkleRoot: Sha256Hash = randomSha256Hash(),
+    merkleRoot: TruncatedMerkleRoot = randomTruncatedMerkleRoot(),
     timestamp: Int = randomInt(0, Int.MAX_VALUE),
     difficulty: Int = randomInt(0, Int.MAX_VALUE),
     nonce: Long = randomLong(0, Int.MAX_VALUE.toLong()),
     normalTransactions: List<VeriBlockTransaction> = (1..10).map { randomVeriBlockTransaction(context) },
-    popTransactions: List<VeriBlockPopTransaction> = (1..10).map { randomVeriBlockPoPTransaction(context) },
+    popTransactions: List<VeriBlockPopTransaction> = (1..10).map { randomVeriBlockPopTransaction(context) },
     metaPackage: BlockMetaPackage = randomBlockMetaPackage()
 ): FullBlock {
     return FullBlock(
@@ -227,7 +241,7 @@ fun randomBlockMetaPackage(
     return BlockMetaPackage(hash)
 }
 
-fun randomVeriBlockPoPTransaction(
+fun randomVeriBlockPopTransaction(
     context: ApmContext,
     address: Address = randomAddress(),
     publishedBlock: VeriBlockBlock = randomVeriBlockBlock(),
@@ -258,7 +272,7 @@ fun randomVeriBlockBlock(
     previousBlock: PreviousBlockVbkHash = randomPreviousBlockVbkHash(),
     previousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
     secondPreviousKeystone: PreviousKeystoneVbkHash = randomPreviousKeystoneVbkHash(),
-    merkleRoot: Sha256Hash = randomSha256Hash(),
+    merkleRoot: TruncatedMerkleRoot = randomTruncatedMerkleRoot(),
     timestamp: Int = randomInt(1, 65535),
     difficulty: Int = randomInt(1, 65535),
     nonce: Long = randomLong(1, 35535)
@@ -284,8 +298,8 @@ fun randomBitcoinTransaction(
 
 fun randomBitcoinBlock(
     version: Int = randomInt(1, 65535),
-    previousBlock: Sha256Hash = randomSha256Hash(),
-    merkleRoot: Sha256Hash = randomSha256Hash(),
+    previousBlock: BtcHash = randomBtcHash(),
+    merkleRoot: MerkleRoot = randomMerkleRoot(),
     timestamp: Int = randomInt(1, 65535),
     bits: Int = randomInt(1, 65535),
     nonce: Int = randomInt(1, 65535)

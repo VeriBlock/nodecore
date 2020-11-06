@@ -8,8 +8,9 @@
 package org.veriblock.spv.model
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 
-class MultisigTransaction(txId: Sha256Hash) : StandardTransaction(txId) {
+class MultisigTransaction(txId: VbkTxId) : StandardTransaction(txId) {
     override val transactionTypeIdentifier: TransactionTypeIdentifier
         get() = TransactionTypeIdentifier.MULTISIG
 }

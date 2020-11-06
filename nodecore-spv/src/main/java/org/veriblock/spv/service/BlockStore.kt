@@ -3,10 +3,10 @@ package org.veriblock.spv.service
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.*
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.CHAIN_WORK_BYTES
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.spv.model.StoredVeriBlockBlock
+import org.veriblock.spv.model.StoredVeriBlockBlock.Companion.CHAIN_WORK_BYTES
 import java.io.Closeable
 import java.io.File
 import java.io.IOException

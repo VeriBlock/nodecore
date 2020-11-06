@@ -14,13 +14,14 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
 import nodecore.api.grpc.utilities.extensions.asVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.miners.pop.core.BlockMetaPackage
-import org.veriblock.miners.pop.core.FullBlock
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.sdk.models.Output
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asTruncatedMerkleRoot
+import org.veriblock.sdk.models.BlockMetaPackage
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockPopTransaction
@@ -53,13 +54,13 @@ fun VeriBlockMessages.Block.deserialize(transactionPrefix: Byte?): FullBlock {
         previousHash.asVbkPreviousBlockHash(),
         secondPreviousHash.asVbkPreviousKeystoneHash(),
         thirdPreviousHash.asVbkPreviousKeystoneHash(),
-        Sha256Hash.wrap(ByteStringUtility.byteStringToHex(merkleRoot), 24),
+        ByteStringUtility.byteStringToHex(merkleRoot).asTruncatedMerkleRoot(),
         timestamp,
         encodedDifficulty,
         winningNonce,
         regularTransactionsList.map { tx -> tx.deserializeNormalTransaction(transactionPrefix) },
         popTransactionsList.map { tx -> tx.deserializePoPTransaction(transactionPrefix) },
-        BlockMetaPackage(Sha256Hash.wrap(blockContentMetapackage.hash.toByteArray()))
+        BlockMetaPackage(blockContentMetapackage.hash.toByteArray().asBtcHash())
     )
 }
 

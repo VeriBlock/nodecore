@@ -1,7 +1,6 @@
 package org.veriblock.spv.admin.service.impl
 
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -15,11 +14,10 @@ import org.veriblock.core.Context
 import org.veriblock.core.EndorsementCreationException
 import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
-import org.veriblock.core.TransactionSubmissionException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
-import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.params.defaultMainNetParameters
+import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
+import org.veriblock.core.crypto.EMPTY_VBK_TX
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
 import org.veriblock.core.wallet.AddressManager
@@ -30,7 +28,6 @@ import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.LedgerContext
-import org.veriblock.spv.model.LedgerProofStatus
 import org.veriblock.spv.model.LedgerValue
 import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardAddress
@@ -72,7 +69,7 @@ class AdminApiServiceTest {
 
     @Test
     fun sendCoins() {
-        val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction: Transaction = StandardTransaction(EMPTY_VBK_TX)
         val transactions = listOf(transaction)
         val ledgerContext = LedgerContext(
             ledgerValue = LedgerValue(100L, 0L, 0L),
@@ -108,7 +105,7 @@ class AdminApiServiceTest {
 
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressDoesntExist() {
-        val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction: Transaction = StandardTransaction(EMPTY_VBK_TX)
         val ledgerContext = LedgerContext(
             ledgerValue = LedgerValue(100L, 0L, 0L),
             address = Address(address),
@@ -134,7 +131,7 @@ class AdminApiServiceTest {
 
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressIsInvalid() {
-        val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction: Transaction = StandardTransaction(EMPTY_VBK_TX)
         val ledgerContext = LedgerContext(
             address = Address(address),
             ledgerValue = LedgerValue(100L, 0L, 0L),
@@ -160,7 +157,7 @@ class AdminApiServiceTest {
 
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenBalanceIsNotEnough() {
-        val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction: Transaction = StandardTransaction(EMPTY_VBK_TX)
         val ledgerContext = LedgerContext(
             address = Address(address),
             block = block,
@@ -186,7 +183,7 @@ class AdminApiServiceTest {
 
     @Test(expected = SendCoinsException::class)
     fun sendCoinsWhenAddressInfoDoentExist() {
-        val transaction: Transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction: Transaction = StandardTransaction(EMPTY_VBK_TX)
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
         every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
@@ -457,7 +454,7 @@ class AdminApiServiceTest {
 
     @Test
     fun submitTransactionsWhenTxSignedThenTrue() {
-        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH)
+        val transaction = StandardTransaction(EMPTY_VBK_TX)
         runBlocking {
             spvService.submitTransactions(listOf(transaction))
         }
@@ -483,7 +480,7 @@ class AdminApiServiceTest {
 
     @Test(expected = EndorsementCreationException::class)
     fun createAltChainEndorsementWhenMaxFeeLess() {
-        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH).also {
+        val transaction = StandardTransaction(EMPTY_VBK_TX).also {
             it.inputAddress = StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS")
             it.inputAmount = Coin.ONE
             it.data = ByteArray(12)
@@ -505,7 +502,7 @@ class AdminApiServiceTest {
 
     @Test(expected = Test.None::class)
     fun createAltChainEndorsement() {
-        val transaction = StandardTransaction(Sha256Hash.ZERO_HASH).also {
+        val transaction = StandardTransaction(EMPTY_VBK_TX).also {
             it.inputAddress = StandardAddress("VcspPDtJNpNmLV8qFTqb2F5157JNHS")
             it.inputAmount = Coin.ONE
             it.data = ByteArray(12)

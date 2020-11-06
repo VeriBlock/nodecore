@@ -5,7 +5,7 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package org.veriblock.sdk.blockchain.store
+package org.veriblock.spv.model
 
 import org.junit.Assert
 import org.junit.Before
@@ -13,7 +13,6 @@ import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock.Companion.deserialize
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -35,9 +34,7 @@ class StoredVeriBlockBlockTest {
     @Test
     fun serializeAndDeserialize() {
         val bytes = storedVeriBlockBlockExpected.serialize()
-        val storedVeriBlockBlockActual = deserialize(
-            bytes
-        )
+        val storedVeriBlockBlockActual = bytes.deserializeStoredVeriBlockBlock()
         Assert.assertEquals(storedVeriBlockBlockExpected, storedVeriBlockBlockActual)
     }
 
@@ -46,9 +43,7 @@ class StoredVeriBlockBlockTest {
         val buffer = ByteBuffer.allocateDirect(StoredVeriBlockBlock.SIZE)
         storedVeriBlockBlockExpected.serialize(buffer)
         buffer.flip()
-        val storedVeriBlockBlockActual = deserialize(
-            buffer
-        )
+        val storedVeriBlockBlockActual = buffer.deserializeStoredVeriBlockBlock()
         Assert.assertEquals(storedVeriBlockBlockExpected, storedVeriBlockBlockActual)
     }
 }

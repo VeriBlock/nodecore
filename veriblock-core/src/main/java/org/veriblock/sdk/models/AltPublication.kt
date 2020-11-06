@@ -7,9 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk.models
 
-import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.Preconditions
-import java.util.ArrayList
+import org.veriblock.core.crypto.sha256HashOf
 
 data class AltPublication(
     val transaction: VeriBlockTransaction,
@@ -18,7 +16,7 @@ data class AltPublication(
     val context: List<VeriBlockBlock> = emptyList()
 ) {
     fun getId(): ByteArray =
-        Sha256Hash.hash(transaction.id.bytes + containingBlock.hash.bytes)
+        sha256HashOf(transaction.id.bytes + containingBlock.hash.bytes)
 
     fun getBlocks(): List<VeriBlockBlock> =
         context + containingBlock

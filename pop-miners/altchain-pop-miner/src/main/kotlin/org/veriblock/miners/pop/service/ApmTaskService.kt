@@ -166,7 +166,7 @@ class ApmTaskService(
                 ?: failOperation("No merkle path found for ${walletTransaction.id}")
             logger.info(operation, "Successfully retrieved the merkle path for the transaction: ${walletTransaction.id}!")
 
-            val vbkMerkleRoot = merklePath.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH)
+            val vbkMerkleRoot = merklePath.merkleRoot.truncate()
             val verified = vbkMerkleRoot == blockOfProof.merkleRoot
             if (!verified) {
                 failOperation(

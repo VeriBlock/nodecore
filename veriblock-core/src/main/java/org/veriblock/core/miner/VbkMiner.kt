@@ -1,8 +1,13 @@
 package org.veriblock.core.miner
 
 import org.veriblock.core.bitcoinj.BitcoinUtilities
+import org.veriblock.core.crypto.BtcHash
+import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.TruncatedMerkleRoot
+import org.veriblock.core.crypto.asBtcHash
+import org.veriblock.core.crypto.asMerkleRoot
+import org.veriblock.core.crypto.asTruncatedMerkleRoot
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
@@ -49,7 +54,7 @@ fun getAncestorAtHeight(
 fun getBlockTemplate(
     prev: VeriBlockBlock,
     // put random merkle root for uniqueness
-    merkleRoot: Sha256Hash,
+    merkleRoot: TruncatedMerkleRoot,
     networkParams: NetworkParameters,
     context: List<VeriBlockBlock>,
     getPreviousBlock: (block: VeriBlockBlock) -> VeriBlockBlock?
@@ -94,8 +99,16 @@ fun getBlockTemplate(
 
 private val rnd = Random(0)
 
-fun randomMerkleRoot(): Sha256Hash {
-    return Sha256Hash.wrap(rnd.nextBytes(32))
+fun randomBtcHash(): BtcHash {
+    return rnd.nextBytes(32).asBtcHash()
+}
+
+fun randomMerkleRoot(): MerkleRoot {
+    return rnd.nextBytes(32).asMerkleRoot()
+}
+
+fun randomTruncatedMerkleRoot(): TruncatedMerkleRoot {
+    return rnd.nextBytes(16).asTruncatedMerkleRoot()
 }
 
 // first, create a template with getBlockTemplate, then mine a block
@@ -143,7 +156,7 @@ fun vbkBlockGenerator(
         // get template for next block
         val tmpl = getBlockTemplate(
             last,
-            randomMerkleRoot(),
+            randomTruncatedMerkleRoot(),
             networkParams,
             chain,
             getPreviousBlock

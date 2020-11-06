@@ -5,19 +5,14 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-package org.veriblock.miners.pop.service.mockmining
+package org.nodecore.vpmmock.mockmining
 
-import org.nodecore.vpmmock.mockmining.BitcoinBlockData
-import org.nodecore.vpmmock.mockmining.BtcBlockchain
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.params.BitcoinRegTestParameters
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.params.defaultRegTestParameters
 import org.veriblock.core.utilities.Utility
-import org.veriblock.sdk.blockchain.store.BitcoinStore
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.sdk.sqlite.ConnectionSelector
 import java.nio.ByteBuffer
 import java.security.*
 

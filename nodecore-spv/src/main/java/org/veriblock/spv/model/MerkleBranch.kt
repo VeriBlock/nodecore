@@ -10,8 +10,6 @@ package org.veriblock.spv.model
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.MerklePath
 import org.veriblock.spv.util.Utils
-import java.util.ArrayList
-import java.util.stream.Collectors
 
 class MerkleBranch(
     index: Int,

@@ -8,6 +8,8 @@
 
 package org.veriblock.miners.pop.service
 
+import org.veriblock.core.crypto.VbkTxId
+import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.miners.pop.proto.OperationProto
 import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
@@ -55,7 +57,7 @@ class OperationSerializer(
         serialized: OperationProto.Operation,
         createdAt: LocalDateTime,
         logs: List<OperationLog>,
-        txFactory: (String) -> WalletTransaction
+        txFactory: (VbkTxId) -> WalletTransaction
     ): ApmOperation {
         val chain = pluginService[serialized.chainId]
             ?: error("Unable to load plugin ${serialized.chainId} for operation ${serialized.operationId}")
@@ -83,7 +85,7 @@ class OperationSerializer(
 
             if (serialized.txId.isNotEmpty()) {
                 try {
-                    setTransaction(ApmSpTransaction(txFactory(serialized.txId)))
+                    setTransaction(ApmSpTransaction(txFactory(serialized.txId.asVbkTxId())))
                 } catch (e: IllegalStateException) {
                     fail(e.message ?: "Unable to load VBK transaction ${serialized.txId}")
                     reconstituting = false

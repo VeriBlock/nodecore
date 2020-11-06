@@ -7,8 +7,8 @@ import org.veriblock.core.Context
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.vbkBlockGenerator
 import org.veriblock.core.params.getDefaultNetworkParameters
-import org.veriblock.sdk.blockchain.store.StoredVeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.spv.model.StoredVeriBlockBlock
 import org.veriblock.spv.service.BlockStore
 import org.veriblock.spv.service.Blockchain
 import java.math.BigInteger

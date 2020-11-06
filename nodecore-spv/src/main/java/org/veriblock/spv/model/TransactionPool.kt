@@ -10,6 +10,7 @@ package org.veriblock.spv.model
 import com.google.common.base.Preconditions
 import io.ktor.util.network.*
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkTxId
 import java.lang.ref.Reference
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
@@ -27,13 +28,13 @@ class TransactionPool {
 
     private val lock = ReentrantLock(true)
     private val referenceQueue = ReferenceQueue<TransactionMeta>()
-    private val pool: LinkedHashMap<Sha256Hash, WeakPoolReference> = object : LinkedHashMap<Sha256Hash, WeakPoolReference>() {
-        override fun removeEldestEntry(eldest: Map.Entry<Sha256Hash, WeakPoolReference>): Boolean {
+    private val pool: LinkedHashMap<VbkTxId, WeakPoolReference> = object : LinkedHashMap<VbkTxId, WeakPoolReference>() {
+        override fun removeEldestEntry(eldest: Map.Entry<VbkTxId, WeakPoolReference>): Boolean {
             return size > 1000
         }
     }
 
-    fun record(txId: Sha256Hash, peerAddress: NetworkAddress): Int = lock.withLock {
+    fun record(txId: VbkTxId, peerAddress: NetworkAddress): Int = lock.withLock {
         purge()
         val tx = getOrCreate(txId)
         val wasNew = tx.recordBroadcast(peerAddress)
@@ -45,7 +46,7 @@ class TransactionPool {
         }
     }
 
-    fun getOrCreate(txId: Sha256Hash): TransactionMeta = lock.withLock {
+    fun getOrCreate(txId: VbkTxId): TransactionMeta = lock.withLock {
         val reference = pool[txId]
         if (reference != null) {
             val transactionMeta = reference.get()
