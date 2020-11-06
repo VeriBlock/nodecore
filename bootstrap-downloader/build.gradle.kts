@@ -1,3 +1,5 @@
+import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
+
 plugins {
     java
     kotlin("jvm")
@@ -21,6 +23,7 @@ dependencies {
     implementation("me.tongfei:progressbar:0.8.1")
     implementation("commons-codec:commons-codec:1.9")
     implementation("commons-cli:commons-cli:1.4")
+    implementation("org.fusesource.jansi:jansi:1.18")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
@@ -45,3 +48,8 @@ tasks.startScripts {
 }
 
 setupJar("Bootstrap Downloader", "bootstrap.downloader")
+
+tasks.startScripts {
+    (windowsStartScriptGenerator as WindowsStartScriptGenerator).template =
+        resources.text.fromFile("windowsStartScript.txt")
+}
