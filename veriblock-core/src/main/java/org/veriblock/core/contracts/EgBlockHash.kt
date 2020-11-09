@@ -12,6 +12,7 @@ import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.extensions.asHexBytes
+import org.veriblock.core.utilities.extensions.toHex
 import java.util.Objects
 
 /**
@@ -44,7 +45,7 @@ class EgBlockHash internal constructor(
     }
 
     override fun toString(): String {
-        return hash.toString()
+        return hash.toHex()
     }
 
     /**
