@@ -14,7 +14,7 @@ import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.core.altchain.AltchainPoPEndorsement
-import org.veriblock.core.contracts.BlockEndorsement
+import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
@@ -160,7 +160,7 @@ class NxtFamilyChain(
 
     override fun extractAddressDisplay(addressData: ByteArray): String = TODO()
 
-    override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement = TODO()
+    override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence = TODO()
 
     override suspend fun getBlockChainInfo(): StateInfo = TODO()
     

@@ -15,8 +15,9 @@ import org.veriblock.alt.plugins.util.RpcResponse
 import org.veriblock.alt.plugins.util.handle
 import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.altchain.AltchainPoPEndorsement
-import org.veriblock.core.contracts.BlockEndorsement
-import org.veriblock.core.contracts.BlockEndorsementHash
+import org.veriblock.core.contracts.BlockEvidence
+import org.veriblock.core.contracts.EgBlockHash
+import org.veriblock.core.contracts.asEgBlockHash
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -172,15 +173,15 @@ class TestChain(
         return String(addressData)
     }
 
-    override fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement {
+    override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
         val context = altchainPopEndorsement.getContextInfo()
         val hash = context.copyOfRange(0, 4)
-        return BlockEndorsement(
+        return BlockEvidence(
             Utility.byteArrayToInt(hash),
-            BlockEndorsementHash(hash.toHex()),
-            BlockEndorsementHash(context.copyOfRange(4, 8).toHex()),
-            BlockEndorsementHash(context.copyOfRange(8, 12).toHex()),
-            BlockEndorsementHash(context.copyOfRange(12, 16).toHex())
+            hash.toHex().asEgBlockHash(),
+            context.copyOfRange(4, 8).toHex().asEgBlockHash(),
+            context.copyOfRange(8, 12).toHex().asEgBlockHash(),
+            context.copyOfRange(12, 16).toHex().asEgBlockHash()
         )
     }
 

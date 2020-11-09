@@ -1,6 +1,7 @@
 package org.veriblock.spv.service
 
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.*
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -151,7 +152,7 @@ class BlockStore(
         val header = ByteArray(BlockUtility.getBlockHeaderLength(height))
         blocksFile.read(header)
 
-        val vbkHash = VbkHash(hash)
+        val vbkHash = hash.asVbkHash()
         return StoredVeriBlockBlock(
             header = SerializeDeserializeService.parseVeriBlockBlock(header, vbkHash),
             work = BigInteger(1, work),
