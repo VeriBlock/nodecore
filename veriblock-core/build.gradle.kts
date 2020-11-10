@@ -47,6 +47,8 @@ dependencies {
     // Unit testing
     testImplementation("junit:junit:4.12")
 
+    // Testing Assertions
+    testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
 }
 
 setupJar("VeriBlock Core Library", "org.veriblock.core")
