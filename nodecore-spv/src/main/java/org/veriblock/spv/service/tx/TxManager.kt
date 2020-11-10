@@ -1,9 +1,13 @@
 package org.veriblock.spv.service.tx
 
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asAnyVbkHash
+import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Event
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.spv.model.Transaction
@@ -142,7 +146,7 @@ class TxManager(
         val current = System.currentTimeMillis()
         if (item.containingBlock == null && current - item.lastTxInfoTime > TEN_MINUTES) {
             // last time this tx received 'TxInfo' was 10 min ago, Tx is likely to be invalid.
-            logger.warn {"Transaction=${item.id} is marked as invalid"}
+            logger.warn { "Transaction=${item.id} is marked as invalid" }
             item.observer.trigger(Invalid(item.id))
         }
 
@@ -173,7 +177,12 @@ class TxManager(
             // we don't know containing block yet, and tx is not in mempool
         }
 
-        val block = blockchain.getBlock(info.blockHash)
+        val hash = try {
+            info.blockHash.trimToPreviousBlockSize()
+        } catch (e: Exception) {
+            return false
+        }
+        val block = blockchain.getBlock(hash)
         // can't find block locally, ignore this tx info
             ?: return false
 
@@ -181,6 +190,7 @@ class TxManager(
         // verify merkle proof for this TX
         if (mp.merkleRoot.truncate() != block.header.merkleRoot) {
             // can't prove that TX is in `block`
+            logger.warn { "mp=${mp.merkleRoot}, trimmed=${mp.merkleRoot.truncate()} == mroot=${block.header.merkleRoot}" }
             return false
         }
 

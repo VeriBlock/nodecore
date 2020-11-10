@@ -1,5 +1,6 @@
 package org.veriblock.spv.service
 
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.crypto.VbkHash
@@ -90,7 +91,7 @@ data class TransactionInfo(
     val bitcoinBlockHash: String,
     val bitcoinTxId: String,
     val bitcoinConfirmations: Int,
-    val blockHash: VbkHash,
+    val blockHash: AnyVbkHash,
     val merklePath: String
 )
 

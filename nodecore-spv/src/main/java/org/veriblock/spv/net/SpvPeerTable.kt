@@ -26,6 +26,8 @@ import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
+import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkTxId
@@ -529,7 +531,7 @@ private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
     bitcoinBlockHash = bitcoinBlockHash.toHex(),
     bitcoinTxId = bitcoinTxId.toHex(),
     bitcoinConfirmations = bitcoinConfirmations,
-    blockHash = blockHash.toByteArray().asVbkHash(),
+    blockHash = blockHash.toByteArray().asAnyVbkHash(),
     merklePath = merklePath
 )
 
