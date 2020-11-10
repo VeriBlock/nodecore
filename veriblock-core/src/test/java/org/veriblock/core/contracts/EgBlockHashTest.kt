@@ -2,6 +2,7 @@ package org.veriblock.core.contracts
 
 import io.kotlintest.matchers.numerics.shouldBeGreaterThan
 import io.kotlintest.shouldBe
+import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.toHex
 import kotlin.random.Random
@@ -59,6 +60,24 @@ class EgBlockHashTest {
 
         // Then
         isBetter shouldBe true
+    }
+
+    @Test
+    fun isBetterThan_WhenOtherIsFullHash() {
+        val base = "EEEF26F89FEE8AE934".asEgBlockHash()
+        val other = "0000000000035761E5F0C258E55832EEEF26F89FEE8AE934".asEgBlockHash()
+
+        base.isBetterThan(other) shouldBe false
+    }
+
+    @Test
+    fun equals_WhenPartial() {
+        val base = "AFB99AB25A2212FE7C".asEgBlockHash()
+        val other = "0000000000021AD1155C91DBEDD52AAFB99AB25A2212FE7C".asEgBlockHash()
+
+        // Testing equals both ways
+        base shouldBe other
+        other shouldBe base
     }
 }
 
