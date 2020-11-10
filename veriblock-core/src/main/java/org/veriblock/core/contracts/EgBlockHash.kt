@@ -8,9 +8,6 @@
 
 package org.veriblock.core.contracts
 
-import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import java.util.Objects
@@ -23,12 +20,12 @@ class EgBlockHash internal constructor(
     /**
      * The block hash, or a fraction of it
      */
-    val hash: ByteArray
+    val bytes: ByteArray
 ) {
     /**
-     * The least common denominator (the last 9 bytes) of [hash]
+     * The least common denominator (the last 9 bytes) of [bytes]
      */
-    val significantHash: ByteArray = hash.copyOfRange((hash.size - 9).coerceAtLeast(0), hash.size)
+    val significantBytes: ByteArray = bytes.copyOfRange((bytes.size - 9).coerceAtLeast(0), bytes.size)
 
     /**
      * Returns true if this hash is a version of the other with more information
@@ -41,22 +38,22 @@ class EgBlockHash internal constructor(
         if (!equals(other)) {
             return false
         }
-        return this.hash.size > other.hash.size
+        return this.bytes.size > other.bytes.size
     }
 
     override fun toString(): String {
-        return hash.toHex()
+        return bytes.toHex()
     }
 
     /**
      * Two hashes with the same [.significantHash] are considered equal
      */
     override fun equals(other: Any?): Boolean {
-        return other is EgBlockHash && significantHash.contentEquals(other.significantHash)
+        return other is EgBlockHash && significantBytes.contentEquals(other.significantBytes)
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(significantHash)
+        return Objects.hash(significantBytes)
     }
 }
 

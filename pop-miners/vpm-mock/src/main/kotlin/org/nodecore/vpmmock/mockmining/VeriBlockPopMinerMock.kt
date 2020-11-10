@@ -28,7 +28,7 @@ fun serializePublicationData(header: ByteArray, address: Address): ByteArray {
 
 class VeriBlockPopMinerMock(
     val veriBlockParameters: NetworkParameters = defaultRegTestParameters,
-    val bitcoinBlockchain:BtcBlockchain = BtcBlockchain(
+    val bitcoinBlockchain: BtcBlockchain = BtcBlockchain(
         veriBlockParameters.bitcoinOriginBlock,
         veriBlockParameters.bitcoinOriginBlockHeight
         )
