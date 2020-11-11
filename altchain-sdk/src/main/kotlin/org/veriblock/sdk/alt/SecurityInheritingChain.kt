@@ -9,7 +9,7 @@
 package org.veriblock.sdk.alt
 
 import org.veriblock.core.altchain.AltchainPoPEndorsement
-import org.veriblock.core.contracts.BlockEndorsement
+import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
@@ -115,7 +115,7 @@ interface SecurityInheritingChain {
     /**
      * Extracts a block endorsement from the given data (coming from a VBK PoP Transaction)
      */
-    fun extractBlockEndorsement(altchainPopEndorsement: AltchainPoPEndorsement): BlockEndorsement
+    fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence
 
     /**
      * Whether or not this chain is configured to perform any automining

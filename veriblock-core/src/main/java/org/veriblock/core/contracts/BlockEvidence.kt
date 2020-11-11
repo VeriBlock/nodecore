@@ -8,25 +8,25 @@
 
 package org.veriblock.core.contracts
 
-data class BlockEndorsement(
+data class BlockEvidence(
     val height: Int,
-    val hash: BlockEndorsementHash,
-    val previousHash: BlockEndorsementHash,
-    val previousKeystone: BlockEndorsementHash,
-    val secondKeystone: BlockEndorsementHash
+    val hash: EgBlockHash,
+    val previousHash: EgBlockHash,
+    val previousKeystone: EgBlockHash,
+    val secondKeystone: EgBlockHash? = null
 ) {
     constructor(
         height: Int,
         hash: String,
         previousHash: String,
         previousKeystone: String,
-        secondKeystone: String
+        secondKeystone: String? = null
     ) : this(
         height,
-        BlockEndorsementHash(hash.toUpperCase()),
-        BlockEndorsementHash(previousHash.toUpperCase()),
-        BlockEndorsementHash(previousKeystone.toUpperCase()),
-        BlockEndorsementHash(secondKeystone.toUpperCase())
+        hash.asEgBlockHash(),
+        previousHash.asEgBlockHash(),
+        previousKeystone.asEgBlockHash(),
+        secondKeystone?.asEgBlockHash()
     )
 
     constructor(
@@ -34,12 +34,12 @@ data class BlockEndorsement(
         hash: ByteArray,
         previousHash: ByteArray,
         previousKeystone: ByteArray,
-        secondKeystone: ByteArray
+        secondKeystone: ByteArray? = null
     ) : this(
         height,
-        BlockEndorsementHash(hash),
-        BlockEndorsementHash(previousHash),
-        BlockEndorsementHash(previousKeystone),
-        BlockEndorsementHash(secondKeystone)
+        hash.asEgBlockHash(),
+        previousHash.asEgBlockHash(),
+        previousKeystone.asEgBlockHash(),
+        secondKeystone?.asEgBlockHash()
     )
 }
