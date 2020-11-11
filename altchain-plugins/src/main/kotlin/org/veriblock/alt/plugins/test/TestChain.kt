@@ -215,19 +215,21 @@ class TestChain(
         }
 
         val blockData = SecurityInheritingBlock(
-            hash,
-            height,
-            previousBlock.hash,
-            100,
-            0,
-            0,
-            "",
-            0.0,
-            coinbase.txId,
-            listOf(),
-            publishedAtvs.map { it.getId().toHex() },
-            previousKeystone.hash,
-            secondPreviousKeystone.hash
+            hash = hash,
+            height = height,
+            previousHash = previousBlock.hash,
+            confirmations = 100,
+            version = 0,
+            nonce = 0,
+            merkleRoot = "",
+            difficulty = 0.0,
+            coinbaseTransactionId = coinbase.txId,
+            transactionIds = listOf(),
+            endorsingVbkHashes = listOf(),
+            veriBlockPublicationIds = publishedAtvs.map { it.getId().toHex() },
+            bitcoinPublicationIds = listOf(),
+            previousKeystone = previousKeystone.hash,
+            secondPreviousKeystone = secondPreviousKeystone.hash
         )
 
         publishedAtvs.clear()

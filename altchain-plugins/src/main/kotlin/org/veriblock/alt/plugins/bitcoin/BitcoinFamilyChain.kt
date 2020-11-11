@@ -105,17 +105,19 @@ class BitcoinFamilyChain(
             }
         }
         return SecurityInheritingBlock(
-            btcBlock.hash,
-            btcBlock.height,
-            btcBlock.previousblockhash ?: "0000000000000000000000000000000000000000000000000000000000000000",
-            btcBlock.confirmations,
-            btcBlock.version,
-            btcBlock.nonce,
-            btcBlock.merkleroot,
-            btcBlock.difficulty,
-            btcBlock.tx[0],
-            btcBlock.tx.drop(1),
-            btcBlock.pop.state.stored.atvs
+            hash = btcBlock.hash,
+            height = btcBlock.height,
+            previousHash = btcBlock.previousblockhash ?: "0000000000000000000000000000000000000000000000000000000000000000",
+            confirmations = btcBlock.confirmations,
+            version = btcBlock.version,
+            nonce = btcBlock.nonce,
+            merkleRoot = btcBlock.merkleroot,
+            difficulty = btcBlock.difficulty,
+            coinbaseTransactionId = btcBlock.tx[0],
+            transactionIds = btcBlock.tx.drop(1),
+            endorsingVbkHashes = btcBlock.pop.state.stored.vbkblocks,
+            veriBlockPublicationIds = btcBlock.pop.state.stored.atvs,
+            bitcoinPublicationIds = btcBlock.pop.state.stored.vtbs
         )
     }
 
@@ -195,7 +197,7 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getPopMempool(): PopMempool {
-        val response: BtcPopMempool = rpcRequest("getrawpopmempool")
+        val response: BtcPopStoredStateData = rpcRequest("getrawpopmempool")
         return PopMempool(response.vbkblocks, response.atvs, response.vtbs)
     }
 
@@ -362,7 +364,9 @@ private data class BtcPopStateData(
 )
 
 private data class BtcPopStoredStateData(
-    val atvs: List<String>
+    val vbkblocks: List<String>,
+    val atvs: List<String>,
+    val vtbs: List<String>
 )
 
 private data class BlockChainInfo(
@@ -387,10 +391,4 @@ private data class ValidityInfo(
     val state: String,
     val code: String,
     val message: String
-)
-
-private data class BtcPopMempool(
-    val vbkblocks: List<String>,
-    val atvs: List<String>,
-    val vtbs: List<String>
 )
