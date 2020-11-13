@@ -3,18 +3,16 @@ package org.veriblock.spv.net
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.spv.model.TransactionTypeIdentifier
-import org.veriblock.spv.service.PendingTransactionContainer
-import org.veriblock.spv.service.tx.TxManager
+import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.util.nextMessageId
 
 private val logger = createLogger {}
 
 class P2PService(
-    private val pendingTransactionContainer: TxManager,
+    private val pendingTransactionContainer: TransactionManager,
     private val networkParameters: NetworkParameters
 ) {
     fun onTransactionRequest(txIds: List<VbkTxId>, sender: SpvPeer) {

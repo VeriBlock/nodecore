@@ -26,9 +26,7 @@ import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.asAnyVbkHash
-import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.debugWarn
@@ -39,7 +37,7 @@ import org.veriblock.spv.model.mapper.LedgerProofReplyMapper
 import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.serialization.MessageSerializer.deserializeNormalTransaction
 import org.veriblock.spv.service.*
-import org.veriblock.spv.service.tx.TxManager
+import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 import org.veriblock.spv.util.buildMessage
@@ -65,7 +63,7 @@ class SpvPeerTable(
     private val spvContext: SpvContext,
     private val p2pService: P2PService,
     peerDiscovery: PeerDiscovery,
-    val txMgr: TxManager
+    val txMgr: TransactionManager
 ) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
@@ -229,7 +227,7 @@ class SpvPeerTable(
 
 
     private suspend fun requestPendingTransactions() {
-        val pendingTransactionIds = txMgr.getPendingTxIds()
+        val pendingTransactionIds = txMgr.getPendingTransactionIds()
         try {
             for (txId in pendingTransactionIds) {
                 val request = buildMessage {
