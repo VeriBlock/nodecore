@@ -369,10 +369,10 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
         previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
         previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
         secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-        merkleRoot = "A2EA7C29EF7915DB412EBD4012A9C617".asTruncatedMerkleRoot(),
-        timestamp = 1570649416,
-        difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
-        nonce = 14304633
+        merkleRoot = "84E710F30BB8CFC9AF12622A8F39B917".asTruncatedMerkleRoot(),
+        timestamp = 1603044490,
+        difficulty = BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
+        nonce = 0
     )
 
     // regtest BTC genesis block:
@@ -387,16 +387,16 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
     )
     override val protocolVersion: Int = 3
 
-    override val transactionPrefix = 0xEE.toByte()
+    override val transactionPrefix = 0xED.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = false
 
-    override val progPowForkHeight = 1 // Only genesis block doesn't use vProgPoW
-    override val progPowStartTimeEpoch: Long = 1605745160L
+    override val progPowForkHeight = 0
+    override val progPowStartTimeEpoch: Long = 1605303771L
 
     init {
         val hash = genesisBlock.hash.toString()
-        check(hash == "00000017EB579EC7D0CDD63379A0615DC3D68032CE248823") {
+        check(hash == "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977") {
             "Regtest Genesis Block does not match expected hash!"
         }
     }
