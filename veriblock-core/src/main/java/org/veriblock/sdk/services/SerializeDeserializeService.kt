@@ -239,11 +239,9 @@ object SerializeDeserializeService {
 
     fun serializeHeaders(veriBlockBlock: VeriBlockBlock): ByteArray {
         // Hardcode 0 length hash size for network param serialization
-        val headerSize = if (veriBlockBlock.height == 0) {
-            Constants.HEADER_SIZE_VeriBlockBlock_VBlake
-        } else {
+        val headerSize =
             BlockUtility.getBlockHeaderLength(veriBlockBlock.height)
-        }
+
         val buffer = ByteBuffer.allocateDirect(headerSize)
         buffer.putBEInt32(veriBlockBlock.height)
         buffer.putBEInt16(veriBlockBlock.version)
@@ -253,7 +251,7 @@ object SerializeDeserializeService {
         buffer.putBEBytes(veriBlockBlock.merkleRoot.bytes)
         buffer.putBEInt32(veriBlockBlock.timestamp)
         buffer.putBEInt32(veriBlockBlock.difficulty)
-        if (veriBlockBlock.height > 0 && BlockUtility.isProgPow(veriBlockBlock.height)) {
+        if (BlockUtility.isProgPow(veriBlockBlock.height)) {
             buffer.put((veriBlockBlock.nonce shr 32).toByte())
         }
         buffer.putBEInt32(veriBlockBlock.nonce.toInt())

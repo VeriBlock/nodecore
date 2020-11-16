@@ -8,11 +8,16 @@ package org.veriblock.core.params
 
 import org.junit.Assert
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex
 
 class AlphaNetParametersTests {
+    init {
+        Context.set(defaultAlphaNetParameters)
+    }
+
     @Test
     fun verifyGenesisBlock() {
         Assert.assertEquals(

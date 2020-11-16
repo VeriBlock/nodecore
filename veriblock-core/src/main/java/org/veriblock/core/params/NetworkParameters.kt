@@ -344,25 +344,18 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val transactionPrefix = 0xEE.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = true
-
-    init {
-        val hash = genesisBlock.hash.toString()
-        check(hash == "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977") {
-            "Regtest Genesis Block does not match expected hash!"
-        }
-    }
 }
 
 object RegTestProgPoWParameters : NetworkParametersTemplate() {
     const val NETWORK = "regtest_progpow"
-    private val MINIMUM_POW_DIFFICULTY: BigInteger = 100_000_000L.toBigInteger()
+    private val MINIMUM_POW_DIFFICULTY: BigInteger = BigInteger.ONE
 
     override val name = NETWORK
-    override val rpcPort = 10503
-    override val p2pPort = 7503
+    override val rpcPort = 10504
+    override val p2pPort = 7504
 
     override val bootstrapDns: String? = null
-    override val fileTag = "regtest-progpow"
+    override val fileTag = "regtest_progpow"
     override val genesisBlock = VeriBlockBlock(
         height = 0,
         version = 2.toShort(),
@@ -387,19 +380,10 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
     )
     override val protocolVersion: Int = 3
 
+    override val progPowForkHeight = 0 // enabled from genesis block
     override val transactionPrefix = 0xED.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
-    override val powNoRetargeting = false
-
-    override val progPowForkHeight = 0
-    override val progPowStartTimeEpoch: Long = 1605303771L
-
-    init {
-        val hash = genesisBlock.hash.toString()
-        check(hash == "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977") {
-            "Regtest Genesis Block does not match expected hash!"
-        }
-    }
+    override val powNoRetargeting = true
 }
 
 @JvmField
