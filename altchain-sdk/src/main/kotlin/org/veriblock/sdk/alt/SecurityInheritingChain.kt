@@ -23,12 +23,12 @@ interface SecurityInheritingChain {
     /**
      * Common configuration for the chain.
      */
-    val config: ChainConfig
+    suspend fun getConfig(): ChainConfig
 
     /**
      * Returns this security inheriting chain's unique identifier.
      */
-    val id: Long
+    suspend fun getId(): Long
 
     /**
      * Returns this security inheriting chain's key, usually the token symbol.
@@ -71,14 +71,24 @@ interface SecurityInheritingChain {
     suspend fun getTransaction(txId: String): SecurityInheritingTransaction?
 
     /**
-     * Returns this security inheriting chain's payout delay, in blocks.
-     */
-    fun getPayoutDelay(): Int
-
-    /**
      * Returns this security inheriting chain's best known VeriBlock Block hash.
      */
-    suspend fun getBestKnownVbkBlockHash(): String
+    suspend fun getVbkBestKnownBlockHash(): String
+
+    /** 
+     * Returns this security inheriting chain's VBK block 
+     */
+    suspend fun getVbkBlock(hash: String): VbkBlock
+
+    /**
+     * Returns this security inheriting chain's best known Bitcoin Block hash.
+     */
+    suspend fun getBtcBestKnownBlockHash(): String
+
+    /**
+     * Returns this security inheriting chain's BTC block 
+     */
+    suspend fun getBtcBlock(hash: String): BtcBlock
 
     /**
      * Returns this security inheriting chain's PoP mempool (ATVs and VTBs).
@@ -86,26 +96,14 @@ interface SecurityInheritingChain {
     suspend fun getPopMempool(): PopMempool
 
     /**
-     * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height
-     * if [blockHeight] is null).
+     * Retrieves mining instruction from the SI chain for the given [blockHash] (or the best block hash
+     * if [block hash] is null).
      */
-    suspend fun getMiningInstruction(blockHeight: Int? = null): ApmInstruction
+    suspend fun getMiningInstruction(blockHash: String? = null): ApmInstruction
 
-    /**
-     * Submits VeriBlock context blocks ([contextBlocks]), ATVs ([atvs]) and VTBs ([vtbs]) to the altchain
-     * @return The submission's resulting first ATV id
-     */
-    suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    )
-
-    suspend fun submitContext(contextBlocks: List<VeriBlockBlock>) = submit(contextBlocks, emptyList(), emptyList())
-
-    suspend fun submitAtvs(atvs: List<AltPublication>) = submit(emptyList(), atvs, emptyList())
-
-    suspend fun submitVtbs(vtbs: List<VeriBlockPublication>) = submit(emptyList(), emptyList(), vtbs)
+    suspend fun submitAtv(atv: AltPublication): ValidationState
+    suspend fun submitVtb(vtb: VeriBlockPublication): ValidationState
+    suspend fun submitVbk(vbk: VbkBlock): ValidationState
 
     /**
      * Extracts an address' display string from the given data (coming from the Mining Instruction)
@@ -132,3 +130,9 @@ interface SecurityInheritingChain {
      */
     suspend fun getBlockChainInfo(): StateInfo
 }
+
+data class ValidationState(
+    val valid: Boolean,
+    val code: String? = null,
+    val message: String? = null
+)
