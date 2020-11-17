@@ -26,11 +26,6 @@ interface SecurityInheritingChain {
     suspend fun getConfig(): ChainConfig
 
     /**
-     * Returns this security inheriting chain's unique identifier.
-     */
-    suspend fun getId(): Long
-
-    /**
      * Returns this security inheriting chain's key, usually the token symbol.
      */
     val key: String
