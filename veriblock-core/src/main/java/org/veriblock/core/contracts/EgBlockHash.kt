@@ -54,8 +54,7 @@ class EgBlockHash internal constructor(
     }
 
     override fun hashCode(): Int {
-        val length = significantBytes.size
-        return Utility.fromBytes(significantBytes[length - 4], significantBytes[length - 3], significantBytes[length - 2], significantBytes[length - 1])
+        return significantBytes.contentHashCode()
     }
 }
 
