@@ -13,7 +13,7 @@ import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
 
 abstract class Transaction {
-    lateinit var txId: Sha256Hash
+    lateinit var txId: VbkTxId
     var inputAddress: AddressLight? = null
     var transactionMeta: TransactionMeta? = null
     var signature: ByteArray? = null
@@ -39,5 +39,4 @@ abstract class Transaction {
         this.signature = signature
         this.publicKey = publicKey
     }
-
 }

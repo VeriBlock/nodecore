@@ -8,12 +8,13 @@
 
 package org.veriblock.core.contracts
 
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import java.util.Objects
 
 /**
- * "Easy-going" hashes: these always return true when their last 9 bytes are equal.
+ * "Easy-going" hash: [equals] always returns true when both operands' last 9 bytes are equal.
  * Use case: BFI
  */
 class EgBlockHash internal constructor(
@@ -53,7 +54,8 @@ class EgBlockHash internal constructor(
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(significantBytes)
+        val length = significantBytes.size
+        return Utility.fromBytes(significantBytes[length - 4], significantBytes[length - 3], significantBytes[length - 2], significantBytes[length - 1])
     }
 }
 
