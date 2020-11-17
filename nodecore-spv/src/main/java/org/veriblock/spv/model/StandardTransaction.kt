@@ -49,7 +49,7 @@ open class StandardTransaction : Transaction {
     )
 
     constructor(
-        txId: Sha256Hash?,
+        txId: VbkTxId?,
         inputAddress: String,
         inputAmount: Long,
         outputs: List<Output>,
