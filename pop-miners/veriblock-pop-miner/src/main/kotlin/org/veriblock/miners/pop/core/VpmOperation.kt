@@ -9,13 +9,13 @@
 package org.veriblock.miners.pop.core
 
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.bitcoinj.core.Block
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.TransactionConfidence
-import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.common.generateOperationId
@@ -55,11 +55,11 @@ class VpmOperation(
         setState(VpmOperationState.INITIAL)
     }
 
-    val transactionConfidenceEventChannel = BroadcastChannel<TransactionConfidence.ConfidenceType>(Channel.CONFLATED)
+    val transactionConfidence = MutableStateFlow(TransactionConfidence.ConfidenceType.UNKNOWN)
 
     val transactionListener = { confidence: TransactionConfidence, reason: TransactionConfidence.Listener.ChangeReason ->
         if (reason == TransactionConfidence.Listener.ChangeReason.TYPE) {
-            transactionConfidenceEventChannel.offer(confidence.confidenceType)
+            transactionConfidence.value = confidence.confidenceType
         }
     }
 
@@ -83,13 +83,15 @@ class VpmOperation(
 
         transaction.confidence.addEventListener(transactionListener)
         GlobalScope.launch {
-            for (confidenceType in transactionConfidenceEventChannel.openSubscription()) {
-                if (confidenceType == TransactionConfidence.ConfidenceType.PENDING) {
-                    EventBus.transactionSufferedReorgEvent.trigger(this@VpmOperation)
-                    // Reset the state to the endorsement transaction pending for confirmation
-                    setState(VpmOperationState.ENDORSEMENT_TRANSACTION)
+            transactionConfidence
+                .drop(1) // Skip current state (PENDING)
+                .collect {
+                    if (it == TransactionConfidence.ConfidenceType.PENDING) {
+                        EventBus.transactionSufferedReorgEvent.trigger(this@VpmOperation)
+                        // Reset the state to the endorsement transaction pending for confirmation
+                        setState(VpmOperationState.ENDORSEMENT_TRANSACTION)
+                    }
                 }
-            }
         }
     }
 

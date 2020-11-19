@@ -8,20 +8,20 @@
 
 package org.veriblock.miners.pop.core
 
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
 import java.util.ArrayList
 
 class TransactionMeta(
     val txId: VbkTxId
 ) {
-    val stateChangedBroadcastChannel = BroadcastChannel<MetaState>(CONFLATED)
+    private val _state = MutableStateFlow(MetaState.UNKNOWN)
 
-    var state = MetaState.UNKNOWN
-        private set
+    val stateFlow = _state.asStateFlow()
+
+    val state: MetaState get() = _state.value
 
     var appearsInBestChainBlock: AnyVbkHash? = null
 
@@ -61,16 +61,15 @@ class TransactionMeta(
     }
 
     fun setState(state: MetaState) {
-        if (this.state == state) {
+        if (_state.value == state) {
             return
         }
 
-        this.state = state
         if (state == MetaState.PENDING) {
             depth = 0
             appearsAtChainHeight = -1
         }
-        stateChangedBroadcastChannel.offer(state)
+        _state.value = state
     }
 
     fun incrementDepth() {

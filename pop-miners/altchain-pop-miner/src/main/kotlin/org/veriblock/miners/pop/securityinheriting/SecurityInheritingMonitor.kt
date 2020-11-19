@@ -12,12 +12,13 @@ import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -74,11 +75,9 @@ class SecurityInheritingMonitor(
     private val sameNetwork = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
 
-    private var bestBlockHeight: Int = -1
+    private val bestBlockHeight = MutableStateFlow(-1)
 
     private var pollSchedule: Job? = null
-
-    private val newBlockHeightBroadcastChannel = BroadcastChannel<Int>(CONFLATED)
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
@@ -222,14 +221,13 @@ class SecurityInheritingMonitor(
                     return
                 }
 
-                if (bestBlockHeight != this.bestBlockHeight) {
+                if (bestBlockHeight != this.bestBlockHeight.value) {
                     logger.debug { "New chain head detected!" }
-                    if (this.bestBlockHeight != -1 && chain.shouldAutoMine(bestBlockHeight)) {
+                    if (this.bestBlockHeight.value != -1 && chain.shouldAutoMine(bestBlockHeight)) {
                         miner.mine(chainId, bestBlockHeight)
                     }
 
-                    this.bestBlockHeight = bestBlockHeight
-                    newBlockHeightBroadcastChannel.offer(bestBlockHeight)
+                    this.bestBlockHeight.value = bestBlockHeight
 
                     val block = getBlockAtHeight(bestBlockHeight)
                         ?: error("Unable to find block at tip height $bestBlockHeight")
@@ -253,16 +251,15 @@ class SecurityInheritingMonitor(
 
     private suspend fun submitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK Context for ${chain.name}")
-        val subscription = SpvEventBus.newBlockChannel.openSubscription()
-        for (newBlock in subscription) {
+        SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
             try {
                 val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
                 val bestKnownBlock = miner.gateway.getBlock(bestKnownBlockHash)
                     // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                    ?: continue
+                    ?: return@collect
 
                 if (bestKnownBlock.height == newBlock.height) {
-                    continue
+                    return@collect
                 }
 
                 val contextBlocks = generateSequence(newBlock) {
@@ -279,7 +276,7 @@ class SecurityInheritingMonitor(
                 }
 
                 if (contextBlocksToSubmit.isEmpty()) {
-                    continue
+                    return@collect
                 }
 
                 chain.submitContext(contextBlocksToSubmit)
@@ -310,7 +307,7 @@ class SecurityInheritingMonitor(
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
                     " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
-                val newKeystone = SpvEventBus.newBlockChannel.asFlow().filter {
+                val newKeystone = SpvEventBus.newBlockFlow.filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()
 
@@ -356,7 +353,7 @@ class SecurityInheritingMonitor(
 
     private suspend fun getBlockAtHeight(height: Int): SecurityInheritingBlock? {
         // Ignore if we didn't still reach the registered height yet
-        if (height > bestBlockHeight) {
+        if (height > bestBlockHeight.value) {
             return null
         }
 

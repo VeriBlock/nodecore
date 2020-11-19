@@ -112,7 +112,7 @@ class VpmTaskService(
 
             if (endorsementTransaction.confidence.confidenceType != TransactionConfidence.ConfidenceType.BUILDING) {
                 // Wait for the transaction to be ready
-                operation.transactionConfidenceEventChannel.asFlow().onEach {
+                operation.transactionConfidence.onEach {
                     if (it == TransactionConfidence.ConfidenceType.DEAD) {
                         failOperation("The transaction couldn't be confirmed")
                     }

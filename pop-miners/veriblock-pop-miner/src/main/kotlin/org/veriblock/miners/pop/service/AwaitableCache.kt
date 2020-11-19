@@ -6,7 +6,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service
 
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.first
 import org.veriblock.core.utilities.createLogger
 import java.util.LinkedHashMap
 import java.util.concurrent.locks.ReentrantLock
@@ -30,7 +32,7 @@ class AwaitableCache<K, V>(
             return this.size > maxSize
         }
     }
-    private val deferredCache = HashMap<K, ConflatedBroadcastChannel<V>>()
+    private val deferredCache = HashMap<K, MutableSharedFlow<V>>()
 
     private val lock = ReentrantLock(true)
 
@@ -39,7 +41,7 @@ class AwaitableCache<K, V>(
             // Check for any subscriptors to this value
             deferredCache[key]?.let {
                 // Offer the value to all subscriptors of the broadcast channel
-                it.offer(value)
+                it.tryEmit(value)
                 // Remove the broadcast channel
                 deferredCache.remove(key)
             }
@@ -57,11 +59,14 @@ class AwaitableCache<K, V>(
             }
             // Retrieve (or create) a broadcast channel for this key
             deferredCache.getOrPut(key) {
-                ConflatedBroadcastChannel()
+                MutableSharedFlow<V>(
+                    extraBufferCapacity = 1,
+                    onBufferOverflow = BufferOverflow.DROP_OLDEST
+                )
             }
         }
 
         // Open a subscription in the retrieved broadcast channel and suspend execution
-        return deferred.openSubscription().receive()
+        return deferred.first()
     }
 }
