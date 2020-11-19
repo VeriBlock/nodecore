@@ -392,7 +392,7 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = false
 
     override val progPowForkHeight = 1 // Only genesis block doesn't use vProgPoW
-    override val progPowStartTimeEpoch: Long = 1605303771L
+    override val progPowStartTimeEpoch: Long = 1605745160L
 
     init {
         val hash = genesisBlock.hash.toString()
