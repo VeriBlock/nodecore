@@ -8,7 +8,11 @@
 
 package org.veriblock.miners.pop.service
 
+import javafx.application.Application.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.altchain.checkForValidEndorsement
@@ -28,7 +32,6 @@ import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.MinerConfig
@@ -113,16 +116,10 @@ class ApmTaskService(
                 ?: failTask("ConfirmTransactionTask called without wallet transaction!")
 
             logger.info(operation, "Waiting for the transaction to be included in VeriBlock block...")
-            // We will wait for the transaction to be confirmed, which will trigger DetermineBlockOfProofTask
-            val txMetaChannel = endorsementTransaction.transaction.transactionMeta.stateChangedBroadcastChannel.openSubscription()
-            txMetaChannel.receive() // Skip first state change (PENDING)
-            do {
-                val metaState = txMetaChannel.receive()
-                if (metaState === TransactionMeta.MetaState.PENDING) {
-                    failOperation("The VeriBlock chain has reorganized")
-                }
-            } while (metaState !== TransactionMeta.MetaState.CONFIRMED)
-            txMetaChannel.cancel()
+            // Wait for the transaction to be confirmed
+            endorsementTransaction.transaction.transactionMeta.stateFlow.first {
+                it == TransactionMeta.MetaState.CONFIRMED
+            }
 
             // Transaction has been confirmed!
             operation.setConfirmed()

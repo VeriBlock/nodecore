@@ -1,7 +1,7 @@
 package org.veriblock.spv.util
 
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -26,7 +26,10 @@ object SpvEventBus {
 
     // Block Events
     val newBestBlockEvent = AsyncEvent<VeriBlockBlock>("New Best Block", Threading.LISTENER_THREAD)
-    val newBlockChannel = BroadcastChannel<VeriBlockBlock>(Channel.CONFLATED)
+    val newBlockFlow = MutableSharedFlow<VeriBlockBlock>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     //val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", Threading.LISTENER_THREAD)
 }
 

@@ -10,6 +10,9 @@ package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
@@ -210,26 +213,21 @@ class VeriBlockNetwork(
         contextHash: String,
         btcContextHash: String
     ): List<VeriBlockPublication> {
-        val newBlockChannel = SpvEventBus.newBlockChannel.openSubscription()
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
                 |   - BTC Context Hash: $btcContextHash""".trimMargin()
-        logger.debug {
-            "Successfully subscribed to VTB retrieval event!\n$extraLogData"
-        }
-        logger.debug("Waiting for VTBs...")
+        logger.debug("Waiting for VTBs...\n$extraLogData")
         try {
             // Loop through each new block until we get a not-empty publication list
-            for (newBlock in newBlockChannel) {
+            return SpvEventBus.newBlockFlow.map {
                 // Retrieve VTBs from NodeCore
-                val veriBlockPublications = gateway.getVeriBlockPublications(
+                gateway.getVeriBlockPublications(
                     keystoneHash, contextHash, btcContextHash
                 )
+            }.first {
                 // If the list is not empty, return it
-                if (veriBlockPublications.isNotEmpty()) {
-                    return veriBlockPublications
-                }
+                it.isNotEmpty()
             }
         } catch (e: Exception) {
             try {
@@ -238,11 +236,7 @@ class VeriBlockNetwork(
             } catch (ignored: Exception) {
             }
             throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", e)
-        } finally {
-            newBlockChannel.cancel()
         }
-        // The new block channel never ends, so this will never happen
-        error("Unable to retrieve VeriBlock publications: the subscription to new blocks has been interrupted")
     }
 }
 

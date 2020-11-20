@@ -189,7 +189,7 @@ class Blockchain(
         }
 
         // add new block to a queue
-        SpvEventBus.newBlockChannel.offer(block)
+        SpvEventBus.newBlockFlow.tryEmit(block)
 
         return true
     }
