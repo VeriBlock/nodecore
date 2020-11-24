@@ -362,7 +362,7 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
         previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
         previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
         secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-        merkleRoot = "84E710F30BB8CFC9AF12622A8F39B917".asTruncatedMerkleRoot(),
+        merkleRoot = "80D7178046D25CA9AD283C5AF587A7C5".asTruncatedMerkleRoot(),
         timestamp = 1603044490,
         difficulty = BitcoinUtilities.encodeCompactBits(BigInteger.valueOf(1L)).toInt(),
         nonce = 0
