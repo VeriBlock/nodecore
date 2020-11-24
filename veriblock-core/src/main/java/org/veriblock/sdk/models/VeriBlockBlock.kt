@@ -36,11 +36,7 @@ open class VeriBlockBlock(
         get() = SerializeDeserializeService.serializeHeaders(this)
 
     val hash: VbkHash by lazy {
-        precomputedHash ?: if (height == 0) {
-            BlockUtility.hashVBlakeBlock(raw)
-        } else {
-            BlockUtility.hashBlock(raw)
-        }.asVbkHash()
+        precomputedHash ?: BlockUtility.hashBlock(raw).asVbkHash()
     }
 
     fun getRoundIndex(): Int =

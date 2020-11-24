@@ -8,6 +8,7 @@ package org.veriblock.core.params
 
 import org.junit.Assert
 import org.junit.Test
+import org.veriblock.core.Context
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex
@@ -15,6 +16,10 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import java.util.Base64
 
 class MainNetParametersTests {
+    init {
+        Context.set(defaultMainNetParameters)
+    }
+
     @Test
     fun verifyGenesisBlock() {
         Assert.assertEquals(
