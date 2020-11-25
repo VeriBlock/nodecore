@@ -46,11 +46,11 @@ class Address(address: String) {
         return other is Address && address == other.address
     }
 
-    val poPBytes: ByteArray
-        get() {
-            val bytes = Base58.decode(address.substring(1))
-            return Arrays.copyOfRange(bytes, 0, 16)
-        }
+    fun getPopBytes(isProgPow: Boolean): ByteArray {
+        val bytes = Base58.decode(address.substring(1))
+        val size = if(isProgPow) 15 else 16
+        return Arrays.copyOfRange(bytes, 0, size)
+    }
 
     companion object {
         const val SIZE = 30
