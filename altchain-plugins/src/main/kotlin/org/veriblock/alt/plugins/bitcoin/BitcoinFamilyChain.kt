@@ -205,12 +205,30 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getAtv(id: String): Atv? {
-        val response: BtcAtv = rpcRequest("getrawatv", listOf(id, 1))
+        val response: BtcAtv = try {
+            rpcRequest("getrawatv", listOf(id, 1))
+        } catch (e: RpcException) {
+            if (e.errorCode == -5) {
+                // ATV not found
+                return null
+            } else {
+                throw e
+            }
+        }
         return Atv(response.atv.transaction.hash, response.atv.blockOfProof.hash)
     }
 
     override suspend fun getVtb(id: String): Vtb? {
-        val response: BtcVtb = rpcRequest("getrawvtb", listOf(id, 1))
+        val response: BtcVtb = try {
+            rpcRequest("getrawvtb", listOf(id, 1))
+        } catch (e: RpcException) {
+            if (e.errorCode == -5) {
+                // VTB not found
+                return null
+            } else {
+                throw e
+            }
+        }
         return Vtb(response.vtb.containingBlock.hash)
     }
 
