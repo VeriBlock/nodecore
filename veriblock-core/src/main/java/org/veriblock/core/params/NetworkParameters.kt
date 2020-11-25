@@ -384,6 +384,8 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
     override val transactionPrefix = 0xED.toByte()
     override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
     override val powNoRetargeting = true
+
+    override val progPowStartTimeEpoch: Long = 1606317134L
 }
 
 @JvmField
