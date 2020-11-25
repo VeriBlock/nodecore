@@ -11,7 +11,8 @@ data class SecurityInheritingBlock(
     val difficulty: Double,
     val coinbaseTransactionId: String,
     val transactionIds: List<String>,
-    val endorsingVbkHashes: List<String>,
+    val endorsedBy: List<String>,
+    val knownVbkHashes: List<String>,
     val veriBlockPublicationIds: List<String>,
     val bitcoinPublicationIds: List<String>,
 

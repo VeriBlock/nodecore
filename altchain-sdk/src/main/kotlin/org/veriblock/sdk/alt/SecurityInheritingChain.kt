@@ -10,9 +10,11 @@ package org.veriblock.sdk.alt
 
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
+import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.models.AltPublication
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -84,6 +86,16 @@ interface SecurityInheritingChain {
      * Returns this security inheriting chain's PoP mempool (ATVs and VTBs).
      */
     suspend fun getPopMempool(): PopMempool
+
+    /**
+     * Retrieves an ATV by id, or null if it does not exist.
+     */
+    suspend fun getAtv(id: String): Atv?
+
+    /**
+     * Retrieves a VTB by id, or null if it does not exist.
+     */
+    suspend fun getVtb(id: String): Vtb?
 
     /**
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height

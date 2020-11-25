@@ -24,10 +24,12 @@ import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
+import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
@@ -115,7 +117,8 @@ class BitcoinFamilyChain(
             difficulty = btcBlock.difficulty,
             coinbaseTransactionId = btcBlock.tx[0],
             transactionIds = btcBlock.tx.drop(1),
-            endorsingVbkHashes = btcBlock.pop.state.stored.vbkblocks,
+            endorsedBy = btcBlock.pop.state.endorsedBy,
+            knownVbkHashes = btcBlock.pop.state.stored.vbkblocks,
             veriBlockPublicationIds = btcBlock.pop.state.stored.atvs,
             bitcoinPublicationIds = btcBlock.pop.state.stored.vtbs
         )
@@ -199,6 +202,16 @@ class BitcoinFamilyChain(
     override suspend fun getPopMempool(): PopMempool {
         val response: BtcPopStoredStateData = rpcRequest("getrawpopmempool")
         return PopMempool(response.vbkblocks, response.atvs, response.vtbs)
+    }
+
+    override suspend fun getAtv(id: String): Atv? {
+        val response: BtcAtv = rpcRequest("getrawatv", listOf(id, 1))
+        return Atv(response.atv.transaction.hash, response.atv.blockOfProof.hash)
+    }
+
+    override suspend fun getVtb(id: String): Vtb? {
+        val response: BtcVtb = rpcRequest("getrawvtb", listOf(id, 1))
+        return Vtb(response.vtb.containingBlock.hash)
     }
 
     override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
@@ -314,81 +327,3 @@ fun ByteBuffer.getBytes(count: Int): ByteArray {
     get(result)
     return result
 }
-
-private data class BtcPublicationData(
-    val block_header: String?,
-    val raw_contextinfocontainer: String?,
-    val last_known_veriblock_blocks: List<String>?,
-    val last_known_bitcoin_blocks: List<String>?,
-    val first_address: String? = null
-)
-
-private data class BtcBlock(
-    val hash: String,
-    val height: Int,
-    val confirmations: Int,
-    val version: Short,
-    val nonce: Int,
-    val merkleroot: String,
-    val difficulty: Double,
-    val tx: List<String>,
-    val previousblockhash: String?,
-    val pop: BtcPopData
-)
-
-private data class BtcTransaction(
-    val txid: String,
-    val confirmations: Int,
-    val vout: List<BtcTransactionVout>,
-    val blockhash: String?
-)
-
-private data class BtcTransactionVout(
-    val value: Double,
-    val scriptPubKey: BtcScriptPubKey
-)
-
-private data class BtcScriptPubKey(
-    val asm: String,
-    val hex: String,
-    val reqSigs: Int,
-    val type: String
-)
-
-private data class BtcPopData(
-    val state: BtcPopStateData
-)
-
-private data class BtcPopStateData(
-    val stored: BtcPopStoredStateData
-)
-
-private data class BtcPopStoredStateData(
-    val vbkblocks: List<String>,
-    val atvs: List<String>,
-    val vtbs: List<String>
-)
-
-private data class BlockChainInfo(
-    val chain: String,
-    val blocks: Int,
-    val headers: Int,
-    val initialblockdownload: Boolean
-)
-
-private data class SubmitPopResponse(
-    val vbkblocks: List<ValidationData>,
-    val vtbs: List<ValidationData>,
-    val atvs: List<ValidationData>
-)
-
-private data class ValidationData(
-    val id: String,
-    val validity: ValidityInfo
-)
-
-private data class ValidityInfo(
-    val state: String,
-    val code: String,
-    val message: String
-)

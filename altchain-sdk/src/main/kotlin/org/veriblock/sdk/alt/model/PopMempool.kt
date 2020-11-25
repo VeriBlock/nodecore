@@ -5,3 +5,14 @@ data class PopMempool(
     val atvs: List<String>,
     val vtbs: List<String>
 )
+
+data class Atv(
+    val vbkTransactionId: String,
+    val vbkBlockOfProofHash: String
+)
+
+// TODO
+data class Vtb(
+    //val btcTransactionId: String,
+    val btcBlockOfProofHash: String
+)

@@ -20,9 +20,11 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
@@ -89,6 +91,14 @@ class NxtFamilyChain(
     }
 
     override suspend fun getPopMempool(): PopMempool {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getAtv(id: String): Atv? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getVtb(id: String): Vtb? {
         TODO("Not yet implemented")
     }
 

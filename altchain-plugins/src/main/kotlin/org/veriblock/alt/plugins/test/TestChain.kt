@@ -16,7 +16,6 @@ import org.veriblock.alt.plugins.util.handle
 import org.veriblock.alt.plugins.util.toJson
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
-import org.veriblock.core.contracts.EgBlockHash
 import org.veriblock.core.contracts.asEgBlockHash
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
@@ -24,10 +23,12 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.AltPublication
@@ -122,6 +123,14 @@ class TestChain(
     }
 
     override suspend fun getPopMempool(): PopMempool {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getAtv(id: String): Atv? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getVtb(id: String): Vtb? {
         TODO("Not yet implemented")
     }
 
@@ -225,7 +234,8 @@ class TestChain(
             difficulty = 0.0,
             coinbaseTransactionId = coinbase.txId,
             transactionIds = listOf(),
-            endorsingVbkHashes = listOf(),
+            endorsedBy = listOf(),
+            knownVbkHashes = listOf(),
             veriBlockPublicationIds = publishedAtvs.map { it.getId().toHex() },
             bitcoinPublicationIds = listOf(),
             previousKeystone = previousKeystone.hash,
