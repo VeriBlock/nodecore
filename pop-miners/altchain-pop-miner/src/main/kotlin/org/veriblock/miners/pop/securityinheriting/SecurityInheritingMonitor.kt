@@ -156,18 +156,19 @@ class SecurityInheritingMonitor(
                 }
 
                 // Verify the Altchain configured network
-                if (latestBlockChainInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
+                // TODO: Check with getpopparams
+                //if (latestBlockChainInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
                     if (!isOnSameNetwork()) {
                         sameNetwork.set(true)
                         EventBus.altChainSameNetworkEvent.trigger(chainId)
                     }
-                } else {
-                    if (isOnSameNetwork() || firstPoll) {
-                        sameNetwork.set(false)
-                        EventBus.altChainSameNetworkEvent.trigger(chainId)
-                        logger.warn { "The connected ${chain.name} chain (${latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
-                    }
-                }
+                //} else {
+                //    if (isOnSameNetwork() || firstPoll) {
+                //        sameNetwork.set(false)
+                //        EventBus.altChainSameNetworkEvent.trigger(chainId)
+                //        logger.warn { "The connected ${chain.name} chain (${latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
+                //    }
+                //}
 
                 connected.set(true)
 
