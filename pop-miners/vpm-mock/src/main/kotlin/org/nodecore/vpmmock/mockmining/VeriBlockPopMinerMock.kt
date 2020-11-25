@@ -7,6 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.nodecore.vpmmock.mockmining
 
+import org.veriblock.core.Context
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.params.defaultRegTestParameters
@@ -16,10 +17,11 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
 import java.security.*
 
-fun serializePublicationData(header: ByteArray, address: Address): ByteArray {
+fun serializePublicationData(header: VeriBlockBlock, address: Address): ByteArray {
     val buffer = ByteBuffer.allocateDirect(80)
-    buffer.put(header)
-    buffer.put(address.poPBytes)
+    buffer.put(header.raw)
+    val isProgpow = header.height >= Context.get().networkParameters.progPowForkHeight
+    buffer.put(address.getPopBytes(isProgpow))
     buffer.flip()
     val payoutInfo = ByteArray(80)
     buffer.get(payoutInfo)
@@ -31,17 +33,12 @@ class VeriBlockPopMinerMock(
     val bitcoinBlockchain: BtcBlockchain = BtcBlockchain(
         veriBlockParameters.bitcoinOriginBlock,
         veriBlockParameters.bitcoinOriginBlockHeight
-        )
     )
-{
+) {
     val bitcoinMempool = ArrayList<BitcoinTransaction>()
 
     fun createBtcTx(publishedBlock: VeriBlockBlock, address: Address): BitcoinTransaction {
         return BitcoinTransaction(PublicationData(publishedBlock, address).serialize())
-    }
-
-    fun createBtcTx(publishedBlock: ByteArray, address: Address): BitcoinTransaction {
-        return BitcoinTransaction(serializePublicationData(publishedBlock, address))
     }
 
     /**
@@ -120,7 +117,7 @@ class VeriBlockPopMinerMock(
         val address: Address
     ) {
         fun serialize(): ByteArray = serializePublicationData(
-            SerializeDeserializeService.serializeHeaders(publishedBlock), address
+            publishedBlock, address
         )
     }
 
