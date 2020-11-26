@@ -6,6 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.core.params
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -13,8 +14,13 @@ import org.veriblock.core.Context
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex
+import java.security.Security
 
 class RegTestParametersTests {
+    init {
+        Security.addProvider(BouncyCastleProvider())
+    }
+
     @Before
     fun setup() {
         Context.set(defaultRegTestParameters)
