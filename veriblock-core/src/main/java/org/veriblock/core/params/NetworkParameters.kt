@@ -26,7 +26,13 @@ class NetworkConfig(
     var isSsl: Boolean = false,
     var adminPassword: String? = null,
     var bitcoinOriginBlock: BitcoinOriginBlockConfig? = null,
-    var progPowForkHeight: Int? = null
+    var protocolVersion: Int? = null,
+    var transactionPrefix: Byte? = null,
+    var minimumDifficulty: BigInteger? = null,
+    var powNoRetargeting: Boolean? = null,
+    var blockTimeSeconds: Int? = null,
+    var progPowForkHeight: Int? = null,
+    var progPowStartTimeEpoch: Long? = null
 )
 
 class BitcoinOriginBlockConfig(
@@ -60,10 +66,10 @@ class NetworkParameters(
     val minimumDifficulty: BigInteger
     val powNoRetargeting: Boolean
 
-    var blockTimeSeconds: Int
+    val blockTimeSeconds: Int
 
     val progPowForkHeight: Int
-    var progPowStartTimeEpoch: Long
+    val progPowStartTimeEpoch: Long
 
     var certificateChainPath: String? = config.certificateChainPath
     var isSsl = config.isSsl
@@ -80,10 +86,12 @@ class NetworkParameters(
         val template = when (config.network.toLowerCase()) {
             "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
-            "testnet_progpow" -> TestNetProgPoWParameters
             "alpha" -> AlphaNetParameters
-            "regtest" -> RegTestParameters
-            "regtest_progpow" -> RegTestProgPoWParameters
+            "regtest" -> if (config.progPowForkHeight == 0) {
+                RegTestProgPoWParameters
+            } else {
+                RegTestParameters
+            }
             else -> error("Invalid network")
         }
         name = template.name
@@ -104,16 +112,13 @@ class NetworkParameters(
                 it.nonce.toInt()
             )
         } ?: template.bitcoinOriginBlock
-        protocolVersion = template.protocolVersion
-        transactionPrefix = template.transactionPrefix
-        minimumDifficulty = template.minimumDifficulty
-        powNoRetargeting = template.powNoRetargeting
-        blockTimeSeconds = template.blocktimeSeconds
-        progPowForkHeight = when (config.network.toLowerCase()) {
-            "regtest" -> config.progPowForkHeight ?: template.progPowForkHeight
-            else -> template.progPowForkHeight
-        }
-        progPowStartTimeEpoch = template.progPowStartTimeEpoch
+        protocolVersion = config.protocolVersion ?: template.protocolVersion
+        transactionPrefix = config.transactionPrefix ?: template.transactionPrefix
+        minimumDifficulty = config.minimumDifficulty ?: template.minimumDifficulty
+        powNoRetargeting = config.powNoRetargeting ?: template.powNoRetargeting
+        blockTimeSeconds = config.blockTimeSeconds ?: template.blockTimeSeconds
+        progPowForkHeight = config.progPowForkHeight ?: template.progPowForkHeight
+        progPowStartTimeEpoch = config.progPowStartTimeEpoch ?: template.progPowStartTimeEpoch
     }
 
     override fun toString() =
@@ -143,7 +148,7 @@ sealed class NetworkParametersTemplate {
     abstract val minimumDifficulty: BigInteger
     abstract val powNoRetargeting: Boolean
 
-    open val blocktimeSeconds: Int = 30
+    open val blockTimeSeconds: Int = 30
 
     open val progPowForkHeight: Int = Int.MAX_VALUE // Default of "never"
     open val progPowStartTimeEpoch: Long = Long.MAX_VALUE // Default of "never"
@@ -229,47 +234,6 @@ object TestNetParameters : NetworkParametersTemplate() {
     override val progPowStartTimeEpoch: Long = 1600444017L
 }
 
-object TestNetProgPoWParameters : NetworkParametersTemplate() {
-    const val NETWORK = "testnet_progpow"
-    private val MINIMUM_POW_DIFFICULTY = 100_000_000L.toBigInteger()
-
-    override val name = NETWORK
-    override val rpcPort = 10501
-    override val p2pPort = 7502
-
-    override val bootstrapDns = "seedtestnetprogpow.veriblock.org"
-    override val fileTag = "test-progpow"
-    override val genesisBlock = VeriBlockBlock(
-        height = 0,
-        version = 2.toShort(),
-        previousBlock = PreviousBlockVbkHash.EMPTY_HASH,
-        previousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-        secondPreviousKeystone = PreviousKeystoneVbkHash.EMPTY_HASH,
-        merkleRoot = "A2EA7C29EF7915DB412EBD4012A9C617".asTruncatedMerkleRoot(),
-        timestamp = 1570649416,
-        difficulty = BitcoinUtilities.encodeCompactBits(MINIMUM_POW_DIFFICULTY).toInt(),
-        nonce = 14304633
-    )
-    override val bitcoinOriginBlockHeight = 1834502
-    override val bitcoinOriginBlock = BitcoinBlock(
-        version = 536870912,
-        previousBlock = "000000000000013e99a05bc2dca97efdab0976001eb73e4efabe6d2cded2d011".asBtcHash(),
-        merkleRoot = "aab85d892f28b227557543645c406eb4ca32cf0def54d3c324272891ae8c94a6".asMerkleRoot(),
-        timestamp = 1600091168,
-        difficulty = 436381186,
-        nonce = 707329687L.toInt()
-    )
-    override val protocolVersion: Int = 2
-
-    override val transactionPrefix = 0xAB.toByte()
-    override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
-    override val powNoRetargeting = false
-
-    //override val progPowForkHeight = 1 // Only genesis block doesn't use ProgPoW
-    override val progPowForkHeight = 100 // First 100 blocks don't use ProgPoW
-    override val progPowStartTimeEpoch: Long = 1600091168L
-}
-
 object AlphaNetParameters : NetworkParametersTemplate() {
     const val NETWORK = "alpha"
     private val MINIMUM_POW_DIFFICULTY = 9_999_872L.toBigInteger()
@@ -307,8 +271,8 @@ object AlphaNetParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = false
 }
 
-object RegTestParameters : NetworkParametersTemplate() {
-    const val NETWORK = "regtest"
+sealed class RegTestParametersTemplate : NetworkParametersTemplate() {
+    val NETWORK = "regtest"
     private val MINIMUM_POW_DIFFICULTY: BigInteger = BigInteger.ONE
 
     override val name = NETWORK
@@ -346,16 +310,9 @@ object RegTestParameters : NetworkParametersTemplate() {
     override val powNoRetargeting = true
 }
 
-object RegTestProgPoWParameters : NetworkParametersTemplate() {
-    const val NETWORK = "regtest_progpow"
-    private val MINIMUM_POW_DIFFICULTY: BigInteger = BigInteger.ONE
+object RegTestParameters : RegTestParametersTemplate()
 
-    override val name = NETWORK
-    override val rpcPort = 10504
-    override val p2pPort = 7504
-
-    override val bootstrapDns: String? = null
-    override val fileTag = "regtest_progpow"
+object RegTestProgPoWParameters : RegTestParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         height = 0,
         version = 2.toShort(),
@@ -368,24 +325,7 @@ object RegTestProgPoWParameters : NetworkParametersTemplate() {
         nonce = 0
     )
 
-    // regtest BTC genesis block:
-    override val bitcoinOriginBlockHeight = 0
-    override val bitcoinOriginBlock = BitcoinBlock(
-        version = 1,
-        previousBlock = "0000000000000000000000000000000000000000000000000000000000000000".asBtcHash(),
-        merkleRoot = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b".asMerkleRoot(),
-        timestamp = 1296688602,
-        difficulty = 0x207fffff,
-        nonce = 2
-    )
-    override val protocolVersion: Int = 3
-
     override val progPowForkHeight = 0 // enabled from genesis block
-    override val transactionPrefix = 0xED.toByte()
-    override val minimumDifficulty = MINIMUM_POW_DIFFICULTY
-    override val powNoRetargeting = true
-
-    override val progPowStartTimeEpoch: Long = 1606317134L
 }
 
 @JvmField
@@ -393,9 +333,6 @@ val defaultMainNetParameters = NetworkParameters { network = MainNetParameters.N
 
 @JvmField
 val defaultTestNetParameters = NetworkParameters { network = TestNetParameters.NETWORK }
-
-@JvmField
-val defaultTestNetProgPoWParameters = NetworkParameters { network = TestNetProgPoWParameters.NETWORK }
 
 @JvmField
 val defaultAlphaNetParameters = NetworkParameters { network = AlphaNetParameters.NETWORK }
@@ -409,7 +346,6 @@ val defaultRegTestProgPoWParameters = NetworkParameters { network = RegTestProgP
 fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
-    TestNetProgPoWParameters.NETWORK -> defaultTestNetProgPoWParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
     RegTestParameters.NETWORK -> defaultRegTestParameters
     RegTestProgPoWParameters.NETWORK -> defaultRegTestProgPoWParameters
