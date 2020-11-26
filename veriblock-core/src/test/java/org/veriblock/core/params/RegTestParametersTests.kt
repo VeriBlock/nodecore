@@ -7,6 +7,7 @@
 package org.veriblock.core.params
 
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.crypto.Crypto
@@ -14,7 +15,8 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex
 
 class RegTestParametersTests {
-    init {
+    @Before
+    fun setup() {
         Context.set(defaultRegTestParameters)
     }
 
@@ -27,6 +29,19 @@ class RegTestParametersTests {
         Assert.assertEquals(
             "7C08C0014554E5DD602FAE9C4D3C02F4D512C8BF3893C977",
             defaultRegTestParameters.genesisBlock.hash.toString()
+        )
+    }
+
+    @Test
+    fun verifyProgPowGenesisBlock() {
+        Context.set(defaultRegTestProgPoWParameters)
+        Assert.assertEquals(
+            "00000000000200000000000000000000000000000000000000000000000000000000000080D7178046D25CA9AD283C5AF587A7C55F8C848A010100000000000000",
+            defaultRegTestProgPoWParameters.genesisBlock.raw.toHex()
+        )
+        Assert.assertEquals(
+            "A3E77A18A8F7B4568A062F69340D1AD4360382E5BC218A8C",
+            defaultRegTestProgPoWParameters.genesisBlock.hash.toString()
         )
     }
 
