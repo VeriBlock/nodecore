@@ -24,6 +24,7 @@ import org.veriblock.miners.pop.service.BitcoinService
 import org.veriblock.miners.pop.service.NodeCoreGateway
 import org.veriblock.miners.pop.service.NodeCoreService
 import org.veriblock.miners.pop.service.PopSubmitRejected
+import org.veriblock.miners.pop.service.SEGWIT_TX_FEE_RATE
 import org.veriblock.miners.pop.service.TaskException
 import org.veriblock.miners.pop.service.TaskService
 import org.veriblock.miners.pop.service.failOperation
@@ -32,6 +33,7 @@ import org.veriblock.miners.pop.service.hr
 import org.veriblock.miners.pop.service.min
 import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.getSynchronizedMessage
+import java.text.DecimalFormat
 import java.util.ArrayList
 import kotlin.math.roundToInt
 
@@ -75,12 +77,13 @@ class VpmTaskService(
             try {
                 val transaction = bitcoinService.createPoPTransaction(opReturnScript)
                 if (transaction != null) {
-                    val txSizeKb = transaction.unsafeBitcoinSerialize().size / 1000.0
+                    val txSize = transaction.unsafeBitcoinSerialize().size
                     val feeSats = transaction.fee.value
-                    val feePerKb = (feeSats / txSizeKb).roundToInt()
+                    // Adjust fee/Byte calculation
+                    val feePerVByte = DecimalFormat("#,###.##").format(feeSats / (txSize * SEGWIT_TX_FEE_RATE))
                     logger.info(
                         operation,
-                        "Created BTC transaction '${transaction.txId}'. Fee: $feeSats Sat. Size: $txSizeKb KB. Fee per KB: $feePerKb Sat/KB."
+                        "Created BTC transaction '${transaction.txId}'. Fee: $feeSats Sat. Size: $txSize Bytes. Fee per vByte: ~$feePerVByte Sat/vB."
                     )
 
                     val exposedTransaction = ExpTransaction(

@@ -44,10 +44,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToLong
 
-private val logger = createLogger {}
+val SEGWIT_TX_FEE_RATE = 0.713043478
 
 private val EMPTY_OBJECT = Any()
+
+private val logger = createLogger {}
 
 @Suppress("UnstableApiUsage")
 class BitcoinService(
@@ -613,7 +616,7 @@ class BitcoinService(
         Coin.valueOf(maxFee)
 
     private fun getTransactionFeePerKb(): Coin =
-        Coin.valueOf(feePerKb)
+        Coin.valueOf((feePerKb * SEGWIT_TX_FEE_RATE).roundToLong())
 }
 
 private fun BitcoinNetwork.getFilePrefix(): String {
