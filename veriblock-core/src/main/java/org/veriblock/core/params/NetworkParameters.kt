@@ -14,6 +14,7 @@ import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asMerkleRoot
 import org.veriblock.core.crypto.asTruncatedMerkleRoot
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
@@ -347,14 +348,18 @@ val defaultRegTestProgPoWParameters = NetworkParameters {
     progPowStartTimeEpoch = System.currentTimeMillis() / 1000
 }
 
+private val logger = createLogger {}
+
 fun getDefaultNetworkParameters(name: String, progPowGenesis: Boolean = false) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
     RegTestParameters.NETWORK -> {
         if (!progPowGenesis) {
+            logger.warn { "Using non-progpow network params" }
             defaultRegTestParameters
         } else {
+            logger.warn { "Using progpow network params" }
             defaultRegTestProgPoWParameters
         }
     }
