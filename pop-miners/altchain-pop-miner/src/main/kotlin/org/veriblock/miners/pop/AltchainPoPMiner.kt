@@ -62,7 +62,6 @@ private fun run(autoRestart: Boolean): Int {
         }
     }
 
-    logger.info { "Starting dependency injection" }
     val koin = startKoin {
         modules(
             listOf(

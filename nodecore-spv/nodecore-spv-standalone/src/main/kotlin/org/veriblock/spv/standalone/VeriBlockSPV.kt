@@ -54,12 +54,18 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
+    val commandFactory = CommandFactory()
+    // Create shell before any logging
+    val shell = Shell(commandFactory)
+
     logger.info { "Initializing SPV Context (${spvConfig.network})..." }
     val spvContext = SpvContext(spvConfig)
-    val shell = Shell(CommandFactory().apply {
+
+    // Initialize the commands
+    commandFactory.apply {
         standardCommands()
         spvCommands(spvContext)
-    })
+    }
     shell.initialize()
 
     var errored = false

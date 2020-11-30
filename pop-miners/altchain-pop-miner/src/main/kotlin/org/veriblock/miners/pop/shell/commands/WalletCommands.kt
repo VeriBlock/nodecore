@@ -62,7 +62,7 @@ fun CommandFactory.walletCommands(
         )
     ) {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
-        val destinationAddress = getParameter<String>("destinationAddress")
+        val destinationAddress: String = getParameter("destinationAddress")
         runBlocking {
             miner.spvContext.spvService.sendCoins(null, listOf(Output(destinationAddress.asStandardAddress(), atomicAmount.asCoin())))
         }
