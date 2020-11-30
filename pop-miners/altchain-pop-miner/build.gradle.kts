@@ -200,6 +200,11 @@ tasks.named("processResources") {
     dependsOn("npm_run_build")
 }
 
+// Cache NPM build
+tasks.named("npm_run_build") {
+    outputs.cacheIf { true }
+}
+
 distributions {
     main {
         contents {

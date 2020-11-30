@@ -8,11 +8,8 @@
 
 package org.veriblock.miners.pop.service
 
-import javafx.application.Application.launch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.altchain.checkForValidEndorsement
