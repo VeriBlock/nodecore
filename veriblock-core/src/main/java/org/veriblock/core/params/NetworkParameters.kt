@@ -343,25 +343,18 @@ val defaultRegTestParameters = NetworkParameters { network = RegTestParameters.N
 
 @JvmField
 val defaultRegTestProgPoWParameters = NetworkParameters {
-    network = RegTestParameters.NETWORK
+    network = "regtest_progpow"
     progPowForkHeight = 0
     progPowStartTimeEpoch = System.currentTimeMillis() / 1000
 }
 
 private val logger = createLogger {}
 
-fun getDefaultNetworkParameters(name: String, progPowGenesis: Boolean = false) = when (name) {
+fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
-    RegTestParameters.NETWORK -> {
-        if (!progPowGenesis) {
-            logger.warn { "Using non-progpow network params" }
-            defaultRegTestParameters
-        } else {
-            logger.warn { "Using progpow network params" }
-            defaultRegTestProgPoWParameters
-        }
-    }
+    RegTestParameters.NETWORK -> defaultRegTestParameters
+    RegTestProgPoWParameters.NETWORK -> defaultRegTestProgPoWParameters
     else -> error("Unknown VBK network: $name")
 }

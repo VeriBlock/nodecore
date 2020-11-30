@@ -20,7 +20,7 @@ fun configModule(): Module {
         single { minerConfig }
 
         // Context
-        single { getDefaultNetworkParameters(minerConfig.network, minerConfig.progpowGenesis) }
+        single { getDefaultNetworkParameters(minerConfig.network) }
         single { ApmContext(get(), get()) }
 
         single { AltchainPopMinerService(get(), get(), get(), get(), get(), get()) }
@@ -33,5 +33,4 @@ class MinerConfig(
     var maxFee: Long = 10_000_000,
     val connectDirectlyTo: List<String> = emptyList(),
     val mock: Boolean = false,
-    val progpowGenesis: Boolean = false
 )
