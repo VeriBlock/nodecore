@@ -37,7 +37,15 @@ private val logger = createLogger {}
 private val shutdownSignal = CountDownLatch(1)
 
 private val config = Configuration()
-private val spvConfig: SpvConfig = config.extract("spv") ?: SpvConfig()
+
+private val spvConfig: SpvConfig = SpvConfig(
+    network = config.getString("network") ?: "mainnet",
+    dataDir = config.getString("dataDir") ?: config.getDataDirectory(),
+    connectDirectlyTo = config.getOrNull("connectDirectlyTo") {
+        getStringList(it)
+    }?: emptyList(),
+    trustPeerHashes = config.getBoolean("trustPeerHashes") ?: false
+)
 
 private fun run(): Int {
     Security.addProvider(BouncyCastleProvider())
