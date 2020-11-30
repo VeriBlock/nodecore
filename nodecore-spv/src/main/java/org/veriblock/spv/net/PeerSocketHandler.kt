@@ -100,10 +100,10 @@ class PeerSocketHandler(
                 writeChannel.writeFully(message, 0, message.size)
                 writeChannel.flush()
             } catch (e: InterruptedException) {
-                logger.info("Output stream thread shutting down")
+                logger.debug("Output stream thread shutting down")
                 break
             } catch (e: CancellationException) {
-                logger.info("Output stream thread shutting down")
+                logger.debug("Output stream thread shutting down")
                 break
             } catch (e: IOException) {
                 logger.info("Socket closed")

@@ -7,9 +7,9 @@ import org.veriblock.core.tuweni.ethash.EthHash;
 import org.veriblock.core.types.Pair;
 import org.veriblock.core.types.Triple;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,7 +19,7 @@ public class ProgPoWCache {
     private static final int BUFFER_FOR_CALCULATION = 100;
 
     // Maps epochs to pairs of DAG caches and cDags
-    private static final Map<Integer, Triple<int[], int[], Long>> cachedPairs = new HashMap<>();
+    private static final Map<Integer, Triple<int[], int[], Long>> cachedPairs = new ConcurrentHashMap<>();
     private static final Lock cacheLock = new ReentrantLock();
 
     private static Integer MAX_CACHED_PAIRS = 10 + new Random().nextInt(4);
@@ -83,11 +83,11 @@ public class ProgPoWCache {
             // Loop through all pairs, find the one that was used the longest ago to remove
             long earliestTimestamp = Long.MAX_VALUE;
             Integer earliestKey = null;
-            for (Integer key : cachedPairs.keySet()) {
-                long lastAccessed = cachedPairs.get(key).getThird();
+            for (Map.Entry<Integer, Triple<int[], int[], Long>> entry : cachedPairs.entrySet()) {
+                long lastAccessed = entry.getValue().getThird();
                 if (lastAccessed < earliestTimestamp) {
                     earliestTimestamp = lastAccessed;
-                    earliestKey = key;
+                    earliestKey = entry.getKey();
                 }
             }
 
