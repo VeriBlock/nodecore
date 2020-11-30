@@ -96,7 +96,6 @@ class SpvContext(
         baseDir.mkdirs()
 
         try {
-            Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))
             directory = baseDir
             filePrefix = networkParameters.name
             blockStore = BlockStore(networkParameters, directory)
@@ -114,6 +113,8 @@ class SpvContext(
                 this, peerTable, transactionService, addressManager,
                 pendingTransactionContainer, blockchain
             )
+
+            Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))
         } catch (e: Exception) {
             logger.debugWarn(e) { "Could not initialize SPV Context" }
             throw RuntimeException(e)
