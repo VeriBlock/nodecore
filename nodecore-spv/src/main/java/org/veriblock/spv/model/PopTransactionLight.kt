@@ -59,7 +59,7 @@ class PopTransactionLight(
     @Throws(IOException::class)
     private fun serializeToStream(stream: OutputStream) {
         stream.write(transactionTypeIdentifier.id.toInt())
-        inputAddress.serializeToStream(stream)
+        inputAddress!!.serializeToStream(stream)
         SerializeDeserializeService.serialize(endorsedBlock, stream)
         SerializeDeserializeService.serialize(bitcoinTx, stream)
         SerializeDeserializeService.serialize(bitcoinMerklePath, stream)
