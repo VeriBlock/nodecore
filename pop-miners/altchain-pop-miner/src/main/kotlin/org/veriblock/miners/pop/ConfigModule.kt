@@ -4,6 +4,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.veriblock.core.params.NetworkConfig
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.params.defaultRegTestProgPoWParameters
 import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.core.ApmContext
@@ -19,7 +20,7 @@ fun configModule(): Module {
         single { minerConfig }
 
         // Context
-        single { getDefaultNetworkParameters(minerConfig.network) }
+        single { getDefaultNetworkParameters(minerConfig.network, minerConfig.progpowGenesis) }
         single { ApmContext(get(), get()) }
 
         single { AltchainPopMinerService(get(), get(), get(), get(), get(), get()) }
@@ -31,5 +32,6 @@ class MinerConfig(
     var feePerByte: Long = 1_000,
     var maxFee: Long = 10_000_000,
     val connectDirectlyTo: List<String> = emptyList(),
-    val mock: Boolean = false
+    val mock: Boolean = false,
+    val progpowGenesis: Boolean = false
 )
