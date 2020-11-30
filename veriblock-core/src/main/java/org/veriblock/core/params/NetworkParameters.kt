@@ -347,7 +347,7 @@ val defaultRegTestProgPoWParameters = NetworkParameters {
     progPowStartTimeEpoch = System.currentTimeMillis() / 1000
 }
 
-fun getDefaultNetworkParameters(name: String, progPowGenesis: Boolean = false) = when (name) {
+fun getDefaultNetworkParameters(name: String, progPowGenesis: Boolean = true) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters

@@ -33,5 +33,5 @@ class MinerConfig(
     var maxFee: Long = 10_000_000,
     val connectDirectlyTo: List<String> = emptyList(),
     val mock: Boolean = false,
-    val progpowGenesis: Boolean = false
+    val progpowGenesis: Boolean = true
 )
