@@ -54,7 +54,7 @@ class SpvGateway(
     }
 
     fun getBlock(hash: AnyVbkHash): VeriBlockBlock? {
-        logger.trace { "Requesting VBK block with hash $hash..." }
+        logger.debug { "Requesting VBK block with hash $hash..." }
 
         return spvService.getVbkBlockHeader(hash)?.let {
             SerializeDeserializeService.parseVeriBlockBlock(it.header, it.hash.asVbkHash())

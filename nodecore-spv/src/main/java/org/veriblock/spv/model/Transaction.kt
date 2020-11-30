@@ -14,7 +14,7 @@ import org.veriblock.core.params.NetworkParameters
 
 abstract class Transaction {
     lateinit var txId: VbkTxId
-    lateinit var inputAddress: AddressLight
+    var inputAddress: AddressLight? = null
     var transactionMeta: TransactionMeta? = null
     var signature: ByteArray? = null
     var publicKey: ByteArray? = null

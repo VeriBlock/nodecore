@@ -233,7 +233,7 @@ class TransactionService(
             builder.txId = ByteString.copyFrom(tx.txId.bytes)
             builder.type = VeriBlockMessages.Transaction.Type.STANDARD
             builder.sourceAmount = tx.inputAmount!!.atomicUnits
-            builder.sourceAddress = ByteString.copyFrom(tx.inputAddress.toByteArray())
+            builder.sourceAddress = ByteString.copyFrom(tx.inputAddress!!.toByteArray())
             builder.data = ByteString.copyFrom(tx.data)
             //        builder.setTimestamp(getTimeStamp());
             //        builder.setSize(tx.getSize());

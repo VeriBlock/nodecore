@@ -74,7 +74,7 @@ class TransactionMonitor(
                     ?: error("Unable to retrieve pending transactions")
                 tx.transactionMeta.depth = it.confirmations
                 tx.transactionMeta.appearsAtChainHeight = it.blockNumber
-                tx.transactionMeta.appearsInBestChainBlock = it.blockHash
+                tx.transactionMeta.appearsInBestChainBlock = it.blockHash.asAnyVbkHash()
                 tx.merklePath = VeriBlockMerklePath(it.merklePath)
                 tx.transactionMeta.setState(TransactionMeta.MetaState.CONFIRMED)
             }

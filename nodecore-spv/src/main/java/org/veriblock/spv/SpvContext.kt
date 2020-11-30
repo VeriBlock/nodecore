@@ -20,7 +20,6 @@ import org.veriblock.spv.model.LedgerValue
 import org.veriblock.spv.model.TransactionPool
 import org.veriblock.spv.net.*
 import org.veriblock.spv.service.*
-import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.util.SpvEventBus.addressStateUpdatedEvent
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
 import java.io.File
@@ -52,7 +51,7 @@ class SpvContext(
     val p2PService: P2PService
     val addressManager: AddressManager
     val transactionService: TransactionService
-    val pendingTransactionContainer: TransactionManager
+    val pendingTransactionContainer: PendingTransactionContainer
     val pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
 
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
@@ -101,7 +100,7 @@ class SpvContext(
             blockStore = BlockStore(networkParameters, directory)
             transactionPool = TransactionPool()
             blockchain = Blockchain(blockStore)
-            pendingTransactionContainer = TransactionManager(blockchain)
+            pendingTransactionContainer = PendingTransactionContainer()
             p2PService = P2PService(pendingTransactionContainer, networkParameters)
             addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
