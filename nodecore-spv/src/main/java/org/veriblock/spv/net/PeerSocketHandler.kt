@@ -22,6 +22,7 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugInfo
 import org.veriblock.spv.serialization.MessageSerializer.deserialize
 import org.veriblock.spv.util.Threading.PEER_INPUT_POOL
 import java.io.IOException
@@ -136,19 +137,16 @@ class PeerSocketHandler(
                 // Disconnect?
                 break
             } catch (e: IOException) {
-                logger.info("Disconnected from peer ${peer.address}.")
+                logger.debugInfo(e) { "Disconnected from peer ${peer.address}" }
                 break
             } catch (e: ClosedReceiveChannelException) {
-                logger.info("Disconnected from peer ${peer.address}.")
-                break
-            } catch (e: ClosedReceiveChannelException) {
-                logger.info("Disconnected from peer ${peer.address}.")
+                logger.debugInfo(e) { "Disconnected from peer ${peer.address}" }
                 break
             } catch (e: CancellationException) {
-                logger.info("Input stream thread shutting down")
+                logger.debug("Input stream thread shutting down")
                 break
             } catch (e: Exception) {
-                logger.error("Socket error: ", e)
+                logger.error(e) { "Socket error" }
                 break
             }
             //delay(10L)
