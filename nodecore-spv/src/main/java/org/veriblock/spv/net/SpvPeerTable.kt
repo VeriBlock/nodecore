@@ -26,6 +26,7 @@ import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.BloomFilter
+import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.debugWarn
@@ -36,6 +37,7 @@ import org.veriblock.spv.model.mapper.LedgerProofReplyMapper
 import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.serialization.MessageSerializer.deserializeNormalTransaction
 import org.veriblock.spv.service.*
+import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 import org.veriblock.spv.util.buildMessage
@@ -61,7 +63,7 @@ class SpvPeerTable(
     private val spvContext: SpvContext,
     private val p2pService: P2PService,
     peerDiscovery: PeerDiscovery,
-    pendingTransactionContainer: PendingTransactionContainer
+    val txMgr: TransactionManager
 ) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
@@ -70,7 +72,6 @@ class SpvPeerTable(
     var maximumPeers = DEFAULT_CONNECTIONS
     var downloadPeer: SpvPeer? = null
     val bloomFilter: BloomFilter
-    private val pendingTransactionContainer: PendingTransactionContainer
 
     private val peers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
     private val pendingPeers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
@@ -88,17 +89,18 @@ class SpvPeerTable(
         bloomFilter = createBloomFilter()
         blockchain = spvContext.blockchain
         discovery = peerDiscovery
-        this.pendingTransactionContainer = pendingTransactionContainer
 
-        SpvEventBus.pendingTransactionDownloadedEvent.register(
-            spvContext.pendingTransactionDownloadedListener,
-            spvContext.pendingTransactionDownloadedListener::onPendingTransactionDownloaded
-        )
+        SpvEventBus.pendingTransactionDownloadedEvent.register(this) {
+            logger.debug {"Tx=${it.txId} downloaded..."}
+        }
     }
 
     fun start() {
         running.set(true)
 
+        SpvEventBus.newBestBlockEvent.register(this) {
+            txMgr.onVbkBestBlock(it)
+        }
         SpvEventBus.addressStateUpdatedEvent.register(this) {
             logger.info { "New address state=$it" }
         }
@@ -113,7 +115,7 @@ class SpvPeerTable(
         coroutineScope.launchWithFixedDelay(200L, 60_000L) {
             discoverPeers()
         }
-        coroutineScope.launchWithFixedDelay(5_000L, 20_000L) {
+        coroutineScope.launchWithFixedDelay(5_000L, 30_000L) {
             requestPendingTransactions()
         }
 
@@ -225,7 +227,7 @@ class SpvPeerTable(
 
 
     private suspend fun requestPendingTransactions() {
-        val pendingTransactionIds = pendingTransactionContainer.getPendingTransactionIds()
+        val pendingTransactionIds = txMgr.getPendingTransactionIds()
         try {
             for (txId in pendingTransactionIds) {
                 val request = buildMessage {
@@ -233,15 +235,28 @@ class SpvPeerTable(
                         .setId(txId.bytes.toByteString())
                         .build()
                 }
-                val response = requestMessage(request)
-                if (response.transactionReply.success) {
-                    pendingTransactionContainer.updateTransactionInfo(response.transactionReply.transaction.toModel())
-                } else {
-                    val transaction = pendingTransactionContainer.getTransaction(txId)
-                    if (transaction != null) {
-                        advertise(transaction)
+                requestAllMessages(request)
+                    .map { it.transactionReply }
+                    .collect {
+                        if (it.success) {
+                            // tx exists
+                            val info = it.transaction.toModel()
+                            logger.info { "Tx=${txId} found: VBK:${info.blockNumber}:${info.blockHash}"}
+
+                            txMgr.onTransactionInfo(info)
+                        } else {
+                            // remote peer does not know about this tx.
+                            logger.info { "Tx=${txId} NOT found"}
+
+                            val transaction = txMgr.getTransaction(txId)
+                            if (transaction != null) {
+                                // rebroadcast it
+                                advertise(transaction)
+                            }
+
+                            txMgr.onMissingTransactionInfo(txId)
+                        }
                     }
-                }
             }
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to request pending transactions" }
@@ -514,7 +529,7 @@ private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
     bitcoinBlockHash = bitcoinBlockHash.toHex(),
     bitcoinTxId = bitcoinTxId.toHex(),
     bitcoinConfirmations = bitcoinConfirmations,
-    blockHash = blockHash.toHex(),
+    blockHash = blockHash.toByteArray().asAnyVbkHash(),
     merklePath = merklePath
 )
 

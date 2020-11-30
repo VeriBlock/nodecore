@@ -26,7 +26,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext
@@ -42,6 +41,10 @@ import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.asLightAddress
 import org.veriblock.spv.net.SpvPeerTable
 import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
+import org.veriblock.spv.service.tx.TransactionManager
+import org.veriblock.spv.service.tx.TxStatusChangedEventData.Confirmation
+import org.veriblock.spv.service.tx.TxStatusChangedEventData.GotRequiredConfirmationsN
+import org.veriblock.spv.service.tx.TxStatusChangedEventData.Invalid
 import org.veriblock.spv.util.buildMessage
 import java.io.File
 import java.io.IOException
@@ -54,7 +57,7 @@ class SpvService(
     private val peerTable: SpvPeerTable,
     private val transactionService: TransactionService,
     private val addressManager: AddressManager,
-    private val pendingTransactionContainer: PendingTransactionContainer,
+    private val pendingTransactionContainer: TransactionManager,
     private val blockchain: Blockchain
 ) {
     fun getStateInfo(): StateInfo {
@@ -126,7 +129,16 @@ class SpvService(
             addressCoinsIndexList, outputs
         )
         return transactions.asFlow().onEach {
-            pendingTransactionContainer.addTransaction(it)
+            val event = pendingTransactionContainer.addTransaction(it)
+            event.register(this) { e ->
+                logger.debug {
+                    "Tx=${e.id} ${when (e) {
+                        is Confirmation -> "has confirmation=${e.confirmations} in a block=${e.block}"
+                        is GotRequiredConfirmationsN -> "is confirmed!"
+                        is Invalid -> "is invalid"
+                    }}"
+                }
+            }
             peerTable.advertise(it)
         }.map {
             it.txId
@@ -351,7 +363,7 @@ class SpvService(
 
     fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
-    fun getTransactions(ids: List<Sha256Hash>) = ids.mapNotNull {
+    fun getTransactions(ids: List<Sha256Hash>): List<TransactionInfo> = ids.mapNotNull {
         pendingTransactionContainer.getTransactionInfo(it)
     }
 
