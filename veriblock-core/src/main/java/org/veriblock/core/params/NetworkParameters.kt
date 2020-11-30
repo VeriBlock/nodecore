@@ -347,16 +347,10 @@ val defaultRegTestProgPoWParameters = NetworkParameters {
     progPowStartTimeEpoch = System.currentTimeMillis() / 1000
 }
 
-fun getDefaultNetworkParameters(name: String, progPowGenesis: Boolean = true) = when (name) {
+fun getDefaultNetworkParameters(name: String) = when (name) {
     MainNetParameters.NETWORK -> defaultMainNetParameters
     TestNetParameters.NETWORK -> defaultTestNetParameters
     AlphaNetParameters.NETWORK -> defaultAlphaNetParameters
-    RegTestParameters.NETWORK -> {
-        if (!progPowGenesis) {
-            defaultRegTestParameters
-        } else {
-            defaultRegTestProgPoWParameters
-        }
-    }
+    RegTestParameters.NETWORK -> defaultRegTestProgPoWParameters
     else -> error("Unknown VBK network: $name")
 }
