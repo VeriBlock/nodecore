@@ -49,7 +49,7 @@ class Configuration(
 
     inline fun <reified T> extract(path: String): T? = getOrNull(path) { extract<T>(it) }
 
-    fun getDataDirectory() = getString(DATA_DIR_OPTION_KEY) ?: "."
+    fun getDataDirectory() = getString(DATA_DIR_OPTION_KEY) ?: System.getenv(DATA_DIR_OPTION_KEY) ?: "."
 
     fun list(): Map<String, String> {
         val sysProperties = System.getProperties()
