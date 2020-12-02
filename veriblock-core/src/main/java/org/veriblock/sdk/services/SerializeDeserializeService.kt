@@ -140,6 +140,18 @@ object SerializeDeserializeService {
     }
 
     // VeriBlockTransaction
+    fun serialize(veriBlockTransaction: VeriBlockTransaction): ByteArray {
+        try {
+            ByteArrayOutputStream().use { stream ->
+                serialize(veriBlockTransaction, stream)
+                return stream.toByteArray()
+            }
+        } catch (ignore: IOException) {
+            // Should not happen
+        }
+        return byteArrayOf()
+    }
+
     fun serialize(veriBlockTransaction: VeriBlockTransaction, stream: OutputStream) {
         val rawTransaction = serializeTransactionEffects(veriBlockTransaction)
         stream.writeVariableLengthValue(rawTransaction)
