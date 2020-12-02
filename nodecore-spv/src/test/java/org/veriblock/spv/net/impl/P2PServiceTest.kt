@@ -29,7 +29,7 @@ class P2PServiceTest {
     @Before
     fun setUp() {
         Context.set(defaultTestNetParameters)
-        spvContext = SpvContext(SpvConfig("testnet", connectDirectlyTo = listOf("localhost")))
+        spvContext = SpvContext(SpvConfig(defaultTestNetParameters, connectDirectlyTo = listOf("localhost")))
         pendingTransactionContainer = mockk(relaxed = true)
         peer = mockk(relaxed = true)
         p2PService = P2PService(pendingTransactionContainer, spvContext.networkParameters)

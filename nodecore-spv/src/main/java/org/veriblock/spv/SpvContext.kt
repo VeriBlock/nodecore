@@ -11,6 +11,7 @@ import io.ktor.util.network.*
 import org.veriblock.core.ConfigurationException
 import org.veriblock.core.Context
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
@@ -37,9 +38,7 @@ private val logger = createLogger {}
 class SpvContext(
     config: SpvConfig
 ) {
-    val networkParameters: NetworkParameters = NetworkParameters {
-        network = config.network
-    }
+    val networkParameters: NetworkParameters = config.networkParameters
 
     val directory: File
     val filePrefix: String
@@ -147,7 +146,7 @@ class SpvContext(
 }
 
 class SpvConfig(
-    val network: String = "mainnet",
+    val networkParameters: NetworkParameters = defaultMainNetParameters,
     val dataDir: String = ".",
     val connectDirectlyTo: List<String> = emptyList(),
     val trustPeerHashes: Boolean = false

@@ -17,6 +17,7 @@ import me.tongfei.progressbar.ProgressBarStyle
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
+import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.tuweni.progpow.ProgPoWCache
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
@@ -39,7 +40,7 @@ private val shutdownSignal = CountDownLatch(1)
 private val config = Configuration()
 
 private val spvConfig: SpvConfig = SpvConfig(
-    network = config.getString("network") ?: "mainnet",
+    networkParameters = getDefaultNetworkParameters(config.getString("network") ?: "mainnet"),
     dataDir = config.getString("dataDir") ?: config.getDataDirectory(),
     connectDirectlyTo = config.getOrNull("connectDirectlyTo") {
         getStringList(it)
@@ -66,7 +67,7 @@ private fun run(): Int {
     // Create shell before any logging
     val shell = Shell(commandFactory)
 
-    logger.info { "Initializing SPV Context (${spvConfig.network})..." }
+    logger.info { "Initializing SPV Context (${spvConfig.networkParameters.name})..." }
     val spvContext = SpvContext(spvConfig)
 
     // Initialize the commands

@@ -134,13 +134,12 @@ class PeerSocketHandler(
                 }
             } catch (e: SocketException) {
                 logger.info("Attempted to read from a socket that has been closed.")
-                // Disconnect?
                 break
             } catch (e: IOException) {
-                logger.debugInfo(e) { "Disconnected from peer ${peer.address}" }
+                logger.info("Disconnected from peer ${peer.address}.")
                 break
             } catch (e: ClosedReceiveChannelException) {
-                logger.debugInfo(e) { "Disconnected from peer ${peer.address}" }
+                logger.info("Disconnected from peer ${peer.address}.")
                 break
             } catch (e: CancellationException) {
                 logger.debug("Input stream thread shutting down")

@@ -14,7 +14,6 @@ import io.ktor.util.network.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
@@ -100,7 +99,7 @@ class SpvPeerTable(
         running.set(true)
 
         SpvEventBus.addressStateUpdatedEvent.register(this) {
-            logger.info { "New address state=$it" }
+            logger.debug { "New address state: $it" }
         }
         SpvEventBus.peerConnectedEvent.register(this, ::onPeerConnected)
         SpvEventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
@@ -430,7 +429,7 @@ class SpvPeerTable(
     ): Flow<VeriBlockMessages.Event> = channelFlow {
         // Perform the request for all the peers asynchronously
         // TODO: consider a less expensive approach such as asking a random peer. There can be peer behavior score weighting and/or retries.
-        for (peer in peers.values) {
+        peers.values.map { peer ->
             // Launch each request in a child coroutine
             launch {
                 val response = peer.requestMessage(event, timeoutInMillis)
@@ -438,9 +437,7 @@ class SpvPeerTable(
                 logger.debug { "Received response from peer=${peer.address} response=${response.resultsCase.name}" }
                 send(response)
             }
-        }
-        // Wait for requests to be done or flow to be cancelled before closing it
-        awaitClose()
+        }.joinAll() // Wait for requests to be done or cancelled before closing the flow
     }
 
     suspend fun requestMessage(

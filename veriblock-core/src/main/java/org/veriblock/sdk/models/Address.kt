@@ -106,14 +106,9 @@ class Address(address: String) {
     }
 
     init {
-        Preconditions.notNull(
-            address,
-            "Address cannot be null"
-        )
-        Preconditions.argument<Any>(
-            address.length == SIZE && address[0] == STARTING_CHAR,
+        require(address.length == SIZE && address[0] == STARTING_CHAR) {
             "The address $address is not a valid VBK address"
-        )
+        }
         this.address = address
         data = getDataPortionFromAddress(address)
         isMultisig = address[SIZE - 1] == MULTISIG_ENDING_CHAR
