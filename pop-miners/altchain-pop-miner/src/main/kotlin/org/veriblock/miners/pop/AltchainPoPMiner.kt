@@ -23,6 +23,7 @@ import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.alt.plugin.PluginService
+import org.veriblock.sdk.util.checkSystemClock
 import org.veriblock.shell.Shell
 import java.security.Security
 import java.time.Duration
@@ -50,6 +51,11 @@ private fun run(autoRestart: Boolean): Int {
     println("${SharedConstants.TYPE_HELP}\n")
 
     Runtime.getRuntime().addShutdownHook(Thread { shutdownSignal.countDown() })
+
+    // Check the system clock status with NTP
+    GlobalScope.launch {
+        checkSystemClock()
+    }
 
     // Automatic restart code (FIXME remove once APM becomes stable)
     if (autoRestart) {
