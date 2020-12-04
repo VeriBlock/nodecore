@@ -1,6 +1,6 @@
 package org.veriblock.spv.model
 
-class LedgerValue(
+data class LedgerValue(
     val availableAtomicUnits: Long,
     val frozenAtomicUnits: Long,
     val signatureIndex: Long

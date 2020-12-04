@@ -58,7 +58,19 @@ class BitcoinFamilyChain(
     override val name: String = configuration.name
         ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
-    private val payoutAddressScript: ByteArray
+    private val payoutAddress: String
+
+    private var payoutAddressScript: ByteArray? = null
+
+    private suspend fun getPayoutAddressScript() = payoutAddressScript ?: run {
+        val script = if (payoutAddress.isHex()) {
+            payoutAddress.asHexBytes()
+        } else {
+            validateAddress(payoutAddress)
+        }
+        payoutAddressScript = script
+        script
+    }
 
     override val httpClient = createHttpClient(
         authConfig = config.auth,
@@ -78,15 +90,7 @@ class BitcoinFamilyChain(
         if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
             error("'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address")
         }
-        payoutAddressScript = if (config.payoutAddress.isHex()) {
-            config.payoutAddress.asHexBytes()
-        } else {
-            try {
-                SegwitAddressUtility.generatePayoutScriptFromSegwitAddress(config.payoutAddress)
-            } catch (e: Exception) {
-                error("Invalid segwit address: ${e.message}")
-            }
-        }
+        payoutAddress = config.payoutAddress
     }
 
     override suspend fun getBestBlockHeight(): Int {
@@ -256,7 +260,7 @@ class BitcoinFamilyChain(
         val publicationData = PublicationData(
             id,
             response.block_header.asHexBytes(),
-            payoutAddressScript,
+            getPayoutAddressScript(),
             response.raw_contextinfocontainer.asHexBytes()
         )
         return ApmInstruction(
@@ -336,6 +340,27 @@ class BitcoinFamilyChain(
         } catch (e: Exception) {
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
+        }
+    }
+
+    private suspend fun validateAddress(address: String): ByteArray {
+        try {
+            val response: AddressValidationResponse = rpcRequest("validateaddress", listOf(address))
+            if (response.isvalid) {
+                return response.scriptPubKey?.asHexBytes()
+                    ?: error("Unexpected response from 'validateaddress'. 'scriptPubKey' is not set!")
+            } else {
+                error("Invalid Address: $address")
+            }
+        } catch (e: RpcException) {
+            if (e.errorCode == -32601) {
+                // Method not found
+                error("Method 'validateaddress' not found. It must be implemented in order to specify payout addresses.")
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            error("Unable to perform the validateaddress rpc call to ${config.host} (is it reachable?)")
         }
     }
 }

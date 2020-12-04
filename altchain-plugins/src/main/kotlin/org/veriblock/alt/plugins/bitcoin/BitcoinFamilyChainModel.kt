@@ -128,3 +128,13 @@ internal data class ValidityInfo(
     val code: String,
     val message: String
 )
+
+internal data class AddressValidationResponse(
+    val isvalid: Boolean,
+    val address: String?,
+    val scriptPubKey: String?,
+    val isscript: Boolean?,
+    val iswitness: Boolean?,
+    val witness_version: String?,
+    val witness_programo: String?
+)

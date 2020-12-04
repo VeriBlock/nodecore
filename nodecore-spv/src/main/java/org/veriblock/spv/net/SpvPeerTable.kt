@@ -95,9 +95,6 @@ class SpvPeerTable(
     fun start() {
         running.set(true)
 
-        SpvEventBus.addressStateUpdatedEvent.register(this) {
-            logger.debug { "New address state: $it" }
-        }
         SpvEventBus.peerConnectedEvent.register(this, ::onPeerConnected)
         SpvEventBus.peerDisconnectedEvent.register(this, ::onPeerDisconnected)
         SpvEventBus.messageReceivedEvent.register(this) {

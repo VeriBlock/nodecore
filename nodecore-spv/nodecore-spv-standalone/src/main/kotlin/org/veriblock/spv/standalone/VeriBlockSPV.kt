@@ -29,6 +29,7 @@ import org.veriblock.spv.standalone.commands.standardCommands
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.DownloadStatus
+import org.veriblock.spv.util.SpvEventBus
 import java.security.Security
 import java.util.concurrent.CountDownLatch
 import kotlin.system.exitProcess
@@ -122,6 +123,11 @@ private fun run(): Int {
                 }
             }
         }
+
+        SpvEventBus.addressStateUpdatedEvent.register(logger) {
+            logger.info { it.toString() }
+        }
+
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
         logger.info { """Type "help" to display a list of available commands""" }
         shell.run()

@@ -82,7 +82,7 @@ class SpvService(
         )
     }
 
-    fun getAddressState(addr: Address): LedgerContext? = spvContext.getAddressState(addr)
+    fun getAddressState(addr: Address): LedgerContext = spvContext.getAddressState(addr)
 
     // if sourceAddress is null, use all available addresses
     suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {

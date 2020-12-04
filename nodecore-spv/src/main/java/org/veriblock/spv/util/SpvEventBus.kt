@@ -4,8 +4,11 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.AsyncEvent
+import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.model.LedgerContext
+import org.veriblock.spv.model.LedgerValue
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.TransactionMeta
 import org.veriblock.spv.net.SpvPeer
@@ -17,7 +20,7 @@ object SpvEventBus {
     val peerDisconnectedEvent = AsyncEvent<SpvPeer>("Peer Disconnected", EVENT_EXECUTOR)
     val messageReceivedEvent = AsyncEvent<MessageReceivedEvent>("Message Received", EVENT_EXECUTOR)
 
-    val addressStateUpdatedEvent = AsyncEvent<LedgerContext>("Address State Updated", EVENT_EXECUTOR)
+    val addressStateUpdatedEvent = AsyncEvent<AddressStateChangeEvent>("Address State Updated", EVENT_EXECUTOR)
 
     val pendingTransactionDownloadedEvent = AsyncEvent<StandardTransaction>("Pending Transaction Downloaded", EVENT_EXECUTOR)
 
@@ -37,3 +40,22 @@ data class MessageReceivedEvent(
     val peer: SpvPeer,
     val message: VeriBlockMessages.Event
 )
+
+data class AddressStateChangeEvent(
+    val address: Address,
+    val previousState: LedgerValue,
+    val newState: LedgerValue
+) {
+    override fun toString(): String {
+        return when {
+            previousState.signatureIndex == -1L ->
+                "$address balance: ${newState.availableAtomicUnits.asCoin()}"
+            previousState.availableAtomicUnits < newState.availableAtomicUnits ->
+                "$address received ${newState.availableAtomicUnits - previousState.availableAtomicUnits} VBK. New balance: ${newState.availableAtomicUnits.asCoin()} VBK"
+            previousState.availableAtomicUnits > newState.availableAtomicUnits ->
+                "$address paid ${previousState.availableAtomicUnits - newState.availableAtomicUnits} VBK. New balance: ${newState.availableAtomicUnits.asCoin()} VBK"
+            else ->
+                "$address balance has changed: ${newState.availableAtomicUnits.asCoin()}"
+        }
+    }
+}

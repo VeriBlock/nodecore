@@ -21,6 +21,7 @@ import org.veriblock.spv.model.LedgerValue
 import org.veriblock.spv.model.TransactionPool
 import org.veriblock.spv.net.*
 import org.veriblock.spv.service.*
+import org.veriblock.spv.util.AddressStateChangeEvent
 import org.veriblock.spv.util.SpvEventBus.addressStateUpdatedEvent
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
 import java.io.File
@@ -138,8 +139,13 @@ class SpvContext(
 
     fun getAllAddressesState(): Map<Address, LedgerContext> = addressState
     fun setAddressState(ledgerContext: LedgerContext) {
+        val previousLedgerContext = getAddressState(ledgerContext.address)
         addressState[ledgerContext.address] = ledgerContext
-        addressStateUpdatedEvent.trigger(ledgerContext)
+        if (ledgerContext.ledgerValue != previousLedgerContext.ledgerValue) {
+            addressStateUpdatedEvent.trigger(
+                AddressStateChangeEvent(ledgerContext.address, previousLedgerContext.ledgerValue, ledgerContext.ledgerValue)
+            )
+        }
     }
 
     fun getSignatureIndex(address: Address): Long? = addressState[address]?.ledgerValue?.signatureIndex

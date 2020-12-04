@@ -176,7 +176,7 @@ public class PeerTable {
             return;
         }
         if (blacklist.containsKey(hostAddress)) {
-            logger.info("Incoming connection is from a blacklisted peer, closing connection");
+            logger.info("Incoming connection is from a blacklisted peer ({}), closing connection", hostAddress);
             try {
                 socketChannel.close();
             } catch (IOException ignored) {}
@@ -189,7 +189,7 @@ public class PeerTable {
         if (peers.containsKey(addressKey)) {
             Peer original = peers.get(addressKey);
             if (original.getStatus() != Peer.Status.Closed && original.getStatus() != Peer.Status.Errored) {
-                logger.info("Incoming connection is from an already connected peer, closing connection");
+                logger.info("Incoming connection is from an already connected peer ({}), closing connection", addressKey);
                 try {
                     socketChannel.close();
                 } catch (IOException ignored) {}
