@@ -12,6 +12,7 @@ package org.veriblock.miners.pop
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.koin.core.context.startKoin
@@ -53,7 +54,7 @@ private fun run(autoRestart: Boolean): Int {
     Runtime.getRuntime().addShutdownHook(Thread { shutdownSignal.countDown() })
 
     // Check the system clock status with NTP
-    GlobalScope.launch {
+    runBlocking {
         checkSystemClock()
     }
 

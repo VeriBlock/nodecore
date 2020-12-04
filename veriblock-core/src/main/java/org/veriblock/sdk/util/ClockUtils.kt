@@ -10,6 +10,7 @@ import org.veriblock.sdk.models.Constants
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlin.system.exitProcess
 
 private val logger = createLogger {}
 
@@ -23,6 +24,7 @@ suspend fun checkSystemClock() = withTimeout(Duration.ofSeconds(30)) {
     }
     if (abs(ntpCurrentTime - System.currentTimeMillis()) > TimeUnit.SECONDS.toMillis(Constants.ALLOWED_TIME_DRIFT.toLong())) {
         logger.error { "The system clock is out of synchronization, please synchronize it" }
+        exitProcess(1)
     } else {
         logger.info { "The system clock is synchronized" }
     }
