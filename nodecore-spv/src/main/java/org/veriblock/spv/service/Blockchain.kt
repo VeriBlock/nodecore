@@ -15,6 +15,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VerificationException
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.model.StoredVeriBlockBlock
 import org.veriblock.spv.util.SpvEventBus
@@ -41,7 +42,7 @@ class Blockchain(
     /**
      * Drop existing block index, and re-generate one from disk.
      */
-    fun reindex() {
+    private fun reindex() {
         logger.info { "Reading ${blockStore.networkParameters} blocks..." }
 
         // drop previous block index
@@ -114,7 +115,7 @@ class Blockchain(
     /**
      * Reads a chain of blocks from active chain of given `size` ending with `hash`
      */
-    fun getChainWithTip(hash: AnyVbkHash, size: Int): ArrayList<StoredVeriBlockBlock> {
+    private fun getChainWithTip(hash: AnyVbkHash, size: Int): List<StoredVeriBlockBlock> {
         val ret = ArrayList<StoredVeriBlockBlock>()
         var i = 0
         var cursor = getBlock(hash)
@@ -145,8 +146,10 @@ class Blockchain(
             ?: throw IllegalStateException("Found index with hash=${block.previousBlock} but could not read its block")
 
         // is block statelessly valid?
-        if (!ValidationService.checkBlock(block)) {
-            logger.warn {"Rejecting block=$block, it is statelessly invalid"}
+        try {
+            ValidationService.verify(block)
+        } catch (e: VerificationException) {
+            logger.warn {"Rejecting block $block: ${e.message}"}
             return false
         }
 
@@ -201,9 +204,10 @@ class Blockchain(
     }
 
     fun getPeerQuery(): List<VeriBlockBlock> {
-        return getChainWithTip(activeChain.tip.smallHash, 100)
+        return getChainWithTip(activeChain.tip.smallHash, 100).asSequence()
             .map { it.header }
             .filter { it.isKeystone() }
+            .toList()
     }
 
     private fun appendToBlockIndex(position: Long, block: StoredVeriBlockBlock): BlockIndex {
@@ -302,7 +306,7 @@ class Blockchain(
         }
     }
 
-    fun validateFit(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Boolean {
+    private fun validateFit(blockToAdd: VeriBlockBlock, validationContext: List<VeriBlockBlock>): Boolean {
         if (validationContext.isEmpty()) {
             logger.warn { "Block ($blockToAdd) builds upon an invalid tree!" }
             return false

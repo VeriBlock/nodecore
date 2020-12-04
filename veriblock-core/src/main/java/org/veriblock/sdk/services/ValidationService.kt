@@ -50,7 +50,6 @@ object ValidationService {
         return block.timestamp <= currentTime + Constants.ALLOWED_TIME_DRIFT
     }
 
-
     fun checkProofOfWork(block: VeriBlockBlock) {
         if (!isProofOfWorkValid(block)) {
             throw VerificationException(
@@ -65,7 +64,7 @@ object ValidationService {
 
     fun checkMaximumDrift(veriBlockBlock: VeriBlockBlock) {
         if (!isBlockTimeValid(veriBlockBlock)) {
-            throw VerificationException("Block is too far in the future")
+            throw VerificationException("Block is too far in the future. Consider checking your system's clock.")
         }
     }
 
@@ -80,7 +79,7 @@ object ValidationService {
     fun isProofOfWorkValid(block: BitcoinBlock): Boolean {
         val embeddedTarget = BitcoinUtilities.decodeCompactBits(block.difficulty.toLong())
         val hash = block.hash.toBigInteger()
-        return hash.compareTo(embeddedTarget) <= 0
+        return hash <= embeddedTarget
     }
 
     @Throws(VerificationException::class)

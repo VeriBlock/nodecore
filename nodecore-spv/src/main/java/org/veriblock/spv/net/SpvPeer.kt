@@ -172,8 +172,8 @@ class SpvPeer(
     }
 
     private fun requestBlockDownload(keystones: List<VeriBlockBlock>) {
-        if(keystones.isEmpty()) {
-            throw IllegalArgumentException("Trying to request block download with empty keystones!")
+        require(keystones.isNotEmpty()) {
+            "Trying to request block download with an empty keystone list!"
         }
         val queryBuilder = KeystoneQuery.newBuilder()
         for (block in keystones) {

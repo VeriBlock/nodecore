@@ -386,5 +386,4 @@ class SpvService(
             ?: throw IllegalStateException(
                 "Requested signature index for address which is not present in AddressState"
             )
-
 }

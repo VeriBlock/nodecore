@@ -8,10 +8,15 @@
 package org.veriblock.spv.util
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mu.KLogger
+import org.veriblock.core.utilities.debugError
 import java.lang.Runtime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
@@ -60,6 +65,9 @@ object Threading {
             .build()
     )
 
+    val PEER_TABLE_DISPATCHER = PEER_TABLE_THREAD.asCoroutineDispatcher()
+    val PEER_TABLE_SCOPE = CoroutineScope(PEER_TABLE_DISPATCHER)
+
     @Throws(ExecutionException::class, InterruptedException::class)
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
@@ -97,5 +105,11 @@ inline fun CoroutineScope.launchWithFixedDelay(
     while (isActive) {
         block()
         delay(periodMillis)
+    }
+}
+
+inline fun Job.invokeOnFailure(crossinline block: (Throwable) -> Unit) = invokeOnCompletion { throwable ->
+    if (throwable != null && throwable !is CancellationException) {
+        block(throwable)
     }
 }
