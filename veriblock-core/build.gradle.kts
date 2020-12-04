@@ -37,6 +37,9 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.13.3")
     implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
+    // NTP time utility
+    implementation("com.lyft.kronos:kronos-java:0.0.1-alpha10")
+
     api("io.netty:netty-buffer:4.1.30.Final")
     api("io.vertx:vertx-core:3.6.2")
     api("com.google.guava:guava:20.0")
