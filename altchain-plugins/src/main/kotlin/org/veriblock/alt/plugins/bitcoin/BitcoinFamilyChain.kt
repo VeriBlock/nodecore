@@ -241,7 +241,7 @@ class BitcoinFamilyChain(
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
-        logger.info { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
+        logger.debug { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
         val response: BtcPublicationData = rpcRequest("getpopdata", listOf(actualBlockHeight))
 
         if (response.block_header == null) {

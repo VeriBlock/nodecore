@@ -45,6 +45,7 @@ import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.util.checkSuccess
 import org.veriblock.spv.util.SpvEventBus
+import org.veriblock.spv.util.invokeOnFailure
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
@@ -125,8 +126,16 @@ class SecurityInheritingMonitor(
                 delay(1_000L)
             }
             // Start submitting context and VTBs
-            launch { submitContext() }
-            launch { submitVtbs() }
+            launch {
+                submitContext()
+            }.invokeOnFailure {
+                logger.error(it) { "${chain.name} context submission task has failed" }
+            }
+            launch {
+                submitVtbs()
+            }.invokeOnFailure {
+                logger.error(it) { "${chain.name} VTB submission task has failed" }
+            }
         }
     }
 

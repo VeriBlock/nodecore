@@ -124,9 +124,8 @@ class SpvContext(
         peerTable.shutdown()
     }
 
-    fun getAddressState(address: Address): LedgerContext = addressState.getOrDefault(
-        key = address,
-        defaultValue = LedgerContext(
+    fun getAddressState(address: Address): LedgerContext = addressState.getOrPut(address) {
+        LedgerContext(
             address = address,
             ledgerValue = LedgerValue(
                 availableAtomicUnits = 0L,
@@ -135,7 +134,7 @@ class SpvContext(
             ),
             block = blockchain.networkParameters.genesisBlock
         )
-    )
+    }
 
     fun getAllAddressesState(): Map<Address, LedgerContext> = addressState
     fun setAddressState(ledgerContext: LedgerContext) {

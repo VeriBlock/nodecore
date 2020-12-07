@@ -127,7 +127,7 @@ class ApmTaskService(
         operation.runTask(
             taskName = "Determine Block of Proof",
             targetState = ApmOperationState.BLOCK_OF_PROOF,
-            timeout = 20.sec
+            timeout = 5.min
         ) {
             val transaction = operation.endorsementTransaction?.transaction
                 ?: failTask("The operation has no transaction set!")

@@ -107,9 +107,6 @@ class SpvService(
         } else {
             val address = Address(sourceAddress.get())
             val ledgerContext = getAddressState(address)
-                ?: throw SendCoinsException(
-                    "Information about this address does not exist. Perhaps your node is waiting for this information. Try to do it later."
-                )
             addressCoinsIndexList.add(
                 AddressCoinsIndex(
                     address = address.address,
