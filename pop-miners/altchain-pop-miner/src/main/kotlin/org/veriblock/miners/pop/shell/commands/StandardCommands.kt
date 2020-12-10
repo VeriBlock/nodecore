@@ -32,7 +32,6 @@ fun CommandFactory.standardCommands() {
         form = "quit|exit",
         description = "Quit the application"
     ) {
-        EventBus.programQuitEvent.trigger(1)
         quit()
         success()
     }
