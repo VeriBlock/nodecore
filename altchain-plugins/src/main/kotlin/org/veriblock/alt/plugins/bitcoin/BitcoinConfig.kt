@@ -11,7 +11,7 @@ class BitcoinConfig(
     override val keystonePeriod: Int = 5,
     override val neededConfirmations: Int = 10,
     override val spFinalityDelay: Int = 100,
-    override val payoutDelay: Int = 500,
+    override val payoutDelay: Int = 50,
     override val blockRoundIndices: List<Int> = listOf(4, 2, 3, 1, 2),
     override val autoMineRounds: MutableSet<Int> = HashSet(),
     val requestLogsPath: String? = null,

@@ -36,6 +36,8 @@ class ApmOperation(
     createdAt,
     logs, reconstituting
 ) {
+    var remainingConfirmations: Int? = null
+
     var miningInstruction: ApmInstruction? = null
         private set
     var endorsementTransaction: ApmSpTransaction? = null

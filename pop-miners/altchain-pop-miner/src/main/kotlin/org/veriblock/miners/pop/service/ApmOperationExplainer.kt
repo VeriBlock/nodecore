@@ -81,9 +81,9 @@ class ApmOperationExplainer(
         ApmOperationState.PROVEN ->
             "Merkle path has been verified"
         ApmOperationState.SUBMITTED_POP_DATA ->
-            "VTBs submitted to ${operation.chain.name}! ${operation.chain.name} ATV id: ${operation.atvId}"
+            "ATV=${operation.atvId} submitted to ${operation.chain.name}!"
         ApmOperationState.ATV_CONFIRMED ->
-            "ATV confirmed in ${operation.chain.name} block ${operation.atvBlockHash}"
+            "ATV=${operation.atvId} confirmed in ${operation.chain.name} block ${operation.atvBlockHash}"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
@@ -101,7 +101,7 @@ class ApmOperationExplainer(
         ApmOperationState.SUBMITTED_POP_DATA ->
             "Submitting PoP Data to ${operation.chain.name}"
         ApmOperationState.ATV_CONFIRMED ->
-            "Waiting for the ${operation.chain.name} ATV ${operation.atvId} to be confirmed"
+            "Waiting for ${operation.remainingConfirmations ?: "INF"} confirmations in the ${operation.chain.name} for ATV=${operation.atvId}"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()

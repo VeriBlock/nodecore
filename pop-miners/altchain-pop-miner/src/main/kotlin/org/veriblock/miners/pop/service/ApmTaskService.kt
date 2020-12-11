@@ -101,7 +101,9 @@ class ApmTaskService(
             val walletTransaction = miner.transactionMonitor.getTransaction(transaction.id)
             operation.setTransaction(ApmSpTransaction(walletTransaction))
             logger.info(operation, "Successfully added the VBK transaction: ${walletTransaction.id}!")
-            logger.debug(operation, "Transaction ${transaction.id} networkByte=${transaction.networkByte} signatureIndex=${transaction.signatureIndex}")
+            logger.debug(
+                operation, "Transaction ${transaction.id} networkByte=${transaction.networkByte} signatureIndex=${transaction.signatureIndex}"
+            )
             logger.debug(operation, "Transaction ${transaction.id} raw data: ${SerializeDeserializeService.serialize(transaction).toHex()}")
         }
 
@@ -192,8 +194,7 @@ class ApmTaskService(
                 val proofOfProof = AltPublication(
                     endorsementTransaction.transaction,
                     merklePath,
-                    blockOfProof,
-                    emptyList()
+                    blockOfProof
                 )
 
                 operation.chain.submitAtvs(listOf(proofOfProof))
@@ -212,15 +213,26 @@ class ApmTaskService(
         operation.runTask(
             taskName = "Confirm ATV",
             targetState = ApmOperationState.ATV_CONFIRMED,
-            timeout = 5.hr
+            timeout = 10.days
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val atvId = operation.atvId
                 ?: failTask("Confirm PoP Transaction task called without ATV id!")
+            val miningInstruction = operation.miningInstruction
+                ?: failTask("PayoutDetectionTask called without mining instruction!")
 
             val chainName = operation.chain.name
-            logger.info(operation, "Waiting for $chainName ATV ($atvId) to be published in a block...")
-            val atvBlock = operation.chainMonitor.confirmAtv(atvId)
+            val lastBlockHeight = operation.chain.getBestBlockHeight()
+            val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
+            // here we will be waiting until payout block occurs, to be 100% sure that this ATV has not been reorganized before payout block occurred
+            val confirmations = operation.chain.getPayoutDelay() - (lastBlockHeight - endorsedBlockHeight)
+            if (confirmations < 1) {
+                failTask(
+                    "ATV=${atvId} can not be confirmed in $chainName because it expired (endorsed=${endorsedBlockHeight}, tip=${lastBlockHeight}, validity window=${operation.chain.getPayoutDelay()})"
+                )
+            }
+            logger.info(operation, "Waiting for $confirmations confirmations on ATV=$atvId in $chainName...")
+            val atvBlock = operation.chainMonitor.confirmAtv(operation, atvId, confirmations)
             logger.info(operation, "Successfully confirmed $chainName ATV $atvId!")
 
             operation.setAtvBlockHash(atvBlock.hash)
@@ -229,7 +241,7 @@ class ApmTaskService(
         operation.runTask(
             taskName = "Payout Detection",
             targetState = ApmOperationState.PAYOUT_DETECTED,
-            timeout = 10.days
+            timeout = 1.days
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val miningInstruction = operation.miningInstruction
@@ -259,6 +271,7 @@ class ApmTaskService(
                 "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + ${operation.chain.getPayoutDelay()})"
             )
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
+            // this should be instant
             val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight)
             val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId)
                 ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
@@ -266,6 +279,7 @@ class ApmTaskService(
                 it.addressHex.asHexBytes().contentEquals(miningInstruction.publicationData.payoutInfo)
             }
             if (rewardVout != null) {
+                // TODO: this looks like something hacky, figure out how to handle
                 val payoutName = if (operation.chain.key.startsWith("v", true)) {
                     operation.chain.key.toUpperCase().decapitalize()
                 } else {

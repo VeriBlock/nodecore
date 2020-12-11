@@ -33,11 +33,14 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.service.AltchainPopMinerService
+import org.veriblock.miners.pop.service.failTask
 import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.StateInfo
@@ -82,8 +85,6 @@ class SecurityInheritingMonitor(
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
-
-    private val atvBlocksById = ConcurrentHashMap<String, SecurityInheritingBlock>()
 
     fun isReady(): Boolean =
         ready.get()
@@ -167,10 +168,10 @@ class SecurityInheritingMonitor(
                 // Verify the Altchain configured network
                 // TODO: Check with getpopparams
                 //if (latestBlockChainInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
-                    if (!isOnSameNetwork()) {
-                        sameNetwork.set(true)
-                        EventBus.altChainSameNetworkEvent.trigger(chainId)
-                    }
+                if (!isOnSameNetwork()) {
+                    sameNetwork.set(true)
+                    EventBus.altChainSameNetworkEvent.trigger(chainId)
+                }
                 //} else {
                 //    if (isOnSameNetwork() || firstPoll) {
                 //        sameNetwork.set(false)
@@ -265,7 +266,7 @@ class SecurityInheritingMonitor(
             try {
                 val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
                 val bestKnownBlock = miner.gateway.getBlock(bestKnownBlockHash)
-                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
                     ?: return@collect
 
                 if (bestKnownBlock.height == newBlock.height) {
@@ -315,7 +316,7 @@ class SecurityInheritingMonitor(
                 }
                 logger.info {
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
-                    " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
+                        " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
                 val newKeystone = SpvEventBus.newBlockFlow.filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
@@ -354,10 +355,6 @@ class SecurityInheritingMonitor(
                 "with ${block.veriBlockPublicationIds.size} publications: ${block.veriBlockPublicationIds.joinToString()}"
             }
             "Found new ${chain.name} block: ${block.hash} @ ${block.height} $publicationsString"
-        }
-
-        for (atvId in block.veriBlockPublicationIds) {
-            atvBlocksById[atvId.toLowerCase()] = block
         }
     }
 
@@ -434,15 +431,22 @@ class SecurityInheritingMonitor(
         }
     }
 
-    suspend fun confirmAtv(id: String): SecurityInheritingBlock {
-        while (true) {
-            val block = atvBlocksById[id.toLowerCase()]
-            if (block == null) {
-                delay(20_000L)
-                continue
+    suspend fun confirmAtv(operation: ApmOperation, id: String, confirmations: Int): SecurityInheritingBlock {
+        var atv: Atv? = null
+        do {
+            try {
+                atv = chain.getAtv(id)
+                operation.remainingConfirmations = atv?.confirmations
+            } catch (e: Exception) {
+                operation.remainingConfirmations = null
+                logger.debug(e) { "Can not get ATV from ${chain.name}" }
             }
-            return block
-        }
+
+            delay(2_000L)
+        } while (atv == null || atv.confirmations < confirmations)
+        return chain.getBlock(atv.containingBlock) ?: failTask(
+            "Got $confirmations confirmations on ATV=${id}, but its containing block does not exist on chain ${chain.name}"
+        )
     }
 
     private fun <T, R> subscribe(container: MutableMap<T, MutableList<Channel<R>>>, key: T): Channel<R> {

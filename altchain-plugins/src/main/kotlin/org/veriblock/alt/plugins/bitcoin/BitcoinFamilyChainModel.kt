@@ -75,7 +75,9 @@ internal data class BtcAtvData(
     val version: Int,
     val confirmations: Int,
     val transaction: BtcVbkTransaction,
-    val blockOfProof: BtcVbkBlock
+    val blockOfProof: BtcVbkBlock,
+    // containing Alt block hash
+    val blockhash: String
 )
 
 internal data class BtcVbkTransaction(

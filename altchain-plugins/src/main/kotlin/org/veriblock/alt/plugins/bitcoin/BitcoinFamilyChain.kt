@@ -88,7 +88,9 @@ class BitcoinFamilyChain(
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
         if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
-            error("'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address")
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
         }
         payoutAddress = config.payoutAddress
     }
@@ -210,7 +212,7 @@ class BitcoinFamilyChain(
 
     override suspend fun getAtv(id: String): Atv? {
         val response: BtcAtv = try {
-            rpcRequest("getrawatv", listOf(id, 1))
+            rpcRequest("getrawatv", listOf(id, 2))
         } catch (e: RpcException) {
             if (e.errorCode == -5) {
                 // ATV not found
@@ -219,7 +221,12 @@ class BitcoinFamilyChain(
                 throw e
             }
         }
-        return Atv(response.atv.transaction.hash, response.atv.blockOfProof.hash)
+        return Atv(
+            vbkTransactionId = response.atv.transaction.hash,
+            vbkBlockOfProofHash = response.atv.blockOfProof.hash,
+            containingBlock = response.atv.blockhash,
+            confirmations = response.atv.confirmations
+        )
     }
 
     override suspend fun getVtb(id: String): Vtb? {
@@ -281,29 +288,26 @@ class BitcoinFamilyChain(
             contextBlocks.map {
                 SerializeDeserializeService.serialize(it).toHex()
             },
-            // Submit only 1 VTB at most
-            vtbs.asSequence().take(1).map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
+            vtbs.map {
+                SerializeDeserializeService.serialize(it).toHex()
             }.toList(),
             atvs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
+                SerializeDeserializeService.serialize(it).toHex()
             }
         ))
         logger.debug { "SubmitPoP Response: $submitPopResponse" }
         // Submit extra VTBs one by one
         vtbs.asSequence().drop(1).forEach {
             logger.debug { "Submitting VTB with first BTC context block: ${it.getFirstBitcoinBlock()?.hash}" }
-            val submitVtbResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
+            val submitVtbResponse: SubmitPopResponse = rpcRequest(
+                "submitpop", listOf(
                 emptyList(),
-                listOf(SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()),
+                listOf(
+                    SerializeDeserializeService.serialize(it).toHex()
+                ),
                 emptyList()
-            ))
+            )
+            )
             logger.debug { "SubmitPoP VTB Partial Response: $submitVtbResponse" }
         }
     }
