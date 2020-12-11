@@ -66,7 +66,7 @@ class Blockchain(
             // validate block
             try {
                 ValidationService.verify(block.header)
-            }catch(e: Exception) {
+            } catch (e: Exception) {
                 return@forEach false
             }
 
