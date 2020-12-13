@@ -128,13 +128,6 @@ class MinerService(
             logger.info { "The connected NodeCore is not ready" }
             verifyMinerIsReady()
         }
-        // Miner Events
-        EventBus.minerReadyEvent.register(this) {
-            logger.info { "The miner is ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. " }
-        }
-        EventBus.minerNotReadyEvent.register(this) {
-            logger.info { "The miner is not ready" }
-        }
 
         bitcoinService.initialize()
         nodeCoreService.initialize()
@@ -151,16 +144,12 @@ class MinerService(
         }
     }
 
+
     private fun verifyMinerIsReady() {
         if (nodeCoreService.isReady() && bitcoinService.isServiceReady() && bitcoinService.isBlockchainDownloaded() && bitcoinService.isSufficientlyFunded()) {
             if (!isMinerReady) {
                 isMinerReady = true
-                EventBus.minerReadyEvent.trigger()
-            }
-        } else {
-            if (isMinerReady) {
-                isMinerReady = false
-                EventBus.minerNotReadyEvent.trigger()
+                logger.info { "The miner is ready to start mining. Type 'help' to see available commands. Type 'mine' to start mining. " }
             }
         }
     }
@@ -188,9 +177,6 @@ class MinerService(
         EventBus.nodeCoreNotSameNetworkEvent.unregister(this)
         EventBus.nodeCoreReadyEvent.unregister(this)
         EventBus.nodeCoreNotReadyEvent.unregister(this)
-        // Miner Events
-        EventBus.minerReadyEvent.unregister(this)
-        EventBus.minerNotReadyEvent.unregister(this)
 
         processManager.shutdown()
         bitcoinService.shutdown()

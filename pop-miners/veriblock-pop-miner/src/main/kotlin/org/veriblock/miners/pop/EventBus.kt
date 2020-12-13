@@ -2,7 +2,6 @@ package org.veriblock.miners.pop
 
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Transaction
-import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
 import org.veriblock.miners.pop.core.VpmOperation
@@ -37,10 +36,6 @@ object EventBus {
     val popMiningOperationCompletedEvent = Event<String>("PoP Mining Operation Completed")
     val popMiningOperationFinishedEvent = Event<VpmOperation>("PoP Mining Operation Finished")
     val popMiningOperationStateChangedEvent = Event<VpmOperation>("PoP Mining Operation State Changed")
-
-    // Miner Events
-    val minerReadyEvent = EmptyEvent("Miner is ready")
-    val minerNotReadyEvent = EmptyEvent("Miner is not ready")
 
     // Others
     val programQuitEvent = Event<Int>("Program Quit")
