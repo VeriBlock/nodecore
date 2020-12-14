@@ -288,31 +288,17 @@ class BitcoinFamilyChain(
         vtbs: List<VeriBlockPublication>
     ) {
         logger.debug { "Submitting PoP data to $name daemon at ${config.host}..." }
-        val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            contextBlocks.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            },
-            vtbs.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            }.toList(),
-            atvs.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            }
-        ))
-        logger.debug { "SubmitPoP Response: $submitPopResponse" }
-        // Submit extra VTBs one by one
-        vtbs.asSequence().drop(1).forEach {
-            logger.debug { "Submitting VTB with first BTC context block: ${it.getFirstBitcoinBlock()?.hash}" }
-            val submitVtbResponse: SubmitPopResponse = rpcRequest(
-                "submitpop", listOf(
-                emptyList(),
-                listOf(
-                    SerializeDeserializeService.serialize(it).toHex()
-                ),
-                emptyList()
-            )
-            )
-            logger.debug { "SubmitPoP VTB Partial Response: $submitVtbResponse" }
+        // submit VBK blocks first
+        contextBlocks.forEach {
+            rpcRequest("submitpop", listOf(SerializeDeserializeService.serialize(it).toHex(), emptyList<String>(), emptyList<String>()))
+        }
+        // then VTBs
+        vtbs.forEach {
+            rpcRequest("submitpop", listOf(emptyList<String>(), SerializeDeserializeService.serialize(it).toHex(), emptyList<String>()))
+        }
+        // then ATVs
+        atvs.forEach {
+            rpcRequest("submitpop", listOf(emptyList<String>(), emptyList<String>(), SerializeDeserializeService.serialize(it).toHex()))
         }
     }
 
