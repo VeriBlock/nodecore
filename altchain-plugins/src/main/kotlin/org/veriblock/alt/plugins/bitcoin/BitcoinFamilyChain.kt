@@ -290,15 +290,15 @@ class BitcoinFamilyChain(
         logger.debug { "Submitting PoP data to $name daemon at ${config.host}..." }
         // submit VBK blocks first
         contextBlocks.forEach {
-            rpcRequest("submitpop", listOf(SerializeDeserializeService.serialize(it).toHex(), emptyList<String>(), emptyList<String>()))
+            rpcRequest("submitpop", listOf(listOf(SerializeDeserializeService.serialize(it).toHex()), emptyList<String>(), emptyList<String>()))
         }
         // then VTBs
         vtbs.forEach {
-            rpcRequest("submitpop", listOf(emptyList<String>(), SerializeDeserializeService.serialize(it).toHex(), emptyList<String>()))
+            rpcRequest("submitpop", listOf(emptyList<String>(), listOf(SerializeDeserializeService.serialize(it).toHex()), emptyList<String>()))
         }
         // then ATVs
         atvs.forEach {
-            rpcRequest("submitpop", listOf(emptyList<String>(), emptyList<String>(), SerializeDeserializeService.serialize(it).toHex()))
+            rpcRequest("submitpop", listOf(emptyList<String>(), emptyList<String>(), listOf(SerializeDeserializeService.serialize(it).toHex())))
         }
     }
 
