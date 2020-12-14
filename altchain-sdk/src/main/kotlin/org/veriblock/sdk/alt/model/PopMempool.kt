@@ -8,7 +8,9 @@ data class PopMempool(
 
 data class Atv(
     val vbkTransactionId: String,
-    val vbkBlockOfProofHash: String
+    val vbkBlockOfProofHash: String,
+    val containingBlock: String,
+    val confirmations: Int
 )
 
 // TODO

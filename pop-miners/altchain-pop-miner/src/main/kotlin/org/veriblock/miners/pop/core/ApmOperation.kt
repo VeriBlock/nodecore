@@ -16,6 +16,7 @@ import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.service.Metrics
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
@@ -46,12 +47,17 @@ class ApmOperation(
         private set
     var atvId: String? = null
         private set
-    var atvBlockHash: String? = null
-        private set
     var payoutBlockHash: String? = null
         private set
     var payoutAmount: Long? = null
         private set
+
+    // (mem-only) should NOT be serialized
+    var requiredConfirmations: Int? = null
+    // (mem-only) should NOT be serialized
+    var currentConfirmations: Int? = null
+    // (mem-only) should NOT be serialized
+    var atvBlock: SecurityInheritingBlock? = null
 
     init {
         setState(ApmOperationState.INITIAL)
@@ -67,6 +73,12 @@ class ApmOperation(
 
     override fun onFailed() {
         EventBus.operationFinishedEvent.trigger(this)
+    }
+
+    fun atvReorganized() {
+        this.requiredConfirmations = null
+        this.currentConfirmations = null
+        this.atvBlock = null
     }
 
     fun setMiningInstruction(miningInstruction: ApmInstruction) {
@@ -118,16 +130,8 @@ class ApmOperation(
         setState(ApmOperationState.SUBMITTED_POP_DATA)
     }
 
-    fun setAtvBlockHash(atvBlockHash: String) {
-        if (state != ApmOperationState.SUBMITTED_POP_DATA) {
-            error("Trying to set PoP transaction's block hash without having the PoP transaction id")
-        }
-        this.atvBlockHash = atvBlockHash
-        setState(ApmOperationState.ATV_CONFIRMED)
-    }
-
     fun setPayoutData(payoutBlockHash: String, payoutAmount: Long) {
-        if (state != ApmOperationState.ATV_CONFIRMED) {
+        if (state != ApmOperationState.SUBMITTED_POP_DATA) {
             error("Trying to set Payout Data without having the Proof of Proof id")
         }
         this.payoutBlockHash = payoutBlockHash
@@ -163,8 +167,8 @@ class ApmOperation(
         atvId?.let {
             result["altAtvId"] = it
         }
-        atvBlockHash?.let {
-            result["altAtvBlockHash"] = it
+        atvBlock?.let {
+            result["altAtvBlock"] = "${it.hash} @ ${it.height}"
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it

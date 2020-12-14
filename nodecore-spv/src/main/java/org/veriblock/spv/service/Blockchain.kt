@@ -151,7 +151,7 @@ class Blockchain(
         try {
             ValidationService.verify(block)
         } catch (e: VerificationException) {
-            logger.warn {"Rejecting block $block: ${e.message}"}
+            logger.warn { "Rejecting block $block: ${e.message}" }
             return false
         }
 

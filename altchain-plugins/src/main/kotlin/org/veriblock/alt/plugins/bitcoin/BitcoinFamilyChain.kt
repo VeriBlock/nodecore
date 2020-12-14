@@ -88,13 +88,15 @@ class BitcoinFamilyChain(
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
         if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
-            error("'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address")
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
         }
         payoutAddress = config.payoutAddress
     }
 
     override suspend fun getBestBlockHeight(): Int {
-        logger.debug { "Retrieving best block height..." }
+        logger.trace { "Retrieving best block height..." }
         return rpcRequest("getblockcount")
     }
 
@@ -170,10 +172,14 @@ class BitcoinFamilyChain(
         return header.contentEquals(blockHeaderToCheck)
     }
 
-    override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
+    override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
         val btcTransaction: BtcTransaction = try {
-            rpcRequest("getrawtransaction", listOf(txId, 1))
+            if (blockHash == null) {
+                rpcRequest("getrawtransaction", listOf(txId, 1))
+            } else {
+                rpcRequest("getrawtransaction", listOf(txId, 1, blockHash))
+            }
         } catch (e: RpcException) {
             if (e.errorCode == -5) {
                 // Transaction not found
@@ -210,7 +216,7 @@ class BitcoinFamilyChain(
 
     override suspend fun getAtv(id: String): Atv? {
         val response: BtcAtv = try {
-            rpcRequest("getrawatv", listOf(id, 1))
+            rpcRequest("getrawatv", listOf(id, 2))
         } catch (e: RpcException) {
             if (e.errorCode == -5) {
                 // ATV not found
@@ -219,7 +225,12 @@ class BitcoinFamilyChain(
                 throw e
             }
         }
-        return Atv(response.atv.transaction.hash, response.atv.blockOfProof.hash)
+        return Atv(
+            vbkTransactionId = response.atv.transaction.hash,
+            vbkBlockOfProofHash = response.atv.blockOfProof.hash,
+            containingBlock = response.blockhash,
+            confirmations = response.confirmations
+        )
     }
 
     override suspend fun getVtb(id: String): Vtb? {
@@ -277,34 +288,17 @@ class BitcoinFamilyChain(
         vtbs: List<VeriBlockPublication>
     ) {
         logger.debug { "Submitting PoP data to $name daemon at ${config.host}..." }
-        val submitPopResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-            contextBlocks.map {
-                SerializeDeserializeService.serialize(it).toHex()
-            },
-            // Submit only 1 VTB at most
-            vtbs.asSequence().take(1).map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            }.toList(),
-            atvs.map {
-                SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()
-            }
-        ))
-        logger.debug { "SubmitPoP Response: $submitPopResponse" }
-        // Submit extra VTBs one by one
-        vtbs.asSequence().drop(1).forEach {
-            logger.debug { "Submitting VTB with first BTC context block: ${it.getFirstBitcoinBlock()?.hash}" }
-            val submitVtbResponse: SubmitPopResponse = rpcRequest("submitpop", listOf(
-                emptyList(),
-                listOf(SerializeDeserializeService.serialize(
-                    it.copy(context = emptyList())
-                ).toHex()),
-                emptyList()
-            ))
-            logger.debug { "SubmitPoP VTB Partial Response: $submitVtbResponse" }
+        // submit VBK blocks first
+        contextBlocks.forEach {
+            rpcRequest("submitpop", listOf(SerializeDeserializeService.serialize(it).toHex(), emptyList<String>(), emptyList<String>()))
+        }
+        // then VTBs
+        vtbs.forEach {
+            rpcRequest("submitpop", listOf(emptyList<String>(), SerializeDeserializeService.serialize(it).toHex(), emptyList<String>()))
+        }
+        // then ATVs
+        atvs.forEach {
+            rpcRequest("submitpop", listOf(emptyList<String>(), emptyList<String>(), SerializeDeserializeService.serialize(it).toHex()))
         }
     }
 
