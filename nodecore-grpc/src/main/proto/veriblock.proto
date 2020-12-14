@@ -1610,15 +1610,6 @@ message GenerateBlocksReply {
     repeated bytes hash = 2 [(hex_encoded)=true];
 }
 
-message GetEndorsementsForBlockRequest {
-    bytes hash = 1 [(hex_encoded)=true];
-}
-
-message GetEndorsementsForBlockReply {
-    Result result = 1;
-    repeated PoPEndorsementInfo endorsements = 2;
-}
-
 service Admin {
     rpc SubmitRawTransaction(SubmitRawTransactionRequest) returns (ProtocolReply) {}
 
@@ -1767,6 +1758,4 @@ service Admin {
     rpc AbandonTransaction(AbandonTransactionRequest) returns (AbandonTransactionReply) {}
 
     rpc RebroadcastTransaction(RebroadcastTransactionRequest) returns (RebroadcastTransactionReply) {}
-
-    rpc GetEndorsementsForBlock(GetEndorsementsForBlockRequest) returns (GetEndorsementsForBlockReply) {}
 }

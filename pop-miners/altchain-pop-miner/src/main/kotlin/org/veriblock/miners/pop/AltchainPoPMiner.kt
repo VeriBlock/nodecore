@@ -89,6 +89,9 @@ private fun run(autoRestart: Boolean): Int {
     try {
         shell.initialize()
         pluginService.loadPlugins()
+        if (pluginService.getPlugins().isEmpty()) {
+            error("In order for APM to run, at least one altchain plugin must be configured properly.")
+        }
         minerService.initialize()
         minerService.start()
         securityInheritingService.start(minerService)

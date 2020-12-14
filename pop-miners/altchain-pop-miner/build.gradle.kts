@@ -60,7 +60,7 @@ dependencies {
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
     // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.2-beta.8")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.2-beta.13")
     // SPA
     implementation("com.github.lamba92:ktor-spa:1.1.5")
 

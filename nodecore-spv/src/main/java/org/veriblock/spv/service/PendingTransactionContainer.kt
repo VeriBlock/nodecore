@@ -10,8 +10,6 @@ import java.util.ArrayList
 import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 
-private const val MIN_TX_SEND_PERIOD_MS = 5_000
-
 class PendingTransactionContainer {
     // TODO(warchant): use Address as a key, instead of String
     private val pendingAddressTransaction: MutableMap<String, MutableList<Transaction>> = ConcurrentHashMap()
@@ -49,20 +47,9 @@ class PendingTransactionContainer {
     }
 
     private val mutex = Mutex()
-    private val lastTransactionTimes = ConcurrentHashMap<String, Long>()
 
     suspend fun addTransaction(transaction: Transaction) = mutex.withLock {
         val inputAddress = transaction.inputAddress.toString()
-
-        // Artifically delay tx broadcast when 2 transactions are sent too close to each other
-        val expectedNextTime = (lastTransactionTimes[inputAddress] ?: 0) + MIN_TX_SEND_PERIOD_MS
-        val currentTime = System.currentTimeMillis()
-        if (currentTime < expectedNextTime) {
-            delay(expectedNextTime - currentTime)
-            lastTransactionTimes[inputAddress] = expectedNextTime
-        } else {
-            lastTransactionTimes[inputAddress] = currentTime
-        }
 
         // Add as pending transaction
         val transactions = pendingAddressTransaction[inputAddress]
