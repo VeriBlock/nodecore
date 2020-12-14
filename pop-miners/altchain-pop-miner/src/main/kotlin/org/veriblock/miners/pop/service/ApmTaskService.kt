@@ -218,7 +218,8 @@ class ApmTaskService(
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
             val miningInstruction = operation.miningInstruction
                 ?: failTask("PayoutDetectionTask called without mining instruction!")
-            val atvId = operation.atvId ?: failTask("Can't get ATV id")
+            val atvId = operation.atvId
+                ?: failTask("Can't get ATV id")
 
             val chainName = operation.chain.name
             val endorsedBlockHeight = miningInstruction.endorsedBlockHeight

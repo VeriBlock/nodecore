@@ -70,7 +70,7 @@ interface SecurityInheritingChain {
      * Returns the transaction for the given [txId] retrieved from the SI chain daemon,
      * or null if it does not exist.
      */
-    suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction?
+    suspend fun getTransaction(txId: String, blockHash: String? = null): SecurityInheritingTransaction?
 
     /**
      * Returns this security inheriting chain's payout delay, in blocks.

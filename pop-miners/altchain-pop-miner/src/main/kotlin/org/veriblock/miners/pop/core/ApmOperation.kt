@@ -37,14 +37,6 @@ class ApmOperation(
     createdAt,
     logs, reconstituting
 ) {
-    // (mem-only) should NOT be serialized
-    var requiredConfirmations: Int? = null
-    // (mem-only) should NOT be serialized
-    var currentConfirmations: Int? = null
-    // (mem-only) should NOT be serialized
-    var atvBlock: SecurityInheritingBlock? = null
-
-
     var miningInstruction: ApmInstruction? = null
         private set
     var endorsementTransaction: ApmSpTransaction? = null
@@ -59,6 +51,13 @@ class ApmOperation(
         private set
     var payoutAmount: Long? = null
         private set
+
+    // (mem-only) should NOT be serialized
+    var requiredConfirmations: Int? = null
+    // (mem-only) should NOT be serialized
+    var currentConfirmations: Int? = null
+    // (mem-only) should NOT be serialized
+    var atvBlock: SecurityInheritingBlock? = null
 
     init {
         setState(ApmOperationState.INITIAL)
