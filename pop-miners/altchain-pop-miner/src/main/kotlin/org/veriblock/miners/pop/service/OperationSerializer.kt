@@ -29,7 +29,7 @@ class OperationSerializer(
     private val securityInheritingService: SecurityInheritingService
 ) {
     fun serialize(operation: ApmOperation): OperationProto.Operation {
-        val protoData = OperationProto.Operation(
+        return OperationProto.Operation(
             operationId = operation.id,
             chainId = operation.chain.key,
             state = operation.state.id,
@@ -45,12 +45,10 @@ class OperationSerializer(
             } ?: ByteArray(0),
             merklePath = operation.merklePath?.toCompactString() ?: "",
             atvId = operation.atvId ?: "",
-            atvBlockHash = operation.atvBlockHash ?: "",
             payoutBlockHash = operation.payoutBlockHash ?: "",
             payoutAmount = operation.payoutAmount ?: 0L,
             failureReason = operation.failureReason ?: ""
         )
-        return protoData
     }
 
     fun deserialize(
@@ -104,10 +102,6 @@ class OperationSerializer(
 
             if (serialized.atvId.isNotEmpty()) {
                 setAtvId(serialized.atvId)
-            }
-
-            if (serialized.atvBlockHash.isNotEmpty()) {
-                setAtvBlockHash(serialized.atvBlockHash)
             }
 
             if (serialized.payoutBlockHash.isNotEmpty()) {

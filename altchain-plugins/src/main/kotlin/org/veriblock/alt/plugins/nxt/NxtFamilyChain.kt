@@ -60,7 +60,7 @@ class NxtFamilyChain(
     }
 
     override suspend fun getBestBlockHeight(): Int {
-        logger.debug { "Retrieving best block height..." }
+        logger.trace { "Retrieving best block height..." }
         return httpClient.get<NxtBlockData>("${config.host}/nxt") {
             parameter("requestType", "getBlock")
         }.height
@@ -78,7 +78,7 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
+    override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         TODO("Not yet implemented")
     }
 

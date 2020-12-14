@@ -58,7 +58,7 @@ open class VbkHash internal constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
     }
 }
 
-open class PreviousBlockVbkHash internal constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
+open class PreviousBlockVbkHash constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
         check(bytes.size == HASH_LENGTH) {
             "Trying to create a previous block VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
@@ -77,7 +77,7 @@ open class PreviousBlockVbkHash internal constructor(bytes: ByteArray) : AnyVbkH
     }
 }
 
-open class PreviousKeystoneVbkHash internal constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
+open class PreviousKeystoneVbkHash constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
     init {
         check(bytes.size == HASH_LENGTH) {
             "Trying to create a previous keystone VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"

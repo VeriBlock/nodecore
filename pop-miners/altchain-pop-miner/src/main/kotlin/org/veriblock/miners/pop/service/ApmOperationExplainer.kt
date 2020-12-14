@@ -40,7 +40,7 @@ class ApmOperationExplainer(
             )
         } + OperationWorkflowStage(
             if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
-            "12. COMPLETED",
+            "9. COMPLETED",
             if (operation.state == MiningOperationState.COMPLETED) "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}" else ""
         ))
     }
@@ -81,9 +81,7 @@ class ApmOperationExplainer(
         ApmOperationState.PROVEN ->
             "Merkle path has been verified"
         ApmOperationState.SUBMITTED_POP_DATA ->
-            "ATV=${operation.atvId} submitted to ${operation.chain.name}!"
-        ApmOperationState.ATV_CONFIRMED ->
-            "ATV=${operation.atvId} confirmed in ${operation.chain.name} block ${operation.atvBlockHash}"
+            "ATV: ${operation.atvId} submitted to ${operation.chain.name}!"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
@@ -100,13 +98,16 @@ class ApmOperationExplainer(
             "Waiting for ${context.vbkTokenName} endorsement transaction to appear in a block"
         ApmOperationState.SUBMITTED_POP_DATA ->
             "Submitting PoP Data to ${operation.chain.name}"
-        ApmOperationState.ATV_CONFIRMED ->
-            "Waiting for ${operation.remainingConfirmations ?: "INF"} confirmations in the ${operation.chain.name} for ATV=${operation.atvId}"
         ApmOperationState.PAYOUT_DETECTED -> {
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
                 val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                "Waiting for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
+                val confirmations = if(operation.requiredConfirmations == null) {
+                    "ATV to be mined in a block"
+                } else {
+                    "${operation.currentConfirmations ?: "0"}/${operation.requiredConfirmations} confirmations"
+                }
+                "Waiting for $confirmations for ATV: ${operation.atvId} to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
             } ?: "Waiting for reward to be paid"
         }
         else ->
@@ -119,8 +120,6 @@ class ApmOperationExplainer(
                 "Will wait for ${context.vbkTokenName} endorsement transaction to appear in a block"
             ApmOperationState.SUBMITTED_POP_DATA ->
                 "Will submit PoP Data to ${operation.chain.name}"
-            ApmOperationState.ATV_CONFIRMED ->
-                "Will wait for the ${operation.chain.name} ATV to be confirmed"
             ApmOperationState.PAYOUT_DETECTED -> {
                 operation.miningInstruction?.let { miningInstruction ->
                     val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()

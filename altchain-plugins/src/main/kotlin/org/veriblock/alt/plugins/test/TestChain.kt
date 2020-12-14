@@ -110,7 +110,7 @@ class TestChain(
         return blockHeaderToCheck.toHex().contains(block.data.hash)
     }
 
-    override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
+    override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         return transactions[txId]
     }
 

@@ -33,11 +33,8 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.service.AltchainPopMinerService
-import org.veriblock.miners.pop.service.failTask
 import org.veriblock.miners.pop.util.VTBDebugUtility
-import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
@@ -377,7 +374,7 @@ class SecurityInheritingMonitor(
 
     private suspend fun getTransaction(txId: String): SecurityInheritingTransaction? = try {
         // Retrieve block from SI chain
-        chain.getTransaction(txId)
+        chain.getTransaction(txId, null)
     } catch (e: Exception) {
         logger.debugWarn(e) { "Error when retrieving ${chain.name} transaction $txId" }
         null
@@ -431,22 +428,20 @@ class SecurityInheritingMonitor(
         }
     }
 
-    suspend fun confirmAtv(operation: ApmOperation, id: String, confirmations: Int): SecurityInheritingBlock {
-        var atv: Atv? = null
+    suspend fun getAtv(id: String, delay: Long = 10_000L, predicate: suspend (atv: Atv) -> Boolean): Atv? {
+        var atv: Atv?
         do {
-            try {
-                atv = chain.getAtv(id)
-                operation.remainingConfirmations = atv?.confirmations
+            atv = try {
+                chain.getAtv(id)
             } catch (e: Exception) {
-                operation.remainingConfirmations = null
-                logger.debug(e) { "Can not get ATV from ${chain.name}" }
+                logger.debug { "Can not get ATV=${id} from ${chain.name}: ${e.message}" }
+                null
             }
 
-            delay(2_000L)
-        } while (atv == null || atv.confirmations < confirmations)
-        return chain.getBlock(atv.containingBlock) ?: failTask(
-            "Got $confirmations confirmations on ATV=${id}, but its containing block does not exist on chain ${chain.name}"
-        )
+            delay(delay)
+        } while (atv == null || !predicate(atv))
+
+        return atv
     }
 
     private fun <T, R> subscribe(container: MutableMap<T, MutableList<Channel<R>>>, key: T): Channel<R> {

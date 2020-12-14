@@ -57,7 +57,7 @@ class BitcoinFamilyChainTest {
 
     @Test
     fun getTransaction() = runBlocking {
-        val data = chain.getTransaction("be3aeeae1428b21ab244180ebca7494a3ae413d50f917e6a227ed2cae36c9503")
+        val data = chain.getTransaction("be3aeeae1428b21ab244180ebca7494a3ae413d50f917e6a227ed2cae36c9503",)
         println(data)
     }
 

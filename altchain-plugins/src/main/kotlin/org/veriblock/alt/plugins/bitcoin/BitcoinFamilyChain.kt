@@ -96,7 +96,7 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getBestBlockHeight(): Int {
-        logger.debug { "Retrieving best block height..." }
+        logger.trace { "Retrieving best block height..." }
         return rpcRequest("getblockcount")
     }
 
@@ -172,10 +172,14 @@ class BitcoinFamilyChain(
         return header.contentEquals(blockHeaderToCheck)
     }
 
-    override suspend fun getTransaction(txId: String): SecurityInheritingTransaction? {
+    override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
         val btcTransaction: BtcTransaction = try {
-            rpcRequest("getrawtransaction", listOf(txId, 1))
+            if (blockHash == null) {
+                rpcRequest("getrawtransaction", listOf(txId, 1))
+            } else {
+                rpcRequest("getrawtransaction", listOf(txId, 1, blockHash))
+            }
         } catch (e: RpcException) {
             if (e.errorCode == -5) {
                 // Transaction not found
@@ -224,8 +228,8 @@ class BitcoinFamilyChain(
         return Atv(
             vbkTransactionId = response.atv.transaction.hash,
             vbkBlockOfProofHash = response.atv.blockOfProof.hash,
-            containingBlock = response.atv.blockhash,
-            confirmations = response.atv.confirmations
+            containingBlock = response.blockhash,
+            confirmations = response.confirmations
         )
     }
 

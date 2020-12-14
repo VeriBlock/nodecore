@@ -66,6 +66,7 @@ internal data class BtcPopStoredStateData(
 internal data class BtcAtv(
     val in_active_chain: Boolean,
     val blockheight: Int,
+    val blockhash: String,
     val confirmations: Int,
     val atv: BtcAtvData
 )
@@ -73,11 +74,8 @@ internal data class BtcAtv(
 internal data class BtcAtvData(
     val id: String,
     val version: Int,
-    val confirmations: Int,
     val transaction: BtcVbkTransaction,
     val blockOfProof: BtcVbkBlock,
-    // containing Alt block hash
-    val blockhash: String
 )
 
 internal data class BtcVbkTransaction(
