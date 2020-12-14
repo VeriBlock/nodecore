@@ -102,12 +102,11 @@ class ApmOperationExplainer(
             operation.miningInstruction?.let { miningInstruction ->
                 val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
                 val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                val confirmations = if(operation.requiredConfirmations == null) {
-                    "ATV to be mined in a block"
+                return if(operation.requiredConfirmations == null) {
+                    "Waiting for ATV to be mined in a block..."
                 } else {
-                    "${operation.currentConfirmations ?: "0"}/${operation.requiredConfirmations} confirmations"
+                    "Got ${operation.currentConfirmations ?: "0"}/${operation.requiredConfirmations} confirmations for ATV: ${operation.atvId} to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
                 }
-                "Waiting for $confirmations for ATV: ${operation.atvId} to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
             } ?: "Waiting for reward to be paid"
         }
         else ->
