@@ -87,9 +87,13 @@ abstract class MiningOperation(
         logs.add(log)
     }
 
+    /**
+     * Gets the operation logs which are more specific than the supplied log level or the same
+     * @param level: The log level, Level.TRACE by default
+     */
     fun getLogs(level: Level = Level.TRACE): List<OperationLog> {
         return logs.filter {
-            Level.toLevel(it.level).isLessSpecificThan(level)
+            Level.toLevel(it.level).isMoreSpecificThan(level)
         }
     }
 
