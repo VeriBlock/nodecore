@@ -210,52 +210,6 @@ class ApmTaskService(
             }
         }
 
-//        operation.runTask(
-//            taskName = "Confirm ATV",
-//            targetState = ApmOperationState.ATV_CONFIRMED,
-//            timeout = 1.days
-//        ) {
-//            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-//            val atvId = operation.atvId
-//                ?: failTask("Confirm PoP Transaction task called without ATV id!")
-//            val miningInstruction = operation.miningInstruction
-//                ?: failTask("PayoutDetectionTask called without mining instruction!")
-//            val chainName = operation.chain.name
-//
-//            // wait for 2 confirmations before switching to task "payout detection"
-//            val confirmations = 2
-//            operation.requiredConfirmations = confirmations
-//            var atvBlock: SecurityInheritingBlock? = null
-//            val atv = operation.chainMonitor.getAtv(atvId) { atv ->
-//                if(atv.confirmations == 0) {
-//                    // ATV is in mempool, wait...
-//                    false
-//                } else {
-//                    // we get ATV containing block
-//                    atvBlock = operation.chain.getBlock(atv.containingBlock)
-//                    atv.confirmations >= confirmations && atvBlock != null
-//                }
-//            }
-//            logger.info(operation, "Successfully confirmed ATV: $atvId in $chainName block ${atvBlock.hash} @ ${atvBlock.height}!")
-//            operation.setAtvBlockHash(atvBlock.hash)
-
-
-//            val lastBlockHeight = operation.chain.getBestBlockHeight()
-//            val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
-//            // here we will be waiting until payout block occurs, to be 100% sure that this ATV has not been reorganized before payout block occurred
-//            val requiredConfirmations = (operation.chain.getPayoutDelay() - (lastBlockHeight - endorsedBlockHeight)).coerceAtLeast(0)
-//            if (requiredConfirmations > 0) {
-//                logger.info(operation, "Waiting for $requiredConfirmations required confirmations on ATV: $atvId in $chainName...")
-//            } else {
-//                logger.info(operation, "ATV: $atvId in $chainName is either confirmed or expired (tip=$lastBlockHeight, endorsed height=$endorsedBlockHeight, validity window=${operation.chain.getPayoutDelay()}")
-//            }
-//            // if ATV expired, task will fail. if confirmed, will continue.
-//            val atvBlock = operation.chainMonitor.confirmAtv(operation, atvId, requiredConfirmations)
-//            logger.info(operation, "Successfully confirmed ATV: $atvId in $chainName block ${atvBlock.hash} @ ${atvBlock.height}!")
-//
-//            operation.setAtvBlockHash(atvBlock.hash)
-//        }
-
         operation.runTask(
             taskName = "Payout Detection",
             targetState = ApmOperationState.PAYOUT_DETECTED,
