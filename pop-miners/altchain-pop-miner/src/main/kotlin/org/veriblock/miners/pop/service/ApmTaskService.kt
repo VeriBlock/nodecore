@@ -259,7 +259,7 @@ class ApmTaskService(
 
             // this should be instant
             val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight)
-            // we known payout block hash, so give `getTransaction` a hint where to search.
+            // we know payout block hash, so give `getTransaction` a hint where to search.
             // in reality, this is required for BTC-plugin, because not all nodes may have 'txindex=1' enabled,
             // and if it is disabled (by default), this call fails immediately. A hint resolves this situation
             // by providing a block hash where node has to search for this particular TX.
