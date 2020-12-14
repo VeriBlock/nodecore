@@ -93,7 +93,7 @@ abstract class MiningOperation(
      */
     fun getLogs(level: Level = Level.TRACE): List<OperationLog> {
         return logs.filter {
-            !Level.toLevel(it.level).isLessSpecificThan(level)
+            Level.toLevel(it.level).isMoreSpecificThan(level)
         }
     }
 
