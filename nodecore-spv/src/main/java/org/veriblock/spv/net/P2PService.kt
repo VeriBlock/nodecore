@@ -8,12 +8,13 @@ import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.service.PendingTransactionContainer
+import org.veriblock.spv.service.tx.TxManager
 import org.veriblock.spv.util.nextMessageId
 
 private val logger = createLogger {}
 
 class P2PService(
-    private val pendingTransactionContainer: PendingTransactionContainer,
+    private val pendingTransactionContainer: TxManager,
     private val networkParameters: NetworkParameters
 ) {
     fun onTransactionRequest(txIds: List<VbkTxId>, sender: SpvPeer) {

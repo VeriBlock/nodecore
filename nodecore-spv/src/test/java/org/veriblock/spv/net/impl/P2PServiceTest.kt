@@ -19,10 +19,11 @@ import org.veriblock.spv.model.asStandardAddress
 import org.veriblock.spv.net.P2PService
 import org.veriblock.spv.net.SpvPeer
 import org.veriblock.spv.service.PendingTransactionContainer
+import org.veriblock.spv.service.tx.TxManager
 
 class P2PServiceTest {
     private lateinit var spvContext: SpvContext
-    private lateinit var pendingTransactionContainer: PendingTransactionContainer
+    private lateinit var pendingTransactionContainer: TxManager
     private lateinit var peer: SpvPeer
     private lateinit var p2PService: P2PService
 
