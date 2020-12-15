@@ -253,7 +253,6 @@ class ApmTaskService(
                             operation.requiredConfirmations = requiredConfirmations
                             operation.currentConfirmations = atv.confirmations
                             operation.atvBlock = containingBlock
-                            error("HUEHUE")
                             atv.confirmations >= requiredConfirmations
                         }
                     }
