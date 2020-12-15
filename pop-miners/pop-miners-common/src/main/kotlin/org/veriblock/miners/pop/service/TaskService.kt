@@ -10,6 +10,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.core.MiningOperation
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.core.debug
+import org.veriblock.miners.pop.core.debugWarn
 import org.veriblock.miners.pop.core.info
 import org.veriblock.miners.pop.core.warn
 import java.time.Duration
@@ -30,10 +31,9 @@ abstract class TaskService<MO : MiningOperation> {
         } catch (e: CancellationException) {
             logger.info(operation, "Job was cancelled")
         } catch (e: OperationException) {
-            operation.fail(e.message)
+            operation.fail(e.message, e.cause)
         } catch (t: Throwable) {
-            logger.debug(operation, t, t.toString())
-            operation.fail(t.message ?: "An unexpected error has occurred. Please check the logs for further details")
+            operation.fail(t.message ?: "An unexpected error has occurred. Please check the logs for further details", t)
         }
     }
 
@@ -66,7 +66,7 @@ abstract class TaskService<MO : MiningOperation> {
                 success = true
                 timerSample.stop(timer)
             } catch (e: TaskException) {
-                logger.warn(this, "Task '$taskName' has failed: ${e.message}")
+                logger.debugWarn(this, e, "Task '$taskName' has failed")
                 if (attempts < MAX_TASK_RETRIES) {
                     attempts++
                     // Check if the task was cancelled before performing sany reattempts
@@ -81,16 +81,14 @@ abstract class TaskService<MO : MiningOperation> {
                     throw e
                 }
             } catch (e: TimeoutCancellationException) {
-                failOperation(
-                    "Operation has been cancelled for taking too long during task '$taskName'."
-                )
+                failOperation("Operation has been cancelled for taking too long during task '$taskName'", e)
             }
         } while (!success)
     }
 }
 
 class TaskException(override val message: String) : RuntimeException()
-class OperationException(override val message: String) : RuntimeException()
+class OperationException(override val message: String, override val cause: Throwable?) : RuntimeException()
 
 /**
  *  Throw an exception as the task failed. It is inline so that call stack is not polluted.
@@ -102,8 +100,8 @@ inline fun failTask(reason: String): Nothing {
 /**
  *  Throw an exception as the task failed. It is inline so that call stack is not polluted.
  */
-inline fun failOperation(reason: String): Nothing {
-    throw OperationException(reason)
+inline fun failOperation(reason: String, cause: Throwable? = null): Nothing {
+    throw OperationException(reason, cause)
 }
 
 inline val Int.sec get() = Duration.ofSeconds(this.toLong())

@@ -28,6 +28,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Collections
 import java.util.HashMap
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -42,7 +43,7 @@ class TransactionMonitor(
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
     private val lock = ReentrantLock(true)
-    private val transactions: MutableMap<VbkTxId, WalletTransaction> = HashMap()
+    private val transactions: MutableMap<VbkTxId, WalletTransaction> = ConcurrentHashMap()
 
     init {
         for (tx in transactionsToLoad) {

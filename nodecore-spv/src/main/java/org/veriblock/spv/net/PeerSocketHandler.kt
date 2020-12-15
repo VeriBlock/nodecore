@@ -19,6 +19,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.VeriBlockMessages
 import org.veriblock.core.utilities.createLogger
@@ -88,6 +89,9 @@ class PeerSocketHandler(
             }
         } catch (e: InterruptedException) {
             logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress}: $e" }
+        } catch (e: ClosedSendChannelException) {
+            logger.debug { "Trying to send message to peer ${socket.remoteAddress} when the socket was already closed" }
+            stop()
         }
     }
 

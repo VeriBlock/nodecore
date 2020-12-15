@@ -59,7 +59,7 @@ class VpmTaskService(
                 val popReply = nodeCoreGateway.getPop(operation.endorsedBlockHeight)
                 operation.setMiningInstruction(popReply)
             } catch (e: StatusRuntimeException) {
-                failOperation("Failed to get PoP publication data from NodeCore: ${e.status}")
+                failOperation("Failed to get PoP publication data from NodeCore: ${e.status}", e)
             }
         }
 

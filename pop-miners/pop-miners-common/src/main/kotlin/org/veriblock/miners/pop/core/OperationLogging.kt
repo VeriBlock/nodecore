@@ -10,6 +10,8 @@ import org.apache.logging.log4j.Level.ERROR
 import org.apache.logging.log4j.Level.INFO
 import org.apache.logging.log4j.Level.TRACE
 import org.apache.logging.log4j.Level.WARN
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -40,13 +42,23 @@ private fun KLogger.log(
 ) {
     val log = OperationLog(System.currentTimeMillis(), level.name(), msg)
     operation.addLog(log)
+    if (t != null) {
+        val errorLog = OperationLog(
+            System.currentTimeMillis(),
+            level.name(),
+            StringWriter().also {
+                t.printStackTrace(PrintWriter(it))
+            }.toString()
+        )
+        operation.addLog(errorLog)
+    }
     if (operation.isLoggingEnabled(level)) {
         val loggerMsg = "[${operation.id}] $msg"
         when (level) {
-            TRACE -> trace(loggerMsg)
-            DEBUG -> debug(loggerMsg)
-            INFO -> info(loggerMsg)
-            WARN -> warn(loggerMsg)
+            TRACE -> if (t != null) trace(loggerMsg, t) else trace(loggerMsg)
+            DEBUG -> if (t != null) debug(loggerMsg, t) else debug(loggerMsg)
+            INFO -> if (t != null) info(loggerMsg, t) else info(loggerMsg)
+            WARN -> if (t != null) warn(loggerMsg, t) else warn(loggerMsg)
             ERROR -> if (t != null) error(loggerMsg, t) else error(loggerMsg)
         }
     }
@@ -84,3 +96,18 @@ fun KLogger.error(
 fun KLogger.error(
     operation: MiningOperation, t: Throwable, msg: String
 ) = log(operation, ERROR, msg, t)
+
+fun KLogger.debugInfo(operation: MiningOperation, t: Throwable, msg: String) {
+    info(operation, "$msg: ${t.message}")
+    debug(operation, t, "Stack Trace:")
+}
+
+fun KLogger.debugWarn(operation: MiningOperation, t: Throwable, msg: String) {
+    warn(operation, "$msg: ${t.message}")
+    debug(operation, t, "Stack Trace:")
+}
+
+fun KLogger.debugError(operation: MiningOperation, t: Throwable, msg: String) {
+    error(operation, "$msg: ${t.message}")
+    debug(operation, t, "Stack Trace:")
+}

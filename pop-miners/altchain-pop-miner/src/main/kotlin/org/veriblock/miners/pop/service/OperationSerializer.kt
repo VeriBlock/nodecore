@@ -85,7 +85,7 @@ class OperationSerializer(
                 try {
                     setTransaction(ApmSpTransaction(txFactory(serialized.txId.asVbkTxId())))
                 } catch (e: IllegalStateException) {
-                    fail(e.message ?: "Unable to load VBK transaction ${serialized.txId}")
+                    fail(e.message ?: "Unable to load VBK transaction ${serialized.txId}", e)
                     reconstituting = false
                     return this
                 }

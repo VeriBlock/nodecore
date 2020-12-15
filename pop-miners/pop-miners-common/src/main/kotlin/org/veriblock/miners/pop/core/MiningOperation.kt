@@ -33,7 +33,7 @@ abstract class MiningOperation(
 
     protected fun setState(state: MiningOperationState) {
         this.state = state
-        if (!reconstituting) {
+        if (!reconstituting || state == MiningOperationState.FAILED) {
             logger.debug(this, "New state: $state")
             onStateChanged()
         }
@@ -54,8 +54,11 @@ abstract class MiningOperation(
     open fun onCompleted() {
     }
 
-    fun fail(reason: String) {
+    fun fail(reason: String, cause: Throwable? = null) {
         logger.warn(this, "Failed: $reason")
+        if (cause != null) {
+            logger.debug(this, cause, "Stack Trace:")
+        }
         failureReason = reason
         setState(MiningOperationState.FAILED)
 

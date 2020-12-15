@@ -15,8 +15,6 @@ import org.koin.core.inject
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
@@ -32,6 +30,8 @@ import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.core.debugError
+import org.veriblock.miners.pop.core.debugWarn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -57,7 +57,7 @@ class ApmTaskService(
             val publicationData = try {
                 operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
             } catch (e: Exception) {
-                failOperation("Error while trying to get PoP Mining Instruction from ${operation.chain.name}: ${e.message}")
+                failOperation("Error while trying to get PoP Mining Instruction from ${operation.chain.name}", e)
             }
             operation.setMiningInstruction(publicationData)
             logger.info(operation, "Successfully retrieved the mining instruction!")
@@ -79,8 +79,7 @@ class ApmTaskService(
             val transaction = try {
                 val endorsementData = SerializeDeserializeService.serialize(miningInstruction.publicationData)
                 endorsementData.checkForValidEndorsement {
-                    logger.debugError(it) { "Invalid endorsement data" }
-                    failOperation("Invalid endorsement data: ${endorsementData.toHex()}")
+                    failOperation("Invalid endorsement data: ${endorsementData.toHex()}", it)
                 }
                 miner.network.submitEndorsement(
                     endorsementData,
@@ -88,7 +87,7 @@ class ApmTaskService(
                     minerConfig.maxFee
                 )
             } catch (e: Exception) {
-                failOperation("Could not create endorsement VBK transaction: ${e.message}")
+                failOperation("Could not create endorsement VBK transaction", e)
             }
 
             val valid = AddressUtility.isSignatureValid(
@@ -205,7 +204,7 @@ class ApmTaskService(
 
                 operation.setAtvId(atvId)
             } catch (e: Exception) {
-                logger.debugWarn(e) { "Error submitting proof of proof" }
+                logger.debugWarn(operation, e, "Error submitting proof of proof")
                 failTask("Error submitting proof of proof to ${operation.chain.name}: ${e.message}")
             }
         }
@@ -233,29 +232,35 @@ class ApmTaskService(
 
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
 
-            operation.chainMonitor.getAtv(atvId) { atv ->
-                if (atv.confirmations == 0) {
-                    // atv is in mempool, continue waiting...
-                    operation.atvReorganized()
-                    false
-                } else {
-                    // atv is in a block
-                    val containingBlock = operation.chain.getBlock(atv.containingBlock)
-                    if (containingBlock == null) {
-                        // if this happens, then this may be concurrency issue - when at the moment of 'getAtv' execution ATV was in a block,
-                        // then suddenly block reorganized and 'getBlock' returned null.
-                        // on next iteration we will find out.
+            try {
+                operation.chainMonitor.getAtv(atvId) { atv ->
+                    if (atv.confirmations == 0) {
+                        // atv is in mempool, continue waiting...
                         operation.atvReorganized()
                         false
                     } else {
-                        // we expect to get at least this amount of confirmations to wait for payout block
-                        val requiredConfirmations = payoutBlockHeight - containingBlock.height
-                        operation.requiredConfirmations = requiredConfirmations
-                        operation.currentConfirmations = atv.confirmations
-                        operation.atvBlock = containingBlock
-                        atv.confirmations >= requiredConfirmations
+                        // atv is in a block
+                        val containingBlock = operation.chain.getBlock(atv.containingBlock)
+                        if (containingBlock == null) {
+                            // if this happens, then this may be concurrency issue - when at the moment of 'getAtv' execution ATV was in a block,
+                            // then suddenly block reorganized and 'getBlock' returned null.
+                            // on next iteration we will find out.
+                            operation.atvReorganized()
+                            false
+                        } else {
+                            // we expect to get at least this amount of confirmations to wait for payout block
+                            val requiredConfirmations = payoutBlockHeight - containingBlock.height
+                            operation.requiredConfirmations = requiredConfirmations
+                            operation.currentConfirmations = atv.confirmations
+                            operation.atvBlock = containingBlock
+                            error("HUEHUE")
+                            atv.confirmations >= requiredConfirmations
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                logger.debugWarn(operation, e, "Error while monitoring ATV")
+                failTask("Error while monitoring ATV: ${e.message}")
             }
 
             // this should be instant
