@@ -10,9 +10,9 @@ package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.time.withTimeout
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
@@ -31,6 +31,7 @@ import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.spv.util.SpvEventBus
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -207,12 +208,11 @@ class VeriBlockNetwork(
         firstPoll = false
     }
 
-    // FIXME This implementation not good enough. Use channels.
     suspend fun getVeriBlockPublications(
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
-    ): List<VeriBlockPublication> {
+    ): List<VeriBlockPublication> = withTimeout(Duration.ofMinutes(40)) {
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
@@ -220,7 +220,7 @@ class VeriBlockNetwork(
         logger.debug("Waiting for VTBs...\n$extraLogData")
         try {
             // Loop through each new block until we get a not-empty publication list
-            return SpvEventBus.newBlockFlow.map {
+            SpvEventBus.newBlockFlow.map {
                 // Retrieve VTBs from NodeCore
                 gateway.getVeriBlockPublications(
                     keystoneHash, contextHash, btcContextHash
@@ -239,5 +239,3 @@ class VeriBlockNetwork(
         }
     }
 }
-
-class BlockDownloadException(message: String) : Exception(message)
