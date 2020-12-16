@@ -1,9 +1,11 @@
 package nodecore.api.grpc.utilities.extensions
 
 import com.google.protobuf.ByteString
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
@@ -46,3 +48,4 @@ fun ByteArray.toByteString(): ByteString =
 fun ByteString.asVbkHash(): VbkHash = toByteArray().asVbkHash()
 fun ByteString.asVbkPreviousBlockHash(): PreviousBlockVbkHash = toByteArray().asVbkPreviousBlockHash()
 fun ByteString.asVbkPreviousKeystoneHash(): PreviousKeystoneVbkHash = toByteArray().asVbkPreviousKeystoneHash()
+fun ByteString.asAnyVbkHash(): AnyVbkHash = toByteArray().asAnyVbkHash()

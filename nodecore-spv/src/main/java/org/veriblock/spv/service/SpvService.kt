@@ -26,7 +26,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext
@@ -42,7 +41,7 @@ import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.asLightAddress
 import org.veriblock.spv.net.SpvPeerTable
 import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
-import org.veriblock.spv.service.tx.TxManager
+import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.service.tx.TxStatusChangedEvent
 import org.veriblock.spv.util.buildMessage
 import java.io.File
@@ -56,7 +55,7 @@ class SpvService(
     private val peerTable: SpvPeerTable,
     private val transactionService: TransactionService,
     private val addressManager: AddressManager,
-    private val pendingTransactionContainer: TxManager,
+    private val pendingTransactionContainer: TransactionManager,
     private val blockchain: Blockchain
 ) {
     fun getStateInfo(): StateInfo {

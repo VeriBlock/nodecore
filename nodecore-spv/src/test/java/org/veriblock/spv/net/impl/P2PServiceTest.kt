@@ -7,7 +7,6 @@ import nodecore.api.grpc.VeriBlockMessages
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
-import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
 import org.veriblock.core.crypto.EMPTY_VBK_TX
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
@@ -18,12 +17,11 @@ import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.asStandardAddress
 import org.veriblock.spv.net.P2PService
 import org.veriblock.spv.net.SpvPeer
-import org.veriblock.spv.service.PendingTransactionContainer
-import org.veriblock.spv.service.tx.TxManager
+import org.veriblock.spv.service.tx.TransactionManager
 
 class P2PServiceTest {
     private lateinit var spvContext: SpvContext
-    private lateinit var pendingTransactionContainer: TxManager
+    private lateinit var pendingTransactionContainer: TransactionManager
     private lateinit var peer: SpvPeer
     private lateinit var p2PService: P2PService
 

@@ -14,6 +14,7 @@ import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.service.Blockchain
 import org.veriblock.spv.service.TransactionInfo
 import org.veriblock.spv.service.tx.TxStatusChangedEvent.*
+import org.veriblock.spv.util.SpvEventBus
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -60,7 +61,7 @@ private data class TxIdMonitorEntry(
 
 private const val TEN_MINUTES = 10 * 60 * 1000 /* ms */
 
-class TxManager(
+class TransactionManager(
     val blockchain: Blockchain
 ) {
     private val lock = ReentrantLock()
@@ -68,7 +69,13 @@ class TxManager(
     private val monitoredTxIds = ConcurrentHashMap<Sha256Hash, TxIdMonitorEntry>()
     private val txesByAddress = ConcurrentHashMap<Address, ArrayList<Sha256Hash>>()
 
-    fun getPendingTxIds(): List<Sha256Hash> = monitoredTxIds.keys().toList()
+    init {
+        SpvEventBus.newBestBlockEvent.register(this) {
+            onVbkBestBlock(it)
+        }
+    }
+
+    fun getPendingTransactionIds(): List<Sha256Hash> = monitoredTxIds.keys().toList()
 
     fun addTransaction(id: Sha256Hash, confirmations: Int = 1): Event<TxStatusChangedEvent> {
         check(confirmations > 0) {

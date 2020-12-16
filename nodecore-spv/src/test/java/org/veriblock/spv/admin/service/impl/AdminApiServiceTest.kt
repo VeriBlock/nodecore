@@ -16,7 +16,6 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
-import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
 import org.veriblock.core.crypto.EMPTY_VBK_TX
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
@@ -37,9 +36,8 @@ import org.veriblock.spv.model.asLightAddress
 import org.veriblock.spv.net.SpvPeerTable
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.Blockchain
-import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.service.TransactionService
-import org.veriblock.spv.service.tx.TxManager
+import org.veriblock.spv.service.tx.TransactionManager
 import java.io.IOException
 import java.security.KeyPairGenerator
 
@@ -49,7 +47,7 @@ class AdminApiServiceTest {
     private lateinit var addressManager: AddressManager
     private lateinit var peerTable: SpvPeerTable
     private lateinit var spvService: SpvService
-    private lateinit var transactionContainer: TxManager
+    private lateinit var transactionContainer: TransactionManager
     private lateinit var blockchain: Blockchain
     val address = "VHoWCZrQB4kqLHm1EoNoU8rih7ohyG"
     val block = defaultTestNetParameters.genesisBlock
