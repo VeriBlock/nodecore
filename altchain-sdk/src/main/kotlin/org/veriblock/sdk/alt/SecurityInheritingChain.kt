@@ -15,10 +15,7 @@ import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.Vtb
-import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.models.*
 
 interface SecurityInheritingChain {
 
@@ -81,6 +78,12 @@ interface SecurityInheritingChain {
      * Returns this security inheriting chain's best known VeriBlock Block hash.
      */
     suspend fun getBestKnownVbkBlockHash(): String
+
+    suspend fun getVbkBlock(hash: String): VeriBlockBlock // getvbkblock
+
+    suspend fun getBestKnownBtcBlockHash(): String // getbtcbestblockhash ?
+
+    suspend fun getBtcBlock(hash: String): BitcoinBlock // getvbkblock
 
     /**
      * Returns this security inheriting chain's PoP mempool (ATVs and VTBs).

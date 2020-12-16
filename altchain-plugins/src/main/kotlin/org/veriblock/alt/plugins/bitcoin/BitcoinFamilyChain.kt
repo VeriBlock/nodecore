@@ -17,7 +17,8 @@ import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
-import org.veriblock.core.crypto.Crypto
+import org.veriblock.core.crypto.*
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
@@ -32,11 +33,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
-import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
 import kotlin.math.abs
@@ -334,6 +331,52 @@ class BitcoinFamilyChain(
         } catch (e: Exception) {
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
+        }
+    }
+
+    override suspend fun getVbkBlock(hash: String): VeriBlockBlock {
+        logger.debug { "Retrieving the VBK block for the hash $hash" }
+        return try {
+            val response: VbkBlock = rpcRequest("getvbkblock", hash)
+            return VeriBlockBlock(
+                height = response.header.height,
+                version = response.header.version,
+                previousBlock = response.header.previousBlock.asAnyVbkHash().trimToPreviousBlockSize(),
+                previousKeystone = response.header.previousKeystone.asAnyVbkHash().trimToPreviousKeystoneSize(),
+                secondPreviousKeystone = response.header.secondPreviousKeystone.asAnyVbkHash().trimToPreviousKeystoneSize(),
+                merkleRoot = Utility.hexToBytes(response.header.merkleRoot).asMerkleRoot().truncate(),
+                timestamp = response.header.timestamp,
+                difficulty = response.header.difficulty,
+                nonce = response.header.nonce
+            )
+        } catch(e: Exception) {
+            error("Unable to perform the getvbkblock rpc call for the hash $hash")
+        }
+    }
+
+    override suspend fun getBestKnownBtcBlockHash(): String {
+        logger.debug { "Retrieving the best known BTC block hash..." }
+        try {
+            return (rpcRequest("getbtcbestblockhash") as BestBtcBlockHash).bestBtcBlockHash
+        } catch(e: Exception) {
+            error("Unable to perform the getbtcbestblockhash rpc call")
+        }
+    }
+
+    override suspend fun getBtcBlock(hash: String): BitcoinBlock {
+        logger.debug { "Retrieving the BTC block for the hash $hash" }
+        return try {
+            val response: BtcBlockBlock = rpcRequest("getbtcblock", hash)
+            return BitcoinBlock(
+                version = response.header.version,
+                previousBlock = response.header.previousBlock.asBtcHash(),
+                merkleRoot = Utility.hexToBytes(response.header.merkleRoot).asMerkleRoot(),
+                timestamp = response.header.timestamp,
+                difficulty = 0, // FIXME difficulty field is not at the response
+                nonce = response.header.nonce
+            )
+        } catch(e: Exception) {
+            error("Unable to perform the getbtcblock rpc call for the hash $hash")
         }
     }
 
