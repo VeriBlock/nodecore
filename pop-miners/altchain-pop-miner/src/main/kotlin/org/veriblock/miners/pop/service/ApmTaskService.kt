@@ -232,7 +232,7 @@ class ApmTaskService(
 
             logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
 
-            try {
+            val atv = try {
                 operation.chainMonitor.getAtv(atvId) { atv ->
                     if (atv.confirmations == 0) {
                         // atv is in mempool, continue waiting...
@@ -262,8 +262,11 @@ class ApmTaskService(
                 failTask("Error while monitoring ATV: ${e.message}")
             }
 
+            val atvBlock = operation.atvBlock
+                ?: failTask("ATV=${atvId} block should be set")
+
             // this should be instant
-            val payoutBlock = operation.chainMonitor.getBlockAtHeight(payoutBlockHeight)
+            val payoutBlock = operation.chainMonitor.getBlockAtHeight(atvBlock.height)
             // we know payout block hash, so give `getTransaction` a hint where to search.
             // in reality, this is required for BTC-plugin, because not all nodes may have 'txindex=1' enabled,
             // and if it is disabled (by default), this call fails immediately. A hint resolves this situation
