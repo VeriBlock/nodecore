@@ -344,7 +344,7 @@ class BitcoinFamilyChain(
                 previousBlock = response.header.previousBlock.asAnyVbkHash().trimToPreviousBlockSize(),
                 previousKeystone = response.header.previousKeystone.asAnyVbkHash().trimToPreviousKeystoneSize(),
                 secondPreviousKeystone = response.header.secondPreviousKeystone.asAnyVbkHash().trimToPreviousKeystoneSize(),
-                merkleRoot = Utility.hexToBytes(response.header.merkleRoot).asMerkleRoot().truncate(),
+                merkleRoot = response.header.merkleRoot.asTruncatedMerkleRoot(),
                 timestamp = response.header.timestamp,
                 difficulty = response.header.difficulty,
                 nonce = response.header.nonce
@@ -370,7 +370,7 @@ class BitcoinFamilyChain(
             return BitcoinBlock(
                 version = response.header.version,
                 previousBlock = response.header.previousBlock.asBtcHash(),
-                merkleRoot = Utility.hexToBytes(response.header.merkleRoot).asMerkleRoot(),
+                merkleRoot = response.header.merkleRoot.asMerkleRoot(),
                 timestamp = response.header.timestamp,
                 difficulty = 0, // FIXME difficulty field is not at the response
                 nonce = response.header.nonce
