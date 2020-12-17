@@ -85,6 +85,13 @@ class SpvContext(
 
         logger.info { "Using ${peerDiscovery.name()} discovery" }
 
+        if (trustPeerHashes) {
+            logger.warn {
+                "Fast sync mode is enabled. This feature makes SPV to synchronize faster in exchange of less security." +
+                    " In order to disable it, locate 'trustPeerHashes' in the configuration file and set it to false."
+            }
+        }
+
         if (!Context.isCreated()) {
             Context.create(networkParameters)
         } else if (Context.get().networkParameters.name != networkParameters.name) {
