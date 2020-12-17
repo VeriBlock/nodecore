@@ -337,7 +337,7 @@ class BitcoinFamilyChain(
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock {
         logger.debug { "Retrieving the VBK block for the hash $hash" }
         return try {
-            val response: VbkBlock = rpcRequest("getvbkblock", hash)
+            val response: VbkBlock = rpcRequest("getvbkblock", listOf(hash))
             return VeriBlockBlock(
                 height = response.header.height,
                 version = response.header.version,
@@ -366,7 +366,7 @@ class BitcoinFamilyChain(
     override suspend fun getBtcBlock(hash: String): BitcoinBlock {
         logger.debug { "Retrieving the BTC block for the hash $hash" }
         return try {
-            val response: BtcBlockBlock = rpcRequest("getbtcblock", hash)
+            val response: BtcBlockBlock = rpcRequest("getbtcblock", listOf(hash))
             return BitcoinBlock(
                 version = response.header.version,
                 previousBlock = response.header.previousBlock.asBtcHash(),
