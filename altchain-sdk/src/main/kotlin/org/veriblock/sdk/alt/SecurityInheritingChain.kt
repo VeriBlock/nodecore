@@ -79,11 +79,20 @@ interface SecurityInheritingChain {
      */
     suspend fun getBestKnownVbkBlockHash(): String
 
-    suspend fun getVbkBlock(hash: String): VeriBlockBlock // getvbkblock
+    /**
+     * Returns the VeriBlockBlock for the given [hash]
+     */
+    suspend fun getVbkBlock(hash: String): VeriBlockBlock
 
-    suspend fun getBestKnownBtcBlockHash(): String // getbtcbestblockhash ?
+    /**
+     * Returns the hash from the best known BTC block
+     */
+    suspend fun getBestKnownBtcBlockHash(): String
 
-    suspend fun getBtcBlock(hash: String): BitcoinBlock // getvbkblock
+    /**
+     * Returns the BitcoinBlock for the given [hash]
+     */
+    suspend fun getBtcBlock(hash: String): BitcoinBlock
 
     /**
      * Returns this security inheriting chain's PoP mempool (ATVs and VTBs).
