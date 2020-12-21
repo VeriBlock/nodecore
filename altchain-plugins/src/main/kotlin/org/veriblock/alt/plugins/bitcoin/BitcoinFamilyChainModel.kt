@@ -160,7 +160,7 @@ internal data class VbkBlockHeader(
 )
 
 internal data class StoredVtbIds(
-    val vtbIds: List<String>
+    val vtbids: List<String>
 )
 
 internal data class BestBtcBlockHash(
