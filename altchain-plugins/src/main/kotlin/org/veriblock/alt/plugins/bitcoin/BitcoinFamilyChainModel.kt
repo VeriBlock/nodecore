@@ -191,5 +191,5 @@ internal data class AddressValidationResponse(
     val isscript: Boolean?,
     val iswitness: Boolean?,
     val witness_version: String?,
-    val witness_programo: String?
+    val witness_program: String?
 )

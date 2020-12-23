@@ -130,7 +130,7 @@ class TestChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getVbkBlock(hash: String): VeriBlockBlock {
+    override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
         TODO("Not yet implemented")
     }
 
@@ -138,7 +138,7 @@ class TestChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getBtcBlock(hash: String): BitcoinBlock {
+    override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
         TODO("Not yet implemented")
     }
 
