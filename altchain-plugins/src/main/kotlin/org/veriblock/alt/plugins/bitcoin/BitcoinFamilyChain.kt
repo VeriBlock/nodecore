@@ -340,15 +340,15 @@ class BitcoinFamilyChain(
         return try {
             val response: VbkBlock = rpcRequest("getvbkblock", listOf(hash))
             VeriBlockBlock(
-                height = response.header.height,
-                version = response.header.version,
-                previousBlock = response.header.previousBlock.asAnyVbkHash().trimToPreviousBlockSize(),
-                previousKeystone = response.header.previousKeystone.asAnyVbkHash().trimToPreviousKeystoneSize(),
-                secondPreviousKeystone = response.header.secondPreviousKeystone.asAnyVbkHash().trimToPreviousKeystoneSize(),
-                merkleRoot = response.header.merkleRoot.asTruncatedMerkleRoot(),
-                timestamp = response.header.timestamp,
-                difficulty = response.header.difficulty,
-                nonce = response.header.nonce
+                height = response.header?.height ?: error("getvbkblock height field must be set"),
+                version = response.header.version ?: error("getvbkblock version field must be set"),
+                previousBlock = response.header.previousBlock?.asAnyVbkHash()?.trimToPreviousBlockSize() ?: error("getvbkblock previousBlock field must be set"),
+                previousKeystone = response.header.previousKeystone?.asAnyVbkHash()?.trimToPreviousKeystoneSize() ?: error("getvbkblock previousKeystone field must be set"),
+                secondPreviousKeystone = response.header.secondPreviousKeystone?.asAnyVbkHash()?.trimToPreviousKeystoneSize() ?: error("getvbkblock secondPreviousKeystone field must be set"),
+                merkleRoot = response.header.merkleRoot?.asTruncatedMerkleRoot() ?: error("getvbkblock merkleRoot field must be set"),
+                timestamp = response.header.timestamp ?: error("getvbkblock timestamp field must be set"),
+                difficulty = response.header.difficulty ?: error("getvbkblock difficulty field must be set"),
+                nonce = response.header.nonce ?: error("getvbkblock nonce field must be set")
             )
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
@@ -370,12 +370,12 @@ class BitcoinFamilyChain(
         return try {
             val response: BtcBlockBlock = rpcRequest("getbtcblock", listOf(hash))
             BitcoinBlock(
-                version = response.header.version,
-                previousBlock = response.header.previousBlock.asBtcHash(),
-                merkleRoot = response.header.merkleRoot.asMerkleRoot(),
-                timestamp = response.header.timestamp,
+                version = response.header?.version ?: error("getbtcblock version field must be set"),
+                previousBlock = response.header.previousBlock?.asBtcHash() ?: error("getbtcblock previousBlock field must be set"),
+                merkleRoot = response.header.merkleRoot?.asMerkleRoot() ?: error("getbtcblock merkleRoot field must be set"),
+                timestamp = response.header.timestamp ?: error("getbtcblock timestamp field must be set"),
                 difficulty = 0, // FIXME difficulty field is not at the response
-                nonce = response.header.nonce
+                nonce = response.header.nonce ?: error("getbtcblock nonce field must be set")
             )
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
