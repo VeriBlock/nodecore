@@ -163,10 +163,6 @@ internal data class StoredVtbIds(
     val vtbids: List<String?>?
 )
 
-internal data class BestBtcBlockHash(
-    val bestBtcBlockHash: String
-)
-
 internal data class SubmitPopResponse(
     val vbkblocks: List<ValidationData>,
     val vtbs: List<ValidationData>,

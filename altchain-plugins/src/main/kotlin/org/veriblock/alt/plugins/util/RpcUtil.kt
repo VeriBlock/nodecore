@@ -14,7 +14,6 @@ import com.google.gson.JsonNull
 import com.google.gson.reflect.TypeToken
 import org.veriblock.alt.plugins.HttpException
 import org.veriblock.alt.plugins.fromJson
-import org.veriblock.core.utilities.createLogger
 import java.lang.reflect.Type
 
 data class JsonRpcRequestBody(

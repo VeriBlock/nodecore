@@ -362,7 +362,7 @@ class BitcoinFamilyChain(
 
     override suspend fun getBestKnownBtcBlockHash(): String {
         logger.debug { "Retrieving the best known BTC block hash..." }
-        return (rpcRequest("getbtcbestblockhash") as BestBtcBlockHash).bestBtcBlockHash
+        return rpcRequest("getbtcbestblockhash")
     }
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
