@@ -25,12 +25,6 @@ abstract class MiningOperation(
 
     private val logs: MutableList<OperationLog> = CopyOnWriteArrayList(logs)
 
-    init {
-        if (!reconstituting) {
-            Metrics.startedOperationsCounter.increment()
-        }
-    }
-
     protected fun setState(state: MiningOperationState) {
         this.state = state
         if (!reconstituting || state == MiningOperationState.FAILED) {
@@ -40,6 +34,9 @@ abstract class MiningOperation(
     }
 
     open fun onStateChanged() {
+        if (!reconstituting && state.id == MiningOperationState.INITIAL_ID) {
+            Metrics.startedOperationsCounter.increment()
+        }
     }
 
     fun complete() {
@@ -48,10 +45,10 @@ abstract class MiningOperation(
         if (!reconstituting) {
             onCompleted()
         }
-        Metrics.completedOperationsCounter.increment()
     }
 
     open fun onCompleted() {
+        Metrics.completedOperationsCounter.increment()
     }
 
     fun fail(reason: String, cause: Throwable? = null) {
@@ -65,11 +62,12 @@ abstract class MiningOperation(
         if (!reconstituting) {
             onFailed()
             cancelJob()
-            Metrics.failedOperationsCounter.increment()
         }
     }
 
-    open fun onFailed() {}
+    open fun onFailed() {
+        Metrics.failedOperationsCounter.increment()
+    }
 
     fun isFailed() = failureReason != null
 

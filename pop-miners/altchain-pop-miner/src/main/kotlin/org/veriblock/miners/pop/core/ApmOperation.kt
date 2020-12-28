@@ -64,14 +64,17 @@ class ApmOperation(
     }
 
     override fun onStateChanged() {
+        super.onStateChanged()
         EventBus.operationStateChangedEvent.trigger(this)
     }
 
     override fun onCompleted() {
+        super.onCompleted()
         EventBus.operationFinishedEvent.trigger(this)
     }
 
     override fun onFailed() {
+        super.onFailed()
         EventBus.operationFinishedEvent.trigger(this)
     }
 
