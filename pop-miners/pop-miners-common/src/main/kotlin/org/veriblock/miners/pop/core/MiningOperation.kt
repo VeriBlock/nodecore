@@ -34,7 +34,7 @@ abstract class MiningOperation(
     }
 
     open fun onStateChanged() {
-        if (!reconstituting && state.id == MiningOperationState.INITIAL_ID) {
+        if (state.id == MiningOperationState.INITIAL_ID) {
             Metrics.startedOperationsCounter.increment()
         }
     }
