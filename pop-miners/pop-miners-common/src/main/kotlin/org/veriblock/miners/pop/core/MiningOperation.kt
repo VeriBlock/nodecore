@@ -57,15 +57,16 @@ abstract class MiningOperation(
             logger.debug(this, cause, "Stack Trace:")
         }
         failureReason = reason
+        val originalState = state
         setState(MiningOperationState.FAILED)
 
         if (!reconstituting) {
-            onFailed()
+            onFailed(originalState)
             cancelJob()
         }
     }
 
-    open fun onFailed() {
+    open fun onFailed(originalState: MiningOperationState) {
         Metrics.failedOperationsCounter.increment()
     }
 

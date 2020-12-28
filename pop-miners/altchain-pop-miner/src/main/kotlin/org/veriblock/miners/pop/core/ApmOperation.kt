@@ -73,8 +73,8 @@ class ApmOperation(
         EventBus.operationFinishedEvent.trigger(this)
     }
 
-    override fun onFailed() {
-        super.onFailed()
+    override fun onFailed(originalState: MiningOperationState) {
+        super.onFailed(originalState)
         EventBus.operationFinishedEvent.trigger(this)
     }
 

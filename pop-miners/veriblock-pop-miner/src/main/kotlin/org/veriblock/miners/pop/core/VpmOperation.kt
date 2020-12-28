@@ -151,11 +151,13 @@ class VpmOperation(
     }
 
     override fun onCompleted() {
+        super.onCompleted()
         EventBus.popMiningOperationCompletedEvent.trigger(id)
         EventBus.popMiningOperationFinishedEvent.trigger(this)
     }
 
-    override fun onFailed() {
+    override fun onFailed(originalState: MiningOperationState) {
+        super.onFailed(originalState)
         Metrics.failedOperationsCounter.increment()
         EventBus.popMiningOperationFinishedEvent.trigger(this)
     }
