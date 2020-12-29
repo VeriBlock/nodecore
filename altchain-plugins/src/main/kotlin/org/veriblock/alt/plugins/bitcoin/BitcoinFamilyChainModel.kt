@@ -112,6 +112,57 @@ internal data class BlockChainInfo(
     val initialblockdownload: Boolean
 )
 
+internal data class BtcBlockBlock(
+    val chainWork: String?,
+    val height: Int?,
+    val header: BtcBlockHeader?,
+    val status: Int?,
+    val vbkRefs: List<Int?>?,
+    val blockOfProofEndorsements: List<String?>?
+)
+
+internal data class BtcBlockHeader(
+    val hash: String?,
+    val version: Int?,
+    val previousBlock: String?,
+    val merkleRoot: String?,
+    val timestamp: Int?,
+    val bits: Long?,
+    val nonce: Int?
+)
+
+internal data class VbkBlock(
+    val chainWork: String?,
+    val containingEndorsements: List<String?>?,
+    val endorsedBy: List<Int?>?,
+    val height: Int?,
+    val header: VbkBlockHeader?,
+    val status: Int?,
+    val ref: Int?,
+    val stored: StoredVtbIds?,
+    val blockOfProofEndorsements: List<String?>?
+)
+
+internal data class VbkBlockHeader(
+    val id: String?,
+    val hash: String?,
+    val height: Int?,
+    val version: Short?,
+    val previousBlock: String?,
+    val previousKeystone: String?,
+    val secondPreviousKeystone: String?,
+    val merkleRoot: String?,
+    val timestamp: Int?,
+    val difficulty: Int?,
+    val nonce: Long?,
+    val stored: StoredVtbIds?,
+    val blockOfProofEndorsements: List<String?>?
+)
+
+internal data class StoredVtbIds(
+    val vtbids: List<String?>?
+)
+
 internal data class SubmitPopResponse(
     val vbkblocks: List<ValidationData>,
     val vtbs: List<ValidationData>,
@@ -136,5 +187,5 @@ internal data class AddressValidationResponse(
     val isscript: Boolean?,
     val iswitness: Boolean?,
     val witness_version: String?,
-    val witness_programo: String?
+    val witness_program: String?
 )

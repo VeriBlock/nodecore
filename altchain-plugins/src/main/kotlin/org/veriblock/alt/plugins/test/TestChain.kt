@@ -31,11 +31,7 @@ import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
-import org.veriblock.sdk.models.AltPublication
-import org.veriblock.sdk.models.PublicationData
-import org.veriblock.sdk.models.StateInfo
-import org.veriblock.sdk.models.VeriBlockBlock
-import org.veriblock.sdk.models.VeriBlockPublication
+import org.veriblock.sdk.models.*
 import java.util.TreeMap
 import kotlin.random.Random
 
@@ -131,6 +127,18 @@ class TestChain(
     }
 
     override suspend fun getVtb(id: String): Vtb? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getBestKnownBtcBlockHash(): String {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
         TODO("Not yet implemented")
     }
 
