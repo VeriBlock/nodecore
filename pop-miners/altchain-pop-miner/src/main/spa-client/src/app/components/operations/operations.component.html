@@ -1,13 +1,26 @@
-<h2 class="mat-h2">VBK Wallet</h2>
+<mat-toolbar>
+  <mat-toolbar-row>
 
-<p>Address: {{vbkAddress}}</p>
-<p>Balance: {{vbkBalance}}</p>
+    <h1>Ethereum (ETH)</h1>
+
+    <div style="text-align: center;">
+      <div>{{vbkBalance}}</div>
+      <div>Address: {{vbkAddress}}</div>
+    </div>
+
+    <a mat-button [matMenuTriggerFor]="prefMenu" aria-label="Preferences" matTooltip="Preferences">
+      <mat-icon aria-hidden="true">settings</mat-icon>
+      <span>Configuration</span>
+    </a>
+
+  </mat-toolbar-row>
+</mat-toolbar>
 
 <h2 class="mat-h2">Operations</h2>
 
-<button mat-fab (click)="openMineDialog()" class="floatingButton">
+<!-- <button mat-fab type="button" (click)="openMineDialog()" class="floatingButton">
   <mat-icon>add</mat-icon>
-</button>
+</button> -->
 
 Filter by status
 <mat-button-toggle-group [value]="statusFilter" (valueChange)="changeStatusFilter($event)">
@@ -66,8 +79,8 @@ Filter by status
           <tr mat-row *matRowDef="let row; columns: ['status', 'taskName', 'extraInformation'];"></tr>
         </table>
 
-        <button mat-button (click)="openLogsDialog('info')">Display Logs</button>
-        <button mat-button (click)="openLogsDialog('debug')">Display Debug Logs</button>
+        <button mat-button type="button" (click)="openLogsDialog('info')">Display Logs</button>
+        <button mat-button type="button" (click)="openLogsDialog('debug')">Display Debug Logs</button>
       </div>
     </td>
   </ng-container>
@@ -81,3 +94,15 @@ Filter by status
 <mat-paginator *ngIf="operations.length > 0" [length]="operationsTotalCount" [pageSizeOptions]="[10, 25, 100]" showFirstLastButtons
   (page)="changePage($event)">
 </mat-paginator>
+
+<!-- My Account menu -->
+<mat-menu #prefMenu="matMenu" [overlapTrigger]="false">
+
+  <a mat-menu-item [routerLink]="['/']">
+    <span>configuration 1</span>
+  </a>
+
+  <a mat-menu-item [routerLink]="['/']">
+    <span>configuration 2</span>
+  </a>
+</mat-menu>

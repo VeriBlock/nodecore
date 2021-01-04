@@ -1,22 +1,129 @@
 @import "../node_modules/@angular/material/theming";
+@import "./component-themes";
 // Plus imports for other components in your app.
+
+// Define a custom typography config that overrides the font-family as well as the
+// `headlines` and `body-1` levels.
+$custom-typography: mat-typography-config(
+  $font-family: 'Roboto, monospace',
+  $body-1: mat-typography-level(14px, 24px, 400),
+  $caption: mat-typography-level(14px, 24px, 400)
+);
+
+@include mat-base-typography($custom-typography);
 
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat-core();
+@include mat-core($custom-typography);
 
-$primary: #446fb8;
-$accent: #1e9710;
+$vbk-primary: (
+  50: #ecf8e6,
+  100: #ceeec0,
+  200: #aee396,
+  300: #8ed76c,
+  400: #75cf4d,
+  500: #5dc62d,
+  600: #55c028,
+  700: #4bb922,
+  800: #41b11c,
+  900: #30a411,
+  A100: #dcffd4,
+  A200: #b2ffa1,
+  A400: #88ff6e,
+  A700: #73ff55,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #000000,
+    600: #000000,
+    700: #000000,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  ),
+);
+
+$vbk-accent: (
+  50: #e6e6e8,
+  100: #bfc0c6,
+  200: #9596a1,
+  300: #6b6c7b,
+  400: #4b4d5e,
+  500: #2b2d42,
+  600: #26283c,
+  700: #202233,
+  800: #1a1c2b,
+  900: #10111d,
+  A100: #6161ff,
+  A200: #2e2eff,
+  A400: #0000fa,
+  A700: #0000e0,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #ffffff,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #ffffff,
+    A200: #ffffff,
+    A400: #ffffff,
+    A700: #ffffff,
+  ),
+);
+
+$vbk-warn: (
+  50: #f6eaea,
+  100: #e8cbcb,
+  200: #d8a9a9,
+  300: #c88686,
+  400: #bd6c6c,
+  500: #b15252,
+  600: #aa4b4b,
+  700: #a14141,
+  800: #983838,
+  900: #882828,
+  A100: #ffcaca,
+  A200: #ff9797,
+  A400: #ff6464,
+  A700: #ff4b4b,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  ),
+);
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.
-$app-primary: mat-palette($mat-indigo);
-$app-accent: mat-palette($mat-grey);
+$app-primary: mat-palette($vbk-primary);
+$app-accent: mat-palette($vbk-accent);
 
 // The warn palette is optional (defaults to red).
-$app-warn: mat-palette($mat-red);
+$app-warn: mat-palette($vbk-warn);
 
 // Create the theme object (a Sass map containing all of the palettes).
 $app-theme: mat-light-theme($app-primary, $app-accent, $app-warn);
@@ -25,19 +132,4 @@ $app-theme: mat-light-theme($app-primary, $app-accent, $app-warn);
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
 @include angular-material-theme($app-theme);
-
-.primary-color {
-  color: $primary;
-}
-
-.accent-color {
-  color: $accent;
-}
-
-.background-primary-color {
-  background-color: $primary;
-}
-
-.background-accent-color {
-  background-color: $accent;
-}
+@include component-themes($app-theme);

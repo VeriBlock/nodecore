@@ -1,12 +1,10 @@
-<mat-toolbar color="primary" class="mat-elevation-z5">
-  <mat-toolbar-row>
-    <span>Altchain PoP Miner</span>
-    <span class="toolbar-spacer"></span>
-    <!--<mat-icon class="toolbar-icon" aria-hidden="false" aria-label="Example heart icon">favorite</mat-icon>
-    <mat-icon class="toolbar-icon" aria-hidden="false" aria-label="Example delete icon">delete</mat-icon>-->
-  </mat-toolbar-row>
-</mat-toolbar>
+<mat-drawer-container autosize>
+  <mat-drawer #drawer mode="side" opened disableClose color="accent">
+    <p>VeriBlock</p>
+  </mat-drawer>
 
-<div class="content">
-  <router-outlet></router-outlet>
-</div>
+  <mat-drawer-content>
+    <router-outlet></router-outlet>
+  </mat-drawer-content>
+
+</mat-drawer-container>

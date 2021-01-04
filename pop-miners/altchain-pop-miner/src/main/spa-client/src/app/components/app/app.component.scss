@@ -1,11 +1,18 @@
-.toolbar-icon {
-  padding: 0 14px;
-}
-
-.toolbar-spacer {
-  flex: 1 1 auto;
-}
-
-.content {
-  padding: 20px 20px 0;
+mat-drawer-container {
+  flex: 1;
+  width: 100%;
+  min-width: 100%;
+  min-height: 100vh;
+  height: 100%;
+  mat-drawer {
+    min-width: 190px;
+    height: 100%;
+    padding: 20px;
+    text-align: center;
+  }
+  mat-drawer-content {
+    flex: 1;
+    height: 100%;
+    padding: 25px 40px;
+  }
 }

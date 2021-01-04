@@ -1,0 +1,6 @@
+@import '~@angular/material/theming';
+@import 'src/styles/drawer-theme.scss';
+
+@mixin component-themes($theme) {
+  @include drawer-theme($theme);
+}

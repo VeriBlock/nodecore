@@ -1,0 +1,10 @@
+@import '~@angular/material/theming';
+
+@mixin drawer-theme($theme) {
+  $accent: map-get($theme, accent);
+
+  .mat-drawer {
+    background-color: mat-color($accent);
+    color: white
+  }
+}
