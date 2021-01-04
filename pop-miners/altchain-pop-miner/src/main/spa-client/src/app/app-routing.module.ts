@@ -1,15 +1,20 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import {OperationsComponent} from "./component/operations.component";
 
+import { OperationsComponent } from '@components/operations/operations.component';
 
 const routes: Routes = [
-  {path: '', redirectTo: 'operations', pathMatch: 'full'},
-  {path: 'operations', component: OperationsComponent},
+  { path: 'operations', component: OperationsComponent },
+  { path: '**', redirectTo: 'operations', pathMatch: 'full' },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload', relativeLinkResolution: 'legacy' })],
-  exports: [RouterModule]
+  imports: [
+    RouterModule.forRoot(routes, {
+      onSameUrlNavigation: 'reload',
+      relativeLinkResolution: 'legacy',
+    }),
+  ],
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

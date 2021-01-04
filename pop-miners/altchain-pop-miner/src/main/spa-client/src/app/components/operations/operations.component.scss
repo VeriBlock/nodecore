@@ -1,4 +1,3 @@
-
 .floatingButton {
   position: fixed;
   top: 30px;
@@ -11,24 +10,17 @@
   margin-bottom: 1px;
 }
 
-
-
 .done {
-  background-color: greenyellow
+  background-color: greenyellow;
 }
 
 .current {
-  background-color: yellow
+  background-color: yellow;
 }
 
 .failed {
-  background-color: red
+  background-color: red;
 }
-
-
-
-
-
 
 table {
   width: 100%;
@@ -56,5 +48,5 @@ tr.element-row:not(.expanded-row):active {
 }
 
 mat-button-toggle-group {
-  margin-left: 10px
+  margin-left: 10px;
 }

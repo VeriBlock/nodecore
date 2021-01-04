@@ -1,11 +1,10 @@
-
 export class Operation {
   operationId: string;
   chain: string;
   state: string;
   endorsedBlockHeight: number;
   task: string;
-  stateDetail: any
+  stateDetail: any;
 }
 
 export class OperationSummaryList {
@@ -23,4 +22,3 @@ export class OperationWorkflow {
   operationId: string;
   stages: OperationWorkflowStage[];
 }
-

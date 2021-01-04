@@ -2,11 +2,11 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import {OperationSummaryList, OperationWorkflow} from "../model/operation";
-import {Operation} from "../model/operation";
-import {MineRequest, MinerInfo} from "../model/miner";
-import {environment} from "../../environments/environment";
-import {ConfiguredAltchainList} from "../model/configured-altchain";
+import {OperationSummaryList, OperationWorkflow} from "../model/operation.model";
+import {Operation} from "../model/operation.model";
+import {MineRequest, MinerInfo} from "../model/miner.model";
+import {environment} from "../../../environments/environment";
+import {ConfiguredAltchainList} from "../model/configured-altchain.model";
 
 /*
  * @author Pere
