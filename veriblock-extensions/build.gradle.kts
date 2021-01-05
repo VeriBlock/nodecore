@@ -29,7 +29,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.13.3")
     compile("com.google.code.gson:gson:2.8.2")
     compile("io.netty:netty-buffer:4.1.30.Final")
-    compile("org.bouncycastle:bcprov-jdk15on:1.60")
     compile("io.vertx:vertx-core:3.6.2")
 
     testImplementation("junit:junit:4.12")
