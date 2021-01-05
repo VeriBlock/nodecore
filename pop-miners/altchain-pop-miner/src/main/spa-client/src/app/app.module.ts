@@ -14,12 +14,14 @@ import { SharedModule } from './shared/shared.module';
 import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dialog.component';
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
+import { OperationsTableComponent } from './components/operations/operations-table/operations-table.component';
 import { AppComponent } from '@components/app/app.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     OperationsComponent,
+    OperationsTableComponent,
     MineDialogComponent,
     LogsDialogComponent,
   ],

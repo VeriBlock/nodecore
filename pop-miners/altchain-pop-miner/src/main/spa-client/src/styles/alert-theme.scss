@@ -1,0 +1,28 @@
+@import '~@angular/material/theming';
+
+@mixin alert-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $foreground: map-get($theme, foreground);
+
+  .alert-info {
+    color: black;
+    background-color: mat-color($warn, lighter);
+    display: flex;
+    justify-content: center;
+    word-break: break-word;
+  }
+
+  .text-success {
+    color: mat-color($primary);
+  }
+
+  .text-warning {
+    color: mat-color($accent);
+  }
+
+  .text-danger {
+    color: mat-color($warn);
+  }
+}

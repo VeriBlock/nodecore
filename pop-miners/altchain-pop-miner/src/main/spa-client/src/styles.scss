@@ -4,4 +4,13 @@ body {
   mat-form-field.mat-form-field {
     font-size: 14px;
   }
+
+  mat-card .mat-table {
+    width: 100%;
+  }
+
+  .overflow-container {
+    display: block;
+    overflow: auto;
+  }
 }

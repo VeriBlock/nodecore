@@ -14,6 +14,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 // import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 // import { MatListModule } from '@angular/material/list';
@@ -24,6 +25,7 @@ const exportedComponents = [
   CdkScrollableModule,
   MatButtonModule,
   MatButtonToggleModule,
+  MatCardModule,
   MatDialogModule,
   // MatExpansionModule,
   MatFormFieldModule,

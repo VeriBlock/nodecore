@@ -1,0 +1,18 @@
+@import "~@angular/material/theming";
+
+@mixin flag-theme($theme) {
+  $foreground: map-get($theme, foreground);
+  $accent: map-get($theme, accent);
+
+  div.flag {
+    color: mat-color($foreground, text);
+    border: solid mat-color($foreground, divider) 1px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+
+    &.flag-accent {
+      background: mat-color($accent);
+      color: white;
+    }
+  }
+}

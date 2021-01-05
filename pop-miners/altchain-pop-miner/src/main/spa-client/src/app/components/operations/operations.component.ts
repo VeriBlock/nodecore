@@ -1,42 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  animate,
-  state,
-  style,
-  transition,
-  trigger,
-} from '@angular/animations';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { ActivatedRoute, Params, Router } from '@angular/router';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSelectChange } from '@angular/material/select';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
-import { ActivatedRoute } from '@angular/router';
-import { Location } from '@angular/common';
 import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
 import { MineDialogComponent } from './mine-dialog/mine-dialog.component';
-import { LogsDialogComponent } from './logs-dialog/logs-dialog.component';
 
 import { ApiService } from '@core/service/api.service';
 
 import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 import { Operation } from '@core/model/operation.model';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatSelectChange } from '@angular/material/select';
 
 @Component({
   selector: 'operations',
   templateUrl: './operations.component.html',
   styleUrls: ['./operations.component.scss'],
-  animations: [
-    trigger('detailExpand', [
-      state('collapsed', style({ height: '0px', minHeight: '0' })),
-      state('expanded', style({ height: '*' })),
-      transition(
-        'expanded <=> collapsed',
-        animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')
-      ),
-    ]),
-  ],
 })
 export class OperationsComponent implements OnInit {
   public form: FormGroup = this.formBuilder.group({
@@ -45,40 +27,41 @@ export class OperationsComponent implements OnInit {
 
   public filters: string[] = ['all', 'active', 'completed', 'failed'];
   public isLoading = true;
+  public tableLoading = true;
 
   configuredAltchains: ConfiguredAltchain[] = [];
 
   vbkAddress: string;
   vbkBalance: string;
 
-  operations: Operation[] = [];
-  operationsTotalCount: number = 0;
-  selectedOperationId: string;
-  columnsToDisplay = ['operationId', 'chain', 'state', 'task'];
+  public operationsTotalCount: number = 0;
+  public selectedOperationId: string;
 
-  pageLimit = 10;
-  pageOffset = 0;
+  public operationsDataSource = new MatTableDataSource<Operation>();
 
-  operationWorkflows = {};
+  public pageLimit = 10;
+  public pageOffset = 0;
 
-  trackByOperationId = (index, operation) => operation.operationId;
+  public operationWorkflows = {};
 
   constructor(
     private formBuilder: FormBuilder,
     private apiService: ApiService,
     private route: ActivatedRoute,
-    private location: Location,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit() {
     // Get route's query params
     this.route.queryParams.subscribe((params) => {
-      console.log(params);
-      this.selectedOperationId = params.selectedOperationId;
-      console.log(params.statusFilter);
+      this.selectedOperationId = params.selectedOperationId || null;
+
+      if (this.selectedOperationId) {
+        this.loadWorkFlow();
+      }
+
       if (params.statusFilter) {
-        console.log(params.statusFilter);
         this.form.controls['filter'].patchValue(params.statusFilter);
       }
       if (params.pageLimit) {
@@ -105,6 +88,7 @@ export class OperationsComponent implements OnInit {
       .subscribe((response) => {
         this.vbkAddress = response.vbkAddress;
         this.vbkBalance = response.vbkBalance / 100_000_000 + ' VBK';
+        this.isLoading = false;
       });
 
     // Check the operation list API every 2 seconds
@@ -120,9 +104,9 @@ export class OperationsComponent implements OnInit {
         )
       )
       .subscribe((response) => {
-        this.operations = response.operations;
+        this.operationsDataSource.data = response.operations.slice();
         this.operationsTotalCount = response.totalCount;
-        this.isLoading = false;
+        this.tableLoading = false;
       });
 
     // Check the operation details API every 5 seconds
@@ -140,18 +124,11 @@ export class OperationsComponent implements OnInit {
       });
   }
 
-  selectOperation(operation: Operation) {
-    if (operation.operationId == this.selectedOperationId) {
-      this.selectedOperationId = null;
-      this.updateDirectionBar();
-      return;
-    }
+  public loadWorkFlow() {
     this.apiService
-      .getOperationWorkflow(operation.operationId)
+      .getOperationWorkflow(this.selectedOperationId)
       .subscribe((workflow) => {
-        this.operationWorkflows[operation.operationId] = workflow;
-        this.selectedOperationId = operation.operationId;
-        this.updateDirectionBar();
+        this.operationWorkflows[this.selectedOperationId] = workflow;
       });
   }
 
@@ -161,32 +138,29 @@ export class OperationsComponent implements OnInit {
     this.dialog.open(MineDialogComponent, dialogConfig);
   }
 
-  openLogsDialog(level: string) {
-    this.apiService
-      .getOperationLogs(this.selectedOperationId, level)
-      .subscribe((logs) => {
-        const dialogConfig = new MatDialogConfig();
-        dialogConfig.data = logs;
-        this.dialog.open(LogsDialogComponent, dialogConfig);
-      });
-  }
-
   changeStatusFilter(event: MatSelectChange) {
     if (!event.value) {
       return;
     }
-    this.updateDirectionBar();
+    this.updateQueryParams();
     this.refreshOperationList();
   }
 
-  changePage(event: PageEvent) {
+  public pageChangeEmit(event: PageEvent) {
+    let pageIndex = event.pageIndex;
+    if (this.pageLimit !== event.pageSize) {
+      pageIndex = 0;
+    }
     this.pageLimit = event.pageSize;
-    this.pageOffset = event.pageIndex * event.pageSize;
-    this.updateDirectionBar();
+    this.pageOffset = pageIndex * this.pageLimit;
+
+    this.updateQueryParams();
     this.refreshOperationList();
   }
 
   private refreshOperationList() {
+    this.tableLoading = true;
+
     this.apiService
       .getOperations(
         this.form.controls['filter']?.value || 'active',
@@ -194,26 +168,28 @@ export class OperationsComponent implements OnInit {
         this.pageOffset
       )
       .subscribe((response) => {
-        this.operations = response.operations;
+        this.operationsDataSource.data = response.operations.slice();
+
         this.operationsTotalCount = response.totalCount;
+        this.tableLoading = false;
       });
   }
 
-  updateDirectionBar() {
-    const queryParams = [];
-    if (this.selectedOperationId) {
-      queryParams.push(`selectedOperationId=${this.selectedOperationId}`);
-    }
-    if (this.form.controls['filter']?.value != 'active') {
-      queryParams.push(`statusFilter=${this.form.controls['filter']?.value}`);
-    }
-    if (this.pageLimit != 10) {
-      queryParams.push(`pageLimit=${this.pageLimit}`);
-    }
-    if (this.pageOffset > 0) {
-      queryParams.push(`pageOffset=${this.pageOffset}`);
-    }
-    const query = queryParams.join('&');
-    this.location.go('operations', query);
+  private updateQueryParams() {
+    const queryParams: Params = {};
+    queryParams['selectedOperationId'] = this.selectedOperationId || null;
+    queryParams['statusFilter'] =
+      this.form.controls['filter']?.value &&
+      this.form.controls['filter']?.value != 'active'
+        ? this.form.controls['filter']?.value
+        : null;
+    queryParams['pageLimit'] = this.pageLimit != 10 ? this.pageLimit : null;
+    queryParams['pageOffset'] = this.pageOffset > 0 ? this.pageOffset : null;
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: queryParams,
+      queryParamsHandling: 'merge',
+    });
   }
 }
