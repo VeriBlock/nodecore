@@ -21,7 +21,7 @@ buildscript {
 
 plugins {
     kotlin("jvm") version kotlinVersion
-    id("nebula.release") version "6.0.0"
+    id("nebula.release") version "6.0.1"
     id("com.jfrog.artifactory") version "4.15.1"
     jacoco
     id("org.sonarqube") version "2.8"
