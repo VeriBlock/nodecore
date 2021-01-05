@@ -20,6 +20,8 @@ import { ApiService } from '@core/service/api.service';
 
 import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 import { Operation } from '@core/model/operation.model';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { MatSelectChange } from '@angular/material/select';
 
 @Component({
   selector: 'operations',
@@ -37,6 +39,13 @@ import { Operation } from '@core/model/operation.model';
   ],
 })
 export class OperationsComponent implements OnInit {
+  public form: FormGroup = this.formBuilder.group({
+    filter: '',
+  });
+
+  public filters: string[] = ['all', 'active', 'completed', 'failed'];
+  public isLoading = true;
+
   configuredAltchains: ConfiguredAltchain[] = [];
 
   vbkAddress: string;
@@ -47,7 +56,6 @@ export class OperationsComponent implements OnInit {
   selectedOperationId: string;
   columnsToDisplay = ['operationId', 'chain', 'state', 'task'];
 
-  statusFilter = 'active';
   pageLimit = 10;
   pageOffset = 0;
 
@@ -56,6 +64,7 @@ export class OperationsComponent implements OnInit {
   trackByOperationId = (index, operation) => operation.operationId;
 
   constructor(
+    private formBuilder: FormBuilder,
     private apiService: ApiService,
     private route: ActivatedRoute,
     private location: Location,
@@ -70,7 +79,7 @@ export class OperationsComponent implements OnInit {
       console.log(params.statusFilter);
       if (params.statusFilter) {
         console.log(params.statusFilter);
-        this.statusFilter = params.statusFilter;
+        this.form.controls['filter'].patchValue(params.statusFilter);
       }
       if (params.pageLimit) {
         this.pageLimit = params.pageLimit;
@@ -79,12 +88,14 @@ export class OperationsComponent implements OnInit {
         this.pageOffset = params.pageOffset;
       }
     });
+
     // Get the configured altchains
     this.apiService
       .getConfiguredAltchains()
       .subscribe((configuredAltchains) => {
         this.configuredAltchains = configuredAltchains.altchains;
       });
+
     // Check the miner data API every 61 seconds
     interval(61_000)
       .pipe(
@@ -102,7 +113,7 @@ export class OperationsComponent implements OnInit {
         startWith(0),
         switchMap(() =>
           this.apiService.getOperations(
-            this.statusFilter,
+            this.form.controls['filter']?.value || 'active',
             this.pageLimit,
             this.pageOffset
           )
@@ -111,7 +122,9 @@ export class OperationsComponent implements OnInit {
       .subscribe((response) => {
         this.operations = response.operations;
         this.operationsTotalCount = response.totalCount;
+        this.isLoading = false;
       });
+
     // Check the operation details API every 5 seconds
     interval(5_000)
       .pipe(
@@ -158,11 +171,10 @@ export class OperationsComponent implements OnInit {
       });
   }
 
-  changeStatusFilter(filter: string) {
-    if (!filter) {
+  changeStatusFilter(event: MatSelectChange) {
+    if (!event.value) {
       return;
     }
-    this.statusFilter = filter;
     this.updateDirectionBar();
     this.refreshOperationList();
   }
@@ -176,7 +188,11 @@ export class OperationsComponent implements OnInit {
 
   private refreshOperationList() {
     this.apiService
-      .getOperations(this.statusFilter, this.pageLimit, this.pageOffset)
+      .getOperations(
+        this.form.controls['filter']?.value || 'active',
+        this.pageLimit,
+        this.pageOffset
+      )
       .subscribe((response) => {
         this.operations = response.operations;
         this.operationsTotalCount = response.totalCount;
@@ -188,8 +204,8 @@ export class OperationsComponent implements OnInit {
     if (this.selectedOperationId) {
       queryParams.push(`selectedOperationId=${this.selectedOperationId}`);
     }
-    if (this.statusFilter != 'active') {
-      queryParams.push(`statusFilter=${this.statusFilter}`);
+    if (this.form.controls['filter']?.value != 'active') {
+      queryParams.push(`statusFilter=${this.form.controls['filter']?.value}`);
     }
     if (this.pageLimit != 10) {
       queryParams.push(`pageLimit=${this.pageLimit}`);

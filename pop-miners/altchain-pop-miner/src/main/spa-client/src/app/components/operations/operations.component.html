@@ -1,7 +1,7 @@
 <mat-toolbar>
   <mat-toolbar-row>
 
-    <h1>Ethereum (ETH)</h1>
+    <h2>Ethereum (ETH)</h2>
 
     <div style="text-align: center;">
       <div>{{vbkBalance}}</div>
@@ -14,88 +14,109 @@
     </a>
 
   </mat-toolbar-row>
+
+  <mat-toolbar-row style="justify-content: center">
+    <h3>Mine</h3>
+    <button mat-icon-button type="button" [matMenuTriggerFor]="moreMenu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+  </mat-toolbar-row>
 </mat-toolbar>
 
-<h2 class="mat-h2">Operations</h2>
+<h1 fxLayout="row" fxLayoutAlign="space-between baseline" fxLayoutGap="5px" [formGroup]="form">
+  <span>Operations</span>
+
+  <div>
+    <mat-form-field appearance="outline">
+      <mat-label>Filter by:</mat-label>
+      <mat-select formControlName="filter" (selectionChange)="changeStatusFilter($event)">
+        <mat-option value="" disabled>Choose</mat-option>
+        <mat-option *ngFor="let filter of filters" [value]="filter">{{ filter }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</h1>
 
 <!-- <button mat-fab type="button" (click)="openMineDialog()" class="floatingButton">
   <mat-icon>add</mat-icon>
 </button> -->
 
-Filter by status
-<mat-button-toggle-group [value]="statusFilter" (valueChange)="changeStatusFilter($event)">
-  <mat-button-toggle value="active" checked title="Active operations">
-    <mat-icon>pending_actions</mat-icon>
-  </mat-button-toggle>
-  <mat-button-toggle value="completed" title="Completed operations">
-    <mat-icon>check_box</mat-icon>
-  </mat-button-toggle>
-  <mat-button-toggle value="failed" title="Failed operations">
-    <mat-icon>error</mat-icon>
-  </mat-button-toggle>
-  <mat-button-toggle value="all" title="All operations">
-    <mat-icon>list_alt</mat-icon>
-  </mat-button-toggle>
-</mat-button-toggle-group>
+<progress-indicator [showSpinner]="isLoading"></progress-indicator>
 
-<p></p>
+<ng-container *ngIf="!isLoading">
 
-<span *ngIf="operations.length == 0">There are no operations matching the current filter</span>
+  <span *ngIf="operations.length == 0">There are no operations matching the current filter</span>
 
-<table mat-table *ngIf="operations.length > 0" [dataSource]="operations" [trackBy]="trackByOperationId" multiTemplateDataRows
-  class="mat-elevation-z2">
-  <ng-container *ngFor="let column of columnsToDisplay" matColumnDef="{{column}}">
-    <th mat-header-cell *matHeaderCellDef> {{column}} </th>
-    <td mat-cell *matCellDef="let operation"> {{operation[column]}} </td>
-  </ng-container>
+  <table mat-table *ngIf="operations.length > 0" [dataSource]="operations" [trackBy]="trackByOperationId" multiTemplateDataRows
+    class="mat-elevation-z2">
+    <ng-container *ngFor="let column of columnsToDisplay" matColumnDef="{{column}}">
+      <th mat-header-cell *matHeaderCellDef> {{column}} </th>
+      <td mat-cell *matCellDef="let operation"> {{operation[column]}} </td>
+    </ng-container>
 
-  <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
-  <ng-container matColumnDef="expandedDetail">
-    <td mat-cell *matCellDef="let operation" [attr.colspan]="columnsToDisplay.length">
-      <div class="element-detail" [@detailExpand]="operation.operationId == selectedOperationId ? 'expanded' : 'collapsed'">
+    <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
+    <ng-container matColumnDef="expandedDetail">
+      <td mat-cell *matCellDef="let operation" [attr.colspan]="columnsToDisplay.length">
+        <div class="element-detail" [@detailExpand]="operation.operationId == selectedOperationId ? 'expanded' : 'collapsed'">
 
-        <table mat-table *ngIf="operationWorkflows[operation.operationId]" [dataSource]="operationWorkflows[operation.operationId].stages"
-          class="mat-elevation-z8">
+          <table mat-table *ngIf="operationWorkflows[operation.operationId]" [dataSource]="operationWorkflows[operation.operationId].stages"
+            class="mat-elevation-z8">
 
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef> Status </th>
-            <td mat-cell *matCellDef="let element" [class.done]="element.status == 'DONE'" [class.current]="element.status == 'CURRENT'"
-              [class.failed]="element.status == 'FAILED'"> {{element.status}} </td>
-          </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> Status </th>
+              <td mat-cell *matCellDef="let element" [class.done]="element.status == 'DONE'" [class.current]="element.status == 'CURRENT'"
+                [class.failed]="element.status == 'FAILED'"> {{element.status}} </td>
+            </ng-container>
 
-          <ng-container matColumnDef="taskName">
-            <th mat-header-cell *matHeaderCellDef> Task </th>
-            <td mat-cell *matCellDef="let element" [class.current]="element.status == 'CURRENT'"
-              [class.failed]="element.status == 'FAILED'"> {{element.taskName}} </td>
-          </ng-container>
+            <ng-container matColumnDef="taskName">
+              <th mat-header-cell *matHeaderCellDef> Task </th>
+              <td mat-cell *matCellDef="let element" [class.current]="element.status == 'CURRENT'"
+                [class.failed]="element.status == 'FAILED'"> {{element.taskName}} </td>
+            </ng-container>
 
-          <ng-container matColumnDef="extraInformation">
-            <th mat-header-cell *matHeaderCellDef> Description </th>
-            <td mat-cell *matCellDef="let element" [class.current]="element.status == 'CURRENT'"
-              [class.failed]="element.status == 'FAILED'"> {{element.extraInformation}} </td>
-          </ng-container>
+            <ng-container matColumnDef="extraInformation">
+              <th mat-header-cell *matHeaderCellDef> Description </th>
+              <td mat-cell *matCellDef="let element" [class.current]="element.status == 'CURRENT'"
+                [class.failed]="element.status == 'FAILED'"> {{element.extraInformation}} </td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="['status', 'taskName', 'extraInformation']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['status', 'taskName', 'extraInformation'];"></tr>
-        </table>
+            <tr mat-header-row *matHeaderRowDef="['status', 'taskName', 'extraInformation']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['status', 'taskName', 'extraInformation'];"></tr>
+          </table>
 
-        <button mat-button type="button" (click)="openLogsDialog('info')">Display Logs</button>
-        <button mat-button type="button" (click)="openLogsDialog('debug')">Display Debug Logs</button>
-      </div>
-    </td>
-  </ng-container>
+          <button mat-button type="button" (click)="openLogsDialog('info')">Display Logs</button>
+          <button mat-button type="button" (click)="openLogsDialog('debug')">Display Debug Logs</button>
+        </div>
+      </td>
+    </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
-  <tr mat-row *matRowDef="let operation; columns: columnsToDisplay;" class="element-row"
-    [class.expanded-row]="selectedOperationId === operation.operationId" (click)="selectOperation(operation)">
-  </tr>
-  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
-</table>
-<mat-paginator *ngIf="operations.length > 0" [length]="operationsTotalCount" [pageSizeOptions]="[10, 25, 100]" showFirstLastButtons
-  (page)="changePage($event)">
-</mat-paginator>
+    <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+    <tr mat-row *matRowDef="let operation; columns: columnsToDisplay;" class="element-row"
+      [class.expanded-row]="selectedOperationId === operation.operationId" (click)="selectOperation(operation)">
+    </tr>
+    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+  </table>
+  <mat-paginator *ngIf="operations.length > 0" [length]="operationsTotalCount" [pageSizeOptions]="[10, 25, 100]" showFirstLastButtons
+    (page)="changePage($event)">
+  </mat-paginator>
+</ng-container>
 
-<!-- My Account menu -->
+<!-- Mine menu -->
+<mat-menu #moreMenu="matMenu">
+  <ng-template matMenuContent>
+
+    <a mat-menu-item [routerLink]="[ '/']">
+      <span>mine 1</span>
+    </a>
+
+    <a mat-menu-item [routerLink]="[ '/']">
+      <span>mine 2</span>
+    </a>
+
+  </ng-template>
+</mat-menu>
+
+<!-- Preference menu -->
 <mat-menu #prefMenu="matMenu" [overlapTrigger]="false">
 
   <a mat-menu-item [routerLink]="['/']">

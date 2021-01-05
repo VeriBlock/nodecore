@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 
-// import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 // import { MatExpansionModule } from '@angular/material/expansion';
@@ -32,7 +32,7 @@ const exportedComponents = [
   // MatListModule,
   MatMenuModule,
   MatPaginatorModule,
-  // MatProgressSpinnerModule,
+  MatProgressSpinnerModule,
   MatSelectModule,
   MatSidenavModule,
   MatSnackBarModule,

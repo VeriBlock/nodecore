@@ -1,9 +1,13 @@
-mat-toolbar-row {
-  flex: 1;
-  flex-direction: row;
-  justify-content: space-between;
-  align-self: center;
-  font-size: 14px;
+mat-toolbar {
+  margin-bottom: 5px;
+
+  mat-toolbar-row {
+    flex: 1;
+    flex-direction: row;
+    justify-content: space-between;
+    align-self: center;
+    font-size: 14px;
+  }
 }
 
 .floatingButton {
