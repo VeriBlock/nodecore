@@ -5,7 +5,7 @@
       <img src="/assets/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
       <span>Testnet</span>
 
-      <mat-card *ngFor="let altchain of configuredAltchains" class="altchains">
+      <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0">
         <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
           <img [src]="altchain?.logo || '/assets/circle-logo.png'" style="display:block;" width="28px" height="28" />
           <span>{{ altchain?.name }}</span>

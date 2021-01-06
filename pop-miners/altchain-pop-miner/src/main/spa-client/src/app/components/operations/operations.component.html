@@ -37,16 +37,16 @@
   </div>
 </h1>
 
-<progress-indicator [showSpinner]="isLoading"></progress-indicator>
+<vbk-progress-indicator [showSpinner]="isLoading"></vbk-progress-indicator>
 
 <ng-container *ngIf="!isLoading">
   <mat-card>
     <mat-card-content>
       <!-- Table -->
-      <operations-table [dataSource]="operationsDataSource" (pageChange)="pageChangeEmit($event)" [isLoading]="tableLoading"
+      <vbk-operations-table [dataSource]="operationsDataSource" (pageChange)="pageChangeEmit($event)" [isLoading]="tableLoading"
         [pageOffset]="pageOffset" [defaultPageSize]="pageLimit" [totalLines]="operationsTotalCount"
         [selectedOperationId]="selectedOperationId" [operationWorkflows]="operationWorkflows">
-      </operations-table>
+      </vbk-operations-table>
     </mat-card-content>
   </mat-card>
 </ng-container>

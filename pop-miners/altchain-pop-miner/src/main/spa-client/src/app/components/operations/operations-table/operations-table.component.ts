@@ -25,7 +25,7 @@ import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { LogsDialogComponent } from '../logs-dialog/logs-dialog.component';
 
 @Component({
-  selector: 'operations-table',
+  selector: 'vbk-operations-table',
   templateUrl: './operations-table.component.html',
   styleUrls: ['./operations-table.component.scss'],
   animations: [

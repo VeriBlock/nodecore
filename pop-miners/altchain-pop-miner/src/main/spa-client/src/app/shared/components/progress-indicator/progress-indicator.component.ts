@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'progress-indicator',
+  selector: 'vbk-progress-indicator',
   templateUrl: './progress-indicator.component.html',
   styleUrls: ['./progress-indicator.component.scss'],
 })

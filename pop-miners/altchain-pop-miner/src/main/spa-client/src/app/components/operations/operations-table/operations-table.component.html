@@ -50,7 +50,7 @@
             <div style="padding-bottom: 1em;">
 
               <ng-container *ngIf="!operationWorkflows[element.operationId]; else operationsBlock">
-                <progress-indicator [showSpinner]="true"></progress-indicator>
+                <vbk-progress-indicator [showSpinner]="true"></vbk-progress-indicator>
               </ng-container>
 
               <ng-template #operationsBlock>
@@ -110,7 +110,7 @@
       <!-- Expanding operation -->
       <tr mat-row *matRowDef="let row; columns: ['operationColumn']" class="operations-row"></tr>
     </table>
-    <progress-indicator [showSpinner]="isLoading"></progress-indicator>
+    <vbk-progress-indicator [showSpinner]="isLoading"></vbk-progress-indicator>
 
   </div>
 

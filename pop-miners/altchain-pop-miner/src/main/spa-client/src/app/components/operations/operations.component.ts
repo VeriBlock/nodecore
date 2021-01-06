@@ -12,7 +12,7 @@ import { ApiService } from '@core/service/api.service';
 import { Operation } from '@core/model/operation.model';
 
 @Component({
-  selector: 'operations',
+  selector: 'vbk-operations',
   templateUrl: './operations.component.html',
   styleUrls: ['./operations.component.scss'],
 })

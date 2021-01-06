@@ -9,7 +9,7 @@ import { MineRequest } from '@core/model/miner.model';
 import { ApiService } from '@core/service/api.service';
 
 @Component({
-  selector: 'mine-dialog',
+  selector: 'vbk-mine-dialog',
   templateUrl: './mine-dialog.component.html',
   styleUrls: [],
 })

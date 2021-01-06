@@ -5,7 +5,7 @@ import { Operation } from '@core/model/operation.model';
 import { ApiService } from '@core/service/api.service';
 
 @Component({
-  selector: 'logs-dialog',
+  selector: 'vbk-logs-dialog',
   templateUrl: './logs-dialog.component.html',
 })
 export class LogsDialogComponent {

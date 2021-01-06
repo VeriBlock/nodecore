@@ -7,7 +7,7 @@ import { ApiService } from '@core/service/api.service';
 import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 
 @Component({
-  selector: 'app-root',
+  selector: 'vbk-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
