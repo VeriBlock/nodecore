@@ -1,5 +1,6 @@
 package nodecore.cli.commands
 
+import nodecore.cli.contracts.EndpointTransportType
 import nodecore.cli.contracts.PeerEndpoint
 import org.veriblock.core.params.getDefaultNetworkParameters
 import org.veriblock.core.utilities.AddressUtility
@@ -13,7 +14,18 @@ object ShellCommandParameterMappers {
 
     val PEER: CommandParameterMapper = { suppliedParam ->
         try {
-            PeerEndpoint(suppliedParam)
+            val transportType: EndpointTransportType = when {
+                suppliedParam.toLowerCase().startsWith("http://") -> EndpointTransportType.HTTP
+                suppliedParam.toLowerCase().startsWith("https://") -> EndpointTransportType.HTTPS
+                else -> EndpointTransportType.HTTP
+            }
+            val parsedAddress = suppliedParam.replace("https://", "").replace("http://", "")
+            val parts = parsedAddress.split(":").toTypedArray()
+            PeerEndpoint(
+                address = parts[0],
+                port = parts[1].toShort(),
+                transportType = transportType
+            )
         } catch(ignored: Exception) {
             throw syntaxError(
                 command,
