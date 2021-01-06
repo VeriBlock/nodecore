@@ -4,116 +4,95 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.cli.serialization
 
-package nodecore.cli.serialization;
+import com.google.gson.annotations.SerializedName
+import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.core.utilities.Utility
+import java.util.ArrayList
 
-import com.google.gson.annotations.SerializedName;
-import nodecore.api.grpc.VeriBlockMessages;
-import nodecore.api.grpc.utilities.ByteStringAddressUtility;
-import nodecore.api.grpc.utilities.ByteStringUtility;
-import org.veriblock.core.utilities.Utility;
+class TransactionInfo(
+    transaction: VeriBlockMessages.Transaction
+) {
+    val size: Int
+    val txid: String
+    val data: String
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class TransactionInfo {
-    public TransactionInfo(final VeriBlockMessages.Transaction transaction) {
-        switch (transaction.getType()) {
-            case STANDARD:
-                type = "standard";
-                break;
-            case PROOF_OF_PROOF:
-                type = "proof_of_proof";
-                break;
-            case MULTISIG:
-                type = "multisig";
-                break;
-            case UNRECOGNIZED:
-                break;
-        }
-
-        if (transaction != VeriBlockMessages.Transaction.getDefaultInstance()) {
-            txid = ByteStringUtility.byteStringToHex(transaction.getTxId());
-            merklePath = transaction.getMerklePath();
-            size = transaction.getSize();
-            timestamp = transaction.getTimestamp();
-            sourceAmount = Utility.formatAtomicLongWithDecimal(transaction.getSourceAmount());
-            sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.getSourceAddress());
-            data = ByteStringUtility.byteStringToHex(transaction.getData());
-            fee = Utility.formatAtomicLongWithDecimal(transaction.getTransactionFee());
-            if (transaction.getType() == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
-                byte[] bitcoinBlockHeaderBytes = transaction.getBitcoinBlockHeaderOfProof() != null ?
-                    transaction.getBitcoinBlockHeaderOfProof().toByteArray() :
-                    new byte[]{};
-
-                if(bitcoinBlockHeaderBytes.length > 0 && bitcoinBlockHeaderBytes[0] == 10 && bitcoinBlockHeaderBytes[1] == 80) {
-                    //TODO: remove first two bytes if they are 0A50 (10,80)
-                    byte[] newBytes = new byte[bitcoinBlockHeaderBytes.length - 2];
-                    System.arraycopy(bitcoinBlockHeaderBytes, 2, newBytes, 0, newBytes.length);
-                    bitcoinBlockHeaderBytes = newBytes;
-                }
-                bitcoinBlockHeader = Utility.bytesToHex(bitcoinBlockHeaderBytes);
-                bitcoinTransaction = ByteStringUtility.byteStringToHex(transaction.getBitcoinTransaction());
-                endorsedBlockHeader = ByteStringUtility.byteStringToHex(transaction.getEndorsedBlockHeader());
-            } else {
-                bitcoinBlockHeader = "N/A";
-                bitcoinTransaction = "N/A";
-                endorsedBlockHeader = "N/A";
-                List<String> contextBlockHeaders = new ArrayList<String>();
-
-                contextBlockHeaders.add("N/A");
-                // contextBitcoinBlockHeaders = contextBlockHeaders;
-            }
-            for (final VeriBlockMessages.Output output : transaction.getOutputsList())
-                outputs.add(new OutputInfo(output));
-        } else {
-            size = 0;
-            txid = "N/A";
-            data = "N/A";
-            type = "N/A";
-            fee = "N/A";
-            timestamp = 0;
-            sourceAmount = "N/A";
-            merklePath = "N/A";
-            sourceAddress = "N/A";
-            bitcoinTransaction = "N/A";
-            bitcoinBlockHeader = "N/A";
-            endorsedBlockHeader = "N/A";
-        }
+    var type: String? = when (transaction.type) {
+        VeriBlockMessages.Transaction.Type.STANDARD -> "standard"
+        VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF -> "proof_of_proof"
+        VeriBlockMessages.Transaction.Type.MULTISIG ->  "multisig"
+        else -> null
     }
 
-    public int size;
-
-    public String txid;
-
-    public String data;
-
-    public String type;
-
-    public String fee;
-
-    public int timestamp;
+    val fee: String
+    val timestamp: Int
 
     @SerializedName("source_amount")
-    public String sourceAmount;
+    val sourceAmount: String
 
     @SerializedName("merkle_path")
-    public String merklePath;
+    val merklePath: String
 
     @SerializedName("source_address")
-    public String sourceAddress;
+    val sourceAddress: String
 
     @SerializedName("bitcoin_transaction")
-    public String bitcoinTransaction;
+    val bitcoinTransaction: String
 
     @SerializedName("bitcoin_block_header_of_proof")
-    public String bitcoinBlockHeader;
+    val bitcoinBlockHeader: String
 
     @SerializedName("endorsed_block_header")
-    public String endorsedBlockHeader;
+    val endorsedBlockHeader: String
 
-    // @SerializedName("context_bitcoin_block_headers")
-    // public List<String> contextBitcoinBlockHeaders;
+    var outputs: MutableList<OutputInfo> = ArrayList()
 
-    public List<OutputInfo> outputs = new ArrayList<>();
+    init {
+        if (transaction !== VeriBlockMessages.Transaction.getDefaultInstance()) {
+            txid = ByteStringUtility.byteStringToHex(transaction.txId)
+            merklePath = transaction.merklePath
+            size = transaction.size
+            timestamp = transaction.timestamp
+            sourceAmount = Utility.formatAtomicLongWithDecimal(transaction.sourceAmount)
+            sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.sourceAddress)
+            data = ByteStringUtility.byteStringToHex(transaction.data)
+            fee = Utility.formatAtomicLongWithDecimal(transaction.transactionFee)
+
+            if (transaction.type == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
+                var bitcoinBlockHeaderBytes = transaction.bitcoinBlockHeaderOfProof?.toByteArray() ?: byteArrayOf()
+                if (bitcoinBlockHeaderBytes.isNotEmpty() && bitcoinBlockHeaderBytes[0].toInt() == 10 && bitcoinBlockHeaderBytes[1].toInt() == 80) {
+                    //TODO: remove first two bytes if they are 0A50 (10,80)
+                    val newBytes = ByteArray(bitcoinBlockHeaderBytes.size - 2)
+                    System.arraycopy(bitcoinBlockHeaderBytes, 2, newBytes, 0, newBytes.size)
+                    bitcoinBlockHeaderBytes = newBytes
+                }
+                bitcoinBlockHeader = Utility.bytesToHex(bitcoinBlockHeaderBytes)
+                bitcoinTransaction = ByteStringUtility.byteStringToHex(transaction.bitcoinTransaction)
+                endorsedBlockHeader = ByteStringUtility.byteStringToHex(transaction.endorsedBlockHeader)
+            } else {
+                bitcoinBlockHeader = "N/A"
+                bitcoinTransaction = "N/A"
+                endorsedBlockHeader = "N/A"
+            }
+            transaction.outputsList.forEach { output ->
+                outputs.add(OutputInfo(output))
+            }
+        } else {
+            size = 0
+            txid = "N/A"
+            data = "N/A"
+            type = "N/A"
+            fee = "N/A"
+            timestamp = 0
+            sourceAmount = "N/A"
+            merklePath = "N/A"
+            sourceAddress = "N/A"
+            bitcoinTransaction = "N/A"
+            bitcoinBlockHeader = "N/A"
+            endorsedBlockHeader = "N/A"
+        }
+    }
 }
