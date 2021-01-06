@@ -9,7 +9,6 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.AddressHistory
 import org.veriblock.core.utilities.Utility
-import java.util.*
 
 class AddressHistoryInfo(
     history: AddressHistory

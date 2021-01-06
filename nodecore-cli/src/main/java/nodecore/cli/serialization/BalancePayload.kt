@@ -3,7 +3,6 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
 import org.veriblock.core.utilities.Utility
-import java.util.*
 
 class BalancePayload(
     reply: GetBalanceReply

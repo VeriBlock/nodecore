@@ -7,9 +7,7 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.BlackListInfo
 import nodecore.api.grpc.VeriBlockMessages.ListBannedReply
-import java.util.stream.Collectors
 
 class ListBannedPayload(
     reply: ListBannedReply

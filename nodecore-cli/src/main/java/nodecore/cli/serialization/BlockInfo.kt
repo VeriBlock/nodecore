@@ -12,7 +12,6 @@ import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Utility
-import java.util.*
 
 class BlockInfo(
     block: VeriBlockMessages.Block

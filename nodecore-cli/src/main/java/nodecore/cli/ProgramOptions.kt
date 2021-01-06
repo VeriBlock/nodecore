@@ -11,10 +11,7 @@ import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.ParseException
-import org.veriblock.core.params.NetworkParameters
-import org.veriblock.core.params.getDefaultNetworkParameters
-import java.util.ArrayList
-import java.util.Properties
+import java.util.*
 
 class ProgramOptions {
     var configPath: String? = null

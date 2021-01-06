@@ -6,32 +6,28 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli
 
-import nodecore.cli.services.AdminServiceClient
-import java.lang.Runnable
-import javax.net.ssl.SSLException
-import nodecore.cli.contracts.ProtocolEndpoint
-import java.lang.InterruptedException
-import org.veriblock.shell.CommandContext
-import java.lang.IllegalArgumentException
 import nodecore.cli.annotations.CommandServiceType
-import nodecore.cli.contracts.ProtocolEndpointType
-import org.veriblock.core.SharedConstants
 import nodecore.cli.contracts.AdminService
 import nodecore.cli.contracts.ConnectionFailedException
+import nodecore.cli.contracts.ProtocolEndpoint
+import nodecore.cli.contracts.ProtocolEndpointType
+import nodecore.cli.services.AdminServiceClient
 import org.jline.reader.LineReader
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.Context
+import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.defaultAlphaNetParameters
 import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.Command
+import org.veriblock.shell.CommandContext
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import org.veriblock.shell.core.Result
-import java.lang.Exception
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.net.ssl.SSLException
 
 private val logger = createLogger {}
 

@@ -1,7 +1,6 @@
 package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers

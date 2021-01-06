@@ -6,11 +6,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.AddressBalanceSchedule
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.veriblock.core.utilities.Utility
-import java.util.*
 
 class AddressBalanceSchedulePayload(
     message: AddressBalanceSchedule

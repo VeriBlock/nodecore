@@ -7,10 +7,9 @@
 package nodecore.cli
 
 object Constants {
-    val APPLICATION_NAME = Constants::class.java.getPackage().specificationTitle
-    @JvmField
-    val APPLICATION_VERSION = Constants::class.java.getPackage().specificationVersion
-    @JvmField
-    val FULL_APPLICATION_NAME_VERSION = APPLICATION_NAME + " v" + APPLICATION_VERSION
+    private val APPLICATION_NAME: String? = Constants::class.java.getPackage().specificationTitle
+    private val APPLICATION_VERSION: String? = Constants::class.java.getPackage().specificationVersion
+
+    val FULL_APPLICATION_NAME_VERSION = "$APPLICATION_NAME v$APPLICATION_VERSION"
     const val DEFAULT_PROPERTIES = "nodecore-cli-default.properties"
 }

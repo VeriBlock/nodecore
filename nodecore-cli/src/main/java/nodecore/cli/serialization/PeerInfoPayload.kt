@@ -7,10 +7,8 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.GetPeerInfoReply
 import nodecore.cli.contracts.PeerEndpoint
-import java.util.stream.Collectors
 
 class PeerInfoPayload(
     reply: GetPeerInfoReply

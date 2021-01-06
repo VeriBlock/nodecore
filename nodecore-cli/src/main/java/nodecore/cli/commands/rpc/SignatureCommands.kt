@@ -10,7 +10,6 @@ import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.SignMessagePayload
 import nodecore.cli.serialization.SignatureIndexPayload
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
