@@ -49,50 +49,56 @@
 
             <div style="padding-bottom: 1em;">
 
-              <table mat-table *ngIf="operationWorkflows[element.operationId]" [dataSource]="operationWorkflows[element.operationId].stages"
-                class="mat-elevation-z8">
+              <ng-container *ngIf="!operationWorkflows[element.operationId]; else operationsBlock">
+                <progress-indicator [showSpinner]="true"></progress-indicator>
+              </ng-container>
 
-                <ng-container matColumnDef="statusColumn">
-                  <th mat-header-cell *matHeaderCellDef> Status </th>
-                  <td mat-cell *matCellDef="let element">
+              <ng-template #operationsBlock>
 
-                    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="padding: 5px 0" [ngClass]="{
-                      'text-success': element?.status === 'DONE',
-                      'text-warning': element?.status === 'CURRENT',
-                      'text-danger': element?.status === 'FAILED'
-                    }">
+                <table mat-table *ngIf="operationWorkflows[element.operationId]"
+                  [dataSource]="operationWorkflows[element.operationId].stages" class="mat-elevation-z8">
 
-                      <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
-                        <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="25"></mat-progress-spinner>
-                      </ng-container>
+                  <ng-container matColumnDef="statusColumn">
+                    <th mat-header-cell *matHeaderCellDef> Status </th>
+                    <td mat-cell *matCellDef="let element">
 
-                      <ng-template #iconBlock>
-                        <mat-icon>{{ getIcon(element?.status)}}</mat-icon>
-                      </ng-template>
+                      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="padding: 5px 0" [ngClass]="{
+                        'text-success': element?.status === 'DONE',
+                        'text-warning': element?.status === 'CURRENT',
+                        'text-danger': element?.status === 'FAILED'
+                      }">
 
-                      <span>{{ element?.status }}</span>
-                    </div>
-                  </td>
-                </ng-container>
+                        <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
+                          <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="25"></mat-progress-spinner>
+                        </ng-container>
 
-                <ng-container matColumnDef="taskColumn">
-                  <th mat-header-cell *matHeaderCellDef> Task </th>
-                  <td mat-cell *matCellDef="let element"> {{element.taskName}} </td>
-                </ng-container>
+                        <ng-template #iconBlock>
+                          <mat-icon>{{ getIcon(element?.status)}}</mat-icon>
+                        </ng-template>
 
-                <ng-container matColumnDef="detailsColumn">
-                  <th mat-header-cell *matHeaderCellDef> Description </th>
-                  <td mat-cell *matCellDef="let element"> {{element.extraInformation}} </td>
-                </ng-container>
+                        <span>{{ element?.status }}</span>
+                      </div>
+                    </td>
+                  </ng-container>
 
-                <tr mat-header-row *matHeaderRowDef="['taskColumn', 'detailsColumn', 'statusColumn']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
-              </table>
+                  <ng-container matColumnDef="taskColumn">
+                    <th mat-header-cell *matHeaderCellDef> Task </th>
+                    <td mat-cell *matCellDef="let element"> {{element.taskName}} </td>
+                  </ng-container>
 
-              <button mat-button type="button" (click)="openLogsDialog('info')">Display Logs</button>
-              <button mat-button type="button" (click)="openLogsDialog('debug')">Display Debug Logs</button>
+                  <ng-container matColumnDef="detailsColumn">
+                    <th mat-header-cell *matHeaderCellDef> Description </th>
+                    <td mat-cell *matCellDef="let element"> {{element.extraInformation}} </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="['taskColumn', 'detailsColumn', 'statusColumn']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
+                </table>
+
+                <button mat-button type="button" (click)="openLogsDialog('info')">Display Logs</button>
+                <button mat-button type="button" (click)="openLogsDialog('debug')">Display Debug Logs</button>
+              </ng-template>
             </div>
-
           </div>
         </td>
       </ng-container>

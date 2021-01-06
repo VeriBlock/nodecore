@@ -29,7 +29,7 @@ export class OperationsComponent implements OnInit {
   public isLoading = true;
   public tableLoading = true;
 
-  configuredAltchains: ConfiguredAltchain[] = [];
+  // configuredAltchains: ConfiguredAltchain[] = [];
 
   vbkAddress: string;
   vbkBalance: string;
@@ -72,12 +72,12 @@ export class OperationsComponent implements OnInit {
       }
     });
 
-    // Get the configured altchains
-    this.apiService
-      .getConfiguredAltchains()
-      .subscribe((configuredAltchains) => {
-        this.configuredAltchains = configuredAltchains.altchains;
-      });
+    // // Get the configured altchains
+    // this.apiService
+    //   .getConfiguredAltchains()
+    //   .subscribe((configuredAltchains) => {
+    //     this.configuredAltchains = configuredAltchains.altchains;
+    //   });
 
     // Check the miner data API every 61 seconds
     interval(61_000)
@@ -132,11 +132,11 @@ export class OperationsComponent implements OnInit {
       });
   }
 
-  openMineDialog() {
-    const dialogConfig = new MatDialogConfig();
-    dialogConfig.data = this.configuredAltchains;
-    this.dialog.open(MineDialogComponent, dialogConfig);
-  }
+  // openMineDialog() {
+  //   const dialogConfig = new MatDialogConfig();
+  //   dialogConfig.data = this.configuredAltchains;
+  //   this.dialog.open(MineDialogComponent, dialogConfig);
+  // }
 
   changeStatusFilter(event: MatSelectChange) {
     if (!event.value) {

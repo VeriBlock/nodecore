@@ -20,26 +20,16 @@ table.mat-table {
   tr.operations-row {
     height: 0;
 
-    table.mat-table {
-      margin-bottom: 10px;
-      padding-left: 5px;
-      padding-right: 5px;
-      min-width: 450px;
-      overflow-x: scroll;
+    tr.mat-header-row,
+    tr.mat-row {
+      th.mat-header-cell,
+      td.mat-cell {
+        &.mat-column-statusColumn {
+          min-width: 120px;
+        }
 
-      tr.mat-header-row,
-      tr.mat-row {
-        th.mat-header-cell,
-        td.mat-cell {
-          text-align: left;
-
-          &.mat-column-statusColumn {
-            min-width: 120px;
-          }
-
-          &.mat-column-taskColumn {
-            min-width: 150px;
-          }
+        &.mat-column-taskColumn {
+          min-width: 150px;
         }
       }
     }
