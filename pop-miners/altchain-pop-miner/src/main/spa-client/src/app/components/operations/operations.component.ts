@@ -56,11 +56,11 @@ export class OperationsComponent implements OnInit {
       }
 
       if (params.pageLimit) {
-        this.pageLimit = params.pageLimit;
+        this.pageLimit = parseInt(params.pageLimit, 10);
       }
 
       if (params.pageOffset) {
-        this.pageOffset = params.pageOffset;
+        this.pageOffset = parseInt(params.pageOffset, 10);
       }
     });
 

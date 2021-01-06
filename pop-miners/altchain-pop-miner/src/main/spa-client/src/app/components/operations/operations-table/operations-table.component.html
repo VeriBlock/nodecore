@@ -9,8 +9,8 @@
 
 <ng-template #operationsTableBlock>
 
-  <mat-paginator [length]="totalLines" [pageSize]="defaultPageSize" [pageIndex]="pageOffset" [pageSizeOptions]="pageSizeOptions"
-    (page)="pageChangeEvent($event)" [disabled]="isLoading"></mat-paginator>
+  <mat-paginator [length]="totalLines" [pageSize]="defaultPageSize" [pageIndex]="pageOffset/defaultPageSize"
+    [pageSizeOptions]="pageSizeOptions" (page)="pageChangeEvent($event)" [disabled]="isLoading"></mat-paginator>
 
   <div [class.overflow-container]="true">
 
@@ -114,7 +114,7 @@
 
   </div>
 
-  <mat-paginator *ngIf="totalLines > defaultPageSize" [length]="totalLines" [pageSize]="defaultPageSize" [pageIndex]="pageOffset"
-    [pageSizeOptions]="pageSizeOptions" (page)="pageChangeEvent($event)" [disabled]="isLoading">
+  <mat-paginator *ngIf="totalLines > defaultPageSize" [length]="totalLines" [pageSize]="defaultPageSize"
+    [pageIndex]="pageOffset/defaultPageSize" [pageSizeOptions]="pageSizeOptions" (page)="pageChangeEvent($event)" [disabled]="isLoading">
   </mat-paginator>
 </ng-template>
