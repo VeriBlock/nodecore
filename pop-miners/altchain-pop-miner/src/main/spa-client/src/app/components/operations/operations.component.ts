@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSelectChange } from '@angular/material/select';
@@ -8,11 +7,8 @@ import { PageEvent } from '@angular/material/paginator';
 import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
-import { MineDialogComponent } from './mine-dialog/mine-dialog.component';
-
 import { ApiService } from '@core/service/api.service';
 
-import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 import { Operation } from '@core/model/operation.model';
 
 @Component({
@@ -27,12 +23,7 @@ export class OperationsComponent implements OnInit {
 
   public filters: string[] = ['all', 'active', 'completed', 'failed'];
   public isLoading = true;
-  public tableLoading = true;
-
-  // configuredAltchains: ConfiguredAltchain[] = [];
-
-  vbkAddress: string;
-  vbkBalance: string;
+  public tableLoading = false;
 
   public operationsTotalCount: number = 0;
   public selectedOperationId: string;
@@ -48,7 +39,6 @@ export class OperationsComponent implements OnInit {
     private formBuilder: FormBuilder,
     private apiService: ApiService,
     private route: ActivatedRoute,
-    private dialog: MatDialog,
     private router: Router
   ) {}
 
@@ -64,32 +54,15 @@ export class OperationsComponent implements OnInit {
       if (params.statusFilter) {
         this.form.controls['filter'].patchValue(params.statusFilter);
       }
+
       if (params.pageLimit) {
         this.pageLimit = params.pageLimit;
       }
+
       if (params.pageOffset) {
         this.pageOffset = params.pageOffset;
       }
     });
-
-    // // Get the configured altchains
-    // this.apiService
-    //   .getConfiguredAltchains()
-    //   .subscribe((configuredAltchains) => {
-    //     this.configuredAltchains = configuredAltchains.altchains;
-    //   });
-
-    // Check the miner data API every 61 seconds
-    interval(61_000)
-      .pipe(
-        startWith(0),
-        switchMap(() => this.apiService.getMinerInfo())
-      )
-      .subscribe((response) => {
-        this.vbkAddress = response.vbkAddress;
-        this.vbkBalance = response.vbkBalance / 100_000_000 + ' VBK';
-        this.isLoading = false;
-      });
 
     // Check the operation list API every 2 seconds
     interval(2_000)
@@ -106,7 +79,7 @@ export class OperationsComponent implements OnInit {
       .subscribe((response) => {
         this.operationsDataSource.data = response.operations.slice();
         this.operationsTotalCount = response.totalCount;
-        this.tableLoading = false;
+        this.isLoading = false;
       });
 
     // Check the operation details API every 5 seconds
@@ -132,13 +105,7 @@ export class OperationsComponent implements OnInit {
       });
   }
 
-  // openMineDialog() {
-  //   const dialogConfig = new MatDialogConfig();
-  //   dialogConfig.data = this.configuredAltchains;
-  //   this.dialog.open(MineDialogComponent, dialogConfig);
-  // }
-
-  changeStatusFilter(event: MatSelectChange) {
+  public changeStatusFilter(event: MatSelectChange) {
     if (!event.value) {
       return;
     }

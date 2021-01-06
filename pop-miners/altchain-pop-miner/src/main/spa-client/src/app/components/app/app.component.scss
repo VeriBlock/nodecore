@@ -5,15 +5,33 @@ mat-drawer-container {
   min-height: 100vh;
   height: 100%;
   padding-bottom: 25px;
+
   mat-drawer {
+    flex: 1;
     min-width: 190px;
     height: 100%;
     padding: 20px;
     text-align: center;
+
+    mat-card {
+      width: 95%;
+      padding: 1em 0 1em 0.5em;
+    }
+
+    .mat-divider {
+      border-top-color: white;
+    }
   }
+
   mat-drawer-content {
     flex: 1;
     height: 100%;
     padding: 25px 40px;
+  }
+}
+
+@media (min-width: 1080px) {
+  mat-drawer-container {
+    position: fixed;
   }
 }

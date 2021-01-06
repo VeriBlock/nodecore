@@ -105,7 +105,7 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns" class="element-row"
-        [class.expanded-row]="selectedOperationId === row?.operationId" (click)="selectOperation(row)" style="cursor: pointer;"></tr>
+        [class.expanded-row]="selectedOperationId === row?.operationId" (click)="selectOperation(row)" class="clickable"></tr>
 
       <!-- Expanding operation -->
       <tr mat-row *matRowDef="let row; columns: ['operationColumn']" class="operations-row"></tr>

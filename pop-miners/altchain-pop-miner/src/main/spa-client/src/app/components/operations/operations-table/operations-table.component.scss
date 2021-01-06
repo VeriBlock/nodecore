@@ -43,8 +43,9 @@ table.mat-table {
     border-bottom-width: 0;
   }
 
-  .clickable .toggle:hover {
+  .clickable:hover {
     cursor: pointer;
+    background-color: rgba(90, 90, 90, 0.1);
   }
 
   .hidden-row {

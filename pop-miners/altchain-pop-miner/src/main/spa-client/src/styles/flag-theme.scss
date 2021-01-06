@@ -12,7 +12,7 @@
 
     &.flag-accent {
       background: mat-color($accent);
-      color: white;
+      color: mat-contrast($accent, 400);
     }
   }
 }

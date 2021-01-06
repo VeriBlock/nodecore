@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 // import { MatExpansionModule } from '@angular/material/expansion';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -17,7 +18,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-// import { MatListModule } from '@angular/material/list';
+import { MatListModule } from '@angular/material/list';
 
 import { CdkScrollableModule } from '@angular/cdk/scrolling';
 
@@ -27,11 +28,12 @@ const exportedComponents = [
   MatButtonToggleModule,
   MatCardModule,
   MatDialogModule,
+  MatDividerModule,
   // MatExpansionModule,
   MatFormFieldModule,
   MatIconModule,
   // MatInputModule,
-  // MatListModule,
+  MatListModule,
   MatMenuModule,
   MatPaginatorModule,
   MatProgressSpinnerModule,

@@ -1,6 +1,47 @@
 <mat-drawer-container autosize>
   <mat-drawer #drawer mode="side" opened disableClose color="accent">
-    <img src="/assets/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
+
+    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px" style="height: 100%; padding-bottom: 1em;">
+      <img src="/assets/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
+      <span>Testnet</span>
+
+      <mat-card *ngFor="let altchain of configuredAltchains" class="altchains">
+        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+          <img [src]="altchain?.logo || '/assets/circle-logo.png'" style="display:block;" width="28px" height="28" />
+          <span>{{ altchain?.name }}</span>
+        </div>
+      </mat-card>
+
+      <div fxFlex></div>
+
+      <mat-divider></mat-divider>
+
+      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
+        <span>Balance</span>
+        <span>{{ vbkBalance || '0.00' }} VBK</span>
+        <span>Address: {{vbkAddress}}</span>
+      </div>
+
+      <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"
+        style="width: 100%; padding-left: 1em; padding-right: 1em;">
+        <button mat-mini-fab type="button" color="primary" matTooltip="Send">
+          <mat-icon>send</mat-icon>
+        </button>
+        <button mat-mini-fab type="button" color="warn" matTooltip="Receive">
+          <mat-icon>cloud_download</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="width: 95%;">
+        <button mat-button [matMenuTriggerFor]="prefMenu" aria-label="Settings" matTooltip="Settings">
+          <mat-icon aria-hidden="true">settings</mat-icon>
+          <span>Settings</span>
+        </button>
+      </div>
+
+    </div>
   </mat-drawer>
 
   <mat-drawer-content>
@@ -8,3 +49,15 @@
   </mat-drawer-content>
 
 </mat-drawer-container>
+
+<!-- Preference menu -->
+<mat-menu #prefMenu="matMenu" [overlapTrigger]="false">
+
+  <a mat-menu-item [routerLink]="['/']">
+    <span>settings 1</span>
+  </a>
+
+  <a mat-menu-item [routerLink]="['/']">
+    <span>settings 2</span>
+  </a>
+</mat-menu>

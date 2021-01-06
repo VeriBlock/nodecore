@@ -1,0 +1,19 @@
+@import "~@angular/material/theming";
+
+@mixin card-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+  $warn: map-get($theme, warn);
+  $foreground: map-get($theme, foreground);
+
+  mat-card.altchains {
+    background-color: mat-color($accent);
+    color: mat-contrast($accent, 400);
+
+    &:hover {
+      background-color: mat-color($accent, 200);
+      color: mat-contrast($accent, 200);
+      cursor: pointer;
+    }
+  }
+}

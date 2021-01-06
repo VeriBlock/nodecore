@@ -1,10 +1,12 @@
 @import '~@angular/material/theming';
-@import 'src/styles/drawer-theme.scss';
 @import 'src/styles/alert-theme.scss';
+@import 'src/styles/card-theme.scss';
+@import 'src/styles/drawer-theme.scss';
 @import 'src/styles/flag-theme.scss';
 
 @mixin component-themes($theme) {
-  @include drawer-theme($theme);
+  @include card-theme($theme);
   @include alert-theme($theme);
+  @include drawer-theme($theme);
   @include flag-theme($theme);
 }

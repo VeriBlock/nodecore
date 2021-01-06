@@ -5,12 +5,25 @@ body {
     font-size: 14px;
   }
 
-  mat-card .mat-table {
-    width: 100%;
+  mat-card {
+    .mat-table {
+      width: 100%;
+    }
   }
 
   .overflow-container {
     display: block;
     overflow: auto;
+  }
+
+  a,
+  button {
+    &:not(.mat-mini-fab) .mat-button-wrapper mat-icon {
+      margin-right: 0.5em;
+    }
+  }
+
+  .mat-divider {
+    width: 100%;
   }
 }
