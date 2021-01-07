@@ -11,7 +11,7 @@ import nodecore.api.grpc.VeriBlockMessages.TroubleshootPoPTransactionsReply
 class TroubleshootPoPTransactionsPayload(
     reply: TroubleshootPoPTransactionsReply
 ) {
-    val PoPProblemReports = Array(reply.popProblemReportsCount) {
-        PoPTransactionProblemReport(reply.getPopProblemReports(it))
+    val PoPProblemReports = Array(reply.popProblemReportsCount) { index ->
+        PoPTransactionProblemReport(reply.getPopProblemReports(index))
     }
 }

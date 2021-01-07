@@ -11,7 +11,7 @@ import nodecore.api.grpc.VeriBlockMessages.MultisigBundle
 class MultisigBundleInfo(
     multisigBundle: MultisigBundle
 ) {
-    val multisigSlots = Array(multisigBundle.slotsCount) {
-        MultisigSlotInfo(multisigBundle.getSlots(it))
+    val multisigSlots = Array(multisigBundle.slotsCount) { index ->
+        MultisigSlotInfo(multisigBundle.getSlots(index))
     }
 }

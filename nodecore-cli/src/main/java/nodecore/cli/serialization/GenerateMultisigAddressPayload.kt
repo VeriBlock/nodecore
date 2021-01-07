@@ -12,8 +12,8 @@ import nodecore.api.grpc.utilities.ByteStringAddressUtility
 class GenerateMultisigAddressPayload(
     reply: GenerateMultisigAddressReply
 ) {
-    val sourceAddresses = Array(reply.sourceAddressesCount) {
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getSourceAddresses(it))
+    val sourceAddresses = Array(reply.sourceAddressesCount) { index ->
+        ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getSourceAddresses(index))
     }
 
     val signatureThresholdM = reply.signatureThresholdM

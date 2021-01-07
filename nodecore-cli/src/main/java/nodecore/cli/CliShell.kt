@@ -6,6 +6,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nodecore.cli.annotations.CommandServiceType
 import nodecore.cli.contracts.AdminService
 import nodecore.cli.contracts.ConnectionFailedException
@@ -37,10 +40,9 @@ class CliShell(
 ) : Shell(
     commandFactory, null
 ) {
-    private val endpointContainer: ProtocolEndpointContainer = ProtocolEndpointContainer()
+    private var protocolEndpoint: ProtocolEndpoint? = null
     private val connected = AtomicBoolean(false)
     private var adminServiceClient: AdminServiceClient? = null
-    private var disconnectCallBack: Runnable? = null
 
     public override fun onStop() {
         disconnect()
@@ -64,7 +66,7 @@ class CliShell(
                 adminServiceClient = AdminServiceClient(endpoint.address, endpoint.port.toInt(), endpoint.transportType, configuration, endpoint.password)
                 try {
                     adminServiceClient!!.connect()
-                    endpointContainer.protocolEndpoint = endpoint
+                    protocolEndpoint = endpoint
                     refreshCompleter()
                     connected.set(true)
                     true
@@ -99,19 +101,15 @@ class CliShell(
                 adminServiceClient!!.shutdown()
                 adminServiceClient = null
                 refreshCompleter()
-                if (disconnectCallBack != null) {
-                    disconnectCallBack!!.run()
-                    disconnectCallBack = null
-                }
             }
-            endpointContainer.protocolEndpoint = null
+            protocolEndpoint = null
         } catch (e: Exception) {
             logger.error("Unhandled exception", e)
         }
     }
 
     override fun getPrompt(): String {
-        return if (endpointContainer.protocolEndpoint == null) {
+        return if (protocolEndpoint == null) {
             AttributedStringBuilder()
                 .style(AttributedStyle.BOLD)
                 .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW + 8))
@@ -127,7 +125,7 @@ class CliShell(
                 .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN + 8))
                 .append("(VBK_CLI ")
                 .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN + 8))
-                .append(endpointContainer.protocolEndpoint.toString())
+                .append(protocolEndpoint.toString())
                 .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN + 8))
                 .append(") > ")
                 .toAnsi()
@@ -137,10 +135,6 @@ class CliShell(
     override fun handleResult(context: CommandContext, result: Result): Result {
         var failed = result.isFailed
         try {
-            val disconnectCallBack = context.getExtraData<Runnable>("disconnectCallBack")
-            if (disconnectCallBack != null) {
-                this.disconnectCallBack = disconnectCallBack
-            }
             val disconnect = context.getExtraData<Boolean>("disconnect")
             if (disconnect != null && disconnect) {
                 disconnect()
@@ -234,7 +228,7 @@ class CliShell(
 
     override fun Command.shouldAutoComplete(): Boolean {
         val extraData = this.extraData
-        return  endpointContainer?.protocolEndpoint != null || extraData != null && extraData == CommandServiceType.SHELL.name
+        return  protocolEndpoint != null || extraData != null && extraData == CommandServiceType.SHELL.name
     }
 
     fun initialize(programOptions: ProgramOptions) {
@@ -268,52 +262,46 @@ class CliShell(
             } catch (e: Exception) { }
         }
 
-        val t = Thread(object : Runnable {
-            override fun run() {
-                while (!connected.get()) {
-                    for (i in 10500..10502) {
-                        if (bound(i)) {
-                            val msg = AttributedStringBuilder()
-                                    .style(AttributedStyle.BOLD.foreground(AttributedStyle.GREEN))
-                                    .append("""
-                                        A local NodeCore ${if (i == 10500) "MainNet" else if (i == 10501) "TestNet" else "AlphaNet"} Instance is present on 127.0.0.1:""".trimIndent())
-                                    .append(Integer.toString(i))
-                                    .append("!\n ")
-                                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
-                                    .append("To connect to NodeCore " + (if (i == 10500) "MainNet" else if (i == 10501) "TestNet" else "AlphaNet") + ", type: ")
-                                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
-                                    .append("connect 127.0.0.1:")
-                                    .append(Integer.toString(i))
-                                    .append("\n\n")
-                                    .toAnsi()
-                            printInfo(msg)
-                            reader.callWidget(LineReader.REDRAW_LINE)
-                            reader.callWidget(LineReader.REDISPLAY)
-                            return
-                        }
+        GlobalScope.launch {
+            while (!connected.get()) {
+                for (port in 10500..10502) {
+                    val network = when (port) {
+                        10500 -> "MainNet"
+                        10501 -> "TestNet"
+                        else -> "AlphaNet"
                     }
-                    try {
-                        Thread.sleep(1000)
-                    } catch (ignore: Exception) {
+                    if (bound(port)) {
+                        val msg = AttributedStringBuilder()
+                            .style(AttributedStyle.BOLD.foreground(AttributedStyle.GREEN))
+                            .append("\n\nA local NodeCore $network Instance is present on 127.0.0.1:$port!\n ")
+                            .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
+                            .append("To connect to NodeCore $network, type: ")
+                            .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                            .append("connect 127.0.0.1:$port\n\n")
+                            .toAnsi()
+                        printInfo(msg)
+                        reader.callWidget(LineReader.REDRAW_LINE)
+                        reader.callWidget(LineReader.REDISPLAY)
+                        return@launch
                     }
                 }
+                delay(1000)
             }
+        }
+    }
 
-            private fun bound(port: Int): Boolean {
-                return try {
-                    connect(
-                        ProtocolEndpoint(
-                            address = "127.0.0.1",
-                            port = port.toShort()
-                        ),
-                        false
-                    )
-                } catch (ignored: Exception) {
-                    false
-                }
-            }
-        })
-        t.start()
+    private fun bound(port: Int): Boolean {
+        return try {
+            connect(
+                ProtocolEndpoint(
+                    address = "127.0.0.1",
+                    port = port.toShort()
+                ),
+                false
+            )
+        } catch (ignored: Exception) {
+            false
+        }
     }
 
     private fun printIntroStandard() {
@@ -471,9 +459,7 @@ class CliShell(
     }
 
     val protocolType: ProtocolEndpointType
-        get() = endpointContainer.protocolEndpoint?.let { protocolEndpoint ->
-            protocolEndpoint.type
-        } ?: ProtocolEndpointType.NONE
+        get() = protocolEndpoint?.type ?: ProtocolEndpointType.NONE
 
     val adminService: AdminService
         get() = adminServiceClient!!

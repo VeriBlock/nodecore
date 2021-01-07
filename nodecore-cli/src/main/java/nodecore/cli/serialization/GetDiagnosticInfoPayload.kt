@@ -56,15 +56,15 @@ class GetDiagnosticInfoPayload(reply: GetDiagnosticInfoReply) {
     val nodecorePropertiesSource = reply.nodecorePropertiesSource
 
     @SerializedName("nodecore_properties_values")
-    val nodecorePropertiesValues = Array(reply.nodecorePropertiesValuesCount) {
-        reply.getNodecorePropertiesValues(it)
+    val nodecorePropertiesValues = Array(reply.nodecorePropertiesValuesCount) { index ->
+        reply.getNodecorePropertiesValues(index)
     }
 
     @SerializedName("nodecore_start_commandline")
     val nodecoreStartCommandline = reply.nodecoreStartCommandline
 
     @SerializedName("environment_variables")
-    val environmentVariables = Array(reply.environmentVariablesCount) {
-        reply.getEnvironmentVariables(it)
+    val environmentVariables = Array(reply.environmentVariablesCount) { index ->
+        reply.getEnvironmentVariables(index)
     }
 }
