@@ -70,6 +70,7 @@ class ApiServer(
             install(DefaultHeaders)
             install(CallLogging)
             install(CORS) {
+                method(HttpMethod.Put)
                 anyHost()
                 allowNonSimpleContentTypes = true
             }
