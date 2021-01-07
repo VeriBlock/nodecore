@@ -107,3 +107,8 @@ data class WithdrawRequest(
 data class WithdrawResponse(
     val ids: List<String>
 )
+
+@Response("The configured network")
+data class NetworkInfoResponse(
+    val name: String
+)
