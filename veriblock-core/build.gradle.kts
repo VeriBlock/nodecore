@@ -29,9 +29,6 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
-    // Persistence (TODO: remove me)
-    api("org.xerial:sqlite-jdbc:$sqliteVersion")
-
     // Logging
     api("io.github.microutils:kotlin-logging:1.6.26")
     implementation("org.apache.logging.log4j:log4j-api:2.13.3")

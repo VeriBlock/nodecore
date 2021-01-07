@@ -14,11 +14,16 @@ import org.apache.commons.cli.ParseException
 import java.util.*
 
 class ProgramOptions {
-    var configPath: String? = null
+    lateinit var configPath: String
         private set
-    private var _properties = Properties()
+
     var connect: String? = null
-        private set
+
+    private var properties = Properties()
+
+    init {
+        resetToDefaults()
+    }
 
     fun parse(args: Array<String>): Boolean {
         val configFileOption = Option.builder("c")
@@ -49,7 +54,7 @@ class ProgramOptions {
         val parser: CommandLineParser = DefaultParser()
         return try {
             val commandLine = parser.parse(options, args)
-            _properties = commandLine.getOptionProperties("D")
+            properties = commandLine.getOptionProperties("D")
             if (commandLine.hasOption("c")) {
                 configPath = commandLine.getOptionValue('c')
             }
@@ -64,19 +69,15 @@ class ProgramOptions {
     }
 
     fun resetToDefaults() {
-        _properties.clear()
+        properties.clear()
         configPath = "nodecore-cli.properties"
     }
 
     fun removeProperty(name: String) {
-        _properties.remove(name)
+        properties.remove(name)
     }
 
     fun getProperty(name: String): String? {
-        return _properties.getProperty(name)
-    }
-
-    init {
-        resetToDefaults()
+        return properties.getProperty(name)
     }
 }

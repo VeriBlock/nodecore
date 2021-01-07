@@ -4,120 +4,101 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.cli
 
-package nodecore.cli;
+import org.veriblock.core.utilities.createLogger
+import java.io.*
+import java.lang.Exception
+import java.util.*
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+private val logger = createLogger {}
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Properties;
+class Configuration(
+    private val options: ProgramOptions
+) {
+    private var properties = Properties()
+    private val defaultProperties = Properties()
 
-public class Configuration {
-    private static final Logger _logger = LoggerFactory.getLogger(Configuration.class);
-    private Properties _properties = new Properties();
-    private final Properties _defaultProperties = new Properties();
-    private ProgramOptions _options;
-
-    private String getPropertyOverrideOrDefault(final String name) {
-        String value = _options.getProperty(name);
-        if (value != null && value.length() > 0)
-            return value;
-        value = _properties.getProperty(name);
-        if (value == null)
-            return "";
-        return value;
+    init {
+        loadDefaults()
+        properties = Properties(defaultProperties)
     }
 
-    public Configuration(ProgramOptions options) {
-        _options = options;
-        loadDefaults();
-        _properties = new Properties(_defaultProperties);
-    }
-
-    public void clearProperties() {
-        _properties.clear();
-    }
-
-    public boolean isDebugEnabled() {
-        String flag = getPropertyOverrideOrDefault("debug.enabled");
-        return flag.equalsIgnoreCase("true");
-    }
-
-    public void load() {
-        try
-        {
-            try (InputStream stream = new FileInputStream(_options.getConfigPath())) {
-                load(stream);
-            }
-        } catch (FileNotFoundException e) {
-            _logger.info("Unable to load custom properties file: File '{}' does not exist. Using default properties.", _options.getConfigPath());
-        } catch (IOException e) {
-            _logger.info("Unable to load custom properties file. Using default properties.", e);
+    private fun getPropertyOverrideOrDefault(name: String): String? {
+        val value = options.getProperty(name)
+        if (!value.isNullOrEmpty()) {
+            return value
         }
+        return properties.getProperty(name)
     }
 
-    public void load(InputStream inputStream) {
+    val isDebugEnabled: Boolean
+        get() = getPropertyOverrideOrDefault("debug.enabled")?.toBoolean() ?: false
+
+    fun load() {
         try {
-            _properties.load(inputStream);
-        } catch (Exception e) {
-            _logger.error("Unhandled exception in DefaultConfiguration.load", e);
-        }
-    }
-
-    private void loadDefaults() {
-        try
-        {
-
-            try (InputStream stream = Configuration.class
-                    .getClassLoader()
-                    .getResourceAsStream(Constants.DEFAULT_PROPERTIES)) {
-                _defaultProperties.load(stream);
+            FileInputStream(options.configPath).use { stream -> load(stream) }
+        } catch (e: FileNotFoundException) {
+            logger.info {
+                "Unable to load custom properties file: File '${options.configPath}' does not exist. Using default properties."
             }
-        } catch (IOException e) {
-            _logger.error("Unable to load default properties", e);
+        } catch (e: IOException) {
+            logger.info("Unable to load custom properties file. Using default properties.", e)
         }
     }
 
-    public void save() {
+    fun load(inputStream: InputStream?) {
         try {
-            File configFile = new File(_options.getConfigPath());
+            properties.load(inputStream)
+        } catch (e: Exception) {
+            logger.error("Unhandled exception in DefaultConfiguration.load", e)
+        }
+    }
+
+    private fun loadDefaults() {
+        try {
+            Configuration::class.java
+                .classLoader
+                .getResourceAsStream(Constants.DEFAULT_PROPERTIES).use { stream -> defaultProperties.load(stream) }
+        } catch (e: IOException) {
+            logger.error("Unable to load default properties", e)
+        }
+    }
+
+    fun save() {
+        try {
+            val configFile = File(options.configPath)
             if (!configFile.exists()) {
-                configFile.createNewFile();
+                configFile.createNewFile()
             }
-            OutputStream stream = new FileOutputStream(configFile);
-            save(stream);
-            stream.close();
-        } catch (IOException e) {
-            _logger.warn("Unable to save custom properties file", e);
+            val stream: OutputStream = FileOutputStream(configFile)
+            save(stream)
+            stream.close()
+        } catch (e: IOException) {
+            logger.warn("Unable to save custom properties file", e)
         }
     }
 
-    public void save(OutputStream outputStream) {
+    fun save(outputStream: OutputStream) {
         try {
-            _properties.store(outputStream, "NodeCore Configuration");
-            outputStream.flush();
-        } catch (Exception e) {
-            _logger.error("Unhandled exception in DefaultConfiguration.save", e);
+            properties.store(outputStream, "NodeCore Configuration")
+            outputStream.flush()
+        } catch (e: Exception) {
+            logger.error("Unhandled exception in DefaultConfiguration.save", e)
         }
     }
 
-    public String getPrivateKeyPath() {
-        return getPropertyOverrideOrDefault(ConfigurationKeys.SECURITY_PRIVATE_KEY_PATH);
+    fun clearProperties() {
+        properties.clear()
     }
 
-    public String getCertificateChainPath() {
-        return getPropertyOverrideOrDefault(ConfigurationKeys.SECURITY_CERT_CHAIN_PATH);
-    }
+    val privateKeyPath: String
+        get() = getPropertyOverrideOrDefault(ConfigurationKeys.SECURITY_PRIVATE_KEY_PATH) ?: ""
+    val certificateChainPath: String
+        get() = getPropertyOverrideOrDefault(ConfigurationKeys.SECURITY_CERT_CHAIN_PATH) ?: ""
 
-    private static class ConfigurationKeys {
-        private static final String SECURITY_CERT_CHAIN_PATH = "rpc.security.cert.chain.path";
-        private static final String SECURITY_PRIVATE_KEY_PATH = "rpc.security.private.key.path";
+    private object ConfigurationKeys {
+        const val SECURITY_CERT_CHAIN_PATH = "rpc.security.cert.chain.path"
+        const val SECURITY_PRIVATE_KEY_PATH = "rpc.security.private.key.path"
     }
 }
