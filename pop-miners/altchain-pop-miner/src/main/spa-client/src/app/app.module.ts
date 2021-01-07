@@ -18,15 +18,17 @@ import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dia
 import { OperationsComponent } from '@components/operations/operations.component';
 import { AppComponent } from '@components/app/app.component';
 import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
+import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-dialog/app-fee-setting-dialog.component';
 
 @NgModule({
   declarations: [
+    AppFeeSettingDialogComponent,
     AppComponent,
-    OperationsComponent,
+    CoinConfigurationDialogComponent,
     OperationsTableComponent,
+    OperationsComponent,
     MineDialogComponent,
     LogsDialogComponent,
-    CoinConfigurationDialogComponent,
   ],
   imports: [
     BrowserModule,

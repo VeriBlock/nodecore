@@ -27,10 +27,10 @@
 
       <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"
         style="width: 100%; padding-left: 1em; padding-right: 1em;">
-        <button mat-mini-fab type="button" color="primary" matTooltip="Send">
+        <button mat-mini-fab type="button" color="primary" matTooltip="Deposit">
           <mat-icon>cloud_upload</mat-icon>
         </button>
-        <button mat-mini-fab type="button" color="warn" matTooltip="Receive">
+        <button mat-mini-fab type="button" color="warn" matTooltip="Withdraw">
           <mat-icon>cloud_download</mat-icon>
         </button>
       </div>
@@ -38,7 +38,8 @@
       <mat-divider></mat-divider>
 
       <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="width: 95%;">
-        <button mat-button [matMenuTriggerFor]="prefMenu" aria-label="Settings" matTooltip="Settings">
+        <button mat-button type="button" aria-label="Settings" matTooltip="Settings" (click)="openFeeConfigurationDialog()"
+          [disabled]="isLoadingSettings">
           <mat-icon aria-hidden="true">settings</mat-icon>
           <span>Settings</span>
         </button>
@@ -52,15 +53,3 @@
   </mat-drawer-content>
 
 </mat-drawer-container>
-
-<!-- Preference menu -->
-<mat-menu #prefMenu="matMenu" [overlapTrigger]="false">
-
-  <a mat-menu-item [routerLink]="['/']">
-    <span>settings 1</span>
-  </a>
-
-  <a mat-menu-item [routerLink]="['/']">
-    <span>settings 2</span>
-  </a>
-</mat-menu>

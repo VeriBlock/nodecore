@@ -3,6 +3,10 @@ body {
 
   mat-form-field.mat-form-field {
     font-size: 14px;
+
+    &:not(.mat-paginator-page-size-select) {
+      width: 100%;
+    }
   }
 
   mat-card {
