@@ -223,8 +223,8 @@ class AltchainPopMinerService(
 
     fun checkAltChainReadyConditions(
         chainId: String,
-        chain: SecurityInheritingChain = pluginService[chainId] ?: error(""),
-        monitor: SecurityInheritingMonitor = securityInheritingService.getMonitor(chainId) ?: error("")
+        chain: SecurityInheritingChain = pluginService[chainId] ?: error("Unable to find altchain plugin '$chainId'"),
+        monitor: SecurityInheritingMonitor = securityInheritingService.getMonitor(chainId) ?: error("Unable to load altchain monitor $chainId")
     ): CheckResult {
         // Verify if the miner is connected to the alt chain daemon
         if (!monitor.isAccessible()) {
