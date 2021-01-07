@@ -7,15 +7,16 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.toHex
-import org.veriblock.core.utilities.Utility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.core.utilities.extensions.toHex
 
 class PoPTransactionProblemReport(
     report: VeriBlockMessages.PoPTransactionProblemReport)
 {
     val address = report.address?.let {
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(it)
+        it.toProperAddressType()
     }
 
     val txid = report.txid?.toHex()
@@ -34,9 +35,9 @@ class PoPTransactionProblemReport(
 
     val paidOutInPoPVBKBlock = report.paidOutInPopPayoutVbkBlock
 
-    val PoPPayoutVBKAmount = Utility.formatAtomicLongWithDecimal(report.popPayoutVbkAmount)
+    val PoPPayoutVBKAmount = report.popPayoutVbkAmount.formatAtomicLongWithDecimal()
 
-    val bitcoinTxID = Utility.bytesToHex(report.bitcoinTxid.toByteArray())
+    val bitcoinTxID = report.bitcoinTxid.toByteArray().toHex()
 
     val includedInBTCBlockHash = report.includedInBtcBlockHash?.toHex()
 

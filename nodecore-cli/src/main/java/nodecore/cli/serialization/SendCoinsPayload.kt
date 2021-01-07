@@ -9,6 +9,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.SendCoinsReply
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class SendCoinsPayload(
     reply: SendCoinsReply

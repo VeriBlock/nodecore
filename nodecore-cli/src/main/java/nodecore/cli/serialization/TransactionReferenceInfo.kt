@@ -7,7 +7,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class TransactionReferenceInfo(
     transactionInfo: VeriBlockMessages.TransactionInfo

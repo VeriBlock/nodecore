@@ -8,9 +8,10 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import org.veriblock.core.utilities.Utility
+import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.core.utilities.extensions.toHex
 import java.util.ArrayList
 
 class TransactionInfo(
@@ -56,10 +57,10 @@ class TransactionInfo(
             merklePath = transaction.merklePath
             size = transaction.size
             timestamp = transaction.timestamp
-            sourceAmount = Utility.formatAtomicLongWithDecimal(transaction.sourceAmount)
-            sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.sourceAddress)
+            sourceAmount = transaction.sourceAmount.formatAtomicLongWithDecimal()
+            sourceAddress = transaction.sourceAddress.toProperAddressType()
             data = transaction.data.toHex()
-            fee = Utility.formatAtomicLongWithDecimal(transaction.transactionFee)
+            fee = transaction.transactionFee.formatAtomicLongWithDecimal()
 
             if (transaction.type == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
                 var bitcoinBlockHeaderBytes = transaction.bitcoinBlockHeaderOfProof?.toByteArray() ?: byteArrayOf()
@@ -69,7 +70,7 @@ class TransactionInfo(
                     System.arraycopy(bitcoinBlockHeaderBytes, 2, newBytes, 0, newBytes.size)
                     bitcoinBlockHeaderBytes = newBytes
                 }
-                bitcoinBlockHeader = Utility.bytesToHex(bitcoinBlockHeaderBytes)
+                bitcoinBlockHeader = bitcoinBlockHeaderBytes.toHex()
                 bitcoinTransaction = transaction.bitcoinTransaction.toHex()
                 endorsedBlockHeader = transaction.endorsedBlockHeader.toHex()
             } else {

@@ -22,7 +22,7 @@ fun TransactionUnion.toTransactionInfoUnion() = when (transactionCase) {
     )
     TransactionUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
         type = "signed",
-        signed = SignedTransactionInfo(signed)
+        signed = signed.toSignedTransactionInfo()
     )
     TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
         type = "unknown"
@@ -37,7 +37,7 @@ fun VeriBlockMessages.TransactionInfoUnion.toModel() = when (transactionCase) {
     )
     VeriBlockMessages.TransactionInfoUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
         type = "signed",
-        signed = SignedTransactionInfo(signed)
+        signed = signed.toModel()
     )
     VeriBlockMessages.TransactionInfoUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
         type = "unknown"

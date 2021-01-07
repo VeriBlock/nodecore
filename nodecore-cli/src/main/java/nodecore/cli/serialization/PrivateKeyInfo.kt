@@ -10,12 +10,14 @@ import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyReply
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class PrivateKeyInfo(
     reply: DumpPrivateKeyReply
 ) {
     @SerializedName("address")
-    val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.address)
+    val address = reply.address.toProperAddressType()
 
     @SerializedName("private_key")
     val privateKey = reply.privateKey.toHex()

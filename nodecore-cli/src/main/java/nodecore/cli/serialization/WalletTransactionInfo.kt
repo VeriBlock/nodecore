@@ -9,10 +9,10 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import com.opencsv.bean.CsvBindByName
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.BlockUtility
-import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -36,7 +36,7 @@ class WalletTransactionInfo(
 
     @CsvBindByName
     @SerializedName("address_mine")
-    val addressMine = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.address)
+    val addressMine = transaction.address.toProperAddressType()
 
     //CB|TX sent | TX Received
     @CsvBindByName
@@ -46,10 +46,10 @@ class WalletTransactionInfo(
     @CsvBindByName
     @SerializedName("address_to")
     val addressTo = if (txType == "RECEIVED" && transaction.outputsCount > 0) {
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.getOutputs(0).address)
+        transaction.getOutputs(0).address.toProperAddressType()
     } else if (txType == "SENT" && transaction.outputsCount > 0) {
         transaction.outputsList.joinToString(":") {
-            ByteStringAddressUtility.parseProperAddressTypeAutomatically(it.address)
+            it.address.toProperAddressType()
         }
     } else {
         null
@@ -58,16 +58,16 @@ class WalletTransactionInfo(
     @CsvBindByName
     @SerializedName("address_from")
     val addressFrom = if (this.txType == "RECEIVED") {
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.input.address)
+        transaction.input.address.toProperAddressType()
     } else if (txType == "SENT") {
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.input.address)
+        transaction.input.address.toProperAddressType()
     } else {
         null
     }
 
     @CsvBindByName
     @SerializedName("amount")
-    val amount = Utility.formatAtomicLongWithDecimal(transaction.netAmount)
+    val amount = transaction.netAmount.formatAtomicLongWithDecimal()
 
     //UNKNOWN|PENDING|CONFIRMED|DEAD
     @CsvBindByName

@@ -8,6 +8,7 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.SubmitMultisigTxReply
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class SubmitMultisigTxPayload(
     reply: SubmitMultisigTxReply

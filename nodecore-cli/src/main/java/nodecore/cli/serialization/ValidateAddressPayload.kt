@@ -8,13 +8,13 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.ValidateAddressReply
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class ValidateAddressPayload(
     reply: ValidateAddressReply
 ) {
-    val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.address)
+    val address = reply.address.toProperAddressType()
 
     @SerializedName("is_remote")
     val isRemote = reply.isRemote

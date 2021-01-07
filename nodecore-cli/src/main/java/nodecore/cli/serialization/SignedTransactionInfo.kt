@@ -9,38 +9,33 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
-import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
-class SignedTransactionInfo {
-    constructor(signed: SignedTransaction) {
-        signatureIndex = signed.signatureIndex
-        signature = signed.signature.toHex()
-        publicKey = signed.publicKey.toHex()
-        transaction = TransactionInfo(signed.transaction)
-    }
-
-    constructor(signed: VeriBlockMessages.SignedTransactionInfo) {
-        signatureIndex = signed.signatureIndex
-        signature = signed.signature.toHex()
-        publicKey = signed.publicKey.toHex()
-        transaction = TransactionInfo(signed.transaction.transaction)
-        confirmations = signed.transaction.confirmations
-        bitcoinConfirmations = signed.transaction.bitcoinConfirmations
-    }
-
-    var signature: String?
-
+class SignedTransactionInfo(
+    val signature: String,
     @SerializedName("public_key")
-    var publicKey: String?
-
+    val publicKey: String?,
     @SerializedName("signature_index")
-    var signatureIndex: Long?
-
-    var transaction: TransactionInfo?
-
+    val signatureIndex: Long?,
+    val transaction: TransactionInfo?,
     @SerializedName("confirmations")
-    var confirmations = 0
-
+    val confirmations: Int = 0,
     @SerializedName("bitcoinConfirmations")
-    var bitcoinConfirmations = 0
-}
+    val bitcoinConfirmations: Int = 0
+)
+
+fun SignedTransaction.toSignedTransactionInfo(): SignedTransactionInfo = SignedTransactionInfo(
+    signatureIndex = signatureIndex,
+    signature = signature.toHex(),
+    publicKey = publicKey.toHex(),
+    transaction = TransactionInfo(transaction)
+)
+
+fun VeriBlockMessages.SignedTransactionInfo.toModel(): SignedTransactionInfo = SignedTransactionInfo(
+    signatureIndex = signatureIndex,
+    signature = signature.toHex(),
+    publicKey = publicKey.toHex(),
+    transaction = TransactionInfo(transaction.transaction),
+    confirmations = transaction.confirmations,
+    bitcoinConfirmations = transaction.bitcoinConfirmations
+)

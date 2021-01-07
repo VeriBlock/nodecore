@@ -1,7 +1,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.RebroadcastTransactionReply
-import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.toHex
 
 class RebroadcastTransactionFromTxIDInfo(
     reply: RebroadcastTransactionReply
@@ -19,6 +19,6 @@ class RebroadcastTransactionFromTxIDInfo(
     }
 
     val txidsNotRebroadcast = reply.txidsNotRebroadcastList.map {
-        Utility.bytesToHex(it.toByteArray())
+        it.toByteArray().toHex()
     }
 }
