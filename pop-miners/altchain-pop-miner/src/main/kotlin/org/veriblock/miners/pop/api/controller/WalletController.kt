@@ -3,10 +3,9 @@ package org.veriblock.miners.pop.api.controller
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.put
+import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.Utility
 import org.veriblock.miners.pop.api.dto.WithdrawRequest
 import org.veriblock.miners.pop.api.dto.WithdrawResponse
@@ -23,7 +22,7 @@ class WalletController(
     class WithdrawPath
 
     override fun NormalOpenAPIRoute.registerApi() = route("wallet") {
-        put<WithdrawPath, WithdrawResponse, WithdrawRequest>(
+        post<WithdrawPath, WithdrawResponse, WithdrawRequest>(
             info("Withdraw VBKs to Address")
         ) { _, request ->
             val atomicAmount = Utility.convertDecimalCoinToAtomicLong(request.amount)
