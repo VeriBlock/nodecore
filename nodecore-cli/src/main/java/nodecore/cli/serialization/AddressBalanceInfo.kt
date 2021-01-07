@@ -8,12 +8,13 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.Utility
 
 class AddressBalanceInfo(
     addressBalance: VeriBlockMessages.AddressBalance
 ) {
-    val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(addressBalance.address)
+    val address = addressBalance.address.toProperAddressType()
 
     val totalAmount = Utility.formatAtomicLongWithDecimal(addressBalance.totalAmount)
 

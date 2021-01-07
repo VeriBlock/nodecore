@@ -38,7 +38,7 @@ class NIOClientTest {
             client.write(buffer)
             buffer.clear()
             client.read(buffer)
-            response = String(buffer.array()).trim { it <= ' ' }
+            response = String(buffer.array()).trim()
             println("response=$response")
             buffer.clear()
         } catch (e: IOException) {

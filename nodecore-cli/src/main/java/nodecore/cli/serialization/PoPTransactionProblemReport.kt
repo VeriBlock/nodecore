@@ -8,6 +8,7 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.Utility
 
 class PoPTransactionProblemReport(
@@ -17,25 +18,17 @@ class PoPTransactionProblemReport(
         ByteStringAddressUtility.parseProperAddressTypeAutomatically(it)
     }
 
-    val txid = report.txid?.let {
-        Utility.bytesToHex(it.toByteArray())
-    }
+    val txid = report.txid?.toHex()
 
-    val endorsedVBKBlockHash = report.endorsedVbkBlockHash?.let {
-        Utility.bytesToHex(it.toByteArray())
-    }
+    val endorsedVBKBlockHash = report.endorsedVbkBlockHash?.toHex()
 
     val endorsedVBKBlockIndex = report.endorsedVbkBlockIndex
 
-    val includedInVBKBlockHash = report.includedInVbkBlockHash?.let {
-        Utility.bytesToHex(it.toByteArray())
-    }
+    val includedInVBKBlockHash = report.includedInVbkBlockHash?.toHex()
 
     val includedInVBKBlockIndex = report.includedInVbkBlockIndex
 
-    val PotentialPoPPayoutVBKBlockHash = report.popPayoutVbkBlockHash?.let {
-        Utility.bytesToHex(it.toByteArray())
-    }
+    val PotentialPoPPayoutVBKBlockHash = report.popPayoutVbkBlockHash?.toHex()
 
     val PotentialPoPPayoutVBKBlockIndex = report.popPayoutVbkBlockIndex
 
@@ -45,9 +38,7 @@ class PoPTransactionProblemReport(
 
     val bitcoinTxID = Utility.bytesToHex(report.bitcoinTxid.toByteArray())
 
-    val includedInBTCBlockHash = report.includedInBtcBlockHash?.let {
-        Utility.bytesToHex(it.toByteArray())
-    }
+    val includedInBTCBlockHash = report.includedInBtcBlockHash?.toHex()
 
     val includedInBTCBlockIndex = report.includedInBtcBlockIndex
 
@@ -83,6 +74,6 @@ class PoPTransactionProblemReport(
         if (includedInVBKBlockHash == null) {
             potentialCause += "The PoP transaction does not appear to have been included in any VeriBlock block!\n"
         }
-        potentialCause = potentialCause.trim { it <= ' ' }
+        potentialCause = potentialCause.trim()
     }
 }
