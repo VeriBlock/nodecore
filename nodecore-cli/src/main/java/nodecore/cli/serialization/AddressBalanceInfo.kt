@@ -7,9 +7,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class AddressBalanceInfo(

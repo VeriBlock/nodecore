@@ -7,9 +7,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.MultisigSlot
-import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.utilities.AddressUtility
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toBase58
 import org.veriblock.core.utilities.extensions.toHex
 

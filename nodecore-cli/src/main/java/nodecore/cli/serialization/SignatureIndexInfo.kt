@@ -8,7 +8,6 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.AddressSignatureIndexes
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class SignatureIndexInfo(

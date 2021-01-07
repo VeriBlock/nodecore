@@ -12,7 +12,7 @@ import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
-import java.util.ArrayList
+import java.util.*
 
 class TransactionInfo(
     transaction: VeriBlockMessages.Transaction

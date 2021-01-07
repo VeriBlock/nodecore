@@ -9,7 +9,6 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import com.opencsv.bean.CsvBindByName
 import nodecore.api.grpc.VeriBlockMessages.GetInfoReply
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class GetInfoPayload(

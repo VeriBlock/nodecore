@@ -7,7 +7,6 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.BalanceUnlockEvent
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BalanceScheduleItem(

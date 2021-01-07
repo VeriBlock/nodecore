@@ -8,8 +8,6 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyReply
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
