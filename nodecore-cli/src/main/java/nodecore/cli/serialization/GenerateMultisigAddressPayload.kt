@@ -8,12 +8,13 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.GenerateMultisigAddressReply
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class GenerateMultisigAddressPayload(
     reply: GenerateMultisigAddressReply
 ) {
     val sourceAddresses = Array(reply.sourceAddressesCount) { index ->
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.getSourceAddresses(index))
+       reply.getSourceAddresses(index).toProperAddressType()
     }
 
     val signatureThresholdM = reply.signatureThresholdM

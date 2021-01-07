@@ -9,10 +9,11 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyReply
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class ImportPrivateKeyInfo(
     reply: ImportPrivateKeyReply
 ) {
     @SerializedName("imported_address")
-    val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.resultantAddress)
+    val address = reply.resultantAddress.toProperAddressType()
 }

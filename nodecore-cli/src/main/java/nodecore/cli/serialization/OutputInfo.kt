@@ -8,14 +8,16 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class OutputInfo(
     output: VeriBlockMessages.Output
 ) {
-    val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(output.address)
+    val address = output.address.toProperAddressType()
 
-    val amount = Utility.formatAtomicLongWithDecimal(output.amount)
+    val amount = output.amount.formatAtomicLongWithDecimal()
 
     override fun toString(): String = "address='$address'; amount='$amount'"
 }

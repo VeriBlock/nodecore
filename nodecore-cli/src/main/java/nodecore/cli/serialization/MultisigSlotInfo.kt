@@ -10,18 +10,20 @@ import nodecore.api.grpc.VeriBlockMessages.MultisigSlot
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.toBase58
+import org.veriblock.core.utilities.extensions.toHex
 
 class MultisigSlotInfo(
     slot: MultisigSlot
 ) {
     val publicKey = if (slot.publicKey != null) {
-        Utility.bytesToHex(slot.publicKey.toByteArray())
+        slot.publicKey.toByteArray().toHex()
     } else {
         "-"
     }
 
     val signature = if (slot.publicKey != null) {
-        Utility.bytesToHex(slot.signature.toByteArray())
+        slot.signature.toByteArray().toHex()
     } else {
         "-"
     }
@@ -29,7 +31,7 @@ class MultisigSlotInfo(
     val ownerAddress = if (slot.publicKey != null) {
         AddressUtility.addressFromPublicKey(slot.publicKey.toByteArray())
     } else {
-        Base58.encode(slot.ownerAddress.toByteArray())
+        slot.ownerAddress.toByteArray().toBase58()
     }
 
     val populated = slot.populated

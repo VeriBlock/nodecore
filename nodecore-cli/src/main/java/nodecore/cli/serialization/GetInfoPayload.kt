@@ -10,6 +10,7 @@ import com.google.gson.annotations.SerializedName
 import com.opencsv.bean.CsvBindByName
 import nodecore.api.grpc.VeriBlockMessages.GetInfoReply
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class GetInfoPayload(
     reply: GetInfoReply
@@ -28,7 +29,7 @@ class GetInfoPayload(
 
     @CsvBindByName
     @SerializedName("transaction_fee")
-    val transactionFee = Utility.formatAtomicLongWithDecimal(reply.transactionFee)
+    val transactionFee = reply.transactionFee.formatAtomicLongWithDecimal()
 
     @SerializedName("last_block")
     val lastBlock = BlockSummaryInfo(reply.lastBlock)

@@ -9,6 +9,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class NewAddressPayload(
     reply: GetNewAddressReply
@@ -18,6 +19,6 @@ class NewAddressPayload(
 
     @SerializedName("additional_address")
     val additionalAddresses = reply.additionalAddressesList.map {
-        ByteStringAddressUtility.parseProperAddressTypeAutomatically(it)
+        it.toProperAddressType()
     }.toTypedArray()
 }

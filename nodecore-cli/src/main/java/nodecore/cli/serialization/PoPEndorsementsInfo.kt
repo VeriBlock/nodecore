@@ -10,13 +10,16 @@ import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.PoPEndorsementInfo
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class PoPEndorsementsInfo(
     popEndorsementInfo: PoPEndorsementInfo
 ) {
     @SerializedName("miner_address")
-    val minerAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(popEndorsementInfo.minerAddress)
+    val minerAddress = popEndorsementInfo.minerAddress.toProperAddressType()
 
     @SerializedName("endorsed_veriblock_block_hash")
     val endorsedVeriBlockBlockHash = popEndorsementInfo.endorsedVeriblockBlockHash.toHex()
@@ -40,7 +43,7 @@ class PoPEndorsementsInfo(
     val bitcoinBlockHeaderHash = popEndorsementInfo.bitcoinBlockHeaderHash.toHex()
 
     @SerializedName("reward")
-    val reward = Utility.formatAtomicLongWithDecimal(popEndorsementInfo.reward)
+    val reward = popEndorsementInfo.reward.formatAtomicLongWithDecimal()
 
     @SerializedName("finalized")
     val finalized = popEndorsementInfo.finalized

@@ -8,6 +8,8 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.GetPopReply
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toBase58
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class PopPayload(
     reply: GetPopReply
@@ -30,7 +32,7 @@ class PopPayload(
 
     val nonce = reply.nonce
 
-    val pop_miner_address = ByteStringUtility.byteStringToBase58(reply.popMinerAddress)
+    val pop_miner_address = reply.popMinerAddress.toBase58()
 
     val full_pop = reply.fullPop.toHex()
 

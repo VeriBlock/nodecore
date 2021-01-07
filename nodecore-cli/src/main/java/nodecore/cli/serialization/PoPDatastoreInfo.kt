@@ -10,4 +10,8 @@ import nodecore.api.grpc.VeriBlockMessages.PoPDatastore
 
 class PoPDatastoreInfo(
     poPDatastore: PoPDatastore
-)
+) {
+    init {
+        //TODO: Implement
+    }
+}
