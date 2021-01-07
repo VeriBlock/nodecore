@@ -9,16 +9,17 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockReply
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class BitcoinBlockPayload(
     reply: GetLastBitcoinBlockReply
 ) {
     @SerializedName("header")
-    val header = ByteStringUtility.byteStringToHex(reply.header)
+    val header = reply.header.toHex()
 
     @SerializedName("height")
     val height = reply.height
 
     @SerializedName("hash")
-    val hash = ByteStringUtility.byteStringToHex(reply.hash)
+    val hash = reply.hash.toHex()
 }

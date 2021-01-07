@@ -20,5 +20,5 @@ class ValidateAddressPayload(
     val isRemote = reply.isRemote
 
     @SerializedName("public_key")
-    val publicKey = ByteStringUtility.byteStringToHex(reply.publicKey)
+    val publicKey = reply.publicKey.toHex()
 }

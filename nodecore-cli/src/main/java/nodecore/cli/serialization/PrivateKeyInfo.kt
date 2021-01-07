@@ -18,5 +18,5 @@ class PrivateKeyInfo(
     val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.address)
 
     @SerializedName("private_key")
-    val privateKey = ByteStringUtility.byteStringToHex(reply.privateKey)
+    val privateKey = reply.privateKey.toHex()
 }

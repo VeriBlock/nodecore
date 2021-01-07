@@ -9,10 +9,11 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.BlockFeeTable
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BlockFeeTableInfo(
     message: BlockFeeTable
 ) {
     @SerializedName("pop_fee_share")
-    val popFeeShare = Utility.formatAtomicLongWithDecimal(message.popFeeShare)
+    val popFeeShare = message.popFeeShare.formatAtomicLongWithDecimal()
 }

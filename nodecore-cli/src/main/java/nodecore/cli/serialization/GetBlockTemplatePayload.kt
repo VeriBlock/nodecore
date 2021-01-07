@@ -30,7 +30,7 @@ class GetBlockTemplatePayload(reply: GetBlockTemplateReply) {
     val currentTimestamp = reply.currentTimestamp.toLong()
 
     @SerializedName("previous_block_hash")
-    val previousBlockHash = ByteStringUtility.byteStringToHex(reply.previousBlockHash)
+    val previousBlockHash = reply.previousBlockHash.toHex()
 
     val mutable = reply.mutableList
 

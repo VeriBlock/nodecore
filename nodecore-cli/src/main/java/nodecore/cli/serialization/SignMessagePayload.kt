@@ -13,7 +13,7 @@ class SignMessagePayload(
     val address: String,
     message: SignMessageReply
 ) {
-    val signedMessage = ByteStringUtility.byteStringToHex(message.signedMessage)
+    val signedMessage = message.signedMessage.toHex()
 
-    val publicKey = ByteStringUtility.byteStringToHex(message.publicKey)
+    val publicKey = message.publicKey.toHex()
 }

@@ -10,14 +10,17 @@ import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
+import org.veriblock.core.utilities.extensions.toHex
 
 class BlockInfo(
     block: VeriBlockMessages.Block
 ) {
     @SerializedName("hash")
-    val hash = ByteStringUtility.byteStringToHex(block.hash)
+    val hash = block.hash.toHex()
 
     @SerializedName("number")
     val number = block.number
@@ -26,38 +29,38 @@ class BlockInfo(
     val version = block.version.toShort()
 
     @SerializedName("previous_hash")
-    val previousHash = ByteStringUtility.byteStringToHex(block.previousHash)
+    val previousHash = block.previousHash.toHex()
 
     @SerializedName("second_previous_hash")
     val secondPreviousHash = if (number % 20 == 0) {
         null
     } else {
-        ByteStringUtility.byteStringToHex(block.secondPreviousHash)
+        block.secondPreviousHash.toHex()
     }
 
     @SerializedName("previous_keystone_hash")
     val previousKeystoneHash = if (number % 20 == 0) {
-        ByteStringUtility.byteStringToHex(block.secondPreviousHash)
+        block.secondPreviousHash.toHex()
     } else {
         null
     }
 
     @SerializedName("third_previous_hash")
     val thirdPreviousHash = if (number % 20 == 0) {
-        ByteStringUtility.byteStringToHex(block.thirdPreviousHash)
+        block.thirdPreviousHash.toHex()
     } else {
         null
     }
 
     @SerializedName("second_previous_keystone_hash")
     val secondPreviousKeystoneHash = if (number % 20 == 0) {
-        ByteStringUtility.byteStringToHex(block.thirdPreviousHash)
+        block.thirdPreviousHash.toHex()
     } else {
         null
     }
 
     @SerializedName("merkle_root")
-    val merkleRoot = ByteStringUtility.byteStringToHex(block.merkleRoot)
+    val merkleRoot = block.merkleRoot.toHex()
 
     @SerializedName("timestamp")
     val timestamp = block.timestamp
@@ -70,31 +73,31 @@ class BlockInfo(
 
     @SerializedName("bitcoin_block_headers")
     val bitcoinBlockHeaders = block.bitcoinBlockHeadersList.map {
-        ByteStringUtility.byteStringToHex(it)
+        it.toHex()
     }
 
     @SerializedName("regular_transactions")
     val regular_transactions = block.regularTransactionsList.map { transactionUnion ->
         if (transactionUnion.transactionCase == TransactionUnion.TransactionCase.SIGNED) {
-            ByteStringUtility.byteStringToHex(transactionUnion.signed.transaction.txId)
+            transactionUnion.signed.transaction.txId.toHex()
         } else {
-            ByteStringUtility.byteStringToHex(transactionUnion.signedMultisig.transaction.txId)
+            transactionUnion.signedMultisig.transaction.txId.toHex()
         }
     }
 
     @SerializedName("pop_transactions")
     val pop_transactions = block.popTransactionsList.map { transactionUnion ->
-        ByteStringUtility.byteStringToHex(transactionUnion.signed.transaction.txId)
+        transactionUnion.signed.transaction.txId.toHex()
     }
 
     @SerializedName("total_fees")
-    val totalFees = Utility.formatAtomicLongWithDecimal(block.totalFees)
+    val totalFees = block.totalFees.formatAtomicLongWithDecimal()
 
     @SerializedName("pow_coinbase_reward")
-    val powCoinbaseReward = Utility.formatAtomicLongWithDecimal(block.powCoinbaseReward)
+    val powCoinbaseReward = block.powCoinbaseReward.formatAtomicLongWithDecimal()
 
     @SerializedName("pop_coinbase_reward")
-    val popCoinbaseReward = Utility.formatAtomicLongWithDecimal(block.popCoinbaseReward)
+    val popCoinbaseReward = block.popCoinbaseReward.formatAtomicLongWithDecimal()
 
     @SerializedName("block_content_metapackage")
     val blockContentMetapackage = BlockContentMetapackageInfo(block.blockContentMetapackage)
@@ -104,32 +107,28 @@ class BlockInfo(
 
     @SerializedName("header")
     val header = if (number % 20 == 0) {
-        Utility.bytesToHex(
-            BlockUtility.assembleBlockHeader(
-                number,
-                version,
-                previousHash,
-                previousKeystoneHash,
-                secondPreviousKeystoneHash,
-                merkleRoot,
-                timestamp,
-                encoded_difficulty,
-                winningNonce
-            )
-        )
+        BlockUtility.assembleBlockHeader(
+            number,
+            version,
+            previousHash,
+            previousKeystoneHash,
+            secondPreviousKeystoneHash,
+            merkleRoot,
+            timestamp,
+            encoded_difficulty,
+            winningNonce
+        ).toHex()
     } else {
-        Utility.bytesToHex(
-            BlockUtility.assembleBlockHeader(
-                number,
-                version,
-                previousHash,
-                secondPreviousHash,
-                thirdPreviousHash,
-                merkleRoot,
-                timestamp,
-                encoded_difficulty,
-                winningNonce
-            )
-        )
+        BlockUtility.assembleBlockHeader(
+            number,
+            version,
+            previousHash,
+            secondPreviousHash,
+            thirdPreviousHash,
+            merkleRoot,
+            timestamp,
+            encoded_difficulty,
+            winningNonce
+        ).toHex()
     }
 }

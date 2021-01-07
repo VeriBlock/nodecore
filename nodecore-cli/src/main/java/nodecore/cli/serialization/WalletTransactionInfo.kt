@@ -22,7 +22,7 @@ class WalletTransactionInfo(
 ) {
     @CsvBindByName
     @SerializedName("transaction_id")
-    val txId = ByteStringUtility.byteStringToHex(transaction.txId)
+    val txId = transaction.txId.toHex()
 
     @CsvBindByName
     @SerializedName("timestamp")

@@ -9,22 +9,23 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.AddressHistory
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class AddressHistoryInfo(
     history: AddressHistory
 ) {
-    val balance: String = Utility.formatAtomicLongWithDecimal(history.balance)
+    val balance: String = history.balance.formatAtomicLongWithDecimal()
 
     @SerializedName("blocks_mined")
     val blocksMined = history.blocksMined
 
     @SerializedName("confirmed_transactions")
     val confirmedTransactions = history.confirmedTransactionsList.map { transactionInfoUnion ->
-        TransactionInfoUnion(transactionInfoUnion)
+        transactionInfoUnion.toModel()
     }
 
     @SerializedName("pending_transactions")
     val pendingTransactions = history.pendingTransactionsList.map { transactionInfoUnion ->
-        TransactionInfoUnion(transactionInfoUnion)
+        transactionInfoUnion.toModel()
     }
 }

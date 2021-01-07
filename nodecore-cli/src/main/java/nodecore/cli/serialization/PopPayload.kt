@@ -16,13 +16,13 @@ class PopPayload(
 
     val version = reply.version
 
-    val previous_block_hash = ByteStringUtility.byteStringToHex(reply.previousBlockHash)
+    val previous_block_hash = reply.previousBlockHash.toHex()
 
-    val second_previous_block_hash = ByteStringUtility.byteStringToHex(reply.secondPreviousBlockHash)
+    val second_previous_block_hash = reply.secondPreviousBlockHash.toHex()
 
-    val third_previous_block_hash = ByteStringUtility.byteStringToHex(reply.thirdPreviousBlockHash)
+    val third_previous_block_hash = reply.thirdPreviousBlockHash.toHex()
 
-    val merkle_root = ByteStringUtility.byteStringToHex(reply.merkleRoot)
+    val merkle_root = reply.merkleRoot.toHex()
 
     val timestamp = reply.timestamp
 
@@ -32,7 +32,7 @@ class PopPayload(
 
     val pop_miner_address = ByteStringUtility.byteStringToBase58(reply.popMinerAddress)
 
-    val full_pop = ByteStringUtility.byteStringToHex(reply.fullPop)
+    val full_pop = reply.fullPop.toHex()
 
-    val last_known_block = ByteStringUtility.byteStringToHex(reply.lastKnownBlock.header)
+    val last_known_block = reply.lastKnownBlock.header.toHex()
 }

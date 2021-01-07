@@ -8,18 +8,20 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.AddressBalanceSchedule
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class AddressBalanceSchedulePayload(
     message: AddressBalanceSchedule
 ) {
-    val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(message.address)
+    val address = message.address.toProperAddressType()
 
-    val totalBalance = Utility.formatAtomicLongWithDecimal(message.totalBalance)
+    val totalBalance = message.totalBalance.formatAtomicLongWithDecimal()
 
-    val unlockedBalance = Utility.formatAtomicLongWithDecimal(message.unlockBalance)
+    val unlockedBalance = message.unlockBalance.formatAtomicLongWithDecimal()
 
-    val lockedBalance = Utility.formatAtomicLongWithDecimal(message.lockedBalance)
+    val lockedBalance = message.lockedBalance.formatAtomicLongWithDecimal()
 
     val schedule = message.scheduleList.map { balanceUnlockEvent ->
         BalanceScheduleItem(balanceUnlockEvent)

@@ -9,6 +9,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.CoinbaseTransaction
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.Utility
 
 class CoinbaseTransactionInfo(
@@ -36,5 +37,5 @@ class CoinbaseTransactionInfo(
         OutputInfo(output)
     }
 
-    val coinbase_tx_hash = ByteStringUtility.byteStringToHex(coinbaseTransaction.txId)
+    val coinbase_tx_hash = coinbaseTransaction.txId.toHex()
 }

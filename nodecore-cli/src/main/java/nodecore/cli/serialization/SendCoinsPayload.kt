@@ -15,6 +15,6 @@ class SendCoinsPayload(
 ) {
     @SerializedName("txids")
     val txids = Array(reply.txIdsCount) { index ->
-        ByteStringUtility.byteStringToHex(reply.getTxIds(index))
+        reply.getTxIds(index).toHex()
     }
 }

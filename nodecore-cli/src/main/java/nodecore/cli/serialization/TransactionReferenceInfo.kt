@@ -20,11 +20,11 @@ class TransactionReferenceInfo(
 
     val transaction = TransactionInfo(transactionInfo.transaction)
 
-    val endorsedBlockHash = ByteStringUtility.byteStringToHex(transactionInfo.endorsedBlockHash)
+    val endorsedBlockHash = transactionInfo.endorsedBlockHash.toHex()
 
-    val bitcoinBlockHash = ByteStringUtility.byteStringToHex(transactionInfo.bitcoinBlockHash)
+    val bitcoinBlockHash = transactionInfo.bitcoinBlockHash.toHex()
 
-    val bitcoinTxID = ByteStringUtility.byteStringToHex(transactionInfo.bitcoinTxId)
+    val bitcoinTxID = transactionInfo.bitcoinTxId.toHex()
 
     val bitcoinConfirmations = transactionInfo.bitcoinConfirmations
 }

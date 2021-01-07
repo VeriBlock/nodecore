@@ -14,15 +14,15 @@ import nodecore.api.grpc.utilities.ByteStringUtility
 class SignedTransactionInfo {
     constructor(signed: SignedTransaction) {
         signatureIndex = signed.signatureIndex
-        signature = ByteStringUtility.byteStringToHex(signed.signature)
-        publicKey = ByteStringUtility.byteStringToHex(signed.publicKey)
+        signature = signed.signature.toHex()
+        publicKey = signed.publicKey.toHex()
         transaction = TransactionInfo(signed.transaction)
     }
 
     constructor(signed: VeriBlockMessages.SignedTransactionInfo) {
         signatureIndex = signed.signatureIndex
-        signature = ByteStringUtility.byteStringToHex(signed.signature)
-        publicKey = ByteStringUtility.byteStringToHex(signed.publicKey)
+        signature = signed.signature.toHex()
+        publicKey = signed.publicKey.toHex()
         transaction = TransactionInfo(signed.transaction.transaction)
         confirmations = signed.transaction.confirmations
         bitcoinConfirmations = signed.transaction.bitcoinConfirmations

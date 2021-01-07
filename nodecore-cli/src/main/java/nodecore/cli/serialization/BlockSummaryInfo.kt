@@ -9,13 +9,14 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.BlockSummary
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.Utility
 
 class BlockSummaryInfo(
     block: BlockSummary
 ) {
     @SerializedName("hash")
-    val hash = ByteStringUtility.byteStringToHex(block.hash)
+    val hash = block.hash.toHex()
 
     @SerializedName("number")
     val number = block.number
@@ -24,18 +25,18 @@ class BlockSummaryInfo(
     val version = block.version.toShort()
 
     @SerializedName("previous_hash")
-    val previousHash = ByteStringUtility.byteStringToHex(block.previousHash)
+    val previousHash = block.previousHash.toHex()
 
     @SerializedName("second_previous_hash")
     val secondPreviousHash = if (number % 20 == 0) {
         null
     } else {
-        ByteStringUtility.byteStringToHex(block.secondPreviousHash)
+        block.secondPreviousHash.toHex()
     }
 
     @SerializedName("previous_keystone_hash")
     val previousKeystoneHash = if (number % 20 == 0) {
-        ByteStringUtility.byteStringToHex(block.secondPreviousHash)
+        block.secondPreviousHash.toHex()
     } else {
         null
     }
@@ -44,18 +45,18 @@ class BlockSummaryInfo(
     val thirdPreviousHash = if (number % 20 == 0) {
         null
     } else {
-        ByteStringUtility.byteStringToHex(block.thirdPreviousHash)
+        block.thirdPreviousHash.toHex()
     }
 
     @SerializedName("second_previous_keystone_hash")
     val secondPreviousKeystoneHash = if (number % 20 == 0) {
-        ByteStringUtility.byteStringToHex(block.thirdPreviousHash)
+        block.thirdPreviousHash.toHex()
     } else {
         null
     }
 
     @SerializedName("merkle_root")
-    val merkleRoot = ByteStringUtility.byteStringToHex(block.merkleRoot)
+    val merkleRoot = block.merkleRoot.toHex()
 
     @SerializedName("timestamp")
     val timestamp = block.timestamp
@@ -67,7 +68,7 @@ class BlockSummaryInfo(
     val winningNonce = block.winningNonce
 
     @SerializedName("ledger_hash")
-    val ledgerHash = ByteStringUtility.byteStringToHex(block.ledgerHash)
+    val ledgerHash = block.ledgerHash.toHex()
 
     @SerializedName("size")
     val size = block.size

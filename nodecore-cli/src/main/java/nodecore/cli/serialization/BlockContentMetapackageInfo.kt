@@ -9,6 +9,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.BlockContentMetapackage
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class BlockContentMetapackageInfo(
     metapackage: BlockContentMetapackage
@@ -23,10 +24,10 @@ class BlockContentMetapackageInfo(
     val blockFeeTable = BlockFeeTableInfo(metapackage.blockFeeTable)
 
     @SerializedName("miner_comment")
-    val minerComment = String(metapackage.minerComment.toByteArray())
+    val minerComment = metapackage.minerComment.toByteArray().decodeToString()
 
     @SerializedName("ledger_hash")
-    val ledgerHash = ByteStringUtility.byteStringToHex(metapackage.ledgerHash)
+    val ledgerHash = metapackage.ledgerHash.toHex()
 
     @SerializedName("extra_nonce")
     val extraNonce = metapackage.extraNonce

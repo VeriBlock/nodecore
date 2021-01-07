@@ -19,25 +19,25 @@ class PoPEndorsementsInfo(
     val minerAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(popEndorsementInfo.minerAddress)
 
     @SerializedName("endorsed_veriblock_block_hash")
-    val endorsedVeriBlockBlockHash = ByteStringUtility.byteStringToHex(popEndorsementInfo.endorsedVeriblockBlockHash)
+    val endorsedVeriBlockBlockHash = popEndorsementInfo.endorsedVeriblockBlockHash.toHex()
 
     @SerializedName("contained_in_veriblock_block_hash")
-    val containedInVeriBlockBlockHash = ByteStringUtility.byteStringToHex(popEndorsementInfo.containedInVeriblockBlockHash)
+    val containedInVeriBlockBlockHash = popEndorsementInfo.containedInVeriblockBlockHash.toHex()
 
     @SerializedName("veriblock_transaction_id")
-    val veriBlockTransactionId = ByteStringUtility.byteStringToHex(popEndorsementInfo.veriblockTxId)
+    val veriBlockTransactionId = popEndorsementInfo.veriblockTxId.toHex()
 
     @SerializedName("bitcoin_transaction")
-    val bitcoinTransaction = ByteStringUtility.byteStringToHex(popEndorsementInfo.bitcoinTransaction)
+    val bitcoinTransaction = popEndorsementInfo.bitcoinTransaction.toHex()
 
     @SerializedName("bitcoin_transaction_id")
-    val bitcoinTransactionId = ByteStringUtility.byteStringToHex(popEndorsementInfo.bitcoinTxId)
+    val bitcoinTransactionId = popEndorsementInfo.bitcoinTxId.toHex()
 
     @SerializedName("bitcoin_block_header")
-    val bitcoinBlockHeader = ByteStringUtility.byteStringToHex(popEndorsementInfo.bitcoinBlockHeader)
+    val bitcoinBlockHeader = popEndorsementInfo.bitcoinBlockHeader.toHex()
 
     @SerializedName("bitcoin_block_header_hash")
-    val bitcoinBlockHeaderHash = ByteStringUtility.byteStringToHex(popEndorsementInfo.bitcoinBlockHeaderHash)
+    val bitcoinBlockHeaderHash = popEndorsementInfo.bitcoinBlockHeaderHash.toHex()
 
     @SerializedName("reward")
     val reward = Utility.formatAtomicLongWithDecimal(popEndorsementInfo.reward)

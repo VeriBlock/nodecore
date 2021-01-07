@@ -8,13 +8,14 @@ package nodecore.cli.serialization
 
 import nodecore.api.grpc.VeriBlockMessages.BalanceUnlockEvent
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BalanceScheduleItem(
     message: BalanceUnlockEvent
 ) {
     val blockHeight = message.blockHeight
 
-    val amountUnlocked = Utility.formatAtomicLongWithDecimal(message.amountUnlocked)
+    val amountUnlocked = message.amountUnlocked.formatAtomicLongWithDecimal()
 
-    val lockedBalance = Utility.formatAtomicLongWithDecimal(message.lockedBalance)
+    val lockedBalance = message.lockedBalance.formatAtomicLongWithDecimal()
 }

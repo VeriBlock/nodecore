@@ -10,17 +10,18 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class AddressBalanceInfo(
     addressBalance: VeriBlockMessages.AddressBalance
 ) {
     val address = addressBalance.address.toProperAddressType()
 
-    val totalAmount = Utility.formatAtomicLongWithDecimal(addressBalance.totalAmount)
+    val totalAmount = addressBalance.totalAmount.formatAtomicLongWithDecimal()
 
-    val unlockedAmount = Utility.formatAtomicLongWithDecimal(addressBalance.unlockedAmount)
+    val unlockedAmount = addressBalance.unlockedAmount.formatAtomicLongWithDecimal()
 
-    val lockedAmount = Utility.formatAtomicLongWithDecimal(addressBalance.lockedAmount)
+    val lockedAmount = addressBalance.lockedAmount.formatAtomicLongWithDecimal()
 
     override fun toString(): String = "address='$address'; unlocked_amount='$unlockedAmount'; locked_amount='$lockedAmount'"
 }

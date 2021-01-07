@@ -9,6 +9,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.CandidateTransaction
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.toHex
 
 class CandidateTransactionInfo(
     candidate: CandidateTransaction
@@ -20,9 +21,9 @@ class CandidateTransactionInfo(
     val required = candidate.required
 
     @SerializedName("transaction_id")
-    val transactionId = ByteStringUtility.byteStringToHex(candidate.txId)
+    val transactionId = candidate.txId.toHex()
 
-    val transaction = TransactionInfoUnion(candidate.transaction)
+    val transaction = candidate.transaction.toTransactionInfoUnion()
 
     val depends = candidate.dependsList
 }

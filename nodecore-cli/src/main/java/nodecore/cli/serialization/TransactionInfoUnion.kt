@@ -9,36 +9,38 @@ package nodecore.cli.serialization
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
 
-class TransactionInfoUnion {
-    constructor(union: TransactionUnion) {
-        when (union.transactionCase) {
-            TransactionUnion.TransactionCase.UNSIGNED -> {
-                type = "unsigned"
-                unsigned = TransactionInfo(union.unsigned)
-            }
-            TransactionUnion.TransactionCase.SIGNED -> {
-                type = "signed"
-                signed = SignedTransactionInfo(union.signed)
-            }
-            TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> type = "unknown"
-        }
-    }
+class TransactionInfoUnion(
+    val type: String? = null,
+    val unsigned: TransactionInfo? = null,
+    val signed: SignedTransactionInfo? = null
+)
 
-    constructor(union: VeriBlockMessages.TransactionInfoUnion) {
-        when (union.transactionCase) {
-            VeriBlockMessages.TransactionInfoUnion.TransactionCase.UNSIGNED -> {
-                type = "unsigned"
-                unsigned = TransactionInfo(union.unsigned.transaction)
-            }
-            VeriBlockMessages.TransactionInfoUnion.TransactionCase.SIGNED -> {
-                type = "signed"
-                signed = SignedTransactionInfo(union.signed)
-            }
-            VeriBlockMessages.TransactionInfoUnion.TransactionCase.TRANSACTION_NOT_SET -> type = "unknown"
-        }
-    }
+fun TransactionUnion.toTransactionInfoUnion() = when (transactionCase) {
+    TransactionUnion.TransactionCase.UNSIGNED -> TransactionInfoUnion(
+        type = "unsigned",
+        unsigned = TransactionInfo(unsigned)
+    )
+    TransactionUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
+        type = "signed",
+        signed = SignedTransactionInfo(signed)
+    )
+    TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
+        type = "unknown"
+    )
+    else -> TransactionInfoUnion()
+}
 
-    var type: String? = null
-    var unsigned: TransactionInfo? = null
-    var signed: SignedTransactionInfo? = null
+fun VeriBlockMessages.TransactionInfoUnion.toModel() = when (transactionCase) {
+    VeriBlockMessages.TransactionInfoUnion.TransactionCase.UNSIGNED -> TransactionInfoUnion(
+        type = "unsigned",
+        unsigned = TransactionInfo(unsigned.transaction)
+    )
+    VeriBlockMessages.TransactionInfoUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
+        type = "signed",
+        signed = SignedTransactionInfo(signed)
+    )
+    VeriBlockMessages.TransactionInfoUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
+        type = "unknown"
+    )
+    else -> TransactionInfoUnion()
 }

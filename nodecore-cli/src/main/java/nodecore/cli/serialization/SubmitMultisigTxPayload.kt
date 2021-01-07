@@ -14,7 +14,7 @@ class SubmitMultisigTxPayload(
 ) {
     val transaction = TransactionInfo(reply.signedMultisigTransaction.transaction)
 
-    val txid = ByteStringUtility.byteStringToHex(reply.txid)
+    val txid = reply.txid.toHex()
 
     val multisigSlotBundle = MultisigBundleInfo(reply.signedMultisigTransaction.signatureBundle)
 

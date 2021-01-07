@@ -3,6 +3,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
 import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BalancePayload(
     reply: GetBalanceReply
@@ -13,7 +14,7 @@ class BalancePayload(
     }
 
     @SerializedName("total_confirmed")
-    val totalConfirmed = Utility.formatAtomicLongWithDecimal(reply.totalConfirmed)
+    val totalConfirmed = reply.totalConfirmed.formatAtomicLongWithDecimal()
 
     @SerializedName("unconfirmed")
     val unconfirmed = reply.unconfirmedList.map { output ->
@@ -21,5 +22,5 @@ class BalancePayload(
     }
 
     @SerializedName("total_unconfirmed")
-    val totalUnconfirmed = Utility.formatAtomicLongWithDecimal(reply.totalUnconfirmed)
+    val totalUnconfirmed = reply.totalUnconfirmed.formatAtomicLongWithDecimal()
 }

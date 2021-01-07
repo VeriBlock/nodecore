@@ -52,13 +52,13 @@ class TransactionInfo(
 
     init {
         if (transaction !== VeriBlockMessages.Transaction.getDefaultInstance()) {
-            txid = ByteStringUtility.byteStringToHex(transaction.txId)
+            txid = transaction.txId.toHex()
             merklePath = transaction.merklePath
             size = transaction.size
             timestamp = transaction.timestamp
             sourceAmount = Utility.formatAtomicLongWithDecimal(transaction.sourceAmount)
             sourceAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(transaction.sourceAddress)
-            data = ByteStringUtility.byteStringToHex(transaction.data)
+            data = transaction.data.toHex()
             fee = Utility.formatAtomicLongWithDecimal(transaction.transactionFee)
 
             if (transaction.type == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
@@ -70,8 +70,8 @@ class TransactionInfo(
                     bitcoinBlockHeaderBytes = newBytes
                 }
                 bitcoinBlockHeader = Utility.bytesToHex(bitcoinBlockHeaderBytes)
-                bitcoinTransaction = ByteStringUtility.byteStringToHex(transaction.bitcoinTransaction)
-                endorsedBlockHeader = ByteStringUtility.byteStringToHex(transaction.endorsedBlockHeader)
+                bitcoinTransaction = transaction.bitcoinTransaction.toHex()
+                endorsedBlockHeader = transaction.endorsedBlockHeader.toHex()
             } else {
                 bitcoinBlockHeader = "N/A"
                 bitcoinTransaction = "N/A"

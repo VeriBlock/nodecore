@@ -21,7 +21,7 @@ class MakeUnsignedMultisigTxPayload(
 
     val unsignedTransactionHex = Utility.bytesToHex(reply.unsignedMultisigTransactionWithIndex.toByteArray())
 
-    val txid = ByteStringUtility.byteStringToHex(reply.txid)
+    val txid = reply.txid.toHex()
 
     val sigIndex = reply.signatureIndex
 
