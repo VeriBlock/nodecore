@@ -210,7 +210,23 @@ class AltchainPopMinerService(
         if (!network.isSynchronized()) {
             return CheckResult.Failure(MineException("SPV is not synchronized: ${network.latestSpvStateInfo.getSynchronizedMessage()}"))
         }
+
         // Specific checks for the alt chain
+        checkAltChainReadyConditions(chain.key, chain, monitor)
+
+        // Verify if the block is too old to be mined
+        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
+            return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
+        }
+        return CheckResult.Success()
+    }
+
+    fun checkAltChainReadyConditions(
+        chainId: String,
+        chain: SecurityInheritingChain = pluginService[chainId] ?: error(""),
+        monitor: SecurityInheritingMonitor = securityInheritingService.getMonitor(chainId) ?: error("")
+    ): CheckResult {
+        // Verify if the miner is connected to the alt chain daemon
         if (!monitor.isAccessible()) {
             return CheckResult.Failure(MineException("The miner is not connected to the ${chain.name} chain at ${chain.config.host}, is it reachable?"))
         }
@@ -221,10 +237,6 @@ class AltchainPopMinerService(
         // Verify the synchronized status
         if (!monitor.isSynchronized()) {
             return CheckResult.Failure(MineException("The chain ${chain.name} is not synchronized: ${monitor.latestBlockChainInfo.getSynchronizedMessage()}"))
-        }
-        // Verify if the block is too old to be mined
-        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
-            return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
         }
         return CheckResult.Success()
     }

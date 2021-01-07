@@ -17,6 +17,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import org.apache.logging.log4j.Level
+import org.veriblock.miners.pop.api.dto.AltChainReadyStatusResponse
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
@@ -30,6 +31,7 @@ import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.AltchainPopMinerService
+import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.plugin.PluginService
 
 class MiningController(
@@ -167,15 +169,28 @@ class MiningController(
             info("Get configured altchains")
         ) {
             val altchains = pluginService.getPlugins().values.map {
+                val altChainReadyResult = miner.checkAltChainReadyConditions(it.key)
+                val isAltChainReady = altChainReadyResult !is CheckResult.Failure
+                val readyStatusResponse = AltChainReadyStatusResponse(
+                    isAltChainReady,
+                    if (!isAltChainReady) {
+                        (altChainReadyResult as  CheckResult.Failure).error.message
+                    } else {
+                        null
+                    }
+                )
                 ConfiguredAltchain(
                     it.id,
                     it.key,
                     it.name,
-                    it.getPayoutDelay()
+                    it.getPayoutDelay(),
+                    readyStatusResponse
                 )
+
             }.sortedBy {
                 it.key
             }
+
             respond(ConfiguredAltchainList(altchains))
         }
     }
