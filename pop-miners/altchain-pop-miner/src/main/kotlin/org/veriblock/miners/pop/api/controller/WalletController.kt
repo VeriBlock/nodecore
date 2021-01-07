@@ -27,12 +27,10 @@ class WalletController(
             info("Withdraw VBKs to Address")
         ) { _, request ->
             val atomicAmount = Utility.convertDecimalCoinToAtomicLong(request.amount)
-            val result = runBlocking {
-                miner.spvContext.spvService.sendCoins(
-                    null,
-                    listOf(Output(request.destinationAddress.asStandardAddress(), atomicAmount.asCoin()))
-                )
-            }
+            val result = miner.spvContext.spvService.sendCoins(
+                null,
+                listOf(Output(request.destinationAddress.asStandardAddress(), atomicAmount.asCoin()))
+            )
             val ids = result.map {
                 it.toString()
             }

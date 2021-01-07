@@ -149,25 +149,26 @@ class AltchainPopMinerService(
         }
     }
 
-    fun getOperations(status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Int = 0): List<ApmOperation> {
+    fun getOperations(altchainKey: String? = null, status: MiningOperationStatus = MiningOperationStatus.ACTIVE, limit: Int = 50, offset: Int = 0): List<ApmOperation> {
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.values.asSequence()
+                .filter { altchainKey == null || it.chain.key == altchainKey }
                 .sortedBy { it.createdAt }
                 .drop(offset)
                 .take(limit)
                 .toList()
         } else {
-            operationService.getOperations(status, limit, offset) { txId ->
+            operationService.getOperations(altchainKey, status, limit, offset) { txId ->
                 transactionMonitor.getTransaction(txId)
             }
         }
     }
 
-    fun getOperationsCount(status: MiningOperationStatus = MiningOperationStatus.ACTIVE): Int {
+    fun getOperationsCount(altchainKey: String? = null, status: MiningOperationStatus = MiningOperationStatus.ACTIVE): Int {
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.size
         } else {
-            operationService.getOperationsCount(status)
+            operationService.getOperationsCount(altchainKey, status)
         }
     }
 

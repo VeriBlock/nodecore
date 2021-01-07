@@ -16,11 +16,11 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.core.parseOperationLogs
 import org.veriblock.miners.pop.core.toJson
-import org.veriblock.miners.pop.storage.OperationRepository
-import org.veriblock.miners.pop.storage.OperationStateRecord
+import org.veriblock.miners.pop.storage.ApmOperationRepository
+import org.veriblock.miners.pop.storage.ApmOperationStateRecord
 
 class OperationService(
-    private val repository: OperationRepository,
+    private val repository: ApmOperationRepository,
     private val operationSerializer: OperationSerializer
 ) {
     fun getOperation(id: String, txFactory: (VbkTxId) -> WalletTransaction): ApmOperation? {
@@ -38,23 +38,24 @@ class OperationService(
         }
     }
 
-    fun getOperations(state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (VbkTxId) -> WalletTransaction): List<ApmOperation> {
-        val operations = repository.getOperations(state, limit, offset)
+    fun getOperations(altchainKey: String?, state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (VbkTxId) -> WalletTransaction): List<ApmOperation> {
+        val operations = repository.getOperations(altchainKey, state, limit, offset)
         return operations.map {
             val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)
             operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)
         }
     }
 
-    fun getOperationsCount(state: MiningOperationStatus): Int {
-        return repository.getOperationsCount(state)
+    fun getOperationsCount(altchainKey: String?, state: MiningOperationStatus): Int {
+        return repository.getOperationsCount(altchainKey, state)
     }
 
     fun storeOperation(operation: ApmOperation) {
         val serialized = operationSerializer.serialize(operation)
         repository.saveOperationState(
-            OperationStateRecord(
+            ApmOperationStateRecord(
                 operation.id,
+                operation.chain.key,
                 operation.state.id,
                 ProtoBuf.encodeToByteArray(OperationProto.Operation.serializer(), serialized),
                 operation.createdAt,

@@ -25,8 +25,8 @@ import org.veriblock.miners.pop.service.OperationService
 import org.veriblock.miners.pop.shell.configure
 import org.veriblock.miners.pop.storage.KeyValueRepository
 import org.veriblock.miners.pop.storage.KeyValueTable
-import org.veriblock.miners.pop.storage.OperationRepository
-import org.veriblock.miners.pop.storage.OperationStateTable
+import org.veriblock.miners.pop.storage.ApmOperationRepository
+import org.veriblock.miners.pop.storage.ApmOperationStateTable
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
@@ -65,13 +65,13 @@ val minerModule = module {
             transactionManager.defaultIsolationLevel = Connection.TRANSACTION_READ_UNCOMMITTED
             transaction(this) {
                 SchemaUtils.createMissingTablesAndColumns(
-                    OperationStateTable,
+                    ApmOperationStateTable,
                     KeyValueTable
                 )
             }
         }
     }
 
-    single { OperationRepository(get()) }
+    single { ApmOperationRepository(get()) }
     single { KeyValueRepository(get()) }
 }

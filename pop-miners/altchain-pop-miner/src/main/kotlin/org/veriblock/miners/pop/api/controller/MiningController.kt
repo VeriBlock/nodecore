@@ -43,6 +43,7 @@ class MiningController(
 
     @Path("operations")
     class MinerOperationsPath(
+        @QueryParam("Operation altchain key (optional)") val altchainKey: String?,
         @QueryParam("Operation status (optional)") val status: String?,
         @QueryParam("Pagination limit (optional)") val limit: Int?,
         @QueryParam("Pagination offset (optional)") val offset: Int?
@@ -116,8 +117,8 @@ class MiningController(
             // Get the given offset filter
             val offset = location.offset ?: 0
             // Get the operations
-            val operations = miner.getOperations(status, limit, offset)
-            val count = miner.getOperationsCount(status)
+            val operations = miner.getOperations(location.altchainKey, status, limit, offset)
+            val count = miner.getOperationsCount(location.altchainKey, status)
             // Paginate and map operations
             val result = operations.map {
                 it.toSummaryResponse()
