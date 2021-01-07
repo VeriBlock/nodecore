@@ -24,7 +24,10 @@ class TransactionServiceTest : TestCase() {
 
     @Test
     fun testCreateTransactionsByOutputList() {
-        val transactionService = TransactionService(mockk(relaxed = true), defaultTestNetParameters)
+        val transactionService = TransactionService(
+            addressManager = mockk(relaxed = true),
+            networkParameters = defaultTestNetParameters
+        )
         val addressCoinsIndexList = listOf(
             AddressCoinsIndex("V9YtYGe28er1D79qkshWHcxfbH3p2j", 100L * Coin.COIN_VALUE, 1L),
             AddressCoinsIndex("V66n5xh5Mu8nnR1D3is3eRkp92ktL9", 0L, 1L),

@@ -7,7 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
-import com.google.common.base.Preconditions
 import io.ktor.util.network.*
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
