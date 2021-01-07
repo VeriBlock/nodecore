@@ -1,9 +1,7 @@
 package nodecore.cli.commands.rpc
 
-import com.google.protobuf.ByteString
 import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.cli.cliShell
@@ -13,7 +11,6 @@ import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.PoPEndorsementsInfo
 import nodecore.cli.serialization.PopPayload
 import nodecore.cli.serialization.TroubleshootPoPTransactionsPayload
-import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter

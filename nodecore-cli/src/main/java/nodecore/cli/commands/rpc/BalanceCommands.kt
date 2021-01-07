@@ -24,7 +24,7 @@ fun CommandFactory.balanceCommands() {
         val address: String? = getOptionalParameter("address")
         val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
         if (address != null) {
-            request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address));
+            request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
         val result = cliShell.adminService.getBalance(request.build())
 

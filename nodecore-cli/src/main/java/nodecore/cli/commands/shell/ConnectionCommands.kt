@@ -1,11 +1,9 @@
 package nodecore.cli.commands.shell
 
 import nodecore.cli.cliCommand
-import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.contracts.PeerEndpoint
 import nodecore.cli.contracts.ProtocolEndpoint
-import nodecore.cli.contracts.ProtocolEndpointType
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -31,10 +29,13 @@ fun CommandFactory.connectionCommands() {
             }
         }
     ) {
-        val type = ProtocolEndpointType.RPC
         val peer: PeerEndpoint = getParameter("peer")
         val passwordParam: String? = getOptionalParameter("password")
-        val endpoint = ProtocolEndpoint(peer.toString(), type, passwordParam)
+        val endpoint = ProtocolEndpoint(
+            password = passwordParam,
+            address = peer.address,
+            port = peer.port
+        )
 
         this.extraData["connect"] = endpoint
 

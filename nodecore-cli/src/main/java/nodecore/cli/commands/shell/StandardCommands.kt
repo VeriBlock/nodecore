@@ -90,7 +90,7 @@ fun CommandFactory.standardCommands() {
                 )
                 val requiresConnection = commandServiceType == CommandServiceType.RPC
                 if (
-                    isValidType(commandServiceType, shell.getProtocolType())
+                    isValidType(commandServiceType, shell.protocolType)
                     && (!requiresConnection || (requiresConnection && shell.isConnected()))
                 ) {
                     shell.printStyled("\nCommand: ${def.name}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
