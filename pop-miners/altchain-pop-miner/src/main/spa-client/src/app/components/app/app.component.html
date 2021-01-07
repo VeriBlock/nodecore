@@ -19,13 +19,16 @@
       <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
         <span>Balance</span>
         <span>{{ vbkBalance || '0.00' }} VBK</span>
-        <span>Address: {{vbkAddress}}</span>
+        <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="5px">
+          <span>Address: </span>
+          <span style="word-break: break-word;">{{vbkAddress}}</span>
+        </div>
       </div>
 
       <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"
         style="width: 100%; padding-left: 1em; padding-right: 1em;">
         <button mat-mini-fab type="button" color="primary" matTooltip="Send">
-          <mat-icon>send</mat-icon>
+          <mat-icon>cloud_upload</mat-icon>
         </button>
         <button mat-mini-fab type="button" color="warn" matTooltip="Receive">
           <mat-icon>cloud_download</mat-icon>

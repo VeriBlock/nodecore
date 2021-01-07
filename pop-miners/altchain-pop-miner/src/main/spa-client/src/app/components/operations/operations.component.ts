@@ -7,7 +7,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
-import { ApiService } from '@core/service/api.service';
+import { MinerService } from '@core/services/miner.service';
 
 import { Operation } from '@core/model/operation.model';
 
@@ -37,7 +37,7 @@ export class OperationsComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private apiService: ApiService,
+    private minerService: MinerService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -69,7 +69,7 @@ export class OperationsComponent implements OnInit {
       .pipe(
         startWith(0),
         switchMap(() =>
-          this.apiService.getOperations(
+          this.minerService.getOperations(
             this.form.controls['filter']?.value || 'active',
             this.pageLimit,
             this.pageOffset
@@ -88,7 +88,7 @@ export class OperationsComponent implements OnInit {
         startWith(0),
         switchMap(() =>
           this.selectedOperationId
-            ? this.apiService.getOperationWorkflow(this.selectedOperationId)
+            ? this.minerService.getOperationWorkflow(this.selectedOperationId)
             : EMPTY
         )
       )
@@ -98,7 +98,7 @@ export class OperationsComponent implements OnInit {
   }
 
   public loadWorkFlow() {
-    this.apiService
+    this.minerService
       .getOperationWorkflow(this.selectedOperationId)
       .subscribe((workflow) => {
         this.operationWorkflows[this.selectedOperationId] = workflow;
@@ -128,7 +128,7 @@ export class OperationsComponent implements OnInit {
   private refreshOperationList() {
     this.tableLoading = true;
 
-    this.apiService
+    this.minerService
       .getOperations(
         this.form.controls['filter']?.value || 'active',
         this.pageLimit,

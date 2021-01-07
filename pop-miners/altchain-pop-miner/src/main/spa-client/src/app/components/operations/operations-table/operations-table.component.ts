@@ -16,13 +16,15 @@ import {
   animate,
 } from '@angular/animations';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 
-import { Operation } from '@core/model/operation.model';
-import { ActivatedRoute, Params, Router } from '@angular/router';
-import { ApiService } from '@core/service/api.service';
-import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { MinerService } from '@core/services/miner.service';
+
 import { LogsDialogComponent } from '../logs-dialog/logs-dialog.component';
+
+import { Operation } from '@core/model/operation.model';
 
 @Component({
   selector: 'vbk-operations-table',
@@ -80,7 +82,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   public defaultPageIndex = 0;
 
   constructor(
-    private apiService: ApiService,
+    private minerService: MinerService,
     private router: Router,
     private route: ActivatedRoute,
     private dialog: MatDialog
@@ -119,7 +121,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   }
 
   public openLogsDialog(level: string) {
-    this.apiService
+    this.minerService
       .getOperationLogs(this.selectedOperationId, level)
       .subscribe((logs) => {
         const dialogConfig = new MatDialogConfig();

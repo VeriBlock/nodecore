@@ -9,6 +9,7 @@ mat-drawer-container {
   mat-drawer {
     flex: 1;
     min-width: 190px;
+    max-width: 250px;
     height: 100%;
     padding: 20px;
     text-align: center;

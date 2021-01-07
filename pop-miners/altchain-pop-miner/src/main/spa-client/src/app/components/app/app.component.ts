@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { startWith, switchMap } from 'rxjs/operators';
 import { interval } from 'rxjs';
 
-import { ApiService } from '@core/service/api.service';
+import { MinerService } from '@core/services/miner.service';
 
 import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 
@@ -12,16 +12,15 @@ import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-
   public configuredAltchains: ConfiguredAltchain[] = [];
   public vbkAddress: string;
   public vbkBalance: string;
 
-  constructor(private apiService: ApiService) {}
+  constructor(private minerService: MinerService) {}
 
   ngOnInit() {
     // Get the configured altchains
-    this.apiService
+    this.minerService
       .getConfiguredAltchains()
       .subscribe((configuredAltchains) => {
         this.configuredAltchains = configuredAltchains.altchains;
@@ -31,7 +30,7 @@ export class AppComponent implements OnInit {
     interval(61_000)
       .pipe(
         startWith(0),
-        switchMap(() => this.apiService.getMinerInfo())
+        switchMap(() => this.minerService.getMinerInfo())
       )
       .subscribe((response) => {
         this.vbkAddress = response.vbkAddress;

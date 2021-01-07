@@ -1,8 +1,9 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
+import { MinerService } from '@core/services/miner.service';
+
 import { Operation } from '@core/model/operation.model';
-import { ApiService } from '@core/service/api.service';
 
 @Component({
   selector: 'vbk-logs-dialog',
@@ -11,7 +12,7 @@ import { ApiService } from '@core/service/api.service';
 export class LogsDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<Operation>,
-    private apiService: ApiService,
+    private minerService: MinerService,
     @Inject(MAT_DIALOG_DATA) public logs: string[]
   ) {}
 }

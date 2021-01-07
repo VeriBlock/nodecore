@@ -6,7 +6,7 @@ import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 import { Operation } from '@core/model/operation.model';
 import { MineRequest } from '@core/model/miner.model';
 
-import { ApiService } from '@core/service/api.service';
+import { MinerService } from '@core/services/miner.service';
 
 @Component({
   selector: 'vbk-mine-dialog',
@@ -18,7 +18,7 @@ export class MineDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<Operation>,
-    private apiService: ApiService,
+    private minerService: MinerService,
     @Inject(MAT_DIALOG_DATA) public configuredAltchains: ConfiguredAltchain[]
   ) {
     this.formGroup = new FormGroup({
@@ -29,7 +29,7 @@ export class MineDialogComponent {
   mine(): void {
     const request = new MineRequest();
     request.chainSymbol = this.formGroup.get('chainSymbol').value;
-    this.apiService.mine(request).subscribe((response) => {
+    this.minerService.postMine(request).subscribe((response) => {
       console.info(
         'Mine request successful! Operation id: ' + response.operationId
       );

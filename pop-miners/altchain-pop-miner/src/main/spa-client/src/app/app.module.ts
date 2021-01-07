@@ -5,16 +5,17 @@ import { BrowserModule } from '@angular/platform-browser';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ReactiveFormsModule } from '@angular/forms';
 
-import { ErrorInterceptor } from './core/service/interceptor/error.interceptor';
-import { ApiService } from './core/service/api.service';
+import { ErrorInterceptor } from '@core/services/interceptor/error.interceptor';
+import { ConfigService } from '@core/services/config.service';
+import { MinerService } from '@core/services/miner.service';
 
 import { AppRoutingModule } from './app-routing.module';
-import { SharedModule } from './shared/shared.module';
+import { SharedModule } from '@shared/shared.module';
 
+import { OperationsTableComponent } from '@components/operations/operations-table/operations-table.component';
 import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dialog.component';
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
-import { OperationsTableComponent } from './components/operations/operations-table/operations-table.component';
 import { AppComponent } from '@components/app/app.component';
 
 @NgModule({
@@ -36,7 +37,8 @@ import { AppComponent } from '@components/app/app.component';
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-    ApiService,
+    MinerService,
+    ConfigService,
   ],
   bootstrap: [AppComponent],
 })
