@@ -1,7 +1,7 @@
 <mat-toolbar style="margin-bottom: 0;">
   <mat-toolbar-row>
 
-    <h2>Ethereum (ETH)</h2>
+    <h2>{{ selectedAltChain?.name }} ({{ selectedAltChain?.key}})</h2>
 
     <button mat-button type="button" aria-label="Preferences" matTooltip="Preferences" (click)="openCoinConfigurationDialog()"
       [disabled]="isLoadingConfiguration">

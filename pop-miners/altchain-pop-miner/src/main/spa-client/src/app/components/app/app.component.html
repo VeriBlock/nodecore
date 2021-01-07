@@ -5,7 +5,7 @@
       <img src="/assets/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
       <span>Testnet</span>
 
-      <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0">
+      <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
         <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
           <img [src]="altchain?.logo || '/assets/circle-logo.png'" style="display:block;" width="28px" height="28" />
           <span>{{ altchain?.name }}</span>
@@ -49,7 +49,16 @@
   </mat-drawer>
 
   <mat-drawer-content>
-    <router-outlet></router-outlet>
+    <ng-container *ngIf="!isAltChainSelected;">
+      <mat-card class="alert-info">
+        <mat-card-content style="display: flex;">
+          <mat-icon size="lg" style="padding-right: 5px;">info</mat-icon>
+          <span>No AltChain selected</span>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
+
+    <router-outlet *ngIf="isAltChainSelected"></router-outlet>
   </mat-drawer-content>
 
 </mat-drawer-container>

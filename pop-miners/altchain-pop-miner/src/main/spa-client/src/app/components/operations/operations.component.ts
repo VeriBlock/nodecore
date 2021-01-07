@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSelectChange } from '@angular/material/select';
@@ -8,23 +8,27 @@ import { MatDialog } from '@angular/material/dialog';
 import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
+import { DataShareService } from '@core/services/data-share.service';
 import { ConfigService } from '@core/services/config.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
 
-import { Operation } from '@core/model/operation.model';
+import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
 import { AutoMineRound } from '@core/model/config.model';
+import { Operation } from '@core/model/operation.model';
 
 @Component({
   selector: 'vbk-operations',
   templateUrl: './operations.component.html',
   styleUrls: ['./operations.component.scss'],
 })
-export class OperationsComponent implements OnInit {
+export class OperationsComponent implements OnInit, OnDestroy {
   public form: FormGroup = this.formBuilder.group({
     filter: '',
   });
+
+  public selectedAltChain: ConfiguredAltchain = null;
 
   public filters: string[] = ['all', 'active', 'completed', 'failed'];
   public isLoading = true;
@@ -32,7 +36,7 @@ export class OperationsComponent implements OnInit {
   public isLoadingConfiguration = false;
 
   public operationsTotalCount: number = 0;
-  public selectedOperationId: string;
+  public selectedOperationId: string = null;
 
   public operationsDataSource = new MatTableDataSource<Operation>();
 
@@ -41,16 +45,26 @@ export class OperationsComponent implements OnInit {
 
   public operationWorkflows = {};
 
+  private currentSelectionSubscription: any;
+
   constructor(
     private formBuilder: FormBuilder,
     private minerService: MinerService,
     private configService: ConfigService,
+    private dataShareService: DataShareService,
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog
   ) {}
 
   ngOnInit() {
+    this.currentSelectionSubscription = this.dataShareService.currentAltChain.subscribe(
+      (data: ConfiguredAltchain) => {
+        this.initValues();
+        this.selectedAltChain = data;
+      }
+    );
+
     // Get route's query params
     this.route.queryParams.subscribe((params) => {
       this.selectedOperationId = params.selectedOperationId || null;
@@ -103,6 +117,26 @@ export class OperationsComponent implements OnInit {
       .subscribe((workflow) => {
         this.operationWorkflows[workflow.operationId] = workflow;
       });
+  }
+
+  ngOnDestroy(): void {
+    this.currentSelectionSubscription.unsubscribe();
+  }
+
+  public initValues() {
+    this.isLoading = true;
+    this.tableLoading = false;
+    this.isLoadingConfiguration = false;
+
+    this.operationsTotalCount = 0;
+    this.selectedOperationId = null;
+
+    this.operationsDataSource.data = [];
+
+    this.pageLimit = 10;
+    this.pageOffset = 0;
+
+    this.operationWorkflows = {};
   }
 
   public loadWorkFlow() {

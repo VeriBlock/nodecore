@@ -6,19 +6,20 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ErrorInterceptor } from '@core/services/interceptor/error.interceptor';
+import { DataShareService } from '@core/services/data-share.service';
 import { ConfigService } from '@core/services/config.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { AppRoutingModule } from './app-routing.module';
 import { SharedModule } from '@shared/shared.module';
 
+import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
+import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-dialog/app-fee-setting-dialog.component';
 import { OperationsTableComponent } from '@components/operations/operations-table/operations-table.component';
 import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dialog.component';
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
 import { AppComponent } from '@components/app/app.component';
-import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
-import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-dialog/app-fee-setting-dialog.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-d
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
     MinerService,
     ConfigService,
+    DataShareService
   ],
   bootstrap: [AppComponent],
 })

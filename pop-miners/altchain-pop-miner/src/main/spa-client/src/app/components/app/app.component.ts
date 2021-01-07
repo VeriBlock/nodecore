@@ -3,6 +3,7 @@ import { startWith, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { interval } from 'rxjs';
 
+import { DataShareService } from '@core/services/data-share.service';
 import { ConfigService } from '@core/services/config.service';
 import { MinerService } from '@core/services/miner.service';
 
@@ -22,9 +23,12 @@ export class AppComponent implements OnInit {
   public vbkBalance: string;
   public isLoadingSettings = false;
 
+  public isAltChainSelected = false;
+
   constructor(
-    private minerService: MinerService,
+    private dataShareService: DataShareService,
     private configService: ConfigService,
+    private minerService: MinerService,
     private dialog: MatDialog
   ) {}
 
@@ -46,6 +50,11 @@ export class AppComponent implements OnInit {
         this.vbkAddress = response.vbkAddress;
         this.vbkBalance = (response.vbkBalance / 100_000_000).toString();
       });
+  }
+
+  public changeAltChain(data: ConfiguredAltchain) {
+    this.isAltChainSelected = Boolean(data?.key);
+    this.dataShareService.changeSelectedAltChain(data);
   }
 
   public openFeeConfigurationDialog() {
