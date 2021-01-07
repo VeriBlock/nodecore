@@ -21,7 +21,8 @@ val webApiModule = module {
                 get<MiningController>(),
                 get<DiagnosticController>(),
                 get<ConfigurationController>(),
-                get<QuitController>()
+                get<QuitController>(),
+                get<WalletController>()
             )
         )
     }
