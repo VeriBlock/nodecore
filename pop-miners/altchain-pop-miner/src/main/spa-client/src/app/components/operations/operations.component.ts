@@ -4,12 +4,17 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSelectChange } from '@angular/material/select';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
+import { ConfigService } from '@core/services/config.service';
 import { MinerService } from '@core/services/miner.service';
 
+import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
+
 import { Operation } from '@core/model/operation.model';
+import { AutoMineRound } from '@core/model/config.model';
 
 @Component({
   selector: 'vbk-operations',
@@ -24,6 +29,7 @@ export class OperationsComponent implements OnInit {
   public filters: string[] = ['all', 'active', 'completed', 'failed'];
   public isLoading = true;
   public tableLoading = false;
+  public isLoadingConfiguration = false;
 
   public operationsTotalCount: number = 0;
   public selectedOperationId: string;
@@ -38,8 +44,10 @@ export class OperationsComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private minerService: MinerService,
+    private configService: ConfigService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -157,6 +165,35 @@ export class OperationsComponent implements OnInit {
       relativeTo: this.route,
       queryParams: queryParams,
       queryParamsHandling: 'merge',
+    });
+  }
+
+  public openCoinConfigurationDialog() {
+    this.isLoadingConfiguration = true;
+
+    this.configService.getAutoMineConfig('vbtc').subscribe((data) => {
+      const dialogRef = this.dialog.open(CoinConfigurationDialogComponent, {
+        minWidth: '250px',
+        maxWidth: '500px',
+        panelClass: 'dialog',
+        data: data,
+        closeOnNavigation: true,
+      });
+      this.isLoadingConfiguration = false;
+
+      dialogRef
+        .afterClosed()
+        .subscribe((result: { save: boolean; data: AutoMineRound[] }) => {
+          if (result?.save) {
+            this.configService
+              .putAutoMineConfig('vbtc', {
+                automineRounds: result?.data || null,
+              })
+              .subscribe(() => {
+                console.log('save successful');
+              });
+          }
+        });
     });
   }
 }

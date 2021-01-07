@@ -3,10 +3,11 @@
 
     <h2>Ethereum (ETH)</h2>
 
-    <a mat-button [matMenuTriggerFor]="prefMenu" aria-label="Preferences" matTooltip="Preferences">
+    <button mat-button aria-label="Preferences" matTooltip="Preferences" (click)="openCoinConfigurationDialog()"
+      [disabled]="isLoadingConfiguration">
       <mat-icon aria-hidden="true">settings</mat-icon>
       <span>Coin Configuration</span>
-    </a>
+    </button>
 
   </mat-toolbar-row>
 </mat-toolbar>
@@ -64,16 +65,4 @@
     </a>
 
   </ng-template>
-</mat-menu>
-
-<!-- Preference menu -->
-<mat-menu #prefMenu="matMenu" [overlapTrigger]="false">
-
-  <a mat-menu-item [routerLink]="['/']">
-    <span>configuration 1</span>
-  </a>
-
-  <a mat-menu-item [routerLink]="['/']">
-    <span>configuration 2</span>
-  </a>
 </mat-menu>

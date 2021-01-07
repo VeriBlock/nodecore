@@ -3,7 +3,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ErrorInterceptor } from '@core/services/interceptor/error.interceptor';
 import { ConfigService } from '@core/services/config.service';
@@ -17,6 +17,7 @@ import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dia
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
 import { AppComponent } from '@components/app/app.component';
+import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
 
 @NgModule({
   declarations: [
@@ -25,12 +26,14 @@ import { AppComponent } from '@components/app/app.component';
     OperationsTableComponent,
     MineDialogComponent,
     LogsDialogComponent,
+    CoinConfigurationDialogComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
     BrowserAnimationsModule,
+    FormsModule,
     ReactiveFormsModule,
     FlexLayoutModule,
     SharedModule,
