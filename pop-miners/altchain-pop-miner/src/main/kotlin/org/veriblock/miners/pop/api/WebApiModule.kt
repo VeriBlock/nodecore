@@ -5,11 +5,13 @@ import org.veriblock.miners.pop.api.controller.ConfigurationController
 import org.veriblock.miners.pop.api.controller.DiagnosticController
 import org.veriblock.miners.pop.api.controller.MiningController
 import org.veriblock.miners.pop.api.controller.QuitController
+import org.veriblock.miners.pop.api.controller.WalletController
 
 val webApiModule = module {
     single { MiningController(get(), get(), get()) }
     single { DiagnosticController(get()) }
     single { ConfigurationController(get(), get(), get()) }
+    single { WalletController(get()) }
     single { QuitController() }
 
     single {

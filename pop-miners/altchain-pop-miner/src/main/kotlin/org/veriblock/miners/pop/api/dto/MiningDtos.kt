@@ -96,3 +96,14 @@ data class ConfiguredAltchain(
     val name: String,
     val payoutDelay: Int
 )
+
+@Request("A request to withdraw VBKs to address")
+data class WithdrawRequest(
+    val amount: String,
+    val destinationAddress: String
+)
+
+@Response("Withdraw transaction ids")
+data class WithdrawResponse(
+    val ids: List<String>
+)
