@@ -2,7 +2,7 @@
   <mat-drawer #drawer mode="side" opened disableClose color="accent">
 
     <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px" style="height: 100%; padding-bottom: 1em;">
-      <img src="/assets/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
+      <img src="/assets/images/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
       <span>Testnet</span>
 
       <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
