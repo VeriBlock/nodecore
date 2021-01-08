@@ -23,14 +23,11 @@ dependencies {
     api("commons-cli:commons-cli:1.4")
 
     // Crypto
-    api("org.bouncycastle:bcprov-jdk15on:1.60")
+    api("org.bouncycastle:bcprov-jdk15on:1.68")
 
     // Coroutines
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
-
-    // Persistence (TODO: remove me)
-    api("org.xerial:sqlite-jdbc:$sqliteVersion")
 
     // Logging
     api("io.github.microutils:kotlin-logging:1.6.26")

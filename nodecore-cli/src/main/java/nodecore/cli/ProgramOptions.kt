@@ -1,5 +1,5 @@
 // VeriBlock NodeCore CLI
-// Copyright 2017-2020 Xenios SEZC
+// Copyright 2017-2021 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
@@ -11,17 +11,19 @@ import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.ParseException
-import org.veriblock.core.params.NetworkParameters
-import org.veriblock.core.params.getDefaultNetworkParameters
-import java.util.ArrayList
-import java.util.Properties
+import java.util.*
 
 class ProgramOptions {
-    var configPath: String? = null
+    lateinit var configPath: String
         private set
-    private var _properties = Properties()
+
     var connect: String? = null
-        private set
+
+    private var properties = Properties()
+
+    init {
+        resetToDefaults()
+    }
 
     fun parse(args: Array<String>): Boolean {
         val configFileOption = Option.builder("c")
@@ -52,7 +54,7 @@ class ProgramOptions {
         val parser: CommandLineParser = DefaultParser()
         return try {
             val commandLine = parser.parse(options, args)
-            _properties = commandLine.getOptionProperties("D")
+            properties = commandLine.getOptionProperties("D")
             if (commandLine.hasOption("c")) {
                 configPath = commandLine.getOptionValue('c')
             }
@@ -67,19 +69,15 @@ class ProgramOptions {
     }
 
     fun resetToDefaults() {
-        _properties.clear()
+        properties.clear()
         configPath = "nodecore-cli.properties"
     }
 
     fun removeProperty(name: String) {
-        _properties.remove(name)
+        properties.remove(name)
     }
 
     fun getProperty(name: String): String? {
-        return _properties.getProperty(name)
-    }
-
-    init {
-        resetToDefaults()
+        return properties.getProperty(name)
     }
 }

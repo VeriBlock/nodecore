@@ -1,6 +1,6 @@
 // VeriBlock Blockchain Project
 // Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2020 Xenios SEZC
+// Copyright 2018-2021 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
@@ -38,7 +38,7 @@ class NIOClientTest {
             client.write(buffer)
             buffer.clear()
             client.read(buffer)
-            response = String(buffer.array()).trim { it <= ' ' }
+            response = String(buffer.array()).trim()
             println("response=$response")
             buffer.clear()
         } catch (e: IOException) {

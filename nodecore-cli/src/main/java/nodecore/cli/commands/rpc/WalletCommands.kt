@@ -10,7 +10,7 @@ import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
 import nodecore.cli.serialization.WalletTransactionInfo
-import nodecore.cli.utilities.CommandUtility
+import nodecore.cli.utilities.handleRuntimeException
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -140,7 +140,7 @@ fun CommandFactory.walletCommands() {
                 }
             } //end of loop
         } catch (e: StatusRuntimeException) {
-            result = CommandUtility.handleRuntimeException(e, logger)
+            result = handleRuntimeException(e, logger)
         }
 
         prepareResult(!result.isFailed, result.getMessages().map { VeriBlockMessages.Result.newBuilder().build() }) {

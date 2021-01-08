@@ -1,6 +1,6 @@
 // VeriBlock Blockchain Project
 // Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2020 Xenios SEZC
+// Copyright 2018-2021 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
@@ -21,7 +21,7 @@ buildscript {
 
 plugins {
     kotlin("jvm") version kotlinVersion
-    id("nebula.release") version "6.0.0"
+    id("nebula.release") version "6.0.1"
     id("com.jfrog.artifactory") version "4.15.1"
     jacoco
     id("org.sonarqube") version "2.8"

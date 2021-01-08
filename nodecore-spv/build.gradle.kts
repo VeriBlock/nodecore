@@ -1,12 +1,10 @@
 // VeriBlock Blockchain Project
 // Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2020 Xenios SEZC
+// Copyright 2018-2021 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
@@ -14,7 +12,6 @@ plugins {
     kotlin("jvm")
     idea
     id("java-library")
-    id("com.google.protobuf")
     `java-library`
     `maven-publish`
     id("com.jfrog.artifactory")
@@ -38,12 +35,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.13.3")
     implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
-    // Database
-    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
-
-    implementation("com.google.protobuf:protobuf-java:3.6.1")
-    implementation("com.google.protobuf:protobuf-java-util:3.6.1")
-
     implementation("org.freemarker:freemarker:2.3.14")
 
     //veriblock-core and nodecore-grpc plus their dependencies
@@ -54,23 +45,6 @@ dependencies {
     // required if you want to use Mockito for unit tests
     testCompile("org.mockito:mockito-core:2.7.22")
     testImplementation("io.mockk:mockk:1.9.3")
-}
-
-protobuf {
-    generatedFilesBaseDir = "$projectDir/src/generated"
-
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.5.1"
-    }
-}
-
-sourceSets {
-    main {
-        proto {}
-        java {
-            srcDir("$projectDir/src/generated/main/java")
-        }
-    }
 }
 
 tasks.test {

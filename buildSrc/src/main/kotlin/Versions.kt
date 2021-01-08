@@ -1,5 +1,5 @@
 
-const val kotlinVersion = "1.4.10"
+const val kotlinVersion = "1.4.21"
 const val coroutinesVersion = "1.4.1"
 const val ktorVersion = "1.4.0"
 const val kotlinxSerializationVersion = "1.0.1"

@@ -1,6 +1,6 @@
 // VeriBlock Blockchain Project
 // Copyright 2017-2018 VeriBlock, Inc
-// Copyright 2018-2020 Xenios SEZC
+// Copyright 2018-2021 Xenios SEZC
 // All rights reserved.
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
@@ -86,8 +86,6 @@ dependencies {
 
     implementation("com.zaxxer:HikariCP:3.3.1")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
-
-    implementation("org.bouncycastle:bcprov-jdk15on:1.60")
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")
