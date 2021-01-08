@@ -4,13 +4,17 @@ import { Observable } from 'rxjs/internal/Observable';
 
 import { environment } from 'src/environments/environment';
 
+import { HttpUtilsService } from './http-utils.service';
+
 import {
-  OperationSummaryList,
+  ConfiguredAltchainList,
+  MineRequest,
+  MinerInfo,
   Operation,
+  OperationGetListParams,
+  OperationSummaryList,
   OperationWorkflow,
-} from '@core/model/operation.model';
-import { ConfiguredAltchainList } from '@core/model/configured-altchain.model';
-import { MinerInfo, MineRequest } from '@core/model/miner.model';
+} from '@core/model';
 
 /*
  * @author Pere
@@ -22,7 +26,10 @@ import { MinerInfo, MineRequest } from '@core/model/miner.model';
 export class MinerService {
   private baseUrl: string;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private httpUtilsService: HttpUtilsService
+  ) {
     this.baseUrl = `${environment.apiUrl}/miner`;
   }
 
@@ -30,14 +37,12 @@ export class MinerService {
     return this.http.get<MinerInfo>(`${this.baseUrl}`);
   }
 
-  getOperations(
-    status: string,
-    limit: number,
-    offset: number
+  getOperationList(
+    dto: OperationGetListParams
   ): Observable<OperationSummaryList> {
-    return this.http.get<OperationSummaryList>(
-      `${this.baseUrl}/operations?status=${status}&limit=${limit}&offset=${offset}`
-    );
+    return this.http.get<OperationSummaryList>(`${this.baseUrl}/operations`, {
+      params: this.httpUtilsService.toHttpParams(dto),
+    });
   }
 
   getOperation(id: string): Observable<Operation> {

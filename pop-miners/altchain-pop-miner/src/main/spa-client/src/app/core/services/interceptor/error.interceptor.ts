@@ -8,11 +8,12 @@ import {
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { MatSnackBar } from '@angular/material/snack-bar';
+
+import { AlertService } from '../alert.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-  constructor(public snackBar: MatSnackBar) {}
+  constructor(public alertService: AlertService) {}
 
   intercept(
     request: HttpRequest<any>,
@@ -32,9 +33,9 @@ export class ErrorInterceptor implements HttpInterceptor {
             errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
           }
         }
-        this.snackBar.open(errorMessage, '', {
-          duration: 8000,
-        });
+
+        this.alertService.addWarning(errorMessage);
+
         return throwError(errorMessage);
       })
     );

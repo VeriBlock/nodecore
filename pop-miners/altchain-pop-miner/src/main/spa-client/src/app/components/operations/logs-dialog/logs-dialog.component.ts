@@ -3,7 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 import { MinerService } from '@core/services/miner.service';
 
-import { Operation } from '@core/model/operation.model';
+import { Operation } from '@core/model';
 
 @Component({
   selector: 'vbk-logs-dialog',

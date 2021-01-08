@@ -24,7 +24,7 @@ import { MinerService } from '@core/services/miner.service';
 
 import { LogsDialogComponent } from '../logs-dialog/logs-dialog.component';
 
-import { Operation } from '@core/model/operation.model';
+import { Operation } from '@core/model';
 
 @Component({
   selector: 'vbk-operations-table',

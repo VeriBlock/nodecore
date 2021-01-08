@@ -1,4 +1,4 @@
-@import '~@angular/material/theming';
+@import "~@angular/material/theming";
 
 @mixin alert-theme($theme) {
   $primary: map-get($theme, primary);
@@ -6,9 +6,25 @@
   $warn: map-get($theme, warn);
   $foreground: map-get($theme, foreground);
 
+  .alert-success {
+    color: mat-contrast($primary, 400);
+    background-color: mat-color($primary);
+    display: flex;
+    justify-content: center;
+    word-break: break-word;
+  }
+
   .alert-info {
-    color: black;
-    background-color: mat-color($warn, lighter);
+    color: mat-contrast($warn, 100);
+    background-color: mat-color($warn, 100);
+    display: flex;
+    justify-content: center;
+    word-break: break-word;
+  }
+
+  .alert-warning {
+    color: mat-contrast($warn, 400);
+    background-color: mat-color($warn);
     display: flex;
     justify-content: center;
     word-break: break-word;

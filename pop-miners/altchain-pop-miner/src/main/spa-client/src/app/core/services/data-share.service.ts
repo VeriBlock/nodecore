@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 
-import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
+import { ConfiguredAltchain } from '@core/model';
 
 @Injectable({
   providedIn: 'root',

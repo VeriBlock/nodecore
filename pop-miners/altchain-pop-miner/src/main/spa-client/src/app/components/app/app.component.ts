@@ -5,12 +5,12 @@ import { interval } from 'rxjs';
 
 import { DataShareService } from '@core/services/data-share.service';
 import { ConfigService } from '@core/services/config.service';
+import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { AppFeeSettingDialogComponent } from './app-fee-setting-dialog/app-fee-setting-dialog.component';
 
-import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
-import { VbkFeeConfig } from '@core/model/config.model';
+import { ConfiguredAltchain, VbkFeeConfig } from '@core/model';
 
 @Component({
   selector: 'vbk-root',
@@ -28,6 +28,7 @@ export class AppComponent implements OnInit {
   constructor(
     private dataShareService: DataShareService,
     private configService: ConfigService,
+    private alertService: AlertService,
     private minerService: MinerService,
     private dialog: MatDialog
   ) {}
@@ -72,10 +73,14 @@ export class AppComponent implements OnInit {
 
       dialogRef
         .afterClosed()
-        .subscribe((result: { save: boolean; data: VbkFeeConfig }) => {
+        .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
+          console.log(result?.feeConfig);
+
           if (result?.save) {
-            this.configService.putVbkFee(data).subscribe(() => {
-              console.log('save successful');
+            this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
+              this.alertService.addSuccess(
+                'Configuration updated successfully!'
+              );
             });
           }
         });
@@ -87,7 +92,6 @@ export class AppComponent implements OnInit {
   }
 
   public showImg(chain: ConfiguredAltchain) {
-    console.log(chain);
     chain.hasLogo = true;
   }
 }

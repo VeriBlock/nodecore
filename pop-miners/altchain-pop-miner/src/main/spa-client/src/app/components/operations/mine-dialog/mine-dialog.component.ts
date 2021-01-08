@@ -1,12 +1,10 @@
 import { Component, Inject } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-
-import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
-import { Operation } from '@core/model/operation.model';
-import { MineRequest } from '@core/model/miner.model';
+import { FormControl, FormGroup } from '@angular/forms';
 
 import { MinerService } from '@core/services/miner.service';
+
+import { Operation, ConfiguredAltchain, MineRequest } from '@core/model';
 
 @Component({
   selector: 'vbk-mine-dialog',

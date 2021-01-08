@@ -10,13 +10,12 @@ import { EMPTY, interval } from 'rxjs';
 
 import { DataShareService } from '@core/services/data-share.service';
 import { ConfigService } from '@core/services/config.service';
+import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
 
-import { ConfiguredAltchain } from '@core/model/configured-altchain.model';
-import { AutoMineRound } from '@core/model/config.model';
-import { Operation } from '@core/model/operation.model';
+import { ConfiguredAltchain, Operation, AutoMineRound } from '@core/model';
 
 @Component({
   selector: 'vbk-operations',
@@ -48,10 +47,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
   private currentSelectionSubscription: any;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private minerService: MinerService,
-    private configService: ConfigService,
     private dataShareService: DataShareService,
+    private configService: ConfigService,
+    private alertService: AlertService,
+    private minerService: MinerService,
+    private formBuilder: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog
@@ -92,11 +92,12 @@ export class OperationsComponent implements OnInit, OnDestroy {
       .pipe(
         startWith(0),
         switchMap(() =>
-          this.minerService.getOperations(
-            this.form.controls['filter']?.value || 'active',
-            this.pageLimit,
-            this.pageOffset
-          )
+          this.minerService.getOperationList({
+            altchainKey: this.selectedAltChain?.key || null,
+            status: this.form.controls['filter']?.value || 'active',
+            limit: this.pageLimit,
+            offset: this.pageOffset,
+          })
         )
       )
       .subscribe((response) => {
@@ -172,11 +173,12 @@ export class OperationsComponent implements OnInit, OnDestroy {
     this.tableLoading = true;
 
     this.minerService
-      .getOperations(
-        this.form.controls['filter']?.value || 'active',
-        this.pageLimit,
-        this.pageOffset
-      )
+      .getOperationList({
+        altchainKey: this.selectedAltChain?.key || null,
+        status: this.form.controls['filter']?.value || 'active',
+        limit: this.pageLimit,
+        offset: this.pageOffset,
+      })
       .subscribe((response) => {
         this.operationsDataSource.data = response.operations.slice();
 
@@ -225,7 +227,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
                 automineRounds: result?.data || null,
               })
               .subscribe(() => {
-                console.log('save successful');
+                this.alertService.addSuccess(
+                  'Configuration updated successfully!'
+                );
               });
           }
         });

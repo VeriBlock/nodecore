@@ -7,6 +7,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ErrorInterceptor } from '@core/services/interceptor/error.interceptor';
 import { DataShareService } from '@core/services/data-share.service';
+import { HttpUtilsService } from '@core/services/http-utils.service';
 import { ConfigService } from '@core/services/config.service';
 import { MinerService } from '@core/services/miner.service';
 
@@ -20,6 +21,7 @@ import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dia
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
 import { AppComponent } from '@components/app/app.component';
+import { AlertService } from '@core/services/alert.service';
 
 @NgModule({
   declarations: [
@@ -43,9 +45,11 @@ import { AppComponent } from '@components/app/app.component';
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    AlertService,
     MinerService,
     ConfigService,
-    DataShareService
+    DataShareService,
+    HttpUtilsService,
   ],
   bootstrap: [AppComponent],
 })

@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { VbkFeeConfig } from '@core/model/config.model';
+import { VbkFeeConfig } from '@core/model';
 
 @Component({
   selector: 'vbk-app-fee-setting-dialog',
@@ -34,6 +34,6 @@ export class AppFeeSettingDialogComponent implements OnInit {
   }
 
   public onSave(): void {
-    this.dialogRef.close({ save: true, data: this.form.value });
+    this.dialogRef.close({ save: true, feeConfig: this.form.value });
   }
 }
