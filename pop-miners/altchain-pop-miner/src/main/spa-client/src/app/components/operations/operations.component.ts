@@ -68,6 +68,8 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
     // Get route's query params
     this.route.queryParams.subscribe((params) => {
+      this.isLoading = true;
+
       this.selectedOperationId = params.selectedOperationId || null;
 
       if (this.selectedOperationId) {

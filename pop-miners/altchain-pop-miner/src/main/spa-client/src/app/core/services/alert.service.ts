@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-const DefaultDurationMs = 40000;
+const DefaultDurationMs = 4000;
 const ErrorDurationMs = 8000;
 
 @Injectable({

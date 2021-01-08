@@ -9,25 +9,28 @@
   .alert-success {
     color: mat-contrast($primary, 400);
     background-color: mat-color($primary);
-    display: flex;
-    justify-content: center;
-    word-break: break-word;
   }
 
   .alert-info {
     color: mat-contrast($warn, 100);
     background-color: mat-color($warn, 100);
-    display: flex;
-    justify-content: center;
-    word-break: break-word;
   }
 
   .alert-warning {
     color: mat-contrast($warn, 400);
     background-color: mat-color($warn);
+  }
+
+  .alert-success,
+  .alert-info,
+  .alert-warning {
     display: flex;
     justify-content: center;
     word-break: break-word;
+
+    simple-snack-bar {
+      justify-content: center;
+    }
   }
 
   .text-success {
