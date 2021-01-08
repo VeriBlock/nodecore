@@ -22,7 +22,7 @@ body {
 
   a,
   button {
-    &:not(.mat-mini-fab) .mat-button-wrapper mat-icon {
+    &:not(.mat-mini-fab):not(.mat-icon-button) .mat-button-wrapper mat-icon {
       margin-right: 0.5em;
     }
   }

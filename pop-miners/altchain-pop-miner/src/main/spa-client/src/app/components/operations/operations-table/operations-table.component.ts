@@ -59,6 +59,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
 
   @Input()
   public displayedColumns: string[] = [
+    'moreColumn',
     'operationIdColumn',
     'stateColumn',
     'taskColumn',
