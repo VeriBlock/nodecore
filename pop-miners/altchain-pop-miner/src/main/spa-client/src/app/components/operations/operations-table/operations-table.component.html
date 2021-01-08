@@ -83,7 +83,7 @@
 
                   <ng-container matColumnDef="taskColumn">
                     <th mat-header-cell *matHeaderCellDef> Task </th>
-                    <td mat-cell *matCellDef="let element"> {{element.taskName}} </td>
+                    <td mat-cell *matCellDef="let element"> {{adjustLetters(element?.taskName)}} </td>
                   </ng-container>
 
                   <ng-container matColumnDef="detailsColumn">

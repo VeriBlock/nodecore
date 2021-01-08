@@ -148,4 +148,19 @@ export class OperationsTableComponent implements OnInit, OnChanges {
       ? 'expandedOperation'
       : 'collapsedOperation';
   }
+
+  public adjustLetters(task: string): string {
+    const wordsAndNumbers: string[] = task.toLowerCase().split('. ');
+    const words: string[] = wordsAndNumbers[1].split('_');
+
+    words.forEach((word, index) => {
+      words[index] = this.capitalizeFirstLetter(word);
+    });
+
+    return `${wordsAndNumbers[0]}. ${words.join(' ')}`;
+  }
+
+  public capitalizeFirstLetter(word: string): string {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }
 }

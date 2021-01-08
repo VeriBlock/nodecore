@@ -4,13 +4,20 @@ import { MatDialog } from '@angular/material/dialog';
 import { interval } from 'rxjs';
 
 import { DataShareService } from '@core/services/data-share.service';
+import { NetworkService } from '@core/services/network.service';
 import { ConfigService } from '@core/services/config.service';
 import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { AppFeeSettingDialogComponent } from './app-fee-setting-dialog/app-fee-setting-dialog.component';
 
-import { ConfiguredAltchain, VbkFeeConfig } from '@core/model';
+import {
+  ConfiguredAltchain,
+  ConfiguredAltchainList,
+  NetworkInfoResponse,
+  VbkFeeConfig,
+} from '@core/model';
+import { forkJoin } from 'rxjs/internal/observable/forkJoin';
 
 @Component({
   selector: 'vbk-root',
@@ -18,6 +25,7 @@ import { ConfiguredAltchain, VbkFeeConfig } from '@core/model';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
+  public networkInfo: string = null;
   public configuredAltchains: ConfiguredAltchain[] = [];
   public vbkAddress: string;
   public vbkBalance: string;
@@ -27,6 +35,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     private dataShareService: DataShareService,
+    private networkService: NetworkService,
     private configService: ConfigService,
     private alertService: AlertService,
     private minerService: MinerService,
@@ -34,12 +43,14 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Get the configured altchains
-    this.minerService
-      .getConfiguredAltchains()
-      .subscribe((configuredAltchains) => {
-        this.configuredAltchains = configuredAltchains.altchains;
-      });
+    forkJoin([
+      this.minerService.getConfiguredAltchains(),
+      this.networkService.getNetworkInfo(),
+    ]).subscribe((results) => {
+      this.configuredAltchains =
+        (results[0] as ConfiguredAltchainList)?.altchains || [];
+      this.networkInfo = (results[1] as NetworkInfoResponse)?.name || null;
+    });
 
     // Check the miner data API every 61 seconds
     interval(61_000)
