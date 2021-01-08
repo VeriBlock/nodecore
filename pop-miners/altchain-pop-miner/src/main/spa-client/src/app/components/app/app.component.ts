@@ -81,4 +81,13 @@ export class AppComponent implements OnInit {
         });
     });
   }
+
+  public getAltChainLogo(key: string) {
+    return `https://cryptoicons.org/api/icon/${key}/100`;
+  }
+
+  public showImg(chain: ConfiguredAltchain) {
+    console.log(chain);
+    chain.hasLogo = true;
+  }
 }

@@ -7,4 +7,6 @@ export class ConfiguredAltchain {
   key: string;
   name: string;
   payoutDelay: number;
+
+  hasLogo?: boolean;
 }

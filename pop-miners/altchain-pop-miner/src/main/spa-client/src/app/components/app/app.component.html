@@ -6,9 +6,11 @@
       <span>Testnet</span>
 
       <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
-        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
-          <img [src]="altchain?.logo || '/assets/circle-logo.png'" style="display:block;" width="28px" height="28" />
-          <span>{{ altchain?.name }}</span>
+        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px;">
+          <mat-icon inline *ngIf="!altchain?.hasLogo">help</mat-icon>
+          <img [src]="getAltChainLogo(altchain?.key)" (load)="showImg(altchain)" alt="Icon" height="48px" width="48px"
+            [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" />
+          <span style="font-size: 14px;">{{ altchain?.name }}</span>
         </div>
       </mat-card>
 

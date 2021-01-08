@@ -61,6 +61,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     this.currentSelectionSubscription = this.dataShareService.currentAltChain.subscribe(
       (data: ConfiguredAltchain) => {
         this.initValues();
+        this.updateQueryParams();
         this.selectedAltChain = data;
       }
     );
