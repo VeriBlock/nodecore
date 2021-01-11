@@ -281,13 +281,9 @@ class SecurityInheritingMonitor(
                 val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
                 val contextBlocksToSubmit = contextBlocks.filter {
                     it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
+                }.onEach {
+                    chain.submitPopVbk(it)
                 }
-
-                if (contextBlocksToSubmit.isEmpty()) {
-                    return@collect
-                }
-
-                chain.submitContext(contextBlocksToSubmit)
                 logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
@@ -332,7 +328,9 @@ class SecurityInheritingMonitor(
                 logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
 
                 // Submit them to the blockchain
-                chain.submitVtbs(vtbs)
+                vtbs.forEach {
+                    chain.submitPopVtb(it)
+                }
                 logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }

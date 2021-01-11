@@ -29,6 +29,7 @@ import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.model.SubmitPopResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
@@ -280,24 +281,16 @@ class BitcoinFamilyChain(
         )
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        logger.debug { "Submitting PoP data to $name daemon at ${config.host}..." }
-        // submit VBK blocks first
-        contextBlocks.forEach {
-            rpcRequest("submitpop", listOf(listOf(SerializeDeserializeService.serialize(it).toHex()), emptyList(), emptyList()))
-        }
-        // then VTBs
-        vtbs.forEach {
-            rpcRequest("submitpop", listOf(emptyList(), listOf(SerializeDeserializeService.serialize(it).toHex()), emptyList()))
-        }
-        // then ATVs
-        atvs.forEach {
-            rpcRequest("submitpop", listOf(emptyList(), emptyList(), listOf(SerializeDeserializeService.serialize(it).toHex())))
-        }
+    override suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse {
+        return rpcRequest("submitpopvbk", listOf(SerializeDeserializeService.serialize(block).toHex()))
+    }
+
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
+        return rpcRequest("submitpopatv", listOf(SerializeDeserializeService.serialize(atv).toHex()))
+    }
+
+    override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
+        return rpcRequest("submitpopvtb", listOf(SerializeDeserializeService.serialize(vtb).toHex()))
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {

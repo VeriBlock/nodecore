@@ -196,7 +196,7 @@ class ApmTaskService(
                     blockOfProof
                 )
 
-                operation.chain.submitAtvs(listOf(proofOfProof))
+                val response = operation.chain.submitPopAtv(proofOfProof)
                 val atvId = proofOfProof.getId().toHex()
 
                 val chainName = operation.chain.name

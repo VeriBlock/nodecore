@@ -163,12 +163,6 @@ internal data class StoredVtbIds(
     val vtbids: List<String?>?
 )
 
-internal data class SubmitPopResponse(
-    val vbkblocks: List<ValidationData>,
-    val vtbs: List<ValidationData>,
-    val atvs: List<ValidationData>
-)
-
 internal data class ValidationData(
     val id: String,
     val validity: ValidityInfo

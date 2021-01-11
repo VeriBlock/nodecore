@@ -28,6 +28,7 @@ import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.model.SubmitPopResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
@@ -167,24 +168,36 @@ class TestChain(
         return ApmInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        val atv = atvs.firstOrNull()
-            ?: return
-        val publicationData = atv.transaction.publicationData
-            ?: error("Proof of proof does not have publication data!")
-        val publicationDataHeader = publicationData.header.toHex()
-        val publicationDataContextInfo = publicationData.contextInfo.toHex()
-        val expectedContextInfo = operations[publicationDataHeader]
-            ?: error("Couldn't find operation with initial header $publicationDataHeader")
-        if (publicationDataContextInfo != expectedContextInfo) {
-            error("Expected publication data context differs from the one PoP supplied back")
-        }
-        publishedAtvs += atvs
+    override suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse {
+        TODO("Not yet implemented")
     }
+
+    override suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
+        TODO("Not yet implemented")
+    }
+
+//    override suspend fun submit(
+//        contextBlocks: List<VeriBlockBlock>,
+//        atvs: List<AltPublication>,
+//        vtbs: List<VeriBlockPublication>
+//    ) {
+//        val atv = atvs.firstOrNull()
+//            ?: return
+//        val publicationData = atv.transaction.publicationData
+//            ?: error("Proof of proof does not have publication data!")
+//        val publicationDataHeader = publicationData.header.toHex()
+//        val publicationDataContextInfo = publicationData.contextInfo.toHex()
+//        val expectedContextInfo = operations[publicationDataHeader]
+//            ?: error("Couldn't find operation with initial header $publicationDataHeader")
+//        if (publicationDataContextInfo != expectedContextInfo) {
+//            error("Expected publication data context differs from the one PoP supplied back")
+//        }
+//        publishedAtvs += atvs
+//    }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
         return String(addressData)
