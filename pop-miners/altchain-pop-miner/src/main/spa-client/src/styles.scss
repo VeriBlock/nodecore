@@ -9,12 +9,6 @@ body {
     }
   }
 
-  mat-card {
-    .mat-table {
-      width: 100%;
-    }
-  }
-
   .overflow-container {
     display: block;
     overflow: auto;
@@ -29,18 +23,5 @@ body {
 
   .mat-divider {
     width: 100%;
-  }
-
-  .dialog .mat-dialog-container {
-    overflow: hidden;
-    font-size: 16px;
-    padding: 1em;
-    min-width: 200px;
-
-    .mat-dialog-content {
-      overflow: hidden;
-      height: 100%;
-      padding: 1em;
-    }
   }
 }

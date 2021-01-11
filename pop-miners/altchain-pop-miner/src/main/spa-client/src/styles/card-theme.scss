@@ -6,6 +6,12 @@
   $warn: map-get($theme, warn);
   $foreground: map-get($theme, foreground);
 
+  mat-card {
+    .mat-table {
+      width: 100%;
+    }
+  }
+
   mat-card.altchains {
     background-color: mat-color($accent);
     color: mat-contrast($accent, 400);

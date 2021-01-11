@@ -1,0 +1,24 @@
+@import "~@angular/material/theming";
+
+@mixin dialog-theme($theme) {
+  $accent: map-get($theme, accent);
+
+  .dialog .mat-dialog-container {
+    overflow: hidden;
+    font-size: 16px;
+    padding: 1em;
+    min-width: 200px;
+
+    .mat-dialog-title {
+      background-color: mat-color($accent);
+      color: mat-contrast($accent, 400);
+      padding: 1em;
+    }
+
+    .mat-dialog-content {
+      overflow: hidden;
+      height: 100%;
+      padding: 1em;
+    }
+  }
+}

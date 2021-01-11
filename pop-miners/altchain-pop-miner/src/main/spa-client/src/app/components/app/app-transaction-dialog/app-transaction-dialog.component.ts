@@ -65,8 +65,6 @@ export class AppTransactionDialogComponent implements OnInit {
   }
 
   public onWithdraw(): void {
-    console.log('withdraw', this.form.value);
-
     if (this.form.invalid) {
       this.alertService.addWarning(
         'Please check the form and fix the errors indicated'
@@ -87,7 +85,6 @@ export class AppTransactionDialogComponent implements OnInit {
     this.walletService
       .postWithdraw(sendData)
       .subscribe((res: WithdrawResponse) => {
-        console.log(res);
         this.alertService.addSuccess('Operation successful');
 
         this.tx = res.ids[0];
