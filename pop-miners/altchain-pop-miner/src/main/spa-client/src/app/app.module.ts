@@ -19,6 +19,7 @@ import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dia
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
 import { AppComponent } from '@components/app/app.component';
+import { AppTransactionDialogComponent } from './components/app/app-transaction-dialog/app-transaction-dialog.component';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -36,6 +37,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     OperationsComponent,
     MineDialogComponent,
     LogsDialogComponent,
+    AppTransactionDialogComponent,
   ],
   imports: [
     BrowserAnimationsModule,

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { startWith, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { interval } from 'rxjs';
+import { forkJoin } from 'rxjs/internal/observable/forkJoin';
+import { interval } from 'rxjs/internal/observable/interval';
 
 import { DataShareService } from '@core/services/data-share.service';
 import { NetworkService } from '@core/services/network.service';
@@ -9,6 +10,7 @@ import { ConfigService } from '@core/services/config.service';
 import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
+import { AppTransactionDialogComponent } from './app-transaction-dialog/app-transaction-dialog.component';
 import { AppFeeSettingDialogComponent } from './app-fee-setting-dialog/app-fee-setting-dialog.component';
 
 import {
@@ -17,7 +19,6 @@ import {
   NetworkInfoResponse,
   VbkFeeConfig,
 } from '@core/model';
-import { forkJoin } from 'rxjs/internal/observable/forkJoin';
 
 @Component({
   selector: 'vbk-root',
@@ -102,5 +103,19 @@ export class AppComponent implements OnInit {
 
   public showImg(chain: ConfiguredAltchain) {
     chain.hasLogo = true;
+  }
+
+  public openTransactionDialog(isDeposit: boolean) {
+    this.dialog.open(AppTransactionDialogComponent, {
+      minWidth: '500px',
+      maxWidth: '800px',
+      panelClass: 'dialog',
+      data: {
+        isDeposit,
+        vbkAddress: this.vbkAddress,
+        vbkBalance: this.vbkBalance,
+      },
+      closeOnNavigation: true,
+    });
   }
 }

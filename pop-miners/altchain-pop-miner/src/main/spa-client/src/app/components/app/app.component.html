@@ -36,10 +36,10 @@
 
         <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"
           style="width: 100%; padding-left: 1em; padding-right: 1em;">
-          <button mat-mini-fab type="button" color="primary" matTooltip="Deposit">
+          <button mat-mini-fab type="button" color="primary" matTooltip="Deposit" (click)="openTransactionDialog(true)">
             <mat-icon>cloud_upload</mat-icon>
           </button>
-          <button mat-mini-fab type="button" color="warn" matTooltip="Withdraw">
+          <button mat-mini-fab type="button" color="warn" matTooltip="Withdraw" (click)="openTransactionDialog(false)">
             <mat-icon>cloud_download</mat-icon>
           </button>
         </div>

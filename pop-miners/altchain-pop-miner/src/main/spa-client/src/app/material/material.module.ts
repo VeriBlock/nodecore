@@ -23,9 +23,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 
 import { CdkScrollableModule } from '@angular/cdk/scrolling';
+import { ClipboardModule } from '@angular/cdk/clipboard';
 
 const exportedComponents = [
   CdkScrollableModule,
+  ClipboardModule,
   MatBadgeModule,
   MatButtonModule,
   MatButtonToggleModule,
