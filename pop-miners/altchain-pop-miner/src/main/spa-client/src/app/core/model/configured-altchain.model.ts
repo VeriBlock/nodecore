@@ -7,6 +7,12 @@ export class ConfiguredAltchain {
   key: string;
   name: string;
   payoutDelay: number;
+  readyStatus: AltChainReadyStatusResponse;
 
   hasLogo?: boolean;
+}
+
+export class AltChainReadyStatusResponse {
+  isReady: boolean;
+  reason?: string;
 }

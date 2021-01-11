@@ -1,52 +1,57 @@
 <mat-drawer-container autosize>
   <mat-drawer #drawer mode="side" opened disableClose color="accent">
 
-    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px" style="height: 100%; padding-bottom: 1em;">
-      <img src="/assets/images/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28" />
-      <span>{{networkInfo}}</span>
+    <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
+      <div style="max-width: 100%;">
+        <img src="/assets/images/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28px" />
+        <span>{{networkInfo}}</span>
+      </div>
 
-      <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
-        <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
-          <mat-icon inline *ngIf=" !altchain?.hasLogo">help</mat-icon>
-          <img [src]="getAltChainLogo(altchain?.key)" (load)="showImg(altchain)" alt="Icon" height="48px" width="48px"
-            [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" />
-          <span style="font-size: 14px;">{{ altchain?.name }}</span>
+      <div fxFlex="80" style="max-width: 100%; overflow: auto;">
+        <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
+          <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
+            <mat-icon inline *ngIf=" !altchain?.hasLogo">help</mat-icon>
+            <img [src]="getAltChainLogo(altchain?.key)" (load)="showImg(altchain)" alt="Icon" height="48px" width="48px"
+              [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" />
+            <span style="font-size: 14px;">{{ altchain?.name }}</span>
+          </div>
+        </mat-card>
+      </div>
+
+      <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px">
+
+        <mat-divider></mat-divider>
+
+        <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
+          <span>Balance</span>
+          <span>{{ vbkBalance || '0.00' }} VBK</span>
+          <!-- <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="5px">
+            <span>Address: </span>
+            <span style="word-break: break-word;">{{vbkAddress}}</span>
+          </div> -->
         </div>
-      </mat-card>
 
-      <div fxFlex></div>
-
-      <mat-divider></mat-divider>
-
-      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
-        <span>Balance</span>
-        <span>{{ vbkBalance || '0.00' }} VBK</span>
-        <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="5px">
-          <span>Address: </span>
-          <span style="word-break: break-word;">{{vbkAddress}}</span>
+        <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"
+          style="width: 100%; padding-left: 1em; padding-right: 1em;">
+          <button mat-mini-fab type="button" color="primary" matTooltip="Deposit">
+            <mat-icon>cloud_upload</mat-icon>
+          </button>
+          <button mat-mini-fab type="button" color="warn" matTooltip="Withdraw">
+            <mat-icon>cloud_download</mat-icon>
+          </button>
         </div>
+
+        <mat-divider></mat-divider>
+
+        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="width: 95%;">
+          <button mat-button type="button" aria-label="Settings" matTooltip="Settings" (click)="openFeeConfigurationDialog()"
+            [disabled]="isLoadingSettings">
+            <mat-icon aria-hidden="true">settings</mat-icon>
+            <span>Settings</span>
+          </button>
+        </div>
+
       </div>
-
-      <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"
-        style="width: 100%; padding-left: 1em; padding-right: 1em;">
-        <button mat-mini-fab type="button" color="primary" matTooltip="Deposit">
-          <mat-icon>cloud_upload</mat-icon>
-        </button>
-        <button mat-mini-fab type="button" color="warn" matTooltip="Withdraw">
-          <mat-icon>cloud_download</mat-icon>
-        </button>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="width: 95%;">
-        <button mat-button type="button" aria-label="Settings" matTooltip="Settings" (click)="openFeeConfigurationDialog()"
-          [disabled]="isLoadingSettings">
-          <mat-icon aria-hidden="true">settings</mat-icon>
-          <span>Settings</span>
-        </button>
-      </div>
-
     </div>
   </mat-drawer>
 

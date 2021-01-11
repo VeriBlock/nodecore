@@ -85,8 +85,6 @@ export class AppComponent implements OnInit {
       dialogRef
         .afterClosed()
         .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
-          console.log(result?.feeConfig);
-
           if (result?.save) {
             this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
               this.alertService.addSuccess(
