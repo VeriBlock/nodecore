@@ -10,6 +10,10 @@
     background-color: mat-color($accent);
     color: mat-contrast($accent, 400);
 
+    .mat-badge-content {
+      color: transparent;
+    }
+
     &:hover {
       background-color: mat-color($accent, 200);
       color: mat-contrast($accent, 200);

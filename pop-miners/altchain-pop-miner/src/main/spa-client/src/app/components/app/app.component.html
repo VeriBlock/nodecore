@@ -10,9 +10,12 @@
       <div fxFlex="80" style="max-width: 100%; overflow: auto;">
         <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
           <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
-            <mat-icon inline *ngIf=" !altchain?.hasLogo">help</mat-icon>
-            <img [src]="getAltChainLogo(altchain?.key)" (load)="showImg(altchain)" alt="Icon" height="48px" width="48px"
-              [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" />
+            <mat-icon inline *ngIf="!altchain?.hasLogo" matBadge="." matBadgePosition="below after"
+              [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'" matBadgeSize="small">help</mat-icon>
+            <span matBadge="." matBadgePosition="below after" [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'"
+              matBadgeSize="small" [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}">
+              <img [src]="getAltChainLogo(altchain?.key)" (load)="showImg(altchain)" height="48px" width="48px" />
+            </span>
             <span style="font-size: 14px;">{{ altchain?.name }}</span>
           </div>
         </mat-card>
