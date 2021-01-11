@@ -57,6 +57,17 @@
       </ng-template>
     </mat-card-content>
   </mat-card>
+
+  <ng-container *ngIf="showAlert">
+    <mat-card class="alert-success" style="margin: 1em;">
+      <mat-card-content style="display: flex;">
+        <mat-icon size="lg" style="padding-right: 5px;">link</mat-icon>
+        <a [href]="getTxLink()" target="_tab" rel="noopener noreferrer">
+          <span>{{ tx }}</span>
+        </a>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
 </div>
 
 <!-- Action buttons -->

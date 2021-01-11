@@ -114,6 +114,7 @@ export class AppComponent implements OnInit {
         isDeposit,
         vbkAddress: this.vbkAddress,
         vbkBalance: this.vbkBalance,
+        isTestnet: this.networkInfo === 'testnet'
       },
       closeOnNavigation: true,
     });

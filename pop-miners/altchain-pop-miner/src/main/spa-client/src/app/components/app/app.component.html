@@ -2,7 +2,7 @@
   <mat-drawer #drawer mode="side" opened disableClose color="accent">
 
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
-      <div style="max-width: 100%;">
+      <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
         <img src="/assets/images/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28px" />
         <span>{{networkInfo}}</span>
       </div>
@@ -28,10 +28,6 @@
         <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
           <span>Balance</span>
           <span>{{ vbkBalance || '0.00' }} VBK</span>
-          <!-- <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="5px">
-            <span>Address: </span>
-            <span style="word-break: break-word;">{{vbkAddress}}</span>
-          </div> -->
         </div>
 
         <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="5px"

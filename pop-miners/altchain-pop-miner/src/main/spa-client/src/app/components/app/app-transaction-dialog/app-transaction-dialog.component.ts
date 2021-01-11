@@ -22,8 +22,11 @@ export class AppTransactionDialogComponent implements OnInit {
   public isDeposit = true;
   public vbkAddress: string;
   public vbkBalance: string;
+  public isTestnet = false;
 
   public submitInProgress = false;
+  public showAlert = false;
+  public tx: string = null;
 
   constructor(
     public dialogRef: MatDialogRef<AppTransactionDialogComponent>,
@@ -32,13 +35,19 @@ export class AppTransactionDialogComponent implements OnInit {
     private formBuilder: FormBuilder,
 
     @Inject(MAT_DIALOG_DATA)
-    public data: { isDeposit: boolean; vbkAddress: string; vbkBalance: string }
+    public data: {
+      isDeposit: boolean;
+      vbkAddress: string;
+      vbkBalance: string;
+      isTestnet: boolean;
+    }
   ) {}
 
   ngOnInit(): void {
     this.isDeposit = this.data.isDeposit || null;
     this.vbkAddress = this.data.vbkAddress || null;
     this.vbkBalance = this.data.vbkBalance || null;
+    this.isTestnet = this.data.isTestnet || false;
 
     if (this.vbkBalance) {
       this.form
@@ -79,10 +88,24 @@ export class AppTransactionDialogComponent implements OnInit {
       .postWithdraw(sendData)
       .subscribe((res: WithdrawResponse) => {
         console.log(res);
-        this.alertService.addSuccess(JSON.stringify(res));
+        this.alertService.addSuccess('Operation successful');
+
+        this.tx = res.ids[0];
+        this.showAlert = true;
+
+        setTimeout(() => {
+          this.tx = null;
+          this.showAlert = false;
+        }, 15000);
       })
       .add(() => {
         this.submitInProgress = false;
       });
+  }
+
+  public getTxLink(): string {
+    return `https://${
+      this.isTestnet ? 'testnet.' : ''
+    }explore.veriblock.org/tx/${this.tx}`;
   }
 }
