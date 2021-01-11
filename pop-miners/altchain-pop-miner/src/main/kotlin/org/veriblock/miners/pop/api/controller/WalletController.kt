@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.miners.pop.api.dto.WithdrawRequest
 import org.veriblock.miners.pop.api.dto.WithdrawResponse
@@ -26,9 +27,14 @@ class WalletController(
             info("Withdraw VBKs to Address")
         ) { _, request ->
             val atomicAmount = Utility.convertDecimalCoinToAtomicLong(request.amount)
+            val destinationAddress = if (AddressUtility.isValidStandardOrMultisigAddress(request.destinationAddress)) {
+                request.destinationAddress
+            } else {
+                throw BadRequestException("${request.destinationAddress} is not a valid standard address")
+            }
             val result = miner.spvContext.spvService.sendCoins(
                 null,
-                listOf(Output(request.destinationAddress.asStandardAddress(), atomicAmount.asCoin()))
+                listOf(Output(destinationAddress.asStandardAddress(), atomicAmount.asCoin()))
             )
             val ids = result.map {
                 it.toString()
