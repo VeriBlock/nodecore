@@ -13,13 +13,12 @@ import { SharedModule } from '@shared/shared.module';
 import { CoreModule } from '@core/core.module';
 
 import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
+import { AppTransactionDialogComponent } from './components/app/app-transaction-dialog/app-transaction-dialog.component';
 import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-dialog/app-fee-setting-dialog.component';
 import { OperationsTableComponent } from '@components/operations/operations-table/operations-table.component';
-import { MineDialogComponent } from '@components/operations/mine-dialog/mine-dialog.component';
 import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
 import { OperationsComponent } from '@components/operations/operations.component';
 import { AppComponent } from '@components/app/app.component';
-import { AppTransactionDialogComponent } from './components/app/app-transaction-dialog/app-transaction-dialog.component';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -35,7 +34,6 @@ export function HttpLoaderFactory(http: HttpClient) {
     CoinConfigurationDialogComponent,
     OperationsTableComponent,
     OperationsComponent,
-    MineDialogComponent,
     LogsDialogComponent,
     AppTransactionDialogComponent,
   ],

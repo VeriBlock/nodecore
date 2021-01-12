@@ -15,7 +15,6 @@ import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
-import { MineDialogComponent } from './mine-dialog/mine-dialog.component';
 
 import {
   ConfiguredAltchain,
@@ -24,6 +23,7 @@ import {
   OperationDetailResponse,
   OperationWorkflow,
   OperationWorkflowStage,
+  MineRequest,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
 
@@ -272,13 +272,22 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   public openMineDialog() {
-    this.dialog.open(MineDialogComponent, {
-      minWidth: '400px',
-      maxWidth: '700px',
-      panelClass: 'dialog',
-      data: this.selectedAltChain,
-      closeOnNavigation: true,
-    });
+    const request: MineRequest = {
+      chainSymbol: this.selectedAltChain.key,
+    };
+
+    this.isLoadingConfiguration = true;
+
+    this.minerService
+      .postMine(request)
+      .subscribe((response) => {
+        this.alertService.addSuccess(
+          'Mine request successful! Operation id: ' + response.operationId
+        );
+      })
+      .add(() => {
+        this.isLoadingConfiguration = false;
+      });
   }
 
   private createWorkflowTable(
