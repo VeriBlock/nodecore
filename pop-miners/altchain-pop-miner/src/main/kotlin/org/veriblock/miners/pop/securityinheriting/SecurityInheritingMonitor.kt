@@ -177,7 +177,9 @@ class SecurityInheritingMonitor(
 
                 // Verify the Altchain configured network
                 // TODO: check if APM & altchain are on same VBK network (beware of comparisons "test" vs "testnet")
+                sameNetwork.set(true)
                 // TODO: check if POP is active and exit if not.
+                popIsActive.set(true)
 
                 connected.set(true)
 
