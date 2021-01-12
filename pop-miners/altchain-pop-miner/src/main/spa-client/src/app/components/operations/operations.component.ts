@@ -293,7 +293,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   private createWorkflowTable(
     operation: OperationDetailResponse
   ): OperationWorkflow {
-    console.log(operation);
+    // console.log(operation);
 
     const data: OperationWorkflow = {
       operationId: operation.operationId,
