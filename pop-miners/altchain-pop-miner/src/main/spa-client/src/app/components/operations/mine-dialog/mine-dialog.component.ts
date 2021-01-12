@@ -1,14 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormControl, FormGroup } from '@angular/forms';
 
 import { MinerService } from '@core/services/miner.service';
+import { AlertService } from '@core/services/alert.service';
 
-import {
-  OperationSummaryResponse,
-  ConfiguredAltchain,
-  MineRequest,
-} from '@core/model';
+import { ConfiguredAltchain, MineRequest } from '@core/model';
 
 @Component({
   selector: 'vbk-mine-dialog',
@@ -16,26 +12,29 @@ import {
   styleUrls: [],
 })
 export class MineDialogComponent {
-  formGroup: FormGroup;
-
   constructor(
-    public dialogRef: MatDialogRef<OperationSummaryResponse>,
+    public dialogRef: MatDialogRef<MineDialogComponent>,
     private minerService: MinerService,
-    @Inject(MAT_DIALOG_DATA) public configuredAltchains: ConfiguredAltchain[]
-  ) {
-    this.formGroup = new FormGroup({
-      chainSymbol: new FormControl(configuredAltchains[0].key, []),
+    private alertService: AlertService,
+
+    @Inject(MAT_DIALOG_DATA)
+    public data: ConfiguredAltchain
+  ) {}
+
+  public onMine(): void {
+    const request: MineRequest = {
+      chainSymbol: this.data.key,
+    };
+
+    this.minerService.postMine(request).subscribe((response) => {
+      this.alertService.addSuccess(
+        'Mine request successful! Operation id: ' + response.operationId
+      );
+      this.dialogRef.close();
     });
   }
 
-  mine(): void {
-    const request = new MineRequest();
-    request.chainSymbol = this.formGroup.get('chainSymbol').value;
-    this.minerService.postMine(request).subscribe((response) => {
-      console.info(
-        'Mine request successful! Operation id: ' + response.operationId
-      );
-      this.dialogRef.close(response);
-    });
+  public onCancel(): void {
+    this.dialogRef.close();
   }
 }

@@ -5,6 +5,7 @@ import { MatSelectChange } from '@angular/material/select';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateService } from '@ngx-translate/core';
 import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
@@ -14,6 +15,7 @@ import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
+import { MineDialogComponent } from './mine-dialog/mine-dialog.component';
 
 import {
   ConfiguredAltchain,
@@ -24,7 +26,6 @@ import {
   OperationWorkflowStage,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
-import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'vbk-operations',
@@ -267,6 +268,16 @@ export class OperationsComponent implements OnInit, OnDestroy {
               });
           }
         });
+    });
+  }
+
+  public openMineDialog() {
+    this.dialog.open(MineDialogComponent, {
+      minWidth: '400px',
+      maxWidth: '700px',
+      panelClass: 'dialog',
+      data: this.selectedAltChain,
+      closeOnNavigation: true,
     });
   }
 

@@ -17,7 +17,8 @@
     <span style="font-size: 20px; padding-left: 1em; width: 100%; text-align: center;">Mine</span>
 
     <div fxLayout="row" fxLayoutAlign="space-between center" style="border-left: 1px white solid;">
-      <button mat-icon-button type="button" [matMenuTriggerFor]="moreMenu">
+      <button mat-icon-button type="button" matTooltip="Mining operations" (click)="openMineDialog()"
+        [disabled]="isLoadingConfiguration">
         <mat-icon>more_vert</mat-icon>
       </button>
     </div>
@@ -51,18 +52,3 @@
     </mat-card-content>
   </mat-card>
 </ng-container>
-
-<!-- Mine menu -->
-<mat-menu #moreMenu="matMenu">
-  <ng-template matMenuContent>
-
-    <a mat-menu-item [routerLink]="['/']">
-      <span>mine 1</span>
-    </a>
-
-    <a mat-menu-item [routerLink]="['/']">
-      <span>mine 2</span>
-    </a>
-
-  </ng-template>
-</mat-menu>

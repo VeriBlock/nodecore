@@ -1,10 +1,25 @@
+<h1 mat-dialog-title>
+  <span>Mining Options</span>
+</h1>
+
 <div mat-dialog-content>
-  <form [formGroup]="formGroup">
-    <mat-form-field>
-      <mat-select formControlName="chainSymbol" placeholder="Chain symbol">
-        <mat-option *ngFor="let altchain of configuredAltchains" [value]="altchain?.key">{{altchain?.name}}</mat-option>
-      </mat-select>
+  <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px">
+
+    <mat-form-field appearance="outline">
+      <mat-label>Selected Altchain</mat-label>
+      <input matInput type="text" [ngModel]="data.name" readonly />
     </mat-form-field>
-    <button mat-raised-button type="button" color="primary" (click)="mine()">Mine</button>
-  </form>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div mat-dialog-actions fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+
+  <button mat-raised-button type="button" (click)="onCancel()" color="warn">
+    <span>Cancel</span>
+  </button>
+
+  <button mat-raised-button type="button" (click)="onMine()" color="primary">
+    <span>Mine</span>
+  </button>
 </div>
