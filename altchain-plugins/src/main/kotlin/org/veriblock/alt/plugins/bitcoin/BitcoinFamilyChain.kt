@@ -266,7 +266,7 @@ class BitcoinFamilyChain(
             id,
             response.block_header.asHexBytes(),
             getPayoutAddressScript(),
-            response.authenticated_contextinfo.serialized.asHexBytes()
+            response.authenticated_context.serialized.asHexBytes()
         )
         return ApmInstruction(
             actualBlockHeight,

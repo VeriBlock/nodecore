@@ -14,7 +14,7 @@ internal data class BtcContextInfo(
 
 internal data class BtcPublicationData(
     val block_header: String,
-    val authenticated_contextinfo: BtcContextInfo,
+    val authenticated_context: BtcContextInfo,
     val last_known_veriblock_blocks: List<String>,
     val last_known_bitcoin_blocks: List<String>,
 )

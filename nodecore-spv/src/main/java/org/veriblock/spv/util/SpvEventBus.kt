@@ -51,9 +51,9 @@ data class AddressStateChangeEvent(
             previousState.signatureIndex == -1L ->
                 "$address balance: ${newState.availableAtomicUnits.asCoin()}"
             previousState.availableAtomicUnits < newState.availableAtomicUnits ->
-                "$address received ${newState.availableAtomicUnits - previousState.availableAtomicUnits} VBK. New balance: ${newState.availableAtomicUnits.asCoin()} VBK"
+                "$address received ${(newState.availableAtomicUnits - previousState.availableAtomicUnits).asCoin()} VBK. New balance: ${newState.availableAtomicUnits.asCoin()} VBK"
             previousState.availableAtomicUnits > newState.availableAtomicUnits ->
-                "$address paid ${previousState.availableAtomicUnits - newState.availableAtomicUnits} VBK. New balance: ${newState.availableAtomicUnits.asCoin()} VBK"
+                "$address paid ${(previousState.availableAtomicUnits - newState.availableAtomicUnits).asCoin()} VBK. New balance: ${newState.availableAtomicUnits.asCoin()} VBK"
             else ->
                 "$address balance has changed: ${newState.availableAtomicUnits.asCoin()}"
         }

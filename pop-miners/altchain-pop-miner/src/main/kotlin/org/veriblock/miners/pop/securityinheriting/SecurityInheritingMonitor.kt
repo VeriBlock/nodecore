@@ -17,11 +17,14 @@ import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Configuration
@@ -257,7 +260,7 @@ class SecurityInheritingMonitor(
     }
 
     private suspend fun submitContext() = coroutineScope {
-        logger.info("Starting continuous submission of VBK Context for ${chain.name}")
+        logger.info("Starting continuous submission of VBK context for ${chain.name}")
         SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
             try {
                 val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
@@ -278,12 +281,17 @@ class SecurityInheritingMonitor(
                 }.toList()
 
                 val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-                val contextBlocksToSubmit = contextBlocks.filter {
-                    it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
-                }.onEach {
-                    chain.submitPopVbk(it)
-                }
-                logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
+                val successfulSubmissions = contextBlocks.asFlow()
+                    .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
+                    .map { contextBlock ->
+                        val result = chain.submitPopVbk(contextBlock)
+                        if (!result.accepted) {
+                            logger.warn { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
+                        }
+                        result
+                    }
+                    .count { it.accepted }
+                logger.info { "Successuflly submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
@@ -330,7 +338,16 @@ class SecurityInheritingMonitor(
                 vtbs.forEach {
                     chain.submitPopVtb(it)
                 }
-                logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
+                val successfulSubmissions = vtbs.asFlow()
+                    .map { vtb ->
+                        val result = chain.submitPopVtb(vtb)
+                        if (!result.accepted) {
+                            logger.warn { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                        }
+                        result
+                    }
+                    .count { it.accepted }
+                logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
