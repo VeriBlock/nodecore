@@ -4,7 +4,11 @@ import { FormControl, FormGroup } from '@angular/forms';
 
 import { MinerService } from '@core/services/miner.service';
 
-import { Operation, ConfiguredAltchain, MineRequest } from '@core/model';
+import {
+  OperationSummaryResponse,
+  ConfiguredAltchain,
+  MineRequest,
+} from '@core/model';
 
 @Component({
   selector: 'vbk-mine-dialog',
@@ -15,7 +19,7 @@ export class MineDialogComponent {
   formGroup: FormGroup;
 
   constructor(
-    public dialogRef: MatDialogRef<Operation>,
+    public dialogRef: MatDialogRef<OperationSummaryResponse>,
     private minerService: MinerService,
     @Inject(MAT_DIALOG_DATA) public configuredAltchains: ConfiguredAltchain[]
   ) {

@@ -1,14 +1,17 @@
-export class Operation {
-  operationId: string;
+export class OperationSummaryResponse {
   chain: string;
+  endorsedBlockHeight?: number;
+  operationId: string;
   state: string;
-  endorsedBlockHeight: number;
   task: string;
+}
+
+export class OperationDetailResponse extends OperationSummaryResponse {
   stateDetail: any;
 }
 
-export class OperationSummaryList {
-  operations: Operation[];
+export class OperationSummaryListResponse {
+  operations: OperationSummaryResponse[];
   totalCount: number;
 }
 

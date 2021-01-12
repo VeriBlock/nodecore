@@ -23,8 +23,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MinerService } from '@core/services/miner.service';
 
 import { LogsDialogComponent } from '../logs-dialog/logs-dialog.component';
-
-import { Operation } from '@core/model';
+import { OperationSummaryResponse } from '@core/model';
+import { OperationStatus } from '@core/enums';
 
 @Component({
   selector: 'vbk-operations-table',
@@ -66,7 +66,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   ];
 
   @Input()
-  public dataSource = new MatTableDataSource<Operation>();
+  public dataSource = new MatTableDataSource<OperationSummaryResponse>();
 
   @Input()
   public selectedOperationId: string = null;
@@ -97,7 +97,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public selectOperation(operation: Operation) {
+  public selectOperation(operation: OperationSummaryResponse) {
     this.selectedOperationId =
       operation?.operationId === this.selectedOperationId
         ? null
@@ -144,7 +144,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
     }
   }
 
-  public changeOperationRowState(item: Operation): string {
+  public changeOperationRowState(item: OperationSummaryResponse): string {
     return item?.operationId === this.selectedOperationId
       ? 'expandedOperation'
       : 'collapsedOperation';
@@ -163,5 +163,18 @@ export class OperationsTableComponent implements OnInit, OnChanges {
 
   public capitalizeFirstLetter(word: string): string {
     return word.charAt(0).toUpperCase() + word.slice(1);
+  }
+
+  public checkStatus(status: OperationStatus): string {
+    switch (status) {
+      case OperationStatus.DONE:
+        return 'text-success';
+
+      case OperationStatus.CURRENT:
+        return 'text-warning';
+
+      default:
+        return 'text-danger';
+    }
   }
 }

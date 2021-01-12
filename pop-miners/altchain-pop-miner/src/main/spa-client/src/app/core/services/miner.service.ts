@@ -10,9 +10,10 @@ import {
   ConfiguredAltchainList,
   MineRequest,
   MinerInfo,
-  Operation,
+  OperationDetailResponse,
   OperationGetListParams,
-  OperationSummaryList,
+  OperationSummaryListResponse,
+  OperationSummaryResponse,
   OperationWorkflow,
 } from '@core/model';
 
@@ -39,14 +40,19 @@ export class MinerService {
 
   getOperationList(
     dto: OperationGetListParams
-  ): Observable<OperationSummaryList> {
-    return this.http.get<OperationSummaryList>(`${this.baseUrl}/operations`, {
-      params: this.httpUtilsService.toHttpParams(dto),
-    });
+  ): Observable<OperationSummaryListResponse> {
+    return this.http.get<OperationSummaryListResponse>(
+      `${this.baseUrl}/operations`,
+      {
+        params: this.httpUtilsService.toHttpParams(dto),
+      }
+    );
   }
 
-  getOperation(id: string): Observable<Operation> {
-    return this.http.get<Operation>(`${this.baseUrl}/operations/${id}`);
+  getOperation(id: string): Observable<OperationDetailResponse> {
+    return this.http.get<OperationDetailResponse>(
+      `${this.baseUrl}/operations/${id}`
+    );
   }
 
   getOperationWorkflow(id: string): Observable<OperationWorkflow> {
@@ -61,8 +67,11 @@ export class MinerService {
     );
   }
 
-  postMine(request: MineRequest): Observable<Operation> {
-    return this.http.post<Operation>(`${this.baseUrl}/mine`, request);
+  postMine(request: MineRequest): Observable<OperationSummaryResponse> {
+    return this.http.post<OperationSummaryResponse>(
+      `${this.baseUrl}/mine`,
+      request
+    );
   }
 
   getConfiguredAltchains(): Observable<ConfiguredAltchainList> {

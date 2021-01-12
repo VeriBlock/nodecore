@@ -73,11 +73,8 @@
                     <th mat-header-cell *matHeaderCellDef> Status </th>
                     <td mat-cell *matCellDef="let element">
 
-                      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="padding: 5px 0" [ngClass]="{
-                        'text-success': element?.status === 'DONE',
-                        'text-warning': element?.status === 'CURRENT',
-                        'text-danger': element?.status === 'FAILED'
-                      }">
+                      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="padding: 5px 0"
+                        [class]="checkStatus(element?.status)">
 
                         <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
                           <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="25"></mat-progress-spinner>
@@ -94,6 +91,7 @@
 
                   <ng-container matColumnDef="taskColumn">
                     <th mat-header-cell *matHeaderCellDef> Task </th>
+                    <!-- <td mat-cell *matCellDef="let element"> {{element?.taskName}} </td> -->
                     <td mat-cell *matCellDef="let element"> {{adjustLetters(element?.taskName)}} </td>
                   </ng-container>
 

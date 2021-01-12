@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 
 import { environment } from 'src/environments/environment';
+
 import { AutoMineConfig, VbkFeeConfig } from '@core/model';
 
 @Injectable({

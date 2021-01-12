@@ -1,20 +1,20 @@
 {
   "ApmOperationState_Done_Initial": "Created APM operation id: {{ operationId }}",
   "ApmOperationState_Done_Instruction": "Endorsed {{operationChainName}} block height: {{operationEndorsedBlockHeight}}",
-  "ApmOperationState_Done_Endorsement_Transaction": "{{contextVbkTokenName}} endorsement transaction id: {{transactionTxId}} (fee: {{transactionFee}}",
+  "ApmOperationState_Done_Endorsement_Transaction": "{{contextVbkTokenName}} endorsement transaction id: {{transactionTxId}} (fee: {{transactionFee}})",
   "ApmOperationState_Done_Block_Of_Proof": "{{contextVbkTokenName}} Block of Proof: {{blockOfProofHash}} @ {{blockOfProofHeight}}",
   "ApmOperationState_Done_Proven": "Merkle path has been verified",
   "ApmOperationState_Done_Submitted_Pop_Data": "ATV: {{operationAtvId}} submitted to {{operationChainName}}!",
   "ApmOperationState_Done_Payout_Detected": "Payout detected in {{operationChainName}} block {{payoutBlockHeight}} to {{operationChainName}} address {{address}}",
   "ApmOperationState_Done_Payout_Detected_No_Instruction": "Payout detected in {{operationChainName}}",
 
-  "ApmOperationState_Current_Endorsement_Tx_Confirmed": "Waiting for {{context.vbkTokenName}} endorsement transaction to appear in a block",
+  "ApmOperationState_Current_Endorsement_Tx_Confirmed": "Waiting for {{contextVbkTokenName}} endorsement transaction to appear in a block",
   "ApmOperationState_Current_Submitted_Pop_Data": "Submitting PoP Data to {{operationChainName}}",
   "ApmOperationState_Current_Payout_Detected_No_Confirmation": "Waiting for ATV to be mined in a block...",
-  "ApmOperationState_Current_Payout_Detected_Confirmation": "Got {{operation.currentConfirmations}}/{{operation.requiredConfirmations}} confirmations for ATV: {{operation.atvId}} to be paid in {{operationChainName}} block @ {{payoutBlockHeight}} to {{operationChainName}} address {{address}}",
+  "ApmOperationState_Current_Payout_Detected_Confirmation": "Got {{currentConfirmations}}/{{requiredConfirmations}} confirmations for ATV: {{operationAtvId}} to be paid in {{operationChainName}} block @ {{payoutBlockHeight}} to {{operationChainName}} address {{address}}",
 
-  "ApmOperationState_Pending_Endorsement_Tx_Confirmed": "Will wait for {{context.vbkTokenName}} endorsement transaction to appear in a block",
+  "ApmOperationState_Pending_Endorsement_Tx_Confirmed": "Will wait for {{contextVbkTokenName}} endorsement transaction to appear in a block",
   "ApmOperationState_Pending_Submitted_Pop_Data": "Will submit PoP Data to {{operationChainName}}",
   "ApmOperationState_Pending_Payout_Detected": "Will wait for reward to be paid in {{operationChainName}} block @ {{payoutBlockHeight}} to {{operationChainName}} address {{address}}",
-  "ApmOperationState_Pending_Payout_Detected_No_Instruction": "Waiting for reward to be paid"
+  "ApmOperationState_Payout_Detected_No_Instruction": "Waiting for reward to be paid"
 }

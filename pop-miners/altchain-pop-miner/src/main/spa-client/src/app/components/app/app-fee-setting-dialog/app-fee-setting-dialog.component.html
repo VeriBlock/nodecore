@@ -22,14 +22,13 @@
 </div>
 
 <!-- Action buttons -->
-<div mat-dialog-actions fxLayout="row" fxLayoutAlign="center" fxLayoutGap="10px" style="padding-bottom:20px;">
-
-  <button mat-raised-button type="button" (click)="onSave()" color="primary" [disabled]="form?.invalid">
-    <span>Save</span>
-  </button>
+<div mat-dialog-actions fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
 
   <button mat-raised-button type="button" (click)="onCancel()" color="warn">
     <span>Cancel</span>
   </button>
 
+  <button mat-raised-button type="button" (click)="onSave()" color="primary" [disabled]="form?.invalid">
+    <span>Save</span>
+  </button>
 </div>

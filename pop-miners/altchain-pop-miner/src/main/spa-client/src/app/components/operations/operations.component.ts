@@ -15,7 +15,16 @@ import { MinerService } from '@core/services/miner.service';
 
 import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
 
-import { ConfiguredAltchain, Operation, AutoMineRound } from '@core/model';
+import {
+  ConfiguredAltchain,
+  AutoMineRound,
+  OperationSummaryResponse,
+  OperationDetailResponse,
+  OperationWorkflow,
+  OperationWorkflowStage,
+} from '@core/model';
+import { OperationState, OperationStatus } from '@core/enums';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'vbk-operations',
@@ -30,6 +39,18 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public selectedAltChain: ConfiguredAltchain = null;
 
   public filters: string[] = ['all', 'active', 'completed', 'failed'];
+  private globalOperationStages: string[] = [
+    OperationState.INITIAL,
+    OperationState.INSTRUCTION,
+    OperationState.ENDORSEMENT_TRANSACTION,
+    OperationState.ENDORSEMENT_TX_CONFIRMED,
+    OperationState.BLOCK_OF_PROOF,
+    OperationState.PROVEN,
+    OperationState.SUBMITTED_POP_DATA,
+    OperationState.PAYOUT_DETECTED,
+    OperationState.COMPLETED,
+  ];
+
   public isLoading = true;
   public tableLoading = false;
   public isLoadingConfiguration = false;
@@ -37,7 +58,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public operationsTotalCount: number = 0;
   public selectedOperationId: string = null;
 
-  public operationsDataSource = new MatTableDataSource<Operation>();
+  public operationsDataSource = new MatTableDataSource<OperationSummaryResponse>();
 
   public pageLimit = 10;
   public pageOffset = 0;
@@ -49,6 +70,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   constructor(
     private dataShareService: DataShareService,
     private configService: ConfigService,
+    private translate: TranslateService,
     private alertService: AlertService,
     private minerService: MinerService,
     private formBuilder: FormBuilder,
@@ -112,12 +134,18 @@ export class OperationsComponent implements OnInit, OnDestroy {
         startWith(0),
         switchMap(() =>
           this.selectedOperationId
-            ? this.minerService.getOperationWorkflow(this.selectedOperationId)
+            ? // ? this.minerService.getOperation(this.selectedOperationId)
+              this.minerService.getOperationWorkflow(this.selectedOperationId)
             : EMPTY
         )
       )
       .subscribe((workflow) => {
         this.operationWorkflows[workflow.operationId] = workflow;
+
+        // .subscribe((data: OperationDetailResponse) => {
+        //   this.operationWorkflows[data.operationId] = this.createWorkflowTable(
+        //     data
+        //   );
       });
   }
 
@@ -143,9 +171,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
   public loadWorkFlow() {
     this.minerService
+      // .getOperation(this.selectedOperationId)
       .getOperationWorkflow(this.selectedOperationId)
       .subscribe((workflow) => {
         this.operationWorkflows[this.selectedOperationId] = workflow;
+
+        // .subscribe((data: OperationDetailResponse) => {
+        //   this.operationWorkflows[
+        //     this.selectedOperationId
+        //   ] = this.createWorkflowTable(data);
       });
   }
 
@@ -234,5 +268,242 @@ export class OperationsComponent implements OnInit, OnDestroy {
           }
         });
     });
+  }
+
+  private createWorkflowTable(
+    operation: OperationDetailResponse
+  ): OperationWorkflow {
+    console.log(operation);
+
+    const data: OperationWorkflow = {
+      operationId: operation.operationId,
+      stages: [],
+    };
+
+    const currentStageNumber: number =
+      this.globalOperationStages.findIndex((x) => x === operation.state) || 8;
+
+    this.globalOperationStages.forEach((stage, index) => {
+      const eachStage: OperationWorkflowStage = {
+        status: this.getOperationStatus(stage, currentStageNumber),
+        taskName: `${index + 1}. ${this.globalOperationStages[index]}`,
+        extraInformation: null,
+      };
+
+      eachStage.extraInformation = this.setStageExtraInformation(
+        eachStage.status,
+        operation,
+        index
+      );
+
+      data.stages.push(eachStage);
+    });
+    return data;
+  }
+
+  private setStageExtraInformation(
+    status: string,
+    operation: OperationDetailResponse,
+    index: number
+  ): string {
+    switch (status) {
+      case OperationStatus.DONE:
+        return this.getExtraInformation(operation, index);
+
+      case OperationStatus.CURRENT:
+        return this.getCurrentHint(operation, index);
+
+      case OperationStatus.PENDING:
+        return this.getPendingHint(operation, index);
+    }
+
+    return '';
+  }
+
+  private getOperationStatus(
+    selectedState: string,
+    currentStageNumber: number
+  ) {
+    const selectedStateNumber: number = this.globalOperationStages.findIndex(
+      (x) => x === selectedState
+    );
+
+    return selectedStateNumber <= currentStageNumber
+      ? 'DONE'
+      : selectedStateNumber === currentStageNumber + 1
+      ? 'CURRENT'
+      : 'PENDING';
+  }
+
+  private getExtraInformation(
+    operation: OperationDetailResponse,
+    index: number
+  ): string {
+    switch (index) {
+      case 0:
+        return this.translate.instant('ApmOperationState_Done_Initial', {
+          operationId: operation?.operationId,
+        });
+      case 1:
+        return this.translate.instant('ApmOperationState_Done_Instruction', {
+          operationChainName: this.selectedAltChain?.name,
+          operationEndorsedBlockHeight: operation?.endorsedBlockHeight,
+        });
+      case 2:
+        return this.translate.instant(
+          'ApmOperationState_Done_Endorsement_Transaction',
+          {
+            contextVbkTokenName: operation?.chain, // TODO tVBK?
+            transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
+            transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
+          }
+        );
+      case 4:
+        return this.translate.instant('ApmOperationState_Done_Block_Of_Proof', {
+          contextVbkTokenName: operation?.chain, // TODO tVBK?
+          blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
+          blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProof?.height, // TODO from where?
+        });
+      case 5:
+        return this.translate.instant('ApmOperationState_Done_Proven');
+      case 6:
+        return this.translate.instant(
+          'ApmOperationState_Done_Submitted_Pop_Data',
+          {
+            operationAtvId: operation?.stateDetail?.altAtvId,
+            operationChainName: this.selectedAltChain?.name,
+          }
+        );
+      case 7:
+        return operation?.stateDetail?.expectedRewardBlock &&
+          operation?.stateDetail?.address
+          ? this.translate.instant('ApmOperationState_Done_Payout_Detected', {
+              operationChainName: this.selectedAltChain?.name,
+              payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+              address: null,
+            })
+          : this.translate.instant(
+              'ApmOperationState_Done_Payout_Detected_No_Instruction',
+              {
+                operationChainName: this.selectedAltChain?.name,
+              }
+            );
+      default:
+        return '';
+    }
+  }
+
+  private getCurrentHint(
+    operation: OperationDetailResponse,
+    index: number
+  ): string {
+    switch (index) {
+      case 3:
+        return this.translate.instant(
+          'ApmOperationState_Current_Endorsement_Tx_Confirmed',
+          {
+            contextVbkTokenName: operation?.chain, // TODO tVBK?
+          }
+        );
+      case 6:
+        return this.translate.instant(
+          'ApmOperationState_Current_Submitted_Pop_Data',
+          {
+            operationChainName: this.selectedAltChain?.name,
+          }
+        );
+      case 7:
+        const containingBlockHeight = parseInt(
+          operation?.stateDetail?.altAtvBlock.split('@')[1] || '0',
+          10
+        );
+        const requiredConfirmations =
+          parseInt(operation?.stateDetail?.expectedRewardBlock || '0', 10) -
+          containingBlockHeight;
+
+        // if !miningInstruction?.let then ApmOperationState_Payout_Detected_No_Instruction
+
+        return !requiredConfirmations
+          ? this.translate.instant(
+              'ApmOperationState_Current_Payout_Detected_No_Confirmation'
+            )
+          : this.translate.instant(
+              'ApmOperationState_Current_Payout_Detected_Confirmation',
+              {
+                currentConfirmations:
+                  operation?.stateDetail?.currentConfirmations || '0',
+                requiredConfirmations,
+                operationAtvId: operation?.stateDetail?.altAtvId,
+                operationChainName: this.selectedAltChain?.name,
+                payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+                address: null,
+              }
+            );
+      default:
+        return '';
+    }
+  }
+
+  private getPendingHint(
+    operation: OperationDetailResponse,
+    index: number
+  ): string {
+    switch (index) {
+      case 3:
+        return this.translate.instant(
+          'ApmOperationState_Pending_Endorsement_Tx_Confirmed',
+          {
+            contextVbkTokenName: operation?.chain, // TODO tVBK?
+          }
+        );
+      case 6:
+        return this.translate.instant(
+          'ApmOperationState_Pending_Submitted_Pop_Data',
+          {
+            operationChainName: this.selectedAltChain?.name,
+          }
+        );
+      case 7:
+        const containingBlockHeight = parseInt(
+          operation?.stateDetail?.altAtvBlock.split('@')[1] || '0',
+          10
+        );
+        const requiredConfirmations =
+          parseInt(operation?.stateDetail?.expectedRewardBlock || '0', 10) -
+          containingBlockHeight;
+
+        // if !miningInstruction?.let then ApmOperationState_Payout_Detected_No_Instruction
+
+        return !requiredConfirmations
+          ? this.translate.instant(
+              'ApmOperationState_Current_Payout_Detected_No_Confirmation'
+            )
+          : this.translate.instant(
+              'ApmOperationState_Current_Payout_Detected_Confirmation',
+              {
+                currentConfirmations:
+                  operation?.stateDetail?.currentConfirmations || '0',
+                requiredConfirmations,
+                operationAtvId: operation?.stateDetail?.altAtvId,
+                operationChainName: this.selectedAltChain?.name,
+                payoutBlockHeight: null,
+                address: null,
+              }
+            );
+      default:
+        return '';
+    }
+  }
+
+  // private getStateFromFailedOperation(operation: OperationDetailResponse): MiningOperationState {
+  private getStateFromFailedOperation(operationStateDetail: any) {
+    // return {
+    // operationStateDetail.atvId != null -> ApmOperationState.SUBMITTED_POP_DATA
+    // operationStateDetail.merklePath != null -> ApmOperationState.PROVEN
+    // operationStateDetail.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
+    // operationStateDetail.endorsementTransaction != null -> ApmOperationState.ENDORSEMENT_TRANSACTION
+    // operationStateDetail.miningInstruction != null -> ApmOperationState.INSTRUCTION
+    //   else -> ApmOperationState.INITIAL
+    // }
   }
 }
