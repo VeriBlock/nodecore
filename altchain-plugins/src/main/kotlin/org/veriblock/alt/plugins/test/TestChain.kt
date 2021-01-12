@@ -25,6 +25,7 @@ import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -100,6 +101,10 @@ class TestChain(
         }.data
     }
 
+    override suspend fun getPopParams(): PopParamsResponse {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
         val block = blocks[height]
             ?: return false
@@ -143,7 +148,7 @@ class TestChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
+    override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {
         logger.debug { "Retrieving last known blocks from NodeCore at ${config.host}..." }
         val lastVbkHash = getLastVeriBlockBlockHash().asHexBytes()
         val lastBtcHash = getLastBitcoinBlockHash().asHexBytes()

@@ -30,7 +30,6 @@ import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.MinerConfig
-import org.veriblock.miners.pop.core.debugError
 import org.veriblock.miners.pop.core.debugWarn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.models.getSynchronizedMessage
@@ -55,7 +54,7 @@ class ApmTaskService(
             verifySpvStatus()
             logger.info(operation, "Getting the mining instruction...")
             val publicationData = try {
-                operation.chain.getMiningInstruction(operation.endorsedBlockHeight)
+                operation.chain.getMiningInstructionByHeight(operation.endorsedBlockHeight)
             } catch (e: Exception) {
                 failOperation("Error while trying to get PoP Mining Instruction from ${operation.chain.name}", e)
             }
@@ -198,11 +197,16 @@ class ApmTaskService(
 
                 val response = operation.chain.submitPopAtv(proofOfProof)
                 val atvId = proofOfProof.getId().toHex()
-
                 val chainName = operation.chain.name
-                logger.info(operation, "ATV submitted to $chainName! $chainName ATV Id: $atvId")
 
-                operation.setAtvId(atvId)
+                if(!response.accepted) {
+                    logger.warn { "ATV=${atvId} has not been accepted by POP mempool in $chainName" }
+                    failOperation("Bad ATV: ${response.code} ${response.message}")
+                } else {
+                    logger.info { "ATV=${atvId} has been accepted by POP mempool in $chainName" }
+                    operation.setAtvId(atvId)
+                }
+
             } catch (e: Exception) {
                 logger.debugWarn(operation, e, "Error submitting proof of proof")
                 failTask("Error submitting proof of proof to ${operation.chain.name}: ${e.message}")

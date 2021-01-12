@@ -8,12 +8,15 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
+internal data class BtcContextInfo(
+    val serialized: String
+)
+
 internal data class BtcPublicationData(
-    val block_header: String?,
-    val raw_contextinfocontainer: String?,
-    val last_known_veriblock_blocks: List<String>?,
-    val last_known_bitcoin_blocks: List<String>?,
-    val first_address: String? = null
+    val block_header: String,
+    val authenticated_contextinfo: BtcContextInfo,
+    val last_known_veriblock_blocks: List<String>,
+    val last_known_bitcoin_blocks: List<String>,
 )
 
 internal data class BtcBlock(

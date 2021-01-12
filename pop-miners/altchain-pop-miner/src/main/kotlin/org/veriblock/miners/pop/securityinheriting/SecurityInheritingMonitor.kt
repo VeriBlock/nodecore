@@ -38,6 +38,7 @@ import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.StateInfo
@@ -70,6 +71,7 @@ class SecurityInheritingMonitor(
 
     private var firstPoll: Boolean = true
 
+    private val popIsActive = AtomicBoolean(false)
     private val ready = AtomicBoolean(false)
     private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
@@ -82,6 +84,9 @@ class SecurityInheritingMonitor(
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
+
+    fun isPopActive(): Boolean =
+        popIsActive.get()
 
     fun isReady(): Boolean =
         ready.get()
@@ -123,6 +128,11 @@ class SecurityInheritingMonitor(
             while (!isReady()) {
                 delay(1_000L)
             }
+
+            while(!isPopActive()) {
+                delay(10_000L)
+            }
+
             // Start submitting context and VTBs
             launch {
                 submitContext()
@@ -163,19 +173,8 @@ class SecurityInheritingMonitor(
                 }
 
                 // Verify the Altchain configured network
-                // TODO: Check with getpopparams
-                //if (latestBlockChainInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
-                if (!isOnSameNetwork()) {
-                    sameNetwork.set(true)
-                    EventBus.altChainSameNetworkEvent.trigger(chainId)
-                }
-                //} else {
-                //    if (isOnSameNetwork() || firstPoll) {
-                //        sameNetwork.set(false)
-                //        EventBus.altChainSameNetworkEvent.trigger(chainId)
-                //        logger.warn { "The connected ${chain.name} chain (${latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
-                //    }
-                //}
+                // TODO: check if APM & altchain are on same VBK network (beware of comparisons "test" vs "testnet")
+                // TODO: check if POP is active and exit if not.
 
                 connected.set(true)
 
@@ -295,7 +294,7 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VTBs for ${chain.name}")
         while (true) {
             try {
-                val instruction = chain.getMiningInstruction()
+                val instruction = chain.getMiningInstructionByHeight()
                 val vbkContextBlockHash = instruction.context.first().asVbkHash()
                 val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash) ?: run {
                     // Maybe our peer doesn't know about that block yet. Let's wait a few seconds and give it another chance

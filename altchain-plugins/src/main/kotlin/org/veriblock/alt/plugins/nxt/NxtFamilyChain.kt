@@ -22,6 +22,7 @@ import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SubmitPopResponse
@@ -87,6 +88,10 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
+    override suspend fun getPopParams(): PopParamsResponse {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
         TODO("Not yet implemented")
     }
@@ -111,7 +116,7 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
+    override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
 

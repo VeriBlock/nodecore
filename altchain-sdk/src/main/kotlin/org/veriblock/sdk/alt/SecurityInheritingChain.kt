@@ -12,6 +12,7 @@ import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SubmitPopResponse
@@ -80,6 +81,8 @@ interface SecurityInheritingChain {
      */
     suspend fun getBestKnownVbkBlockHash(): String
 
+    suspend fun getPopParams(): PopParamsResponse
+
     /**
      * Returns the VeriBlockBlock for the given [hash]
      */
@@ -114,7 +117,7 @@ interface SecurityInheritingChain {
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height
      * if [blockHeight] is null).
      */
-    suspend fun getMiningInstruction(blockHeight: Int? = null): ApmInstruction
+    suspend fun getMiningInstructionByHeight(blockHeight: Int? = null): ApmInstruction
 
     suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse
 

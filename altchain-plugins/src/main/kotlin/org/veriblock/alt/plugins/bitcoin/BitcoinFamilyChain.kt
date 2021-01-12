@@ -26,6 +26,7 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -246,20 +247,14 @@ class BitcoinFamilyChain(
         return Vtb(response.vtb.containingBlock.hash)
     }
 
-    override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
+    override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {
         val actualBlockHeight = blockHeight
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
         logger.debug { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
-        val response: BtcPublicationData = rpcRequest("getpopdata", listOf(actualBlockHeight))
+        val response: BtcPublicationData = rpcRequest("getpopdatabyheight", listOf(actualBlockHeight))
 
-        if (response.block_header == null) {
-            error("Publication data's 'block_header' must be set!")
-        }
-        if (response.raw_contextinfocontainer == null) {
-            error("Publication data's 'raw_contextinfocontainer' must be set!")
-        }
         if (response.last_known_veriblock_blocks.isNullOrEmpty()) {
             error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
         }
@@ -271,7 +266,7 @@ class BitcoinFamilyChain(
             id,
             response.block_header.asHexBytes(),
             getPayoutAddressScript(),
-            response.raw_contextinfocontainer.asHexBytes()
+            response.authenticated_contextinfo.serialized.asHexBytes()
         )
         return ApmInstruction(
             actualBlockHeight,
@@ -326,6 +321,10 @@ class BitcoinFamilyChain(
             logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
         }
+    }
+
+    override suspend fun getPopParams(): PopParamsResponse {
+        return rpcRequest("getpopparams", emptyList<String>())
     }
 
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
