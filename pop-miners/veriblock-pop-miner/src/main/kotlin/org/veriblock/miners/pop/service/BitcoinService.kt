@@ -109,9 +109,6 @@ class BitcoinService(
                 it.endorsementTransaction?.confidence?.removeEventListener(it.transactionListener)
             }
         }
-        GlobalScope.launchWithFixedDelay(10_000, 10_000) {
-            verifyBalance(true)
-        }
         logger.info("BitcoinService constructor finished")
     }
 
@@ -202,6 +199,10 @@ class BitcoinService(
                     if (createdDaysAgo >= 30) {
                         logger.info { "This wallet was created $createdDaysAgo day(s) ago, we recommend you to create a new wallet and move your funds there, this will drastically decrease the needed time to synchronize the wallet" }
                     }
+                }
+
+                GlobalScope.launchWithFixedDelay(10_000, 10_000) {
+                    verifyBalance(true)
                 }
 
                 setServiceReady(true)
