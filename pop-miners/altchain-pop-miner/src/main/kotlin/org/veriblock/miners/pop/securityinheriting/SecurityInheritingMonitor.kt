@@ -288,12 +288,14 @@ class SecurityInheritingMonitor(
                     .map { contextBlock ->
                         val result = chain.submitPopVbk(contextBlock)
                         if (!result.accepted) {
-                            logger.warn { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
+                            logger.debug { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
                         }
                         result
                     }
                     .count { it.accepted }
-                logger.info { "Successuflly submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
+                if (successfulSubmissions > 0) {
+                    logger.info { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
+                }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
@@ -344,12 +346,14 @@ class SecurityInheritingMonitor(
                     .map { vtb ->
                         val result = chain.submitPopVtb(vtb)
                         if (!result.accepted) {
-                            logger.warn { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                            logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
                         }
                         result
                     }
                     .count { it.accepted }
-                logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+                if (successfulSubmissions > 0) {
+                    logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+                }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
