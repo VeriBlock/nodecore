@@ -473,10 +473,10 @@ object SerializeDeserializeService {
             0, Constants.MAX_HEADER_SIZE_PUBLICATION_DATA
         )
         val contextInfoBytes = buffer.getVariableLengthValue(
-            0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA
+            0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA
         )
         val payoutInfoBytes = buffer.getVariableLengthValue(
-            0, Constants.MAX_CONTEXT_SIZE_PUBLICATION_DATA
+            0, Constants.MAX_PAYOUT_SIZE_PUBLICATION_DATA
         )
         return PublicationData(identifier, headerBytes, payoutInfoBytes, contextInfoBytes)
     }
