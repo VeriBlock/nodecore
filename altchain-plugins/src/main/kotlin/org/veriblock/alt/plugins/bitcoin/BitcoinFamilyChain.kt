@@ -19,6 +19,7 @@ import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
@@ -36,6 +37,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.lang.IllegalStateException
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -318,7 +320,7 @@ class BitcoinFamilyChain(
                 response.chain
             )
         } catch (e: Exception) {
-            logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
+            logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
         }
     }
@@ -396,7 +398,7 @@ class BitcoinFamilyChain(
                 throw e
             }
         } catch (e: Exception) {
-            error("Unable to perform the validateaddress rpc call to ${config.host} (is it reachable?)")
+            throw IllegalStateException("Unable to perform the validateaddress rpc call to ${config.host}", e)
         }
     }
 }
