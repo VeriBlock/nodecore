@@ -28,7 +28,7 @@ public class Constants {
     // usually it contains the POP miner address and not exceed 30 bytes
     public static final int MAX_PAYOUT_SIZE_PUBLICATION_DATA = 100;
     // usually it contains ContextInfoContainer which has height, previousKeystone, secondKeystone and merkle root
-    public static final int MAX_CONTEXT_SIZE_PUBLICATION_DATA = 100;
+    public static final int MAX_CONTEXT_SIZE_PUBLICATION_DATA = 1000000;
 
     public static final int MINIMUM_TIMESTAMP_ONSET_BLOCK_HEIGHT = 110_000;
     public static final int POP_REWARD_PAYMENT_DELAY = 500;
