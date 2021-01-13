@@ -105,7 +105,9 @@ private fun run(): Int {
                         progressBar.stepTo(progPowHeight - initialHeight)
                     }
                 }
-                logger.info { "Proceeding to download vProgPoW blocks. This operation is highly CPU-intensive and will take some time." }
+                if (!spvConfig.trustPeerHashes) {
+                    logger.info { "Proceeding to download vProgPoW blocks. This operation is highly CPU-intensive and will take some time." }
+                }
                 val progPowInitialHeight = initialHeight.toLong().coerceAtLeast(progPowHeight)
                 ProgressBarBuilder().apply {
                     setTaskName("Downloading vProgPow Blocks")

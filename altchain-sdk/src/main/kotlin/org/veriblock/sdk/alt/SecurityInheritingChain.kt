@@ -12,8 +12,10 @@ import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.SubmitPopResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.models.*
 
@@ -79,6 +81,8 @@ interface SecurityInheritingChain {
      */
     suspend fun getBestKnownVbkBlockHash(): String
 
+    suspend fun getPopParams(): PopParamsResponse
+
     /**
      * Returns the VeriBlockBlock for the given [hash]
      */
@@ -113,23 +117,13 @@ interface SecurityInheritingChain {
      * Retrieves mining instruction from the SI chain for the given [blockHeight] (or the best block height
      * if [blockHeight] is null).
      */
-    suspend fun getMiningInstruction(blockHeight: Int? = null): ApmInstruction
+    suspend fun getMiningInstructionByHeight(blockHeight: Int? = null): ApmInstruction
 
-    /**
-     * Submits VeriBlock context blocks ([contextBlocks]), ATVs ([atvs]) and VTBs ([vtbs]) to the altchain
-     * @return The submission's resulting first ATV id
-     */
-    suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    )
+    suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse
 
-    suspend fun submitContext(contextBlocks: List<VeriBlockBlock>) = submit(contextBlocks, emptyList(), emptyList())
+    suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse
 
-    suspend fun submitAtvs(atvs: List<AltPublication>) = submit(emptyList(), atvs, emptyList())
-
-    suspend fun submitVtbs(vtbs: List<VeriBlockPublication>) = submit(emptyList(), emptyList(), vtbs)
+    suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse
 
     /**
      * Extracts an address' display string from the given data (coming from the Mining Instruction)

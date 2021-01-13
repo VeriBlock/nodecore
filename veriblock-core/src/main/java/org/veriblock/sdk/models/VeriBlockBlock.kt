@@ -58,7 +58,7 @@ open class VeriBlockBlock(
     }
 
     override fun toString(): String {
-        return "VeriBlockBlock($hash @ $height)"
+        return "$hash @ $height"
     }
 
     override fun hashCode(): Int {
