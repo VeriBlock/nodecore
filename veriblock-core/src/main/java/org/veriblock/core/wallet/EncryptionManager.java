@@ -51,7 +51,7 @@ public class EncryptionManager {
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         SecretKey secretKey = factory.generateSecret(keySpec);
 
-        Cipher cipher = Cipher.getInstance("AES/GCM/PKCS5Padding");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         encryptedInfo.iv = new byte[GCM_NONCE_LENGTH];
         random.nextBytes(encryptedInfo.iv);
 
@@ -79,7 +79,7 @@ public class EncryptionManager {
 
             GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, encrypted.iv);
 
-            Cipher cipher = Cipher.getInstance("AES/GCM/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secretKey.getEncoded(), 0, 16, "AES"), spec);
             cipher.updateAAD(encrypted.additionalData);
 
