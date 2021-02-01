@@ -85,7 +85,7 @@ dependencies {
     // Better mocks
     testImplementation("io.mockk:mockk:1.9.3")
     // Better assertions
-    testImplementation("io.kotlintest:kotlintest-assertions:3.4.2")
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

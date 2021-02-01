@@ -63,7 +63,7 @@ dependencies {
 
     testImplementation("junit:junit:4.12")
     testImplementation("org.apache.commons:commons-lang3:3.8.1")
-    testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
 }
 
 setupJar("PoP Miners Common Library", "org.veriblock.miners.pop")

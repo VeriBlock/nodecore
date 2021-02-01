@@ -1,6 +1,6 @@
 package org.veriblock.core
 
-import io.kotlintest.shouldBe
+import io.kotest.matchers.shouldBe
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Test
 import org.veriblock.core.Context

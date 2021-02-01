@@ -1,8 +1,7 @@
 package org.veriblock.core.contracts
 
-import io.kotlintest.matchers.numerics.shouldBeGreaterThan
-import io.kotlintest.shouldBe
-import org.junit.Assert
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.toHex
 import kotlin.random.Random

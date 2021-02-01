@@ -42,7 +42,7 @@ dependencies {
     implementation("com.opencsv:opencsv:4.3.2")
 
     testImplementation("junit:junit:4.12")
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.0")
+    testImplementation("io.kotest:kotest-runner-junit5:4.3.2")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

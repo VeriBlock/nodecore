@@ -1,7 +1,7 @@
 package org.veriblock.miners.pop.common
 
-import io.kotlintest.shouldBe
-import io.kotlintest.shouldThrow
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath
