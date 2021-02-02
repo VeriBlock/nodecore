@@ -1,6 +1,7 @@
 package org.veriblock.core.utilities
 
-import org.junit.Assert
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.contracts.TransactionAddress
 import org.veriblock.core.contracts.TransactionAmount
@@ -14,8 +15,8 @@ class SerializerUtilityTests {
         val addrBytes = Utility.hexToBytes("01166772F51AB208D32771AB1506970EEB664462730B838E")
 
         val addr = TransactionAddress.deserialize(ByteBuffer.wrap(addrBytes))
-        Assert.assertEquals(addr.toString(), addrValue)
-        Assert.assertFalse(addr.isMultisig)
+        addrValue shouldBe addr.toString()
+        addr.isMultisig shouldBe false
     }
 
     @Test
@@ -30,7 +31,7 @@ class SerializerUtilityTests {
         val coinBytes = Utility.hexToBytes("04d09dc300")
         val amount = TransactionAmount.deserialize(ByteBuffer.wrap(coinBytes))
 
-        Assert.assertArrayEquals(coinBytesExpected, coinBytes)
-        Assert.assertEquals(coinValue.value(), amount.value())
+        coinBytes.toList() shouldContainExactly coinBytesExpected.toList()
+        amount.value() shouldBe coinValue.value()
     }
 }

@@ -3,14 +3,11 @@ package org.veriblock.core
 import io.kotest.matchers.shouldBe
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Test
-import org.veriblock.core.Context
 import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.TruncatedMerkleRoot
-import org.veriblock.core.crypto.VbkHash
-import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.core.params.defaultRegTestProgPoWParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex

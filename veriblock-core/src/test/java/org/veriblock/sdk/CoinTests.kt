@@ -7,12 +7,13 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.sdk
 
-import org.junit.Assert
+import io.kotest.assertions.fail
+import io.kotest.matchers.shouldBe
 import org.junit.Test
-import org.veriblock.sdk.models.asCoin
-import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.core.utilities.Utility
+import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.models.parseCoin
+import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.sdk.util.writeSingleByteLengthValue
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -24,7 +25,7 @@ class CoinTests {
         val input = 123456789L.asCoin()
         val serialized = SerializeDeserializeService.serialize(input)
         val deserialized = ByteBuffer.wrap(serialized).parseCoin()
-        Assert.assertEquals(input, deserialized)
+        deserialized shouldBe input
     }
 
     @Test
@@ -36,10 +37,10 @@ class CoinTests {
                 stream.writeSingleByteLengthValue(array)
                 val buffer = ByteBuffer.wrap(stream.toByteArray())
                 buffer.parseCoin()
-                Assert.fail("Expected IllegalArgumentException")
+                fail("Expected IllegalArgumentException")
             }
         } catch (e: IllegalArgumentException) {
-            Assert.assertTrue(e.message!!.startsWith("Unexpected length"))
+            e.message!!.startsWith("Unexpected length") shouldBe true
         }
     }
 }

@@ -32,6 +32,8 @@ dependencies {
     compile("io.vertx:vertx-core:3.6.2")
 
     testImplementation("junit:junit:4.12")
+    // Testing Assertions
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

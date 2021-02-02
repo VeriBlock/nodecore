@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.lite.core
 
-import org.junit.Assert
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asMerkleRoot
@@ -24,9 +24,7 @@ class MerklePathTests {
             "953855AD90E483B0492E812CD0581D82F0514675732C24D054AC473EB689D110".asSha256Hash()
         )
         val merklePath = MerkleBranch(0, subject, path, true)
-        Assert.assertTrue(
-            merklePath.verify("9610685BCE24913B2C8562A95A8A4248B216B3ECA4F6D6D0".asSha256Hash())
-        )
+        merklePath.verify("9610685BCE24913B2C8562A95A8A4248B216B3ECA4F6D6D0".asSha256Hash()) shouldBe true
     }
 
     @Test
@@ -39,9 +37,7 @@ class MerklePathTests {
             "953855AD90E483B0492E812CD0581D82F0514675732C24D054AC473EB689D110".asSha256Hash()
         )
         val merklePath = MerkleBranch(3, subject, path, true)
-        Assert.assertTrue(
-            merklePath.verify("9D5EC2CEB02657B9B2A74A188FE6C593BABE07B297B99F200DFD065906D35795".asSha256Hash())
-        )
+        merklePath.verify("9D5EC2CEB02657B9B2A74A188FE6C593BABE07B297B99F200DFD065906D35795".asSha256Hash()) shouldBe true
     }
 
     @Test
@@ -54,8 +50,6 @@ class MerklePathTests {
             "953855AD90E483B0492E812CD0581D82F0514675732C24D054AC473EB689D110".asSha256Hash()
         )
         val merklePath = MerkleBranch(2, subject, path, true)
-        Assert.assertTrue(
-            merklePath.verify("9BBAE0AACC6DD72146C5612B3C625208AFD27EB7F61A3A0FB7D660CA63EF5671".asSha256Hash())
-        )
+        merklePath.verify("9BBAE0AACC6DD72146C5612B3C625208AFD27EB7F61A3A0FB7D660CA63EF5671".asSha256Hash()) shouldBe true
     }
 }

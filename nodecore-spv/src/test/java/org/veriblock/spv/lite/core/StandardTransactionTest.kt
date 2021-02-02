@@ -1,7 +1,7 @@
 package org.veriblock.spv.lite.core
 
+import io.kotest.matchers.shouldBe
 import nodecore.api.grpc.utilities.ByteStringUtility
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
@@ -46,18 +46,14 @@ class StandardTransactionTest {
         val sign = byteArrayOf(3, 2, 1)
         tx.addSignature(sign, pub)
         val signedTransaction = tx.getSignedMessageBuilder(spvContext.networkParameters).build()
-        Assert.assertEquals(5904L, signedTransaction.signatureIndex)
-        Assert.assertEquals(3500000000L, signedTransaction.transaction.sourceAmount)
-        Assert.assertEquals(
-            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", ByteStringUtility.byteStringToBase58(signedTransaction.transaction.sourceAddress)
-        )
-        Assert.assertEquals(1, signedTransaction.transaction.outputsList.size.toLong())
-        Assert.assertEquals(
-            "V7GghFKRA6BKqtHD7LTdT2ao93DRNA", ByteStringUtility.byteStringToBase58(signedTransaction.transaction.getOutputs(0).address)
-        )
-        Assert.assertEquals(3499999999L, signedTransaction.transaction.getOutputs(0).amount)
-        Assert.assertEquals(pub, tx.publicKey)
-        Assert.assertEquals(sign, tx.signature)
+        signedTransaction.signatureIndex shouldBe 5904L
+        signedTransaction.transaction.sourceAmount shouldBe 3500000000L
+        ByteStringUtility.byteStringToBase58(signedTransaction.transaction.sourceAddress) shouldBe "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs"
+        signedTransaction.transaction.outputsList.size.toLong() shouldBe 1
+        ByteStringUtility.byteStringToBase58(signedTransaction.transaction.getOutputs(0).address) shouldBe "V7GghFKRA6BKqtHD7LTdT2ao93DRNA"
+        signedTransaction.transaction.getOutputs(0).amount shouldBe 3499999999L
+        tx.publicKey shouldBe pub
+        tx.signature shouldBe sign
     }
 
     @Test
@@ -71,9 +67,6 @@ class StandardTransactionTest {
             "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.networkParameters
         )
         val serialized = tx.toByteArray(spvContext.networkParameters)
-        Assert.assertEquals(
-            "01011667A654EE3E0C918D8652B63829D7F3BEF98524BF899604D09DC30001011667901A1E11C650509EFC46E09E81678054D8562AF02B04D09DC2FF0217100100",
-            Utility.bytesToHex(serialized)
-        )
+        Utility.bytesToHex(serialized) shouldBe "01011667A654EE3E0C918D8652B63829D7F3BEF98524BF899604D09DC30001011667901A1E11C650509EFC46E09E81678054D8562AF02B04D09DC2FF0217100100"
     }
 }

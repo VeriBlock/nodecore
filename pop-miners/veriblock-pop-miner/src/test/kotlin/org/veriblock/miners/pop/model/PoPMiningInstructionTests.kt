@@ -6,7 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.model
 
-import org.junit.Assert
+import io.kotest.matchers.collections.shouldContainExactly
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -31,10 +31,10 @@ class PoPMiningInstructionTests {
     @Test
     fun serializationWhenAllPropertiesSet() {
         val returned = serializeThenDeserialize()
-        Assert.assertArrayEquals(data.endorsedBlockHeader, returned.endorsedBlockHeader)
-        Assert.assertArrayEquals(data.lastBitcoinBlock, returned.lastBitcoinBlock)
-        Assert.assertArrayEquals(data.minerAddressBytes, returned.minerAddressBytes)
-        Assert.assertArrayEquals(data.publicationData, returned.publicationData)
+        returned.endorsedBlockHeader.toList() shouldContainExactly data.endorsedBlockHeader.toList()
+        returned.lastBitcoinBlock.toList() shouldContainExactly data.lastBitcoinBlock.toList()
+        returned.minerAddressBytes.toList() shouldContainExactly data.minerAddressBytes.toList()
+        returned.publicationData.toList() shouldContainExactly data.publicationData.toList()
     }
 
     private fun serializeThenDeserialize(): PopMiningInstruction {
