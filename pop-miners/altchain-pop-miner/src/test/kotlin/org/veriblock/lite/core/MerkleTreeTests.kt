@@ -60,7 +60,7 @@ class MerkleTreeTests {
 
         val tree = MerkleTree.of(block)
         val proof = tree.getMerklePath(Sha256Hash.wrap("714CDDB2AE77D963B48258DED5622D861FBA78372209155EC781F1E82A5F91EE"), 2, true)
-        Assert.assertEquals(block.merkleRoot, proof.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH))
+        proof.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH) shouldBe block.merkleRoot
     }
 
     @Test
@@ -85,6 +85,6 @@ class MerkleTreeTests {
 
         val tree = MerkleTree.of(block)
         val proof = tree.getMerklePath(Sha256Hash.wrap("7898EFAA2BF5E2783C9DAF2B62883827D3C2D1BABEC101DD622C42F47D63154A"), 0, true)
-        Assert.assertEquals(block.merkleRoot, proof.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH))
+        proof.merkleRoot.trim(Sha256Hash.VERIBLOCK_MERKLE_ROOT_LENGTH) shouldBe block.merkleRoot
     }*/
 }

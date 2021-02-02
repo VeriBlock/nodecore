@@ -81,8 +81,6 @@ dependencies {
     // Test
     testImplementation("junit:junit:4.12")
     // Mocks
-    testImplementation("org.mockito:mockito-core:2.+")
-    // Better mocks
     testImplementation("io.mockk:mockk:1.9.3")
     // Better assertions
     testImplementation("io.kotest:kotest-assertions-core:4.3.2")

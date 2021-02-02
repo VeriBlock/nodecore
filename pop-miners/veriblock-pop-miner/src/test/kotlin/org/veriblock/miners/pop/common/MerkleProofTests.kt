@@ -4,53 +4,47 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.miners.pop.common
 
-package org.veriblock.miners.pop.common;
+import io.kotest.assertions.fail
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
+import org.bitcoinj.core.PartialMerkleTree
+import org.bitcoinj.core.Sha256Hash
+import org.bitcoinj.params.TestNet3Params
+import org.junit.Test
+import org.veriblock.miners.pop.model.merkle.MerkleProof.Companion.parse
+import org.veriblock.miners.pop.model.merkle.MerkleProof
+import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath
+import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree
+import java.util.*
 
-import org.bitcoinj.core.PartialMerkleTree;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.params.TestNet3Params;
-import org.junit.Assert;
-import org.junit.Test;
-import org.veriblock.miners.pop.model.merkle.BitcoinMerklePath;
-import org.veriblock.miners.pop.model.merkle.BitcoinMerkleTree;
-import org.veriblock.miners.pop.model.merkle.MerkleProof;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
-public class MerkleProofTests {
+class MerkleProofTests {
     @Test
-    public void multipleTransactionsInBlock() {
-        byte[] bits = new byte[3];
-        bits[0] = -9;
-        bits[1] = 14;
-        bits[2] = 0;
-
-        List<Sha256Hash> hashes = new LinkedList<>();
-        hashes.add(0, Sha256Hash.wrap("ea1a84f5e589ff3a08c65676600df6e800ee8b83c9e27a6360c42a8552248b5a"));
-        hashes.add(1, Sha256Hash.wrap("13eb190aaed9b528afc98d37b0675a7c70297c2439816f924d6d86b2672fe738"));
-        hashes.add(2, Sha256Hash.wrap("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4"));
-        hashes.add(3, Sha256Hash.wrap("ed1db9c0a208d85da3bddf9094a80f5bbb90a7550be8adf1d09adcf51a79ea11"));
-        hashes.add(4, Sha256Hash.wrap("1e84fae6e276fc4ab63000babc0e80431e58b5d05d961100bf68aa919afda5b5"));
-        hashes.add(5, Sha256Hash.wrap("c0bd32798e349d592cb2631348c3c2b2bc9bbfe3b64b4d5b1a6d5a8c2c31f4e5"));
-        hashes.add(6, Sha256Hash.wrap("93a2ddf5da3b652d7683cb0937e1ed2787436af5fede6664af862e74e6630782"));
-        hashes.add(7, Sha256Hash.wrap("f94bea63ca5597af795b101dc5591e4149a4acd2ffc93c5b932649e6a3d9fb23"));
-        hashes.add(8, Sha256Hash.wrap("ed95a4ba0f8431b3edaaaf0712c2d70a69cffb0bda5fe38418b9ea2ed2b4911b"));
-
-        PartialMerkleTree tree = new PartialMerkleTree(TestNet3Params.get(), bits, hashes, 68);
-        tree.getTxnHashAndMerkleRoot(new LinkedList<>());
-
-        MerkleProof proof = MerkleProof.parse(tree);
-        if (proof == null) {
-            Assert.fail();
-        }
-
-        String txProof = proof.getCompactPath(Sha256Hash.wrap("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4"));
-        String[] parts = txProof.split(":");
-
-        String[] expected = new String[]{
+    fun multipleTransactionsInBlock() {
+        val bits = ByteArray(3)
+        bits[0] = -9
+        bits[1] = 14
+        bits[2] = 0
+        val hashes = listOf(
+            Sha256Hash.wrap("ea1a84f5e589ff3a08c65676600df6e800ee8b83c9e27a6360c42a8552248b5a"),
+            Sha256Hash.wrap("13eb190aaed9b528afc98d37b0675a7c70297c2439816f924d6d86b2672fe738"),
+            Sha256Hash.wrap("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4"),
+            Sha256Hash.wrap("ed1db9c0a208d85da3bddf9094a80f5bbb90a7550be8adf1d09adcf51a79ea11"),
+            Sha256Hash.wrap("1e84fae6e276fc4ab63000babc0e80431e58b5d05d961100bf68aa919afda5b5"),
+            Sha256Hash.wrap("c0bd32798e349d592cb2631348c3c2b2bc9bbfe3b64b4d5b1a6d5a8c2c31f4e5"),
+            Sha256Hash.wrap("93a2ddf5da3b652d7683cb0937e1ed2787436af5fede6664af862e74e6630782"),
+            Sha256Hash.wrap("f94bea63ca5597af795b101dc5591e4149a4acd2ffc93c5b932649e6a3d9fb23"),
+            Sha256Hash.wrap("ed95a4ba0f8431b3edaaaf0712c2d70a69cffb0bda5fe38418b9ea2ed2b4911b")
+        )
+        val tree = PartialMerkleTree(TestNet3Params.get(), bits, hashes, 68)
+        tree.getTxnHashAndMerkleRoot(LinkedList())
+        val proof = parse(tree)
+            ?: fail("")
+        val txProof =
+            proof.getCompactPath(Sha256Hash.wrap("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4"))
+        val parts = txProof.split(":").toTypedArray()
+        val expected = arrayOf(
             "17", "F464B1EF45CC5D29E8EB2860A10DE46EC13F62C5F8C87E463EA59B5EDCC4CA56",
             "38E72F67B2866D4D926F8139247C29707C5A67B0378DC9AF28B5D9AE0A19EB13",
             "C40E9E844481BB835892BDDCDE0402C2091746AAAE2BFBE7CF33EF4B959B91BE",
@@ -59,23 +53,17 @@ public class MerkleProofTests {
             "5A8B2452852AC460637AE2C9838BEE00E8F60D607656C6083AFF89E5F5841AEA",
             "23FBD9A3E64926935B3CC9FFD2ACA449411E59C51D105B79AF9755CA63EA4BF9",
             "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"
-        };
-
-        Assert.assertArrayEquals(expected, parts);
-
-        BitcoinMerklePath verification = new BitcoinMerklePath(txProof);
-        String calculatedRoot = verification.getMerkleRoot();
-
-        Assert.assertEquals("bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96", calculatedRoot.toLowerCase());
-        Assert.assertEquals(
-            "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96",
-            tree.getTxnHashAndMerkleRoot(new LinkedList<>()).toString()
-        );
+        )
+        parts.toList() shouldContainExactly expected.toList()
+        val verification = BitcoinMerklePath(txProof)
+        val calculatedRoot = verification.getMerkleRoot()
+        calculatedRoot.toLowerCase() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
+        tree.getTxnHashAndMerkleRoot(LinkedList()).toString() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
     }
 
     @Test
-    public void old() {
-        String[] txns = new String[]{
+    fun old() {
+        val txns = arrayOf(
             "df48199e864d5c38feb0482531d0f74530946df1d0a05d6be4f79be89c3bc125",
             "18565166b4d2d6923a3e7729383593080e4e6d41deb473fe45de8381dccc617c",
             "c44d996f7f5b2f309bd527b581156389b2e2eb9237bf9eae35a6956e24c03ab0",
@@ -144,13 +132,11 @@ public class MerkleProofTests {
             "6d3b73da45161098b2847fd09e64b84421d887536ff3592bf969b293a3348fe3",
             "b751b89ab152492059e242a064c5dcf85d5c9412fe24d392f030c134dc1c1cdf",
             "982c260e95b29fc8d11fda14421878069cea000ed317a552f13ae18e5596db42"
-        };
-        BitcoinMerkleTree tree = new BitcoinMerkleTree(true, Arrays.asList(txns));
-        BitcoinMerklePath path = tree.getPathFromTxID("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4");
-
-        String[] parts = path.getCompactFormat().split(":");
-
-        String[] expected = new String[]{
+        )
+        val tree = BitcoinMerkleTree(true, Arrays.asList(*txns))
+        val path = tree.getPathFromTxID("56cac4dc5e9ba53e467ec8f8c5623fc16ee40da16028ebe8295dcc45efb164f4")
+        val parts = path!!.getCompactFormat().split(":").toTypedArray()
+        val expected = arrayOf(
             "17", "F464B1EF45CC5D29E8EB2860A10DE46EC13F62C5F8C87E463EA59B5EDCC4CA56",
             "38E72F67B2866D4D926F8139247C29707C5A67B0378DC9AF28B5D9AE0A19EB13",
             "C40E9E844481BB835892BDDCDE0402C2091746AAAE2BFBE7CF33EF4B959B91BE",
@@ -159,10 +145,8 @@ public class MerkleProofTests {
             "5A8B2452852AC460637AE2C9838BEE00E8F60D607656C6083AFF89E5F5841AEA",
             "23FBD9A3E64926935B3CC9FFD2ACA449411E59C51D105B79AF9755CA63EA4BF9",
             "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"
-        };
-
-        Assert.assertArrayEquals(expected, parts);
-
-        Assert.assertEquals("bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96", path.getMerkleRoot().toLowerCase());
+        )
+        parts.toList() shouldContainExactly expected.toList()
+        path.getMerkleRoot().toLowerCase() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
     }
 }

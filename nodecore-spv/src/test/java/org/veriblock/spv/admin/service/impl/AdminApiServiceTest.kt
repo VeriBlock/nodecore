@@ -1,12 +1,12 @@
 package org.veriblock.spv.admin.service.impl
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.AddressCreationException
@@ -99,8 +99,8 @@ class AdminApiServiceTest {
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
         verify(exactly = 1) { peerTable.advertise(any()) }
 
-        Assert.assertNotNull(reply.firstOrNull())
-        Assert.assertTrue(reply.first() == transaction.txId)
+        reply.firstOrNull() shouldNotBe null
+        reply.first() shouldBe transaction.txId
     }
 
     @Test(expected = SendCoinsException::class)
@@ -126,7 +126,7 @@ class AdminApiServiceTest {
                 )
             )
         }
-        //Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
+        //reply.getResults(0).message.contains("Address doesn't exist or invalid") shouldBe true
     }
 
     @Test(expected = SendCoinsException::class)
@@ -152,7 +152,7 @@ class AdminApiServiceTest {
                 )
             )
         }
-        //Assert.assertTrue(reply.getResults(0).message.contains("Address doesn't exist or invalid"))
+        //reply.getResults(0).message.contains("Address doesn't exist or invalid") shouldBe true
     }
 
     @Test(expected = SendCoinsException::class)
@@ -178,7 +178,7 @@ class AdminApiServiceTest {
                 )
             )
         }
-        //Assert.assertTrue(reply.getResults(0).message.contains("Available balance is not enough"))
+        //reply.getResults(0).message.contains("Available balance is not enough") shouldBe true
     }
 
     @Test(expected = SendCoinsException::class)
@@ -198,7 +198,7 @@ class AdminApiServiceTest {
                 )
             )
         }
-        //Assert.assertTrue(reply.getResults(0).message.contains("Information about this address does not exist"))
+        //reply.getResults(0).message.contains("Information about this address does not exist") shouldBe true
     }
 
     @Test
@@ -489,7 +489,7 @@ class AdminApiServiceTest {
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
         val reply = spvService.createAltChainEndorsement(ByteArray(12), Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS"), 10000L, 1000L)
-        Assert.assertNotNull(reply)
+        reply shouldNotBe null
     }
 
     @Test(expected = EndorsementCreationException::class)
@@ -497,7 +497,7 @@ class AdminApiServiceTest {
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } throws RuntimeException()
 
         val reply = spvService.createAltChainEndorsement(ByteArray(12), Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS"), 10000L, 100000000L)
-        Assert.assertNotNull(reply)
+        reply shouldNotBe null
     }
 
     @Test(expected = Test.None::class)
@@ -510,6 +510,6 @@ class AdminApiServiceTest {
         every { transactionService.createUnsignedAltChainEndorsementTransaction(any(), any(), any(), any()) } returns transaction
 
         val reply = spvService.createAltChainEndorsement(ByteArray(12), Address("VcspPDtJNpNmLV8qFTqb2F5157JNHS"), 10000L, 100000000L)
-        Assert.assertNotNull(reply)
+        reply shouldNotBe null
     }
 }

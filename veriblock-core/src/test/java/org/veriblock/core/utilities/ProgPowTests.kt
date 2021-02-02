@@ -1,7 +1,7 @@
 package org.veriblock.core.utilities
 
+import io.kotest.matchers.shouldBe
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.veriblock.core.Context
@@ -26,7 +26,7 @@ class ProgPowTests {
                 println(BlockUtility.hashProgPowBlock(header, height))
             }
         }
-        Assert.assertEquals("00000000AC2178C652A1051DB63637340BB251424E9DCE8C", hash)
+        hash shouldBe "00000000AC2178C652A1051DB63637340BB251424E9DCE8C"
     }
 
     @Ignore

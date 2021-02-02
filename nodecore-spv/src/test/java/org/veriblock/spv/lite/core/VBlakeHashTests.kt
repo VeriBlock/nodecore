@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.lite.core
 
-import org.junit.Assert
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.crypto.VBlake
@@ -32,6 +32,6 @@ class VBlakeHashTests {
             53011
         )
         val hash = VBlake.hash(header).toHex()
-        Assert.assertEquals("000060CB002FB9F2A1F6CAB0662FE96521138AD1FF6ABB89", hash)
+        hash shouldBe "000060CB002FB9F2A1F6CAB0662FE96521138AD1FF6ABB89"
     }
 }

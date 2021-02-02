@@ -6,14 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.core.params
 
-import org.junit.Assert
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.sdk.services.SerializeDeserializeService
-import java.util.Base64
 
 class MainNetParametersTests {
     init {
@@ -22,14 +20,8 @@ class MainNetParametersTests {
 
     @Test
     fun verifyGenesisBlock() {
-        Assert.assertEquals(
-            "000000000002000000000000000000000000000000000000000000000000000000000000A7E5F2B7EC94291767B4D67B4A33682D5C987E0B0600E8D4113D854D",
-            defaultMainNetParameters.genesisBlock.raw.toHex()
-        )
-        Assert.assertEquals(
-            "0000000000F4FD66B91F0649BB3FCB137823C5CE317C105C",
-            defaultMainNetParameters.genesisBlock.hash.toString()
-        )
+        defaultMainNetParameters.genesisBlock.raw.toHex() shouldBe "000000000002000000000000000000000000000000000000000000000000000000000000A7E5F2B7EC94291767B4D67B4A33682D5C987E0B0600E8D4113D854D"
+        defaultMainNetParameters.genesisBlock.hash.toString() shouldBe "0000000000F4FD66B91F0649BB3FCB137823C5CE317C105C"
     }
 
     /* Compute the block hash by SHA256D on the header */
@@ -41,6 +33,6 @@ class MainNetParametersTests {
         val crypto = Crypto()
         val result = crypto.SHA256D(header)
         val hash = Utility.bytesToHex(Utility.flip(result))
-        Assert.assertTrue(hash.equals("00000000000000000022d067f3481a353ed7f2943219d5e006721c5498b5c09d", ignoreCase = true))
+        hash.equals("00000000000000000022d067f3481a353ed7f2943219d5e006721c5498b5c09d", ignoreCase = true) shouldBe true
     }
 }
