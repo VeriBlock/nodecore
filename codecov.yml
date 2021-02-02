@@ -4,7 +4,7 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "30...100"
+  range: "0...100"
 
   status:
     project: false
@@ -20,6 +20,6 @@ parsers:
       macro: no
 
 comment:
-  layout: "header, diff"
+  layout: "reach, diff, flags, files"
   behavior: default
   require_changes: false
