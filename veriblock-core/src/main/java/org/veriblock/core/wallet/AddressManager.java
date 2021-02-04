@@ -659,7 +659,7 @@ public class AddressManager {
         defaultAddress = null;
     }
 
-    public boolean walletExist() {
+    public boolean walletExists() {
         return walletFile.exists();
     }
 

@@ -55,7 +55,7 @@ private fun run(): Int {
         shutdownSignal.countDown()
     })
 
-    ProgPoWCache.setMaxCachedPairs(2); // Fewer cached pairs for SPV
+    ProgPoWCache.setMaxCachedPairs(2) // Fewer cached pairs for SPV
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock ", "")))
@@ -132,16 +132,16 @@ private fun run(): Int {
 
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
         logger.info { "To get started:" }
-        logger.info { """Type "getnewaddress" to create a new address""" }
-        logger.info { """Type "importwallet <sourceLocation>" to import an existing wallet""" }
-        logger.info { """Type "help" to display a list of available commands""" }
+        logger.info { "Type 'getnewaddress' to create a new address" }
+        logger.info { "Type 'importwallet <sourceLocation>' to import an existing wallet" }
+        logger.info { "Type 'help' to display a list of available commands" }
 
-        if (spvContext.addressManager.walletExist()) {
-            val autoImportPrompt = shell.prompt("Found a wallet file at the SPV folder, you would like to import it? Y/N ")
+        if (spvContext.addressManager.walletExists()) {
+            val autoImportPrompt = shell.prompt("Found a wallet file at the SPV data folder, you would like to import it? Y/N ")
             if (autoImportPrompt.equals("y", ignoreCase = true)) {
                 val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
                 spvContext.spvService.importWallet(spvContext.addressManager.walletPath(), passphrase)
-                logger.info { """Type "getbalance" to see the balances of all of your addresses""" }
+                logger.info { "Type 'getbalance' to see the balances of all of your addresses" }
             }
         }
 
