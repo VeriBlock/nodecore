@@ -131,7 +131,20 @@ private fun run(): Int {
         }
 
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
+        logger.info { "To get started:" }
+        logger.info { """Type "getnewaddress" to create a new address""" }
+        logger.info { """Type "importwallet <sourceLocation>" to import an existing wallet""" }
         logger.info { """Type "help" to display a list of available commands""" }
+
+        if (spvContext.addressManager.walletExist()) {
+            val autoImportPrompt = shell.prompt("Found a wallet file at the SPV folder, you would like to import it? Y/N ")
+            if (autoImportPrompt.equals("y", ignoreCase = true)) {
+                val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
+                spvContext.spvService.importWallet(spvContext.addressManager.walletPath(), passphrase)
+                logger.info { """Type "getbalance" to see the balances of all of your addresses""" }
+            }
+        }
+
         shell.run()
     } catch (e: Exception) {
         errored = true

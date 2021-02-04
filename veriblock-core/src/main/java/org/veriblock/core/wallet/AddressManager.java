@@ -659,6 +659,14 @@ public class AddressManager {
         defaultAddress = null;
     }
 
+    public boolean walletExist() {
+        return walletFile.exists();
+    }
+
+    public String walletPath() {
+        return walletFile.toPath().toString();
+    }
+
     private StoredAddress createFromKeyPair(KeyPair keyPair, char[] passphrase) {
         StoredAddress address = new StoredAddress();
         address.publicKey = keyPair.getPublic().getEncoded();
