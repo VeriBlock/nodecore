@@ -136,12 +136,13 @@ private fun run(): Int {
         logger.info { "Type 'importwallet <sourceLocation>' to import an existing wallet" }
         logger.info { "Type 'help' to display a list of available commands" }
 
-        if (spvContext.addressManager.walletExists()) {
-            val autoImportPrompt = shell.prompt("Found a wallet file at the SPV data folder, you would like to import it? Y/N ")
-            if (autoImportPrompt.equals("y", ignoreCase = true)) {
-                val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
-                spvContext.spvService.importWallet(spvContext.addressManager.walletPath(), passphrase)
+        if (!spvContext.addressManager.isLocked) {
+            try {
+                spvContext.spvService.importWallet(spvContext.addressManager.walletPath())
+                logger.info { "Successfully imported the wallet file: ${spvContext.addressManager.walletPath()}" }
                 logger.info { "Type 'getbalance' to see the balances of all of your addresses" }
+            } catch (exception: Exception) {
+                logger.info { "Failed to import the wallet file: ${exception.message}" }
             }
         }
 

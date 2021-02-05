@@ -659,10 +659,6 @@ public class AddressManager {
         defaultAddress = null;
     }
 
-    public boolean walletExists() {
-        return walletFile.exists();
-    }
-
     public String walletPath() {
         return walletFile.toPath().toString();
     }
