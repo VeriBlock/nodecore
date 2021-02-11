@@ -21,6 +21,7 @@ import org.veriblock.spv.model.LedgerValue
 import org.veriblock.spv.model.TransactionPool
 import org.veriblock.spv.net.*
 import org.veriblock.spv.service.*
+import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.util.AddressStateChangeEvent
 import org.veriblock.spv.util.SpvEventBus.addressStateUpdatedEvent
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
@@ -51,7 +52,7 @@ class SpvContext(
     val p2PService: P2PService
     val addressManager: AddressManager
     val transactionService: TransactionService
-    val pendingTransactionContainer: PendingTransactionContainer
+    val transactionManager: TransactionManager
     val pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
 
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
@@ -108,17 +109,17 @@ class SpvContext(
             blockStore = BlockStore(networkParameters, directory)
             transactionPool = TransactionPool()
             blockchain = Blockchain(blockStore)
-            pendingTransactionContainer = PendingTransactionContainer()
-            p2PService = P2PService(pendingTransactionContainer, networkParameters)
+            transactionManager = TransactionManager(blockchain)
+            p2PService = P2PService(transactionManager, networkParameters)
             addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
-            peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
+            peerTable = SpvPeerTable(this, p2PService, peerDiscovery)
             transactionService = TransactionService(addressManager, networkParameters)
             spvService = SpvService(
                 this, peerTable, transactionService, addressManager,
-                pendingTransactionContainer, blockchain
+                transactionManager, blockchain
             )
 
             Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))

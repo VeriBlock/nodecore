@@ -19,19 +19,17 @@ import nodecore.api.grpc.VeriBlockMessages
 import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
 import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.extensions.toByteString
-import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.*
 import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.serialization.MessageSerializer.deserializeNormalTransaction
 import org.veriblock.spv.service.*
+import org.veriblock.spv.service.tx.TransactionManager
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 import org.veriblock.spv.util.Threading.PEER_TABLE_DISPATCHER
@@ -58,8 +56,7 @@ const val AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING = 4//50
 class SpvPeerTable(
     private val spvContext: SpvContext,
     private val p2pService: P2PService,
-    peerDiscovery: PeerDiscovery,
-    pendingTransactionContainer: PendingTransactionContainer
+    peerDiscovery: PeerDiscovery
 ) {
     private val lock = ReentrantLock()
     private val running = AtomicBoolean(false)
@@ -68,7 +65,6 @@ class SpvPeerTable(
     var maximumPeers = DEFAULT_CONNECTIONS
     var downloadPeer: SpvPeer? = null
     val bloomFilter: BloomFilter
-    private val pendingTransactionContainer: PendingTransactionContainer
 
     private val peers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
     private val pendingPeers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
@@ -84,12 +80,10 @@ class SpvPeerTable(
         bloomFilter = createBloomFilter()
         blockchain = spvContext.blockchain
         discovery = peerDiscovery
-        this.pendingTransactionContainer = pendingTransactionContainer
 
-        SpvEventBus.pendingTransactionDownloadedEvent.register(
-            spvContext.pendingTransactionDownloadedListener,
-            spvContext.pendingTransactionDownloadedListener::onPendingTransactionDownloaded
-        )
+        SpvEventBus.pendingTransactionDownloadedEvent.register(this) {
+            logger.debug {"Tx=${it.txId} downloaded..."}
+        }
     }
 
     fun start() {

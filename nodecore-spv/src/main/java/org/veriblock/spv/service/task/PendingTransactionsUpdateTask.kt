@@ -1,7 +1,9 @@
 package org.veriblock.spv.net
 
-
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.utilities.extensions.asAnyVbkHash
 import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.crypto.asVbkTxId
@@ -29,7 +31,7 @@ fun SpvContext.startPendingTransactionsUpdateTask() {
 }
 
 suspend fun SpvContext.requestPendingTransactions() {
-    val pendingTransactionIds = pendingTransactionContainer.getPendingTransactionIds()
+    val pendingTransactionIds = transactionManager.getPendingTransactionIds()
     try {
         for (txId in pendingTransactionIds) {
             val request = buildMessage {
@@ -37,15 +39,28 @@ suspend fun SpvContext.requestPendingTransactions() {
                     .setId(txId.bytes.toByteString())
                     .build()
             }
-            val response = peerTable.requestMessage(request)
-            if (response.transactionReply.success) {
-                pendingTransactionContainer.updateTransactionInfo(response.transactionReply.transaction.toModel())
-            } else {
-                val transaction = pendingTransactionContainer.getTransaction(txId)
-                if (transaction != null) {
-                    peerTable.advertise(transaction)
+            peerTable.requestAllMessages(request)
+                .map { it.transactionReply }
+                .collect {
+                    if (it.success) {
+                        // tx exists
+                        val info = it.transaction.toModel()
+                        logger.info { "Tx=${txId} found: VBK:${info.blockNumber}:${info.blockHash}"}
+
+                        transactionManager.onTransactionInfo(info)
+                    } else {
+                        // remote peer does not know about this tx.
+                        logger.info { "Tx=${txId} NOT found"}
+
+                        val transaction = transactionManager.getTransaction(txId)
+                        if (transaction != null) {
+                            // rebroadcast it
+                            peerTable.advertise(transaction)
+                        }
+
+                        transactionManager.onMissingTransactionInfo(txId)
+                    }
                 }
-            }
         }
     } catch (e: Exception) {
         logger.debugWarn(e) { "Unable to request pending transactions" }
@@ -61,7 +76,7 @@ private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
     bitcoinBlockHash = bitcoinBlockHash.toHex(),
     bitcoinTxId = bitcoinTxId.toHex(),
     bitcoinConfirmations = bitcoinConfirmations,
-    blockHash = blockHash.toHex(),
+    blockHash = blockHash.asAnyVbkHash(),
     merklePath = merklePath
 )
 

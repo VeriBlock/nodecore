@@ -57,9 +57,9 @@ class Ledger {
         } else {
             LedgerEntry.Status.PENDING
         }
-        if (entries.containsKey(tx.inputAddress!!.get())) {
+        if (entries.containsKey(tx.inputAddress.get())) {
             ledgerEntries.add(
-                LedgerEntry(tx.inputAddress!!.get(), tx.txId, tx.inputAmount!!, Coin.ZERO, tx.getSignatureIndex(), 0, status)
+                LedgerEntry(tx.inputAddress.get(), tx.txId, tx.inputAmount!!, Coin.ZERO, tx.getSignatureIndex(), 0, status)
             )
         }
         for (i in tx.getOutputs().indices) {
