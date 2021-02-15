@@ -26,7 +26,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext

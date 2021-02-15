@@ -156,7 +156,7 @@ open class Shell(
                 }
             } catch (ve: VeriBlockException) {
                 failure {
-                    addMessage(ResultMessage("V${ve.error.code}", ve.error.title, listOf(ve.message)))
+                    addMessage(ResultMessage("V${ve.error.code}", ve.error.title, listOf(ve.message), true))
                 }
             } catch (e: Exception) {
                 handleException(e)

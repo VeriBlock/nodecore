@@ -25,7 +25,6 @@ fun CommandFactory.standardCommands() {
         description = "Quit the command line shell"
     ) {
         quit()
-
         success()
     }
 
@@ -44,7 +43,6 @@ fun CommandFactory.standardCommands() {
             for (def in shell.getCommands()){
                 shell.printStyled("    $def", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
             }
-
             success()
         } else {
             val def = shell.getCommandsByAlias()[command]

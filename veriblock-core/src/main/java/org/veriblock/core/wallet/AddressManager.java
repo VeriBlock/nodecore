@@ -533,7 +533,7 @@ public class AddressManager {
 
     public boolean unlock(char[] passphrase) {
         if (!wallet.locked) {
-            return true;
+            throw new WalletException("Unable to unlock wallet; Wallet is not currently locked");
         }
 
         try {
