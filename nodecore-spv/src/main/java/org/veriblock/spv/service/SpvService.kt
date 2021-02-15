@@ -26,7 +26,6 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext
@@ -74,10 +73,14 @@ class SpvService(
             programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",
             nodecoreStartTime = spvContext.startTime.epochSecond,
             walletCacheSyncHeight = blockchain.activeChain.tip.height,
-            walletState = when {
-                addressManager.isEncrypted -> WalletState.DEFAULT
-                addressManager.isLocked -> WalletState.LOCKED
-                else -> WalletState.UNLOCKED
+            walletState = if (!addressManager.isEncrypted) {
+                WalletState.DEFAULT
+            } else {
+                if (addressManager.isLocked) {
+                    WalletState.LOCKED
+                } else {
+                    WalletState.UNLOCKED
+                }
             }
         )
     }
