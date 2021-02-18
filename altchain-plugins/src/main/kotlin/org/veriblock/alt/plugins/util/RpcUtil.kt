@@ -19,7 +19,7 @@ import java.lang.reflect.Type
 data class JsonRpcRequestBody(
     val method: String,
     val params: Any? = emptyList<Any>(),
-    val jsonRpc: String = "1.0"
+    val jsonRpc: String = "2.0"
 )
 
 data class RpcResponse(
