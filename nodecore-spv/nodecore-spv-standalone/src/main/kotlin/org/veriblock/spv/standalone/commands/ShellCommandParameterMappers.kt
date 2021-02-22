@@ -5,7 +5,6 @@ import org.veriblock.shell.CommandParameterMapper
 import org.veriblock.shell.syntaxError
 
 object ShellCommandParameterMappers {
-
     val STANDARD_ADDRESS: CommandParameterMapper = { suppliedParam ->
         if (AddressUtility.isValidStandardAddress(suppliedParam)) {
             suppliedParam
@@ -16,7 +15,6 @@ object ShellCommandParameterMappers {
             )
         }
     }
-
 
     val STANDARD_OR_MULTISIG_ADDRESS: CommandParameterMapper = { suppliedParam ->
         if (AddressUtility.isValidStandardOrMultisigAddress(suppliedParam)) {

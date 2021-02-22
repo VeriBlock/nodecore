@@ -63,7 +63,6 @@ fun CommandFactory.spvCommands(
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(amount)
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
-
         val result = runBlocking {
             context.spvService.sendCoins(
                 sourceAddress = sourceAddress?.asLightAddress(),
@@ -75,7 +74,6 @@ fun CommandFactory.spvCommands(
                 )
             )
         }
-
         printInfo("Transaction ids:")
         displayResult(result.map { it.toString() })
         success()
@@ -176,7 +174,6 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("backupwallet", "getbalance") }
     ) {
         val count = getOptionalParameter<Int>("count")?.coerceAtLeast(1) ?: 1
-
         val result = context.spvService.getNewAddress(count)
         printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
         displayResult(result.map { it.hash })
