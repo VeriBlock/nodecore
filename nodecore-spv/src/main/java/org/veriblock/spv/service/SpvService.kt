@@ -73,14 +73,10 @@ class SpvService(
             programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",
             nodecoreStartTime = spvContext.startTime.epochSecond,
             walletCacheSyncHeight = blockchain.activeChain.tip.height,
-            walletState = if (!addressManager.isEncrypted) {
-                WalletState.DEFAULT
-            } else {
-                if (addressManager.isLocked) {
-                    WalletState.LOCKED
-                } else {
-                    WalletState.UNLOCKED
-                }
+            walletState = when {
+                !addressManager.isEncrypted -> WalletState.DEFAULT
+                addressManager.isLocked -> WalletState.LOCKED
+                else -> WalletState.UNLOCKED
             }
         )
     }
