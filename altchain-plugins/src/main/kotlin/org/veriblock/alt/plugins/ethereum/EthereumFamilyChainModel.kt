@@ -23,6 +23,7 @@ internal data class EthBlock(
     val difficulty: String,
     val transactions: List<String>,
     val parentHash: String?,
+    val miner: String,
     val pop: EthPopData
 )
 
