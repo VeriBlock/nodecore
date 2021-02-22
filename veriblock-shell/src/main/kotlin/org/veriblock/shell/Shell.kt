@@ -127,9 +127,10 @@ open class Shell(
             val stopwatch = Stopwatch.createStarted()
 
             var clear: Boolean? = null
+            var context: CommandContext? = null
             val executeResult: Result = try {
                 val commandResult = commandFactory.getInstance(input)
-                val context = CommandContext(this, commandResult.command, commandResult.parameters)
+                context = CommandContext(this, commandResult.command, commandResult.parameters)
                 var result = commandResult.command.action(context)
 
                 if (!result.isFailed) {
@@ -141,12 +142,6 @@ open class Shell(
                 }
 
                 result = handleResult(context, result)
-
-                // Suggest commands after the command has been handled and only if it has not failed
-                if (!result.isFailed) {
-                    context.suggestCommands()
-                }
-
                 result
             } catch (se: ShellException) {
                 failure {
@@ -170,6 +165,13 @@ open class Shell(
             }
             printStyled("($stopwatch)\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
 
+            // Suggest commands after the command has been handled and only if it has not failed
+            context?.let {
+                if (!executeResult.isFailed) {
+                    it.suggestCommands()
+                }
+            }
+            
             if (clear != null && clear) {
                 clear()
             }
