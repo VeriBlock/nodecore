@@ -40,7 +40,6 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
-import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private val logger = createLogger {}
@@ -124,12 +123,12 @@ class EthereumFamilyChain(
             nonce = btcBlock.nonce.asEthHexInt(),
             merkleRoot = btcBlock.transactionsRoot,
             difficulty = btcBlock.difficulty.asEthHexDouble(),
-            miner = btcBlock.miner,
+            coinbaseTransactionId = "TODO",
             transactionIds = btcBlock.transactions,
-            endorsedBy = btcBlock.pop.state.endorsedBy,
-            knownVbkHashes = btcBlock.pop.state.stored.vbkblocks,
-            veriBlockPublicationIds = btcBlock.pop.state.stored.atvs,
-            bitcoinPublicationIds = btcBlock.pop.state.stored.vtbs
+            endorsedBy = listOf(), // TODO
+            knownVbkHashes = listOf(), // TODO
+            veriBlockPublicationIds = listOf(), // TODO
+            bitcoinPublicationIds = listOf() // TODO
         )
     }
 
@@ -306,16 +305,7 @@ class EthereumFamilyChain(
 
     override suspend fun getBlockChainInfo(): StateInfo {
         return try {
-            val response: BlockChainInfo = rpcRequest("getblockchaininfo") // FIXME
-            val blockDifference = abs(response.headers - response.blocks)
-            StateInfo(
-                response.headers,
-                response.blocks,
-                blockDifference,
-                (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
-                response.initialblockdownload,
-                response.chain
-            )
+            StateInfo(0,0,0, true, false, "testnet") // FIXME
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
@@ -333,7 +323,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
-        TODO("Not yet implemented")
+        TODO("Not yet implemented") // pop_getVbkBlockByHash
     }
 
     override suspend fun getBestKnownBtcBlockHash(): String {
@@ -342,7 +332,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
-        TODO("Not yet implemented")
+        TODO("Not yet implemented") // pop_getBtcBlockByHash
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
