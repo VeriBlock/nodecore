@@ -23,8 +23,7 @@ internal data class EthBlock(
     val difficulty: String,
     val transactions: List<String>,
     val parentHash: String?,
-    val miner: String,
-    val pop: EthPopData
+    val miner: String
 )
 
 internal data class EthTransaction(
@@ -190,5 +189,5 @@ internal class EthPoPParams(
 )
 
 fun String.asEthHexInt() = drop(2).toInt(16)
-fun String.asEthHexDouble() = drop(2).toDouble()
+fun String.asEthHexLong(): Long = drop(2).toLong(16)
 fun Int.asEthHex(): String = "0x${Integer.toHexString(this)}"

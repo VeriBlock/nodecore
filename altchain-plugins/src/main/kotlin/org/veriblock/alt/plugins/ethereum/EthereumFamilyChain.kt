@@ -120,9 +120,9 @@ class EthereumFamilyChain(
             previousHash = btcBlock.parentHash ?: "0000000000000000000000000000000000000000000000000000000000000000",
             confirmations = 0, // FIXME
             version = 0, // FIXME
-            nonce = btcBlock.nonce.asEthHexInt(),
+            nonce = btcBlock.nonce.asEthHexLong(),
             merkleRoot = btcBlock.transactionsRoot,
-            difficulty = btcBlock.difficulty.asEthHexDouble(),
+            difficulty = btcBlock.difficulty.asEthHexInt().toDouble(),
             coinbaseTransactionId = "TODO",
             transactionIds = btcBlock.transactions,
             endorsedBy = listOf(), // TODO

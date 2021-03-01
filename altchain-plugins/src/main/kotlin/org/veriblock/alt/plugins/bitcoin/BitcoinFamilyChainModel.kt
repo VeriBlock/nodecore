@@ -24,7 +24,7 @@ internal data class BtcBlock(
     val height: Int,
     val confirmations: Int,
     val version: Short,
-    val nonce: Int,
+    val nonce: Long,
     val merkleroot: String,
     val difficulty: Double,
     val tx: List<String>,
