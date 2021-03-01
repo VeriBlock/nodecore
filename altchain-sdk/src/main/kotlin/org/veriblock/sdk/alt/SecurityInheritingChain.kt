@@ -121,7 +121,7 @@ interface SecurityInheritingChain {
 
     suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse
 
-    suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse
+    suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse
 
     suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse
 

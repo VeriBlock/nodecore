@@ -17,7 +17,6 @@ import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
@@ -30,7 +29,6 @@ import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
-import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
 
@@ -162,7 +160,7 @@ class NxtFamilyChain(
         )
     }
 
-    override suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse {
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
         TODO("Not yet implemented")
     }
 

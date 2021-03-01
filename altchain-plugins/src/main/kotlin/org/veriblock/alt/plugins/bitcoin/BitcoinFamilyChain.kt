@@ -15,6 +15,7 @@ import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.createLoggerFor
+import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
@@ -282,8 +283,8 @@ class BitcoinFamilyChain(
         return rpcRequest("submitpopvbk", listOf(SerializeDeserializeService.serialize(block).toHex()))
     }
 
-    override suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse {
-        return rpcRequest("submitpopatv", listOf(SerializeDeserializeService.serialize(atvs).toHex()))
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
+        return rpcRequest("submitpopatv", listOf(SerializeDeserializeService.serialize(atv).toHex()))
     }
 
     override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
@@ -401,10 +402,4 @@ class BitcoinFamilyChain(
             throw IllegalStateException("Unable to perform the validateaddress rpc call to ${config.host}", e)
         }
     }
-}
-
-fun ByteBuffer.getBytes(count: Int): ByteArray {
-    val result = ByteArray(count)
-    get(result)
-    return result
 }

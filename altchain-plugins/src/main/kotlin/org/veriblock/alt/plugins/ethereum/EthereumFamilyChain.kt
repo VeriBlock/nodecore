@@ -14,7 +14,11 @@ import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
+import org.veriblock.alt.plugins.util.asEthHex
+import org.veriblock.alt.plugins.util.asEthHexInt
+import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
+import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
@@ -278,8 +282,8 @@ class EthereumFamilyChain(
         return rpcRequest("pop_submitPopVbk", listOf(SerializeDeserializeService.serialize(block).toHex()))
     }
 
-    override suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse {
-        return rpcRequest("pop_submitPopAtv", listOf(SerializeDeserializeService.serialize(atvs).toHex()))
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
+        return rpcRequest("pop_submitPopAtv", listOf(SerializeDeserializeService.serialize(atv).toHex()))
     }
 
     override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
@@ -338,10 +342,4 @@ class EthereumFamilyChain(
     private suspend fun validateAddress(address: String): ByteArray {
         TODO("Not yet implemented")
     }
-}
-
-fun ByteBuffer.getBytes(count: Int): ByteArray {
-    val result = ByteArray(count)
-    get(result)
-    return result
 }

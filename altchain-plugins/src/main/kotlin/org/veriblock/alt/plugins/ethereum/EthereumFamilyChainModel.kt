@@ -188,6 +188,3 @@ internal class EthPoPParams(
     val vbkBootstrap: Int
 )
 
-fun String.asEthHexInt() = drop(2).toInt(16)
-fun String.asEthHexLong(): Long = drop(2).toLong(16)
-fun Int.asEthHex(): String = "0x${Integer.toHexString(this)}"
