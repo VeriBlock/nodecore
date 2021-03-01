@@ -31,7 +31,9 @@ import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.core.debugWarn
+import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
+import org.veriblock.sdk.alt.PayoutDetectionType
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
 
@@ -221,86 +223,98 @@ class ApmTaskService(
             targetState = ApmOperationState.PAYOUT_DETECTED,
             timeout = 10.days
         ) {
-            verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-            val miningInstruction = operation.miningInstruction
-                ?: failTask("PayoutDetectionTask called without mining instruction!")
-            val atvId = operation.atvId
-                ?: failTask("Can't get ATV id")
+            when (operation.chain.config.payoutDetectionType) {
+                PayoutDetectionType.COINBASE -> {
+                    verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
+                    val miningInstruction = operation.miningInstruction
+                        ?: failTask("PayoutDetectionTask called without mining instruction!")
+                    val atvId = operation.atvId
+                        ?: failTask("Can't get ATV id")
 
-            val chainName = operation.chain.name
-            val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
-            val payoutDelay = operation.chain.getPayoutDelay()
-            val payoutBlockHeight = endorsedBlockHeight + payoutDelay
+                    val chainName = operation.chain.name
+                    val endorsedBlockHeight = miningInstruction.endorsedBlockHeight
+                    val payoutDelay = operation.chain.getPayoutDelay()
+                    val payoutBlockHeight = endorsedBlockHeight + payoutDelay
 
-            logger.debug(
-                operation,
-                "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + $payoutDelay)"
-            )
+                    logger.debug(
+                        operation,
+                        "$chainName computed payout block height: $payoutBlockHeight ($endorsedBlockHeight + $payoutDelay)"
+                    )
 
-            logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
+                    logger.info(operation, "Waiting for $chainName payout block ($payoutBlockHeight)...")
 
-            val atv = try {
-                operation.chainMonitor.getAtv(atvId) { atv ->
-                    if (atv.confirmations == 0) {
-                        // atv is in mempool, continue waiting...
-                        operation.atvReorganized()
-                        false
-                    } else {
-                        // atv is in a block
-                        val containingBlock = operation.chain.getBlock(atv.containingBlock)
-                        if (containingBlock == null) {
-                            // if this happens, then this may be concurrency issue - when at the moment of 'getAtv' execution ATV was in a block,
-                            // then suddenly block reorganized and 'getBlock' returned null.
-                            // on next iteration we will find out.
-                            operation.atvReorganized()
-                            false
-                        } else {
-                            // we expect to get at least this amount of confirmations to wait for payout block
-                            val requiredConfirmations = payoutBlockHeight - containingBlock.height
-                            operation.requiredConfirmations = requiredConfirmations
-                            operation.currentConfirmations = atv.confirmations
-                            operation.atvBlock = containingBlock
-                            atv.confirmations >= requiredConfirmations
+                    val atv = try {
+                        operation.chainMonitor.getAtv(atvId) { atv ->
+                            if (atv.confirmations == 0) {
+                                // atv is in mempool, continue waiting...
+                                operation.atvReorganized()
+                                false
+                            } else {
+                                // atv is in a block
+                                val containingBlock = operation.chain.getBlock(atv.containingBlock)
+                                if (containingBlock == null) {
+                                    // if this happens, then this may be concurrency issue - when at the moment of 'getAtv' execution ATV was in a block,
+                                    // then suddenly block reorganized and 'getBlock' returned null.
+                                    // on next iteration we will find out.
+                                    operation.atvReorganized()
+                                    false
+                                } else {
+                                    // we expect to get at least this amount of confirmations to wait for payout block
+                                    val requiredConfirmations = payoutBlockHeight - containingBlock.height
+                                    operation.requiredConfirmations = requiredConfirmations
+                                    operation.currentConfirmations = atv.confirmations
+                                    operation.atvBlock = containingBlock
+                                    atv.confirmations >= requiredConfirmations
+                                }
+                            }
                         }
+                    } catch (e: Exception) {
+                        logger.debugWarn(operation, e, "Error while monitoring ATV")
+                        failTask("Error while monitoring ATV: ${e.message}")
+                    }
+
+                    val atvBlock = operation.atvBlock
+                        ?: failTask("ATV=${atvId} block should be set")
+
+                    // this should be instant
+                    val payoutBlock = operation.chainMonitor.getBlockAtHeight(atvBlock.height)
+                    // we know payout block hash, so give `getTransaction` a hint where to search.
+                    // in reality, this is required for BTC-plugin, because not all nodes may have 'txindex=1' enabled,
+                    // and if it is disabled (by default), this call fails immediately. A hint resolves this situation
+                    // by providing a block hash where node has to search for this particular TX.
+                    val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId, payoutBlock.hash)
+                        ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
+                    val rewardVout = coinbaseTransaction.vout.find {
+                        it.addressHex.asHexBytes().contentEquals(miningInstruction.publicationData.payoutInfo)
+                    }
+                    if (rewardVout != null) {
+                        // TODO: this looks like something hacky, figure out how to handle
+                        val payoutName = if (operation.chain.key.startsWith("v", true)) {
+                            operation.chain.key.toUpperCase().decapitalize()
+                        } else {
+                            operation.chain.key.toUpperCase()
+                        }
+                        logger.info(
+                            operation,
+                            "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} $payoutName"
+                        )
+                        logger.info(operation, "Completed!")
+                        operation.setPayoutData(payoutBlock.hash, rewardVout.value)
+                    } else {
+                        failOperation(
+                            "Unable to find ${operation.chain.name} PoP payout transaction in the expected block's coinbase!" +
+                                " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
+                        )
                     }
                 }
-            } catch (e: Exception) {
-                logger.debugWarn(operation, e, "Error while monitoring ATV")
-                failTask("Error while monitoring ATV: ${e.message}")
-            }
-
-            val atvBlock = operation.atvBlock
-                ?: failTask("ATV=${atvId} block should be set")
-
-            // this should be instant
-            val payoutBlock = operation.chainMonitor.getBlockAtHeight(atvBlock.height)
-            // we know payout block hash, so give `getTransaction` a hint where to search.
-            // in reality, this is required for BTC-plugin, because not all nodes may have 'txindex=1' enabled,
-            // and if it is disabled (by default), this call fails immediately. A hint resolves this situation
-            // by providing a block hash where node has to search for this particular TX.
-            val coinbaseTransaction = operation.chain.getTransaction(payoutBlock.coinbaseTransactionId, payoutBlock.hash)
-                ?: failTask("Unable to find transaction ${payoutBlock.coinbaseTransactionId}")
-            val rewardVout = coinbaseTransaction.vout.find {
-                it.addressHex.asHexBytes().contentEquals(miningInstruction.publicationData.payoutInfo)
-            }
-            if (rewardVout != null) {
-                // TODO: this looks like something hacky, figure out how to handle
-                val payoutName = if (operation.chain.key.startsWith("v", true)) {
-                    operation.chain.key.toUpperCase().decapitalize()
-                } else {
-                    operation.chain.key.toUpperCase()
+                PayoutDetectionType.DISABLED -> {
+                    operation.setPayoutData("Payout detection disabled", 0)
+                    logger.warn(operation, "The payout detection configuration is disabled!")
                 }
-                logger.info(
-                    operation,
-                    "$chainName PoP Payout detected! Amount: ${rewardVout.value.formatAtomicLongWithDecimal()} $payoutName"
-                )
-                logger.info(operation, "Completed!")
-                operation.setPayoutData(payoutBlock.hash, rewardVout.value)
-            } else {
-                failOperation(
-                    "Unable to find ${operation.chain.name} PoP payout transaction in the expected block's coinbase!" +
-                        " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
-                )
+                PayoutDetectionType.BALANCE_DELTA -> {
+                    operation.setPayoutData("Payout detection not implemented", 0)
+                    logger.warn(operation, "The payout detection BALANCE_DELTA is not implemented yet!")
+                }
             }
         }
 
