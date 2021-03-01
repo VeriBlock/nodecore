@@ -46,7 +46,7 @@ class ApmOperationExplainer(
                 when (operation.chain.config.payoutDetectionType) {
                     PayoutDetectionType.COINBASE -> "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}"
                     PayoutDetectionType.BALANCE_DELTA -> "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()} (estimation based on wallet's incoming transactions)"
-                    PayoutDetectionType.DISABLED -> "Unknown (payout detection is disabled)"
+                    PayoutDetectionType.DISABLED -> "Paid amount: Unknown (payout detection is disabled)"
                 }
             } else {
                 ""

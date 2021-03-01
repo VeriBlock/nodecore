@@ -308,11 +308,11 @@ class ApmTaskService(
                     }
                 }
                 PayoutDetectionType.DISABLED -> {
-                    operation.setPayoutData("Payout detection disabled", 0)
+                    operation.setPayoutData("Completed! Payout detection disabled", 0)
                     logger.warn(operation, "The payout detection configuration is disabled!")
                 }
                 PayoutDetectionType.BALANCE_DELTA -> {
-                    operation.setPayoutData("Payout detection not implemented", 0)
+                    operation.setPayoutData("Completed! Payout detection not implemented", 0)
                     logger.warn(operation, "The payout detection BALANCE_DELTA is not implemented yet!")
                 }
             }
