@@ -103,13 +103,13 @@ class EthereumFamilyChain(
 
     override suspend fun getBestBlockHeight(): Int {
         logger.trace { "Retrieving best block height..." }
-        return rpcRequest<String>("eth_blockNumber").asEthHexInt()
+        return rpcRequest<String>("eth_blockNumber", version = "2.0").asEthHexInt()
     }
 
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         logger.debug { "Retrieving block $hash..." }
         val btcBlock: EthBlock = try {
-            rpcRequest("eth_getBlockByHash", listOf(hash, true))
+            rpcRequest("eth_getBlockByHash", listOf(hash, true), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
@@ -139,7 +139,7 @@ class EthereumFamilyChain(
     private suspend fun getBlockHash(height: Int): String? {
         logger.debug { "Retrieving block hash @$height..." }
         return try {
-            rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(height.asEthHex(), false)).hash
+            rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(height.asEthHex(), false), "2.0").hash
         } catch (e: RpcException) {
             if (e.errorCode == -8) {
                 // Block height out of range
@@ -163,7 +163,7 @@ class EthereumFamilyChain(
             ?: return false
         // Get raw block
         val rawBlock: String = try {
-            rpcRequest("eth_getBlockByHash", listOf(blockHash, true))
+            rpcRequest("eth_getBlockByHash", listOf(blockHash, true), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
@@ -181,7 +181,7 @@ class EthereumFamilyChain(
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
         val btcTransaction: EthTransaction = try {
-            rpcRequest("eth_getRawTransactionByHash", listOf(txId))
+            rpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Transaction not found
@@ -208,17 +208,17 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getBestKnownVbkBlockHash(): String {
-        return rpcRequest("pop_getVbkBestBlockHash")
+        return rpcRequest("pop_getVbkBestBlockHash", version = "2.0")
     }
 
     override suspend fun getPopMempool(): PopMempool {
-        val response: EthPopStoredStateData = rpcRequest("pop_getRawPopMempool")
+        val response: EthPopStoredStateData = rpcRequest("pop_getRawPopMempool", version = "2.0")
         return PopMempool(response.vbkblocks, response.atvs, response.vtbs)
     }
 
     override suspend fun getAtv(id: String): Atv? {
         val response: EthAtv = try {
-            rpcRequest("pop_getRawAtv", listOf(id, 1)) // -
+            rpcRequest("pop_getRawAtv", listOf(id, 1), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // ATV not found
@@ -237,7 +237,7 @@ class EthereumFamilyChain(
 
     override suspend fun getVtb(id: String): Vtb? {
         val response: EthVtb = try {
-            rpcRequest("pop_getRawVtb", listOf(id, 1)) // -
+            rpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // VTB not found
@@ -255,7 +255,7 @@ class EthereumFamilyChain(
             ?: getBestBlockHeight()
 
         logger.debug { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
-        val response: EthPublicationData = rpcRequest("pop_getPopDataByHeight", listOf(actualBlockHeight))
+        val response: EthPublicationData = rpcRequest("pop_getPopDataByHeight", listOf(actualBlockHeight), "2.0")
 
         if (response.last_known_veriblock_block.isEmpty()) {
             error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
@@ -279,15 +279,15 @@ class EthereumFamilyChain(
     }
 
     override suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse {
-        return rpcRequest("pop_submitPopVbk", listOf(SerializeDeserializeService.serialize(block).toHex()))
+        return rpcRequest("pop_submitPopVbk", listOf(SerializeDeserializeService.serialize(block).toHex()), "2.0")
     }
 
     override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
-        return rpcRequest("pop_submitPopAtv", listOf(SerializeDeserializeService.serialize(atv).toHex()))
+        return rpcRequest("pop_submitPopAtv", listOf(SerializeDeserializeService.serialize(atv).toHex()), "2.0")
     }
 
     override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
-        return rpcRequest("pop_submitPopVtb", listOf(SerializeDeserializeService.serialize(vtb).toHex()))
+        return rpcRequest("pop_submitPopVtb", listOf(SerializeDeserializeService.serialize(vtb).toHex()), "2.0")
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
@@ -317,7 +317,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getPopParams(): PopParamsResponse {
-        val ethPopParams = rpcRequest<EthPoPParams>("pop_getPopParams", emptyList<String>())
+        val ethPopParams = rpcRequest<EthPoPParams>("pop_getPopParams", emptyList<String>(), "2.0")
         return PopParamsResponse(
             ethPopParams.popActivationHeight.toInt(),
             ethPopParams.networkId,
@@ -332,7 +332,7 @@ class EthereumFamilyChain(
 
     override suspend fun getBestKnownBtcBlockHash(): String {
         logger.debug { "Retrieving the best known BTC block hash..." }
-        return rpcRequest("pop_getBtcBestBlockHash")
+        return rpcRequest("pop_getBtcBestBlockHash", version = "2.0")
     }
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {

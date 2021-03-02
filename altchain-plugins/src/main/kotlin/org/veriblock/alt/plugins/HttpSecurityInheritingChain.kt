@@ -16,8 +16,8 @@ interface HttpSecurityInheritingChain : SecurityInheritingChain {
     val requestsLogger: KLogger?
 }
 
-suspend inline fun <reified T> HttpSecurityInheritingChain.rpcRequest(method: String, params: Any? = emptyList<Any>()): T {
-    val jsonBody = JsonRpcRequestBody(method, params).toJson()
+suspend inline fun <reified T> HttpSecurityInheritingChain.rpcRequest(method: String, params: Any? = emptyList<Any>(), version: String = "1.0"): T {
+    val jsonBody = JsonRpcRequestBody(method, params, version).toJson()
     requestsLogger?.info { "-> ${jsonBody.take(10_000)}" }
     val response: RpcResponse = httpClient.post(config.host) {
         // Since jsonBody is a string, we have to specify it is Json content type
