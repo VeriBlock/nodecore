@@ -389,7 +389,7 @@ class SecurityInheritingMonitor(
             null
         }
         // The best block should never be null if the chain's integrity is not compromised
-            ?: throw IllegalStateException("Unable to find block with height $height while the best chain height is $bestBlockHeight!")
+            ?: throw IllegalStateException("Unable to find block with height $height while the best chain height is ${bestBlockHeight.value}!")
     }
 
     private suspend fun getTransaction(txId: String): SecurityInheritingTransaction? = try {

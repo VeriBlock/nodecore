@@ -8,6 +8,7 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
+import org.veriblock.sdk.alt.PayoutDetectionType
 
 class ApmOperationExplainer(
     val context: ApmContext
@@ -41,7 +42,15 @@ class ApmOperationExplainer(
         } + OperationWorkflowStage(
             if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
             "9. COMPLETED",
-            if (operation.state == MiningOperationState.COMPLETED) "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}" else ""
+            if (operation.state == MiningOperationState.COMPLETED) {
+                when (operation.chain.config.payoutDetectionType) {
+                    PayoutDetectionType.COINBASE -> "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}"
+                    PayoutDetectionType.BALANCE_DELTA -> "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()} (estimation based on wallet's incoming transactions)"
+                    PayoutDetectionType.DISABLED -> "Paid amount: Unknown (payout detection is disabled)"
+                }
+            } else {
+                ""
+            }
         ))
     }
 

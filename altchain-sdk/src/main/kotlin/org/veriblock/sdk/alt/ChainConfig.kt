@@ -12,6 +12,7 @@ abstract class ChainConfig {
     abstract val payoutDelay: Int
     abstract val blockRoundIndices: List<Int>
     open val autoMineRounds: MutableSet<Int> = HashSet()
+    abstract val payoutDetectionType: PayoutDetectionType
 
     val availableRoundIndices: Set<Int> get() = blockRoundIndices.distinct().toSet()
 
@@ -39,4 +40,10 @@ abstract class ChainConfig {
             }
         }
     }
+}
+
+enum class PayoutDetectionType {
+    DISABLED,
+    COINBASE,
+    BALANCE_DELTA
 }

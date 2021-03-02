@@ -6,98 +6,92 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins.bitcoin
+package org.veriblock.alt.plugins.ethereum
 
-internal data class BtcContextInfo(
-    val serialized: String
-)
-
-internal data class BtcPublicationData(
+internal data class EthPublicationData(
     val block_header: String,
-    val authenticated_context: BtcContextInfo,
-    val last_known_veriblock_blocks: List<String>,
-    val last_known_bitcoin_blocks: List<String>,
+    val authenticated_context: String,
+    val last_known_veriblock_block: String,
+    val last_known_bitcoin_block: String,
 )
 
-internal data class BtcBlock(
+internal data class EthBlock(
     val hash: String,
-    val height: Int,
-    val confirmations: Int,
-    val version: Short,
-    val nonce: Long,
-    val merkleroot: String,
-    val difficulty: Double,
-    val tx: List<String>,
-    val previousblockhash: String?,
-    val pop: BtcPopData
+    val number: String,
+    val nonce: String,
+    val transactionsRoot: String,
+    val difficulty: String,
+    val transactions: List<String>,
+    val parentHash: String?,
+    val miner: String
 )
 
-internal data class BtcTransaction(
+internal data class EthTransaction(
     val txid: String,
     val confirmations: Int,
-    val vout: List<BtcTransactionVout>,
+    val vout: List<EthTransactionVout>,
     val blockhash: String?
 )
 
-internal data class BtcTransactionVout(
+internal data class EthTransactionVout(
     val value: Double,
-    val scriptPubKey: BtcScriptPubKey
+    val scriptPubKey: EthScriptPubKey
 )
 
-internal data class BtcScriptPubKey(
+internal data class EthScriptPubKey(
     val asm: String,
     val hex: String,
     val reqSigs: Int,
     val type: String
 )
 
-internal data class BtcPopData(
-    val state: BtcPopStateData
+internal data class EthPopData(
+    val state: EthPopStateData
 )
 
-internal data class BtcPopStateData(
+internal data class EthPopStateData(
     val endorsedBy: List<String>,
-    val stored: BtcPopStoredStateData
+    val stored: EthPopStoredStateData
 )
 
-internal data class BtcPopStoredStateData(
+internal data class EthPopStoredStateData(
     val vbkblocks: List<String>,
     val atvs: List<String>,
     val vtbs: List<String>
 )
 
-internal data class BtcAtv(
+internal data class EthAtv(
     val in_active_chain: Boolean,
     val blockheight: Int,
     val blockhash: String,
     val confirmations: Int,
-    val atv: BtcAtvData
+    val atv: EthAtvData
 )
 
-internal data class BtcAtvData(
+internal data class EthAtvData(
     val id: String,
     val version: Int,
-    val transaction: BtcVbkTransaction,
-    val blockOfProof: BtcVbkBlock,
+    val transaction: EthVbkTransaction,
+    val blockOfProof: EthVbkBlock,
 )
 
-internal data class BtcVbkTransaction(
+internal data class EthVbkTransaction(
     val hash: String
 )
 
-internal data class BtcVbkBlock(
+internal data class EthVbkBlock(
     val hash: String,
     val height: Int
 )
 
-internal data class BtcVtb(
+internal data class EthVtb(
     val in_active_chain: Boolean,
     val blockheight: Int,
     val confirmations: Int,
-    val vtb: BtcVtbData
+    val vtb: EthVtbData
 )
 
-internal data class BtcVtbData(
+internal data class EthVtbData(
     val id: String,
     val version: Int,
     val containingBlock: SpBtcBlock
@@ -115,16 +109,16 @@ internal data class BlockChainInfo(
     val initialblockdownload: Boolean
 )
 
-internal data class BtcBlockBlock(
+internal data class EthBlockBlock(
     val chainWork: String?,
     val height: Int?,
-    val header: BtcBlockHeader?,
+    val header: EthBlockHeader?,
     val status: Int?,
     val vbkRefs: List<Int?>?,
     val blockOfProofEndorsements: List<String?>?
 )
 
-internal data class BtcBlockHeader(
+internal data class EthBlockHeader(
     val hash: String?,
     val version: Int?,
     val previousBlock: String?,
@@ -186,3 +180,11 @@ internal data class AddressValidationResponse(
     val witness_version: String?,
     val witness_program: String?
 )
+
+internal class EthPoPParams(
+    val popActivationHeight: Long,
+    val networkId: Long,
+    val popPayoutDelay: Int,
+    val vbkBootstrap: Int
+)
+

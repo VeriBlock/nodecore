@@ -6,7 +6,7 @@ data class SecurityInheritingBlock(
     val previousHash: String,
     val confirmations: Int,
     val version: Short,
-    val nonce: Int,
+    val nonce: Long,
     val merkleRoot: String,
     val difficulty: Double,
     val coinbaseTransactionId: String,

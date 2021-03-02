@@ -6,14 +6,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package org.veriblock.alt.plugins.bitcoin
+package org.veriblock.alt.plugins.ethereum
 
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
+import org.veriblock.alt.plugins.util.asEthHex
+import org.veriblock.alt.plugins.util.asEthHexInt
+import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.core.altchain.AltchainPoPEndorsement
@@ -27,8 +30,10 @@ import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.Atv
+import org.veriblock.sdk.alt.model.NetworkParam
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.PopParamsResponse
+import org.veriblock.sdk.alt.model.PopPayoutParams
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
@@ -38,22 +43,20 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.lang.IllegalStateException
 import java.nio.ByteBuffer
-import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private val logger = createLogger {}
 
 private const val NOT_FOUND_ERROR_CODE = -5
 
-@PluginSpec(name = "BitcoinFamily", key = "btc")
-class BitcoinFamilyChain(
+@PluginSpec(name = "EthereumFamily", key = "eth")
+class EthereumFamilyChain(
     override val key: String,
     configuration: PluginConfig
 ) : HttpSecurityInheritingChain {
 
-    override val config = BitcoinConfig(configuration)
+    override val config = EthereumConfig(configuration)
 
     override val id: Long = configuration.id
         ?: error("Failed to load altchain plugin $key: please configure the chain 'id'!")
@@ -77,8 +80,8 @@ class BitcoinFamilyChain(
 
     override val httpClient = createHttpClient(
         authConfig = config.auth,
-        contentTypes = listOf(ContentType.Application.Json, ContentType.Text.Any),
-        connectionTimeout = config.daemonConnectionTimeout
+        contentTypes = listOf(ContentType.Application.Json),
+        connectionTimeout = config.daemonConnectionTimeout,
     )
 
     override val requestsLogger = config.requestLogsPath?.let {
@@ -100,13 +103,13 @@ class BitcoinFamilyChain(
 
     override suspend fun getBestBlockHeight(): Int {
         logger.trace { "Retrieving best block height..." }
-        return rpcRequest("getblockcount")
+        return rpcRequest<String>("eth_blockNumber", version = "2.0").asEthHexInt()
     }
 
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         logger.debug { "Retrieving block $hash..." }
-        val btcBlock: BtcBlock = try {
-            rpcRequest("getblock", listOf(hash, 1))
+        val btcBlock: EthBlock = try {
+            rpcRequest("eth_getBlockByHash", listOf(hash, true), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
@@ -117,26 +120,26 @@ class BitcoinFamilyChain(
         }
         return SecurityInheritingBlock(
             hash = btcBlock.hash,
-            height = btcBlock.height,
-            previousHash = btcBlock.previousblockhash ?: "0000000000000000000000000000000000000000000000000000000000000000",
-            confirmations = btcBlock.confirmations,
-            version = btcBlock.version,
-            nonce = btcBlock.nonce,
-            merkleRoot = btcBlock.merkleroot,
-            difficulty = btcBlock.difficulty,
-            coinbaseTransactionId = btcBlock.tx[0],
-            transactionIds = btcBlock.tx.drop(1),
-            endorsedBy = btcBlock.pop.state.endorsedBy,
-            knownVbkHashes = btcBlock.pop.state.stored.vbkblocks,
-            veriBlockPublicationIds = btcBlock.pop.state.stored.atvs,
-            bitcoinPublicationIds = btcBlock.pop.state.stored.vtbs
+            height = btcBlock.number.asEthHexInt(),
+            previousHash = btcBlock.parentHash ?: "0000000000000000000000000000000000000000000000000000000000000000",
+            confirmations = 0, // FIXME
+            version = 0, // FIXME
+            nonce = btcBlock.nonce.asEthHexLong(),
+            merkleRoot = btcBlock.transactionsRoot,
+            difficulty = btcBlock.difficulty.asEthHexInt().toDouble(),
+            coinbaseTransactionId = "TODO",
+            transactionIds = btcBlock.transactions,
+            endorsedBy = listOf(), // TODO
+            knownVbkHashes = listOf(), // TODO
+            veriBlockPublicationIds = listOf(), // TODO
+            bitcoinPublicationIds = listOf() // TODO
         )
     }
 
     private suspend fun getBlockHash(height: Int): String? {
         logger.debug { "Retrieving block hash @$height..." }
         return try {
-            rpcRequest("getblockhash", listOf(height))
+            rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(height.asEthHex(), false), "2.0").hash
         } catch (e: RpcException) {
             if (e.errorCode == -8) {
                 // Block height out of range
@@ -160,7 +163,7 @@ class BitcoinFamilyChain(
             ?: return false
         // Get raw block
         val rawBlock: String = try {
-            rpcRequest("getblock", listOf(blockHash, 0))
+            rpcRequest("eth_getBlockByHash", listOf(blockHash, true), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
@@ -177,12 +180,8 @@ class BitcoinFamilyChain(
 
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
-        val btcTransaction: BtcTransaction = try {
-            if (blockHash == null) {
-                rpcRequest("getrawtransaction", listOf(txId, 1))
-            } else {
-                rpcRequest("getrawtransaction", listOf(txId, 1, blockHash))
-            }
+        val btcTransaction: EthTransaction = try {
+            rpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Transaction not found
@@ -209,17 +208,17 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getBestKnownVbkBlockHash(): String {
-        return rpcRequest("getvbkbestblockhash")
+        return rpcRequest("pop_getVbkBestBlockHash", version = "2.0")
     }
 
     override suspend fun getPopMempool(): PopMempool {
-        val response: BtcPopStoredStateData = rpcRequest("getrawpopmempool")
+        val response: EthPopStoredStateData = rpcRequest("pop_getRawPopMempool", version = "2.0")
         return PopMempool(response.vbkblocks, response.atvs, response.vtbs)
     }
 
     override suspend fun getAtv(id: String): Atv? {
-        val response: BtcAtv = try {
-            rpcRequest("getrawatv", listOf(id, 2))
+        val response: EthAtv = try {
+            rpcRequest("pop_getRawAtv", listOf(id, 1), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // ATV not found
@@ -237,8 +236,8 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getVtb(id: String): Vtb? {
-        val response: BtcVtb = try {
-            rpcRequest("getrawvtb", listOf(id, 1))
+        val response: EthVtb = try {
+            rpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // VTB not found
@@ -256,12 +255,12 @@ class BitcoinFamilyChain(
             ?: getBestBlockHeight()
 
         logger.debug { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
-        val response: BtcPublicationData = rpcRequest("getpopdatabyheight", listOf(actualBlockHeight))
+        val response: EthPublicationData = rpcRequest("pop_getPopDataByHeight", listOf(actualBlockHeight), "2.0")
 
-        if (response.last_known_veriblock_blocks.isNullOrEmpty()) {
+        if (response.last_known_veriblock_block.isEmpty()) {
             error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
         }
-        if (response.last_known_bitcoin_blocks.isNullOrEmpty()) {
+        if (response.last_known_bitcoin_block.isEmpty()) {
             error("Publication data's 'last_known_bitcoin_blocks' must not be empty!")
         }
 
@@ -269,26 +268,26 @@ class BitcoinFamilyChain(
             id,
             response.block_header.asHexBytes(),
             getPayoutAddressScript(),
-            response.authenticated_context.serialized.asHexBytes()
+            response.authenticated_context.asHexBytes()
         )
         return ApmInstruction(
             actualBlockHeight,
             publicationData,
-            response.last_known_veriblock_blocks.map { it.asHexBytes() },
-            response.last_known_bitcoin_blocks.map { it.asHexBytes() }
+            listOf(response.last_known_veriblock_block.asHexBytes()),
+            listOf(response.last_known_bitcoin_block.asHexBytes())
         )
     }
 
     override suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse {
-        return rpcRequest("submitpopvbk", listOf(SerializeDeserializeService.serialize(block).toHex()))
+        return rpcRequest("pop_submitPopVbk", listOf(SerializeDeserializeService.serialize(block).toHex()), "2.0")
     }
 
     override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
-        return rpcRequest("submitpopatv", listOf(SerializeDeserializeService.serialize(atv).toHex()))
+        return rpcRequest("pop_submitPopAtv", listOf(SerializeDeserializeService.serialize(atv).toHex()), "2.0")
     }
 
     override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
-        return rpcRequest("submitpopvtb", listOf(SerializeDeserializeService.serialize(vtb).toHex()))
+        return rpcRequest("pop_submitPopVtb", listOf(SerializeDeserializeService.serialize(vtb).toHex()), "2.0")
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
@@ -310,16 +309,7 @@ class BitcoinFamilyChain(
 
     override suspend fun getBlockChainInfo(): StateInfo {
         return try {
-            val response: BlockChainInfo = rpcRequest("getblockchaininfo")
-            val blockDifference = abs(response.headers - response.blocks)
-            StateInfo(
-                response.headers,
-                response.blocks,
-                blockDifference,
-                (response.headers > 0 && blockDifference < 4) && !response.initialblockdownload,
-                response.initialblockdownload,
-                response.chain
-            )
+            StateInfo(0,0,0, true, false, "testnet") // FIXME
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
@@ -327,79 +317,29 @@ class BitcoinFamilyChain(
     }
 
     override suspend fun getPopParams(): PopParamsResponse {
-        return rpcRequest("getpopparams", emptyList<String>())
+        val ethPopParams = rpcRequest<EthPoPParams>("pop_getPopParams", emptyList<String>(), "2.0")
+        return PopParamsResponse(
+            ethPopParams.popActivationHeight.toInt(),
+            ethPopParams.networkId,
+            PopPayoutParams(ethPopParams.popPayoutDelay),
+            NetworkParam(ethPopParams.vbkBootstrap.toString())
+        )
     }
 
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
-        logger.debug { "Retrieving the VBK block for the hash $hash" }
-        return try {
-            val response: VbkBlock = rpcRequest("getvbkblock", listOf(hash))
-            VeriBlockBlock(
-                height = response.header?.height ?: error("getvbkblock height field must be set"),
-                version = response.header.version ?: error("getvbkblock version field must be set"),
-                previousBlock = response.header.previousBlock?.asAnyVbkHash()?.trimToPreviousBlockSize() ?: error("getvbkblock previousBlock field must be set"),
-                previousKeystone = response.header.previousKeystone?.asAnyVbkHash()?.trimToPreviousKeystoneSize() ?: error("getvbkblock previousKeystone field must be set"),
-                secondPreviousKeystone = response.header.secondPreviousKeystone?.asAnyVbkHash()?.trimToPreviousKeystoneSize() ?: error("getvbkblock secondPreviousKeystone field must be set"),
-                merkleRoot = response.header.merkleRoot?.asTruncatedMerkleRoot() ?: error("getvbkblock merkleRoot field must be set"),
-                timestamp = response.header.timestamp ?: error("getvbkblock timestamp field must be set"),
-                difficulty = response.header.difficulty ?: error("getvbkblock difficulty field must be set"),
-                nonce = response.header.nonce ?: error("getvbkblock nonce field must be set")
-            )
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // Block not found
-                null
-            } else {
-                throw e
-            }
-        }
+        TODO("Not yet implemented") // pop_getVbkBlockByHash
     }
 
     override suspend fun getBestKnownBtcBlockHash(): String {
         logger.debug { "Retrieving the best known BTC block hash..." }
-        return rpcRequest("getbtcbestblockhash")
+        return rpcRequest("pop_getBtcBestBlockHash", version = "2.0")
     }
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
-        logger.debug { "Retrieving the BTC block for the hash $hash" }
-        return try {
-            val response: BtcBlockBlock = rpcRequest("getbtcblock", listOf(hash))
-            BitcoinBlock(
-                version = response.header?.version ?: error("getbtcblock version field must be set"),
-                previousBlock = response.header.previousBlock?.asBtcHash() ?: error("getbtcblock previousBlock field must be set"),
-                merkleRoot = response.header.merkleRoot?.asMerkleRoot() ?: error("getbtcblock merkleRoot field must be set"),
-                timestamp = response.header.timestamp ?: error("getbtcblock timestamp field must be set"),
-                difficulty = 0, // FIXME difficulty field is not at the response
-                nonce = response.header.nonce ?: error("getbtcblock nonce field must be set")
-            )
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // Block not found
-                null
-            } else {
-                throw e
-            }
-        }
+        TODO("Not yet implemented") // pop_getBtcBlockByHash
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
-        try {
-            val response: AddressValidationResponse = rpcRequest("validateaddress", listOf(address))
-            if (response.isvalid) {
-                return response.scriptPubKey?.asHexBytes()
-                    ?: error("Unexpected response from 'validateaddress'. 'scriptPubKey' is not set!")
-            } else {
-                error("Invalid Address: $address")
-            }
-        } catch (e: RpcException) {
-            if (e.errorCode == -32601) {
-                // Method not found
-                error("Method 'validateaddress' not found. It must be implemented in order to specify payout addresses.")
-            } else {
-                throw e
-            }
-        } catch (e: Exception) {
-            throw IllegalStateException("Unable to perform the validateaddress rpc call to ${config.host}", e)
-        }
+        TODO("Not yet implemented")
     }
 }

@@ -1,11 +1,11 @@
-package org.veriblock.alt.plugins.bitcoin
+package org.veriblock.alt.plugins.ethereum
 
 import org.veriblock.sdk.alt.ChainConfig
 import org.veriblock.sdk.alt.PayoutDetectionType
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 import org.veriblock.sdk.alt.plugin.PluginConfig
 
-class BitcoinConfig(
+class EthereumConfig(
     override val host: String = "http://localhost:18332",
     override val auth: HttpAuthConfig? = null,
     override val payoutAddress: String? = null,
@@ -15,7 +15,7 @@ class BitcoinConfig(
     override val payoutDelay: Int = 50,
     override val blockRoundIndices: List<Int> = listOf(4, 2, 3, 1, 2),
     override val autoMineRounds: MutableSet<Int> = HashSet(),
-    override val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
+    override val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.BALANCE_DELTA,
     val requestLogsPath: String? = null,
     val daemonConnectionTimeout: Int = 5000
 ) : ChainConfig() {

@@ -12,11 +12,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.HttpResponseValidator
 import io.ktor.client.features.auth.Auth
 import io.ktor.client.features.auth.providers.basic
 import io.ktor.client.features.json.Json
-import io.ktor.client.features.json.JsonFeature
 import io.ktor.http.ContentType
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 import java.lang.reflect.Type

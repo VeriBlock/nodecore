@@ -19,7 +19,8 @@ import java.lang.reflect.Type
 data class JsonRpcRequestBody(
     val method: String,
     val params: Any? = emptyList<Any>(),
-    val jsonRpc: String = "1.0"
+    val jsonRpc: String = "1.0",
+    val id: Int = 1
 )
 
 data class RpcResponse(
@@ -42,10 +43,10 @@ private val gson = Gson()
 inline fun <reified T> RpcResponse.handle(): T = try {
     val type: Type = object : TypeToken<T>() {}.type
     when {
-        result !is JsonNull ->
-            result.fromJson<T>(type)
         error != null ->
             throw RpcException(error.code, error.message)
+        result !is JsonNull ->
+            result.fromJson<T>(type)
         else ->
             throw IllegalStateException()
     }

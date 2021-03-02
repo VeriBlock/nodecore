@@ -173,7 +173,7 @@ class TestChain(
         return ApmInstruction(finalBlockHeight, publicationData, listOf(lastVbkHash), listOf(lastBtcHash))
     }
 
-    override suspend fun submitPopAtv(atvs: AltPublication): SubmitPopResponse {
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
         TODO("Not yet implemented")
     }
 
