@@ -54,7 +54,7 @@ class PluginService(
             val pluginKey = (config.pluginKey ?: key).toLowerCase()
             val pluginSupplier = plugins[pluginKey]
             if (pluginSupplier == null) {
-                logger.warn { "Unable to load plugin $key, $pluginKey is not implemented" }
+                logger.warn { "Unable to load plugin implementation $key: chain family $pluginKey is not implemented" }
                 return@mapNotNull null
             }
             val plugin = try {
