@@ -27,7 +27,8 @@ class DnsDiscovery(
     init {
         val dnsResolver = DnsResolver()
         try {
-            peers.addAll(dnsResolver.query(dns).map {
+            val resolvedIps = dnsResolver.query(dns)
+            peers.addAll(resolvedIps.map {
                 logger.debug("Found peer ${it}:${port}")
                 NetworkAddress(it, port)
             })
