@@ -41,7 +41,6 @@ import org.veriblock.miners.pop.util.VTBDebugUtility
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
-import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.models.StateInfo
@@ -267,7 +266,7 @@ class SecurityInheritingMonitor(
             try {
                 val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
                 val bestKnownBlock = miner.gateway.getBlock(bestKnownBlockHash)
-                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
                     ?: return@collect
 
                 if (bestKnownBlock.height == newBlock.height) {
@@ -322,14 +321,34 @@ class SecurityInheritingMonitor(
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
                         " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
-                val newKeystone = SpvEventBus.newBlockFlow.filter {
-                    it.height % 20 == 0 && it.height > vbkContextBlock.height
-                }.first()
+                val lastVbkBlock = miner.gateway.getLastBlock()
+                val contextHeightDifference = lastVbkBlock.height - vbkContextBlock.height
+                val keystone = if (contextHeightDifference > 200) { // FIXME: hardcoded value
+                    // If context gap is too big, ask for the 9th-10th next keystone
+                    val keystoneHeight = vbkContextBlock.height + 200 - vbkContextBlock.height % 20 // FIXME: hardcoded value
+                    val foundKeystone = generateSequence(lastVbkBlock) {
+                        miner.gateway.getBlock(it.previousBlock)
+                    }.find {
+                        it.height == keystoneHeight
+                    }
+                    if (foundKeystone == null) {
+                        // Should never happen
+                        logger.warn { "Unable to find VBK block at height $keystoneHeight! Retrying in 5 minutes..." }
+                        delay(30_000L)
+                        continue
+                    }
+                    foundKeystone
+                } else {
+                    // Wait for the next keystone to be mined
+                    SpvEventBus.newBlockFlow.filter {
+                        it.height % 20 == 0 && it.height > vbkContextBlock.height
+                    }.first()
+                }
 
-                logger.info { "Got keystone for ${chain.name}'s VTBs: ${newKeystone.hash} @ ${newKeystone.height}. Retrieving publication data..." }
+                logger.info { "Got keystone for ${chain.name}'s VTBs: ${keystone.hash} @ ${keystone.height}. Retrieving publication data..." }
                 // Fetch and wait for veriblock publications (VTBs)
                 val vtbs = miner.network.getVeriBlockPublications(
-                    newKeystone.hash.toString(),
+                    keystone.hash.toString(),
                     instruction.context.first().toHex(),
                     instruction.btcContext.first().toHex()
                 )

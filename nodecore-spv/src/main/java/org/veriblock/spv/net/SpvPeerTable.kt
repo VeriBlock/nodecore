@@ -164,7 +164,7 @@ class SpvPeerTable(
         }
     }
 
-    private suspend fun discoverPeers() {
+    suspend fun discoverPeers() {
         val maxConnections = maximumPeers
         if (maxConnections > 0 && countConnectedPeers() >= maxConnections) {
             return
@@ -191,7 +191,7 @@ class SpvPeerTable(
         }
     }
 
-    private suspend fun processIncomingMessages() {
+    suspend fun processIncomingMessages() {
         try {
             for ((sender, message) in incomingQueue) {
                 logger.debug { "Processing ${message.resultsCase.name} message from ${sender.address}" }
@@ -341,7 +341,7 @@ class SpvPeerTable(
         }
     }
 
-    suspend fun requestAllMessages(
+    fun requestAllMessages(
         event: VeriBlockMessages.Event,
         timeoutInMillis: Long = 5000L
     ): Flow<VeriBlockMessages.Event> = channelFlow {
