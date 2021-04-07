@@ -323,9 +323,9 @@ class SecurityInheritingMonitor(
                 }
                 val lastVbkBlock = miner.gateway.getLastBlock()
                 val contextHeightDifference = lastVbkBlock.height - vbkContextBlock.height
-                val keystone = if (contextHeightDifference > 200) { // FIXME: hardcoded value
-                    // If context gap is too big, ask for the 9th-10th next keystone
-                    val keystoneHeight = vbkContextBlock.height + 200 - vbkContextBlock.height % 20 // FIXME: hardcoded value
+                val keystone = if (contextHeightDifference > 20) {
+                    // Get next keystone
+                    val keystoneHeight = lastVbkBlock.height + 200 - lastVbkBlock.height % 20 // FIXME: hardcoded value
                     val foundKeystone = generateSequence(lastVbkBlock) {
                         miner.gateway.getBlock(it.previousBlock)
                     }.find {
