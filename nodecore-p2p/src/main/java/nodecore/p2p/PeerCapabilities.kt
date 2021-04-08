@@ -4,68 +4,55 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package nodecore.p2p
 
-package nodecore.p2p;
+import java.util.EnumSet
+import nodecore.p2p.PeerCapabilities
+import org.apache.commons.lang3.EnumUtils
 
-import org.apache.commons.lang3.EnumUtils;
-
-import java.util.EnumSet;
-
-public class PeerCapabilities {
-    public enum Capabilities {
-        Transaction,
-        Block,
-        Query,
-        Sync,
-        NetworkInfo,
-        BatchSync,
-        Advertise,
-        AdvertiseTx,
-        SpvRequests
+class PeerCapabilities(
+    private val capabilities: EnumSet<Capabilities>
+) {
+    enum class Capabilities {
+        Transaction, Block, Query, Sync, NetworkInfo, BatchSync, Advertise, AdvertiseTx, SpvRequests
     }
-
-    private static final EnumSet<Capabilities> INITIAL_CAPABILITIES = EnumSet.of(
-        Capabilities.Transaction,
-        Capabilities.Block,
-        Capabilities.Query,
-        Capabilities.Sync,
-        Capabilities.NetworkInfo,
-        Capabilities.BatchSync
-    );
-
-    private static final EnumSet<Capabilities> ALL = EnumSet.allOf(Capabilities.class);
-
-    private final EnumSet<Capabilities> capabilities;
-
-    private PeerCapabilities(EnumSet<Capabilities> capabilities) {
-        this.capabilities = capabilities;
+    
+    private constructor(bitVector: Long) : this(EnumUtils.processBitVector(Capabilities::class.java, bitVector))
+    
+    fun toBitVector(): Long {
+        return EnumUtils.generateBitVector(Capabilities::class.java, capabilities)
     }
-
-    private PeerCapabilities(long bitVector) {
-        capabilities = EnumUtils.processBitVector(Capabilities.class, bitVector);
+    
+    fun hasCapability(capability: Capabilities): Boolean {
+        return capabilities.contains(capability)
     }
+    
+    companion object {
+        private val INITIAL_CAPABILITIES = EnumSet.of(
+            Capabilities.Transaction,
+            Capabilities.Block,
+            Capabilities.Query,
+            Capabilities.Sync,
+            Capabilities.NetworkInfo,
+            Capabilities.BatchSync
+        )
 
-    public long toBitVector() {
-        return EnumUtils.generateBitVector(Capabilities.class, this.capabilities);
-    }
+        private val ALL = EnumSet.allOf(Capabilities::class.java)
 
-    public boolean hasCapability(Capabilities capability) {
-        return capabilities.contains(capability);
-    }
-
-    public static PeerCapabilities allCapabilities() {
-        return new PeerCapabilities(ALL);
-    }
-
-    public static PeerCapabilities defaultCapabilities() {
-        return new PeerCapabilities(INITIAL_CAPABILITIES);
-    }
-
-    public static PeerCapabilities parse(long bitVector) {
-        if (bitVector <= 0) {
-            return defaultCapabilities();
+        fun allCapabilities(): PeerCapabilities {
+            return PeerCapabilities(ALL)
         }
-
-        return new PeerCapabilities(bitVector);
+        
+        fun defaultCapabilities(): PeerCapabilities {
+            return PeerCapabilities(INITIAL_CAPABILITIES)
+        }
+        
+        fun parse(bitVector: Long): PeerCapabilities {
+            return if (bitVector <= 0) {
+                defaultCapabilities()
+            } else {
+                PeerCapabilities(bitVector)
+            }
+        }
     }
 }
