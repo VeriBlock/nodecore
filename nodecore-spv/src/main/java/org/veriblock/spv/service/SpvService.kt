@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
 import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
-import nodecore.p2p.Constants
 import org.veriblock.core.*
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
@@ -28,6 +27,7 @@ import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.spv.Constants
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.AddressCoinsIndex
 import org.veriblock.spv.model.AddressLight

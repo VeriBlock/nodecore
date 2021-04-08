@@ -325,7 +325,7 @@ class SecurityInheritingMonitor(
                 val contextHeightDifference = lastVbkBlock.height - vbkContextBlock.height
                 val keystone = if (contextHeightDifference > 20) {
                     // Get next keystone
-                    val keystoneHeight = lastVbkBlock.height + 200 - lastVbkBlock.height % 20 // FIXME: hardcoded value
+                    val keystoneHeight = lastVbkBlock.height - lastVbkBlock.height % 20
                     val foundKeystone = generateSequence(lastVbkBlock) {
                         miner.gateway.getBlock(it.previousBlock)
                     }.find {
@@ -383,7 +383,7 @@ class SecurityInheritingMonitor(
         }
     }
 
-    private suspend fun handleNewBlock(block: SecurityInheritingBlock) {
+    private fun handleNewBlock(block: SecurityInheritingBlock) {
         logger.debug {
             val publicationsString = if (block.veriBlockPublicationIds.isEmpty()) {
                 "with no VBK publications"
