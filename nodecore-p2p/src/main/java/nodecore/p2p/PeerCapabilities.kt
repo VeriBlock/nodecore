@@ -39,14 +39,17 @@ class PeerCapabilities(
 
         private val ALL = EnumSet.allOf(Capabilities::class.java)
 
+        @JvmStatic
         fun allCapabilities(): PeerCapabilities {
             return PeerCapabilities(ALL)
         }
-        
+
+        @JvmStatic
         fun defaultCapabilities(): PeerCapabilities {
             return PeerCapabilities(INITIAL_CAPABILITIES)
         }
-        
+
+        @JvmStatic
         fun parse(bitVector: Long): PeerCapabilities {
             return if (bitVector <= 0) {
                 defaultCapabilities()
