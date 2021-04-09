@@ -14,25 +14,25 @@ import mu.KotlinLogging
 fun createLogger(context: () -> Unit) = KotlinLogging.logger(context)
 
 inline fun KLogger.debugInfo(t: Throwable, crossinline msg: () -> String) {
-    info { "${msg()}: ${t.niceMessage()}" }
+    info { "${msg()}: ${t.prettyMessage()}" }
     debug(t) { "Stack Trace:" }
 }
 
 inline fun KLogger.debugWarn(t: Throwable, crossinline msg: () -> String) {
-    warn { "${msg()}: ${t.niceMessage()}" }
+    warn { "${msg()}: ${t.prettyMessage()}" }
     debug(t) { "Stack Trace:" }
 }
 
 inline fun KLogger.debugError(t: Throwable, crossinline msg: () -> String) {
-    error { "${msg()}: ${t.niceMessage()}" }
+    error { "${msg()}: ${t.prettyMessage()}" }
     debug(t) { "Stack Trace:" }
 }
 
-fun Throwable.niceMessage(recursionLevel: Int = 0): String {
+fun Throwable.prettyMessage(recursionLevel: Int = 0): String {
     val baseMessage = (message ?: toString())
     val cause = cause
     return if (cause != null && recursionLevel < 5) {
-        baseMessage + "\nCaused by: ${cause.niceMessage(recursionLevel + 1)}"
+        baseMessage + "\nCaused by: ${cause.prettyMessage(recursionLevel + 1)}"
     } else {
         baseMessage
     }
