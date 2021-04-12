@@ -321,29 +321,11 @@ class SecurityInheritingMonitor(
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
                         " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
-                val lastVbkBlock = miner.gateway.getLastBlock()
-                val contextHeightDifference = lastVbkBlock.height - vbkContextBlock.height
-                val keystone = if (contextHeightDifference > 20) {
-                    // Get next keystone
-                    val keystoneHeight = lastVbkBlock.height - lastVbkBlock.height % 20
-                    val foundKeystone = generateSequence(lastVbkBlock) {
-                        miner.gateway.getBlock(it.previousBlock)
-                    }.find {
-                        it.height == keystoneHeight
-                    }
-                    if (foundKeystone == null) {
-                        // Should never happen
-                        logger.warn { "Unable to find VBK block at height $keystoneHeight! Retrying in 5 minutes..." }
-                        delay(30_000L)
-                        continue
-                    }
-                    foundKeystone
-                } else {
-                    // Wait for the next keystone to be mined
-                    SpvEventBus.newBlockFlow.filter {
-                        it.height % 20 == 0 && it.height > vbkContextBlock.height
-                    }.first()
-                }
+
+                // Wait for the next keystone to be mined
+                val keystone = SpvEventBus.newBlockFlow.filter {
+                    it.height % 20 == 0 && it.height > vbkContextBlock.height
+                }.first()
 
                 logger.info { "Got keystone for ${chain.name}'s VTBs: ${keystone.hash} @ ${keystone.height}. Retrieving publication data..." }
                 // Fetch and wait for veriblock publications (VTBs)
