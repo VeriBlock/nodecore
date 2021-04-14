@@ -1,7 +1,7 @@
 package org.veriblock.spv.model.mapper
 
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
+import nodecore.api.grpc.RpcLedgerProofReply.LedgerProofResult
+import nodecore.api.grpc.RpcLedgerValue
 import org.veriblock.core.InvalidAddressException
 import org.veriblock.core.bitcoinj.Base58
 import org.veriblock.core.crypto.asVbkHash
@@ -44,7 +44,7 @@ object LedgerProofReplyMapper {
         )
     }
 
-    private fun VeriBlockMessages.LedgerValue.toModel(): LedgerValue {
+    private fun RpcLedgerValue.toModel(): LedgerValue {
         return LedgerValue(availableAtomicUnits, frozenAtomicUnits, signatureIndex)
     }
 }

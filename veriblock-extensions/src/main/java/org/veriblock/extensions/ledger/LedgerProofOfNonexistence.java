@@ -8,7 +8,8 @@
 package org.veriblock.extensions.ledger;
 
 import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.RpcLedgerProofOfNonexistence;
+import nodecore.api.grpc.RpcLedgerProofOfNonexistenceOrBuilder;
 import nodecore.api.grpc.utilities.ByteStringAddressUtility;
 import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.core.bitcoinj.Base59;
@@ -383,8 +384,8 @@ public class LedgerProofOfNonexistence {
         return address;
     }
 
-    public VeriBlockMessages.LedgerProofOfNonexistence.Builder getMessageBuilder() {
-        VeriBlockMessages.LedgerProofOfNonexistence.Builder builder = VeriBlockMessages.LedgerProofOfNonexistence.newBuilder();
+    public RpcLedgerProofOfNonexistence.Builder getMessageBuilder() {
+        RpcLedgerProofOfNonexistence.Builder builder = RpcLedgerProofOfNonexistence.newBuilder();
         for (int i = 0; i < verticalProofLayers.length; i++) {
             builder.addVerticalProofLayers(verticalProofLayers[i].getMessageBuilder());
         }
@@ -404,7 +405,7 @@ public class LedgerProofOfNonexistence {
         return builder;
     }
 
-    public static LedgerProofOfNonexistence parseFrom(VeriBlockMessages.LedgerProofOfNonexistenceOrBuilder message) {
+    public static LedgerProofOfNonexistence parseFrom(RpcLedgerProofOfNonexistenceOrBuilder message) {
         LedgerProofNode[] verticalLayers = message.getVerticalProofLayersList().stream().map(LedgerProofNode::parseFrom)
                 .collect(Collectors.toList()).toArray(new LedgerProofNode[message.getVerticalProofLayersCount()]);
 

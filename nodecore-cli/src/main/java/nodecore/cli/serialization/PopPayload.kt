@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.GetPopReply
+import nodecore.api.grpc.RpcGetPopReply
 import nodecore.api.grpc.utilities.extensions.toBase58
 import nodecore.api.grpc.utilities.extensions.toHex
 
 class PopPayload(
-    reply: GetPopReply
+    reply: RpcGetPopReply
 ) {
     val block_height = reply.blockHeight
 

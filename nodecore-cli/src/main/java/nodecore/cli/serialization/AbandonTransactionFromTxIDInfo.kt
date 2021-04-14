@@ -1,10 +1,10 @@
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.AbandonTransactionReply
+import nodecore.api.grpc.RpcAbandonTransactionReply
 import org.veriblock.core.utilities.Utility
 
 class AbandonTransactionFromTxIDInfo(
-    reply: AbandonTransactionReply
+    reply: RpcAbandonTransactionReply
 ) {
     val abandonedTransactionsCount = reply.abandonedTransactionsCount
 

@@ -13,9 +13,14 @@ import io.ktor.util.network.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.withTimeout
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
-import nodecore.api.grpc.VeriBlockMessages.KeystoneQuery
+import nodecore.api.grpc.RpcAnnounce
+import nodecore.api.grpc.RpcBlockHeader
+import nodecore.api.grpc.RpcCreateFilter
+import nodecore.api.grpc.RpcEvent
+import nodecore.api.grpc.RpcEvent.ResultsCase
+import nodecore.api.grpc.RpcKeystoneQuery
+import nodecore.api.grpc.RpcNodeInfo
+import nodecore.api.grpc.RpcTransactionRequest
 import nodecore.p2p.PeerCapabilities
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
@@ -47,15 +52,15 @@ class SpvPeer(
     var bestBlockHeight = 0
         private set
 
-    private val expectedResponses: MutableMap<String, Channel<VeriBlockMessages.Event>> = ConcurrentHashMap()
+    private val expectedResponses: MutableMap<String, Channel<RpcEvent>> = ConcurrentHashMap()
 
     init {
         handler.start()
         val announce = buildMessage {
-            announce = VeriBlockMessages.Announce.newBuilder()
+            announce = RpcAnnounce.newBuilder()
                 .setReply(false)
                 .setNodeInfo(
-                    VeriBlockMessages.NodeInfo.newBuilder().setApplication(self.application)
+                    RpcNodeInfo.newBuilder().setApplication(self.application)
                         .setProtocolVersion(spvContext.networkParameters.protocolVersion)
                         .setPlatform(self.platform)
                         .setStartTimestamp(self.startTimestamp)
@@ -69,11 +74,11 @@ class SpvPeer(
         sendMessage(announce)
     }
 
-    fun sendMessage(message: VeriBlockMessages.Event) {
+    fun sendMessage(message: RpcEvent) {
         handler.write(message)
     }
 
-    fun processMessage(message: VeriBlockMessages.Event) {
+    fun processMessage(message: RpcEvent) {
         // Handle as an expected response if possible
         expectedResponses[message.requestId]?.offer(message)
 
@@ -112,7 +117,7 @@ class SpvPeer(
                 notifyMessageReceived(message)
             }
             ResultsCase.ADVERTISE_TX -> {
-                val txRequestBuilder = VeriBlockMessages.TransactionRequest.newBuilder()
+                val txRequestBuilder = RpcTransactionRequest.newBuilder()
                 val transactions = message.advertiseTx.transactionsList
                 for (tx in transactions) {
                     val txId = tx.txId.toByteArray().asVbkTxId()
@@ -158,7 +163,7 @@ class SpvPeer(
     fun setFilter(filter: BloomFilter) {
         sendMessage {
             setCreateFilter(
-                VeriBlockMessages.CreateFilter.newBuilder()
+                RpcCreateFilter.newBuilder()
                     .setFilter(ByteString.copyFrom(filter.bits))
                     .setFlags(BloomFilter.Flags.BLOOM_UPDATE_NONE.Value)
                     .setHashIterations(filter.hashIterations)
@@ -175,10 +180,10 @@ class SpvPeer(
         require(keystones.isNotEmpty()) {
             "Trying to request block download with an empty keystone list!"
         }
-        val queryBuilder = KeystoneQuery.newBuilder()
+        val queryBuilder = RpcKeystoneQuery.newBuilder()
         for (block in keystones) {
             queryBuilder.addHeaders(
-                VeriBlockMessages.BlockHeader.newBuilder()
+                RpcBlockHeader.newBuilder()
                     .setHash(ByteString.copyFrom(block.hash.bytes))
                     .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
             )
@@ -194,11 +199,11 @@ class SpvPeer(
      * This applies to Request/Response event type pairs.
      */
     suspend fun requestMessage(
-        request: VeriBlockMessages.Event,
+        request: RpcEvent,
         timeoutInMillis: Long = 5000L
-    ): VeriBlockMessages.Event = try {
+    ): RpcEvent = try {
         // Create conflated channel
-        val expectedResponseChannel = Channel<VeriBlockMessages.Event>(CONFLATED)
+        val expectedResponseChannel = Channel<RpcEvent>(CONFLATED)
         // Set this channel as the expected response for the request id
         logger.debug { "Expecting a response to ${request.resultsCase.name} from $address" }
         expectedResponses[request.id] = expectedResponseChannel
@@ -213,7 +218,7 @@ class SpvPeer(
         expectedResponses.remove(request.id)
     }
 
-    private fun notifyMessageReceived(message: VeriBlockMessages.Event) {
+    private fun notifyMessageReceived(message: RpcEvent) {
         SpvEventBus.messageReceivedEvent.trigger(MessageReceivedEvent(this, message))
     }
 
@@ -223,13 +228,13 @@ class SpvPeer(
     }
 }
 
-inline fun SpvPeer.sendMessage(crossinline buildBlock: VeriBlockMessages.Event.Builder.() -> Unit) = sendMessage(
+inline fun SpvPeer.sendMessage(crossinline buildBlock: RpcEvent.Builder.() -> Unit) = sendMessage(
     buildMessage(buildBlock = buildBlock)
 )
 
 suspend inline fun SpvPeer.requestMessage(
     timeoutInMillis: Long = 5000L,
-    crossinline buildBlock: VeriBlockMessages.Event.Builder.() -> Unit
+    crossinline buildBlock: RpcEvent.Builder.() -> Unit
 ) = requestMessage(
     buildMessage(buildBlock = buildBlock),
     timeoutInMillis

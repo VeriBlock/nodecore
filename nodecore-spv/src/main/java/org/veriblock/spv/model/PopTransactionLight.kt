@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
-import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
+import nodecore.api.grpc.RpcSignedTransaction
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.BitcoinTransaction
@@ -42,7 +42,7 @@ class PopTransactionLight(
         return calculateHash()
     }
 
-    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder {
+    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): RpcSignedTransaction.Builder {
         TODO() // SPV-48
     }
 

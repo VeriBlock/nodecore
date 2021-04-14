@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.BlockFeeTable
+import nodecore.api.grpc.RpcBlockFeeTable
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BlockFeeTableInfo(
-    message: BlockFeeTable
+    message: RpcBlockFeeTable
 ) {
     @SerializedName("pop_fee_share")
     val popFeeShare = message.popFeeShare.formatAtomicLongWithDecimal()

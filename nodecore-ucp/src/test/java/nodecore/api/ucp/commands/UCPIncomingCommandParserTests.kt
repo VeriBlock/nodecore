@@ -15,24 +15,24 @@ class UCPIncomingCommandParserTests {
     @Test(expected = InvalidUCPCommandException::class)
     fun parseServerCommand_whenMessageIsNotJson() {
         val notJson = "SELECT * FROM table"
-        val command = UCPIncomingCommandParser.parseServerCommand(notJson)
+        UCPIncomingCommandParser.parseServerCommand(notJson)
     }
 
     @Test(expected = InvalidUCPCommandException::class)
     fun parseServerCommand_whenMessageIsJsonRPC() {
         val json = "{\"params\": [\"ccminer/fpga/2.0.0-linux\"], \"id\": \"1\", \"method\": \"mining.subscribe\"}"
-        val command = UCPIncomingCommandParser.parseServerCommand(json)
+        UCPIncomingCommandParser.parseServerCommand(json)
     }
 
     @Test(expected = InvalidUCPCommandException::class)
     fun parseServerCommand_whenInvalidCommandName() {
         val json = "{\"command\": \"mining.subscribe\", \"foo\": \"bar\"}"
-        val command = UCPIncomingCommandParser.parseServerCommand(json)
+        UCPIncomingCommandParser.parseServerCommand(json)
     }
 
     @Test(expected = InvalidUCPCommandException::class)
     fun parseServerCommand_whenInvalidCommandMessage() {
         val json = "{\"command\": \"mining_subscribe\", \"foo\": \"bar\"}"
-        val command = UCPIncomingCommandParser.parseServerCommand(json)
+        UCPIncomingCommandParser.parseServerCommand(json)
     }
 }

@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
-import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
+import nodecore.api.grpc.RpcSignedTransaction
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.NetworkParameters
@@ -30,7 +30,7 @@ abstract class Transaction {
     abstract fun getSignatureIndex(): Long
     abstract fun getTransactionFee(): Long
     abstract fun toByteArray(networkParameters: NetworkParameters): ByteArray?
-    abstract fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder?
+    abstract fun getSignedMessageBuilder(networkParameters: NetworkParameters): RpcSignedTransaction.Builder?
 
     abstract val data: ByteArray?
     abstract val transactionTypeIdentifier: TransactionTypeIdentifier

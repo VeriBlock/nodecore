@@ -19,27 +19,27 @@ extend google.protobuf.FieldOptions {
 }
 
 option java_package = "nodecore.api.grpc";
-option java_outer_classname = "VeriBlockMessages";
-//option java_multiple_files = true;
+option java_outer_classname = "VeriBlockRpc";
+option java_multiple_files = true;
 
-message AddressBalance {
+message RpcAddressBalance {
     bytes address = 1 [(address_encoded)=true];
     int64 unlocked_amount = 2;
     int64 locked_amount = 3;
     int64 total_amount = 4;
 }
 
-message Output {
+message RpcOutput {
     bytes address = 1 [(address_encoded)=true];
     int64 amount = 2;
 }
 
-message Paging {
+message RpcPaging {
     int32 page_number = 1;
     int32 results_per_page = 2;
 }
 
-message NumericFilter {
+message RpcNumericFilter {
     enum Operator {
         EQUAL = 0;
         LESS_THAN = 1;
@@ -53,64 +53,64 @@ message NumericFilter {
     sint64 secondary_value = 3;
 }
 
-message Endpoint {
+message RpcEndpoint {
     string address = 1;
     int32 port = 2;
 }
 
-message MultisigSlot {
+message RpcMultisigSlot {
     bool populated = 1;
     bytes signature = 2 [(hex_encoded)=true];
     bytes public_key = 3 [(hex_encoded)=true];
     bytes owner_address = 4 [(address_encoded)=true];
 }
 
-message MultisigBundle {
-    repeated MultisigSlot slots = 1;
+message RpcMultisigBundle {
+    repeated RpcMultisigSlot slots = 1;
 }
 
-message SignedTransaction {
+message RpcSignedTransaction {
     bytes signature = 1 [(hex_encoded)=true];
     bytes public_key = 2 [(hex_encoded)=true];
     int64 signature_index = 3;
-    Transaction transaction = 4;
+    RpcTransaction transaction = 4;
 }
 
-message SignedTransactionInfo {
+message RpcSignedTransactionInfo {
     bytes signature = 1 [(hex_encoded)=true];
     bytes public_key = 2 [(hex_encoded)=true];
     int64 signature_index = 3;
-    TransactionInfo transaction = 4;
+    RpcTransactionInfo transaction = 4;
 }
 
-message SignedMultisigTransaction {
-    MultisigBundle signature_bundle = 1;
-    Transaction transaction = 2;
+message RpcSignedMultisigTransaction {
+    RpcMultisigBundle signature_bundle = 1;
+    RpcTransaction transaction = 2;
     int64 signature_index = 3;
 }
 
-message SignedMultisigTransactionInfo {
-    MultisigBundle signature_bundle = 1;
-    TransactionInfo transaction = 2;
+message RpcSignedMultisigTransactionInfo {
+    RpcMultisigBundle signature_bundle = 1;
+    RpcTransactionInfo transaction = 2;
     int64 signature_index = 3;
 }
 
-message CoinbaseTransaction {
+message RpcCoinbaseTransaction {
     int64 pow_coinbase_amount = 1;
     int64 pop_coinbase_amount = 2;
     int64 pow_fee_share = 3;
     int64 pop_fee_share = 4;
-    repeated Output pow_outputs = 5;
-    repeated Output pop_outputs = 6;
+    repeated RpcOutput pow_outputs = 5;
+    repeated RpcOutput pop_outputs = 6;
     int32 block_height = 7;
     bytes tx_id = 8 [(hex_encoded)=true];
 }
 
-message BitcoinBlockHeader {
+message RpcBitcoinBlockHeader {
     bytes header = 1 [(hex_encoded)=true];
 }
 
-message PoPEndorsementInfo {
+message RpcPoPEndorsementInfo {
     bytes miner_address = 1 [(address_encoded)=true];
     bytes endorsed_veriblock_block_hash = 2 [(hex_encoded)=true];
     bytes contained_in_veriblock_block_hash = 3 [(hex_encoded)=true];
@@ -124,44 +124,44 @@ message PoPEndorsementInfo {
     int32 endorsed_block_number = 11;
 }
 
-message StandardAddress {
+message RpcStandardAddress {
     bytes standard_address = 1 [(address_encoded)=true];
 }
 
-message TroubleshootPoPTransactionsRequest {
+message RpcTroubleshootPoPTransactionsRequest {
     bool only_failures = 1;
     int32 search_length = 2;
     oneof search_paramater {
-        AddressSet addresses = 3;
-        TransactionSet transactions = 4;
+        RpcAddressSet addresses = 3;
+        RpcTransactionSet transactions = 4;
     }
 }
 
-message AddressSet {
+message RpcAddressSet {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message AddressUpdateDelta {
+message RpcAddressUpdateDelta {
     bytes address = 1 [(address_encoded)=true];
     int32 number = 2;
     int32 tx_count = 3;
 }
 
-message AddressUpdateDeltaTable {
-    repeated AddressUpdateDelta address_update_deltas = 1;
+message RpcAddressUpdateDeltaTable {
+    repeated RpcAddressUpdateDelta address_update_deltas = 1;
 }
 
-message TransactionSet {
+message RpcTransactionSet {
     repeated bytes txids = 1 [(hex_encoded)=true];
 }
 
-message TroubleshootPoPTransactionsReply {
+message RpcTroubleshootPoPTransactionsReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated PoPTransactionProblemReport popProblemReports = 3;
+    repeated RpcResult results = 2;
+    repeated RpcPoPTransactionProblemReport popProblemReports = 3;
 }
 
-message PoPTransactionProblemReport {
+message RpcPoPTransactionProblemReport {
     bytes address = 1 [(address_encoded)=true];
     bytes txid = 2 [(hex_encoded)=true];
     bytes endorsed_vbk_block_hash = 3 [(hex_encoded)=true];
@@ -182,22 +182,22 @@ message PoPTransactionProblemReport {
     int32 current_block_height = 18;
 }
 
-message GetPoPEndorsementsInfoRequest {
+message RpcGetPoPEndorsementsInfoRequest {
     int32 search_length = 1;
-    repeated StandardAddress addresses = 2;
+    repeated RpcStandardAddress addresses = 2;
 }
 
-message GetPoPEndorsementsInfoReply {
+message RpcGetPoPEndorsementsInfoReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated PoPEndorsementInfo pop_endorsements = 3;
+    repeated RpcResult results = 2;
+    repeated RpcPoPEndorsementInfo pop_endorsements = 3;
 }
 
-message GetPoPRewardEstimatesRequest {
+message RpcGetPoPRewardEstimatesRequest {
     int32 keystones_to_search = 1;
 }
 
-message RewardEstimate {
+message RpcRewardEstimate {
     enum Round {
         ROUND_1 = 0;
         ROUND_2 = 1;
@@ -211,72 +211,72 @@ message RewardEstimate {
     int64 reward_per_point = 3;
 }
 
-message GetPoPRewardEstimatesReply {
+message RpcGetPoPRewardEstimatesReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 
-    repeated RewardEstimate reward_estimates = 3;
+    repeated RpcRewardEstimate reward_estimates = 3;
 }
 
-message GetProtectedChildrenRequest {
+message RpcGetProtectedChildrenRequest {
     int32 search_length = 1;
     bytes veriblock_block_hash = 2 [(hex_encoded)=true];
 }
 
-message GetProtectedChildrenReply {
+message RpcGetProtectedChildrenReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated PoPEndorsementInfo pop_endorsements = 3;
+    repeated RpcResult results = 2;
+    repeated RpcPoPEndorsementInfo pop_endorsements = 3;
 }
 
-message GetProtectingParentsRequest {
+message RpcGetProtectingParentsRequest {
     int32 search_length = 1;
     bytes veriblock_block_hash = 2 [(hex_encoded)=true];
 }
 
-message GetProtectingParentsReply {
+message RpcGetProtectingParentsReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated PoPEndorsementInfo pop_endorsements = 3;
+    repeated RpcResult results = 2;
+    repeated RpcPoPEndorsementInfo pop_endorsements = 3;
 }
 
-message LedgerValue {
+message RpcLedgerValue {
     int64 available_atomic_units = 1;
     int64 frozen_atomic_units = 2;
     int64 signature_index = 3;
 }
 
-message LedgerProofNode {
+message RpcLedgerProofNode {
     bytes route = 1;
     bytes left_contiguous_child_hashes = 2;
     bytes right_contiguous_child_hashes = 3;
-    LedgerValue ledgerValue = 4;
+    RpcLedgerValue ledgerValue = 4;
 }
 
-message LedgerProofOfExistence {
-    repeated LedgerProofNode vertical_proof_layers = 1;
+message RpcLedgerProofOfExistence {
+    repeated RpcLedgerProofNode vertical_proof_layers = 1;
 }
 
-message LedgerProofOfNonexistence {
-    repeated LedgerProofNode vertical_proof_layers = 1;
-    repeated LedgerProofNode horizontal_proof_layers = 2;
+message RpcLedgerProofOfNonexistence {
+    repeated RpcLedgerProofNode vertical_proof_layers = 1;
+    repeated RpcLedgerProofNode horizontal_proof_layers = 2;
     bytes address = 3 [(address_encoded)=true];
 }
 
-message LedgerProof {
+message RpcLedgerProof {
     oneof proof {
-        LedgerProofOfExistence proof_of_existence = 1;
-        LedgerProofOfNonexistence proof_of_nonexistence = 2;
+        RpcLedgerProofOfExistence proof_of_existence = 1;
+        RpcLedgerProofOfNonexistence proof_of_nonexistence = 2;
     }
 }
 
-message LedgerProofWithContext {
-    LedgerProof ledger_proof = 1;
+message RpcLedgerProofWithContext {
+    RpcLedgerProof ledger_proof = 1;
     repeated bytes ledger_proof_context_layers = 2;
-    BlockHeader block_header = 3;
+    RpcBlockHeader block_header = 3;
 }
 
-message Transaction {
+message RpcTransaction {
     enum Type {
         ZERO_UNUSED = 0;
         STANDARD = 1;
@@ -287,55 +287,55 @@ message Transaction {
     Type type = 1;
     bytes source_address = 2 [(address_encoded)=true];
     int64 source_amount = 3;
-    repeated Output outputs = 4;
+    repeated RpcOutput outputs = 4;
     int64 transaction_fee = 5;
     bytes data = 7 [(hex_encoded)=true];
     bytes bitcoin_transaction = 10 [(hex_encoded)=true];
     bytes endorsed_block_header = 11 [(hex_encoded)=true];
-    BitcoinBlockHeader bitcoin_block_header_of_proof = 12;
+    RpcBitcoinBlockHeader bitcoin_block_header_of_proof = 12;
     string merkle_path = 13;
-    repeated BitcoinBlockHeader context_bitcoin_block_headers = 14;
+    repeated RpcBitcoinBlockHeader context_bitcoin_block_headers = 14;
     int32 timestamp = 15;
     int32 size = 16;
     bytes tx_id = 17 [(hex_encoded)=true];
 }
 
-message UnsignedMultisigTransactionWithIndex {
-    Transaction unsigned_multisig_tansaction = 1;
+message RpcUnsignedMultisigTransactionWithIndex {
+    RpcTransaction unsigned_multisig_tansaction = 1;
     int64 signature_index = 2;
 }
 
-message TransactionInfoUnion {
+message RpcTransactionInfoUnion {
     oneof transaction {
-        TransactionInfo unsigned = 1;
-        SignedTransactionInfo signed = 2;
-        SignedMultisigTransactionInfo signed_multisig = 3;
+        RpcTransactionInfo unsigned = 1;
+        RpcSignedTransactionInfo signed = 2;
+        RpcSignedMultisigTransactionInfo signed_multisig = 3;
     }
 }
 
-message TransactionUnion {
+message RpcTransactionUnion {
     oneof transaction {
-        Transaction unsigned = 1;
-        SignedTransaction signed = 2;
-        SignedMultisigTransaction signed_multisig = 3;
+        RpcTransaction unsigned = 1;
+        RpcSignedTransaction signed = 2;
+        RpcSignedMultisigTransaction signed_multisig = 3;
     }
 }
 
-message VBKTransactionWithContext {
-    VBKMerklePath merkle_path = 1;
+message RpcVBKTransactionWithContext {
+    RpcVBKMerklePath merkle_path = 1;
     oneof transaction {
-        SignedTransaction signed_transaction = 2;
-        SignedMultisigTransaction signed_multisig_transaction = 3;
+        RpcSignedTransaction signed_transaction = 2;
+        RpcSignedMultisigTransaction signed_multisig_transaction = 3;
     }
 }
 
-message VBKMerklePath {
+message RpcVBKMerklePath {
     repeated bytes layers = 1 [(hex_encoded)=true];
     bytes bottom_data = 2 [(hex_encoded)=true];
     int32 bottom_data_index = 3;
 }
 
-message TransactionMeta {
+message RpcTransactionMeta {
     enum Status {
         UNKNOWN = 0;
         PENDING = 1;
@@ -350,7 +350,7 @@ message TransactionMeta {
     Status status = 5;
 }
 
-message WalletTransaction {
+message RpcWalletTransaction {
     enum Type {
         NOT_SET = 0;
         POW_COINBASE = 1;
@@ -367,40 +367,40 @@ message WalletTransaction {
     int32 timestamp = 3;
     Type type = 4;
     sint64 net_amount = 5;
-    Output input = 6;
-    repeated Output outputs = 7;
-    TransactionMeta meta = 8;
+    RpcOutput input = 6;
+    repeated RpcOutput outputs = 7;
+    RpcTransactionMeta meta = 8;
 }
 
-message PoPDatastore {
+message RpcPoPDatastore {
     bytes datastore_hash = 1 [(hex_encoded)=true];
     bytes endorsed_veriblock_headers_hash = 2 [(hex_encoded)=true];
     bytes endorsed_altchain_headers_hash = 3 [(hex_encoded)=true];
-    repeated BitcoinHeaderVeriBlockEndorsementCountsPair veriblock_header_endorsements = 4;
-    repeated AltchainIdAltchainHeaderEndorsementCountsPair altchain_header_endorsements = 5;
+    repeated RpcBitcoinHeaderVeriBlockEndorsementCountsPair veriblock_header_endorsements = 4;
+    repeated RpcAltchainIdAltchainHeaderEndorsementCountsPair altchain_header_endorsements = 5;
 }
 
-message AltchainIdAltchainHeaderEndorsementCountsPair {
+message RpcAltchainIdAltchainHeaderEndorsementCountsPair {
     int64 altchain_identifier = 1;
-    repeated AltchainHeaderEndorsementCountPair altchain_header_endorsement_count_pairs = 2;
+    repeated RpcAltchainHeaderEndorsementCountPair altchain_header_endorsement_count_pairs = 2;
 }
 
-message BitcoinHeaderVeriBlockEndorsementCountsPair {
+message RpcBitcoinHeaderVeriBlockEndorsementCountsPair {
     bytes bitcoin_header = 1 [(hex_encoded)=true];
-    repeated VeriBlockHeaderEndorsementCountPair veriblock_header_endorsement_count_pairs = 2;
+    repeated RpcVeriBlockHeaderEndorsementCountPair veriblock_header_endorsement_count_pairs = 2;
 }
 
-message VeriBlockHeaderEndorsementCountPair {
+message RpcVeriBlockHeaderEndorsementCountPair {
     bytes veriblock_header = 1 [(hex_encoded)=true];
     int32 endorsement_count = 2;
 }
 
-message AltchainHeaderEndorsementCountPair {
+message RpcAltchainHeaderEndorsementCountPair {
     bytes altchain_header = 1 [(hex_encoded)=true];
     int32 endorsement_count = 2;
 }
 
-message AltchainPoPEndorsement {
+message RpcAltchainPoPEndorsement {
     int64 identifier = 1;
     bytes header = 2;
     bytes contextInfo = 3;
@@ -408,21 +408,21 @@ message AltchainPoPEndorsement {
     bytes rawData = 5;
 }
 
-message BlockFeeTable {
+message RpcBlockFeeTable {
     int64 pop_fee_share = 1;
 }
 
-message BlockContentMetapackage {
-    CoinbaseTransaction coinbase_transaction = 1;
-    PoPDatastore pop_datastore = 2;
+message RpcBlockContentMetapackage {
+    RpcCoinbaseTransaction coinbase_transaction = 1;
+    RpcPoPDatastore pop_datastore = 2;
     bytes miner_comment = 3 [(ascii_encoded)=true];
     bytes ledger_hash = 4 [(hex_encoded)=true];
     sint64 extra_nonce = 5;
     bytes hash = 6 [(hex_encoded)=true];
-    BlockFeeTable block_fee_table = 7;
+    RpcBlockFeeTable block_fee_table = 7;
 }
 
-message BlockSummary {
+message RpcBlockSummary {
     int32 number = 1;
     int32 timestamp = 2;
     bytes hash = 3 [(hex_encoded)=true];
@@ -443,7 +443,7 @@ message BlockSummary {
 	bytes merkle_root = 18 [(hex_encoded)=true];
 }
 
-message LightBlockSummary {
+message RpcLightBlockSummary {
     int32 number = 1;
     int32 timestamp = 2;
     bytes hash = 3 [(hex_encoded)=true];
@@ -463,7 +463,7 @@ message LightBlockSummary {
 	bytes merkle_root = 17 [(hex_encoded)=true];
 }
 
-message Block {
+message RpcBlock {
     int32 number = 1;
     int32 timestamp = 2;
     bytes hash = 3 [(hex_encoded)=true];
@@ -472,24 +472,24 @@ message Block {
     bytes third_previous_hash = 6 [(hex_encoded)=true];
     int32 encoded_difficulty = 7;
     sint64 winning_nonce = 8;
-    repeated TransactionUnion regular_transactions = 9;
-    repeated TransactionUnion pop_transactions = 10;
+    repeated RpcTransactionUnion regular_transactions = 9;
+    repeated RpcTransactionUnion pop_transactions = 10;
     int64 total_fees = 11;
     int64 pow_coinbase_reward = 12;
     int64 pop_coinbase_reward = 13;
     repeated bytes bitcoin_block_headers = 14 [(hex_encoded)=true];
-    BlockContentMetapackage block_content_metapackage = 15;
+    RpcBlockContentMetapackage block_content_metapackage = 15;
     int32 size = 16;
 	int32 version = 17;
 	bytes merkle_root = 18 [(hex_encoded)=true];
 }
 
-message BlockHeader {
+message RpcBlockHeader {
     bytes header = 1 [(hex_encoded)=true];
     bytes hash = 2 [(hex_encoded)=true];
 }
 
-message FilteredBlock {
+message RpcFilteredBlock {
     int32 number = 1;
     int32 version = 2;
     bytes previous_hash = 3 [(hex_encoded)=true];
@@ -505,7 +505,7 @@ message FilteredBlock {
     bytes merkle_flags = 13 [(hex_encoded)=true];
 }
 
-message LightVBKBlock {
+message RpcLightVBKBlock {
     int32 number = 1;
     int32 timestamp = 2;
     bytes hash = 3 [(hex_encoded)=true];
@@ -514,18 +514,18 @@ message LightVBKBlock {
     bytes third_previous_hash = 6 [(hex_encoded)=true];
     int32 encoded_difficulty = 7;
     sint64 winning_nonce = 8;
-    repeated VBKTransactionWithContext known_regular_transactions = 9;
-    repeated TransactionUnion pop_transactions = 10;
+    repeated RpcVBKTransactionWithContext known_regular_transactions = 9;
+    repeated RpcTransactionUnion pop_transactions = 10;
     int64 pow_coinbase_reward = 11;
     int64 pop_coinbase_reward = 12;
     repeated bytes bitcoin_block_headers = 13 [(hex_encoded)=true];
-    BlockContentMetapackage block_content_metapackage = 14;
+    RpcBlockContentMetapackage block_content_metapackage = 14;
     bytes normal_transaction_merkle_root = 15 [(hex_encoded)=true];
 	int32 version = 16;
 	bytes merkle_root = 17 [(hex_encoded)=true];
 }
 
-message BlockFilter {
+message RpcBlockFilter {
     oneof filters {
         bytes hash = 1 [(hex_encoded)=true];
         int32 index = 2;
@@ -533,56 +533,56 @@ message BlockFilter {
     }
 }
 
-message GetBlocksRequest {
+message RpcGetBlocksRequest {
     int32 search_length = 1;
-    repeated BlockFilter filters = 2;
+    repeated RpcBlockFilter filters = 2;
 }
 
-message Result {
+message RpcResult {
     bool error = 1;
     string code = 2;
     string message = 3;
     string details = 4;
 }
 
-message ProtocolReply {
+message RpcProtocolReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
-message GetBlocksReply {
+message RpcGetBlocksReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated Block blocks = 3;
+    repeated RpcResult results = 2;
+    repeated RpcBlock blocks = 3;
 }
 
-message BackupWalletRequest {
+message RpcBackupWalletRequest {
     bytes target_location = 1 [(ascii_encoded)=true];
 }
 
-message BackupWalletReply {
+message RpcBackupWalletReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
-message ImportWalletRequest {
+message RpcImportWalletRequest {
     bytes source_location = 1 [(ascii_encoded)=true];
     string passphrase = 2;
 }
 
-message ImportWalletReply {
+message RpcImportWalletReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
 // --------------------------------------------------------------------
 
-message Announce {
+message RpcAnnounce {
     bool reply = 1;
-    NodeInfo node_info = 2;
+    RpcNodeInfo node_info = 2;
 }
 
-message NodeInfo {
+message RpcNodeInfo {
     string address = 1;
     int32 port = 2;
     string application = 3;
@@ -594,53 +594,53 @@ message NodeInfo {
     int64 capabilities = 9;
 }
 
-message AddBlocksRequest {
-    repeated Block blocks = 1;
+message RpcAddBlocksRequest {
+    repeated RpcBlock blocks = 1;
 }
 
-message BlockInfo {
+message RpcBlockInfo {
     int32 number = 1;
     bytes hash = 2 [(hex_encoded)=true];
 }
 
-message AddTransactionsReply {
+message RpcAddTransactionsReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     repeated bytes tx_ids = 3 [(hex_encoded)=true];
 }
 
-message Heartbeat {
-    BlockInfo block = 1;
+message RpcHeartbeat {
+    RpcBlockInfo block = 1;
 }
 
-message BlockQuery {
-    BlockInfo block = 1;
+message RpcBlockQuery {
+    RpcBlockInfo block = 1;
     string id = 2;
 }
 
-message BlockQueryReply {
+message RpcBlockQueryReply {
     bool matched = 1;
-    BlockInfo block = 2;
+    RpcBlockInfo block = 2;
     string id = 3;
 }
 
-message SyncRequest {
+message RpcSyncRequest {
     int32 starting_block_height = 1;
     bool sync_transactions = 2;
 }
 
-message NetworkInfoRequest {
+message RpcNetworkInfoRequest {
 }
 
-message NetworkInfoReply {
-    repeated NodeInfo available_nodes = 1;
+message RpcNetworkInfoReply {
+    repeated RpcNodeInfo available_nodes = 1;
 }
 
-message LedgerProofRequest {
+message RpcLedgerProofRequest {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message LedgerProofReply {
+message RpcLedgerProofReply {
     enum Status {
         ADDRESS_EXISTS = 0;
         ADDRESS_DOES_NOT_EXIST = 1;
@@ -650,41 +650,41 @@ message LedgerProofReply {
     message LedgerProofResult {
         bytes address = 1 [(address_encoded)=true];
         Status result = 2;
-        LedgerProofWithContext ledger_proof_with_context = 3;
+        RpcLedgerProofWithContext ledger_proof_with_context = 3;
     }
 
     repeated LedgerProofResult proofs = 1;
 }
 
-message BlockHeadersPaginatedRequest {
+message RpcBlockHeadersPaginatedRequest {
     int32 offset = 1;
     int32 size = 2;
 }
 
-message BlockHeadersByHashesRequest {
-    repeated BlockInfo blocks = 1;
+message RpcBlockHeadersByHashesRequest {
+    repeated RpcBlockInfo blocks = 1;
 }
 
-message BlockHeadersRequest {
+message RpcBlockHeadersRequest {
     oneof request {
-        BlockHeadersPaginatedRequest paginated_request = 1;
-        BlockHeadersByHashesRequest hashes_request = 2;
+        RpcBlockHeadersPaginatedRequest paginated_request = 1;
+        RpcBlockHeadersByHashesRequest hashes_request = 2;
     }
 }
 
-message BlockHeadersReply {
-    repeated BlockHeader blockHeaders = 1;
+message RpcBlockHeadersReply {
+    repeated RpcBlockHeader blockHeaders = 1;
 }
 
-message Acknowledgement {
+message RpcAcknowledgement {
     string message_id = 1;
 }
 
-message AdvertiseBlocks {
-    repeated BlockHeader headers = 1;
+message RpcAdvertiseBlocks {
+    repeated RpcBlockHeader headers = 1;
 }
 
-message TransactionAnnounce {
+message RpcTransactionAnnounce {
     enum Type {
         NORMAL = 0;
         PROOF_OF_PROOF = 1;
@@ -694,23 +694,23 @@ message TransactionAnnounce {
     bytes tx_id = 2 [(hex_encoded)=true];
 }
 
-message AdvertiseTransaction {
-    repeated TransactionAnnounce transactions = 1;
+message RpcAdvertiseTransaction {
+    repeated RpcTransactionAnnounce transactions = 1;
 }
 
-message BlockRequest {
-    repeated BlockHeader headers = 1;
+message RpcBlockRequest {
+    repeated RpcBlockHeader headers = 1;
 }
 
-message TransactionRequest {
-    repeated TransactionAnnounce transactions = 1;
+message RpcTransactionRequest {
+    repeated RpcTransactionAnnounce transactions = 1;
 }
 
-message KeystoneQuery {
-    repeated BlockHeader headers = 1;
+message RpcKeystoneQuery {
+    repeated RpcBlockHeader headers = 1;
 }
 
-message NotFound {
+message RpcNotFound {
     enum Type {
         BLOCK = 0;
         TX = 1;
@@ -719,55 +719,55 @@ message NotFound {
     bytes id = 2;
 }
 
-message CreateFilter {
+message RpcCreateFilter {
     bytes filter = 1;
     int32 hash_iterations = 2;
     int32 tweak = 3;
     int32 flags = 4;
 }
 
-message AddFilter {
+message RpcAddFilter {
     bytes data = 1;
 }
 
-message ClearFilter {
+message RpcClearFilter {
 
 }
 
-message Event {
+message RpcEvent {
     oneof results {
-        Block block = 1;
-        TransactionUnion transaction = 2;
-        Announce announce = 3;
-        Heartbeat heartbeat = 4;
-        BlockQuery block_query = 5;
-        BlockQueryReply block_query_reply = 6;
-        NetworkInfoRequest network_info_request = 8;
-        NetworkInfoReply network_info_reply = 9;
-        Acknowledgement acknowledgement = 10;
-        AdvertiseBlocks advertise_blocks = 13;
-        BlockRequest block_request = 14;
-        KeystoneQuery keystone_query = 15;
-        AdvertiseTransaction advertise_tx = 16;
-        TransactionRequest tx_request = 17;
-        NotFound not_found = 18;
-        CreateFilter create_filter = 19;
-        AddFilter add_filter = 20;
-        ClearFilter clear_filter = 21;
-        BlockRequest filtered_block_request = 22;
-        FilteredBlock filtered_block = 23;
-        LedgerProofRequest ledger_proof_request = 24;
-        LedgerProofReply ledger_proof_reply = 25;
-        BlockHeadersRequest block_headers_request = 26;
-        BlockHeadersReply block_headers_reply = 27;
-        GetTransactionRequest transaction_request = 28;
-        GetTransactionReply transaction_reply = 29;
-        GetVeriBlockPublicationsRequest veriblock_publications_request = 30;
-        GetVeriBlockPublicationsReply veriblock_publications_reply = 31;
-        GetDebugVTBsRequest debug_vtb_request = 32;
-        GetDebugVTBsReply debug_vtb_reply = 33;
-        GetStateInfoRequest state_info_request = 35;
-        GetStateInfoReply state_info_reply = 36;
+        RpcBlock block = 1;
+        RpcTransactionUnion transaction = 2;
+        RpcAnnounce announce = 3;
+        RpcHeartbeat heartbeat = 4;
+        RpcBlockQuery block_query = 5;
+        RpcBlockQueryReply block_query_reply = 6;
+        RpcNetworkInfoRequest network_info_request = 8;
+        RpcNetworkInfoReply network_info_reply = 9;
+        RpcAcknowledgement acknowledgement = 10;
+        RpcAdvertiseBlocks advertise_blocks = 13;
+        RpcBlockRequest block_request = 14;
+        RpcKeystoneQuery keystone_query = 15;
+        RpcAdvertiseTransaction advertise_tx = 16;
+        RpcTransactionRequest tx_request = 17;
+        RpcNotFound not_found = 18;
+        RpcCreateFilter create_filter = 19;
+        RpcAddFilter add_filter = 20;
+        RpcClearFilter clear_filter = 21;
+        RpcBlockRequest filtered_block_request = 22;
+        RpcFilteredBlock filtered_block = 23;
+        RpcLedgerProofRequest ledger_proof_request = 24;
+        RpcLedgerProofReply ledger_proof_reply = 25;
+        RpcBlockHeadersRequest block_headers_request = 26;
+        RpcBlockHeadersReply block_headers_reply = 27;
+        RpcGetTransactionRequest transaction_request = 28;
+        RpcGetTransactionReply transaction_reply = 29;
+        RpcGetVeriBlockPublicationsRequest veriblock_publications_request = 30;
+        RpcGetVeriBlockPublicationsReply veriblock_publications_reply = 31;
+        RpcGetDebugVTBsRequest debug_vtb_request = 32;
+        RpcGetDebugVTBsReply debug_vtb_reply = 33;
+        RpcGetStateInfoRequest state_info_request = 35;
+        RpcGetStateInfoReply state_info_reply = 36;
     }
     string id = 11;
     bool acknowledge = 12;
@@ -775,43 +775,43 @@ message Event {
 }
 // --------------------------------------------------------------------
 
-message NodeRequest {
-    repeated Endpoint endpoint = 1;
+message RpcNodeRequest {
+    repeated RpcEndpoint endpoint = 1;
 }
 
-message StartPoolRequest {
+message RpcStartPoolRequest {
     bytes type = 1 [(utf8_encoded)=true];
 }
 
-message StartPoolReply {
+message RpcStartPoolReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
-message StopPoolRequest {
+message RpcStopPoolRequest {
 }
 
-message StopPoolReply {
+message RpcStopPoolReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
-message RestartPoolWebServerRequest {
+message RpcRestartPoolWebServerRequest {
 }
 
-message RestartPoolWebServerReply {
+message RpcRestartPoolWebServerReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
 
-message GetPopRequest {
+message RpcGetPopRequest {
     int32 block_num = 1;
 }
 
-message GetPopReply {
+message RpcGetPopReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     int32 block_height = 3;
     int32 version = 4;
     bytes previous_block_hash = 5 [(hex_encoded)=true];
@@ -823,213 +823,213 @@ message GetPopReply {
     sint64 nonce = 11;
     bytes pop_miner_address = 12 [(address_encoded)=true];
     bytes full_pop = 13 [(hex_encoded)=true];
-    BitcoinBlockHeader last_known_block = 14;
-    repeated BitcoinBlockHeader last_known_block_context = 15;
+    RpcBitcoinBlockHeader last_known_block = 14;
+    repeated RpcBitcoinBlockHeader last_known_block_context = 15;
 }
 
-message GetInfoRequest {
+message RpcGetInfoRequest {
 }
 
-message GetDiagnosticInfoRequest {
+message RpcGetDiagnosticInfoRequest {
 }
 
-message GetBalanceRequest {
+message RpcGetBalanceRequest {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message GetBalanceReply {
+message RpcGetBalanceReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated AddressBalance confirmed = 3;
-    repeated Output unconfirmed = 4;
+    repeated RpcResult results = 2;
+    repeated RpcAddressBalance confirmed = 3;
+    repeated RpcOutput unconfirmed = 4;
     int64 total_confirmed = 5;
     int64 total_unconfirmed = 6;
 }
 
-message SubmitRawTransactionRequest {
+message RpcSubmitRawTransactionRequest {
     // pre-created, signed transaction body
     // (serialized with byte[] Transaction.serialize())
     bytes transaction = 1 [(hex_encoded)=true];
     // transaction type
-    Transaction.Type type = 2;
+    RpcTransaction.Type type = 2;
 }
 
-message SubmitPopRequest {
+message RpcSubmitPopRequest {
     bytes endorsed_block_header = 1 [(hex_encoded)=true];
     bytes bitcoin_transaction = 2 [(hex_encoded)=true];
     bytes bitcoin_merkle_path_to_root = 3 [(hex_encoded)=true];
-    BitcoinBlockHeader bitcoin_block_header_of_proof = 4;
-    repeated BitcoinBlockHeader context_bitcoin_block_headers = 5;
+    RpcBitcoinBlockHeader bitcoin_block_header_of_proof = 4;
+    repeated RpcBitcoinBlockHeader context_bitcoin_block_headers = 5;
     bytes address = 6 [(address_encoded)=true];
 }
 
-message PoPEndorsement {
+message RpcPoPEndorsement {
     bytes endorsed_block_header = 1 [(hex_encoded)=true];
     bytes bitcoin_transaction = 2 [(hex_encoded)=true];
     bytes bitcoin_merkle_path_to_root = 3 [(hex_encoded)=true];
-    BitcoinBlockHeader bitcoin_block_header_of_proof = 4;
+    RpcBitcoinBlockHeader bitcoin_block_header_of_proof = 4;
     bytes address = 5 [(address_encoded)=true];
 }
 
-message GetEndorsementsOfBlockRequest {
-    BlockFilter filter = 1;
+message RpcGetEndorsementsOfBlockRequest {
+    RpcBlockFilter filter = 1;
 }
 
-message GetEndorsementsOfBlockReply {
+message RpcGetEndorsementsOfBlockReply {
     bool success = 1;
-    repeated PoPEndorsement endorsements = 2;
+    repeated RpcPoPEndorsement endorsements = 2;
 }
 
-message SendCoinsRequest {
+message RpcSendCoinsRequest {
     bytes source_address = 1 [(address_encoded)=true];
-    repeated Output amounts = 2;
+    repeated RpcOutput amounts = 2;
     bool take_fee_from_outputs = 3;
 }
 
-message SendCoinsReply {
+message RpcSendCoinsReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     repeated bytes tx_ids = 3 [(hex_encoded)=true];
 }
 
-message CreateAltChainEndorsementRequest {
+message RpcCreateAltChainEndorsementRequest {
     bytes publication_data = 1 [(hex_encoded)=true];
     bytes source_address = 2 [(address_encoded)=true];
     int64 fee_per_byte = 3;
     int64 max_fee = 4;
 }
 
-message CreateAltChainEndorsementReply {
+message RpcCreateAltChainEndorsementReply {
     bool success = 1;
-    repeated Result results = 2;
-    Transaction transaction = 3;
+    repeated RpcResult results = 2;
+    RpcTransaction transaction = 3;
     int64 signature_index = 4;
 }
 
-message GetAltChainPoPEndorsementsRequest {
+message RpcGetAltChainPoPEndorsementsRequest {
     bytes block_hash = 1 [(hex_encoded)=true];
     int64 altchain_identifier = 2;
 }
 
-message GetAltChainPoPEndorsementsReply {
+message RpcGetAltChainPoPEndorsementsReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes block_hash = 3 [(hex_encoded)=true];
-    repeated AltchainPoPEndorsement altchain_pop_endorsements = 4;
+    repeated RpcAltchainPoPEndorsement altchain_pop_endorsements = 4;
 }
 
-message GetHistoryRequest {
+message RpcGetHistoryRequest {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message AddressHistory {
+message RpcAddressHistory {
     bytes address = 1 [(address_encoded)=true];
     int64 balance = 2;
     int32 blocks_mined = 3;
-    repeated TransactionInfoUnion confirmed_transactions = 4;
-    repeated TransactionInfoUnion pending_transactions = 5;
+    repeated RpcTransactionInfoUnion confirmed_transactions = 4;
+    repeated RpcTransactionInfoUnion pending_transactions = 5;
 }
 
-message GetHistoryReply {
+message RpcGetHistoryReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated AddressHistory addresses = 3;
+    repeated RpcResult results = 2;
+    repeated RpcAddressHistory addresses = 3;
 }
 
-message GetPeerInfoRequest {
+message RpcGetPeerInfoRequest {
 }
 
-message NodeHeight {
+message RpcNodeHeight {
     string peer = 1;
     int32 height = 2;
 }
 
-message GetPeerInfoReply {
+message RpcGetPeerInfoReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated Endpoint endpoints = 3;
-    repeated NodeInfo connected_nodes = 4;
-    repeated NodeInfo disconnected_nodes = 5;
-    repeated NodeInfo candidate_nodes = 6;
-    repeated NodeHeight node_heights = 7;
+    repeated RpcResult results = 2;
+    repeated RpcEndpoint endpoints = 3;
+    repeated RpcNodeInfo connected_nodes = 4;
+    repeated RpcNodeInfo disconnected_nodes = 5;
+    repeated RpcNodeInfo candidate_nodes = 6;
+    repeated RpcNodeHeight node_heights = 7;
 }
 
-message GetBlockchainsRequest {
+message RpcGetBlockchainsRequest {
 }
 
-message GetBlockchainsReply {
+message RpcGetBlockchainsReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     int32 best_blockchain_length = 3;
     int32 longest_blockchain_length = 4;
 }
 
-message SubmitBlocksRequest {
-    repeated Block blocks = 1;
+message RpcSubmitBlocksRequest {
+    repeated RpcBlock blocks = 1;
 }
 
-message GetBlockTimesRequest {
+message RpcGetBlockTimesRequest {
     int32 history_length = 1;
 }
 
-message GetBlockTimesReply {
+message RpcGetBlockTimesReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     repeated sint32 times = 3;
 }
 
-message StartSoloPoolRequest {
+message RpcStartSoloPoolRequest {
 	bytes address = 1 [(address_encoded)=true];
 }
 
-message StartSoloPoolReply {
+message RpcStartSoloPoolReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
-message GetSignatureIndexRequest {
+message RpcGetSignatureIndexRequest {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message SetDefaultAddressRequest {
+message RpcSetDefaultAddressRequest {
     bytes address = 1 [(address_encoded)=true];
 }
 
-message AddressSignatureIndexes {
+message RpcAddressSignatureIndexes {
     bytes address = 1 [(address_encoded)=true];
     int64 pool_index = 3;
     int64 blockchain_index = 2;
 }
 
-message GetSignatureIndexReply {
+message RpcGetSignatureIndexReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated AddressSignatureIndexes indexes = 3;
+    repeated RpcResult results = 2;
+    repeated RpcAddressSignatureIndexes indexes = 3;
 }
 
-message SetDefaultAddressReply {
+message RpcSetDefaultAddressReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 }
 
-message GetTransactionsRequest {
+message RpcGetTransactionsRequest {
     int32 search_length = 1;
     repeated bytes ids = 2 [(hex_encoded)=true];
 }
 
-message GetTransactionRequest {
+message RpcGetTransactionRequest {
     bytes id = 1 [(hex_encoded)=true];
 }
 
-message GetTransactionReply {
+message RpcGetTransactionReply {
     bool success = 1;
-    repeated Result results = 2;
-    TransactionInfo transaction = 3;
+    repeated RpcResult results = 2;
+    RpcTransactionInfo transaction = 3;
 }
 
-message TransactionInfo {
+message RpcTransactionInfo {
     int32 confirmations = 1;
-    Transaction transaction = 2;
+    RpcTransaction transaction = 2;
     int32 block_number = 3;
     int32 timestamp = 4;
     bytes endorsed_block_hash = 5 [(hex_encoded) = true];
@@ -1040,98 +1040,98 @@ message TransactionInfo {
     string merkle_path = 10;
 }
 
-message GetTransactionsReply {
+message RpcGetTransactionsReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated TransactionInfo transactions = 3;
+    repeated RpcResult results = 2;
+    repeated RpcTransactionInfo transactions = 3;
 }
 
-message SetTransactionFeeRequest {
+message RpcSetTransactionFeeRequest {
     int64 amount = 1;
 }
 
-message DumpPrivateKeyRequest {
+message RpcDumpPrivateKeyRequest {
     bytes address = 1 [(address_encoded)=true];
 }
 
-message DumpPrivateKeyReply {
+message RpcDumpPrivateKeyReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes address = 3 [(address_encoded)=true];
     bytes private_key = 4 [(hex_encoded)=true];
 }
 
-message ImportPrivateKeyRequest {
+message RpcImportPrivateKeyRequest {
     bytes private_key = 1 [(hex_encoded)=true];
 }
 
-message ImportPrivateKeyReply {
+message RpcImportPrivateKeyReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes resultant_address = 3 [(address_encoded)=true];
 }
 
-message GetLastBitcoinBlockRequest {
+message RpcGetLastBitcoinBlockRequest {
 }
 
-message GetLastBlockRequest {
+message RpcGetLastBlockRequest {
 }
 
-message GetLastBitcoinBlockReply {
+message RpcGetLastBitcoinBlockReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes header = 3 [(hex_encoded)=true];
     int32 height = 4;
     bytes hash = 5 [(hex_encoded)=true];
 }
 
-message GetLastBitcoinBlockAtVeriBlockBlockRequest {
+message RpcGetLastBitcoinBlockAtVeriBlockBlockRequest {
     bytes vbk_block_hash = 1 [(hex_encoded)=true];
 }
 
-message GetLastBitcoinBlockAtVeriBlockBlockReply {
+message RpcGetLastBitcoinBlockAtVeriBlockBlockReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes header = 3 [(hex_encoded)=true];
     int32 height = 4;
     bytes hash = 5 [(hex_encoded)=true];
 }
 
-message GetLastBlockReply {
+message RpcGetLastBlockReply {
     bool success = 1;
-    repeated Result results = 2;
-    BlockHeader header = 3;
+    repeated RpcResult results = 2;
+    RpcBlockHeader header = 3;
 }
 
-message ListBlocksSinceRequest {
+message RpcListBlocksSinceRequest {
     bytes hash = 1 [(hex_encoded)=true];
 }
 
-message ListBlocksSinceReply {
+message RpcListBlocksSinceReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated BlockHeader removed = 3;
-    repeated BlockHeader added = 4;
+    repeated RpcResult results = 2;
+    repeated RpcBlockHeader removed = 3;
+    repeated RpcBlockHeader added = 4;
 }
 
-message SubmitTransactionsRequest {
-    repeated TransactionUnion transactions = 1;
+message RpcSubmitTransactionsRequest {
+    repeated RpcTransactionUnion transactions = 1;
 }
 
-message GetInfoReply {
+message RpcGetInfoReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     int32 number_of_blocks = 3;
-    BlockSummary last_block = 4;
-    AddressBalance default_address = 5;
+    RpcBlockSummary last_block = 4;
+    RpcAddressBalance default_address = 5;
     int64 transaction_fee = 6;
     int64 estimated_hashrate = 7;
     fixed64 decoded_difficulty = 8;
 }
 
-message GetDiagnosticInfoReply {
+message RpcGetDiagnosticInfoReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
 
     string user_language = 3;
     string java_runtime_name = 4;
@@ -1154,108 +1154,108 @@ message GetDiagnosticInfoReply {
     repeated string environment_variables = 20;
 }
 
-message GetPendingTransactionsRequest {
+message RpcGetPendingTransactionsRequest {
 }
 
-message GetPendingTransactionsReply {
+message RpcGetPendingTransactionsReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated Transaction transactions = 3;
+    repeated RpcResult results = 2;
+    repeated RpcTransaction transactions = 3;
 }
 
-message GetNewAddressRequest {
+message RpcGetNewAddressRequest {
     int32 count = 1;
 }
 
-message GetNewAddressReply {
+message RpcGetNewAddressReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes address = 3 [(address_encoded)=true];
     repeated bytes additional_addresses = 4 [(address_encoded)=true];
 }
 
-message ValidateAddressRequest {
+message RpcValidateAddressRequest {
     bytes address = 1 [(address_encoded)=true];
 }
 
-message ValidateAddressReply {
+message RpcValidateAddressReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes address = 3 [(address_encoded)=true];
     bytes public_key = 4 [(hex_encoded)=true];
     bool is_remote = 5;
 }
 
-message GenerateMultisigAddressRequest {
+message RpcGenerateMultisigAddressRequest {
     repeated bytes source_addresses = 1 [(address_encoded)=true];
     int32 signature_threshold_m = 2;
 }
 
-message GenerateMultisigAddressReply {
+message RpcGenerateMultisigAddressReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     repeated bytes source_addresses = 3 [(address_encoded)=true];
     int32 signature_threshold_m = 4;
     bytes multisig_address = 5 [(address_encoded)=true];
 }
 
-message MakeUnsignedMultisigTxRequest {
+message RpcMakeUnsignedMultisigTxRequest {
     bytes source_multisig_address = 1 [(address_encoded)=true];
-    repeated Output amounts = 2;
+    repeated RpcOutput amounts = 2;
     int64 fee = 3;
     bytes signature_index_string = 4 [(hex_encoded)=true];
 }
 
-message MakeUnsignedMultisigTxReply {
+message RpcMakeUnsignedMultisigTxReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     int32 signature_threshold_m = 3;
     int32 address_composition_count_n = 4;
-    UnsignedMultisigTransactionWithIndex unsigned_multisig_transaction_with_index = 5;
+    RpcUnsignedMultisigTransactionWithIndex unsigned_multisig_transaction_with_index = 5;
     bytes txid = 6 [(hex_encoded)=true];
     int64 signature_index = 7;
 }
 
-message SubmitMultisigTxRequest {
-    SignedMultisigTransaction multisig_transaction = 3;
+message RpcSubmitMultisigTxRequest {
+    RpcSignedMultisigTransaction multisig_transaction = 3;
 }
 
-message SubmitMultisigTxReply {
+message RpcSubmitMultisigTxReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes txid = 3 [(hex_encoded)=true];
-    SignedMultisigTransaction signed_multisig_transaction = 4;
+    RpcSignedMultisigTransaction signed_multisig_transaction = 4;
 }
 
-message SignMessageRequest {
+message RpcSignMessageRequest {
     bytes address = 1 [(address_encoded)=true];
     bytes message = 2 [(hex_encoded)=true];
 }
 
-message SignMessageReply {
+message RpcSignMessageReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bytes signed_message = 3 [(hex_encoded)=true];
     bytes public_key = 4 [(hex_encoded)=true];
 }
 
-message GetBlockTemplateRequest {
+message RpcGetBlockTemplateRequest {
     string mode = 1;
     repeated string capabilities = 2;
 }
 
-message CandidateTransaction {
+message RpcCandidateTransaction {
     int64 fee = 1;
     int64 weight = 2;
     bool required = 3;
     bytes tx_id = 4 [(hex_encoded)=true];
     repeated int32 depends = 5;
-    TransactionUnion transaction = 6;
+    RpcTransactionUnion transaction = 6;
 }
 
-message GetBlockTemplateReply {
+message RpcGetBlockTemplateReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     int64 target = 3;
     int64 size_limit = 4;
     int32 block_height = 5;
@@ -1267,10 +1267,10 @@ message GetBlockTemplateReply {
     bytes second_previous_block_hash = 11 [(hex_encoded)=true];
     bytes third_previous_block_hash = 12 [(hex_encoded)=true];
     bytes previous_ledger_hash = 13 [(hex_encoded)=true];
-    repeated CandidateTransaction transactions = 14;
+    repeated RpcCandidateTransaction transactions = 14;
 }
 
-message SetBanRequest {
+message RpcSetBanRequest {
     enum Command {
         ADD = 0;
         REMOVE = 1;
@@ -1282,7 +1282,7 @@ message SetBanRequest {
     int32 expiry_timestamp = 4;
 }
 
-message SetAllowedRequest {
+message RpcSetAllowedRequest {
     enum Command {
         ADD = 0;
         REMOVE = 1;
@@ -1292,7 +1292,7 @@ message SetAllowedRequest {
     string value = 2;
 }
 
-message BlackListInfo {
+message RpcBlackListInfo {
     enum Type {
         ADDRESS = 0;
         NETMASK = 1;
@@ -1307,7 +1307,7 @@ message BlackListInfo {
     int32 expiry_timestamp = 6;
 }
 
-message WhiteListInfo {
+message RpcWhiteListInfo {
     enum Type {
         ADDRESS = 0;
         NETMASK = 1;
@@ -1320,81 +1320,81 @@ message WhiteListInfo {
     int32 timestamp = 4;
 }
 
-message ListBannedRequest {
+message RpcListBannedRequest {
 }
 
-message ListAllowedRequest {
+message RpcListAllowedRequest {
 }
 
-message ListBannedReply {
+message RpcListBannedReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated BlackListInfo entries = 3;
+    repeated RpcResult results = 2;
+    repeated RpcBlackListInfo entries = 3;
 }
 
-message ListAllowedReply {
+message RpcListAllowedReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated WhiteListInfo entries = 3;
+    repeated RpcResult results = 2;
+    repeated RpcWhiteListInfo entries = 3;
 }
 
-message ListBannedMinersRequest {
+message RpcListBannedMinersRequest {
 }
 
-message ListBannedMinersReply {
+message RpcListBannedMinersReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     repeated string clients = 3;
 }
 
-message ClearBannedRequest {
+message RpcClearBannedRequest {
 }
 
-message ClearBannedMinersRequest {
+message RpcClearBannedMinersRequest {
 }
 
-message ClearAllowedRequest {
+message RpcClearAllowedRequest {
 }
 
-message PingRequest{}
+message RpcPingRequest{}
 
-message PingReply{}
+message RpcPingReply{}
 
-message GetBitcoinBlockIndexRequest {
+message RpcGetBitcoinBlockIndexRequest {
     bytes block_header = 1 [(hex_encoded)=true];
     int32 search_length = 2;
 }
 
-message GetWalletTransactionsRequest {
+message RpcGetWalletTransactionsRequest {
     enum Type {
         LIST = 0;
         QUERY = 1;
     }
     Type request_type = 1;
     bytes address = 2 [(address_encoded)=true];
-    WalletTransaction.Type transaction_type = 3;
-    TransactionMeta.Status status = 4;
-    NumericFilter amount_filter = 5;
-    NumericFilter timestamp_filter = 6;
-    Paging page = 7;
+    RpcWalletTransaction.Type transaction_type = 3;
+    RpcTransactionMeta.Status status = 4;
+    RpcNumericFilter amount_filter = 5;
+    RpcNumericFilter timestamp_filter = 6;
+    RpcPaging page = 7;
 }
 
-message GetWalletTransactionsReply {
+message RpcGetWalletTransactionsReply {
     enum CacheState {
         UNKNOWN = 0;
         BUILDING = 1;
         CURRENT = 2;
         ERRORED = 3;
     }
-    Paging next = 1;
-    repeated WalletTransaction transactions = 2;
+    RpcPaging next = 1;
+    repeated RpcWalletTransaction transactions = 2;
     CacheState cache_state = 3;
     string message = 4;
     bool success = 5;
-    repeated Result results = 6;
+    repeated RpcResult results = 6;
 }
 
-message BlockchainStateInfo {
+message RpcBlockchainStateInfo {
     enum State {
         LOADING = 0;
         NORMAL = 1;
@@ -1405,7 +1405,7 @@ message BlockchainStateInfo {
  State state = 1;
 }
 
-message OperatingStateInfo {
+message RpcOperatingStateInfo {
     enum State {
         STARTED = 0;
         INITIALIZING = 1;
@@ -1415,7 +1415,7 @@ message OperatingStateInfo {
     State state = 1;
 }
 
-message NetworkStateInfo {
+message RpcNetworkStateInfo {
     enum State {
         DISCONNECTED = 0;
         CONNECTED = 1;
@@ -1423,23 +1423,23 @@ message NetworkStateInfo {
     State state = 1;
 }
 
-message GetStateInfoRequest {}
+message RpcGetStateInfoRequest {}
 
-message GetStateInfoReply {
+message RpcGetStateInfoReply {
     enum WalletState {
         DEFAULT = 0;
         LOCKED = 1;
         UNLOCKED = 2;
     }
-    BlockchainStateInfo blockchain_state = 1;
-    OperatingStateInfo operating_state = 2;
-    NetworkStateInfo network_state = 3;
+    RpcBlockchainStateInfo blockchain_state = 1;
+    RpcOperatingStateInfo operating_state = 2;
+    RpcNetworkStateInfo network_state = 3;
     int32 connected_peer_count = 4;
     string current_sync_peer = 5;
     int32 network_height = 6;
     int32 local_blockchain_height = 7;
     bool success = 8;
-    repeated Result results = 9;
+    repeated RpcResult results = 9;
     string network_version = 10;
     string data_directory = 11;
     string program_version = 12;
@@ -1448,60 +1448,60 @@ message GetStateInfoReply {
     WalletState wallet_state = 15;
 }
 
-message StopNodeCoreRequest {}
+message RpcStopNodeCoreRequest {}
 
-message RefreshWalletCacheRequest {}
+message RpcRefreshWalletCacheRequest {}
 
-message EncryptWalletRequest {
+message RpcEncryptWalletRequest {
     string passphrase = 1;
 }
 
-message DecryptWalletRequest {
+message RpcDecryptWalletRequest {
     string passphrase = 1;
 }
 
-message UnlockWalletRequest {
+message RpcUnlockWalletRequest {
     string passphrase = 1;
 }
 
-message LockWalletRequest {}
+message RpcLockWalletRequest {}
 
-message DrainAddressRequest {
+message RpcDrainAddressRequest {
     bytes source_address = 1 [(address_encoded)=true];
     bytes destination_address = 2 [(address_encoded)=true];
 }
 
-message DrainAddressReply {
+message RpcDrainAddressReply {
     bool success = 1;
-    repeated Result results = 2;
-    Transaction transaction = 3;
+    repeated RpcResult results = 2;
+    RpcTransaction transaction = 3;
 }
 
-message BalanceUnlockEvent {
+message RpcBalanceUnlockEvent {
     int32 block_height = 1;
     int64 amount_unlocked = 2;
     int64 locked_balance = 3;
 }
 
-message AddressBalanceSchedule {
+message RpcAddressBalanceSchedule {
     bytes address = 1 [(address_encoded)=true];
     int64 unlock_balance = 2;
     int64 locked_balance = 3;
     int64 total_balance = 4;
-    repeated BalanceUnlockEvent schedule = 5;
+    repeated RpcBalanceUnlockEvent schedule = 5;
 }
 
-message GetBalanceUnlockScheduleRequest {
+message RpcGetBalanceUnlockScheduleRequest {
     repeated bytes addresses = 1 [(address_encoded)=true];
 }
 
-message GetBalanceUnlockScheduleReply {
+message RpcGetBalanceUnlockScheduleReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated AddressBalanceSchedule address_schedule = 3;
+    repeated RpcResult results = 2;
+    repeated RpcAddressBalanceSchedule address_schedule = 3;
 }
 
-message PoolConfiguration {
+message RpcPoolConfiguration {
     bool solo = 1;
     string type = 2;
     string pool_target = 3;
@@ -1511,25 +1511,25 @@ message PoolConfiguration {
     string coinbase_comment = 7;
 }
 
-message PoolStats {
+message RpcPoolStats {
     int32 current_round = 1;
     int32 mining_block_number = 2;
     int32 last_block_number = 3;
     string recent_hash_rate = 4;
 }
 
-message GetPoolStateRequest {}
+message RpcGetPoolStateRequest {}
 
-message GetPoolStateReply {
+message RpcGetPoolStateReply {
     bool success = 1;
-    repeated Result results = 2;
+    repeated RpcResult results = 2;
     bool running = 3;
-    PoolConfiguration configuration = 4;
-    PoolStats stats = 5;
+    RpcPoolConfiguration configuration = 4;
+    RpcPoolStats stats = 5;
 }
 
-message VeriBlockPublication {
-    SignedTransaction pop_transaction = 1;
+message RpcVeriBlockPublication {
+    RpcSignedTransaction pop_transaction = 1;
     string compact_merkle_path = 2;
     bytes containing_block = 3 [(hex_encoded)=true];
     repeated bytes context_to_endorsed = 4 [(hex_encoded)=true];
@@ -1537,225 +1537,225 @@ message VeriBlockPublication {
     bytes block_of_proof = 6 [(hex_encoded)=true];
 }
 
-message GetVeriBlockPublicationsRequest {
+message RpcGetVeriBlockPublicationsRequest {
     bytes keystone_hash = 1 [(hex_encoded)=true];
     bytes context_hash = 2 [(hex_encoded)=true];
     bytes btc_context_hash = 3 [(hex_encoded)=true];
 }
 
-message GetVeriBlockPublicationsReply {
+message RpcGetVeriBlockPublicationsReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated VeriBlockPublication publications = 3;
+    repeated RpcResult results = 2;
+    repeated RpcVeriBlockPublication publications = 3;
 }
 
-message GetDebugVTBsRequest {
+message RpcGetDebugVTBsRequest {
     bytes vbk_context_hash = 1 [(hex_encoded)=true];
     bytes btc_context_hash = 2 [(hex_encoded)=true];
 }
 
-message GetDebugVTBsReply {
+message RpcGetDebugVTBsReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated VeriBlockPublication publications = 3;
+    repeated RpcResult results = 2;
+    repeated RpcVeriBlockPublication publications = 3;
 }
 
-message AddressIndexPair {
+message RpcAddressIndexPair {
     bytes address = 1 [(address_encoded) = true];
     int64 starting_signature_index = 2;
 }
 
-message AbandonAddressTransactionsRequest {
-    repeated AddressIndexPair addresses = 1;
+message RpcAbandonAddressTransactionsRequest {
+    repeated RpcAddressIndexPair addresses = 1;
 }
 
-message AbandonTransactionRequest {
+message RpcAbandonTransactionRequest {
     oneof transactions_to_abandon {
-        TransactionSet txids = 1;
-        AbandonAddressTransactionsRequest addresses = 2;
+        RpcTransactionSet txids = 1;
+        RpcAbandonAddressTransactionsRequest addresses = 2;
     }
 }
 
-message AbandonTransactionReply {
+message RpcAbandonTransactionReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated TransactionUnion abandoned_transactions = 3;
+    repeated RpcResult results = 2;
+    repeated RpcTransactionUnion abandoned_transactions = 3;
     repeated bytes txids_not_abandoned = 4;
 }
 
-message RebroadcastAddressTransactionsRequest {
-    repeated AddressIndexPair addresses = 1;
+message RpcRebroadcastAddressTransactionsRequest {
+    repeated RpcAddressIndexPair addresses = 1;
 }
-message RebroadcastTransactionRequest {
+message RpcRebroadcastTransactionRequest {
     oneof transactions_to_rebroadcast {
-        TransactionSet txids = 1;
-        RebroadcastAddressTransactionsRequest addresses = 2;
+        RpcTransactionSet txids = 1;
+        RpcRebroadcastAddressTransactionsRequest addresses = 2;
     }
 }
 
-message RebroadcastTransactionReply {
+message RpcRebroadcastTransactionReply {
     bool success = 1;
-    repeated Result results = 2;
-    repeated TransactionUnion rebroadcast_transactions = 3;
+    repeated RpcResult results = 2;
+    repeated RpcTransactionUnion rebroadcast_transactions = 3;
     repeated bytes txids_not_rebroadcast = 4;
 }
 
-message GenerateBlocksRequest {
+message RpcGenerateBlocksRequest {
     int32 blocks = 1;
     string address = 2;
 }
 
-message GenerateBlocksReply {
-    Result result = 1;
+message RpcGenerateBlocksReply {
+    RpcResult result = 1;
     repeated bytes hash = 2 [(hex_encoded)=true];
 }
 
 service Admin {
-    rpc SubmitRawTransaction(SubmitRawTransactionRequest) returns (ProtocolReply) {}
+    rpc SubmitRawTransaction(RpcSubmitRawTransactionRequest) returns (RpcProtocolReply) {}
 
-    rpc GenerateBlocks(GenerateBlocksRequest) returns (GenerateBlocksReply) {}
+    rpc GenerateBlocks(RpcGenerateBlocksRequest) returns (RpcGenerateBlocksReply) {}
 
-    rpc GetPop(GetPopRequest) returns (GetPopReply) {}
+    rpc GetPop(RpcGetPopRequest) returns (RpcGetPopReply) {}
 
-    rpc AddNode (NodeRequest) returns (ProtocolReply) {}
+    rpc AddNode(RpcNodeRequest) returns (RpcProtocolReply) {}
 
-    rpc SetBan (SetBanRequest) returns (ProtocolReply) {}
+    rpc SetBan(RpcSetBanRequest) returns (RpcProtocolReply) {}
 
-    rpc GetInfo (GetInfoRequest) returns (GetInfoReply) {}
+    rpc GetInfo(RpcGetInfoRequest) returns (RpcGetInfoReply) {}
 
-    rpc GetDiagnosticInfo (GetDiagnosticInfoRequest) returns (GetDiagnosticInfoReply) {}
+    rpc GetDiagnosticInfo(RpcGetDiagnosticInfoRequest) returns (RpcGetDiagnosticInfoReply) {}
 
-    rpc RemoveNode (NodeRequest) returns (ProtocolReply) {}
+    rpc RemoveNode(RpcNodeRequest) returns (RpcProtocolReply) {}
 
-    rpc StopPool (StopPoolRequest) returns (StopPoolReply) {}
+    rpc StopPool(RpcStopPoolRequest) returns (RpcStopPoolReply) {}
 
-    rpc SubmitPop (SubmitPopRequest) returns (ProtocolReply) {}
+    rpc SubmitPop(RpcSubmitPopRequest) returns (RpcProtocolReply) {}
 
-    rpc SendCoins (SendCoinsRequest) returns (SendCoinsReply) {}
+    rpc SendCoins(RpcSendCoinsRequest) returns (RpcSendCoinsReply) {}
 
-    rpc CreateAltChainEndorsement (CreateAltChainEndorsementRequest) returns (CreateAltChainEndorsementReply) {}
+    rpc CreateAltChainEndorsement(RpcCreateAltChainEndorsementRequest) returns (RpcCreateAltChainEndorsementReply) {}
 
-    rpc GetAltChainPoPEndorsements (GetAltChainPoPEndorsementsRequest) returns (GetAltChainPoPEndorsementsReply) {}
+    rpc GetAltChainPoPEndorsements(RpcGetAltChainPoPEndorsementsRequest) returns (RpcGetAltChainPoPEndorsementsReply) {}
 
-    rpc GetBlocks (GetBlocksRequest) returns (GetBlocksReply) {}
+    rpc GetBlocks(RpcGetBlocksRequest) returns (RpcGetBlocksReply) {}
 
-    rpc StartPool (StartPoolRequest) returns (StartPoolReply) {}
+    rpc StartPool(RpcStartPoolRequest) returns (RpcStartPoolReply) {}
 
-    rpc RestartPoolWebServer (RestartPoolWebServerRequest) returns (RestartPoolWebServerReply) {}
+    rpc RestartPoolWebServer(RpcRestartPoolWebServerRequest) returns (RpcRestartPoolWebServerReply) {}
 
-    rpc GetHistory (GetHistoryRequest) returns (GetHistoryReply) {}
+    rpc GetHistory(RpcGetHistoryRequest) returns (RpcGetHistoryReply) {}
 
-    rpc GetBalance (GetBalanceRequest) returns (GetBalanceReply) {}
+    rpc GetBalance(RpcGetBalanceRequest) returns (RpcGetBalanceReply) {}
 
-    rpc SetAllowed (SetAllowedRequest) returns (ProtocolReply) {}
+    rpc SetAllowed(RpcSetAllowedRequest) returns (RpcProtocolReply) {}
 
-    rpc ListBanned (ListBannedRequest) returns (ListBannedReply) {}
+    rpc ListBanned(RpcListBannedRequest) returns (RpcListBannedReply) {}
 
-    rpc ListBannedMiners(ListBannedMinersRequest) returns (ListBannedMinersReply) {}
+    rpc ListBannedMiners(RpcListBannedMinersRequest) returns (RpcListBannedMinersReply) {}
 
-    rpc ClearBanned(ClearBannedRequest) returns (ProtocolReply) {}
+    rpc ClearBanned(RpcClearBannedRequest) returns (RpcProtocolReply) {}
 
-    rpc ClearBannedMiners(ClearBannedMinersRequest) returns (ProtocolReply) {}
+    rpc ClearBannedMiners(RpcClearBannedMinersRequest) returns (RpcProtocolReply) {}
 
-    rpc SubmitBlocks(SubmitBlocksRequest) returns (ProtocolReply) {}
+    rpc SubmitBlocks(RpcSubmitBlocksRequest) returns (RpcProtocolReply) {}
 
-    rpc ClearAllowed(ClearAllowedRequest) returns (ProtocolReply) {}
+    rpc ClearAllowed(RpcClearAllowedRequest) returns (RpcProtocolReply) {}
 
-    rpc GetPeerInfo(GetPeerInfoRequest) returns (GetPeerInfoReply) {}
+    rpc GetPeerInfo(RpcGetPeerInfoRequest) returns (RpcGetPeerInfoReply) {}
 
-    rpc SignMessage(SignMessageRequest) returns (SignMessageReply) {}
+    rpc SignMessage(RpcSignMessageRequest) returns (RpcSignMessageReply) {}
 
-    rpc ListAllowed(ListAllowedRequest) returns (ListAllowedReply) {}
+    rpc ListAllowed(RpcListAllowedRequest) returns (RpcListAllowedReply) {}
 
-    rpc BackupWallet(BackupWalletRequest) returns (BackupWalletReply) {}
+    rpc BackupWallet(RpcBackupWalletRequest) returns (RpcBackupWalletReply) {}
 
-    rpc ImportWallet(ImportWalletRequest) returns (ImportWalletReply) {}
+    rpc ImportWallet(RpcImportWalletRequest) returns (RpcImportWalletReply) {}
 
-    rpc GetNewAddress(GetNewAddressRequest) returns (GetNewAddressReply) {}
+    rpc GetNewAddress(RpcGetNewAddressRequest) returns (RpcGetNewAddressReply) {}
 
-    rpc GetBlockTimes(GetBlockTimesRequest) returns (GetBlockTimesReply) {}
+    rpc GetBlockTimes(RpcGetBlockTimesRequest) returns (RpcGetBlockTimesReply) {}
 
-    rpc StartSoloPool(StartSoloPoolRequest) returns (StartSoloPoolReply) {}
+    rpc StartSoloPool(RpcStartSoloPoolRequest) returns (RpcStartSoloPoolReply) {}
 
-    rpc GetBlockchains(GetBlockchainsRequest) returns (GetBlockchainsReply) {}
+    rpc GetBlockchains(RpcGetBlockchainsRequest) returns (RpcGetBlockchainsReply) {}
 
-    rpc SetTransactionFee(SetTransactionFeeRequest) returns (ProtocolReply) {}
+    rpc SetTransactionFee(RpcSetTransactionFeeRequest) returns (RpcProtocolReply) {}
 
-    rpc DumpPrivateKey(DumpPrivateKeyRequest) returns (DumpPrivateKeyReply) {}
+    rpc DumpPrivateKey(RpcDumpPrivateKeyRequest) returns (RpcDumpPrivateKeyReply) {}
 
-    rpc ImportPrivateKey(ImportPrivateKeyRequest) returns (ImportPrivateKeyReply) {}
+    rpc ImportPrivateKey(RpcImportPrivateKeyRequest) returns (RpcImportPrivateKeyReply) {}
 
-    rpc SubmitTransactions(SubmitTransactionsRequest) returns (ProtocolReply) {}
+    rpc SubmitTransactions(RpcSubmitTransactionsRequest) returns (RpcProtocolReply) {}
 
-    rpc GetTransactions(GetTransactionsRequest) returns (GetTransactionsReply) {}
+    rpc GetTransactions(RpcGetTransactionsRequest) returns (RpcGetTransactionsReply) {}
 
-    rpc ValidateAddress(ValidateAddressRequest) returns (ValidateAddressReply) {}
+    rpc ValidateAddress(RpcValidateAddressRequest) returns (RpcValidateAddressReply) {}
 
-    rpc GenerateMultisigAddress(GenerateMultisigAddressRequest) returns (GenerateMultisigAddressReply) {}
+    rpc GenerateMultisigAddress(RpcGenerateMultisigAddressRequest) returns (RpcGenerateMultisigAddressReply) {}
 
-    rpc MakeUnsignedMultisigTx(MakeUnsignedMultisigTxRequest) returns (MakeUnsignedMultisigTxReply) {}
+    rpc MakeUnsignedMultisigTx(RpcMakeUnsignedMultisigTxRequest) returns (RpcMakeUnsignedMultisigTxReply) {}
 
-    rpc SubmitMultisigTx(SubmitMultisigTxRequest) returns (SubmitMultisigTxReply) {}
+    rpc SubmitMultisigTx(RpcSubmitMultisigTxRequest) returns (RpcSubmitMultisigTxReply) {}
 
-    rpc GetBitcoinBlockIndex(GetBitcoinBlockIndexRequest) returns (ProtocolReply){}
+    rpc GetBitcoinBlockIndex(RpcGetBitcoinBlockIndexRequest) returns (RpcProtocolReply){}
 
-    rpc GetBlockTemplate(GetBlockTemplateRequest) returns (GetBlockTemplateReply) {}
+    rpc GetBlockTemplate(RpcGetBlockTemplateRequest) returns (RpcGetBlockTemplateReply) {}
 
-    rpc GetSignatureIndex(GetSignatureIndexRequest) returns (GetSignatureIndexReply) {}
+    rpc GetSignatureIndex(RpcGetSignatureIndexRequest) returns (RpcGetSignatureIndexReply) {}
 
-    rpc SetDefaultAddress(SetDefaultAddressRequest) returns (SetDefaultAddressReply) {}
+    rpc SetDefaultAddress(RpcSetDefaultAddressRequest) returns (RpcSetDefaultAddressReply) {}
 
-    rpc GetLastBitcoinBlock(GetLastBitcoinBlockRequest) returns (GetLastBitcoinBlockReply) {}
+    rpc GetLastBitcoinBlock(RpcGetLastBitcoinBlockRequest) returns (RpcGetLastBitcoinBlockReply) {}
 
-    rpc GetLastBitcoinBlockAtVeriBlockBlock(GetLastBitcoinBlockAtVeriBlockBlockRequest) returns (GetLastBitcoinBlockAtVeriBlockBlockReply) {}
+    rpc GetLastBitcoinBlockAtVeriBlockBlock(RpcGetLastBitcoinBlockAtVeriBlockBlockRequest) returns (RpcGetLastBitcoinBlockAtVeriBlockBlockReply) {}
 
-    rpc GetProtectedChildren(GetProtectedChildrenRequest) returns (GetProtectedChildrenReply) {}
+    rpc GetProtectedChildren(RpcGetProtectedChildrenRequest) returns (RpcGetProtectedChildrenReply) {}
 
-    rpc GetProtectingParents(GetProtectingParentsRequest) returns (GetProtectingParentsReply) {}
+    rpc GetProtectingParents(RpcGetProtectingParentsRequest) returns (RpcGetProtectingParentsReply) {}
 
-    rpc GetWalletTransactions(GetWalletTransactionsRequest) returns (GetWalletTransactionsReply) {}
+    rpc GetWalletTransactions(RpcGetWalletTransactionsRequest) returns (RpcGetWalletTransactionsReply) {}
 
-    rpc GetEndorsementsOfBlock(GetEndorsementsOfBlockRequest) returns (GetEndorsementsOfBlockReply) {}
+    rpc GetEndorsementsOfBlock(RpcGetEndorsementsOfBlockRequest) returns (RpcGetEndorsementsOfBlockReply) {}
 
-    rpc GetPendingTransactions(GetPendingTransactionsRequest) returns (GetPendingTransactionsReply) {}
+    rpc GetPendingTransactions(RpcGetPendingTransactionsRequest) returns (RpcGetPendingTransactionsReply) {}
 
-    rpc GetPoPEndorsementsInfo(GetPoPEndorsementsInfoRequest) returns (GetPoPEndorsementsInfoReply) {}
+    rpc GetPoPEndorsementsInfo(RpcGetPoPEndorsementsInfoRequest) returns (RpcGetPoPEndorsementsInfoReply) {}
 
-    rpc GetPoPRewardEstimates(GetPoPRewardEstimatesRequest) returns (GetPoPRewardEstimatesReply) {}
+    rpc GetPoPRewardEstimates(RpcGetPoPRewardEstimatesRequest) returns (RpcGetPoPRewardEstimatesReply) {}
 
-    rpc Ping(PingRequest) returns (PingReply) {}
+    rpc Ping(RpcPingRequest) returns (RpcPingReply) {}
 
-    rpc GetStateInfo(GetStateInfoRequest) returns (GetStateInfoReply) {}
+    rpc GetStateInfo(RpcGetStateInfoRequest) returns (RpcGetStateInfoReply) {}
 
-    rpc GetLastBlock(GetLastBlockRequest) returns (GetLastBlockReply) {}
+    rpc GetLastBlock(RpcGetLastBlockRequest) returns (RpcGetLastBlockReply) {}
 
-    rpc ListBlocksSince(ListBlocksSinceRequest) returns (ListBlocksSinceReply) {}
+    rpc ListBlocksSince(RpcListBlocksSinceRequest) returns (RpcListBlocksSinceReply) {}
 
-    rpc TroubleshootPoPTransactions(TroubleshootPoPTransactionsRequest) returns (TroubleshootPoPTransactionsReply) {}
+    rpc TroubleshootPoPTransactions(RpcTroubleshootPoPTransactionsRequest) returns (RpcTroubleshootPoPTransactionsReply) {}
 
-    rpc StopNodeCore(StopNodeCoreRequest) returns (ProtocolReply) {}
+    rpc StopNodeCore(RpcStopNodeCoreRequest) returns (RpcProtocolReply) {}
 
-    rpc RefreshWalletCache(RefreshWalletCacheRequest) returns (ProtocolReply) {}
+    rpc RefreshWalletCache(RpcRefreshWalletCacheRequest) returns (RpcProtocolReply) {}
 
-    rpc EncryptWallet(EncryptWalletRequest) returns (ProtocolReply) {}
+    rpc EncryptWallet(RpcEncryptWalletRequest) returns (RpcProtocolReply) {}
 
-    rpc DecryptWallet(DecryptWalletRequest) returns (ProtocolReply) {}
+    rpc DecryptWallet(RpcDecryptWalletRequest) returns (RpcProtocolReply) {}
 
-    rpc UnlockWallet(UnlockWalletRequest) returns (ProtocolReply) {}
+    rpc UnlockWallet(RpcUnlockWalletRequest) returns (RpcProtocolReply) {}
 
-    rpc LockWallet(LockWalletRequest) returns (ProtocolReply) {}
+    rpc LockWallet(RpcLockWalletRequest) returns (RpcProtocolReply) {}
 
-    rpc DrainAddress(DrainAddressRequest) returns (DrainAddressReply) {}
+    rpc DrainAddress(RpcDrainAddressRequest) returns (RpcDrainAddressReply) {}
 
-    rpc GetBalanceUnlockSchedule(GetBalanceUnlockScheduleRequest) returns (GetBalanceUnlockScheduleReply) {}
+    rpc GetBalanceUnlockSchedule(RpcGetBalanceUnlockScheduleRequest) returns (RpcGetBalanceUnlockScheduleReply) {}
 
-    rpc GetPoolState(GetPoolStateRequest) returns (GetPoolStateReply) {}
+    rpc GetPoolState(RpcGetPoolStateRequest) returns (RpcGetPoolStateReply) {}
 
-    rpc GetVeriBlockPublications(GetVeriBlockPublicationsRequest) returns (GetVeriBlockPublicationsReply) {}
+    rpc GetVeriBlockPublications(RpcGetVeriBlockPublicationsRequest) returns (RpcGetVeriBlockPublicationsReply) {}
 
-    rpc GetDebugVTBs(GetDebugVTBsRequest) returns (GetDebugVTBsReply) {}
+    rpc GetDebugVTBs(RpcGetDebugVTBsRequest) returns (RpcGetDebugVTBsReply) {}
 
-    rpc AbandonTransaction(AbandonTransactionRequest) returns (AbandonTransactionReply) {}
+    rpc AbandonTransaction(RpcAbandonTransactionRequest) returns (RpcAbandonTransactionReply) {}
 
-    rpc RebroadcastTransaction(RebroadcastTransactionRequest) returns (RebroadcastTransactionReply) {}
+    rpc RebroadcastTransaction(RpcRebroadcastTransactionRequest) returns (RpcRebroadcastTransactionReply) {}
 }

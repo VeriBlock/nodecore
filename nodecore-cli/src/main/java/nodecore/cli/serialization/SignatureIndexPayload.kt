@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexReply
+import nodecore.api.grpc.RpcGetSignatureIndexReply
 
 class SignatureIndexPayload(
-    reply: GetSignatureIndexReply
+    reply: RpcGetSignatureIndexReply
 ) {
     val addresses = reply.indexesList.map { signatureIndexes ->
         SignatureIndexInfo(signatureIndexes)

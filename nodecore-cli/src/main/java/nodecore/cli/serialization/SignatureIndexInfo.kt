@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.AddressSignatureIndexes
+import nodecore.api.grpc.RpcAddressSignatureIndexes
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class SignatureIndexInfo(
-    indexes: AddressSignatureIndexes
+    indexes: RpcAddressSignatureIndexes
 ) {
     @SerializedName("pool_index")
     val poolIndex = indexes.poolIndex

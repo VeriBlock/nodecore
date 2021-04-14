@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.GetPeerInfoReply
+import nodecore.api.grpc.RpcGetPeerInfoReply
 import nodecore.cli.contracts.PeerEndpoint
 
 class PeerInfoPayload(
-    reply: GetPeerInfoReply
+    reply: RpcGetPeerInfoReply
 ) {
     @SerializedName("configured_endpoints")
     val peerEndpoints = reply.endpointsList.map { endpoint ->

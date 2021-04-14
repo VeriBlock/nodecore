@@ -8,7 +8,7 @@
 package org.veriblock.spv.service
 
 import com.google.protobuf.ByteString
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcTransaction
 import org.veriblock.core.types.Pair
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
@@ -227,11 +227,11 @@ class TransactionService(
         }
 
         @JvmStatic
-        fun getRegularTransactionMessageBuilder(tx: StandardTransaction): VeriBlockMessages.Transaction.Builder {
-            val builder = VeriBlockMessages.Transaction.newBuilder()
+        fun getRegularTransactionMessageBuilder(tx: StandardTransaction): RpcTransaction.Builder {
+            val builder = RpcTransaction.newBuilder()
             builder.transactionFee = tx.getTransactionFee()
             builder.txId = ByteString.copyFrom(tx.txId.bytes)
-            builder.type = VeriBlockMessages.Transaction.Type.STANDARD
+            builder.type = RpcTransaction.Type.STANDARD
             builder.sourceAmount = tx.inputAmount!!.atomicUnits
             builder.sourceAddress = ByteString.copyFrom(tx.inputAddress!!.toByteArray())
             builder.data = ByteString.copyFrom(tx.data)

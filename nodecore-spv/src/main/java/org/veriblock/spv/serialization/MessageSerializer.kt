@@ -8,10 +8,12 @@
 package org.veriblock.spv.serialization
 
 import com.google.protobuf.InvalidProtocolBufferException
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.SignedMultisigTransaction
-import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
-import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
+import nodecore.api.grpc.RpcBlock
+import nodecore.api.grpc.RpcBlockHeader
+import nodecore.api.grpc.RpcEvent
+import nodecore.api.grpc.RpcSignedMultisigTransaction
+import nodecore.api.grpc.RpcSignedTransaction
+import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
@@ -37,7 +39,7 @@ import org.veriblock.spv.model.asLightAddress
 private val logger = createLogger {}
 
 object MessageSerializer {
-    fun deserialize(blockHeaderMessage: VeriBlockMessages.BlockHeader, trustHash: Boolean = false): VeriBlockBlock {
+    fun deserialize(blockHeaderMessage: RpcBlockHeader, trustHash: Boolean = false): VeriBlockBlock {
         return if (trustHash) {
             SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray(), blockHeaderMessage.hash.toByteArray().asVbkHash())
         } else {
@@ -46,12 +48,12 @@ object MessageSerializer {
     }
 
     @JvmStatic
-    fun deserializeNormalTransaction(transactionUnionMessage: TransactionUnion): StandardTransaction {
+    fun deserializeNormalTransaction(transactionUnionMessage: RpcTransactionUnion): StandardTransaction {
         return when (transactionUnionMessage.transactionCase) {
-            TransactionUnion.TransactionCase.SIGNED -> deserializeStandardTransaction(
+            RpcTransactionUnion.TransactionCase.SIGNED -> deserializeStandardTransaction(
                 transactionUnionMessage.signed
             )
-            TransactionUnion.TransactionCase.SIGNED_MULTISIG -> deserializeMultisigTransaction(
+            RpcTransactionUnion.TransactionCase.SIGNED_MULTISIG -> deserializeMultisigTransaction(
                 transactionUnionMessage.signedMultisig
             )
             else ->
@@ -60,7 +62,7 @@ object MessageSerializer {
         }
     }
 
-    fun deserializePopTransaction(transactionUnionMessage: TransactionUnion): PopTransactionLight {
+    fun deserializePopTransaction(transactionUnionMessage: RpcTransactionUnion): PopTransactionLight {
         val signed = transactionUnionMessage.signed
         val txMessage = signed.transaction
         val tx = PopTransactionLight(
@@ -79,7 +81,7 @@ object MessageSerializer {
         return tx
     }
 
-    fun deserialize(blockMessage: VeriBlockMessages.Block): FullBlock {
+    fun deserialize(blockMessage: RpcBlock): FullBlock {
         val block = FullBlock(
             blockMessage.number,
             blockMessage.version.toShort(),
@@ -103,7 +105,7 @@ object MessageSerializer {
         return block
     }
 
-    private fun deserializeStandardTransaction(signedTransaction: SignedTransaction): StandardTransaction {
+    private fun deserializeStandardTransaction(signedTransaction: RpcSignedTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
         val tx = StandardTransaction(txMessage.txId.toByteArray().asVbkTxId())
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
@@ -118,7 +120,7 @@ object MessageSerializer {
         return tx
     }
 
-    private fun deserializeMultisigTransaction(signedTransaction: SignedMultisigTransaction): StandardTransaction {
+    private fun deserializeMultisigTransaction(signedTransaction: RpcSignedMultisigTransaction): StandardTransaction {
         val txMessage = signedTransaction.transaction
         val tx: StandardTransaction = MultisigTransaction(txMessage.txId.toByteArray().asVbkTxId())
         tx.inputAddress = ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress).asLightAddress()
@@ -134,9 +136,9 @@ object MessageSerializer {
     }
 
     @JvmStatic
-    fun deserialize(raw: ByteArray?): VeriBlockMessages.Event? {
+    fun deserialize(raw: ByteArray?): RpcEvent? {
         try {
-            return VeriBlockMessages.Event.parseFrom(raw)
+            return RpcEvent.parseFrom(raw)
         } catch (e: InvalidProtocolBufferException) {
             logger.error("Unable to parse message", e)
         }

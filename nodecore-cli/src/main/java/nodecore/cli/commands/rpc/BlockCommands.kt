@@ -1,6 +1,11 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcBlockFilter
+import nodecore.api.grpc.RpcGetBlockTemplateRequest
+import nodecore.api.grpc.RpcGetBlockchainsRequest
+import nodecore.api.grpc.RpcGetBlocksRequest
+import nodecore.api.grpc.RpcGetLastBitcoinBlockRequest
+import nodecore.api.grpc.RpcSubmitBlocksRequest
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -22,7 +27,7 @@ fun CommandFactory.blockCommands() {
         description = "Returns blockchain information",
         suggestedCommands = { listOf("getinfo") }
     ) {
-        val request = VeriBlockMessages.GetBlockchainsRequest.newBuilder().build()
+        val request = RpcGetBlockchainsRequest.newBuilder().build()
         val result = cliShell.adminService.getBlockchains(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -43,9 +48,9 @@ fun CommandFactory.blockCommands() {
         suggestedCommands = { listOf("getblockfromindex", "gettransaction") }
     ) {
         val hash: String = getParameter("blockHash")
-        val request = VeriBlockMessages.GetBlocksRequest
+        val request = RpcGetBlocksRequest
             .newBuilder().addFilters(
-                VeriBlockMessages.BlockFilter.newBuilder().setHash(hash.asHexByteString())
+                RpcBlockFilter.newBuilder().setHash(hash.asHexByteString())
             ).build()
         val result = cliShell.adminService.getBlocks(request)
 
@@ -64,8 +69,8 @@ fun CommandFactory.blockCommands() {
         suggestedCommands = { listOf("getblockfromhash", "gettransaction") }
     ) {
         val index: Int = getParameter("blockIndex")
-        val request = VeriBlockMessages.GetBlocksRequest.newBuilder()
-            .addFilters(VeriBlockMessages.BlockFilter.newBuilder().setIndex(index))
+        val request = RpcGetBlocksRequest.newBuilder()
+            .addFilters(RpcBlockFilter.newBuilder().setIndex(index))
             .build()
         val result = cliShell.adminService.getBlocks(request)
 
@@ -88,7 +93,7 @@ fun CommandFactory.blockCommands() {
         } else {
             getParameter("mode")
         }
-        val request = VeriBlockMessages.GetBlockTemplateRequest.newBuilder().apply {
+        val request = RpcGetBlockTemplateRequest.newBuilder().apply {
             this.mode = mode
         }
 
@@ -109,7 +114,7 @@ fun CommandFactory.blockCommands() {
         form = "getlastbitcoinblock",
         description = "Returns the last Bitcoin block known by NodeCore"
     ) {
-        val request = VeriBlockMessages.GetLastBitcoinBlockRequest.newBuilder().build()
+        val request = RpcGetLastBitcoinBlockRequest.newBuilder().build()
         val result = cliShell.adminService.getLastBitcoinBlock(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -126,7 +131,7 @@ fun CommandFactory.blockCommands() {
         )
     ) {
         val rawBlock: String = getParameter("rawBlock")
-        val request = VeriBlockMessages.SubmitBlocksRequest.parseFrom(Utility.base64ToBytes(rawBlock))
+        val request = RpcSubmitBlocksRequest.parseFrom(Utility.base64ToBytes(rawBlock))
         val result = cliShell.adminService.submitBlocks(request)
 
         prepareResult(result.success, result.resultsList)

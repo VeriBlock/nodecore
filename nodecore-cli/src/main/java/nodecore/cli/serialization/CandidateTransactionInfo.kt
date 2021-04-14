@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.CandidateTransaction
+import nodecore.api.grpc.RpcCandidateTransaction
 import nodecore.api.grpc.utilities.extensions.toHex
 
 class CandidateTransactionInfo(
-    candidate: CandidateTransaction
+    candidate: RpcCandidateTransaction
 ) {
     val fee = candidate.fee
 

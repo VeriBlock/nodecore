@@ -2,7 +2,7 @@ package org.veriblock.spv.util
 
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcEvent
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -38,7 +38,7 @@ object SpvEventBus {
 
 data class MessageReceivedEvent(
     val peer: SpvPeer,
-    val message: VeriBlockMessages.Event
+    val message: RpcEvent
 )
 
 data class AddressStateChangeEvent(

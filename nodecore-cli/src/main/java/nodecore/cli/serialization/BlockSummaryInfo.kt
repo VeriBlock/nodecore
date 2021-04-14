@@ -7,12 +7,12 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.BlockSummary
+import nodecore.api.grpc.RpcBlockSummary
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.Utility
 
 class BlockSummaryInfo(
-    block: BlockSummary
+    block: RpcBlockSummary
 ) {
     @SerializedName("hash")
     val hash = block.hash.toHex()

@@ -8,7 +8,9 @@
 package org.veriblock.extensions.ledger;
 
 import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.RpcBlockHeader;
+import nodecore.api.grpc.RpcLedgerProofWithContext;
+import nodecore.api.grpc.RpcLedgerProofWithContextOrBuilder;
 import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.utilities.BlockUtility;
 import org.veriblock.core.utilities.Utility;
@@ -155,15 +157,15 @@ public class LedgerProofWithContext {
         return copy;
     }
 
-    public VeriBlockMessages.LedgerProofWithContext.Builder getBuilder() {
-        VeriBlockMessages.LedgerProofWithContext.Builder builder = VeriBlockMessages.LedgerProofWithContext.newBuilder();
+    public RpcLedgerProofWithContext.Builder getBuilder() {
+        RpcLedgerProofWithContext.Builder builder = RpcLedgerProofWithContext.newBuilder();
         builder.setLedgerProof(ledgerProof.getMessageBuilder());
 
         for (int i = 0; i < topPath.length; i++) {
             builder.addLedgerProofContextLayers(ByteString.copyFrom(topPath[i]));
         }
 
-        VeriBlockMessages.BlockHeader.Builder blockHeaderBuilder = VeriBlockMessages.BlockHeader.newBuilder();
+        RpcBlockHeader.Builder blockHeaderBuilder = RpcBlockHeader.newBuilder();
         blockHeaderBuilder.setHeader(ByteString.copyFrom(containingHeader));
         blockHeaderBuilder.setHash(ByteString.copyFrom(Utility.hexToBytes(BlockUtility.hashBlock(containingHeader))));
 
@@ -172,7 +174,7 @@ public class LedgerProofWithContext {
         return builder;
     }
 
-    public static LedgerProofWithContext parseFrom(VeriBlockMessages.LedgerProofWithContextOrBuilder message) {
+    public static LedgerProofWithContext parseFrom(RpcLedgerProofWithContextOrBuilder message) {
         LedgerProof ledgerProof = LedgerProof.parseFrom(message.getLedgerProof());
 
         byte[][] contextLayers = message.getLedgerProofContextLayersList()

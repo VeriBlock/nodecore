@@ -12,7 +12,24 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.CancellationException
 import nodecore.api.grpc.AdminGrpc
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcBitcoinBlockHeader
+import nodecore.api.grpc.RpcBlockFilter
+import nodecore.api.grpc.RpcGetBitcoinBlockIndexRequest
+import nodecore.api.grpc.RpcGetBlocksRequest
+import nodecore.api.grpc.RpcGetInfoRequest
+import nodecore.api.grpc.RpcGetLastBlockRequest
+import nodecore.api.grpc.RpcGetPoPEndorsementsInfoRequest
+import nodecore.api.grpc.RpcGetPoPRewardEstimatesRequest
+import nodecore.api.grpc.RpcGetPopRequest
+import nodecore.api.grpc.RpcGetStateInfoRequest
+import nodecore.api.grpc.RpcGetTransactionsRequest
+import nodecore.api.grpc.RpcLockWalletRequest
+import nodecore.api.grpc.RpcOutput
+import nodecore.api.grpc.RpcPingRequest
+import nodecore.api.grpc.RpcRewardEstimate
+import nodecore.api.grpc.RpcSendCoinsRequest
+import nodecore.api.grpc.RpcSubmitPopRequest
+import nodecore.api.grpc.RpcUnlockWalletRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.createLogger
@@ -59,7 +76,7 @@ class NodeCoreGateway(
         return if (!::blockingStub.isInitialized) {
             false
         } else try {
-            blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).ping(VeriBlockMessages.PingRequest.newBuilder().build())
+            blockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).ping(RpcPingRequest.newBuilder().build())
             true
         } catch (e: StatusRuntimeException) {
             logger.debug("Unable to connect ping NodeCore at this time")
@@ -76,7 +93,7 @@ class NodeCoreGateway(
             val request = checkGrpcError {
                 blockingStub
                     .withDeadlineAfter(5L, TimeUnit.SECONDS)
-                    .getStateInfo(VeriBlockMessages.GetStateInfoRequest.newBuilder().build())
+                    .getStateInfo(RpcGetStateInfoRequest.newBuilder().build())
             }
 
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
@@ -94,7 +111,7 @@ class NodeCoreGateway(
     }
 
     fun getPop(blockNumber: Int?): PopMiningInstruction {
-        val requestBuilder = VeriBlockMessages.GetPopRequest.newBuilder()
+        val requestBuilder = RpcGetPopRequest.newBuilder()
         if (blockNumber != null && blockNumber > 0) {
             requestBuilder.blockNum = blockNumber
         }
@@ -129,16 +146,16 @@ class NodeCoreGateway(
     }
 
     fun submitPop(popMiningTransaction: PopMiningTransaction): String {
-        val blockOfProofBuilder = VeriBlockMessages.BitcoinBlockHeader.newBuilder()
+        val blockOfProofBuilder = RpcBitcoinBlockHeader.newBuilder()
         blockOfProofBuilder.header = ByteString.copyFrom(popMiningTransaction.bitcoinBlockHeaderOfProof)
-        val request = VeriBlockMessages.SubmitPopRequest.newBuilder().apply {
+        val request = RpcSubmitPopRequest.newBuilder().apply {
             endorsedBlockHeader = ByteString.copyFrom(popMiningTransaction.endorsedBlockHeader)
             bitcoinTransaction = ByteString.copyFrom(popMiningTransaction.bitcoinTransaction)
             bitcoinMerklePathToRoot = ByteString.copyFrom(popMiningTransaction.bitcoinMerklePathToRoot)
             setBitcoinBlockHeaderOfProof(blockOfProofBuilder)
             address = ByteString.copyFrom(popMiningTransaction.popMinerAddress)
             for (contextBlockHeader in popMiningTransaction.bitcoinContextBlocks) {
-                val header = VeriBlockMessages.BitcoinBlockHeader.newBuilder().apply {
+                val header = RpcBitcoinBlockHeader.newBuilder().apply {
                     header = ByteString.copyFrom(contextBlockHeader)
                 }.build()
                 addContextBitcoinBlockHeaders(header)
@@ -152,7 +169,7 @@ class NodeCoreGateway(
     }
 
     fun getTransactionConfirmationsById(txId: String): Int? {
-        val request = VeriBlockMessages.GetTransactionsRequest.newBuilder().apply {
+        val request = RpcGetTransactionsRequest.newBuilder().apply {
             addIds(ByteString.copyFrom(txId.asHexBytes()))
         }.build()
         val reply = checkGrpcError {
@@ -165,7 +182,7 @@ class NodeCoreGateway(
     }
 
     fun getPopEndorsementInfo(): List<PopEndorsementInfo> {
-        val request = VeriBlockMessages.GetPoPEndorsementsInfoRequest.newBuilder().apply {
+        val request = RpcGetPoPEndorsementsInfoRequest.newBuilder().apply {
             searchLength = 750
         }.build()
         val reply = blockingStub.getPoPEndorsementsInfo(request)
@@ -175,7 +192,7 @@ class NodeCoreGateway(
     }
 
     fun getBitcoinBlockIndex(blockHeader: ByteArray): Int? {
-        val request = VeriBlockMessages.GetBitcoinBlockIndexRequest.newBuilder().apply {
+        val request = RpcGetBitcoinBlockIndexRequest.newBuilder().apply {
             setBlockHeader(ByteString.copyFrom(blockHeader))
             searchLength = 20
         }.build()
@@ -186,7 +203,7 @@ class NodeCoreGateway(
     }
 
     fun getMinerAddress(): String {
-        val request = VeriBlockMessages.GetInfoRequest.newBuilder().build()
+        val request = RpcGetInfoRequest.newBuilder().build()
         val reply = blockingStub.getInfo(request)
         return reply.defaultAddress.address.toByteArray().toBase58()
     }
@@ -195,14 +212,14 @@ class NodeCoreGateway(
         val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(10, TimeUnit.SECONDS)
-                .getLastBlock(VeriBlockMessages.GetLastBlockRequest.newBuilder().build())
+                .getLastBlock(RpcGetLastBlockRequest.newBuilder().build())
         }
         return VeriBlockHeader(reply.header.header.toByteArray())
     }
 
     fun getBlockHash(height: Int): String? {
-        val request = VeriBlockMessages.GetBlocksRequest.newBuilder().addFilters(
-            VeriBlockMessages.BlockFilter.newBuilder().setIndex(height)
+        val request = RpcGetBlocksRequest.newBuilder().addFilters(
+            RpcBlockFilter.newBuilder().setIndex(height)
         ).build()
 
         val reply = checkGrpcError {
@@ -219,7 +236,7 @@ class NodeCoreGateway(
     }
 
     fun unlockWallet(passphrase: String?): Result {
-        val request = VeriBlockMessages.UnlockWalletRequest.newBuilder().setPassphrase(
+        val request = RpcUnlockWalletRequest.newBuilder().setPassphrase(
             passphrase
         ).build()
         val protocolReply = blockingStub.unlockWallet(request)
@@ -234,7 +251,7 @@ class NodeCoreGateway(
     }
 
     fun lockWallet(): Result {
-        val request = VeriBlockMessages.LockWalletRequest.newBuilder().build()
+        val request = RpcLockWalletRequest.newBuilder().build()
         val protocolReply = blockingStub.lockWallet(request)
         val result = Result()
         if (!protocolReply.success) {
@@ -246,8 +263,8 @@ class NodeCoreGateway(
         return result
     }
 
-    fun getPopEstimates(keystonesToSearch: Int): List<VeriBlockMessages.RewardEstimate> {
-        val request = VeriBlockMessages.GetPoPRewardEstimatesRequest.newBuilder().apply {
+    fun getPopEstimates(keystonesToSearch: Int): List<RpcRewardEstimate> {
+        val request = RpcGetPoPRewardEstimatesRequest.newBuilder().apply {
             this.keystonesToSearch = keystonesToSearch
         }.build()
         val reply = checkGrpcError {
@@ -272,8 +289,8 @@ class NodeCoreGateway(
     }
 
     fun sendCoins(address: String, amount: Long, takeFeeFromOutputs: Boolean): List<String> {
-        val request = VeriBlockMessages.SendCoinsRequest.newBuilder().apply {
-            addAmounts(VeriBlockMessages.Output.newBuilder().apply {
+        val request = RpcSendCoinsRequest.newBuilder().apply {
+            addAmounts(RpcOutput.newBuilder().apply {
                 this.address = ByteStringAddressUtility.createProperByteStringAutomatically(address)
                 this.amount = amount
             })

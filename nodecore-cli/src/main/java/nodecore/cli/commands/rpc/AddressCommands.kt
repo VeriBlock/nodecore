@@ -1,6 +1,10 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcDrainAddressRequest
+import nodecore.api.grpc.RpcGenerateMultisigAddressRequest
+import nodecore.api.grpc.RpcGetNewAddressRequest
+import nodecore.api.grpc.RpcSetDefaultAddressRequest
+import nodecore.api.grpc.RpcValidateAddressRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -24,7 +28,7 @@ fun CommandFactory.addressCommands() {
         ),
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
-        val request = VeriBlockMessages.ValidateAddressRequest.newBuilder().apply {
+        val request = RpcValidateAddressRequest.newBuilder().apply {
             address = ByteStringAddressUtility.createProperByteStringAutomatically(getParameter("address"))
         }.build()
 
@@ -47,7 +51,7 @@ fun CommandFactory.addressCommands() {
         val address: String = getParameter("address")
 
         val result = cliShell.adminService.setDefaultAddress(
-            VeriBlockMessages.SetDefaultAddressRequest.newBuilder()
+            RpcSetDefaultAddressRequest.newBuilder()
                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                 .build()
         )
@@ -65,9 +69,10 @@ fun CommandFactory.addressCommands() {
     ) {
         val count = (getOptionalParameter("count") ?: 1).coerceAtLeast(1)
 
-        val result = cliShell.adminService.getNewAddress(VeriBlockMessages.GetNewAddressRequest.newBuilder()
-            .setCount(count)
-            .build()
+        val result = cliShell.adminService.getNewAddress(
+            RpcGetNewAddressRequest.newBuilder()
+                .setCount(count)
+                .build()
         )
         prepareResult(result.success, result.resultsList) {
             NewAddressPayload(result)
@@ -84,7 +89,7 @@ fun CommandFactory.addressCommands() {
         ),
         suggestedCommands = { listOf("getbalance", "gethistory", "makeunsignedmultisigtx", "submitmultisigtx") }
     ) {
-        val requestBuilder = VeriBlockMessages.GenerateMultisigAddressRequest.newBuilder()
+        val requestBuilder = RpcGenerateMultisigAddressRequest.newBuilder()
         val signatureThreshold: Int = getParameter("signatureThreshold")
         requestBuilder.signatureThresholdM = signatureThreshold
         val addresses = getParameter<List<String>>("csvaddresses")
@@ -110,10 +115,11 @@ fun CommandFactory.addressCommands() {
         val sourceAddress: String = getParameter("sourceAddress")
         val destinationAddress: String = getParameter("destinationAddress")
 
-        val result = cliShell.adminService.drainAddress(VeriBlockMessages.DrainAddressRequest.newBuilder()
-            .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress))
-            .setDestinationAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
-            .build()
+        val result = cliShell.adminService.drainAddress(
+            RpcDrainAddressRequest.newBuilder()
+                .setSourceAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress))
+                .setDestinationAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
+                .build()
         )
         prepareResult(result.success, result.resultsList) {
             TransactionInfo(result.transaction)

@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.SendCoinsReply
+import nodecore.api.grpc.RpcSendCoinsReply
 import nodecore.api.grpc.utilities.extensions.toHex
 
 class SendCoinsPayload(
-    reply: SendCoinsReply
+    reply: RpcSendCoinsReply
 ) {
     @SerializedName("txids")
     val txids = Array(reply.txIdsCount) { index ->

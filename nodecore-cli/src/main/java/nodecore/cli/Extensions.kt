@@ -1,7 +1,7 @@
 package nodecore.cli
 
 import io.grpc.StatusRuntimeException
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcResult
 import nodecore.cli.annotations.CommandServiceType
 import nodecore.cli.commands.rpc.addressCommands
 import nodecore.cli.commands.rpc.balanceCommands
@@ -52,13 +52,13 @@ fun CommandFactory.registerCommands() {
     whitelistCommands()
 }
 
-fun failure(results: List<VeriBlockMessages.Result>) = org.veriblock.shell.core.failure {
+fun failure(results: List<RpcResult>) = org.veriblock.shell.core.failure {
     for (r in results) {
         addMessage(r.code, r.message, r.details, r.error)
     }
 }
 
-fun success(results: List<VeriBlockMessages.Result>) = org.veriblock.shell.core.success {
+fun success(results: List<RpcResult>) = org.veriblock.shell.core.success {
     for (r in results) {
         addMessage(r.code, r.message, r.details, r.error)
     }
@@ -66,7 +66,7 @@ fun success(results: List<VeriBlockMessages.Result>) = org.veriblock.shell.core.
 
 inline fun CommandContext.prepareResult(
     success: Boolean,
-    results: List<VeriBlockMessages.Result>,
+    results: List<RpcResult>,
     payloadSupplier: () -> Any = { EmptyPayload() }
 ): Result {
     return if (!success) {

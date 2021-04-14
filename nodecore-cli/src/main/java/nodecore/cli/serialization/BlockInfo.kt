@@ -7,15 +7,15 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
+import nodecore.api.grpc.RpcBlock
+import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 
 class BlockInfo(
-    block: VeriBlockMessages.Block
+    block: RpcBlock
 ) {
     @SerializedName("hash")
     val hash = block.hash.toHex()
@@ -76,7 +76,7 @@ class BlockInfo(
 
     @SerializedName("regular_transactions")
     val regular_transactions = block.regularTransactionsList.map { transactionUnion ->
-        if (transactionUnion.transactionCase == TransactionUnion.TransactionCase.SIGNED) {
+        if (transactionUnion.transactionCase == RpcTransactionUnion.TransactionCase.SIGNED) {
             transactionUnion.signed.transaction.txId.toHex()
         } else {
             transactionUnion.signedMultisig.transaction.txId.toHex()

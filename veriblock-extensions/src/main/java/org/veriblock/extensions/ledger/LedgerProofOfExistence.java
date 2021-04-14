@@ -7,7 +7,8 @@
 
 package org.veriblock.extensions.ledger;
 
-import nodecore.api.grpc.VeriBlockMessages;
+
+import nodecore.api.grpc.RpcLedgerProofOfExistence;
 
 import java.util.stream.Collectors;
 
@@ -118,13 +119,13 @@ public class LedgerProofOfExistence {
         return ledgerValue.copyOf();
     }
 
-    public static LedgerProofOfExistence parseFrom(VeriBlockMessages.LedgerProofOfExistence message) {
+    public static LedgerProofOfExistence parseFrom(RpcLedgerProofOfExistence message) {
         return new LedgerProofOfExistence(message.getVerticalProofLayersList().stream().map(LedgerProofNode::parseFrom)
                 .collect(Collectors.toList()).toArray(new LedgerProofNode[message.getVerticalProofLayersCount()]));
     }
 
-    public VeriBlockMessages.LedgerProofOfExistence.Builder getMessageBuilder() {
-        VeriBlockMessages.LedgerProofOfExistence.Builder builder = VeriBlockMessages.LedgerProofOfExistence.newBuilder();
+    public RpcLedgerProofOfExistence.Builder getMessageBuilder() {
+        RpcLedgerProofOfExistence.Builder builder = RpcLedgerProofOfExistence.newBuilder();
         for (int i = 0; i < verticalProofLayers.length; i++) {
             builder.addVerticalProofLayers(verticalProofLayers[i].getMessageBuilder());
         }

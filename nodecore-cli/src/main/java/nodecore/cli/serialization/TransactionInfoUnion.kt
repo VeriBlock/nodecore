@@ -6,8 +6,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.TransactionUnion
+import nodecore.api.grpc.RpcTransactionInfoUnion
+import nodecore.api.grpc.RpcTransactionUnion
 
 class TransactionInfoUnion(
     val type: String? = null,
@@ -15,31 +15,31 @@ class TransactionInfoUnion(
     val signed: SignedTransactionInfo? = null
 )
 
-fun TransactionUnion.toTransactionInfoUnion() = when (transactionCase) {
-    TransactionUnion.TransactionCase.UNSIGNED -> TransactionInfoUnion(
+fun RpcTransactionUnion.toTransactionInfoUnion() = when (transactionCase) {
+    RpcTransactionUnion.TransactionCase.UNSIGNED -> TransactionInfoUnion(
         type = "unsigned",
         unsigned = TransactionInfo(unsigned)
     )
-    TransactionUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
+    RpcTransactionUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
         type = "signed",
         signed = signed.toSignedTransactionInfo()
     )
-    TransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
+    RpcTransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
         type = "unknown"
     )
     else -> TransactionInfoUnion()
 }
 
-fun VeriBlockMessages.TransactionInfoUnion.toModel() = when (transactionCase) {
-    VeriBlockMessages.TransactionInfoUnion.TransactionCase.UNSIGNED -> TransactionInfoUnion(
+fun RpcTransactionInfoUnion.toModel() = when (transactionCase) {
+    RpcTransactionInfoUnion.TransactionCase.UNSIGNED -> TransactionInfoUnion(
         type = "unsigned",
         unsigned = TransactionInfo(unsigned.transaction)
     )
-    VeriBlockMessages.TransactionInfoUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
+    RpcTransactionInfoUnion.TransactionCase.SIGNED -> TransactionInfoUnion(
         type = "signed",
         signed = signed.toModel()
     )
-    VeriBlockMessages.TransactionInfoUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
+    RpcTransactionInfoUnion.TransactionCase.TRANSACTION_NOT_SET -> TransactionInfoUnion(
         type = "unknown"
     )
     else -> TransactionInfoUnion()

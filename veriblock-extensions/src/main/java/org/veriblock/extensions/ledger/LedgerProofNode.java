@@ -8,7 +8,8 @@
 package org.veriblock.extensions.ledger;
 
 import com.google.protobuf.ByteString;
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.RpcLedgerProofNode;
+import nodecore.api.grpc.RpcLedgerProofNodeOrBuilder;
 import nodecore.api.grpc.utilities.ByteStringUtility;
 import org.veriblock.core.crypto.Crypto;
 
@@ -103,7 +104,7 @@ public class LedgerProofNode {
         this.type = Type.TERMINATING;
     }
 
-    public static LedgerProofNode parseFrom(VeriBlockMessages.LedgerProofNodeOrBuilder message) {
+    public static LedgerProofNode parseFrom(RpcLedgerProofNodeOrBuilder message) {
         if (message.hasLedgerValue()) {
             // Terminating node
             return new LedgerProofNode(
@@ -230,8 +231,8 @@ public class LedgerProofNode {
         }
     }
 
-    public VeriBlockMessages.LedgerProofNode.Builder getMessageBuilder() {
-        VeriBlockMessages.LedgerProofNode.Builder builder = VeriBlockMessages.LedgerProofNode.newBuilder();
+    public RpcLedgerProofNode.Builder getMessageBuilder() {
+        RpcLedgerProofNode.Builder builder = RpcLedgerProofNode.newBuilder();
 
         builder.setRoute(ByteStringUtility.base59ToByteString(new String(route)));
 

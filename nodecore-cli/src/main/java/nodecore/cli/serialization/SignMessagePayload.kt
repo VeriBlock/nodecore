@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.SignMessageReply
+import nodecore.api.grpc.RpcSignMessageReply
 import nodecore.api.grpc.utilities.extensions.toHex
 
 class SignMessagePayload(
     val address: String,
-    message: SignMessageReply
+    message: RpcSignMessageReply
 ) {
     val signedMessage = message.signedMessage.toHex()
 

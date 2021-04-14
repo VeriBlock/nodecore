@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.MultisigBundle
+import nodecore.api.grpc.RpcMultisigBundle
 
 class MultisigBundleInfo(
-    multisigBundle: MultisigBundle
+    multisigBundle: RpcMultisigBundle
 ) {
     val multisigSlots = Array(multisigBundle.slotsCount) { index ->
         MultisigSlotInfo(multisigBundle.getSlots(index))
