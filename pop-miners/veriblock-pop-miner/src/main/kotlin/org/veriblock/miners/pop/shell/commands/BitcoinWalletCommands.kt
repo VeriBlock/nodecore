@@ -89,9 +89,7 @@ fun CommandFactory.bitcoinWalletCommands(
     ) {
         val address: String = getParameter("address")
         val amount: BigDecimal = getParameter("amount")
-        runBlocking {
-            minerService.sendBitcoinToAddress(address, amount).toShellResult()
-        }
+        minerService.sendBitcoinToAddress(address, amount).toShellResult()
     }
 
     command(

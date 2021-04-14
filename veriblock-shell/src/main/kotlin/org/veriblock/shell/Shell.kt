@@ -10,6 +10,7 @@ package org.veriblock.shell
 
 import com.google.common.base.Stopwatch
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.runBlocking
 import org.jline.reader.Completer
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
@@ -46,6 +47,8 @@ open class Shell(
 
     var running = false
         private set
+
+    var logsMuted = false
 
     private val terminal: Terminal = TerminalBuilder.builder().apply {
         if (customStreams != null) {
@@ -131,7 +134,9 @@ open class Shell(
             val executeResult: Result = try {
                 val commandResult = commandFactory.getInstance(input)
                 context = CommandContext(this, commandResult.command, commandResult.parameters)
-                var result = commandResult.command.action(context)
+                var result = runBlocking {
+                    commandResult.command.action(context)
+                }
 
                 if (!result.isFailed) {
                     if (context.quit) {

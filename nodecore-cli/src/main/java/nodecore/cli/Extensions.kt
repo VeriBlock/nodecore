@@ -86,7 +86,7 @@ fun CommandFactory.cliCommand(
     parameters: List<CommandParameter> = emptyList(),
     suggestedCommands: () -> List<String> = { emptyList() },
     commandServiceType: CommandServiceType = CommandServiceType.SHELL,
-    action: CommandContext.() -> Result
+    action: suspend CommandContext.() -> Result
 ) {
     val command = Command(name, form, description, parameters, suggestedCommands, commandServiceType.name) {
         try {
@@ -104,5 +104,5 @@ fun CommandFactory.rpcCommand(
     description: String,
     parameters: List<CommandParameter> = emptyList(),
     suggestedCommands: () -> List<String> = { emptyList() },
-    action: CommandContext.() -> Result
+    action: suspend CommandContext.() -> Result
 ) = cliCommand(name, form, description, parameters, suggestedCommands, CommandServiceType.RPC, action)

@@ -33,8 +33,14 @@ class ShellAppender private constructor(
 
     override fun append(event: LogEvent) {
         val message = layout.toByteArray(event).toString(Charset.defaultCharset())
-        currentShell?.reader?.printAbove(message)
-            ?: print(message)
+        val currentShell = currentShell
+        if (currentShell != null) {
+            if (!currentShell.logsMuted || event.loggerName == "shell-printing") { // TODO extract to constant
+                currentShell.reader.printAbove(message)
+            }
+        } else {
+            print(message)
+        }
     }
 
     companion object {

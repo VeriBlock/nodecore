@@ -7,11 +7,11 @@ plugins {
 }
 
 dependencies {
-    compile(project(":veriblock-core"))
+    api(project(":veriblock-core"))
 
-    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
-    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
-    implementation("com.google.code.gson:gson:2.8.2")
+    api("org.apache.logging.log4j:log4j-api:2.13.3")
+    api("org.apache.logging.log4j:log4j-core:2.13.3")
+    api("com.google.code.gson:gson:2.8.2")
 
     testImplementation("junit:junit:4.12")
 }

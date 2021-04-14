@@ -60,10 +60,8 @@ fun CommandFactory.diagnosticCommands(
         description = "Returns the average fee per byte in a recent Bitcoin block"
     ) {
         try {
-            val blockFees: Pair<Int, Long>? = runBlocking {
-                withTimeoutOrNull(5_000L) {
-                    minerService.showRecentBitcoinFees()
-                }
+            val blockFees: Pair<Int, Long>? = withTimeoutOrNull(5_000L) {
+                minerService.showRecentBitcoinFees()
             }
             if (blockFees != null) {
                 printInfo("Bitcoin Block #${blockFees.left} -> Average Fee per Byte: ${blockFees.right}")

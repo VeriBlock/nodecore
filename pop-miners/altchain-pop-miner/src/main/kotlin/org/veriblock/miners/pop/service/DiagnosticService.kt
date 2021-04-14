@@ -1,7 +1,6 @@
 package org.veriblock.miners.pop.service
 
 import io.grpc.StatusRuntimeException
-import kotlinx.coroutines.runBlocking
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.MinerConfig
@@ -39,29 +38,27 @@ class DiagnosticService(
         // Check the altchains status
         val plugins = pluginService.getPlugins().filter { it.key != "test" }
         if (plugins.isNotEmpty()) {
-            runBlocking {
-                plugins.forEach {
-                    val chainMonitor = securityInheritingService.getMonitor(it.key)
-                        ?: error("Unable to load altchain monitor ${it.key}") // Shouldn't happen
-                    if (chainMonitor.isAccessible()) {
-                        information.add("SUCCESS - ${it.value.name} connection: Connected to ${it.value.config.host}")
-                        // Configured network
-                        if (chainMonitor.isOnSameNetwork()) {
-                            information.add("SUCCESS - ${it.value.name} configured network: ${it.value.name} & APM are running on the same configured network (${context.networkParameters.name})")
-                        } else {
-                            information.add("FAIL - ${it.value.name} configured network: ${it.value.name} (${chainMonitor.latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
-                        }
-                        // Synchronization
-                        if (chainMonitor.isSynchronized()) {
-                            information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized ${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()}")
-                        } else {
-                            information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()}")
-                        }
+            plugins.forEach {
+                val chainMonitor = securityInheritingService.getMonitor(it.key)
+                    ?: error("Unable to load altchain monitor ${it.key}") // Shouldn't happen
+                if (chainMonitor.isAccessible()) {
+                    information.add("SUCCESS - ${it.value.name} connection: Connected to ${it.value.config.host}")
+                    // Configured network
+                    if (chainMonitor.isOnSameNetwork()) {
+                        information.add("SUCCESS - ${it.value.name} configured network: ${it.value.name} & APM are running on the same configured network (${context.networkParameters.name})")
                     } else {
-                        information.add("FAIL - ${it.value.name} connection: Not connected to ${it.value.config.host}")
-                        information.add("FAIL - ${it.value.name} Unable to determine the synchronization status")
-                        information.add("FAIL - ${it.value.name} unable to determine the configured network")
+                        information.add("FAIL - ${it.value.name} configured network: ${it.value.name} (${chainMonitor.latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network")
                     }
+                    // Synchronization
+                    if (chainMonitor.isSynchronized()) {
+                        information.add("SUCCESS - ${it.value.name} synchronization status: Synchronized ${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()}")
+                    } else {
+                        information.add("FAIL- ${it.value.name} synchronization status: Not synchronized, ${chainMonitor.latestBlockChainInfo.getSynchronizedMessage()}")
+                    }
+                } else {
+                    information.add("FAIL - ${it.value.name} connection: Not connected to ${it.value.config.host}")
+                    information.add("FAIL - ${it.value.name} Unable to determine the synchronization status")
+                    information.add("FAIL - ${it.value.name} unable to determine the configured network")
                 }
             }
         } else {

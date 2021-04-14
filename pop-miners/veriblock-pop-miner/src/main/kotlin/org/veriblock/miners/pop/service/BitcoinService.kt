@@ -323,16 +323,12 @@ class BitcoinService(
         }
     }
 
-    fun getBalance(): Coin = runBlocking {
-        withContext(contextCoroutineScope.coroutineContext) {
-            wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
-        }
+    suspend fun getBalance(): Coin = withContext(contextCoroutineScope.coroutineContext) {
+        wallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE)
     }
 
-    fun getPendingBalance(): Coin = runBlocking {
-        withContext(contextCoroutineScope.coroutineContext) {
-            wallet.getBalance(Wallet.BalanceType.ESTIMATED) - wallet.balance
-        }
+    suspend fun getPendingBalance(): Coin = withContext(contextCoroutineScope.coroutineContext) {
+        wallet.getBalance(Wallet.BalanceType.ESTIMATED) - wallet.balance
     }
 
     fun resetWallet() {

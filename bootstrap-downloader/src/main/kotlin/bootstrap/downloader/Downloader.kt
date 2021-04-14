@@ -240,86 +240,84 @@ fun getDefaultNodecoreDataDir(): String {
     return Paths.get(nodeCoreFolder.toPath().toString(), "bin").toString()
 }
 
-fun main(args: Array<String>) {
-    runBlocking {
-        print(SharedConstants.LICENSE)
-        println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
-        println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
-        println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
-        println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Bootstrap_Downloader")}\n")
+suspend fun main(args: Array<String>) {
+    print(SharedConstants.LICENSE)
+    println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION))
+    println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
+    println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
+    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Bootstrap_Downloader")}\n")
 
-        val options = listOf(
-            bootOption(
-                opt = "n",
-                longOpt = "network",
-                desc = "Specify the target network (testnet / mainnet)",
-                argName = "network",
-                configMapping = "downloader.network"
-            ),
-            bootOption(
-                opt = "u",
-                longOpt = "url",
-                desc = "Specify the download url",
-                argName = "url",
-                configMapping = "downloader.url"
-            ),
-            bootOption(
-                opt = "d",
-                longOpt = "dataDir",
-                desc = "Specify the data directory where NodeCore generated files reside",
-                argName = "dataDir",
-                configMapping = "downloader.dataDir"
-            ),
-            bootOption(
-                opt = "l",
-                longOpt = "localUrl",
-                desc = "Specify if the download url is a local url (true / false)",
-                argName = "localUrl",
-                configMapping = "downloader.localUrl"
-            ),
-            bootOption(
-                opt = "h",
-                desc = "Display all the program arguments",
-                configMapping = "downloader.displayHelp"
-            )
+    val options = listOf(
+        bootOption(
+            opt = "n",
+            longOpt = "network",
+            desc = "Specify the target network (testnet / mainnet)",
+            argName = "network",
+            configMapping = "downloader.network"
+        ),
+        bootOption(
+            opt = "u",
+            longOpt = "url",
+            desc = "Specify the download url",
+            argName = "url",
+            configMapping = "downloader.url"
+        ),
+        bootOption(
+            opt = "d",
+            longOpt = "dataDir",
+            desc = "Specify the data directory where NodeCore generated files reside",
+            argName = "dataDir",
+            configMapping = "downloader.dataDir"
+        ),
+        bootOption(
+            opt = "l",
+            longOpt = "localUrl",
+            desc = "Specify if the download url is a local url (true / false)",
+            argName = "localUrl",
+            configMapping = "downloader.localUrl"
+        ),
+        bootOption(
+            opt = "h",
+            desc = "Display all the program arguments",
+            configMapping = "downloader.displayHelp"
         )
+    )
 
-        val bootOptions = try {
-            bootOptions(options, args)
-        } catch (e: Exception) {
-            logger.error { "Unable to parse the program arguments: ${e.message}, use the -h argument to display the available arguments" }
-            return@runBlocking
-        }
-
-        val config = Configuration(
-            bootOptions = bootOptions
-        ).extract<DownloaderConfig>("downloader") ?: DownloaderConfig()
-
-        if (config.displayHelp) {
-            logger.info { "Available program arguments:" }
-            options.forEach {
-                logger.info { "-${it.opt}: ${it.desc}" }
-            }
-            return@runBlocking
-        }
-
-        val networkDirectory = Paths.get(config.dataDir, config.network).toFile()
-        try {
-            if (networkDirectory.exists() && !networkDirectory.canWrite()) {
-                logger.info { "Unable to write at the $networkDirectory directory" }
-                return@runBlocking
-            }
-        } catch (e: SecurityException) {
-            logger.info { "Unable to write at the $networkDirectory directory: ${e.message}" }
-            return@runBlocking
-        }
-        Downloader(
-            config.url,
-            config.network,
-            config.dataDir,
-            config.localUrl
-        ).downloadBlocks()
+    val bootOptions = try {
+        bootOptions(options, args)
+    } catch (e: Exception) {
+        logger.error { "Unable to parse the program arguments: ${e.message}, use the -h argument to display the available arguments" }
+        return
     }
+
+    val config = Configuration(
+        bootOptions = bootOptions
+    ).extract<DownloaderConfig>("downloader") ?: DownloaderConfig()
+
+    if (config.displayHelp) {
+        logger.info { "Available program arguments:" }
+        options.forEach {
+            logger.info { "-${it.opt}: ${it.desc}" }
+        }
+        return
+    }
+
+    val networkDirectory = Paths.get(config.dataDir, config.network).toFile()
+    try {
+        if (networkDirectory.exists() && !networkDirectory.canWrite()) {
+            logger.info { "Unable to write at the $networkDirectory directory" }
+            return
+        }
+    } catch (e: SecurityException) {
+        logger.info { "Unable to write at the $networkDirectory directory: ${e.message}" }
+        return
+    }
+    Downloader(
+        config.url,
+        config.network,
+        config.dataDir,
+        config.localUrl
+    ).downloadBlocks()
 
     logger.info { "Finished! Press any key to exit..." }
     Scanner(System.`in`).nextLine()

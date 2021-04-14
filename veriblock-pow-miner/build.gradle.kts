@@ -13,8 +13,8 @@ plugins {
 }
 
 dependencies {
-    compile(project(":veriblock-core"))
-    compile(project(":nodecore-ucp"))
+    implementation(project(":veriblock-core"))
+    implementation(project(":nodecore-ucp"))
     implementation("org.apache.logging.log4j:log4j-api:2.13.3")
     implementation("org.apache.logging.log4j:log4j-core:2.13.3")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")

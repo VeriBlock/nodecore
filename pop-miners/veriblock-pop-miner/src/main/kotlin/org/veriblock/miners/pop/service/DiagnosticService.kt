@@ -11,8 +11,7 @@ class DiagnosticService(
     private val bitcoinService: BitcoinService,
     private val nodeCoreService: NodeCoreService
 ) {
-
-    fun collectDiagnosticInformation(): DiagnosticInformation {
+    suspend fun collectDiagnosticInformation(): DiagnosticInformation {
         val information = ArrayList<String>()
 
         // Check the NodeCore status

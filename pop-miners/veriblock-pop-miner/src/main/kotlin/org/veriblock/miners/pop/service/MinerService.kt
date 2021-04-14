@@ -199,7 +199,7 @@ class MinerService(
     fun getOperation(id: String) =
         stateService.getOperation(id)
 
-    fun checkReadyConditions(): CheckResult {
+    suspend fun checkReadyConditions(): CheckResult {
         // Verify if the miner is shutting down
         if (isShuttingDown) {
             return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
@@ -245,7 +245,7 @@ class MinerService(
         return CheckResult.Success()
     }
 
-    fun mine(blockNumber: Int?): MineResult {
+    suspend fun mine(blockNumber: Int?): MineResult {
         // Verify all the mine pre-conditions
         val conditionResult = checkReadyConditions()
         if (conditionResult is CheckResult.Failure) {
@@ -266,7 +266,7 @@ class MinerService(
         return result
     }
 
-    fun resubmit(id: String): Result {
+    suspend fun resubmit(id: String): Result {
         // Verify all the mine pre-conditions
         val conditionResult = checkReadyConditions()
         if (conditionResult is CheckResult.Failure) {
@@ -327,10 +327,10 @@ class MinerService(
         }
     }
 
-    fun getBitcoinBalance(): Coin =
+    suspend fun getBitcoinBalance(): Coin =
         bitcoinService.getBalance()
 
-    fun getBitcoinPendingBalance(): Coin =
+    suspend fun getBitcoinPendingBalance(): Coin =
         bitcoinService.getPendingBalance()
 
     fun getLastBitcoinBlock(): StoredBlock =

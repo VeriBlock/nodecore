@@ -63,17 +63,15 @@ fun CommandFactory.spvCommands(
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(amount)
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
-        val result = runBlocking {
-            context.spvService.sendCoins(
-                sourceAddress = sourceAddress?.asLightAddress(),
-                outputs = listOf(
-                    Output(
-                        destinationAddress.asLightAddress(),
-                        atomicAmount.asCoin()
-                    )
+        val result = context.spvService.sendCoins(
+            sourceAddress = sourceAddress?.asLightAddress(),
+            outputs = listOf(
+                Output(
+                    destinationAddress.asLightAddress(),
+                    atomicAmount.asCoin()
                 )
             )
-        }
+        )
         printInfo("Transaction ids:")
         displayResult(result.map { it.toString() })
         success()
