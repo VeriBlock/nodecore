@@ -7,12 +7,12 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyReply
+import nodecore.api.grpc.RpcDumpPrivateKeyReply
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class PrivateKeyInfo(
-    reply: DumpPrivateKeyReply
+    reply: RpcDumpPrivateKeyReply
 ) {
     @SerializedName("address")
     val address = reply.address.toProperAddressType()

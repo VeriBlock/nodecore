@@ -1,7 +1,9 @@
 package org.veriblock.spv.net
 
 import com.google.protobuf.ByteString
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcEvent
+import nodecore.api.grpc.RpcNotFound
+import nodecore.api.grpc.RpcTransactionUnion
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
@@ -21,16 +23,16 @@ class P2PService(
             val transaction = pendingTransactionContainer.getTransaction(txId)
             if (transaction != null) {
                 logger.debug("Found a transaction for the given transaction id: $txId")
-                val builder = VeriBlockMessages.Event.newBuilder()
+                val builder = RpcEvent.newBuilder()
                     .setId(nextMessageId())
                     .setAcknowledge(false)
                 when (transaction.transactionTypeIdentifier) {
                     TransactionTypeIdentifier.STANDARD -> builder.setTransaction(
-                        VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters))
+                        RpcTransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters))
                     )
                     TransactionTypeIdentifier.MULTISIG -> throw UnsupportedOperationException()
                     TransactionTypeIdentifier.PROOF_OF_PROOF -> builder.setTransaction(
-                        VeriBlockMessages.TransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters))
+                        RpcTransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(networkParameters))
                     )
                 }
                 try {
@@ -41,13 +43,13 @@ class P2PService(
                 }
             } else {
                 logger.debug("Couldn't find a transaction for the given id $txId")
-                val builder = VeriBlockMessages.Event.newBuilder()
+                val builder = RpcEvent.newBuilder()
                     .setId(nextMessageId())
                     .setAcknowledge(false)
                     .setNotFound(
-                        VeriBlockMessages.NotFound.newBuilder()
+                        RpcNotFound.newBuilder()
                             .setId(ByteString.copyFrom(txId.bytes))
-                            .setType(VeriBlockMessages.NotFound.Type.TX)
+                            .setType(RpcNotFound.Type.TX)
                     )
                 try {
                     sender.sendMessage(builder.build())

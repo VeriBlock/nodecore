@@ -1,9 +1,9 @@
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.AbandonTransactionReply
+import nodecore.api.grpc.RpcAbandonTransactionReply
 
 class AbandonTransactionsFromAddressInfo(
-    reply: AbandonTransactionReply
+    reply: RpcAbandonTransactionReply
 ) {
     val abandonedTransactionsCount = reply.abandonedTransactionsCount
 

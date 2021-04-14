@@ -1,7 +1,26 @@
 package nodecore.cli.commands.rpc
 
 import com.google.protobuf.ByteString
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcAbandonAddressTransactionsRequest
+import nodecore.api.grpc.RpcAbandonTransactionRequest
+import nodecore.api.grpc.RpcAddressIndexPair
+import nodecore.api.grpc.RpcGetPendingTransactionsRequest
+import nodecore.api.grpc.RpcGetTransactionsRequest
+import nodecore.api.grpc.RpcMakeUnsignedMultisigTxRequest
+import nodecore.api.grpc.RpcMultisigBundle
+import nodecore.api.grpc.RpcMultisigSlot
+import nodecore.api.grpc.RpcOutput
+import nodecore.api.grpc.RpcRebroadcastAddressTransactionsRequest
+import nodecore.api.grpc.RpcRebroadcastTransactionRequest
+import nodecore.api.grpc.RpcSendCoinsRequest
+import nodecore.api.grpc.RpcSetTransactionFeeRequest
+import nodecore.api.grpc.RpcSignedMultisigTransaction
+import nodecore.api.grpc.RpcSubmitMultisigTxRequest
+import nodecore.api.grpc.RpcSubmitTransactionsRequest
+import nodecore.api.grpc.RpcTransaction
+import nodecore.api.grpc.RpcTransactionSet
+import nodecore.api.grpc.RpcTransactionUnion
+import nodecore.api.grpc.RpcUnsignedMultisigTransactionWithIndex
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asHexByteString
@@ -35,9 +54,10 @@ fun CommandFactory.transactionCommands() {
         )
     ) {
         val txid: String = getParameter("txId")
-        val request = VeriBlockMessages.AbandonTransactionRequest.newBuilder()
-            .setTxids(VeriBlockMessages.TransactionSet.newBuilder()
-                .addTxids(txid.asHexByteString())
+        val request = RpcAbandonTransactionRequest.newBuilder()
+            .setTxids(
+                RpcTransactionSet.newBuilder()
+                    .addTxids(txid.asHexByteString())
             ).build()
         val result = cliShell.adminService.abandonTransactionRequest(request)
 
@@ -55,8 +75,8 @@ fun CommandFactory.transactionCommands() {
             )
     ) {
         val txid: String = getParameter("txId")
-        val request = VeriBlockMessages.RebroadcastTransactionRequest.newBuilder()
-                .setTxids(VeriBlockMessages.TransactionSet.newBuilder()
+        val request = RpcRebroadcastTransactionRequest.newBuilder()
+                .setTxids(RpcTransactionSet.newBuilder()
                         .addTxids(ByteString.copyFrom(Utility.hexToBytes(txid)))
                 ).build()
         val result = cliShell.adminService.rebroadcastTransactionRequest(request)
@@ -77,11 +97,11 @@ fun CommandFactory.transactionCommands() {
     ) {
         val address: String = getParameter("address")
         val index: Long = getParameter("index") ?: 0
-        val request = VeriBlockMessages.AbandonTransactionRequest.newBuilder()
+        val request = RpcAbandonTransactionRequest.newBuilder()
             .setAddresses(
-                VeriBlockMessages.AbandonAddressTransactionsRequest.newBuilder()
+                RpcAbandonAddressTransactionsRequest.newBuilder()
                     .addAddresses(
-                        VeriBlockMessages.AddressIndexPair.newBuilder()
+                        RpcAddressIndexPair.newBuilder()
                             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                             .setStartingSignatureIndex(index)))
             .build()
@@ -104,14 +124,16 @@ fun CommandFactory.transactionCommands() {
     ) {
         val address: String = getParameter("address")
         val index: Long = getParameter("index") ?: 0
-        val request = VeriBlockMessages.RebroadcastTransactionRequest.newBuilder()
-                .setAddresses(
-                        VeriBlockMessages.RebroadcastAddressTransactionsRequest.newBuilder()
-                                .addAddresses(
-                                        VeriBlockMessages.AddressIndexPair.newBuilder()
-                                                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
-                                                .setStartingSignatureIndex(index)))
-                .build()
+        val request = RpcRebroadcastTransactionRequest.newBuilder()
+            .setAddresses(
+                RpcRebroadcastAddressTransactionsRequest.newBuilder()
+                    .addAddresses(
+                        RpcAddressIndexPair.newBuilder()
+                            .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
+                            .setStartingSignatureIndex(index)
+                    )
+            )
+            .build()
 
         val result = cliShell.adminService.rebroadcastTransactionRequest(request)
 
@@ -126,7 +148,7 @@ fun CommandFactory.transactionCommands() {
         description = "Returns the transactions pending on the network",
         suggestedCommands = { listOf("send", "getbalance", "gethistory", "sigindex") }
     ) {
-        val request = VeriBlockMessages.GetPendingTransactionsRequest.newBuilder().build()
+        val request = RpcGetPendingTransactionsRequest.newBuilder().build()
         val result = cliShell.adminService.getPendingTransactions(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -146,7 +168,7 @@ fun CommandFactory.transactionCommands() {
     ) {
         val transactionId: String = getParameter("txId")
         val searchLength: Int? = getOptionalParameter("searchLength")
-        val request = VeriBlockMessages.GetTransactionsRequest.newBuilder()
+        val request = RpcGetTransactionsRequest.newBuilder()
             .addIds(transactionId.asHexByteString())
 
         if (searchLength != null) {
@@ -178,12 +200,14 @@ fun CommandFactory.transactionCommands() {
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
         val takeFeeFromOutputs: Boolean? = getOptionalParameter("takeFeeFromOutputs")
 
-        val request = VeriBlockMessages.SendCoinsRequest.newBuilder()
+        val request = RpcSendCoinsRequest.newBuilder()
 
         if (AddressUtility.isValidStandardOrMultisigAddress(destinationAddress)) {
-            request.addAmounts(VeriBlockMessages.Output.newBuilder()
-                .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
-                .setAmount(atomicAmount))
+            request.addAmounts(
+                RpcOutput.newBuilder()
+                    .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
+                    .setAmount(atomicAmount)
+            )
 
             if (sourceAddress != null && AddressUtility.isValidStandardAddress(sourceAddress)) {
                 request.sourceAddress = ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress)
@@ -212,7 +236,7 @@ fun CommandFactory.transactionCommands() {
         )
     ) {
         val fee = getParameter<Long>("transactionFee")
-        val request = VeriBlockMessages.SetTransactionFeeRequest.newBuilder().setAmount(fee).build()
+        val request = RpcSetTransactionFeeRequest.newBuilder().setAmount(fee).build()
         val result = cliShell.adminService.setTransactionFee(request)
 
         prepareResult(result.success, result.resultsList)
@@ -238,9 +262,9 @@ fun CommandFactory.transactionCommands() {
         val transactionFee: String? = getOptionalParameter("transactionFee")
         val signatureIndex: Int? = getOptionalParameter("signatureIndex")
 
-        val request = VeriBlockMessages.MakeUnsignedMultisigTxRequest.newBuilder()
+        val request = RpcMakeUnsignedMultisigTxRequest.newBuilder()
             .setSourceMultisigAddress(ByteStringAddressUtility.createProperByteStringAutomatically(sourceAddress))
-            .addAmounts(VeriBlockMessages.Output.newBuilder()
+            .addAmounts(RpcOutput.newBuilder()
                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(destinationAddress))
                 .setAmount(atomicAmount))
 
@@ -267,8 +291,8 @@ fun CommandFactory.transactionCommands() {
         )
     ) {
         val rawTransaction: String = getParameter("rawTransaction")
-        val request = VeriBlockMessages.SubmitTransactionsRequest
-            .newBuilder().addTransactions(VeriBlockMessages.TransactionUnion.parseFrom(rawTransaction.asHexBytes()))
+        val request = RpcSubmitTransactionsRequest
+            .newBuilder().addTransactions(RpcTransactionUnion.parseFrom(rawTransaction.asHexBytes()))
             .build()
         val result = cliShell.adminService.submitTransactions(request)
 
@@ -298,25 +322,25 @@ fun CommandFactory.transactionCommands() {
         if (publicKeysOrAddresses.size != signaturesHex.size) {
             failure("-1", "Invalid public keys / addresses and signatures provided!", "There must be an equivalent number of provided public keys / addresses as there are signatures. Note that a blank multisig slot (no public key, no slot) ")
         } else {
-            var unsignedTransaction: VeriBlockMessages.UnsignedMultisigTransactionWithIndex? = null
+            var unsignedTransaction: RpcUnsignedMultisigTransactionWithIndex? = null
             try {
-                unsignedTransaction = VeriBlockMessages.UnsignedMultisigTransactionWithIndex.parseFrom(unsignedTransactionBytes)
+                unsignedTransaction = RpcUnsignedMultisigTransactionWithIndex.parseFrom(unsignedTransactionBytes)
             } catch (e: Exception) {
                 failure("-1", "Unable to parse the provided raw multisig transaction!", e.message.toString())
             }
 
             if (unsignedTransaction != null) {
-                if (unsignedTransaction.unsignedMultisigTansaction.type != VeriBlockMessages.Transaction.Type.MULTISIG) {
+                if (unsignedTransaction.unsignedMultisigTansaction.type != RpcTransaction.Type.MULTISIG) {
                     failure("-1", "Invalid transaction provided!", "The provided transaction is not a multisig transaction!")
                 } else {
-                    val signedMultisigTxBuilder = VeriBlockMessages.SignedMultisigTransaction.newBuilder().apply {
+                    val signedMultisigTxBuilder = RpcSignedMultisigTransaction.newBuilder().apply {
                         signatureIndex = unsignedTransaction.signatureIndex
                         transaction = unsignedTransaction.unsignedMultisigTansaction
                     }
 
-                    val multisigBundleBuilder = VeriBlockMessages.MultisigBundle.newBuilder()
+                    val multisigBundleBuilder = RpcMultisigBundle.newBuilder()
                     for (i in publicKeysOrAddresses.indices) {
-                        val multisigSlotBuilder = VeriBlockMessages.MultisigSlot.newBuilder()
+                        val multisigSlotBuilder = RpcMultisigSlot.newBuilder()
                         if (AddressUtility.isValidStandardAddress(publicKeysOrAddresses[i])) {
                             multisigSlotBuilder.ownerAddress = ByteStringUtility.base58ToByteString(publicKeysOrAddresses[i])
                             multisigSlotBuilder.populated = false
@@ -333,7 +357,7 @@ fun CommandFactory.transactionCommands() {
                     }
                     signedMultisigTxBuilder.signatureBundle = multisigBundleBuilder.build()
 
-                    val request = VeriBlockMessages.SubmitMultisigTxRequest.newBuilder().apply {
+                    val request = RpcSubmitMultisigTxRequest.newBuilder().apply {
                         multisigTransaction = signedMultisigTxBuilder.build()
                     }
                     val result = cliShell.adminService.submitMultisigTx(request.build())

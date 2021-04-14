@@ -7,7 +7,8 @@
 
 package org.veriblock.extensions.ledger;
 
-import nodecore.api.grpc.VeriBlockMessages;
+import nodecore.api.grpc.RpcLedgerProof;
+import nodecore.api.grpc.RpcLedgerProofOrBuilder;
 
 /**
  * A LedgerProof contains either a LedgerProofOfExistence or LedgerProofOfNonexistence.
@@ -89,8 +90,8 @@ public class LedgerProof {
         UNKNOWN // The address's existence isn't either proven or disproven
     }
 
-    public VeriBlockMessages.LedgerProof.Builder getMessageBuilder() {
-        VeriBlockMessages.LedgerProof.Builder builder = VeriBlockMessages.LedgerProof.newBuilder();
+    public RpcLedgerProof.Builder getMessageBuilder() {
+        RpcLedgerProof.Builder builder = RpcLedgerProof.newBuilder();
         if (ledgerProofOfExistence != null) {
             builder.setProofOfExistence(ledgerProofOfExistence.getMessageBuilder());
         } else {
@@ -100,7 +101,7 @@ public class LedgerProof {
         return builder;
     }
 
-    public static LedgerProof parseFrom(VeriBlockMessages.LedgerProofOrBuilder message) {
+    public static LedgerProof parseFrom(RpcLedgerProofOrBuilder message) {
         if (message.hasProofOfExistence()) {
             return new LedgerProof(LedgerProofOfExistence.parseFrom(message.getProofOfExistence()));
         } else {

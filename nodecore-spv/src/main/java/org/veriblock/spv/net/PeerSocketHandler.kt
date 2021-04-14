@@ -21,7 +21,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.launch
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcEvent
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.spv.serialization.MessageSerializer.deserialize
@@ -45,7 +45,7 @@ class PeerSocketHandler(
     private lateinit var inputJob: Job
     private lateinit var outputJob: Job
 
-    private val writeQueue: Channel<VeriBlockMessages.Event> = Channel(1100)
+    private val writeQueue: Channel<RpcEvent> = Channel(1100)
     private val running = AtomicBoolean(false)
 
     fun isRunning(): Boolean {
@@ -77,7 +77,7 @@ class PeerSocketHandler(
         }
     }
 
-    fun write(message: VeriBlockMessages.Event) {
+    fun write(message: RpcEvent) {
         logger.debug { "Sending ${message.resultsCase.name} message to ${peer.address}" }
         try {
             val wasAdded = writeQueue.offer(message)

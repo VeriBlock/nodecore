@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcBlock
 
 class BlocksPayload(
-    list: List<VeriBlockMessages.Block>
+    list: List<RpcBlock>
 ) {
     val blocks = list.map { block ->
         BlockInfo(block)

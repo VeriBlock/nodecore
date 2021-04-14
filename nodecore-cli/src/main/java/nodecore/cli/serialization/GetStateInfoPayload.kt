@@ -7,10 +7,10 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.GetStateInfoReply
+import nodecore.api.grpc.RpcGetStateInfoReply
 
 class GetStateInfoPayload(
-    reply: GetStateInfoReply
+    reply: RpcGetStateInfoReply
 ) {
     @SerializedName("blockchain_state")
     val blockchainState = reply.blockchainState.state.name

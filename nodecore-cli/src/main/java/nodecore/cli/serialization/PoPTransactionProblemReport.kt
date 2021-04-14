@@ -6,15 +6,15 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcPoPTransactionProblemReport
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 
 class PoPTransactionProblemReport(
-    report: VeriBlockMessages.PoPTransactionProblemReport)
-{
+    report: RpcPoPTransactionProblemReport
+) {
     val address = report.address?.let {
         it.toProperAddressType()
     }

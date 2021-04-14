@@ -1,6 +1,8 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcClearAllowedRequest
+import nodecore.api.grpc.RpcListAllowedRequest
+import nodecore.api.grpc.RpcSetAllowedRequest
 import nodecore.cli.cliShell
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
@@ -19,8 +21,8 @@ fun CommandFactory.whitelistCommands() {
         )
     ) {
         val value: String = getParameter("address")
-        val request = VeriBlockMessages.SetAllowedRequest.newBuilder()
-            .setCommand(VeriBlockMessages.SetAllowedRequest.Command.ADD)
+        val request = RpcSetAllowedRequest.newBuilder()
+            .setCommand(RpcSetAllowedRequest.Command.ADD)
             .setValue(value)
             .build()
         val result = cliShell.adminService.setAllowed(request)
@@ -33,7 +35,7 @@ fun CommandFactory.whitelistCommands() {
         form = "clearallowed",
         description = "Clears the list of allowed addresses"
     ) {
-        val request = VeriBlockMessages.ClearAllowedRequest.newBuilder().build()
+        val request = RpcClearAllowedRequest.newBuilder().build()
         val result = cliShell.adminService.clearAllowed(request)
 
         prepareResult(result.success, result.resultsList)
@@ -44,7 +46,7 @@ fun CommandFactory.whitelistCommands() {
         form = "listallowed",
         description = "Returns a list of allowed addresses"
     ) {
-        val request = VeriBlockMessages.ListAllowedRequest.newBuilder().build()
+        val request = RpcListAllowedRequest.newBuilder().build()
         val result = cliShell.adminService.listAllowed(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -61,8 +63,8 @@ fun CommandFactory.whitelistCommands() {
         )
     ) {
         val value: String = getParameter("address")
-        val request = VeriBlockMessages.SetAllowedRequest.newBuilder()
-            .setCommand(VeriBlockMessages.SetAllowedRequest.Command.REMOVE)
+        val request = RpcSetAllowedRequest.newBuilder()
+            .setCommand(RpcSetAllowedRequest.Command.REMOVE)
             .setValue(value)
             .build()
         val result = cliShell.adminService.setAllowed(request)

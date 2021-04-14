@@ -7,10 +7,10 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.PoolConfiguration
+import nodecore.api.grpc.RpcPoolConfiguration
 
 class PoolConfigurationPayload(
-    message: PoolConfiguration
+    message: RpcPoolConfiguration
 ) {
     val solo = message.solo
 

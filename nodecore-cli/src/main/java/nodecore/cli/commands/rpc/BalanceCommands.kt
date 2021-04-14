@@ -1,6 +1,7 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcGetBalanceRequest
+import nodecore.api.grpc.RpcGetBalanceUnlockScheduleRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -22,7 +23,7 @@ fun CommandFactory.balanceCommands() {
         suggestedCommands = { listOf("gethistory", "getnewaddress") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.GetBalanceRequest.newBuilder()
+        val request = RpcGetBalanceRequest.newBuilder()
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
@@ -43,7 +44,7 @@ fun CommandFactory.balanceCommands() {
         suggestedCommands = { listOf("getbalance") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.GetBalanceUnlockScheduleRequest.newBuilder()
+        val request = RpcGetBalanceUnlockScheduleRequest.newBuilder()
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }

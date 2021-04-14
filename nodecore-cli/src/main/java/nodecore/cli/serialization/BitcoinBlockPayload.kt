@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockReply
+import nodecore.api.grpc.RpcGetLastBitcoinBlockReply
 import nodecore.api.grpc.utilities.extensions.toHex
 
 class BitcoinBlockPayload(
-    reply: GetLastBitcoinBlockReply
+    reply: RpcGetLastBitcoinBlockReply
 ) {
     @SerializedName("header")
     val header = reply.header.toHex()

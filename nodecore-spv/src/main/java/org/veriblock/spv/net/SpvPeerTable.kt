@@ -15,9 +15,11 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.*
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.Event.ResultsCase
-import nodecore.api.grpc.VeriBlockMessages.TransactionAnnounce
+import nodecore.api.grpc.RpcAdvertiseTransaction
+import nodecore.api.grpc.RpcEvent
+import nodecore.api.grpc.RpcEvent.ResultsCase
+import nodecore.api.grpc.RpcGetStateInfoRequest
+import nodecore.api.grpc.RpcTransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
@@ -288,7 +290,7 @@ class SpvPeerTable(
         peer.setFilter(bloomFilter)
 
         peer.sendMessage {
-            stateInfoRequest = VeriBlockMessages.GetStateInfoRequest.getDefaultInstance()
+            stateInfoRequest = RpcGetStateInfoRequest.getDefaultInstance()
         }
 
         if (downloadPeer == null) {
@@ -304,7 +306,7 @@ class SpvPeerTable(
         }
     }
 
-    private fun onMessageReceived(message: VeriBlockMessages.Event, sender: SpvPeer) {
+    private fun onMessageReceived(message: RpcEvent, sender: SpvPeer) {
         try {
             logger.debug("Message Received messageId: ${message.id}, from: ${sender.address}")
             incomingQueue.offer(NetworkMessage(sender, message))
@@ -317,14 +319,14 @@ class SpvPeerTable(
 
     fun advertise(transaction: Transaction) {
         val advertise = buildMessage {
-            advertiseTx = VeriBlockMessages.AdvertiseTransaction.newBuilder()
+            advertiseTx = RpcAdvertiseTransaction.newBuilder()
                 .addTransactions(
-                    TransactionAnnounce.newBuilder()
+                    RpcTransactionAnnounce.newBuilder()
                         .setType(
                             if (transaction.transactionTypeIdentifier === TransactionTypeIdentifier.PROOF_OF_PROOF) {
-                                TransactionAnnounce.Type.PROOF_OF_PROOF
+                                RpcTransactionAnnounce.Type.PROOF_OF_PROOF
                             } else {
-                                TransactionAnnounce.Type.NORMAL
+                                RpcTransactionAnnounce.Type.NORMAL
                             }
                         )
                         .setTxId(ByteString.copyFrom(transaction.txId.bytes))
@@ -342,9 +344,9 @@ class SpvPeerTable(
     }
 
     fun requestAllMessages(
-        event: VeriBlockMessages.Event,
+        event: RpcEvent,
         timeoutInMillis: Long = 5000L
-    ): Flow<VeriBlockMessages.Event> = channelFlow {
+    ): Flow<RpcEvent> = channelFlow {
         // Perform the request for all the peers asynchronously
         // TODO: consider a less expensive approach such as asking a random peer. There can be peer behavior score weighting and/or retries.
         peers.values.map { peer ->
@@ -359,9 +361,9 @@ class SpvPeerTable(
     }
 
     suspend fun requestMessage(
-        event: VeriBlockMessages.Event,
+        event: RpcEvent,
         timeoutInMillis: Long = 5000L
-    ): VeriBlockMessages.Event = withTimeout(timeoutInMillis) {
+    ): RpcEvent = withTimeout(timeoutInMillis) {
         // Create a flow that emits in execution order
         val allMessagesFlow = requestAllMessages(event, timeoutInMillis)
         // Choose the first one to complete
@@ -369,10 +371,10 @@ class SpvPeerTable(
     }
 
     suspend fun requestMessage(
-        event: VeriBlockMessages.Event,
+        event: RpcEvent,
         timeoutInMillis: Long = 5000L,
-        quantifier: ((VeriBlockMessages.Event) -> Int)
-    ): VeriBlockMessages.Event = coroutineScope {
+        quantifier: ((RpcEvent) -> Int)
+    ): RpcEvent = coroutineScope {
         // Perform the request for all the peers asynchronously
         peers.values.map {
             async {

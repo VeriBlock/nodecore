@@ -1,11 +1,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
+import nodecore.api.grpc.RpcGetBalanceReply
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BalancePayload(
-    reply: GetBalanceReply
+    reply: RpcGetBalanceReply
 ) {
     @SerializedName("confirmed")
     val confirmed = reply.confirmedList.map {

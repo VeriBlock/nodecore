@@ -1,10 +1,10 @@
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.RebroadcastTransactionReply
+import nodecore.api.grpc.RpcRebroadcastTransactionReply
 import org.veriblock.core.utilities.extensions.toHex
 
 class RebroadcastTransactionFromTxIDInfo(
-    reply: RebroadcastTransactionReply
+    reply: RpcRebroadcastTransactionReply
 ) {
     val rebroadcastTransactionsCount = reply.rebroadcastTransactionsCount
 

@@ -1,6 +1,10 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcGetDiagnosticInfoRequest
+import nodecore.api.grpc.RpcGetHistoryRequest
+import nodecore.api.grpc.RpcGetInfoRequest
+import nodecore.api.grpc.RpcGetPeerInfoRequest
+import nodecore.api.grpc.RpcGetStateInfoRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -20,7 +24,7 @@ fun CommandFactory.infoCommands() {
         form = "getdiagnosticinfo",
         description = "Returns diagnostic info about the NodeCore instance"
     ) {
-        val request = VeriBlockMessages.GetDiagnosticInfoRequest.newBuilder().build()
+        val request = RpcGetDiagnosticInfoRequest.newBuilder().build()
         val result = cliShell.adminService.getDiagnosticInfo(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -34,7 +38,7 @@ fun CommandFactory.infoCommands() {
         description = "Returns information about the node and the current blockchain",
         suggestedCommands = { listOf("getbalance", "gettransaction", "getblockfromindex", "getblockfromhash", "getstateinfo") }
     ) {
-        val request = VeriBlockMessages.GetInfoRequest.newBuilder().build()
+        val request = RpcGetInfoRequest.newBuilder().build()
         val result = cliShell.adminService.getInfo(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -48,7 +52,7 @@ fun CommandFactory.infoCommands() {
         description = "Returns a list of connected peers",
         suggestedCommands = { listOf("addnode", "removenode") }
     ) {
-        val request = VeriBlockMessages.GetPeerInfoRequest.newBuilder().build()
+        val request = RpcGetPeerInfoRequest.newBuilder().build()
         val result = cliShell.adminService.getPeerInfo(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -62,7 +66,7 @@ fun CommandFactory.infoCommands() {
         description = "Returns blockchain, operating, and network state information",
         suggestedCommands = { listOf("getinfo") }
     ) {
-        val request = VeriBlockMessages.GetStateInfoRequest.newBuilder().build()
+        val request = RpcGetStateInfoRequest.newBuilder().build()
         val result = cliShell.adminService.getStateInfo(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -80,7 +84,7 @@ fun CommandFactory.infoCommands() {
         suggestedCommands = { listOf("getbalance", "gettransaction") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.GetHistoryRequest.newBuilder()
+        val request = RpcGetHistoryRequest.newBuilder()
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }

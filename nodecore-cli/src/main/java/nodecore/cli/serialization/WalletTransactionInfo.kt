@@ -8,7 +8,7 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import com.opencsv.bean.CsvBindByName
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcWalletTransaction
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.BlockUtility
@@ -18,7 +18,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class WalletTransactionInfo(
-    transaction: VeriBlockMessages.WalletTransaction
+    transaction: RpcWalletTransaction
 ) {
     @CsvBindByName
     @SerializedName("transaction_id")

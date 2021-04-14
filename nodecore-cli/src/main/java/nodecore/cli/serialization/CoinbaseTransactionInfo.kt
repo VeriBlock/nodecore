@@ -7,12 +7,12 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.CoinbaseTransaction
+import nodecore.api.grpc.RpcCoinbaseTransaction
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.Utility
 
 class CoinbaseTransactionInfo(
-    coinbaseTransaction: CoinbaseTransaction
+    coinbaseTransaction: RpcCoinbaseTransaction
 ) {
     @SerializedName("pow_coinbase_amount")
     val powCoinbaseAmount = Utility.formatAtomicLongWithDecimal(coinbaseTransaction.powCoinbaseAmount)

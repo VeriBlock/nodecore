@@ -7,10 +7,10 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcPoolStats
 
 class PoolStatsPayload(
-    message: VeriBlockMessages.PoolStats
+    message: RpcPoolStats
 ) {
     @SerializedName("current_round")
     val currentRound = message.currentRound

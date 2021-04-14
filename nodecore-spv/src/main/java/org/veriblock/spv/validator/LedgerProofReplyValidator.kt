@@ -1,6 +1,6 @@
 package org.veriblock.spv.validator
 
-import nodecore.api.grpc.VeriBlockMessages.LedgerProofReply.LedgerProofResult
+import nodecore.api.grpc.RpcLedgerProofReply
 import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.extensions.ledger.LedgerProofWithContext
@@ -10,7 +10,7 @@ private val logger = createLogger {}
 
 object LedgerProofReplyValidator {
     @JvmStatic
-    fun validate(ledgerProofResult: LedgerProofResult): Boolean {
+    fun validate(ledgerProofResult: RpcLedgerProofReply.LedgerProofResult): Boolean {
         try {
             LedgerProofWithContext.parseFrom(
                 ledgerProofResult.ledgerProofWithContext

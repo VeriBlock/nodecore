@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
-import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
-import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
+import nodecore.api.grpc.RpcGetVeriBlockPublicationsReply
+import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import org.veriblock.core.*
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
@@ -351,7 +351,7 @@ class SpvService(
         pendingTransactionContainer.getTransactionInfo(it)
     }
 
-    suspend fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest): GetVeriBlockPublicationsReply {
+    suspend fun getVeriBlockPublications(getVeriBlockPublicationsRequest: RpcGetVeriBlockPublicationsRequest): RpcGetVeriBlockPublicationsReply {
         val request = buildMessage {
             veriblockPublicationsRequest = getVeriBlockPublicationsRequest
         }

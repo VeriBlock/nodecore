@@ -7,7 +7,8 @@
 
 package org.veriblock.extensions.ledger;
 
-import nodecore.api.grpc.VeriBlockMessages;
+
+import nodecore.api.grpc.RpcLedgerValue;
 
 import java.util.Objects;
 
@@ -38,7 +39,7 @@ public class LedgerValue {
     }
 
 
-    public LedgerValue(VeriBlockMessages.LedgerValue message) {
+    public LedgerValue(RpcLedgerValue message) {
         this(message.getAvailableAtomicUnits(), 0L, message.getSignatureIndex());
 
         if (_availableAtomicUnits < 0) {
@@ -117,8 +118,8 @@ public class LedgerValue {
         return new LedgerValue(this._availableAtomicUnits, this._frozenAtomicUnits, this._signatureIndex);
     }
 
-    public VeriBlockMessages.LedgerValue.Builder getMessageBuilder() {
-        VeriBlockMessages.LedgerValue.Builder builder = VeriBlockMessages.LedgerValue.newBuilder();
+    public RpcLedgerValue.Builder getMessageBuilder() {
+        RpcLedgerValue.Builder builder = RpcLedgerValue.newBuilder();
         builder.setAvailableAtomicUnits(getAvailableAtomicUnits());
         builder.setSignatureIndex(getSignatureIndex());
 

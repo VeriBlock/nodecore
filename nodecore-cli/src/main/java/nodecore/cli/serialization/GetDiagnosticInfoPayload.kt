@@ -7,9 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.GetDiagnosticInfoReply
+import nodecore.api.grpc.RpcGetDiagnosticInfoReply
 
-class GetDiagnosticInfoPayload(reply: GetDiagnosticInfoReply) {
+class GetDiagnosticInfoPayload(
+    reply: RpcGetDiagnosticInfoReply
+) {
     @SerializedName("nodecore_working_directory")
     val workingDirectory = reply.workingDirectory
 

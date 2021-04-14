@@ -3,7 +3,7 @@ package org.veriblock.spv.net.impl
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcEvent
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
@@ -40,12 +40,12 @@ class P2PServiceTest {
         val txIds = listOf(EMPTY_VBK_TX)
 
         every { pendingTransactionContainer.getTransaction(any()) } returns null
-        every { peer.sendMessage((any<VeriBlockMessages.Event>())) } returns Unit
+        every { peer.sendMessage((any<RpcEvent>())) } returns Unit
 
         p2PService.onTransactionRequest(txIds, peer)
 
         verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(any()) }
-        verify(exactly = 1 ) { peer.sendMessage(any<VeriBlockMessages.Event>()) }
+        verify(exactly = 1 ) { peer.sendMessage(any<RpcEvent>()) }
     }
 
     @Test

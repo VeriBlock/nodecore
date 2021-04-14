@@ -7,10 +7,10 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.ListBannedMinersReply
+import nodecore.api.grpc.RpcListBannedMinersReply
 
 class ListBannedMinersPayload(
-    reply: ListBannedMinersReply
+    reply: RpcListBannedMinersReply
 ) {
     @SerializedName("banned_clients")
     val bannedClients = reply.clientsList

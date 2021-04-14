@@ -7,10 +7,10 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcNodeInfo
 
 class NodeInfo(
-    info: VeriBlockMessages.NodeInfo
+    info: RpcNodeInfo
 ) {
     val address = info.address
 

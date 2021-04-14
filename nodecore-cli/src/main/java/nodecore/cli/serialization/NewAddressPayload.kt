@@ -7,12 +7,12 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
+import nodecore.api.grpc.RpcGetNewAddressReply
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class NewAddressPayload(
-    reply: GetNewAddressReply
+    reply: RpcGetNewAddressReply
 ) {
     @SerializedName("address")
     val address = ByteStringAddressUtility.parseProperAddressTypeAutomatically(reply.address)
