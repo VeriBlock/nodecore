@@ -83,10 +83,6 @@ class SpvPeer(
         expectedResponses[message.requestId]?.offer(message)
 
         when (message.resultsCase) {
-            ResultsCase.NETWORK_INFO_REPLY -> {
-                logger.debug("Received ${message.networkInfoReply.availableNodesCount} peers from the peer $address")
-                SpvEventBus.networkInfoReply.trigger(message.networkInfoReply)
-            }
             ResultsCase.ANNOUNCE -> {
                 // Set a status to "Open"
                 // Extract peer info

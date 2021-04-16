@@ -37,8 +37,8 @@ class DnsDiscovery(
         }
     }
 
-    override fun getPeers(): Sequence<NetworkAddress> {
-        return peers.asSequence()
+    override fun getPeers(): List<NetworkAddress> {
+        return peers
     }
 
     override fun name(): String {

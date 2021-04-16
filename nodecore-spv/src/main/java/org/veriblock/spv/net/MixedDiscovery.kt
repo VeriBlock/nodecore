@@ -9,8 +9,8 @@ class MixedDiscovery(
     val strategies: List<PeerDiscovery>
 ) : PeerDiscovery {
 
-    override fun getPeers(): Sequence<NetworkAddress> {
-        return sequenceOf(strategies.flatMap { it.getPeers() }).flatten()
+    override fun getPeers(): List<NetworkAddress> {
+        return strategies.flatMap { it.getPeers() }
     }
 
     override fun name(): String {
