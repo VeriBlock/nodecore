@@ -195,7 +195,7 @@ class SpvPeer(
     }
 
     /**
-     * Sends a P2P request and waits for the peer to respond it during the given timeout (or a default of 2 seconds).
+     * Sends a P2P request and waits for the peer to respond it during the given timeout (or a default of 5 seconds).
      * This applies to Request/Response event type pairs.
      */
     suspend fun requestMessage(

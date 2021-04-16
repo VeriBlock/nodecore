@@ -92,7 +92,6 @@ class SpvPeerTable(
 
     private val peers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
     private val pendingPeers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
-    private val peersFromPeers = HashSet<NetworkAddress>()
 
     // incoming queue must be bounded, otherwise it's easy to DOS SPV
     private val incomingQueue: Channel<NetworkMessage> = Channel(10000)
@@ -140,19 +139,6 @@ class SpvPeerTable(
         }
     }
 
-    private fun onNetworkInfoReply(reply: RpcNetworkInfoReply) {
-        reply.availableNodesList.asSequence()
-            .filter { !peers.any { peer ->
-                peer.key.hostname == it.address }
-            }
-            .filter { !pendingPeers.any { peer ->
-                peer.key.hostname == it.address }
-            }
-            .forEach {
-                peersFromPeers.add(NetworkAddress(it.address, it.port))
-            }
-    }
-
     fun shutdown() {
         running.set(false)
 
@@ -187,7 +173,7 @@ class SpvPeerTable(
         return SpvPeer(spvContext, blockchain, NodeMetadata, socket)
     }
 
-    fun startBlockchainDownload(peer: SpvPeer) {
+    private fun startBlockchainDownload(peer: SpvPeer) {
         logger.debug("Beginning blockchain download")
         try {
             downloadPeer = peer
