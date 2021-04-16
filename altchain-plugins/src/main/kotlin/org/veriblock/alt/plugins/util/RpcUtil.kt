@@ -50,6 +50,8 @@ inline fun <reified T> RpcResponse.handle(): T = try {
         else ->
             throw IllegalStateException()
     }
+} catch (e: RpcException) {
+    throw e
 } catch (e: Exception) {
     throw HttpException("Failed to perform request to the API: ${e.message}", e)
 }
