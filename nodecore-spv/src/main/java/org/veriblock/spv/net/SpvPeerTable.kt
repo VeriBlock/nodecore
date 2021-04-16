@@ -19,15 +19,14 @@ import nodecore.api.grpc.RpcAdvertiseTransaction
 import nodecore.api.grpc.RpcEvent
 import nodecore.api.grpc.RpcEvent.ResultsCase
 import nodecore.api.grpc.RpcGetStateInfoRequest
+import nodecore.api.grpc.RpcNetworkInfoReply
+import nodecore.api.grpc.RpcNetworkInfoRequest
 import nodecore.api.grpc.RpcTransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.extensions.toByteString
-import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.*
@@ -41,12 +40,14 @@ import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
 import org.veriblock.spv.util.buildMessage
 import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
+import org.veriblock.spv.util.nextMessageId
 import java.io.IOException
 import java.nio.channels.ClosedChannelException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.collections.HashSet
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -74,6 +75,7 @@ class SpvPeerTable(
 
     private val peers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
     private val pendingPeers = ConcurrentHashMap<NetworkAddress, SpvPeer>()
+    private val peersFromPeers = HashSet<NetworkAddress>()
 
     // incoming queue must be bounded, otherwise it's easy to DOS SPV
     private val incomingQueue: Channel<NetworkMessage> = Channel(10000)
@@ -102,6 +104,10 @@ class SpvPeerTable(
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
+        SpvEventBus.networkInfoReply.register(this) {
+            onNetworkInfoReply(it)
+        }
+
         PEER_TABLE_SCOPE.launchWithFixedDelay(200L, 60_000L) {
             discoverPeers()
         }.invokeOnFailure { t ->
@@ -118,6 +124,19 @@ class SpvPeerTable(
         }.invokeOnFailure { t ->
             logger.error(t) { "There was an error while processing peer messages. Exiting process..." }
         }
+    }
+
+    private fun onNetworkInfoReply(reply: RpcNetworkInfoReply) {
+        reply.availableNodesList.asSequence()
+            .filter { !peers.any { peer ->
+                peer.key.hostname == it.address }
+            }
+            .filter { !pendingPeers.any { peer ->
+                peer.key.hostname == it.address }
+            }
+            .forEach {
+                peersFromPeers.add(NetworkAddress(it.address, it.port))
+            }
     }
 
     fun shutdown() {
@@ -166,31 +185,50 @@ class SpvPeerTable(
         }
     }
 
-    suspend fun discoverPeers() {
-        val maxConnections = maximumPeers
-        if (maxConnections > 0 && countConnectedPeers() >= maxConnections) {
+    private suspend fun discoverPeers() {
+        if (maximumPeers > 0 && countConnectedPeers() >= maximumPeers) {
             return
         }
-        val needed = maxConnections - (countConnectedPeers() + countPendingPeers())
-        if (needed > 0) {
-            val newPeers = discovery.getPeers().asSequence()
+        getNeededPeers().also { neededPeers ->
+            logger.debug { "We need $neededPeers peers more" }
+            val newPeers = (discovery.getPeers() + peersFromPeers).asSequence()
                 // first, filter out known peers
                 .filter { !peers.containsKey(it) }
                 .filter { !pendingPeers.containsKey(it) }
                 // shuffle ALL new peers
                 .shuffled()
                 // then take needed amount
-                .take(needed)
+                .take(neededPeers)
             for (address in newPeers) {
-                logger.debug("Attempting connection to $address")
-                val peer = try {
-                    connectTo(address)
-                } catch (e: IOException) {
-                    continue
+                connectToPeer(address)
+            }
+            getNeededPeers().also { remainingNeededPeers ->
+                if (peers.isNotEmpty() && remainingNeededPeers > 0) {
+                    // Request to the known peers their known peers
+                    val message = RpcEvent.newBuilder()
+                        .setId(nextMessageId())
+                        .setAcknowledge(false)
+                        .setNetworkInfoRequest(RpcNetworkInfoRequest.newBuilder().build())
+                        .build()
+                    peers.values.forEach { spvPeer ->
+                        logger.debug("Requesting the peer list to the peer ${spvPeer.address}")
+                        spvPeer.sendMessage(message)
+                    }
                 }
-                logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
             }
         }
+    }
+
+    private fun getNeededPeers() =
+        maximumPeers - (countConnectedPeers() + countPendingPeers())
+
+    private suspend fun connectToPeer(address: NetworkAddress) = try {
+        logger.debug("Attempting connection to $address")
+        val peer = connectTo(address)
+        logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
+    } catch (e: IOException) {
+        // Ignored
+        logger.debug(e) { "Unable to connect to the peer $address" }
     }
 
     suspend fun processIncomingMessages() {
@@ -301,6 +339,7 @@ class SpvPeerTable(
     fun onPeerDisconnected(peer: SpvPeer) = lock.withLock {
         pendingPeers.remove(peer.address)
         peers.remove(peer.address)
+        peersFromPeers.remove(peer.address)
         if (downloadPeer?.address?.equals(peer.address) == true) {
             downloadPeer = null
         }
