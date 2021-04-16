@@ -154,6 +154,8 @@ class SpvPeerTable(
         peers[address]?.let {
             return it
         }
+
+        logger.debug("Attempting connection to $address")
         val socket = try {
             aSocket(selectorManager)
                 .tcp()
@@ -162,6 +164,7 @@ class SpvPeerTable(
             logger.debug("Unable to open connection to $address", e)
             throw e
         }
+
         val peer = createPeer(socket)
         lock.withLock {
             pendingPeers[address] = peer
@@ -185,7 +188,7 @@ class SpvPeerTable(
         }
     }
 
-    private suspend fun discoverPeers() {
+    suspend fun discoverPeers() {
         if (maximumPeers > 0 && getConnectedPeerCount() >= maximumPeers) {
             return
         }
@@ -210,7 +213,7 @@ class SpvPeerTable(
         }
     }
 
-    private suspend fun connectToPeers(addresses: Collection<NetworkAddress>, neededPeers: Int = getNeededPeers()) {
+    suspend fun connectToPeers(addresses: Collection<NetworkAddress>, neededPeers: Int = getNeededPeers()) {
         logger.debug { "We need $neededPeers peers more" }
         val newPeers = addresses.asSequence()
             // first, filter out known peers
@@ -227,10 +230,9 @@ class SpvPeerTable(
     private fun getNeededPeers() =
         maximumPeers - (getConnectedPeerCount() + getPendingPeerCount())
 
-    private suspend fun connectToPeer(address: NetworkAddress) = try {
-        logger.debug("Attempting connection to $address")
+    suspend fun connectToPeer(address: NetworkAddress) = try {
         val peer = connectTo(address)
-        logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
+        logger.debug { "Discovered peer connected $address, its best height=${peer.bestBlockHeight}" }
     } catch (e: IOException) {
         // Ignored
         logger.debug(e) { "Unable to connect to the peer $address" }
