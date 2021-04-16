@@ -19,6 +19,7 @@ import org.veriblock.alt.plugins.util.asEthHexInt
 import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.getBytes
+import org.veriblock.alt.plugins.util.normalizeEthHash
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
@@ -119,9 +120,9 @@ class EthereumFamilyChain(
             }
         }
         return SecurityInheritingBlock(
-            hash = btcBlock.hash,
+            hash = btcBlock.hash.normalizeEthHash(),
             height = btcBlock.number.asEthHexInt(),
-            previousHash = btcBlock.parentHash ?: "0000000000000000000000000000000000000000000000000000000000000000",
+            previousHash = btcBlock.parentHash?.normalizeEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
             confirmations = 0, // FIXME
             version = 0, // FIXME
             nonce = btcBlock.nonce.asEthHexLong(),
