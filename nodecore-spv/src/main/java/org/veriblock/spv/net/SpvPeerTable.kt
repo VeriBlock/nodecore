@@ -21,9 +21,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -150,7 +154,7 @@ class SpvPeerTable(
         }
     }
 
-    suspend fun connectTo(address: NetworkAddress): SpvPeer {
+    suspend fun connectTo(address: NetworkAddress): SpvPeer? {
         peers[address]?.let {
             return it
         }
@@ -162,13 +166,16 @@ class SpvPeerTable(
                 .connect(address)
         } catch (e: IOException) {
             logger.debug("Unable to open connection to $address", e)
-            throw e
+            // Ignored
+            return null
         }
 
         val peer = createPeer(socket)
         lock.withLock {
             pendingPeers[address] = peer
         }
+
+        logger.debug { "Discovered peer connected $address, its best height=${peer.bestBlockHeight}" }
         return peer
     }
 
@@ -215,28 +222,20 @@ class SpvPeerTable(
 
     suspend fun connectToPeers(addresses: Collection<NetworkAddress>, neededPeers: Int = getNeededPeers()) {
         logger.debug { "We need $neededPeers peers more" }
-        val newPeers = addresses.asSequence()
+        addresses.asSequence()
             // first, filter out known peers
             .filter { !peers.containsKey(it) && !pendingPeers.containsKey(it) }
             // shuffle ALL new peers
-            .shuffled()
+            .shuffled().asFlow()
             // then take needed amount
             .take(neededPeers)
-        for (address in newPeers) {
-            connectToPeer(address)
-        }
+            .collect {
+                connectTo(it)
+            }
     }
 
     private fun getNeededPeers() =
         maximumPeers - (getConnectedPeerCount() + getPendingPeerCount())
-
-    suspend fun connectToPeer(address: NetworkAddress) = try {
-        val peer = connectTo(address)
-        logger.debug { "Discovered peer connected $address, its best height=${peer.bestBlockHeight}" }
-    } catch (e: IOException) {
-        // Ignored
-        logger.debug(e) { "Unable to connect to the peer $address" }
-    }
 
     suspend fun processIncomingMessages() {
         try {
