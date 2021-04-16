@@ -19,8 +19,8 @@ class DirectDiscovery(
     private val addresses: List<NetworkAddress>
 ) : PeerDiscovery {
 
-    override fun getPeers(): Sequence<NetworkAddress> {
-        return addresses.asSequence()
+    override fun getPeers(): List<NetworkAddress> {
+        return addresses
     }
 
     override fun name(): String {

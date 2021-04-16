@@ -8,32 +8,53 @@
 package org.veriblock.spv.net
 
 import com.google.protobuf.ByteString
-import io.ktor.network.selector.*
-import io.ktor.network.sockets.*
-import io.ktor.util.network.*
-import kotlinx.coroutines.*
+import io.ktor.network.selector.ActorSelectorManager
+import io.ktor.network.sockets.Socket
+import io.ktor.network.sockets.aSocket
+import io.ktor.util.network.NetworkAddress
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import nodecore.api.grpc.RpcAdvertiseTransaction
 import nodecore.api.grpc.RpcEvent
 import nodecore.api.grpc.RpcEvent.ResultsCase
 import nodecore.api.grpc.RpcGetStateInfoRequest
+import nodecore.api.grpc.RpcNetworkInfoRequest
 import nodecore.api.grpc.RpcTransactionAnnounce
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.extensions.toByteString
-import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.crypto.BloomFilter
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.crypto.asVbkTxId
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
-import org.veriblock.spv.model.*
+import org.veriblock.spv.model.DownloadStatus
+import org.veriblock.spv.model.DownloadStatusResponse
+import org.veriblock.spv.model.NetworkMessage
+import org.veriblock.spv.model.NodeMetadata
+import org.veriblock.spv.model.StandardTransaction
+import org.veriblock.spv.model.Transaction
+import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.serialization.MessageSerializer.deserializeNormalTransaction
-import org.veriblock.spv.service.*
+import org.veriblock.spv.service.Blockchain
+import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 import org.veriblock.spv.util.Threading.PEER_TABLE_DISPATCHER
@@ -43,7 +64,7 @@ import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
 import java.io.IOException
 import java.nio.channels.ClosedChannelException
-import java.util.*
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
@@ -67,6 +88,7 @@ class SpvPeerTable(
     private val running = AtomicBoolean(false)
     private val discovery: PeerDiscovery
     private val blockchain: Blockchain
+
     var maximumPeers = DEFAULT_CONNECTIONS
     var downloadPeer: SpvPeer? = null
     val bloomFilter: BloomFilter
@@ -102,6 +124,7 @@ class SpvPeerTable(
         SpvEventBus.messageReceivedEvent.register(this) {
             onMessageReceived(it.message, it.peer)
         }
+
         PEER_TABLE_SCOPE.launchWithFixedDelay(200L, 60_000L) {
             discoverPeers()
         }.invokeOnFailure { t ->
@@ -131,22 +154,28 @@ class SpvPeerTable(
         }
     }
 
-    suspend fun connectTo(address: NetworkAddress): SpvPeer {
+    suspend fun connectTo(address: NetworkAddress): SpvPeer? {
         peers[address]?.let {
             return it
         }
+
+        logger.debug("Attempting connection to $address")
         val socket = try {
             aSocket(selectorManager)
                 .tcp()
                 .connect(address)
         } catch (e: IOException) {
             logger.debug("Unable to open connection to $address", e)
-            throw e
+            // Ignored
+            return null
         }
+
         val peer = createPeer(socket)
         lock.withLock {
             pendingPeers[address] = peer
         }
+
+        logger.debug { "Discovered peer connected $address, its best height=${peer.bestBlockHeight}" }
         return peer
     }
 
@@ -154,7 +183,7 @@ class SpvPeerTable(
         return SpvPeer(spvContext, blockchain, NodeMetadata, socket)
     }
 
-    fun startBlockchainDownload(peer: SpvPeer) {
+    private fun startBlockchainDownload(peer: SpvPeer) {
         logger.debug("Beginning blockchain download")
         try {
             downloadPeer = peer
@@ -167,31 +196,51 @@ class SpvPeerTable(
     }
 
     suspend fun discoverPeers() {
-        val maxConnections = maximumPeers
-        if (maxConnections > 0 && countConnectedPeers() >= maxConnections) {
+        if (maximumPeers > 0 && getConnectedPeerCount() >= maximumPeers) {
             return
         }
-        val needed = maxConnections - (countConnectedPeers() + countPendingPeers())
-        if (needed > 0) {
-            val newPeers = discovery.getPeers().asSequence()
-                // first, filter out known peers
-                .filter { !peers.containsKey(it) }
-                .filter { !pendingPeers.containsKey(it) }
-                // shuffle ALL new peers
-                .shuffled()
-                // then take needed amount
-                .take(needed)
-            for (address in newPeers) {
-                logger.debug("Attempting connection to $address")
-                val peer = try {
-                    connectTo(address)
-                } catch (e: IOException) {
-                    continue
+
+        // Connect to bootstrap peers
+        connectToPeers(discovery.getPeers())
+
+        // Don't ask for further peers if we are using direct discovery
+        if (discovery is DirectDiscovery) {
+            return
+        }
+
+        // Check if we still need peers
+        val remainingNeededPeers = getNeededPeers()
+        if (peers.isNotEmpty() && remainingNeededPeers > 0) {
+            // If so, request to the known peers their known peers
+            logger.debug("Requesting the peer list to all peers")
+            val message = buildMessage {
+                networkInfoRequest = RpcNetworkInfoRequest.newBuilder().build()
+            }
+            requestAllMessages(message).collect { msg ->
+                val peersFromPeer = msg.networkInfoReply.availableNodesList.map {
+                    NetworkAddress(it.address, it.port)
                 }
-                logger.debug("Discovered peer connected $address, its best height=${peer.bestBlockHeight}")
+                connectToPeers(peersFromPeer)
             }
         }
     }
+
+    suspend fun connectToPeers(addresses: Collection<NetworkAddress>, neededPeers: Int = getNeededPeers()) {
+        logger.debug { "We need $neededPeers peers more" }
+        addresses.asSequence()
+            // first, filter out known peers
+            .filter { !peers.containsKey(it) && !pendingPeers.containsKey(it) }
+            // shuffle ALL new peers
+            .shuffled().asFlow()
+            // then take needed amount
+            .take(neededPeers)
+            .collect {
+                connectTo(it)
+            }
+    }
+
+    private fun getNeededPeers() =
+        maximumPeers - (getConnectedPeerCount() + getPendingPeerCount())
 
     suspend fun processIncomingMessages() {
         try {
@@ -413,11 +462,11 @@ class SpvPeerTable(
 
     fun getConnectedPeers(): Collection<SpvPeer> = Collections.unmodifiableCollection(peers.values)
 
-    fun countConnectedPeers(): Int {
+    fun getConnectedPeerCount(): Int {
         return peers.size
     }
 
-    fun countPendingPeers(): Int {
+    fun getPendingPeerCount(): Int {
         return pendingPeers.size
     }
 }
