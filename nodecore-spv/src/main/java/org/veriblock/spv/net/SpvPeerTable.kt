@@ -203,6 +203,11 @@ class SpvPeerTable(
         // Connect to bootstrap peers
         connectToPeers(discovery.getPeers())
 
+        // Don't ask for further peers if we are using direct discovery
+        if (discovery is DirectDiscovery) {
+            return
+        }
+
         // Check if we still need peers
         val remainingNeededPeers = getNeededPeers()
         if (peers.isNotEmpty() && remainingNeededPeers > 0) {
