@@ -231,9 +231,10 @@ class SpvPeerTable(
             // first, filter out known peers
             .filter { !peers.containsKey(it) && !pendingPeers.containsKey(it) }
             // shuffle ALL new peers
-            .shuffled().asFlow()
+            .shuffled()
             // then take needed amount
             .take(neededPeers)
+            .asFlow()
             .collect {
                 connectTo(it)
             }
