@@ -328,7 +328,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
-        TODO("Not yet implemented") // pop_getVbkBlockByHash
+        TODO("Not yet implemented (getVbkBlock)") // pop_getVbkBlockByHash
     }
 
     override suspend fun getBestKnownBtcBlockHash(): String {
@@ -337,10 +337,10 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
-        TODO("Not yet implemented") // pop_getBtcBlockByHash
+        TODO("Not yet implemented (getBtcBlock)") // pop_getBtcBlockByHash
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
-        TODO("Not yet implemented")
+        TODO("ETH addresses are not yet supported. Please, use the raw hex version of your address.")
     }
 }
