@@ -14,13 +14,13 @@ import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
-import org.veriblock.alt.plugins.util.asEthHash
+import org.veriblock.alt.plugins.util.toEthHash
 import org.veriblock.alt.plugins.util.asEthHex
-import org.veriblock.alt.plugins.util.normalizeEthInt
-import org.veriblock.alt.plugins.util.normalizeEthLong
+import org.veriblock.alt.plugins.util.asEthHexInt
+import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.getBytes
-import org.veriblock.alt.plugins.util.normalizeEthHash
+import org.veriblock.alt.plugins.util.asEthHash
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
@@ -105,11 +105,11 @@ class EthereumFamilyChain(
 
     override suspend fun getBestBlockHeight(): Int {
         logger.trace { "Retrieving best block height..." }
-        return rpcRequest<String>("eth_blockNumber", version = "2.0").normalizeEthInt()
+        return rpcRequest<String>("eth_blockNumber", version = "2.0").asEthHexInt()
     }
 
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
-        val ethHash = hash.asEthHash()
+        val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $ethHash..." }
         val btcBlock: EthBlock = try {
             rpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
@@ -122,14 +122,14 @@ class EthereumFamilyChain(
             }
         }
         return SecurityInheritingBlock(
-            hash = btcBlock.hash.normalizeEthHash(),
-            height = btcBlock.number.normalizeEthInt(),
-            previousHash = btcBlock.parentHash?.normalizeEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
+            hash = btcBlock.hash.asEthHash(),
+            height = btcBlock.number.asEthHexInt(),
+            previousHash = btcBlock.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
             confirmations = 0, // FIXME
             version = 0, // FIXME
-            nonce = btcBlock.nonce.normalizeEthLong(),
+            nonce = btcBlock.nonce.asEthHexLong(),
             merkleRoot = btcBlock.transactionsRoot,
-            difficulty = btcBlock.difficulty.normalizeEthInt().toDouble(),
+            difficulty = btcBlock.difficulty.asEthHexInt().toDouble(),
             coinbaseTransactionId = "TODO",
             transactionIds = btcBlock.transactions,
             endorsedBy = listOf(), // TODO
