@@ -14,9 +14,10 @@ import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
+import org.veriblock.alt.plugins.util.asEthHash
 import org.veriblock.alt.plugins.util.asEthHex
-import org.veriblock.alt.plugins.util.asEthHexInt
-import org.veriblock.alt.plugins.util.asEthHexLong
+import org.veriblock.alt.plugins.util.normalizeEthInt
+import org.veriblock.alt.plugins.util.normalizeEthLong
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.alt.plugins.util.normalizeEthHash
@@ -104,13 +105,14 @@ class EthereumFamilyChain(
 
     override suspend fun getBestBlockHeight(): Int {
         logger.trace { "Retrieving best block height..." }
-        return rpcRequest<String>("eth_blockNumber", version = "2.0").asEthHexInt()
+        return rpcRequest<String>("eth_blockNumber", version = "2.0").normalizeEthInt()
     }
 
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
-        logger.debug { "Retrieving block $hash..." }
+        val ethHash = hash.asEthHash()
+        logger.debug { "Retrieving block $ethHash..." }
         val btcBlock: EthBlock = try {
-            rpcRequest("eth_getBlockByHash", listOf(hash, true), "2.0")
+            rpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
@@ -121,13 +123,13 @@ class EthereumFamilyChain(
         }
         return SecurityInheritingBlock(
             hash = btcBlock.hash.normalizeEthHash(),
-            height = btcBlock.number.asEthHexInt(),
+            height = btcBlock.number.normalizeEthInt(),
             previousHash = btcBlock.parentHash?.normalizeEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
             confirmations = 0, // FIXME
             version = 0, // FIXME
-            nonce = btcBlock.nonce.asEthHexLong(),
+            nonce = btcBlock.nonce.normalizeEthLong(),
             merkleRoot = btcBlock.transactionsRoot,
-            difficulty = btcBlock.difficulty.asEthHexInt().toDouble(),
+            difficulty = btcBlock.difficulty.normalizeEthInt().toDouble(),
             coinbaseTransactionId = "TODO",
             transactionIds = btcBlock.transactions,
             endorsedBy = listOf(), // TODO
@@ -138,9 +140,10 @@ class EthereumFamilyChain(
     }
 
     private suspend fun getBlockHash(height: Int): String? {
-        logger.debug { "Retrieving block hash @$height..." }
+        val ethHeight = height.asEthHex()
+        logger.debug { "Retrieving block hash @$ethHeight..." }
         return try {
-            rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(height.asEthHex(), false), "2.0").hash
+            rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(ethHeight, false), "2.0").hash
         } catch (e: RpcException) {
             if (e.errorCode == -8) {
                 // Block height out of range
