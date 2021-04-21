@@ -108,7 +108,7 @@ class EthereumFamilyChain(
 
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         val ethHash = hash.toEthHash()
-        logger.debug { "Retrieving block $ethHash..." }
+        logger.debug { "Retrieving block $hash..." }
         val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
         return block?.let {
             SecurityInheritingBlock(
@@ -132,12 +132,12 @@ class EthereumFamilyChain(
 
     private suspend fun getBlockHash(height: Int): String? {
         val ethHeight = height.asEthHex()
-        logger.debug { "Retrieving block hash @$ethHeight..." }
+        logger.debug { "Retrieving block hash @ $height..." }
         return nullableRpcRequest<EthBlock>("eth_getBlockByNumber", listOf(ethHeight, false), "2.0")?.hash
     }
 
     override suspend fun getBlock(height: Int): SecurityInheritingBlock? {
-        logger.debug { "Retrieving block @$height..." }
+        logger.debug { "Retrieving block @ $height..." }
         val blockHash = getBlockHash(height)
             ?: return null
         return getBlock(blockHash)
