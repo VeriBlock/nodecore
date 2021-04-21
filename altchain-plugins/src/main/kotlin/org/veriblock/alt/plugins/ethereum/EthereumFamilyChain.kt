@@ -12,6 +12,7 @@ import io.ktor.http.*
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
+import org.veriblock.alt.plugins.nullableRpcRequest
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.toEthHash
 import org.veriblock.alt.plugins.util.asEthHex
@@ -108,8 +109,8 @@ class EthereumFamilyChain(
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $ethHash..." }
-        val btcBlock: EthBlock? = rpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
-        return btcBlock?.let {
+        val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
+        return block?.let {
             SecurityInheritingBlock(
                 hash = it.hash.asEthHash(),
                 height = it.number.asEthHexInt(),
@@ -132,7 +133,7 @@ class EthereumFamilyChain(
     private suspend fun getBlockHash(height: Int): String? {
         val ethHeight = height.asEthHex()
         logger.debug { "Retrieving block hash @$ethHeight..." }
-        return rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(ethHeight, false), "2.0").hash
+        return nullableRpcRequest<EthBlock>("eth_getBlockByNumber", listOf(ethHeight, false), "2.0")?.hash
     }
 
     override suspend fun getBlock(height: Int): SecurityInheritingBlock? {
@@ -156,7 +157,7 @@ class EthereumFamilyChain(
 
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
-        val btcTransaction: EthTransaction? = rpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
+        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
         return btcTransaction?.let { ethTransaction ->
             SecurityInheritingTransaction(
                 ethTransaction.txid,
@@ -186,7 +187,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getAtv(id: String): Atv? {
-        val response: EthAtv? = rpcRequest("pop_getRawAtv", listOf(id, 1), "2.0")
+        val response: EthAtv? = nullableRpcRequest("pop_getRawAtv", listOf(id, 1), "2.0")
         return response?.let {
             Atv(
                 vbkTransactionId = it.atv.transaction.hash,
@@ -198,7 +199,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getVtb(id: String): Vtb? {
-        val response: EthVtb? = rpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
+        val response: EthVtb? = nullableRpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
         return response?.let {
             Vtb(it.vtb.containingBlock.hash)
         }
