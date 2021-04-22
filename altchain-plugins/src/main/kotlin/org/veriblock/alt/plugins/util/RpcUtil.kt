@@ -38,6 +38,8 @@ class RpcException(
     override val message: String
 ) : RuntimeException()
 
+class NullResultException : RuntimeException()
+
 private val gson = Gson()
 
 inline fun <reified T> RpcResponse.handle(): T = try {
@@ -48,9 +50,11 @@ inline fun <reified T> RpcResponse.handle(): T = try {
         result !is JsonNull ->
             result.fromJson<T>(type)
         else ->
-            throw IllegalStateException()
+            throw NullResultException()
     }
 } catch (e: RpcException) {
+    throw e
+} catch (e: NullResultException) {
     throw e
 } catch (e: Exception) {
     throw HttpException("Failed to perform request to the API: ${e.message}", e)

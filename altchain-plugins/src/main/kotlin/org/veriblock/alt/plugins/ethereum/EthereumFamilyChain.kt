@@ -12,8 +12,8 @@ import io.ktor.http.*
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
+import org.veriblock.alt.plugins.nullableRpcRequest
 import org.veriblock.alt.plugins.rpcRequest
-import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.toEthHash
 import org.veriblock.alt.plugins.util.asEthHex
 import org.veriblock.alt.plugins.util.asEthHexInt
@@ -48,8 +48,6 @@ import java.nio.ByteBuffer
 import kotlin.math.roundToLong
 
 private val logger = createLogger {}
-
-private const val NOT_FOUND_ERROR_CODE = -5
 
 @PluginSpec(name = "EthereumFamily", key = "eth")
 class EthereumFamilyChain(
@@ -109,52 +107,36 @@ class EthereumFamilyChain(
 
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         val ethHash = hash.toEthHash()
-        logger.debug { "Retrieving block $ethHash..." }
-        val btcBlock: EthBlock = try {
-            rpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // Block not found
-                return null
-            } else {
-                throw e
-            }
+        logger.debug { "Retrieving block $hash..." }
+        val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
+        return block?.let {
+            SecurityInheritingBlock(
+                hash = it.hash.asEthHash(),
+                height = it.number.asEthHexInt(),
+                previousHash = it.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
+                confirmations = 0, // FIXME
+                version = 0, // FIXME
+                nonce = it.nonce.asEthHexLong(),
+                merkleRoot = it.transactionsRoot,
+                difficulty = it.difficulty.asEthHexInt().toDouble(),
+                coinbaseTransactionId = "TODO",
+                transactionIds = it.transactions,
+                endorsedBy = listOf(), // TODO
+                knownVbkHashes = listOf(), // TODO
+                veriBlockPublicationIds = listOf(), // TODO
+                bitcoinPublicationIds = listOf() // TODO
+            )
         }
-        return SecurityInheritingBlock(
-            hash = btcBlock.hash.asEthHash(),
-            height = btcBlock.number.asEthHexInt(),
-            previousHash = btcBlock.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
-            confirmations = 0, // FIXME
-            version = 0, // FIXME
-            nonce = btcBlock.nonce.asEthHexLong(),
-            merkleRoot = btcBlock.transactionsRoot,
-            difficulty = btcBlock.difficulty.asEthHexInt().toDouble(),
-            coinbaseTransactionId = "TODO",
-            transactionIds = btcBlock.transactions,
-            endorsedBy = listOf(), // TODO
-            knownVbkHashes = listOf(), // TODO
-            veriBlockPublicationIds = listOf(), // TODO
-            bitcoinPublicationIds = listOf() // TODO
-        )
     }
 
     private suspend fun getBlockHash(height: Int): String? {
         val ethHeight = height.asEthHex()
-        logger.debug { "Retrieving block hash @$ethHeight..." }
-        return try {
-            rpcRequest<EthBlock>("eth_getBlockByNumber", listOf(ethHeight, false), "2.0").hash
-        } catch (e: RpcException) {
-            if (e.errorCode == -8) {
-                // Block height out of range
-                return null
-            } else {
-                throw e
-            }
-        }
+        logger.debug { "Retrieving block hash @ $height..." }
+        return nullableRpcRequest<EthBlock>("eth_getBlockByNumber", listOf(ethHeight, false), "2.0")?.hash
     }
 
     override suspend fun getBlock(height: Int): SecurityInheritingBlock? {
-        logger.debug { "Retrieving block @$height..." }
+        logger.debug { "Retrieving block @ $height..." }
         val blockHash = getBlockHash(height)
             ?: return null
         return getBlock(blockHash)
@@ -165,16 +147,7 @@ class EthereumFamilyChain(
         val blockHash = getBlockHash(height)
             ?: return false
         // Get raw block
-        val rawBlock: String = try {
-            rpcRequest("eth_getBlockByHash", listOf(blockHash, true), "2.0")
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // Block not found
-                return false
-            } else {
-                throw e
-            }
-        }
+        val rawBlock: String = rpcRequest("eth_getBlockByHash", listOf(blockHash, true), "2.0")
         // Extract header
         val header: ByteArray = Arrays.copyOf(rawBlock.asHexBytes(), blockHeaderToCheck.size)
         // Check header
@@ -183,27 +156,20 @@ class EthereumFamilyChain(
 
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         logger.debug { "Retrieving transaction $txId..." }
-        val btcTransaction: EthTransaction = try {
-            rpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // Transaction not found
-                return null
-            } else {
-                throw e
-            }
+        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
+        return btcTransaction?.let { ethTransaction ->
+            SecurityInheritingTransaction(
+                ethTransaction.txid,
+                ethTransaction.confirmations,
+                ethTransaction.vout.map {
+                    SecurityInheritingTransactionVout(
+                        (it.value * 100000000).roundToLong(),
+                        it.scriptPubKey.hex
+                    )
+                },
+                ethTransaction.blockhash
+            )
         }
-        return SecurityInheritingTransaction(
-            btcTransaction.txid,
-            btcTransaction.confirmations,
-            btcTransaction.vout.map {
-                SecurityInheritingTransactionVout(
-                    (it.value * 100000000).roundToLong(),
-                    it.scriptPubKey.hex
-                )
-            },
-            btcTransaction.blockhash
-        )
     }
 
     override fun getPayoutDelay(): Int {
@@ -220,36 +186,22 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getAtv(id: String): Atv? {
-        val response: EthAtv = try {
-            rpcRequest("pop_getRawAtv", listOf(id, 1), "2.0")
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // ATV not found
-                return null
-            } else {
-                throw e
-            }
+        val response: EthAtv? = nullableRpcRequest("pop_getRawAtv", listOf(id, 1), "2.0")
+        return response?.let {
+            Atv(
+                vbkTransactionId = it.atv.transaction.hash,
+                vbkBlockOfProofHash = it.atv.blockOfProof.hash,
+                containingBlock = it.blockhash,
+                confirmations = it.confirmations
+            )
         }
-        return Atv(
-            vbkTransactionId = response.atv.transaction.hash,
-            vbkBlockOfProofHash = response.atv.blockOfProof.hash,
-            containingBlock = response.blockhash,
-            confirmations = response.confirmations
-        )
     }
 
     override suspend fun getVtb(id: String): Vtb? {
-        val response: EthVtb = try {
-            rpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
-        } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
-                // VTB not found
-                return null
-            } else {
-                throw e
-            }
+        val response: EthVtb? = nullableRpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
+        return response?.let {
+            Vtb(it.vtb.containingBlock.hash)
         }
-        return Vtb(response.vtb.containingBlock.hash)
     }
 
     override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {

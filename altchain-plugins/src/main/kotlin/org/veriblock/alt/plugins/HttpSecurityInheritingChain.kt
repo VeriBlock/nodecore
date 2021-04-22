@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import mu.KLogger
 import org.veriblock.alt.plugins.util.JsonRpcRequestBody
+import org.veriblock.alt.plugins.util.NullResultException
 import org.veriblock.alt.plugins.util.RpcResponse
 import org.veriblock.alt.plugins.util.handle
 import org.veriblock.alt.plugins.util.toJson
@@ -25,4 +26,10 @@ suspend inline fun <reified T> HttpSecurityInheritingChain.rpcRequest(method: St
     }
     requestsLogger?.info { "<- ${response.toJson().take(10_000)}" }
     return response.handle()
+}
+
+suspend inline fun <reified T> HttpSecurityInheritingChain.nullableRpcRequest(method: String, params: Any? = emptyList<Any>(), version: String = "1.0"): T? = try {
+    rpcRequest(method, params, version)
+} catch (e: NullResultException) {
+    null
 }
