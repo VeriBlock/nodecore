@@ -19,6 +19,7 @@ import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
+import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -299,13 +300,14 @@ class BitcoinFamilyChain(
     private val crypto = Crypto()
 
     override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
-        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
-        val height = contextBuffer.getInt()
         val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).flip()
         val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).flip()
-        val previousKeystone = contextBuffer.getBytes(32).flip()
+        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
+        val height = contextBuffer.getInt()
+        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
 
-        return BlockEvidence(height, hash, previousHash, previousKeystone, null)
+        return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
 
     override suspend fun getBlockChainInfo(): StateInfo {

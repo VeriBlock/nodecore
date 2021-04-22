@@ -170,7 +170,7 @@ class SpvPeerTable(
             return null
         }
 
-        val peer = createPeer(socket)
+        val peer = SpvPeer(spvContext, blockchain, NodeMetadata, socket)
         lock.withLock {
             pendingPeers[address] = peer
         }
@@ -179,11 +179,7 @@ class SpvPeerTable(
         return peer
     }
 
-    fun createPeer(socket: Socket): SpvPeer {
-        return SpvPeer(spvContext, blockchain, NodeMetadata, socket)
-    }
-
-    private fun startBlockchainDownload(peer: SpvPeer) {
+    fun startBlockchainDownload(peer: SpvPeer) {
         logger.debug("Beginning blockchain download")
         try {
             downloadPeer = peer

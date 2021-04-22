@@ -19,15 +19,14 @@ import org.veriblock.alt.plugins.util.asEthHex
 import org.veriblock.alt.plugins.util.asEthHexInt
 import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
-import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.alt.plugins.util.asEthHash
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
-import org.veriblock.core.crypto.*
+import org.veriblock.core.tuweni.crypto.Hash
+import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
-import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
@@ -295,20 +294,19 @@ class EthereumFamilyChain(
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
-        // TODO: extract correctly from param, use BitcoinJ maybe?
+        // TODO: extract correctly from param
         return config.payoutAddress ?: "UNKNOWN_ADDRESS"
     }
 
-    private val crypto = Crypto()
-
     override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
+        val hash = Hash.keccak256(altchainPopEndorsement.getHeader())
+        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
-        val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).flip()
-        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).flip()
-        val previousKeystone = contextBuffer.getBytes(32).flip()
+        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
 
-        return BlockEvidence(height, hash, previousHash, previousKeystone, null)
+        return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
 
     override suspend fun getBlockChainInfo(): StateInfo {
