@@ -7,7 +7,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
-import org.junit.Assert
+import io.kotest.matchers.shouldBe
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
@@ -35,7 +35,7 @@ class StoredVeriBlockBlockTest {
     fun serializeAndDeserialize() {
         val bytes = storedVeriBlockBlockExpected.serialize()
         val storedVeriBlockBlockActual = bytes.deserializeStoredVeriBlockBlock()
-        Assert.assertEquals(storedVeriBlockBlockExpected, storedVeriBlockBlockActual)
+        storedVeriBlockBlockActual shouldBe storedVeriBlockBlockExpected
     }
 
     @Test
@@ -44,6 +44,6 @@ class StoredVeriBlockBlockTest {
         storedVeriBlockBlockExpected.serialize(buffer)
         buffer.flip()
         val storedVeriBlockBlockActual = buffer.deserializeStoredVeriBlockBlock()
-        Assert.assertEquals(storedVeriBlockBlockExpected, storedVeriBlockBlockActual)
+        storedVeriBlockBlockActual shouldBe storedVeriBlockBlockExpected
     }
 }

@@ -15,10 +15,13 @@ import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.createLoggerFor
+import org.veriblock.alt.plugins.util.getBytes
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
+import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.flip
 import org.veriblock.core.utilities.extensions.isHex
@@ -26,14 +29,17 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
+import org.veriblock.sdk.alt.model.SubmitPopResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.lang.IllegalStateException
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -245,20 +251,14 @@ class BitcoinFamilyChain(
         return Vtb(response.vtb.containingBlock.hash)
     }
 
-    override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
+    override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {
         val actualBlockHeight = blockHeight
         // Retrieve top block height from API if not supplied
             ?: getBestBlockHeight()
 
         logger.debug { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
-        val response: BtcPublicationData = rpcRequest("getpopdata", listOf(actualBlockHeight))
+        val response: BtcPublicationData = rpcRequest("getpopdatabyheight", listOf(actualBlockHeight))
 
-        if (response.block_header == null) {
-            error("Publication data's 'block_header' must be set!")
-        }
-        if (response.raw_contextinfocontainer == null) {
-            error("Publication data's 'raw_contextinfocontainer' must be set!")
-        }
         if (response.last_known_veriblock_blocks.isNullOrEmpty()) {
             error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
         }
@@ -270,7 +270,7 @@ class BitcoinFamilyChain(
             id,
             response.block_header.asHexBytes(),
             getPayoutAddressScript(),
-            response.raw_contextinfocontainer.asHexBytes()
+            response.authenticated_context.serialized.asHexBytes()
         )
         return ApmInstruction(
             actualBlockHeight,
@@ -280,24 +280,16 @@ class BitcoinFamilyChain(
         )
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        logger.debug { "Submitting PoP data to $name daemon at ${config.host}..." }
-        // submit VBK blocks first
-        contextBlocks.forEach {
-            rpcRequest("submitpop", listOf(listOf(SerializeDeserializeService.serialize(it).toHex()), emptyList(), emptyList()))
-        }
-        // then VTBs
-        vtbs.forEach {
-            rpcRequest("submitpop", listOf(emptyList(), listOf(SerializeDeserializeService.serialize(it).toHex()), emptyList()))
-        }
-        // then ATVs
-        atvs.forEach {
-            rpcRequest("submitpop", listOf(emptyList(), emptyList(), listOf(SerializeDeserializeService.serialize(it).toHex())))
-        }
+    override suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse {
+        return rpcRequest("submitpopvbk", listOf(SerializeDeserializeService.serialize(block).toHex()))
+    }
+
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
+        return rpcRequest("submitpopatv", listOf(SerializeDeserializeService.serialize(atv).toHex()))
+    }
+
+    override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
+        return rpcRequest("submitpopvtb", listOf(SerializeDeserializeService.serialize(vtb).toHex()))
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
@@ -308,13 +300,14 @@ class BitcoinFamilyChain(
     private val crypto = Crypto()
 
     override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
-        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
-        val height = contextBuffer.getInt()
         val hash = crypto.SHA256D(altchainPopEndorsement.getHeader()).flip()
         val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).flip()
-        val previousKeystone = contextBuffer.getBytes(32).flip()
+        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
+        val height = contextBuffer.getInt()
+        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
 
-        return BlockEvidence(height, hash, previousHash, previousKeystone, null)
+        return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
 
     override suspend fun getBlockChainInfo(): StateInfo {
@@ -330,9 +323,13 @@ class BitcoinFamilyChain(
                 response.chain
             )
         } catch (e: Exception) {
-            logger.warn { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
+            logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
         }
+    }
+
+    override suspend fun getPopParams(): PopParamsResponse {
+        return rpcRequest("getpopparams", emptyList<String>())
     }
 
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
@@ -404,13 +401,7 @@ class BitcoinFamilyChain(
                 throw e
             }
         } catch (e: Exception) {
-            error("Unable to perform the validateaddress rpc call to ${config.host} (is it reachable?)")
+            throw IllegalStateException("Unable to perform the validateaddress rpc call to ${config.host}", e)
         }
     }
-}
-
-fun ByteBuffer.getBytes(count: Int): ByteArray {
-    val result = ByteArray(count)
-    get(result)
-    return result
 }

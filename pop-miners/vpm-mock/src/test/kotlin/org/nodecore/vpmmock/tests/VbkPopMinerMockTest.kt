@@ -1,6 +1,6 @@
 package org.nodecore.vpmmock.tests
 
-import io.kotlintest.shouldBe
+import io.kotest.matchers.shouldBe
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context

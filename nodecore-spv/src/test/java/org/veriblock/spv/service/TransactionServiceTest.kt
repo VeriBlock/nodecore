@@ -1,8 +1,9 @@
 package org.veriblock.spv.service
 
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import junit.framework.TestCase
-import org.junit.Assert
 import org.junit.Test
 import org.veriblock.core.Context
 import org.veriblock.core.params.defaultTestNetParameters
@@ -43,7 +44,7 @@ class TransactionServiceTest : TestCase() {
         val result = transactionService.createTransactionsByOutputList(
             addressCoinsIndexList, outputList
         )
-        Assert.assertNotNull(result)
+        result shouldNotBe null
 
         val totalResultOutPut = result.map { tx ->
             tx.getOutputs().map {
@@ -51,6 +52,6 @@ class TransactionServiceTest : TestCase() {
             }.sum()
         }.sum()
 
-        Assert.assertEquals(totalResultOutPut, 450L * Coin.COIN_VALUE)
+        totalResultOutPut shouldBe 450L * Coin.COIN_VALUE
     }
 }

@@ -53,7 +53,10 @@ class PluginService(
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
             val pluginKey = (config.pluginKey ?: key).toLowerCase()
             val pluginSupplier = plugins[pluginKey]
-                ?: return@mapNotNull null
+            if (pluginSupplier == null) {
+                logger.warn { "Unable to load plugin implementation $key: chain family $pluginKey is not implemented" }
+                return@mapNotNull null
+            }
             val plugin = try {
                 pluginSupplier(key, config)
             } catch (e: InvocationTargetException) {

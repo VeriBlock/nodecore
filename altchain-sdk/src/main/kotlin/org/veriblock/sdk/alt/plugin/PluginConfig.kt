@@ -1,5 +1,7 @@
 package org.veriblock.sdk.alt.plugin
 
+import org.veriblock.sdk.alt.PayoutDetectionType
+
 data class PluginConfig(
     val pluginKey: String? = null,
     val id: Long? = null,
@@ -13,6 +15,7 @@ data class PluginConfig(
     val payoutDelay: Int? = null,
     val blockRoundIndices: List<Int>? = null,
     val autoMineRounds: List<Int> = emptyList(),
+    val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
     val extraConfig: Map<String, String> = emptyMap()
 )
 

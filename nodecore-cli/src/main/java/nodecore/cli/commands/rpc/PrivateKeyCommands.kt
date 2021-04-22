@@ -1,6 +1,7 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcDumpPrivateKeyRequest
+import nodecore.api.grpc.RpcImportPrivateKeyRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.cli.cliShell
@@ -24,7 +25,7 @@ fun CommandFactory.privateKeyCommands() {
         suggestedCommands = { listOf("backupwallet", "importwallet", "importprivatekey") }
     ) {
         val address: String = getParameter("address")
-        val request = VeriBlockMessages.DumpPrivateKeyRequest.newBuilder()
+        val request = RpcDumpPrivateKeyRequest.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .build()
 
@@ -47,7 +48,7 @@ fun CommandFactory.privateKeyCommands() {
         suggestedCommands = { listOf("dumpprivatekey", "backupwallet", "importwallet") }
     ) {
         val privateKeyHex: String = getParameter("privateKey")
-        val request = VeriBlockMessages.ImportPrivateKeyRequest.newBuilder()
+        val request = RpcImportPrivateKeyRequest.newBuilder()
             .setPrivateKey(privateKeyHex.asHexByteString())
             .build()
         val result = cliShell.adminService.importPrivateKey(request)

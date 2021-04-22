@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcTransactionInfo
 
 class TransactionReferencesPayload(
-    list: List<VeriBlockMessages.TransactionInfo>
+    list: List<RpcTransactionInfo>
 ) {
     val transactions = list.map { transactionInfo ->
         TransactionReferenceInfo(transactionInfo)

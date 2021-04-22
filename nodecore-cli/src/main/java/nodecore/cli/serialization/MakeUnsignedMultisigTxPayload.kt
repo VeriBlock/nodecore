@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.MakeUnsignedMultisigTxReply
+import nodecore.api.grpc.RpcMakeUnsignedMultisigTxReply
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.utilities.extensions.toHex
 
 class MakeUnsignedMultisigTxPayload(
-    reply: MakeUnsignedMultisigTxReply
+    reply: RpcMakeUnsignedMultisigTxReply
 ) {
     val signatureThresholdM = reply.signatureThresholdM
 

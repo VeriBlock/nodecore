@@ -43,40 +43,45 @@ class PopShell(
 
     fun runOnce() {
         if (mustAcceptWalletSeed) {
-            val walletSeed: List<String>? = minerService.getWalletSeed()
-            if (walletSeed != null) {
-                printInfo(
-                    "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below."
-                )
-                var counter = 0
-                while (prompt("Press 'y' to continue...").toUpperCase() != "Y") {
-                    counter++
-                    if (counter >= 3) {
-                        exitProcess(1)
-                    }
+            logsMuted = true
+            try {
+                val walletSeed: List<String>? = minerService.getWalletSeed()
+                if (walletSeed != null) {
                     printInfo(
                         "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below."
                     )
-                }
-                printInfo("WALLET CREATION TIME:")
-                printInfo(String.format("\t%s", walletSeed[0]))
-                printInfo("SEED WORDS:")
-                walletSeed.subList(1, walletSeed.size).forEach {
-                    printInfo("\t$it")
-                }
-                printInfo(
-                    "\rThis information will not be displayed again. Please make sure you have recorded them securely."
-                )
-                counter = 0
-                while (prompt("Press 'y' to continue...").toUpperCase() != "Y") {
-                    counter++
-                    if (counter >= 3) {
-                        exitProcess(1)
+                    var counter = 0
+                    while (prompt("Press 'y' to continue...").toUpperCase() != "Y") {
+                        counter++
+                        if (counter >= 3) {
+                            exitProcess(1)
+                        }
+                        printInfo(
+                            "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below."
+                        )
+                    }
+                    printInfo("WALLET CREATION TIME:")
+                    printInfo(String.format("\t%s", walletSeed[0]))
+                    printInfo("SEED WORDS:")
+                    walletSeed.subList(1, walletSeed.size).forEach {
+                        printInfo("\t$it")
                     }
                     printInfo(
-                        "This information will not be displayed again. Please make sure you have recorded them securely."
+                        "\rThis information will not be displayed again. Please make sure you have recorded them securely."
                     )
+                    counter = 0
+                    while (prompt("Press 'y' to continue...").toUpperCase() != "Y") {
+                        counter++
+                        if (counter >= 3) {
+                            exitProcess(1)
+                        }
+                        printInfo(
+                            "This information will not be displayed again. Please make sure you have recorded them securely."
+                        )
+                    }
                 }
+            } finally {
+                logsMuted = false
             }
         }
     }

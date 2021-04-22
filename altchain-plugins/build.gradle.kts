@@ -41,7 +41,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.13.3")
 
     testImplementation("junit:junit:4.12")
-    testImplementation("io.kotlintest:kotlintest-assertions:3.4.2")
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
     testImplementation("io.mockk:mockk:1.9.3")
 }
 

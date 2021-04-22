@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.AddressBalanceSchedule
+import nodecore.api.grpc.RpcAddressBalanceSchedule
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class AddressBalanceSchedulePayload(
-    message: AddressBalanceSchedule
+    message: RpcAddressBalanceSchedule
 ) {
     val address = message.address.toProperAddressType()
 

@@ -7,6 +7,7 @@
 
 package org.veriblock.miners.pop.automine
 
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -44,7 +45,7 @@ class AutomineEngineTests {
         EventBus.newVeriBlockFoundEvent.trigger(event)
 
         // Then
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             miner.mine(1000)
         }
     }

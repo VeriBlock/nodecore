@@ -6,13 +6,13 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.MultisigSlot
+import nodecore.api.grpc.RpcMultisigSlot
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.extensions.toBase58
 import org.veriblock.core.utilities.extensions.toHex
 
 class MultisigSlotInfo(
-    slot: MultisigSlot
+    slot: RpcMultisigSlot
 ) {
     val publicKey = if (slot.publicKey != null) {
         slot.publicKey.toByteArray().toHex()

@@ -33,7 +33,6 @@ allprojects {
         mavenLocal()
         jcenter()
         maven("https://jitpack.io")
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 
     tasks.withType<KotlinCompile> {

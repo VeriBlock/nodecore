@@ -9,7 +9,6 @@ package org.veriblock.spv.net
 
 import io.ktor.util.network.NetworkAddress
 import nodecore.p2p.DnsResolver
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
 import java.util.ArrayList
 
@@ -27,7 +26,8 @@ class DnsDiscovery(
     init {
         val dnsResolver = DnsResolver()
         try {
-            peers.addAll(dnsResolver.query(dns).map {
+            val resolvedIps = dnsResolver.query(dns)
+            peers.addAll(resolvedIps.map {
                 logger.debug("Found peer ${it}:${port}")
                 NetworkAddress(it, port)
             })
@@ -35,11 +35,10 @@ class DnsDiscovery(
             logger.error(e.message, e)
             throw RuntimeException(e)
         }
-
     }
 
-    override fun getPeers(): Sequence<NetworkAddress> {
-        return peers.asSequence()
+    override fun getPeers(): List<NetworkAddress> {
+        return peers
     }
 
     override fun name(): String {

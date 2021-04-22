@@ -11,9 +11,8 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
-import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsReply
-import nodecore.api.grpc.VeriBlockMessages.GetVeriBlockPublicationsRequest
-import nodecore.p2p.Constants
+import nodecore.api.grpc.RpcGetVeriBlockPublicationsReply
+import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import org.veriblock.core.*
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
@@ -26,9 +25,9 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.spv.Constants
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.AddressCoinsIndex
 import org.veriblock.spv.model.AddressLight
@@ -75,7 +74,7 @@ class SpvService(
             nodecoreStartTime = spvContext.startTime.epochSecond,
             walletCacheSyncHeight = blockchain.activeChain.tip.height,
             walletState = when {
-                addressManager.isEncrypted -> WalletState.DEFAULT
+                !addressManager.isEncrypted -> WalletState.DEFAULT
                 addressManager.isLocked -> WalletState.LOCKED
                 else -> WalletState.UNLOCKED
             }
@@ -352,7 +351,7 @@ class SpvService(
         pendingTransactionContainer.getTransactionInfo(it)
     }
 
-    suspend fun getVeriBlockPublications(getVeriBlockPublicationsRequest: GetVeriBlockPublicationsRequest): GetVeriBlockPublicationsReply {
+    suspend fun getVeriBlockPublications(getVeriBlockPublicationsRequest: RpcGetVeriBlockPublicationsRequest): RpcGetVeriBlockPublicationsReply {
         val request = buildMessage {
             veriblockPublicationsRequest = getVeriBlockPublicationsRequest
         }

@@ -1,7 +1,11 @@
 package nodecore.cli.commands.rpc
 
 import com.google.protobuf.ByteString
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcGetPoolStateRequest
+import nodecore.api.grpc.RpcRestartPoolWebServerRequest
+import nodecore.api.grpc.RpcStartPoolRequest
+import nodecore.api.grpc.RpcStartSoloPoolRequest
+import nodecore.api.grpc.RpcStopPoolRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
@@ -19,7 +23,7 @@ fun CommandFactory.poolCommands() {
         form = "stoppool|stopsolopool",
         description = "Stops the built-in pool service in NodeCore"
     ) {
-        val request = VeriBlockMessages.StopPoolRequest.newBuilder().build()
+        val request = RpcStopPoolRequest.newBuilder().build()
         val result = cliShell.adminService.stopPool(request)
 
         prepareResult(result.success, result.resultsList)
@@ -36,11 +40,11 @@ fun CommandFactory.poolCommands() {
     ) {
         val address: String? = getOptionalParameter("address")
         val request = if (address != null) {
-            VeriBlockMessages.StartSoloPoolRequest.newBuilder()
+            RpcStartSoloPoolRequest.newBuilder()
                 .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
                 .build()
         } else {
-            VeriBlockMessages.StartSoloPoolRequest.newBuilder().build()
+            RpcStartSoloPoolRequest.newBuilder().build()
         }
         val result = cliShell.adminService.startSoloPool(request)
 
@@ -66,7 +70,7 @@ fun CommandFactory.poolCommands() {
         ),
         suggestedCommands = { listOf("stoppool", "getbalance") }
     ) {
-        val request = VeriBlockMessages.StartPoolRequest.newBuilder().apply {
+        val request = RpcStartPoolRequest.newBuilder().apply {
             try {
                 type = ByteString.copyFrom(getParameter<String>("type").toByteArray(charset("UTF-8")))
             } catch (e: UnsupportedEncodingException) {
@@ -95,7 +99,7 @@ fun CommandFactory.poolCommands() {
         description = "Returns pool configuration and metrics",
         suggestedCommands = { listOf("getinfo", "getstateinfo", "startpool", "stoppool") }
     ) {
-        val request = VeriBlockMessages.GetPoolStateRequest.newBuilder().build()
+        val request = RpcGetPoolStateRequest.newBuilder().build()
         val result = cliShell.adminService.getPoolState(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -108,7 +112,7 @@ fun CommandFactory.poolCommands() {
         form = "restartpoolwebserver",
         description = "Restarts the built-in pool web server"
     ) {
-        val request = VeriBlockMessages.RestartPoolWebServerRequest.newBuilder().build()
+        val request = RpcRestartPoolWebServerRequest.newBuilder().build()
         val result = cliShell.adminService.restartPoolWebServer(request)
 
         prepareResult(result.success, result.resultsList)

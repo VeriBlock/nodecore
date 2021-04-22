@@ -8,11 +8,11 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import com.opencsv.bean.CsvBindByName
-import nodecore.api.grpc.VeriBlockMessages.GetInfoReply
+import nodecore.api.grpc.RpcGetInfoReply
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class GetInfoPayload(
-    reply: GetInfoReply
+    reply: RpcGetInfoReply
 ) {
     @CsvBindByName
     @SerializedName("default_address")

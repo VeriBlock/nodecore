@@ -17,7 +17,7 @@ class Command(
     val parameters: List<CommandParameter>,
     val suggestedCommands: () -> List<String> = { emptyList() },
     val extraData: String? = null,
-    val action: (CommandContext) -> Result
+    val action: suspend (CommandContext) -> Result
 ) {
     override fun toString() = form
 }
@@ -37,7 +37,7 @@ fun CommandFactory.command(
     parameters: List<CommandParameter> = emptyList(),
     suggestedCommands: () -> List<String> = { emptyList() },
     extraData: String? = null,
-    action: CommandContext.() -> Result
+    action: suspend CommandContext.() -> Result
 ) {
     val command = Command(name, form, description, parameters, suggestedCommands, extraData, action)
     registerCommand(command)

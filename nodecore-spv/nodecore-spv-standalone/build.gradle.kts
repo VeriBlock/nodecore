@@ -48,7 +48,7 @@ dependencies {
     implementation("me.tongfei:progressbar:0.8.1")
 
     testImplementation("junit:junit:4.12")
-    testImplementation("io.kotlintest:kotlintest-assertions:3.4.1")
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

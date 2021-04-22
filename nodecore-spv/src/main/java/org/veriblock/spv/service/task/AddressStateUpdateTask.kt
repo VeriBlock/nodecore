@@ -5,7 +5,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.mapNotNull
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcLedgerProofReply
+import nodecore.api.grpc.RpcLedgerProofRequest
 import nodecore.api.grpc.utilities.extensions.asBase58ByteString
 import nodecore.api.grpc.utilities.extensions.toBase58
 import org.veriblock.core.utilities.createLogger
@@ -38,7 +39,7 @@ suspend fun SpvContext.updateAddressState() {
         }
 
         val request = buildMessage {
-            ledgerProofRequest = VeriBlockMessages.LedgerProofRequest.newBuilder().apply {
+            ledgerProofRequest = RpcLedgerProofRequest.newBuilder().apply {
                 for (address in addresses) {
                     addAddresses(address.asBase58ByteString())
                 }
@@ -51,7 +52,7 @@ suspend fun SpvContext.updateAddressState() {
             // handle only ADDRESS_EXISTS replies
             .filter {
                 when (it.result) {
-                    VeriBlockMessages.LedgerProofReply.Status.ADDRESS_EXISTS -> true
+                    RpcLedgerProofReply.Status.ADDRESS_EXISTS -> true
                     else -> {
                         logger.debug { "Received LedgerProofReply with status=${it.result}" }
                         false

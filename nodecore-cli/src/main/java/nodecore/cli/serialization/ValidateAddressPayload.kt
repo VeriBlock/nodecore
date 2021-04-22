@@ -7,12 +7,12 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.ValidateAddressReply
+import nodecore.api.grpc.RpcValidateAddressReply
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class ValidateAddressPayload(
-    reply: ValidateAddressReply
+    reply: RpcValidateAddressReply
 ) {
     val address = reply.address.toProperAddressType()
 

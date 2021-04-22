@@ -7,10 +7,10 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.ListBannedReply
+import nodecore.api.grpc.RpcListBannedReply
 
 class ListBannedPayload(
-    reply: ListBannedReply
+    reply: RpcListBannedReply
 ) {
     @SerializedName("banned_peers")
     val bannedPeers = reply.entriesList.map { blackListInfo ->

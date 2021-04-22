@@ -6,6 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.schedule
 
+import kotlinx.coroutines.runBlocking
 import org.bitcoinj.core.Context
 import org.quartz.CronScheduleBuilder
 import org.quartz.CronTrigger
@@ -90,7 +91,7 @@ class PoPMiningScheduler(
         }
     }
 
-    private fun executeSchedule() {
+    private fun executeSchedule() = runBlocking {
         Context.propagate(config.bitcoin.context)
         val conditionResult = popMinerService.checkReadyConditions()
         if (conditionResult is CheckResult.Success) {

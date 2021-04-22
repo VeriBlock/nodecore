@@ -8,8 +8,8 @@
 package org.veriblock.spv.model
 
 import com.google.protobuf.ByteString
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
+import nodecore.api.grpc.RpcSignedTransaction
+import nodecore.api.grpc.RpcTransaction
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
@@ -84,9 +84,9 @@ open class StandardTransaction : Transaction {
         }
     }
 
-    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): SignedTransaction.Builder {
+    override fun getSignedMessageBuilder(networkParameters: NetworkParameters): RpcSignedTransaction.Builder {
         val transaction = getTransactionMessageBuilder(networkParameters).build()
-        val builder = SignedTransaction.newBuilder()
+        val builder = RpcSignedTransaction.newBuilder()
         builder.transaction = transaction
         builder.signatureIndex = signatureIndex
         builder.publicKey = ByteString.copyFrom(publicKey)
@@ -94,15 +94,15 @@ open class StandardTransaction : Transaction {
         return builder
     }
 
-    private fun getTransactionMessageBuilder(networkParameters: NetworkParameters): VeriBlockMessages.Transaction.Builder {
-        val builder = VeriBlockMessages.Transaction.newBuilder()
+    private fun getTransactionMessageBuilder(networkParameters: NetworkParameters): RpcTransaction.Builder {
+        val builder = RpcTransaction.newBuilder()
         builder.timestamp = Utility.getCurrentTimeSeconds()
         builder.transactionFee = transactionFee
         builder.txId = txId.toString().asHexByteString()
         if (transactionTypeIdentifier == TransactionTypeIdentifier.STANDARD) {
-            builder.type = VeriBlockMessages.Transaction.Type.STANDARD
+            builder.type = RpcTransaction.Type.STANDARD
         } else if (transactionTypeIdentifier == TransactionTypeIdentifier.MULTISIG) {
-            builder.type = VeriBlockMessages.Transaction.Type.MULTISIG
+            builder.type = RpcTransaction.Type.MULTISIG
         }
         builder.sourceAmount = inputAmount!!.atomicUnits
         builder.sourceAddress = ByteString.copyFrom(inputAddress!!.toByteArray())

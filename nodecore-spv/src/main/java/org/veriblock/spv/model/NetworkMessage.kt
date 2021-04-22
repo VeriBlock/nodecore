@@ -7,10 +7,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.model
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcEvent
 import org.veriblock.spv.net.SpvPeer
 
 data class NetworkMessage(
     val sender: SpvPeer,
-    val message: VeriBlockMessages.Event
+    val message: RpcEvent
 )

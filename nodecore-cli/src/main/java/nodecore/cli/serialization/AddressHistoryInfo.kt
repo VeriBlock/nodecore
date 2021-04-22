@@ -7,11 +7,11 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages.AddressHistory
+import nodecore.api.grpc.RpcAddressHistory
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class AddressHistoryInfo(
-    history: AddressHistory
+    history: RpcAddressHistory
 ) {
     val balance: String = history.balance.formatAtomicLongWithDecimal()
 

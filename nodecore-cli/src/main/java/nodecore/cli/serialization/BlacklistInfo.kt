@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.BlackListInfo
+import nodecore.api.grpc.RpcBlackListInfo
 
 class BlacklistInfo(
-    info: BlackListInfo
+    info: RpcBlackListInfo
 ) {
     val type = info.type.name
 

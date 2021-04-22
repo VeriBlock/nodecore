@@ -1,6 +1,6 @@
 package org.veriblock.core.utilities
 
-import org.junit.Assert
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.EMPTY_TRUNCATED_MERKLE_ROOT
@@ -40,7 +40,7 @@ class VeriBlockDifficultyCalculatorTests {
             )
         )
         val result: BigInteger = VeriBlockDifficultyCalculator.calculate(mainnet, blocks[0], blocks)
-        Assert.assertEquals(blocks[0].getDecodedDifficulty(), result)
+        result shouldBe blocks[0].getDecodedDifficulty()
     }
 
     @Test
@@ -56,7 +56,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(blocks[0].getDecodedDifficulty(), result)
+        result shouldBe blocks[0].getDecodedDifficulty()
     }
 
     @Test
@@ -73,7 +73,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("374138710165940323220619084031490655051373200015360"), result)
+        result shouldBe BigInteger("374138710165940323220619084031490655051373200015360")
     }
 
     @Test
@@ -90,7 +90,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("187069355082970161610309542015745327525686600007680"), result)
+        result shouldBe BigInteger("187069355082970161610309542015745327525686600007680")
     }
 
     @Test
@@ -107,7 +107,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("748277420331880646441238168062981310102746400030720"), result)
+        result shouldBe BigInteger("748277420331880646441238168062981310102746400030720")
     }
 
     @Test
@@ -123,7 +123,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("3741387101659403232206190840314906550513732000153600"), result)
+        result shouldBe BigInteger("3741387101659403232206190840314906550513732000153600")
     }
 
     @Test
@@ -140,7 +140,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("1122416130497820969661857252094471965154119600046080"), result)
+        result shouldBe BigInteger("1122416130497820969661857252094471965154119600046080")
     }
 
     @Test
@@ -168,7 +168,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("9363170766320"), result)
+        result shouldBe BigInteger("9363170766320")
     }
 
     @Test
@@ -196,7 +196,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("10729760739729"), result)
+        result shouldBe BigInteger("10729760739729")
     }
 
     @Test
@@ -213,7 +213,7 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("3741387101659403232206190840314906550513732000153600"), result)
+        result shouldBe BigInteger("3741387101659403232206190840314906550513732000153600")
     }
 
     @Test
@@ -238,6 +238,6 @@ class VeriBlockDifficultyCalculatorTests {
             blocks[0],
             blocks
         )
-        Assert.assertEquals(BigInteger("2374098916560"), result)
+        result shouldBe BigInteger("2374098916560")
     }
 }

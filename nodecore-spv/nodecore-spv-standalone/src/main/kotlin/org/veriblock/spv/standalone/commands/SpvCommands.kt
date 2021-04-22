@@ -26,7 +26,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Get Balance",
         form = "getbalance|getbal|bal",
-        description = "See the balances of all of your addresses",
+        description = "Displays the balances of all of your addresses",
         parameters = listOf(
             CommandParameter(name = "address", mapper = ShellCommandParameterMappers.STANDARD_ADDRESS, required = false)
         ),
@@ -40,7 +40,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Get state Info",
         form = "getstateinfo|stateinfo|state|getstate",
-        description = "Returns blockchain, operating, and network state information",
+        description = "Displays blockchain, operating, and network state information",
         suggestedCommands = { listOf("getbalance") }
     ) {
         val result = context.spvService.getStateInfo()
@@ -63,19 +63,15 @@ fun CommandFactory.spvCommands(
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(amount)
         val destinationAddress: String = getParameter("destinationAddress")
         val sourceAddress: String? = getOptionalParameter("sourceAddress")
-
-        val result = runBlocking {
-            context.spvService.sendCoins(
-                sourceAddress = sourceAddress?.asLightAddress(),
-                outputs = listOf(
-                    Output(
-                        destinationAddress.asLightAddress(),
-                        atomicAmount.asCoin()
-                    )
+        val result = context.spvService.sendCoins(
+            sourceAddress = sourceAddress?.asLightAddress(),
+            outputs = listOf(
+                Output(
+                    destinationAddress.asLightAddress(),
+                    atomicAmount.asCoin()
                 )
             )
-        }
-
+        )
         printInfo("Transaction ids:")
         displayResult(result.map { it.toString() })
         success()
@@ -84,7 +80,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Lock Wallet",
         form = "lockwallet",
-        description = "Disables the temporary unlock on the NodeCore wallet",
+        description = "Locks the loaded SPV wallet, this command has no effect on the wallet file",
         suggestedCommands = { listOf("unlockwallet") }
     ) {
         context.spvService.lockWallet()
@@ -94,7 +90,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Unlock Wallet",
         form = "unlockwallet",
-        description = "Temporarily unlocks the NodeCore wallet",
+        description = "Unlocks the loaded SPV wallet, this command has no effect on the wallet file",
         suggestedCommands = { listOf("lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
@@ -105,7 +101,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Decrypt Wallet",
         form = "decryptwallet",
-        description = "Decrypts the wallet loaded in NodeCore",
+        description = "Decrypts the SPV wallet file with the given passphrase",
         suggestedCommands = { listOf("encryptwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
@@ -117,7 +113,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Encrypt Wallet",
         form = "encryptwallet",
-        description = "Encrypts the wallet loaded in NodeCore with a passphrase",
+        description = "Encrypts the SPV wallet file with the given passphrase",
         suggestedCommands = { listOf("decryptwallet", "unlockwallet", "lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
@@ -138,7 +134,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Import Wallet",
         form = "importwallet",
-        description = "Import a NodeCore wallet backup",
+        description = "Imports a SPV wallet file",
         parameters = listOf(
             CommandParameter(name = "sourceLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
@@ -153,7 +149,7 @@ fun CommandFactory.spvCommands(
     command(
         name = "Backup Wallet",
         form = "backupwallet",
-        description = "Backup the SPV wallet",
+        description = "Creates a backup from the loaded SPV wallet",
         parameters = listOf(
             CommandParameter(name = "targetLocation", mapper = CommandParameterMappers.STRING, required = true)
         ),
@@ -176,7 +172,6 @@ fun CommandFactory.spvCommands(
         suggestedCommands = { listOf("backupwallet", "getbalance") }
     ) {
         val count = getOptionalParameter<Int>("count")?.coerceAtLeast(1) ?: 1
-
         val result = context.spvService.getNewAddress(count)
         printInfo("The wallet has been modified. Please make a backup of the wallet data file.")
         displayResult(result.map { it.hash })

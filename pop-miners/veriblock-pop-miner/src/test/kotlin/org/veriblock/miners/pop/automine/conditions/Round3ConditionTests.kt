@@ -7,7 +7,7 @@
 
 package org.veriblock.miners.pop.automine.conditions
 
-import io.kotlintest.shouldBe
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.miners.pop.AutoMineConfig
 import org.veriblock.miners.pop.automine.round3Condition

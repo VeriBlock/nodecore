@@ -6,6 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.automine
 
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.StringUtils
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugWarn
@@ -73,7 +74,9 @@ class AutoMineEngine(
     }
 
     private fun mine(height: Int) {
-        val result = minerService.mine(height)
+        val result = runBlocking {
+            minerService.mine(height)
+        }
         if (result.didFail()) {
             val errorMessage = StringBuilder()
             for (message in result.messages) {

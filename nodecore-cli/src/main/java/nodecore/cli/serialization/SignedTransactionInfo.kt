@@ -7,8 +7,8 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.SignedTransaction
+import nodecore.api.grpc.RpcSignedTransaction
+import nodecore.api.grpc.RpcSignedTransactionInfo
 import nodecore.api.grpc.utilities.extensions.toHex
 
 class SignedTransactionInfo(
@@ -24,14 +24,14 @@ class SignedTransactionInfo(
     val bitcoinConfirmations: Int = 0
 )
 
-fun SignedTransaction.toSignedTransactionInfo(): SignedTransactionInfo = SignedTransactionInfo(
+fun RpcSignedTransaction.toSignedTransactionInfo(): SignedTransactionInfo = SignedTransactionInfo(
     signatureIndex = signatureIndex,
     signature = signature.toHex(),
     publicKey = publicKey.toHex(),
     transaction = TransactionInfo(transaction)
 )
 
-fun VeriBlockMessages.SignedTransactionInfo.toModel(): SignedTransactionInfo = SignedTransactionInfo(
+fun RpcSignedTransactionInfo.toModel(): SignedTransactionInfo = SignedTransactionInfo(
     signatureIndex = signatureIndex,
     signature = signature.toHex(),
     publicKey = publicKey.toHex(),

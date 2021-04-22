@@ -17,18 +17,18 @@ import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
-import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
 import org.veriblock.sdk.alt.model.PopMempool
+import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.SubmitPopResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
-import org.veriblock.sdk.services.SerializeDeserializeService
 
 private val logger = createLogger {}
 
@@ -86,6 +86,10 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
+    override suspend fun getPopParams(): PopParamsResponse {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
         TODO("Not yet implemented")
     }
@@ -110,7 +114,7 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getMiningInstruction(blockHeight: Int?): ApmInstruction {
+    override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {
         val payoutAddress = config.payoutAddress
             ?: error("Payout address is not configured! Please set 'payoutAddress' in the '$key' configuration section.")
 
@@ -156,24 +160,16 @@ class NxtFamilyChain(
         )
     }
 
-    override suspend fun submit(
-        contextBlocks: List<VeriBlockBlock>,
-        atvs: List<AltPublication>,
-        vtbs: List<VeriBlockPublication>
-    ) {
-        logger.info { "Submitting PoP and VeriBlock publications to $key daemon at ${config.host}..." }
-        val jsonBody = NxtSubmitData(
-            atv = SerializeDeserializeService.serialize(atvs.first()).toHex(),
-            vtb = vtbs.map { SerializeDeserializeService.serialize(it).toHex() }
-        ).toJson()
-        val submitResponse: NxtSubmitResponse = httpClient.get("${config.host}/nxt") {
-            parameter("requestType", "submitPop")
-            body = jsonBody
-        }
+    override suspend fun submitPopAtv(atv: AltPublication): SubmitPopResponse {
+        TODO("Not yet implemented")
+    }
 
-        if (submitResponse.error != null) {
-            error("Error calling $key daemon's API: ${submitResponse.error} (${submitResponse.errorDescription})")
-        }
+    override suspend fun submitPopVbk(block: VeriBlockBlock): SubmitPopResponse {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun submitPopVtb(vtb: VeriBlockPublication): SubmitPopResponse {
+        TODO("Not yet implemented")
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String = TODO()

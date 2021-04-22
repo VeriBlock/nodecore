@@ -8,7 +8,12 @@
 
 package org.veriblock.miners.pop.serialization
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcBlock
+import nodecore.api.grpc.RpcBlockHeader
+import nodecore.api.grpc.RpcSignedMultisigTransaction
+import nodecore.api.grpc.RpcSignedTransaction
+import nodecore.api.grpc.RpcTransactionUnion
+import nodecore.api.grpc.RpcVeriBlockPublication
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
@@ -33,21 +38,21 @@ import org.veriblock.spv.model.StandardTransaction
 
 private val logger = createLogger {}
 
-fun VeriBlockMessages.BlockHeader.deserialize(): VeriBlockBlock =
+fun RpcBlockHeader.deserialize(): VeriBlockBlock =
     SerializeDeserializeService.parseVeriBlockBlock(header.toByteArray())
 
-private fun VeriBlockMessages.TransactionUnion.deserializeNormalTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
+private fun RpcTransactionUnion.deserializeNormalTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     return when (transactionCase) {
-        VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED -> signed.deserializeStandardTransaction(transactionPrefix)
-        VeriBlockMessages.TransactionUnion.TransactionCase.SIGNED_MULTISIG -> signedMultisig.deserializeMultisigTransaction(transactionPrefix)
+        RpcTransactionUnion.TransactionCase.SIGNED -> signed.deserializeStandardTransaction(transactionPrefix)
+        RpcTransactionUnion.TransactionCase.SIGNED_MULTISIG -> signedMultisig.deserializeMultisigTransaction(transactionPrefix)
         else -> error("Can't deserialize a transaction with a transaction case: $transactionCase.") // Should be impossible
     }
 }
 
-fun VeriBlockMessages.TransactionUnion.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction =
+fun RpcTransactionUnion.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction =
     signed.deserializePoPTransaction(transactionPrefix)
 
-fun VeriBlockMessages.Block.deserialize(transactionPrefix: Byte?): FullBlock {
+fun RpcBlock.deserialize(transactionPrefix: Byte?): FullBlock {
     return FullBlock(
         number,
         version.toShort(),
@@ -64,7 +69,7 @@ fun VeriBlockMessages.Block.deserialize(transactionPrefix: Byte?): FullBlock {
     )
 }
 
-fun VeriBlockMessages.SignedTransaction.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction {
+fun RpcSignedTransaction.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction {
     val txMessage = transaction
     return VeriBlockPopTransaction(
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
@@ -97,7 +102,7 @@ fun StandardTransaction.deserializeStandardTransaction(transactionPrefix: Byte?)
     )
 }
 
-fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
+fun RpcSignedTransaction.deserializeStandardTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     val txMessage = transaction
     return VeriBlockTransaction(
         txMessage.type.number.toByte(),
@@ -114,7 +119,7 @@ fun VeriBlockMessages.SignedTransaction.deserializeStandardTransaction(transacti
     )
 }
 
-fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
+fun RpcSignedMultisigTransaction.deserializeMultisigTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     val txMessage = transaction
     return VeriBlockTransaction(
         txMessage.type.number.toByte(),
@@ -131,7 +136,7 @@ fun VeriBlockMessages.SignedMultisigTransaction.deserializeMultisigTransaction(t
     )
 }
 
-fun VeriBlockMessages.VeriBlockPublication.deserialize(transactionPrefix: Byte?): VeriBlockPublication {
+fun RpcVeriBlockPublication.deserialize(transactionPrefix: Byte?): VeriBlockPublication {
     val context: List<VeriBlockBlock> =
         contextToEndorsedList.map {
             SerializeDeserializeService.parseVeriBlockBlock(it.toByteArray())

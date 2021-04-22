@@ -17,11 +17,14 @@ import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Configuration
@@ -70,6 +73,7 @@ class SecurityInheritingMonitor(
 
     private var firstPoll: Boolean = true
 
+    private val popIsActive = AtomicBoolean(false)
     private val ready = AtomicBoolean(false)
     private val accessible = AtomicBoolean(false)
     private val synchronized = AtomicBoolean(false)
@@ -82,6 +86,9 @@ class SecurityInheritingMonitor(
 
     private val blockHeightListeners = ConcurrentHashMap<Int, MutableList<Channel<SecurityInheritingBlock>>>()
     private val transactionListeners = ConcurrentHashMap<String, MutableList<Channel<SecurityInheritingTransaction>>>()
+
+    fun isPopActive(): Boolean =
+        popIsActive.get()
 
     fun isReady(): Boolean =
         ready.get()
@@ -123,6 +130,11 @@ class SecurityInheritingMonitor(
             while (!isReady()) {
                 delay(1_000L)
             }
+
+            while(!isPopActive()) {
+                delay(10_000L)
+            }
+
             // Start submitting context and VTBs
             launch {
                 submitContext()
@@ -163,19 +175,10 @@ class SecurityInheritingMonitor(
                 }
 
                 // Verify the Altchain configured network
-                // TODO: Check with getpopparams
-                //if (latestBlockChainInfo.networkVersion.isOnSameNetwork(context.networkParameters.name)) {
-                if (!isOnSameNetwork()) {
-                    sameNetwork.set(true)
-                    EventBus.altChainSameNetworkEvent.trigger(chainId)
-                }
-                //} else {
-                //    if (isOnSameNetwork() || firstPoll) {
-                //        sameNetwork.set(false)
-                //        EventBus.altChainSameNetworkEvent.trigger(chainId)
-                //        logger.warn { "The connected ${chain.name} chain (${latestBlockChainInfo.networkVersion}) & APM (${context.networkParameters.name}) are not running on the same configured network" }
-                //    }
-                //}
+                // TODO: check if APM & altchain are on same VBK network (beware of comparisons "test" vs "testnet")
+                sameNetwork.set(true)
+                // TODO: check if POP is active and exit if not.
+                popIsActive.set(true)
 
                 connected.set(true)
 
@@ -258,12 +261,12 @@ class SecurityInheritingMonitor(
     }
 
     private suspend fun submitContext() = coroutineScope {
-        logger.info("Starting continuous submission of VBK Context for ${chain.name}")
+        logger.info("Starting continuous submission of VBK context for ${chain.name}")
         SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
             try {
                 val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
                 val bestKnownBlock = miner.gateway.getBlock(bestKnownBlockHash)
-                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
                     ?: return@collect
 
                 if (bestKnownBlock.height == newBlock.height) {
@@ -279,16 +282,19 @@ class SecurityInheritingMonitor(
                 }.toList()
 
                 val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-                val contextBlocksToSubmit = contextBlocks.filter {
-                    it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
+                val successfulSubmissions = contextBlocks.asFlow()
+                    .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
+                    .map { contextBlock ->
+                        val result = chain.submitPopVbk(contextBlock)
+                        if (!result.accepted) {
+                            logger.debug { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
+                        }
+                        result
+                    }
+                    .count { it.accepted }
+                if (successfulSubmissions > 0) {
+                    logger.info { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
                 }
-
-                if (contextBlocksToSubmit.isEmpty()) {
-                    return@collect
-                }
-
-                chain.submitContext(contextBlocksToSubmit)
-                logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
@@ -299,7 +305,7 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VTBs for ${chain.name}")
         while (true) {
             try {
-                val instruction = chain.getMiningInstruction()
+                val instruction = chain.getMiningInstructionByHeight()
                 val vbkContextBlockHash = instruction.context.first().asVbkHash()
                 val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash) ?: run {
                     // Maybe our peer doesn't know about that block yet. Let's wait a few seconds and give it another chance
@@ -315,14 +321,16 @@ class SecurityInheritingMonitor(
                     "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
                         " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
                 }
-                val newKeystone = SpvEventBus.newBlockFlow.filter {
+
+                // Wait for the next keystone to be mined
+                val keystone = SpvEventBus.newBlockFlow.filter {
                     it.height % 20 == 0 && it.height > vbkContextBlock.height
                 }.first()
 
-                logger.info { "Got keystone for ${chain.name}'s VTBs: ${newKeystone.hash} @ ${newKeystone.height}. Retrieving publication data..." }
+                logger.info { "Got keystone for ${chain.name}'s VTBs: ${keystone.hash} @ ${keystone.height}. Retrieving publication data..." }
                 // Fetch and wait for veriblock publications (VTBs)
                 val vtbs = miner.network.getVeriBlockPublications(
-                    newKeystone.hash.toString(),
+                    keystone.hash.toString(),
                     instruction.context.first().toHex(),
                     instruction.btcContext.first().toHex()
                 )
@@ -332,8 +340,21 @@ class SecurityInheritingMonitor(
                 logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
 
                 // Submit them to the blockchain
-                chain.submitVtbs(vtbs)
-                logger.info { "Submitted ${vtbs.size} VTBs to ${chain.name}!" }
+                vtbs.forEach {
+                    chain.submitPopVtb(it)
+                }
+                val successfulSubmissions = vtbs.asFlow()
+                    .map { vtb ->
+                        val result = chain.submitPopVtb(vtb)
+                        if (!result.accepted) {
+                            logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                        }
+                        result
+                    }
+                    .count { it.accepted }
+                if (successfulSubmissions > 0) {
+                    logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+                }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
@@ -344,7 +365,7 @@ class SecurityInheritingMonitor(
         }
     }
 
-    private suspend fun handleNewBlock(block: SecurityInheritingBlock) {
+    private fun handleNewBlock(block: SecurityInheritingBlock) {
         logger.debug {
             val publicationsString = if (block.veriBlockPublicationIds.isEmpty()) {
                 "with no VBK publications"
@@ -369,7 +390,7 @@ class SecurityInheritingMonitor(
             null
         }
         // The best block should never be null if the chain's integrity is not compromised
-            ?: throw IllegalStateException("Unable to find block with height $height while the best chain height is $bestBlockHeight!")
+            ?: throw IllegalStateException("Unable to find block with height $height while the best chain height is ${bestBlockHeight.value}!")
     }
 
     private suspend fun getTransaction(txId: String): SecurityInheritingTransaction? = try {

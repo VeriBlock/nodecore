@@ -109,7 +109,7 @@ class TransactionMonitor(
 
     fun getTransaction(transactionId: VbkTxId): WalletTransaction {
         return transactions[transactionId]
-            ?: error("Unable to find transaction $transactionId in the monitored address")
+            ?: error("Unable to find VBK transaction $transactionId in the monitored address ($address)")
     }
 
     private fun removeConfirmations(amount: Int) = lock.withLock {

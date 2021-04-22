@@ -8,6 +8,7 @@ import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
+import org.veriblock.sdk.alt.PayoutDetectionType
 
 class ApmOperationExplainer(
     val context: ApmContext
@@ -41,7 +42,15 @@ class ApmOperationExplainer(
         } + OperationWorkflowStage(
             if (operation.state == MiningOperationState.COMPLETED) "DONE" else "",
             "9. COMPLETED",
-            if (operation.state == MiningOperationState.COMPLETED) "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}" else ""
+            if (operation.state == MiningOperationState.COMPLETED) {
+                when (operation.chain.config.payoutDetectionType) {
+                    PayoutDetectionType.COINBASE -> "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()}"
+                    PayoutDetectionType.BALANCE_DELTA -> "Paid amount: ${operation.payoutAmount?.formatAtomicLongWithDecimal()} (estimation based on wallet's incoming transactions)"
+                    PayoutDetectionType.DISABLED -> "Paid amount: Unknown (payout detection is disabled)"
+                }
+            } else {
+                ""
+            }
         ))
     }
 
@@ -83,11 +92,18 @@ class ApmOperationExplainer(
         ApmOperationState.SUBMITTED_POP_DATA ->
             "ATV: ${operation.atvId} submitted to ${operation.chain.name}!"
         ApmOperationState.PAYOUT_DETECTED -> {
-            operation.miningInstruction?.let { miningInstruction ->
-                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
-                val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address"
-            } ?: "Payout detected in ${operation.chain.name}"
+            when (operation.chain.config.payoutDetectionType) {
+                PayoutDetectionType.COINBASE ->
+                    operation.miningInstruction?.let { miningInstruction ->
+                        val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
+                        val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
+                        "Payout detected in ${operation.chain.name} block $payoutBlockHeight to ${operation.chain.name} address $address"
+                    } ?: "Payout detected in ${operation.chain.name}"
+                PayoutDetectionType.BALANCE_DELTA ->
+                    "TODO"
+                PayoutDetectionType.DISABLED ->
+                    "Skipped"
+            }
         }
         else ->
             ""
@@ -99,15 +115,22 @@ class ApmOperationExplainer(
         ApmOperationState.SUBMITTED_POP_DATA ->
             "Submitting PoP Data to ${operation.chain.name}"
         ApmOperationState.PAYOUT_DETECTED -> {
-            operation.miningInstruction?.let { miningInstruction ->
-                val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
-                val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                return if(operation.requiredConfirmations == null) {
-                    "Waiting for ATV to be mined in a block..."
-                } else {
-                    "Got ${operation.currentConfirmations ?: "0"}/${operation.requiredConfirmations} confirmations for ATV: ${operation.atvId} to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
-                }
-            } ?: "Waiting for reward to be paid"
+            when (operation.chain.config.payoutDetectionType) {
+                PayoutDetectionType.COINBASE ->
+                    operation.miningInstruction?.let { miningInstruction ->
+                        val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
+                        val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
+                        return if(operation.requiredConfirmations == null) {
+                            "Waiting for ATV to be mined in a block..."
+                        } else {
+                            "Got ${operation.currentConfirmations ?: "0"}/${operation.requiredConfirmations} confirmations for ATV: ${operation.atvId} to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
+                        }
+                    } ?: "Waiting for reward to be paid"
+                PayoutDetectionType.BALANCE_DELTA ->
+                    "TODO"
+                PayoutDetectionType.DISABLED ->
+                    "Skipping..."
+            }
         }
         else ->
             ""
@@ -120,11 +143,18 @@ class ApmOperationExplainer(
             ApmOperationState.SUBMITTED_POP_DATA ->
                 "Will submit PoP Data to ${operation.chain.name}"
             ApmOperationState.PAYOUT_DETECTED -> {
-                operation.miningInstruction?.let { miningInstruction ->
-                    val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
-                    val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
-                    "Will wait for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
-                } ?: "Will wait for reward to be paid"
+                when (operation.chain.config.payoutDetectionType) {
+                    PayoutDetectionType.COINBASE ->
+                        operation.miningInstruction?.let { miningInstruction ->
+                            val payoutBlockHeight = miningInstruction.endorsedBlockHeight + operation.chain.getPayoutDelay()
+                            val address = operation.chain.extractAddressDisplay(miningInstruction.publicationData.payoutInfo)
+                            "Will wait for reward to be paid in ${operation.chain.name} block @ $payoutBlockHeight to ${operation.chain.name} address $address"
+                        } ?: "Will wait for reward to be paid"
+                    PayoutDetectionType.BALANCE_DELTA ->
+                        "TODO"
+                    PayoutDetectionType.DISABLED ->
+                        "Disabled"
+                }
             }
             else ->
                 ""

@@ -8,7 +8,7 @@
 
 package org.veriblock.shell
 
-import io.kotlintest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldContain
 import org.junit.Test
 import org.veriblock.shell.core.success
 import java.io.ByteArrayOutputStream

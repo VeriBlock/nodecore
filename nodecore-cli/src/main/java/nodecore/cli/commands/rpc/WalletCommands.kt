@@ -2,7 +2,19 @@ package nodecore.cli.commands.rpc
 
 import com.google.protobuf.ByteString
 import io.grpc.StatusRuntimeException
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcBackupWalletRequest
+import nodecore.api.grpc.RpcDecryptWalletRequest
+import nodecore.api.grpc.RpcEncryptWalletRequest
+import nodecore.api.grpc.RpcGetWalletTransactionsReply
+import nodecore.api.grpc.RpcGetWalletTransactionsRequest
+import nodecore.api.grpc.RpcImportWalletRequest
+import nodecore.api.grpc.RpcLockWalletRequest
+import nodecore.api.grpc.RpcPaging
+import nodecore.api.grpc.RpcRefreshWalletCacheRequest
+import nodecore.api.grpc.RpcResult
+import nodecore.api.grpc.RpcTransactionMeta
+import nodecore.api.grpc.RpcUnlockWalletRequest
+import nodecore.api.grpc.RpcWalletTransaction
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.cli.CliShell
 import nodecore.cli.cliShell
@@ -33,7 +45,7 @@ fun CommandFactory.walletCommands() {
         suggestedCommands = { listOf("importwallet", "dumpprivatekey", "importprivatekey") }
     ) {
         val targetLocation: String = getParameter("targetLocation")
-        val request = VeriBlockMessages.BackupWalletRequest.newBuilder()
+        val request = RpcBackupWalletRequest.newBuilder()
             .setTargetLocation(ByteString.copyFrom(targetLocation.toByteArray()))
             .build()
         val result = cliShell.adminService.backupWallet(request)
@@ -51,7 +63,7 @@ fun CommandFactory.walletCommands() {
         suggestedCommands = { listOf("encryptwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val request = VeriBlockMessages.DecryptWalletRequest.newBuilder()
+        val request = RpcDecryptWalletRequest.newBuilder()
             .setPassphrase(passphrase)
             .build()
         val result = cliShell.adminService.decryptWallet(request)
@@ -71,7 +83,7 @@ fun CommandFactory.walletCommands() {
         } else {
             val confirmation = shell.passwordPrompt("Confirm passphrase: ")
             if (passphrase == confirmation) {
-                val request = VeriBlockMessages.EncryptWalletRequest.newBuilder()
+                val request = RpcEncryptWalletRequest.newBuilder()
                     .setPassphrase(passphrase).build()
                 val result = cliShell.adminService.encryptWallet(request)
 
@@ -105,8 +117,8 @@ fun CommandFactory.walletCommands() {
             val outputFile = File(relativeFile).canonicalPath.toString()
             //Want to output this immediately so that user knows where the exact file is, and could monitor it
             printInfo(String.format("Append to file: %1\$s", outputFile))
-            val transactionType: VeriBlockMessages.WalletTransaction.Type
-            transactionType = type?.let { getTxType(it) } ?: VeriBlockMessages.WalletTransaction.Type.NOT_SET
+            val transactionType: RpcWalletTransaction.Type
+            transactionType = type?.let { getTxType(it) } ?: RpcWalletTransaction.Type.NOT_SET
             var pageNum = 1
             var done = false
             //Delete the file if it exists, in preparation for creating new file
@@ -117,7 +129,7 @@ fun CommandFactory.walletCommands() {
                     if (reply == null) {
                         result = failure()
                         done = true
-                    } else if (reply.cacheState != VeriBlockMessages.GetWalletTransactionsReply.CacheState.CURRENT) { //bad
+                    } else if (reply.cacheState != RpcGetWalletTransactionsReply.CacheState.CURRENT) { //bad
                         result = failure("-2", "Address CacheState not CURRENT", reply.message)
                         done = true
                     } else {
@@ -143,7 +155,7 @@ fun CommandFactory.walletCommands() {
             result = handleRuntimeException(e, logger)
         }
 
-        prepareResult(!result.isFailed, result.getMessages().map { VeriBlockMessages.Result.newBuilder().build() }) {
+        prepareResult(!result.isFailed, result.getMessages().map { RpcResult.newBuilder().build() }) {
             String.format("Wrote $totalCount wallet transactions to file $outputFile",
                 totalCount, outputFile)
         }
@@ -160,7 +172,7 @@ fun CommandFactory.walletCommands() {
     ) {
         val sourceLocation: String = getParameter("sourceLocation")
         val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
-        val request = VeriBlockMessages.ImportWalletRequest.newBuilder()
+        val request = RpcImportWalletRequest.newBuilder()
             .setSourceLocation(ByteString.copyFrom(sourceLocation.toByteArray()))
 
         if (!passphrase.isNullOrEmpty()) {
@@ -178,7 +190,7 @@ fun CommandFactory.walletCommands() {
         description = "Disables the temporary unlock on the NodeCore wallet",
         suggestedCommands = { listOf("unlockwallet") }
     ) {
-        val request = VeriBlockMessages.LockWalletRequest.newBuilder().build()
+        val request = RpcLockWalletRequest.newBuilder().build()
         val result = cliShell.adminService.lockWallet(request)
 
         prepareResult(result.success, result.resultsList)
@@ -191,7 +203,7 @@ fun CommandFactory.walletCommands() {
         suggestedCommands = { listOf("lockwallet") }
     ) {
         val passphrase = shell.passwordPrompt("Enter passphrase: ")
-        val request = VeriBlockMessages.UnlockWalletRequest.newBuilder()
+        val request = RpcUnlockWalletRequest.newBuilder()
             .setPassphrase(passphrase).build()
         val result = cliShell.adminService.unlockWallet(request)
 
@@ -203,7 +215,7 @@ fun CommandFactory.walletCommands() {
         form = "refreshwalletcache",
         description = "Rescans the blockchain for transactions belonging to imported wallets"
     ) {
-        val request = VeriBlockMessages.RefreshWalletCacheRequest.newBuilder().build()
+        val request = RpcRefreshWalletCacheRequest.newBuilder().build()
         val result = cliShell.adminService.refreshWalletCache(request)
 
         prepareResult(result.success, result.resultsList)
@@ -211,13 +223,13 @@ fun CommandFactory.walletCommands() {
 }
 
 private fun getTxType(type: String) = when (type) {
-    "popcoinbase" -> VeriBlockMessages.WalletTransaction.Type.POP_COINBASE
-    "powcoinbase" -> VeriBlockMessages.WalletTransaction.Type.POW_COINBASE
-    "coinbase" -> VeriBlockMessages.WalletTransaction.Type.BOTH_COINBASE
-    "pop" -> VeriBlockMessages.WalletTransaction.Type.POP
-    "received" -> VeriBlockMessages.WalletTransaction.Type.RECEIVED
-    "sent" -> VeriBlockMessages.WalletTransaction.Type.SENT
-    else -> VeriBlockMessages.WalletTransaction.Type.NOT_SET
+    "popcoinbase" -> RpcWalletTransaction.Type.POP_COINBASE
+    "powcoinbase" -> RpcWalletTransaction.Type.POW_COINBASE
+    "coinbase" -> RpcWalletTransaction.Type.BOTH_COINBASE
+    "pop" -> RpcWalletTransaction.Type.POP
+    "received" -> RpcWalletTransaction.Type.RECEIVED
+    "sent" -> RpcWalletTransaction.Type.SENT
+    else -> RpcWalletTransaction.Type.NOT_SET
 }
 
 
@@ -225,13 +237,13 @@ private fun CliShell.getTransactions(
     address: String,
     page: Int,
     itemsPerPage: Int,
-    transactionType: VeriBlockMessages.WalletTransaction.Type
-): VeriBlockMessages.GetWalletTransactionsReply? {
-    val requestBuilder = VeriBlockMessages.GetWalletTransactionsRequest.newBuilder()
+    transactionType: RpcWalletTransaction.Type
+): RpcGetWalletTransactionsReply? {
+    val requestBuilder = RpcGetWalletTransactionsRequest.newBuilder()
     requestBuilder.address = ByteStringAddressUtility.createProperByteStringAutomatically(address)
-    requestBuilder.requestType = VeriBlockMessages.GetWalletTransactionsRequest.Type.QUERY
-    requestBuilder.status = VeriBlockMessages.TransactionMeta.Status.CONFIRMED
-    requestBuilder.page = VeriBlockMessages.Paging.newBuilder()
+    requestBuilder.requestType = RpcGetWalletTransactionsRequest.Type.QUERY
+    requestBuilder.status = RpcTransactionMeta.Status.CONFIRMED
+    requestBuilder.page = RpcPaging.newBuilder()
         .setPageNumber(page)
         .setResultsPerPage(itemsPerPage).build()
     requestBuilder.transactionType = transactionType
@@ -252,7 +264,7 @@ private fun startFileHeader(filename: String) { //Delete file if exists
     appendFile(filename, s)
 }
 
-private fun appendRows(filename: String, transactions: List<VeriBlockMessages.WalletTransaction>?) {
+private fun appendRows(filename: String, transactions: List<RpcWalletTransaction>?) {
     if (transactions == null) {
         return
     }

@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.ListAllowedReply
+import nodecore.api.grpc.RpcListAllowedReply
 
 class ListAllowedPayload(
-    reply: ListAllowedReply
+    reply: RpcListAllowedReply
 ) {
     val allowed = reply.entriesList.map { whiteListInfo  ->
         WhitelistInfo(whiteListInfo)

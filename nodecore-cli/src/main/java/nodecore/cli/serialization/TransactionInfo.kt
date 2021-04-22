@@ -7,7 +7,7 @@
 package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcTransaction
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
@@ -15,16 +15,16 @@ import org.veriblock.core.utilities.extensions.toHex
 import java.util.*
 
 class TransactionInfo(
-    transaction: VeriBlockMessages.Transaction
+    transaction: RpcTransaction
 ) {
     val size: Int
     val txid: String
     val data: String
 
     var type: String? = when (transaction.type) {
-        VeriBlockMessages.Transaction.Type.STANDARD -> "standard"
-        VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF -> "proof_of_proof"
-        VeriBlockMessages.Transaction.Type.MULTISIG ->  "multisig"
+        RpcTransaction.Type.STANDARD -> "standard"
+        RpcTransaction.Type.PROOF_OF_PROOF -> "proof_of_proof"
+        RpcTransaction.Type.MULTISIG ->  "multisig"
         else -> null
     }
 
@@ -52,7 +52,7 @@ class TransactionInfo(
     var outputs: MutableList<OutputInfo> = ArrayList()
 
     init {
-        if (transaction !== VeriBlockMessages.Transaction.getDefaultInstance()) {
+        if (transaction !== RpcTransaction.getDefaultInstance()) {
             txid = transaction.txId.toHex()
             merklePath = transaction.merklePath
             size = transaction.size
@@ -62,7 +62,7 @@ class TransactionInfo(
             data = transaction.data.toHex()
             fee = transaction.transactionFee.formatAtomicLongWithDecimal()
 
-            if (transaction.type == VeriBlockMessages.Transaction.Type.PROOF_OF_PROOF) {
+            if (transaction.type == RpcTransaction.Type.PROOF_OF_PROOF) {
                 var bitcoinBlockHeaderBytes = transaction.bitcoinBlockHeaderOfProof?.toByteArray() ?: byteArrayOf()
                 if (bitcoinBlockHeaderBytes.isNotEmpty() && bitcoinBlockHeaderBytes[0].toInt() == 10 && bitcoinBlockHeaderBytes[1].toInt() == 80) {
                     //TODO: remove first two bytes if they are 0A50 (10,80)

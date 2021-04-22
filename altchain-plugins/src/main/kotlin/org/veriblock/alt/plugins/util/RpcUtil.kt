@@ -19,7 +19,8 @@ import java.lang.reflect.Type
 data class JsonRpcRequestBody(
     val method: String,
     val params: Any? = emptyList<Any>(),
-    val jsonRpc: String = "1.0"
+    val jsonRpc: String = "1.0",
+    val id: Int = 1
 )
 
 data class RpcResponse(
@@ -37,18 +38,24 @@ class RpcException(
     override val message: String
 ) : RuntimeException()
 
+class NullResultException : RuntimeException()
+
 private val gson = Gson()
 
 inline fun <reified T> RpcResponse.handle(): T = try {
     val type: Type = object : TypeToken<T>() {}.type
     when {
-        result !is JsonNull ->
-            result.fromJson<T>(type)
         error != null ->
             throw RpcException(error.code, error.message)
+        result !is JsonNull ->
+            result.fromJson<T>(type)
         else ->
-            throw IllegalStateException()
+            throw NullResultException()
     }
+} catch (e: RpcException) {
+    throw e
+} catch (e: NullResultException) {
+    throw e
 } catch (e: Exception) {
     throw HttpException("Failed to perform request to the API: ${e.message}", e)
 }

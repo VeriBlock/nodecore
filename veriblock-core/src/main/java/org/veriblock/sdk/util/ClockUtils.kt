@@ -3,6 +3,7 @@ package org.veriblock.sdk.util
 import com.lyft.kronos.Clock
 import com.lyft.kronos.ClockFactory
 import com.lyft.kronos.SyncResponseCache
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.time.withTimeout
 import org.veriblock.core.utilities.createLogger
@@ -14,21 +15,25 @@ import kotlin.system.exitProcess
 
 private val logger = createLogger {}
 
-suspend fun checkSystemClock() = withTimeout(Duration.ofSeconds(30)) {
-    logger.info { "Checking the system clock..." }
-    val kronosClock = ClockFactory.createKronosClock(LocalClock(), LocalSyncResponseCache())
-    var ntpCurrentTime = kronosClock.getCurrentNtpTimeMs()
-    while (ntpCurrentTime  == null) {
-        delay(Duration.ofSeconds(1))
-        ntpCurrentTime = kronosClock.getCurrentNtpTimeMs()
+suspend fun checkSystemClock() = try {
+    withTimeout(Duration.ofSeconds(30)) {
+        logger.info { "Checking the system clock..." }
+        val kronosClock = ClockFactory.createKronosClock(LocalClock(), LocalSyncResponseCache())
+        var ntpCurrentTime = kronosClock.getCurrentNtpTimeMs()
+        while (ntpCurrentTime  == null) {
+            delay(Duration.ofSeconds(1))
+            ntpCurrentTime = kronosClock.getCurrentNtpTimeMs()
+        }
+        if (abs(ntpCurrentTime - System.currentTimeMillis()) > TimeUnit.SECONDS.toMillis(Constants.ALLOWED_TIME_DRIFT.toLong())) {
+            logger.error { "The system clock is out of synchronization, please synchronize it" }
+            exitProcess(1)
+        } else {
+            logger.info { "The system clock is synchronized" }
+        }
+        kronosClock.shutdown()
     }
-    if (abs(ntpCurrentTime - System.currentTimeMillis()) > TimeUnit.SECONDS.toMillis(Constants.ALLOWED_TIME_DRIFT.toLong())) {
-        logger.error { "The system clock is out of synchronization, please synchronize it" }
-        exitProcess(1)
-    } else {
-        logger.info { "The system clock is synchronized" }
-    }
-    kronosClock.shutdown()
+} catch (e: TimeoutCancellationException) {
+    logger.warn { "Unable to connect to NTP service. Skipping system clock check..." }
 }
 
 class LocalClock : Clock {

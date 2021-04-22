@@ -6,11 +6,11 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.BalanceUnlockEvent
+import nodecore.api.grpc.RpcBalanceUnlockEvent
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class BalanceScheduleItem(
-    message: BalanceUnlockEvent
+    message: RpcBalanceUnlockEvent
 ) {
     val blockHeight = message.blockHeight
 

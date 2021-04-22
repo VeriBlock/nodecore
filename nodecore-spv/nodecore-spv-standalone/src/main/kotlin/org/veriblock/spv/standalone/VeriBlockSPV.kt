@@ -55,13 +55,13 @@ private fun run(): Int {
         shutdownSignal.countDown()
     })
 
-    ProgPoWCache.setMaxCachedPairs(2); // Fewer cached pairs for SPV
+    ProgPoWCache.setMaxCachedPairs(2) // Fewer cached pairs for SPV
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock ", "")))
     println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
     println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
-    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/NodeCore-SPV")}\n")
+    println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/HowTo_run_SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
     val commandFactory = CommandFactory()
@@ -105,7 +105,9 @@ private fun run(): Int {
                         progressBar.stepTo(progPowHeight - initialHeight)
                     }
                 }
-                logger.info { "Proceeding to download vProgPoW blocks. This operation is highly CPU-intensive and will take some time." }
+                if (!spvConfig.trustPeerHashes) {
+                    logger.info { "Proceeding to download vProgPoW blocks. This operation is highly CPU-intensive and will take some time." }
+                }
                 val progPowInitialHeight = initialHeight.toLong().coerceAtLeast(progPowHeight)
                 ProgressBarBuilder().apply {
                     setTaskName("Downloading vProgPow Blocks")
@@ -129,7 +131,21 @@ private fun run(): Int {
         }
 
         logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
-        logger.info { """Type "help" to display a list of available commands""" }
+        logger.info { "To get started:" }
+        logger.info { "Type 'getnewaddress' to create a new address" }
+        logger.info { "Type 'importwallet <sourceLocation>' to import an existing wallet" }
+        logger.info { "Type 'help' to display a list of available commands" }
+
+        if (!spvContext.addressManager.isLocked) {
+            try {
+                spvContext.spvService.importWallet(spvContext.addressManager.walletPath())
+                logger.info { "Successfully imported the wallet file: ${spvContext.addressManager.walletPath()}" }
+                logger.info { "Type 'getbalance' to see the balances of all of your addresses" }
+            } catch (exception: Exception) {
+                logger.info { "Failed to import the wallet file: ${exception.message}" }
+            }
+        }
+
         shell.run()
     } catch (e: Exception) {
         errored = true

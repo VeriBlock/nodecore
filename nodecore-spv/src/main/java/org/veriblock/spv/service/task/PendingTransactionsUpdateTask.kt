@@ -1,7 +1,10 @@
 package org.veriblock.spv.net
 
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcGetTransactionRequest
+import nodecore.api.grpc.RpcOutput
+import nodecore.api.grpc.RpcTransaction
+import nodecore.api.grpc.RpcTransactionInfo
 import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import org.veriblock.core.crypto.asVbkTxId
@@ -33,7 +36,7 @@ suspend fun SpvContext.requestPendingTransactions() {
     try {
         for (txId in pendingTransactionIds) {
             val request = buildMessage {
-                transactionRequest = VeriBlockMessages.GetTransactionRequest.newBuilder()
+                transactionRequest = RpcGetTransactionRequest.newBuilder()
                     .setId(txId.bytes.toByteString())
                     .build()
             }
@@ -52,7 +55,7 @@ suspend fun SpvContext.requestPendingTransactions() {
     }
 }
 
-private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
+private fun RpcTransactionInfo.toModel() = TransactionInfo(
     confirmations = confirmations,
     transaction = transaction.toModel(),
     blockNumber = blockNumber,
@@ -65,7 +68,7 @@ private fun VeriBlockMessages.TransactionInfo.toModel() = TransactionInfo(
     merklePath = merklePath
 )
 
-private fun VeriBlockMessages.Transaction.toModel() = TransactionData(
+private fun RpcTransaction.toModel() = TransactionData(
     type = TransactionType.valueOf(type.name),
     sourceAddress = sourceAddress.toHex(),
     sourceAmount = sourceAmount,
@@ -82,7 +85,7 @@ private fun VeriBlockMessages.Transaction.toModel() = TransactionData(
     txId = txId.toByteArray().asVbkTxId()
 )
 
-private fun VeriBlockMessages.Output.toModel() = OutputData(
+private fun RpcOutput.toModel() = OutputData(
     address = address.toHex(),
     amount = amount
 )

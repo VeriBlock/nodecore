@@ -10,6 +10,7 @@ package org.veriblock.shell
 
 import com.google.common.base.Stopwatch
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.runBlocking
 import org.jline.reader.Completer
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
@@ -46,6 +47,8 @@ open class Shell(
 
     var running = false
         private set
+
+    var logsMuted = false
 
     private val terminal: Terminal = TerminalBuilder.builder().apply {
         if (customStreams != null) {
@@ -127,10 +130,13 @@ open class Shell(
             val stopwatch = Stopwatch.createStarted()
 
             var clear: Boolean? = null
+            var context: CommandContext? = null
             val executeResult: Result = try {
                 val commandResult = commandFactory.getInstance(input)
-                val context = CommandContext(this, commandResult.command, commandResult.parameters)
-                var result = commandResult.command.action(context)
+                context = CommandContext(this, commandResult.command, commandResult.parameters)
+                var result = runBlocking {
+                    commandResult.command.action(context)
+                }
 
                 if (!result.isFailed) {
                     if (context.quit) {
@@ -141,12 +147,6 @@ open class Shell(
                 }
 
                 result = handleResult(context, result)
-
-                // Suggest commands after the command has been handled and only if it has not failed
-                if (!result.isFailed) {
-                    context.suggestCommands()
-                }
-
                 result
             } catch (se: ShellException) {
                 failure {
@@ -156,7 +156,7 @@ open class Shell(
                 }
             } catch (ve: VeriBlockException) {
                 failure {
-                    addMessage(ResultMessage("V${ve.error.code}", ve.error.title, listOf(ve.message)))
+                    addMessage(ResultMessage("V${ve.error.code}", ve.error.title, listOf(ve.message), true))
                 }
             } catch (e: Exception) {
                 handleException(e)
@@ -170,6 +170,13 @@ open class Shell(
             }
             printStyled("($stopwatch)\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
 
+            // Suggest commands after the command has been handled and only if it has not failed
+            context?.let {
+                if (!executeResult.isFailed) {
+                    it.suggestCommands()
+                }
+            }
+            
             if (clear != null && clear) {
                 clear()
             }

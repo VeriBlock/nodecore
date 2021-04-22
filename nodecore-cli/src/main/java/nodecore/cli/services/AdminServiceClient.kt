@@ -8,112 +8,112 @@ package nodecore.cli.services
 
 import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.AdminRpcConfiguration
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.AbandonTransactionReply
-import nodecore.api.grpc.VeriBlockMessages.AbandonTransactionRequest
-import nodecore.api.grpc.VeriBlockMessages.BackupWalletReply
-import nodecore.api.grpc.VeriBlockMessages.BackupWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.ClearAllowedRequest
-import nodecore.api.grpc.VeriBlockMessages.ClearBannedMinersRequest
-import nodecore.api.grpc.VeriBlockMessages.ClearBannedRequest
-import nodecore.api.grpc.VeriBlockMessages.DecryptWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.DrainAddressReply
-import nodecore.api.grpc.VeriBlockMessages.DrainAddressRequest
-import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyReply
-import nodecore.api.grpc.VeriBlockMessages.DumpPrivateKeyRequest
-import nodecore.api.grpc.VeriBlockMessages.EncryptWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.GenerateMultisigAddressReply
-import nodecore.api.grpc.VeriBlockMessages.GenerateMultisigAddressRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceReply
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceUnlockScheduleReply
-import nodecore.api.grpc.VeriBlockMessages.GetBalanceUnlockScheduleRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBlockTemplateReply
-import nodecore.api.grpc.VeriBlockMessages.GetBlockTemplateRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBlockTimesReply
-import nodecore.api.grpc.VeriBlockMessages.GetBlockTimesRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBlockchainsReply
-import nodecore.api.grpc.VeriBlockMessages.GetBlockchainsRequest
-import nodecore.api.grpc.VeriBlockMessages.GetBlocksReply
-import nodecore.api.grpc.VeriBlockMessages.GetBlocksRequest
-import nodecore.api.grpc.VeriBlockMessages.GetDiagnosticInfoReply
-import nodecore.api.grpc.VeriBlockMessages.GetDiagnosticInfoRequest
-import nodecore.api.grpc.VeriBlockMessages.GetHistoryReply
-import nodecore.api.grpc.VeriBlockMessages.GetHistoryRequest
-import nodecore.api.grpc.VeriBlockMessages.GetInfoReply
-import nodecore.api.grpc.VeriBlockMessages.GetInfoRequest
-import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockReply
-import nodecore.api.grpc.VeriBlockMessages.GetLastBitcoinBlockRequest
-import nodecore.api.grpc.VeriBlockMessages.GetNewAddressReply
-import nodecore.api.grpc.VeriBlockMessages.GetNewAddressRequest
-import nodecore.api.grpc.VeriBlockMessages.GetPeerInfoReply
-import nodecore.api.grpc.VeriBlockMessages.GetPeerInfoRequest
-import nodecore.api.grpc.VeriBlockMessages.GetPendingTransactionsReply
-import nodecore.api.grpc.VeriBlockMessages.GetPendingTransactionsRequest
-import nodecore.api.grpc.VeriBlockMessages.GetPoPEndorsementsInfoReply
-import nodecore.api.grpc.VeriBlockMessages.GetPoPEndorsementsInfoRequest
-import nodecore.api.grpc.VeriBlockMessages.GetPoolStateReply
-import nodecore.api.grpc.VeriBlockMessages.GetPoolStateRequest
-import nodecore.api.grpc.VeriBlockMessages.GetPopReply
-import nodecore.api.grpc.VeriBlockMessages.GetPopRequest
-import nodecore.api.grpc.VeriBlockMessages.GetProtectedChildrenReply
-import nodecore.api.grpc.VeriBlockMessages.GetProtectedChildrenRequest
-import nodecore.api.grpc.VeriBlockMessages.GetProtectingParentsReply
-import nodecore.api.grpc.VeriBlockMessages.GetProtectingParentsRequest
-import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexReply
-import nodecore.api.grpc.VeriBlockMessages.GetSignatureIndexRequest
-import nodecore.api.grpc.VeriBlockMessages.GetStateInfoReply
-import nodecore.api.grpc.VeriBlockMessages.GetStateInfoRequest
-import nodecore.api.grpc.VeriBlockMessages.GetTransactionsReply
-import nodecore.api.grpc.VeriBlockMessages.GetTransactionsRequest
-import nodecore.api.grpc.VeriBlockMessages.GetWalletTransactionsReply
-import nodecore.api.grpc.VeriBlockMessages.GetWalletTransactionsRequest
-import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyReply
-import nodecore.api.grpc.VeriBlockMessages.ImportPrivateKeyRequest
-import nodecore.api.grpc.VeriBlockMessages.ImportWalletReply
-import nodecore.api.grpc.VeriBlockMessages.ImportWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.ListAllowedReply
-import nodecore.api.grpc.VeriBlockMessages.ListAllowedRequest
-import nodecore.api.grpc.VeriBlockMessages.ListBannedMinersReply
-import nodecore.api.grpc.VeriBlockMessages.ListBannedMinersRequest
-import nodecore.api.grpc.VeriBlockMessages.ListBannedReply
-import nodecore.api.grpc.VeriBlockMessages.ListBannedRequest
-import nodecore.api.grpc.VeriBlockMessages.LockWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.MakeUnsignedMultisigTxReply
-import nodecore.api.grpc.VeriBlockMessages.MakeUnsignedMultisigTxRequest
-import nodecore.api.grpc.VeriBlockMessages.NodeRequest
-import nodecore.api.grpc.VeriBlockMessages.PingReply
-import nodecore.api.grpc.VeriBlockMessages.ProtocolReply
-import nodecore.api.grpc.VeriBlockMessages.RebroadcastTransactionReply
-import nodecore.api.grpc.VeriBlockMessages.RebroadcastTransactionRequest
-import nodecore.api.grpc.VeriBlockMessages.RefreshWalletCacheRequest
-import nodecore.api.grpc.VeriBlockMessages.RestartPoolWebServerReply
-import nodecore.api.grpc.VeriBlockMessages.RestartPoolWebServerRequest
-import nodecore.api.grpc.VeriBlockMessages.SendCoinsReply
-import nodecore.api.grpc.VeriBlockMessages.SendCoinsRequest
-import nodecore.api.grpc.VeriBlockMessages.SetAllowedRequest
-import nodecore.api.grpc.VeriBlockMessages.SetDefaultAddressReply
-import nodecore.api.grpc.VeriBlockMessages.SetDefaultAddressRequest
-import nodecore.api.grpc.VeriBlockMessages.SetTransactionFeeRequest
-import nodecore.api.grpc.VeriBlockMessages.SignMessageReply
-import nodecore.api.grpc.VeriBlockMessages.SignMessageRequest
-import nodecore.api.grpc.VeriBlockMessages.StartPoolReply
-import nodecore.api.grpc.VeriBlockMessages.StartPoolRequest
-import nodecore.api.grpc.VeriBlockMessages.StartSoloPoolReply
-import nodecore.api.grpc.VeriBlockMessages.StartSoloPoolRequest
-import nodecore.api.grpc.VeriBlockMessages.StopNodeCoreRequest
-import nodecore.api.grpc.VeriBlockMessages.StopPoolReply
-import nodecore.api.grpc.VeriBlockMessages.StopPoolRequest
-import nodecore.api.grpc.VeriBlockMessages.SubmitBlocksRequest
-import nodecore.api.grpc.VeriBlockMessages.SubmitMultisigTxReply
-import nodecore.api.grpc.VeriBlockMessages.SubmitMultisigTxRequest
-import nodecore.api.grpc.VeriBlockMessages.SubmitPopRequest
-import nodecore.api.grpc.VeriBlockMessages.SubmitTransactionsRequest
-import nodecore.api.grpc.VeriBlockMessages.TroubleshootPoPTransactionsReply
-import nodecore.api.grpc.VeriBlockMessages.TroubleshootPoPTransactionsRequest
-import nodecore.api.grpc.VeriBlockMessages.UnlockWalletRequest
-import nodecore.api.grpc.VeriBlockMessages.ValidateAddressReply
-import nodecore.api.grpc.VeriBlockMessages.ValidateAddressRequest
+import nodecore.api.grpc.RpcAbandonTransactionReply
+import nodecore.api.grpc.RpcAbandonTransactionRequest
+import nodecore.api.grpc.RpcBackupWalletReply
+import nodecore.api.grpc.RpcBackupWalletRequest
+import nodecore.api.grpc.RpcClearAllowedRequest
+import nodecore.api.grpc.RpcClearBannedMinersRequest
+import nodecore.api.grpc.RpcClearBannedRequest
+import nodecore.api.grpc.RpcDecryptWalletRequest
+import nodecore.api.grpc.RpcDrainAddressReply
+import nodecore.api.grpc.RpcDrainAddressRequest
+import nodecore.api.grpc.RpcDumpPrivateKeyReply
+import nodecore.api.grpc.RpcDumpPrivateKeyRequest
+import nodecore.api.grpc.RpcEncryptWalletRequest
+import nodecore.api.grpc.RpcGenerateMultisigAddressReply
+import nodecore.api.grpc.RpcGenerateMultisigAddressRequest
+import nodecore.api.grpc.RpcGetBalanceReply
+import nodecore.api.grpc.RpcGetBalanceRequest
+import nodecore.api.grpc.RpcGetBalanceUnlockScheduleReply
+import nodecore.api.grpc.RpcGetBalanceUnlockScheduleRequest
+import nodecore.api.grpc.RpcGetBlockTemplateReply
+import nodecore.api.grpc.RpcGetBlockTemplateRequest
+import nodecore.api.grpc.RpcGetBlockTimesReply
+import nodecore.api.grpc.RpcGetBlockTimesRequest
+import nodecore.api.grpc.RpcGetBlockchainsReply
+import nodecore.api.grpc.RpcGetBlockchainsRequest
+import nodecore.api.grpc.RpcGetBlocksReply
+import nodecore.api.grpc.RpcGetBlocksRequest
+import nodecore.api.grpc.RpcGetDiagnosticInfoReply
+import nodecore.api.grpc.RpcGetDiagnosticInfoRequest
+import nodecore.api.grpc.RpcGetHistoryReply
+import nodecore.api.grpc.RpcGetHistoryRequest
+import nodecore.api.grpc.RpcGetInfoReply
+import nodecore.api.grpc.RpcGetInfoRequest
+import nodecore.api.grpc.RpcGetLastBitcoinBlockReply
+import nodecore.api.grpc.RpcGetLastBitcoinBlockRequest
+import nodecore.api.grpc.RpcGetNewAddressReply
+import nodecore.api.grpc.RpcGetNewAddressRequest
+import nodecore.api.grpc.RpcGetPeerInfoReply
+import nodecore.api.grpc.RpcGetPeerInfoRequest
+import nodecore.api.grpc.RpcGetPendingTransactionsReply
+import nodecore.api.grpc.RpcGetPendingTransactionsRequest
+import nodecore.api.grpc.RpcGetPoPEndorsementsInfoReply
+import nodecore.api.grpc.RpcGetPoPEndorsementsInfoRequest
+import nodecore.api.grpc.RpcGetPoolStateReply
+import nodecore.api.grpc.RpcGetPoolStateRequest
+import nodecore.api.grpc.RpcGetPopReply
+import nodecore.api.grpc.RpcGetPopRequest
+import nodecore.api.grpc.RpcGetProtectedChildrenReply
+import nodecore.api.grpc.RpcGetProtectedChildrenRequest
+import nodecore.api.grpc.RpcGetProtectingParentsReply
+import nodecore.api.grpc.RpcGetProtectingParentsRequest
+import nodecore.api.grpc.RpcGetSignatureIndexReply
+import nodecore.api.grpc.RpcGetSignatureIndexRequest
+import nodecore.api.grpc.RpcGetStateInfoReply
+import nodecore.api.grpc.RpcGetStateInfoRequest
+import nodecore.api.grpc.RpcGetTransactionsReply
+import nodecore.api.grpc.RpcGetTransactionsRequest
+import nodecore.api.grpc.RpcGetWalletTransactionsReply
+import nodecore.api.grpc.RpcGetWalletTransactionsRequest
+import nodecore.api.grpc.RpcImportPrivateKeyReply
+import nodecore.api.grpc.RpcImportPrivateKeyRequest
+import nodecore.api.grpc.RpcImportWalletReply
+import nodecore.api.grpc.RpcImportWalletRequest
+import nodecore.api.grpc.RpcListAllowedReply
+import nodecore.api.grpc.RpcListAllowedRequest
+import nodecore.api.grpc.RpcListBannedMinersReply
+import nodecore.api.grpc.RpcListBannedMinersRequest
+import nodecore.api.grpc.RpcListBannedReply
+import nodecore.api.grpc.RpcListBannedRequest
+import nodecore.api.grpc.RpcLockWalletRequest
+import nodecore.api.grpc.RpcMakeUnsignedMultisigTxReply
+import nodecore.api.grpc.RpcMakeUnsignedMultisigTxRequest
+import nodecore.api.grpc.RpcNodeRequest
+import nodecore.api.grpc.RpcPingReply
+import nodecore.api.grpc.RpcPingRequest
+import nodecore.api.grpc.RpcProtocolReply
+import nodecore.api.grpc.RpcRebroadcastTransactionReply
+import nodecore.api.grpc.RpcRebroadcastTransactionRequest
+import nodecore.api.grpc.RpcRefreshWalletCacheRequest
+import nodecore.api.grpc.RpcRestartPoolWebServerReply
+import nodecore.api.grpc.RpcRestartPoolWebServerRequest
+import nodecore.api.grpc.RpcSendCoinsReply
+import nodecore.api.grpc.RpcSendCoinsRequest
+import nodecore.api.grpc.RpcSetAllowedRequest
+import nodecore.api.grpc.RpcSetDefaultAddressReply
+import nodecore.api.grpc.RpcSetDefaultAddressRequest
+import nodecore.api.grpc.RpcSetTransactionFeeRequest
+import nodecore.api.grpc.RpcSignMessageReply
+import nodecore.api.grpc.RpcSignMessageRequest
+import nodecore.api.grpc.RpcStartPoolReply
+import nodecore.api.grpc.RpcStartPoolRequest
+import nodecore.api.grpc.RpcStartSoloPoolReply
+import nodecore.api.grpc.RpcStartSoloPoolRequest
+import nodecore.api.grpc.RpcStopNodeCoreRequest
+import nodecore.api.grpc.RpcStopPoolReply
+import nodecore.api.grpc.RpcStopPoolRequest
+import nodecore.api.grpc.RpcSubmitBlocksRequest
+import nodecore.api.grpc.RpcSubmitMultisigTxReply
+import nodecore.api.grpc.RpcSubmitMultisigTxRequest
+import nodecore.api.grpc.RpcSubmitPopRequest
+import nodecore.api.grpc.RpcSubmitTransactionsRequest
+import nodecore.api.grpc.RpcTroubleshootPoPTransactionsReply
+import nodecore.api.grpc.RpcTroubleshootPoPTransactionsRequest
+import nodecore.api.grpc.RpcUnlockWalletRequest
+import nodecore.api.grpc.RpcValidateAddressReply
+import nodecore.api.grpc.RpcValidateAddressRequest
 import nodecore.api.grpc.utilities.ChannelBuilder
 import nodecore.cli.Configuration
 import nodecore.cli.contracts.AdminService
@@ -146,125 +146,125 @@ class AdminServiceClient(
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
     }
 
-    override fun getPop(request: GetPopRequest): GetPopReply = blockingStub.getPop(request)
+    override fun getPop(request: RpcGetPopRequest): RpcGetPopReply = blockingStub.getPop(request)
 
-    override fun addNode(request: NodeRequest): ProtocolReply = blockingStub.addNode(request)
+    override fun addNode(request: RpcNodeRequest): RpcProtocolReply = blockingStub.addNode(request)
 
-    override fun getInfo(request: GetInfoRequest): GetInfoReply = blockingStub.getInfo(request)
+    override fun getInfo(request: RpcGetInfoRequest): RpcGetInfoReply = blockingStub.getInfo(request)
 
-    override fun removeNode(request: NodeRequest): ProtocolReply = blockingStub.removeNode(request)
+    override fun removeNode(request: RpcNodeRequest): RpcProtocolReply = blockingStub.removeNode(request)
 
-    override fun sendCoins(request: SendCoinsRequest): SendCoinsReply = blockingStub.sendCoins(request)
+    override fun sendCoins(request: RpcSendCoinsRequest): RpcSendCoinsReply = blockingStub.sendCoins(request)
 
-    override fun submitPop(request: SubmitPopRequest): ProtocolReply = blockingStub.submitPop(request)
+    override fun submitPop(request: RpcSubmitPopRequest): RpcProtocolReply = blockingStub.submitPop(request)
 
-    override fun getBlocks(request: GetBlocksRequest): GetBlocksReply = blockingStub.getBlocks(request)
+    override fun getBlocks(request: RpcGetBlocksRequest): RpcGetBlocksReply = blockingStub.getBlocks(request)
 
-    override fun getPoPEndorsementsInfo(request: GetPoPEndorsementsInfoRequest): GetPoPEndorsementsInfoReply = blockingStub.getPoPEndorsementsInfo(request)
+    override fun getPoPEndorsementsInfo(request: RpcGetPoPEndorsementsInfoRequest): RpcGetPoPEndorsementsInfoReply = blockingStub.getPoPEndorsementsInfo(request)
 
-    override fun getProtectedChildren(request: GetProtectedChildrenRequest): GetProtectedChildrenReply = blockingStub.getProtectedChildren(request)
+    override fun getProtectedChildren(request: RpcGetProtectedChildrenRequest): RpcGetProtectedChildrenReply = blockingStub.getProtectedChildren(request)
 
-    override fun getProtectingParents(request: GetProtectingParentsRequest): GetProtectingParentsReply = blockingStub.getProtectingParents(request)
+    override fun getProtectingParents(request: RpcGetProtectingParentsRequest): RpcGetProtectingParentsReply = blockingStub.getProtectingParents(request)
 
-    override fun startPool(request: StartPoolRequest): StartPoolReply = blockingStub.startPool(request)
+    override fun startPool(request: RpcStartPoolRequest): RpcStartPoolReply = blockingStub.startPool(request)
 
-    override fun setAllowed(request: SetAllowedRequest): ProtocolReply = blockingStub.setAllowed(request)
+    override fun setAllowed(request: RpcSetAllowedRequest): RpcProtocolReply = blockingStub.setAllowed(request)
 
-    override fun restartPoolWebServer(request: RestartPoolWebServerRequest): RestartPoolWebServerReply = blockingStub.restartPoolWebServer(request)
+    override fun restartPoolWebServer(request: RpcRestartPoolWebServerRequest): RpcRestartPoolWebServerReply = blockingStub.restartPoolWebServer(request)
 
-    override fun stopPool(request: StopPoolRequest): StopPoolReply = blockingStub.stopPool(request)
+    override fun stopPool(request: RpcStopPoolRequest): RpcStopPoolReply = blockingStub.stopPool(request)
 
-    override fun getHistory(request: GetHistoryRequest): GetHistoryReply = blockingStub.getHistory(request)
+    override fun getHistory(request: RpcGetHistoryRequest): RpcGetHistoryReply = blockingStub.getHistory(request)
 
-    override fun getBalance(request: GetBalanceRequest): GetBalanceReply = blockingStub.getBalance(request)
+    override fun getBalance(request: RpcGetBalanceRequest): RpcGetBalanceReply = blockingStub.getBalance(request)
 
-    override fun submitBlocks(request: SubmitBlocksRequest): ProtocolReply = blockingStub.submitBlocks(request)
+    override fun submitBlocks(request: RpcSubmitBlocksRequest): RpcProtocolReply = blockingStub.submitBlocks(request)
 
-    override fun clearAllowed(request: ClearAllowedRequest): ProtocolReply = blockingStub.clearAllowed(request)
+    override fun clearAllowed(request: RpcClearAllowedRequest): RpcProtocolReply = blockingStub.clearAllowed(request)
 
-    override fun listAllowed(request: ListAllowedRequest): ListAllowedReply = blockingStub.listAllowed(request)
+    override fun listAllowed(request: RpcListAllowedRequest): RpcListAllowedReply = blockingStub.listAllowed(request)
 
-    override fun getPeerInfo(request: GetPeerInfoRequest): GetPeerInfoReply = blockingStub.getPeerInfo(request)
+    override fun getPeerInfo(request: RpcGetPeerInfoRequest): RpcGetPeerInfoReply = blockingStub.getPeerInfo(request)
 
-    override fun signMessage(request: SignMessageRequest): SignMessageReply = blockingStub.signMessage(request)
+    override fun signMessage(request: RpcSignMessageRequest): RpcSignMessageReply = blockingStub.signMessage(request)
 
-    override fun backupWallet(request: BackupWalletRequest): BackupWalletReply = blockingStub.backupWallet(request)
+    override fun backupWallet(request: RpcBackupWalletRequest): RpcBackupWalletReply = blockingStub.backupWallet(request)
 
-    override fun importWallet(request: ImportWalletRequest): ImportWalletReply = blockingStub.importWallet(request)
+    override fun importWallet(request: RpcImportWalletRequest): RpcImportWalletReply = blockingStub.importWallet(request)
 
-    override fun getNewAddress(request: GetNewAddressRequest): GetNewAddressReply = blockingStub.getNewAddress(request)
+    override fun getNewAddress(request: RpcGetNewAddressRequest): RpcGetNewAddressReply = blockingStub.getNewAddress(request)
 
-    override fun getBlockTimes(request: GetBlockTimesRequest): GetBlockTimesReply = blockingStub.getBlockTimes(request)
+    override fun getBlockTimes(request: RpcGetBlockTimesRequest): RpcGetBlockTimesReply = blockingStub.getBlockTimes(request)
 
-    override fun startSoloPool(request: StartSoloPoolRequest): StartSoloPoolReply = blockingStub.startSoloPool(request)
+    override fun startSoloPool(request: RpcStartSoloPoolRequest): RpcStartSoloPoolReply = blockingStub.startSoloPool(request)
 
-    override fun getBlockchains(request: GetBlockchainsRequest): GetBlockchainsReply = blockingStub.getBlockchains(request)
+    override fun getBlockchains(request: RpcGetBlockchainsRequest): RpcGetBlockchainsReply = blockingStub.getBlockchains(request)
 
-    override fun setTransactionFee(request: SetTransactionFeeRequest): ProtocolReply = blockingStub.setTransactionFee(request)
+    override fun setTransactionFee(request: RpcSetTransactionFeeRequest): RpcProtocolReply = blockingStub.setTransactionFee(request)
 
-    override fun dumpPrivateKey(request: DumpPrivateKeyRequest): DumpPrivateKeyReply = blockingStub.dumpPrivateKey(request)
+    override fun dumpPrivateKey(request: RpcDumpPrivateKeyRequest): RpcDumpPrivateKeyReply = blockingStub.dumpPrivateKey(request)
 
-    override fun importPrivateKey(request: ImportPrivateKeyRequest): ImportPrivateKeyReply = blockingStub.importPrivateKey(request)
+    override fun importPrivateKey(request: RpcImportPrivateKeyRequest): RpcImportPrivateKeyReply = blockingStub.importPrivateKey(request)
 
-    override fun submitTransactions(request: SubmitTransactionsRequest): ProtocolReply = blockingStub.submitTransactions(request)
+    override fun submitTransactions(request: RpcSubmitTransactionsRequest): RpcProtocolReply = blockingStub.submitTransactions(request)
 
-    override fun validateAddress(request: ValidateAddressRequest): ValidateAddressReply = blockingStub.validateAddress(request)
+    override fun validateAddress(request: RpcValidateAddressRequest): RpcValidateAddressReply = blockingStub.validateAddress(request)
 
-    override fun generateMultisigAddress(request: GenerateMultisigAddressRequest): GenerateMultisigAddressReply = blockingStub.generateMultisigAddress(request)
+    override fun generateMultisigAddress(request: RpcGenerateMultisigAddressRequest): RpcGenerateMultisigAddressReply = blockingStub.generateMultisigAddress(request)
 
-    override fun makeUnsignedMultisigTx(request: MakeUnsignedMultisigTxRequest): MakeUnsignedMultisigTxReply = blockingStub.makeUnsignedMultisigTx(request)
+    override fun makeUnsignedMultisigTx(request: RpcMakeUnsignedMultisigTxRequest): RpcMakeUnsignedMultisigTxReply = blockingStub.makeUnsignedMultisigTx(request)
 
-    override fun submitMultisigTx(request: SubmitMultisigTxRequest): SubmitMultisigTxReply = blockingStub.submitMultisigTx(request)
+    override fun submitMultisigTx(request: RpcSubmitMultisigTxRequest): RpcSubmitMultisigTxReply = blockingStub.submitMultisigTx(request)
 
-    override fun getTransactions(request: GetTransactionsRequest): GetTransactionsReply = blockingStub.getTransactions(request)
+    override fun getTransactions(request: RpcGetTransactionsRequest): RpcGetTransactionsReply = blockingStub.getTransactions(request)
 
-    override fun getBlockTemplate(request: GetBlockTemplateRequest): GetBlockTemplateReply = blockingStub.getBlockTemplate(request)
+    override fun getBlockTemplate(request: RpcGetBlockTemplateRequest): RpcGetBlockTemplateReply = blockingStub.getBlockTemplate(request)
 
-    override fun getSignatureIndex(request: GetSignatureIndexRequest): GetSignatureIndexReply = blockingStub.getSignatureIndex(request)
+    override fun getSignatureIndex(request: RpcGetSignatureIndexRequest): RpcGetSignatureIndexReply = blockingStub.getSignatureIndex(request)
 
-    override fun setDefaultAddress(request: SetDefaultAddressRequest): SetDefaultAddressReply = blockingStub.setDefaultAddress(request)
+    override fun setDefaultAddress(request: RpcSetDefaultAddressRequest): RpcSetDefaultAddressReply = blockingStub.setDefaultAddress(request)
 
-    override fun getLastBitcoinBlock(request: GetLastBitcoinBlockRequest): GetLastBitcoinBlockReply = blockingStub.getLastBitcoinBlock(request)
+    override fun getLastBitcoinBlock(request: RpcGetLastBitcoinBlockRequest): RpcGetLastBitcoinBlockReply = blockingStub.getLastBitcoinBlock(request)
 
-    override fun getPendingTransactions(request: GetPendingTransactionsRequest): GetPendingTransactionsReply = blockingStub.getPendingTransactions(request)
+    override fun getPendingTransactions(request: RpcGetPendingTransactionsRequest): RpcGetPendingTransactionsReply = blockingStub.getPendingTransactions(request)
 
-    override fun getStateInfo(request: GetStateInfoRequest): GetStateInfoReply = blockingStub.getStateInfo(request)
+    override fun getStateInfo(request: RpcGetStateInfoRequest): RpcGetStateInfoReply = blockingStub.getStateInfo(request)
 
-    override fun getDiagnosticInfo(request: GetDiagnosticInfoRequest): GetDiagnosticInfoReply = blockingStub.getDiagnosticInfo(request)
+    override fun getDiagnosticInfo(request: RpcGetDiagnosticInfoRequest): RpcGetDiagnosticInfoReply = blockingStub.getDiagnosticInfo(request)
 
-    override fun troubleshootPoPTransactions(request: TroubleshootPoPTransactionsRequest): TroubleshootPoPTransactionsReply = blockingStub.troubleshootPoPTransactions(request)
+    override fun troubleshootPoPTransactions(request: RpcTroubleshootPoPTransactionsRequest): RpcTroubleshootPoPTransactionsReply = blockingStub.troubleshootPoPTransactions(request)
 
-    override fun stopNodeCore(request: StopNodeCoreRequest): ProtocolReply = blockingStub.stopNodeCore(request)
+    override fun stopNodeCore(request: RpcStopNodeCoreRequest): RpcProtocolReply = blockingStub.stopNodeCore(request)
 
-    override fun refreshWalletCache(request: RefreshWalletCacheRequest): ProtocolReply = blockingStub.refreshWalletCache(request)
+    override fun refreshWalletCache(request: RpcRefreshWalletCacheRequest): RpcProtocolReply = blockingStub.refreshWalletCache(request)
 
-    override fun getWalletTransactions(request: GetWalletTransactionsRequest): GetWalletTransactionsReply = blockingStub.getWalletTransactions(request)
+    override fun getWalletTransactions(request: RpcGetWalletTransactionsRequest): RpcGetWalletTransactionsReply = blockingStub.getWalletTransactions(request)
 
-    override fun connect(): PingReply = blockingStub.ping(VeriBlockMessages.PingRequest.getDefaultInstance())
+    override fun connect(): RpcPingReply = blockingStub.ping(RpcPingRequest.getDefaultInstance())
 
-    override fun clearBanned(request: ClearBannedRequest): ProtocolReply = blockingStub.clearBanned(request)
+    override fun clearBanned(request: RpcClearBannedRequest): RpcProtocolReply = blockingStub.clearBanned(request)
 
-    override fun listBanned(request: ListBannedRequest): ListBannedReply = blockingStub.listBanned(request)
+    override fun listBanned(request: RpcListBannedRequest): RpcListBannedReply = blockingStub.listBanned(request)
 
-    override fun clearBannedMiners(request: ClearBannedMinersRequest): ProtocolReply = blockingStub.clearBannedMiners(request)
+    override fun clearBannedMiners(request: RpcClearBannedMinersRequest): RpcProtocolReply = blockingStub.clearBannedMiners(request)
 
-    override fun listBannedMiners(request: ListBannedMinersRequest): ListBannedMinersReply = blockingStub.listBannedMiners(request)
+    override fun listBannedMiners(request: RpcListBannedMinersRequest): RpcListBannedMinersReply = blockingStub.listBannedMiners(request)
 
-    override fun encryptWallet(request: EncryptWalletRequest): ProtocolReply = blockingStub.encryptWallet(request)
+    override fun encryptWallet(request: RpcEncryptWalletRequest): RpcProtocolReply = blockingStub.encryptWallet(request)
 
-    override fun decryptWallet(request: DecryptWalletRequest): ProtocolReply = blockingStub.decryptWallet(request)
+    override fun decryptWallet(request: RpcDecryptWalletRequest): RpcProtocolReply = blockingStub.decryptWallet(request)
 
-    override fun unlockWallet(request: UnlockWalletRequest): ProtocolReply = blockingStub.unlockWallet(request)
+    override fun unlockWallet(request: RpcUnlockWalletRequest): RpcProtocolReply = blockingStub.unlockWallet(request)
 
-    override fun lockWallet(request: LockWalletRequest): ProtocolReply = blockingStub.lockWallet(request)
+    override fun lockWallet(request: RpcLockWalletRequest): RpcProtocolReply = blockingStub.lockWallet(request)
 
-    override fun drainAddress(request: DrainAddressRequest): DrainAddressReply = blockingStub.drainAddress(request)
+    override fun drainAddress(request: RpcDrainAddressRequest): RpcDrainAddressReply = blockingStub.drainAddress(request)
 
-    override fun getBalanceUnlockSchedule(request: GetBalanceUnlockScheduleRequest): GetBalanceUnlockScheduleReply = blockingStub.getBalanceUnlockSchedule(request)
+    override fun getBalanceUnlockSchedule(request: RpcGetBalanceUnlockScheduleRequest): RpcGetBalanceUnlockScheduleReply = blockingStub.getBalanceUnlockSchedule(request)
 
-    override fun getPoolState(request: GetPoolStateRequest): GetPoolStateReply = blockingStub.getPoolState(request)
+    override fun getPoolState(request: RpcGetPoolStateRequest): RpcGetPoolStateReply = blockingStub.getPoolState(request)
 
-    override fun abandonTransactionRequest(request: AbandonTransactionRequest): AbandonTransactionReply = blockingStub.abandonTransaction(request)
+    override fun abandonTransactionRequest(request: RpcAbandonTransactionRequest): RpcAbandonTransactionReply = blockingStub.abandonTransaction(request)
 
-    override fun rebroadcastTransactionRequest(request: RebroadcastTransactionRequest): RebroadcastTransactionReply = blockingStub.rebroadcastTransaction(request)
+    override fun rebroadcastTransactionRequest(request: RpcRebroadcastTransactionRequest): RpcRebroadcastTransactionReply = blockingStub.rebroadcastTransaction(request)
 }

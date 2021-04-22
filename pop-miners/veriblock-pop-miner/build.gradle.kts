@@ -40,7 +40,7 @@ dependencies {
     implementation("com.diogonunes:JCDP:2.0.3.1")
     implementation("org.quartz-scheduler:quartz:2.2.1")
     implementation("org.quartz-scheduler:quartz-jobs:2.2.1")
-    implementation("org.bitcoinj:bitcoinj-core:0.15.8")
+    implementation("org.bitcoinj:bitcoinj-core:0.15.10")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
@@ -81,11 +81,9 @@ dependencies {
     // Test
     testImplementation("junit:junit:4.12")
     // Mocks
-    testImplementation("org.mockito:mockito-core:2.+")
-    // Better mocks
     testImplementation("io.mockk:mockk:1.9.3")
     // Better assertions
-    testImplementation("io.kotlintest:kotlintest-assertions:3.4.2")
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

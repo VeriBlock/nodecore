@@ -1,6 +1,14 @@
 package nodecore.cli.commands.rpc
 
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcAddressSet
+import nodecore.api.grpc.RpcBitcoinBlockHeader
+import nodecore.api.grpc.RpcGetPoPEndorsementsInfoRequest
+import nodecore.api.grpc.RpcGetPopRequest
+import nodecore.api.grpc.RpcGetProtectedChildrenRequest
+import nodecore.api.grpc.RpcGetProtectingParentsRequest
+import nodecore.api.grpc.RpcStandardAddress
+import nodecore.api.grpc.RpcSubmitPopRequest
+import nodecore.api.grpc.RpcTroubleshootPoPTransactionsRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.api.grpc.utilities.extensions.toByteString
@@ -32,10 +40,10 @@ fun CommandFactory.popCommands() {
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.TroubleshootPoPTransactionsRequest.newBuilder()
+        val request = RpcTroubleshootPoPTransactionsRequest.newBuilder()
         if (address != null) {
             request.setAddresses(
-                VeriBlockMessages.AddressSet.newBuilder().addAddresses(
+                RpcAddressSet.newBuilder().addAddresses(
                     ByteStringAddressUtility.createProperByteStringAutomatically(address)
                 )
             )
@@ -65,7 +73,7 @@ fun CommandFactory.popCommands() {
             }
         }
     ) {
-        val request = VeriBlockMessages.GetPopRequest.newBuilder()
+        val request = RpcGetPopRequest.newBuilder()
             .setBlockNum(getOptionalParameter("block") ?: 0)
             .build()
 
@@ -88,9 +96,11 @@ fun CommandFactory.popCommands() {
     ) {
         val address: String = getParameter("address")
         val searchLength: Int? = getOptionalParameter("searchLength")
-        val request = VeriBlockMessages.GetPoPEndorsementsInfoRequest.newBuilder()
-            .addAddresses(VeriBlockMessages.StandardAddress.newBuilder()
-                .setStandardAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address)))
+        val request = RpcGetPoPEndorsementsInfoRequest.newBuilder()
+            .addAddresses(
+                RpcStandardAddress.newBuilder()
+                 .setStandardAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
+            )
         if (searchLength != null) {
             request.searchLength = searchLength
         }
@@ -122,11 +132,11 @@ fun CommandFactory.popCommands() {
 
         //TODO: Add context Bitcoin block header parameters
 
-        val request = VeriBlockMessages.SubmitPopRequest.newBuilder().apply {
+        val request = RpcSubmitPopRequest.newBuilder().apply {
             this.endorsedBlockHeader = endorsedBlockHeader.asHexByteString()
             this.bitcoinTransaction = bitcoinTransaction.asHexByteString()
             this.bitcoinMerklePathToRoot = bitcoinMerklePathToRoot.toByteArray().toByteString()
-            this.bitcoinBlockHeaderOfProof = VeriBlockMessages.BitcoinBlockHeader.newBuilder().setHeader(bitcoinBlockHeader.asHexByteString())
+            this.bitcoinBlockHeaderOfProof = RpcBitcoinBlockHeader.newBuilder().setHeader(bitcoinBlockHeader.asHexByteString())
                 .build()
         }
         if (address != null) {
@@ -149,7 +159,7 @@ fun CommandFactory.popCommands() {
     ) {
         val hash: String = getParameter("blockhash")
         val searchLength: Int? = getOptionalParameter("searchLength")
-        val request = VeriBlockMessages.GetProtectingParentsRequest.newBuilder()
+        val request = RpcGetProtectingParentsRequest.newBuilder()
             .setVeriblockBlockHash(hash.asHexByteString())
 
         if (searchLength != null) {
@@ -177,7 +187,7 @@ fun CommandFactory.popCommands() {
     ) {
         val hash: String = getParameter("blockhash")
         val searchLength: Int? = getOptionalParameter("searchLength")
-        val request = VeriBlockMessages.GetProtectedChildrenRequest.newBuilder()
+        val request = RpcGetProtectedChildrenRequest.newBuilder()
             .setVeriblockBlockHash(hash.asHexByteString())
 
         if (searchLength != null) {

@@ -7,7 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.lite.core
 
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -33,17 +32,12 @@ class NIOClientTest {
     @Ignore
     fun name() {
         val buffer = ByteBuffer.wrap("Test message".toByteArray())
-        var response: String? = null
-        try {
-            client.write(buffer)
-            buffer.clear()
-            client.read(buffer)
-            response = String(buffer.array()).trim()
-            println("response=$response")
-            buffer.clear()
-        } catch (e: IOException) {
-            Assert.fail()
-        }
+        client.write(buffer)
+        buffer.clear()
+        client.read(buffer)
+        val response = String(buffer.array()).trim()
+        println("response=$response")
+        buffer.clear()
         println(response)
     }
 

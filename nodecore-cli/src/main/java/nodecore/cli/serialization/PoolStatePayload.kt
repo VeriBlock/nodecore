@@ -6,21 +6,22 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages
-import nodecore.api.grpc.VeriBlockMessages.GetPoolStateReply
+import nodecore.api.grpc.RpcGetPoolStateReply
+import nodecore.api.grpc.RpcPoolConfiguration
+import nodecore.api.grpc.RpcPoolStats
 
 class PoolStatePayload(
-    message: GetPoolStateReply
+    message: RpcGetPoolStateReply
 ) {
     val running = message.running
 
-    val configuration= if (VeriBlockMessages.PoolConfiguration.getDefaultInstance() != message.configuration) {
+    val configuration= if (RpcPoolConfiguration.getDefaultInstance() != message.configuration) {
         PoolConfigurationPayload(message.configuration)
     } else {
         null
     }
 
-    val stats = if (VeriBlockMessages.PoolStats.getDefaultInstance() != message.stats) {
+    val stats = if (RpcPoolStats.getDefaultInstance() != message.stats) {
         PoolStatsPayload(message.stats)
     } else {
         null

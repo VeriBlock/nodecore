@@ -8,12 +8,15 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
+internal data class BtcContextInfo(
+    val serialized: String
+)
+
 internal data class BtcPublicationData(
-    val block_header: String?,
-    val raw_contextinfocontainer: String?,
-    val last_known_veriblock_blocks: List<String>?,
-    val last_known_bitcoin_blocks: List<String>?,
-    val first_address: String? = null
+    val block_header: String,
+    val authenticated_context: BtcContextInfo,
+    val last_known_veriblock_blocks: List<String>,
+    val last_known_bitcoin_blocks: List<String>,
 )
 
 internal data class BtcBlock(
@@ -21,7 +24,7 @@ internal data class BtcBlock(
     val height: Int,
     val confirmations: Int,
     val version: Short,
-    val nonce: Int,
+    val nonce: Long,
     val merkleroot: String,
     val difficulty: Double,
     val tx: List<String>,
@@ -161,12 +164,6 @@ internal data class VbkBlockHeader(
 
 internal data class StoredVtbIds(
     val vtbids: List<String?>?
-)
-
-internal data class SubmitPopResponse(
-    val vbkblocks: List<ValidationData>,
-    val vtbs: List<ValidationData>,
-    val atvs: List<ValidationData>
 )
 
 internal data class ValidationData(

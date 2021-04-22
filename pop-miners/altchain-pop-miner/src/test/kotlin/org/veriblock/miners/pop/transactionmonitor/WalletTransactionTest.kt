@@ -8,7 +8,7 @@
 
 package org.veriblock.miners.pop.transactionmonitor
 
-import io.kotlintest.shouldBe
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration

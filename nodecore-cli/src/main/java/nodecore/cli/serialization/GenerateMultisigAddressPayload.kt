@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.VeriBlockMessages.GenerateMultisigAddressReply
+import nodecore.api.grpc.RpcGenerateMultisigAddressReply
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 class GenerateMultisigAddressPayload(
-    reply: GenerateMultisigAddressReply
+    reply: RpcGenerateMultisigAddressReply
 ) {
     val sourceAddresses = Array(reply.sourceAddressesCount) { index ->
        reply.getSourceAddresses(index).toProperAddressType()

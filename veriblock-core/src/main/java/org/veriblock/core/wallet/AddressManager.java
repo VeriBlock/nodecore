@@ -533,7 +533,7 @@ public class AddressManager {
 
     public boolean unlock(char[] passphrase) {
         if (!wallet.locked) {
-            return true;
+            throw new WalletException("Unable to unlock wallet; Wallet is not currently locked");
         }
 
         try {
@@ -657,6 +657,10 @@ public class AddressManager {
 
         addresses.clear();
         defaultAddress = null;
+    }
+
+    public String walletPath() {
+        return walletFile.toPath().toString();
     }
 
     private StoredAddress createFromKeyPair(KeyPair keyPair, char[] passphrase) {

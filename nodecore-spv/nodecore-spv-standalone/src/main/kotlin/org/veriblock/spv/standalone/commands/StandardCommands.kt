@@ -25,14 +25,13 @@ fun CommandFactory.standardCommands() {
         description = "Quit the command line shell"
     ) {
         quit()
-
         success()
     }
 
     command(
         name = "Help",
         form = "help|?|/?|h|/h|h?|showcommands",
-        description = "Returns this help message",
+        description = "Displays this help message",
         parameters = listOf(
             CommandParameter(name = "command", mapper = CommandParameterMappers.STRING, required = false)
         )
@@ -44,15 +43,14 @@ fun CommandFactory.standardCommands() {
             for (def in shell.getCommands()){
                 shell.printStyled("    $def", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
             }
-
             success()
         } else {
             val def = shell.getCommandsByAlias()[command]
             if (def != null) {
-                shell.printStyled("\nCommand: ${def.name}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
-                shell.printStyled("\n${def.form}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                shell.printStyled("\nCommand: ${def.name}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
+                shell.printStyled("\nUsage: ${def.form}", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE), newLine = false)
                 shell.formatParameters(def.parameters)
-                shell.printStyled("\n${def.description}\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
+                shell.printStyled("\nDescription: ${def.description}\n", AttributedStyle.DEFAULT.foreground(AttributedStyle.WHITE))
                 success()
             } else {
                 failure("V004", "Unknown command", "The command $command is unknown. Type 'help' to view all commands.")

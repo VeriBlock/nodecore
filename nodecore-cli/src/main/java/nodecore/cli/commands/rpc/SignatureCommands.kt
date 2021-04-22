@@ -1,7 +1,8 @@
 package nodecore.cli.commands.rpc
 
 import com.google.protobuf.ByteString
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcGetSignatureIndexRequest
+import nodecore.api.grpc.RpcSignMessageRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.ByteStringUtility
 import nodecore.cli.cliShell
@@ -26,7 +27,7 @@ fun CommandFactory.signatureCommands() {
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = VeriBlockMessages.GetSignatureIndexRequest.newBuilder()
+        val request = RpcGetSignatureIndexRequest.newBuilder()
         if (address != null) {
             request.addAddresses(ByteStringAddressUtility.createProperByteStringAutomatically(address))
         }
@@ -48,7 +49,7 @@ fun CommandFactory.signatureCommands() {
     ) {
         val address: String = getParameter("address")
         val message: ByteArray = getParameter<String>("message").asHexBytes()
-        val request = VeriBlockMessages.SignMessageRequest.newBuilder()
+        val request = RpcSignMessageRequest.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .setMessage(ByteString.copyFrom(message))
         val result = cliShell.adminService.signMessage(request.build())
@@ -69,7 +70,7 @@ fun CommandFactory.signatureCommands() {
     ) {
         val address: String = getParameter("address")
         val message: String = getParameter("message")
-        val request = VeriBlockMessages.SignMessageRequest.newBuilder()
+        val request = RpcSignMessageRequest.newBuilder()
             .setAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))
             .setMessage(ByteStringUtility.base64ToByteString(message))
         val result = cliShell.adminService.signMessage(request.build())

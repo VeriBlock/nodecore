@@ -10,7 +10,7 @@ package org.veriblock.miners.pop.net
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import nodecore.api.grpc.VeriBlockMessages
+import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
@@ -83,7 +83,7 @@ class SpvGateway(
 
     suspend fun getVeriBlockPublications(keystoneHash: String, contextHash: String, btcContextHash: String): List<VeriBlockPublication> {
         logger.debug { "Requesting veriblock publications for keystone $keystoneHash..." }
-        val request = VeriBlockMessages.GetVeriBlockPublicationsRequest
+        val request = RpcGetVeriBlockPublicationsRequest
             .newBuilder()
             .setKeystoneHash(ByteStringUtility.hexToByteString(keystoneHash))
             .setContextHash(ByteStringUtility.hexToByteString(contextHash))
