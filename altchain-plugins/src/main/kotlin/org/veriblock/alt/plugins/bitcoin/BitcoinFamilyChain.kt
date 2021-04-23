@@ -8,14 +8,14 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.createLoggerFor
-import org.veriblock.alt.plugins.util.getBytes
+import org.veriblock.alt.plugins.util.segwitToBech32
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
@@ -39,7 +39,6 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.lang.IllegalStateException
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -293,8 +292,17 @@ class BitcoinFamilyChain(
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
-        // TODO: extract correctly from param, use BitcoinJ maybe?
-        return config.payoutAddress ?: "UNKNOWN_ADDRESS"
+        return if (config.addressPrefix != null) {
+            val witnessProgram = ByteArray(addressData.size - 2)
+            addressData.copyInto(witnessProgram, 0,2, addressData.size)
+            try {
+                segwitToBech32(config.addressPrefix,0, witnessProgram)
+            } catch (exception: Exception) {
+                throw IllegalArgumentException("Can't extract the Bech32 address from the address data: ${addressData.toHex()}", exception)
+            }
+        } else {
+            config.payoutAddress ?: "UNKNOWN_ADDRESS"
+        }
     }
 
     private val crypto = Crypto()

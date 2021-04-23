@@ -16,7 +16,8 @@ data class PluginConfig(
     val blockRoundIndices: List<Int>? = null,
     val autoMineRounds: List<Int> = emptyList(),
     val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
-    val extraConfig: Map<String, String> = emptyMap()
+    val extraConfig: Map<String, String> = emptyMap(),
+    val addressPrefix: String? = null
 )
 
 data class HttpAuthConfig(
