@@ -312,8 +312,8 @@ class BitcoinFamilyChain(
         val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).flip()
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
-        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
-        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64).flip()
+        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64).flip()
 
         return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }
