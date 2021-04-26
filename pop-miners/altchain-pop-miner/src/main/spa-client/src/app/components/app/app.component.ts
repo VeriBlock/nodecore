@@ -75,7 +75,7 @@ export class AppComponent implements OnInit {
 
     this.configService.getVbkFee().subscribe((data) => {
       const dialogRef = this.dialog.open(AppFeeSettingDialogComponent, {
-        minWidth: '30vw',
+        minWidth: '350px',
         maxWidth: '500px',
         panelClass: 'dialog',
         data: data,
@@ -98,7 +98,9 @@ export class AppComponent implements OnInit {
   }
 
   public getAltChainLogo(key: string) {
-    return `https://cryptoicons.org/api/icon/${key}/100`;
+    return key.includes('btc')
+      ? '/assets/images/bitcoin.png'
+      : `https://cryptoicons.org/api/icon/${key}/100`;
   }
 
   public showImg(chain: ConfiguredAltchain) {
@@ -114,7 +116,7 @@ export class AppComponent implements OnInit {
         isDeposit,
         vbkAddress: this.vbkAddress,
         vbkBalance: this.vbkBalance,
-        isTestnet: this.networkInfo === 'testnet'
+        isTestnet: this.networkInfo === 'testnet',
       },
       closeOnNavigation: true,
     });

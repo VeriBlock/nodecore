@@ -18,7 +18,7 @@
 
       <ng-container *ngFor="let automineRound of automineRounds; let i = index;">
         <mat-slide-toggle [(ngModel)]="automineRounds[i].enabled" [checked]="automineRound?.enabled" color="primary"
-          style="padding-left: 1em;">
+          style="padding-left: 2em;">
           round: {{ automineRound?.round }}
         </mat-slide-toggle>
       </ng-container>

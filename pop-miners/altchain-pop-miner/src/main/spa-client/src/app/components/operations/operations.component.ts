@@ -15,6 +15,7 @@ import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
 
 import { CoinConfigurationDialogComponent } from './coin-configuration-dialog/coin-configuration-dialog.component';
+import { MineCustomBlockDialogComponent } from './mine-custom-block-dialog/mine-custom-block-dialog.component';
 
 import {
   ConfiguredAltchain,
@@ -34,7 +35,7 @@ import { OperationState, OperationStatus } from '@core/enums';
 })
 export class OperationsComponent implements OnInit, OnDestroy {
   public form: FormGroup = this.formBuilder.group({
-    filter: '',
+    filter: 'active',
   });
 
   public selectedAltChain: ConfiguredAltchain = null;
@@ -111,7 +112,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     });
 
     // Check the operation list API every 2 seconds
-    interval(2_000)
+    interval(2000)
       .pipe(
         startWith(0),
         switchMap(() =>
@@ -130,7 +131,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       });
 
     // Check the operation details API every 5 seconds
-    interval(5_000)
+    interval(5000)
       .pipe(
         startWith(0),
         switchMap(() =>
@@ -205,7 +206,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   private refreshOperationList() {
-    this.tableLoading = true;
+    this.tableLoading = Boolean(this.operationsDataSource?.data.length);
 
     this.minerService
       .getOperationList({
@@ -245,7 +246,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
     this.configService.getAutoMineConfig('vbtc').subscribe((data) => {
       const dialogRef = this.dialog.open(CoinConfigurationDialogComponent, {
-        minWidth: '250px',
+        minWidth: '350px',
         maxWidth: '500px',
         panelClass: 'dialog',
         data: data,
@@ -272,9 +273,30 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   public openMineDialog() {
+    const dialogRef = this.dialog.open(MineCustomBlockDialogComponent, {
+      minWidth: '350px',
+      maxWidth: '500px',
+      panelClass: 'dialog',
+      closeOnNavigation: true,
+    });
+
+    dialogRef
+      .afterClosed()
+      .subscribe((result: { save: boolean; data: number }) => {
+        if (result?.save) {
+          this.startMineBlock(result.data || null);
+        }
+      });
+  }
+
+  public startMineBlock(blockNumber?: number) {
     const request: MineRequest = {
       chainSymbol: this.selectedAltChain.key,
     };
+
+    if (blockNumber) {
+      request.height = blockNumber;
+    }
 
     this.isLoadingConfiguration = true;
 

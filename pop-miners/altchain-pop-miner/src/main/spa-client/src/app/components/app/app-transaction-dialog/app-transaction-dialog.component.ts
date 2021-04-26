@@ -105,4 +105,8 @@ export class AppTransactionDialogComponent implements OnInit {
       this.isTestnet ? 'testnet.' : ''
     }explore.veriblock.org/tx/${this.tx}`;
   }
+
+  public showSuccess(): void {
+    this.alertService.addSuccess('Address copied to clipboard successfully');
+  }
 }

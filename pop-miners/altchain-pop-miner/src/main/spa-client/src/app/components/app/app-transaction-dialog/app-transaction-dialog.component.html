@@ -1,62 +1,51 @@
 <h1 mat-dialog-title>
-  <span>{{isDeposit ? 'Deposit' : 'Withdrawal'}} (VBK)</span>
+  <span>{{isDeposit ? 'Deposit' : 'Withdraw'}} (VBK)</span>
 </h1>
 
 <div mat-dialog-content>
+  <ng-container *ngIf="isDeposit; else withdrawBlock">
+    <mat-form-field appearance="outline">
+      <mat-label>Wallet Address</mat-label>
+      <input matInput type="text" [ngModel]="vbkAddress" readonly />
 
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>VeriBlock (VBK)</mat-card-title>
-    </mat-card-header>
+      <mat-icon matSuffix color="primary" matTooltip="Copy" [cdkCopyToClipboard]="vbkAddress" style="cursor: pointer;"
+        (click)="showSuccess()">
+        content_copy
+      </mat-icon>
+    </mat-form-field>
 
+  </ng-container>
 
-    <mat-card-content>
-      <mat-divider></mat-divider>
+  <ng-template #withdrawBlock>
 
-      <ng-container *ngIf="isDeposit; else withdrawBlock">
-        <mat-form-field appearance="outline">
-          <mat-label>Wallet Address</mat-label>
-          <input matInput type="text" [ngModel]="vbkAddress" readonly />
+    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
-          <mat-icon matSuffix color="primary" matTooltip="Copy" [cdkCopyToClipboard]="vbkAddress" style="cursor: pointer;">
-            content_copy
-          </mat-icon>
-        </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Recipient's wallet address</mat-label>
+        <input matInput type="text" maxlength="50" formControlName="destinationAddress" required />
 
-      </ng-container>
+        <mat-hint>Please verify the wallet address. We cannot refund an incorrect withdrawal.</mat-hint>
 
-      <ng-template #withdrawBlock>
+        <mat-error *ngIf="form.get('destinationAddress').errors?.maxlength">Up to
+          {{form.get('destinationAddress').errors?.maxlength.requiredLength}}
+          characters </mat-error>
+      </mat-form-field>
 
-        <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>Withdrawal amount</mat-label>
+        <input matInput type="number" min="0" formControlName="amount" required />
 
-          <mat-form-field appearance="outline">
-            <mat-label>Recipient's wallet address</mat-label>
-            <input matInput type="text" maxlength="50" formControlName="destinationAddress" required />
+        <span matSuffix>&nbsp; VBK</span>
 
-            <mat-hint>Please verify the wallet address. We cannot refund an incorrect withdrawal.</mat-hint>
+        <mat-hint (click)="setMaxAmount()" style="cursor: pointer; color: blue; text-decoration: underline;" align="end">Available:
+          {{vbkBalance }} VBK
+        </mat-hint>
 
-            <mat-error *ngIf="form.get('destinationAddress').errors?.maxlength">Up to
-              {{form.get('destinationAddress').errors?.maxlength.requiredLength}}
-              characters </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Withdrawal amount</mat-label>
-            <input matInput type="number" min="0" formControlName="amount" required />
-
-            <span matSuffix> VBK </span>
-
-            <mat-hint (click)="setMaxAmount()" style="cursor: pointer; color: blue; text-decoration: underline;" align="end">Available:
-              {{vbkBalance }} VBK
-            </mat-hint>
-
-            <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>
-            <mat-error *ngIf="form.get('amount').errors?.max">Not a valid number</mat-error>
-          </mat-form-field>
-        </div>
-      </ng-template>
-    </mat-card-content>
-  </mat-card>
+        <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>
+        <mat-error *ngIf="form.get('amount').errors?.max">Not a valid number</mat-error>
+      </mat-form-field>
+    </div>
+  </ng-template>
 
   <ng-container *ngIf="showAlert">
     <mat-card class="alert-success" style="margin: 1em;">

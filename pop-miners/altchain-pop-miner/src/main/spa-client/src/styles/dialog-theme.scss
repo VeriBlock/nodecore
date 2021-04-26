@@ -10,9 +10,10 @@
     min-width: 200px;
 
     .mat-dialog-title {
-      background-color: mat-color($accent);
-      color: mat-contrast($accent, 400);
-      padding: 1em;
+      // background-color: mat-color($accent);
+      // color: mat-contrast($accent, 400);
+      // padding: 1em;
+      text-align: center;
     }
 
     .mat-dialog-content {

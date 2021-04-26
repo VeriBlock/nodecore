@@ -13,6 +13,7 @@ import { SharedModule } from '@shared/shared.module';
 import { CoreModule } from '@core/core.module';
 
 import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
+import { MineCustomBlockDialogComponent } from './components/operations/mine-custom-block-dialog/mine-custom-block-dialog.component';
 import { AppTransactionDialogComponent } from './components/app/app-transaction-dialog/app-transaction-dialog.component';
 import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-dialog/app-fee-setting-dialog.component';
 import { OperationsTableComponent } from '@components/operations/operations-table/operations-table.component';
@@ -36,6 +37,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     OperationsComponent,
     LogsDialogComponent,
     AppTransactionDialogComponent,
+    MineCustomBlockDialogComponent,
   ],
   imports: [
     BrowserAnimationsModule,

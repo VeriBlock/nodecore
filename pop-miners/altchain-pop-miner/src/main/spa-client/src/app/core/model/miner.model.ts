@@ -5,5 +5,5 @@ export class MinerInfo {
 
 export class MineRequest {
   chainSymbol: string;
-  //height: number
+  height?: number;
 }

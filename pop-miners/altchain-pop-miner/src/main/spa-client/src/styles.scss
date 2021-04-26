@@ -7,6 +7,11 @@ body {
     &:not(.mat-paginator-page-size-select) {
       width: 100%;
     }
+
+    .mat-form-field-prefix,
+    .mat-form-field-suffix {
+      align-self: center;
+    }
   }
 
   .overflow-container {
