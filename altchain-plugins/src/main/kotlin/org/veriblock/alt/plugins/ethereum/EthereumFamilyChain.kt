@@ -151,8 +151,9 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
+        val ethTxId = txId.toEthHash()
         logger.debug { "Retrieving transaction $txId..." }
-        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
+        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(ethTxId), "2.0")
         return btcTransaction?.let { ethTransaction ->
             SecurityInheritingTransaction(
                 ethTransaction.txid,
