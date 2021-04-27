@@ -11,14 +11,17 @@ table.mat-table {
     td.mat-cell {
       text-align: left;
 
+      &.mat-column-operationIdColumn {
+        min-width: 150px;
+      }
+
       &.mat-column-stateColumn {
         min-width: 100px;
       }
 
-      &.mat-column-moreColumn {
-        padding-right: 1em;
-        text-align: left;
-        width: 50px;
+      &.mat-column-operationStatusColumn {
+        text-align: center;
+        min-width: 120px;
       }
     }
   }
@@ -51,6 +54,7 @@ table.mat-table {
 
   .clickable:hover {
     background-color: rgba(90, 90, 90, 0.1);
+    cursor: pointer;
   }
 
   .hidden-row {

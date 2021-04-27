@@ -35,12 +35,12 @@ import { OperationState, OperationStatus } from '@core/enums';
 })
 export class OperationsComponent implements OnInit, OnDestroy {
   public form: FormGroup = this.formBuilder.group({
-    filter: 'active',
+    filter: 'Active',
   });
 
   public selectedAltChain: ConfiguredAltchain = null;
 
-  public filters: string[] = ['all', 'active', 'completed', 'failed'];
+  public filters: string[] = ['All', 'Active', 'Completed', 'Failed'];
   private globalOperationStages: string[] = [
     OperationState.INITIAL,
     OperationState.INSTRUCTION,
@@ -118,7 +118,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
         switchMap(() =>
           this.minerService.getOperationList({
             altchainKey: this.selectedAltChain?.key || null,
-            status: this.form.controls['filter']?.value || 'active',
+            status: this.form.controls['filter']?.value || 'Active',
             limit: this.pageLimit,
             offset: this.pageOffset,
           })
@@ -312,11 +312,10 @@ export class OperationsComponent implements OnInit, OnDestroy {
       });
   }
 
+  // TODO not used yet
   private createWorkflowTable(
     operation: OperationDetailResponse
   ): OperationWorkflow {
-    // console.log(operation);
-
     const data: OperationWorkflow = {
       operationId: operation.operationId,
       stages: [],

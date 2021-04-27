@@ -59,10 +59,10 @@ export class OperationsTableComponent implements OnInit, OnChanges {
 
   @Input()
   public displayedColumns: string[] = [
-    'moreColumn',
     'operationIdColumn',
     'stateColumn',
     'taskColumn',
+    'operationStatusColumn',
   ];
 
   @Input()
@@ -131,12 +131,12 @@ export class OperationsTableComponent implements OnInit, OnChanges {
       });
   }
 
-  public getIcon(status: string) {
+  public getIcon(status: string): string {
     switch (status) {
-      case 'DONE':
+      case OperationStatus.DONE:
         return 'check_circle';
 
-      case 'FAILED':
+      case OperationStatus.FAILED:
         return 'cancel';
 
       default:
@@ -165,7 +165,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
     return word.charAt(0).toUpperCase() + word.slice(1);
   }
 
-  public checkStatus(status: OperationStatus): string {
+  public checkStatus(status: string): string {
     switch (status) {
       case OperationStatus.DONE:
         return 'text-success';
@@ -176,5 +176,13 @@ export class OperationsTableComponent implements OnInit, OnChanges {
       default:
         return 'text-danger';
     }
+  }
+
+  public checkOperationStatus(task: string): string {
+    if (task.toLowerCase().includes('failed')) return OperationStatus.FAILED;
+
+    if (task.toLowerCase().includes('done')) return OperationStatus.DONE;
+
+    return OperationStatus.CURRENT;
   }
 }

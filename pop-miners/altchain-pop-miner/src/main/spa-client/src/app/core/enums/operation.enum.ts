@@ -14,4 +14,5 @@ export enum OperationStatus {
   PENDING = 'PENDING',
   CURRENT = 'CURRENT',
   DONE = 'DONE',
+  FAILED = 'FAILED',
 }
