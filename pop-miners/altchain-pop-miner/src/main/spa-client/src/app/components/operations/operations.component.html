@@ -1,22 +1,27 @@
 <mat-toolbar>
-  <mat-toolbar-row>
+  <mat-toolbar-row class="coin-header">
 
     <h2>{{ selectedAltChain?.name }} ({{ selectedAltChain?.key?.toUpperCase() }})</h2>
 
-    <button mat-button type="button" aria-label="Preferences" matTooltip="Coin Settings" (click)="openCoinConfigurationDialog()"
-      [disabled]="isLoadingConfiguration">
-      <mat-icon aria-hidden="true">settings</mat-icon>
-      <span>Coin Configuration</span>
+    <button mat-button type="button" (click)="openCoinConfigurationDialog()" [disabled]="isLoadingConfiguration" class="no-hover">
+      <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px">
+        <mat-icon *ngIf="!selectedAltChain?.hasLogo">
+          settings
+        </mat-icon>
+        <mat-icon [ngStyle]="{'display': selectedAltChain?.hasLogo ? 'inherit' : 'none'}">
+          <img [src]="getAltChainLogo(selectedAltChain?.key)" (load)="showImg(selectedAltChain)" height="24px" width="24px" />
+        </mat-icon>
+        <span>Coin Configuration</span>
+      </div>
     </button>
-
   </mat-toolbar-row>
 </mat-toolbar>
 
 <div fxLayout="row" fxLayoutAlign="center center" style="width: 100%;">
-  <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-accent">
+  <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-accent flag-mine">
     <button mat-button (click)="startMineBlock()" matTooltip="Start new mining operation" [disabled]="isLoadingConfiguration"
       style="padding: 0; font-size: 20px; text-align: center;">
-      <div style="min-width: 250px;" class="flag flag-accent">
+      <div style="min-width: 250px;" class="flag flag-accent flag-mine">
         Mine
       </div>
     </button>

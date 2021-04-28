@@ -2,9 +2,14 @@
 
 @mixin drawer-theme($theme) {
   $accent: map-get($theme, accent);
+  $background: map-get($theme, background);
 
   .mat-drawer {
-    background-color: mat-color($accent);
-    color: mat-contrast($accent, 400);
+    background-color: mat-color($accent, 500);
+    color: mat-contrast($accent, 500);
+  }
+
+  .mat-drawer-container {
+    background-color: mat-color($background, background);
   }
 }

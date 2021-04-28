@@ -3,16 +3,32 @@
 @mixin flag-theme($theme) {
   $foreground: map-get($theme, foreground);
   $accent: map-get($theme, accent);
+  $background: map-get($theme, background);
 
-  div.flag {
-    color: mat-color($foreground, text);
-    border: solid mat-color($foreground, divider) 1px;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
+  div {
+    &.flag {
+      color: mat-color($foreground, text);
+      border: solid mat-color($foreground, divider) 1px;
 
-    &.flag-accent {
-      background: mat-color($accent);
-      color: mat-contrast($accent, 400);
+      &.flag-accent {
+        background: mat-color($accent, 500);
+        color: mat-contrast($accent, 500);
+      }
+
+      &.flag-mine {
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+      }
     }
+
+    &.flag-status {
+      padding: 0.5em 16px;
+      border-radius: 1em;
+      background-color: mat-color($background, background);
+    }
+  }
+
+  .clickable:hover div.flag-status {
+    background-color: inherit;
   }
 }

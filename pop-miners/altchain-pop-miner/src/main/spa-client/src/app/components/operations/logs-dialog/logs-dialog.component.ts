@@ -1,8 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
-import { MinerService } from '@core/services/miner.service';
-
 import { OperationSummaryResponse } from '@core/model';
 
 @Component({
@@ -12,7 +10,12 @@ import { OperationSummaryResponse } from '@core/model';
 export class LogsDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<OperationSummaryResponse>,
-    private minerService: MinerService,
-    @Inject(MAT_DIALOG_DATA) public logs: string[]
+    @Inject(MAT_DIALOG_DATA)
+    public data: { logs: string[]; operationId: number; level: string }
   ) {}
+
+  public firstLetterUpperCase = (s: string): string => {
+    if (typeof s !== 'string') return '';
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  };
 }

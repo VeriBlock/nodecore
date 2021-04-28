@@ -22,6 +22,7 @@ table.mat-table {
       &.mat-column-operationStatusColumn {
         text-align: center;
         min-width: 120px;
+        padding-left: 1em;
       }
     }
   }
@@ -35,6 +36,7 @@ table.mat-table {
       td.mat-cell {
         &.mat-column-statusColumn {
           min-width: 120px;
+          padding-left: 1em;
         }
 
         &.mat-column-taskColumn {
@@ -53,7 +55,6 @@ table.mat-table {
   }
 
   .clickable:hover {
-    background-color: rgba(90, 90, 90, 0.1);
     cursor: pointer;
   }
 

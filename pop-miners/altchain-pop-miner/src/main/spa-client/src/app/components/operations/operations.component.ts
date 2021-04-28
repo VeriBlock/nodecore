@@ -304,7 +304,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       .postMine(request)
       .subscribe((response) => {
         this.alertService.addSuccess(
-          'Mine request successful! Operation id: ' + response.operationId
+          'Mine request successful! Operation ID: ' + response.operationId
         );
       })
       .add(() => {
@@ -546,5 +546,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
     // operationStateDetail.miningInstruction != null -> ApmOperationState.INSTRUCTION
     //   else -> ApmOperationState.INITIAL
     // }
+  }
+
+  public getAltChainLogo(key: string) {
+    return key.includes('btc')
+      ? '/assets/images/bitcoin.png'
+      : `https://cryptoicons.org/api/icon/${key}/24`;
+  }
+
+  public showImg(chain: ConfiguredAltchain) {
+    chain.hasLogo = true;
   }
 }

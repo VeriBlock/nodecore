@@ -24,9 +24,20 @@ body {
     &:not(.mat-mini-fab):not(.mat-icon-button) .mat-button-wrapper mat-icon {
       margin-right: 0.5em;
     }
+
+    &.no-hover .mat-button-focus-overlay {
+      background-color: transparent !important;
+    }
   }
 
   .mat-divider {
     width: 100%;
+  }
+
+  .logs-dialog {
+    .mat-dialog-container {
+      font-size: 11px;
+      font-family: Courier Prime, Roboto;
+    }
   }
 }

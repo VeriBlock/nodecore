@@ -54,7 +54,7 @@ export class AppComponent implements OnInit {
     });
 
     // Check the miner data API every 61 seconds
-    interval(61_000)
+    interval(61000)
       .pipe(
         startWith(0),
         switchMap(() => this.minerService.getMinerInfo())

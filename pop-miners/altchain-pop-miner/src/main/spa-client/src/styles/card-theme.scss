@@ -13,11 +13,18 @@
   }
 
   mat-card.altchains {
-    background-color: mat-color($accent);
-    color: mat-contrast($accent, 400);
+    background-color: mat-color($accent, 500);
+    color: mat-contrast($accent, 500);
 
-    .mat-badge-content {
-      color: transparent;
+    .mat-badge {
+      .mat-badge-content {
+        color: transparent;
+        box-shadow: 0px 0px 4px mat-color($primary);
+      }
+
+      &.mat-badge-warn .mat-badge-content {
+        box-shadow: 0px 0px 4px mat-color($warn);
+      }
     }
 
     &:hover {

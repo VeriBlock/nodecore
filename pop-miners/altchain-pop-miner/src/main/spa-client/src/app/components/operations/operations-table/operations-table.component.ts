@@ -126,7 +126,14 @@ export class OperationsTableComponent implements OnInit, OnChanges {
       .getOperationLogs(this.selectedOperationId, level)
       .subscribe((logs) => {
         const dialogConfig = new MatDialogConfig();
-        dialogConfig.data = logs;
+        dialogConfig.data = {
+          logs,
+          operationId: this.selectedOperationId,
+          level: level === 'info' ? '' : level,
+        };
+
+        dialogConfig.panelClass = 'logs-dialog';
+
         this.dialog.open(LogsDialogComponent, dialogConfig);
       });
   }
@@ -134,10 +141,10 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   public getIcon(status: string): string {
     switch (status) {
       case OperationStatus.DONE:
-        return 'check_circle';
+        return 'check_circle_outline';
 
       case OperationStatus.FAILED:
-        return 'cancel';
+        return 'highlight_off';
 
       default:
         return '';
@@ -185,4 +192,9 @@ export class OperationsTableComponent implements OnInit, OnChanges {
 
     return OperationStatus.CURRENT;
   }
+
+  public firstLetterUpperCase = (s: string): string => {
+    if (typeof s !== 'string') return '';
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  };
 }

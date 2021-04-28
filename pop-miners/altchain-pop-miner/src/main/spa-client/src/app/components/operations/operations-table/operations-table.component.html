@@ -52,20 +52,21 @@
         <th mat-header-cell *matHeaderCellDef>STATUS</th>
         <td mat-cell *matCellDef="let element">
 
-          <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" style="padding: 5px 0"
-            [class]="checkStatus(checkOperationStatus(element?.task))">
+          <div fxLayout="row" fxLayoutAlign="center center" [class]="checkStatus(checkOperationStatus(element?.task))">
 
-            <ng-container [ngSwitch]="checkOperationStatus(element?.task)">
-              <ng-container *ngSwitchCase="'CURRENT'">
-                <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="24"></mat-progress-spinner>
+            <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
+              <ng-container [ngSwitch]="checkOperationStatus(element?.task)">
+                <ng-container *ngSwitchCase="'CURRENT'">
+                  <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="19"></mat-progress-spinner>
+                </ng-container>
+                <ng-container *ngSwitchDefault>
+                  <mat-icon>{{ getIcon(checkOperationStatus(element?.task))}}</mat-icon>
+                </ng-container>
               </ng-container>
-              <ng-container *ngSwitchDefault>
-                <mat-icon>{{ getIcon(checkOperationStatus(element?.task))}}</mat-icon>
-              </ng-container>
-            </ng-container>
 
+              <span>{{ firstLetterUpperCase(checkOperationStatus(element?.task)) }}</span>
+            </div>
 
-            <span>{{ checkOperationStatus(element?.task) }}</span>
           </div>
         </td>
       </ng-container>
@@ -90,19 +91,24 @@
                     <th mat-header-cell *matHeaderCellDef> Status </th>
                     <td mat-cell *matCellDef="let element">
 
-                      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="padding: 5px 0"
-                        [class]="checkStatus(element?.status)">
+                      <ng-container *ngIf="element?.status">
+                        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" [class]="checkStatus(element?.status)">
+                          <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
 
-                        <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
-                          <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="24"></mat-progress-spinner>
-                        </ng-container>
+                            <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
+                              <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="19.5"
+                                style="width: 25px; margin-left: 5px;">
+                              </mat-progress-spinner>
+                            </ng-container>
 
-                        <ng-template #iconBlock>
-                          <mat-icon>{{ getIcon(element?.status)}}</mat-icon>
-                        </ng-template>
+                            <ng-template #iconBlock>
+                              <mat-icon style="width: 25px;">{{ getIcon(element?.status)}}</mat-icon>
+                            </ng-template>
 
-                        <span>{{ element?.status }}</span>
-                      </div>
+                            <span>{{ firstLetterUpperCase(element?.status) }}</span>
+                          </div>
+                        </div>
+                      </ng-container>
                     </td>
                   </ng-container>
 
