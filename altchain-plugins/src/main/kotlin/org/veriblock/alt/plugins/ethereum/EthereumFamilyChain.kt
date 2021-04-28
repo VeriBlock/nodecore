@@ -110,11 +110,7 @@ class EthereumFamilyChain(
                 hash = it.hash.asEthHash(),
                 height = it.number.asEthHexInt(),
                 previousHash = it.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
-                confirmations = 0, // FIXME
-                version = 0, // FIXME
-                nonce = it.nonce.asEthHexLong(),
                 merkleRoot = it.transactionsRoot,
-                difficulty = it.difficulty.asEthHexInt().toDouble(),
                 coinbaseTransactionId = "TODO",
                 transactionIds = it.transactions,
                 endorsedBy = listOf(), // TODO
