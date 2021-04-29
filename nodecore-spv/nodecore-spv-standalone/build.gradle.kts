@@ -40,9 +40,10 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
-    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
+    implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")
+    implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
     // Other
     implementation("me.tongfei:progressbar:0.8.1")

@@ -9,9 +9,10 @@ plugins {
 dependencies {
     api(project(":veriblock-core"))
 
-    api("org.apache.logging.log4j:log4j-api:2.13.3")
-    api("org.apache.logging.log4j:log4j-core:2.13.3")
+    api("org.apache.logging.log4j:log4j-api:$log4jVersion")
+    api("org.apache.logging.log4j:log4j-core:$log4jVersion")
     api("com.google.code.gson:gson:2.8.2")
+    api("org.slf4j:slf4j-api:$slf4jVersion")
 
     testImplementation("junit:junit:4.12")
 }
