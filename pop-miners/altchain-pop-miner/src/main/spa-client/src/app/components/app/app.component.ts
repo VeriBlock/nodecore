@@ -32,7 +32,7 @@ export class AppComponent implements OnInit {
   public vbkBalance: string;
   public isLoadingSettings = false;
 
-  public isAltChainSelected = false;
+  public isAltChainSelected = null;
 
   constructor(
     private dataShareService: DataShareService,
@@ -66,7 +66,7 @@ export class AppComponent implements OnInit {
   }
 
   public changeAltChain(data: ConfiguredAltchain) {
-    this.isAltChainSelected = Boolean(data?.key);
+    this.isAltChainSelected = data?.key || null;
     this.dataShareService.changeSelectedAltChain(data);
   }
 
@@ -98,9 +98,9 @@ export class AppComponent implements OnInit {
   }
 
   public getAltChainLogo(key: string) {
-    return key.includes('btc')
-      ? '/assets/images/bitcoin.png'
-      : `https://cryptoicons.org/api/icon/${key}/100`;
+    return `https://cryptoicons.org/api/icon/${
+      key.includes('btc') ? 'btc' : key
+    }/100`;
   }
 
   public showImg(chain: ConfiguredAltchain) {

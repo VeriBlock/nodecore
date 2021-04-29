@@ -17,6 +17,7 @@ mat-drawer-container {
     mat-card {
       width: 95%;
       padding: 1em 0 1em 0.5em;
+      border-radius: 1em;
     }
 
     .mat-divider {
@@ -27,7 +28,7 @@ mat-drawer-container {
   mat-drawer-content {
     flex: 1;
     height: 100%;
-    padding: 1em 3em 2em;
+    padding: 0 3em 2em;
   }
 }
 

@@ -1,6 +1,18 @@
 body {
   margin: 0;
 
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
   mat-form-field.mat-form-field {
     font-size: 14px;
 
@@ -32,12 +44,5 @@ body {
 
   .mat-divider {
     width: 100%;
-  }
-
-  .logs-dialog {
-    .mat-dialog-container {
-      font-size: 11px;
-      font-family: Courier Prime, Roboto;
-    }
   }
 }

@@ -80,6 +80,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   @ViewChild(MatPaginator)
   public paginator: MatPaginator;
 
+  public isLoadingLogs = false;
   public defaultPageIndex = 0;
 
   constructor(
@@ -122,9 +123,11 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   }
 
   public openLogsDialog(level: string) {
+    this.isLoadingLogs = true;
     this.minerService
       .getOperationLogs(this.selectedOperationId, level)
       .subscribe((logs) => {
+        this.isLoadingLogs = false;
         const dialogConfig = new MatDialogConfig();
         dialogConfig.data = {
           logs,

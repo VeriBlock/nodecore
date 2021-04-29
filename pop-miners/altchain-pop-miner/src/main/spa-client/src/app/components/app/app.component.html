@@ -3,18 +3,19 @@
 
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
       <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
-        <img src="/assets/images/VeriBlock_Logo_Rev.png" style="display:block;" width="156px" height="28px" />
+        <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
         <span>{{networkInfo}}</span>
       </div>
 
       <div fxFlex="80" style="max-width: 100%; overflow: auto;">
-        <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0" (click)="changeAltChain(altchain)">
+        <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0"
+          [ngClass]="{'is-active': isAltChainSelected === altchain?.key}" (click)="changeAltChain(altchain)">
           <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
-            <mat-icon inline *ngIf="!altchain?.hasLogo" matBadge="." matBadgePosition="below after"
-              [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'" matBadgeSize="small">help</mat-icon>
             <span matBadge="." matBadgePosition="below after" [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'"
-              matBadgeSize="small" [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}">
-              <img [src]="getAltChainLogo(altchain?.key)" (load)="showImg(altchain)" height="48px" width="48px" />
+              matBadgeSize="small">
+              <img *ngIf="!altchain?.hasLogo" src="/assets/images/default-coin.png" height="48px" width="48px" />
+              <img [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" [src]="getAltChainLogo(altchain?.key)"
+                (load)="showImg(altchain)" height="48px" width="48px" />
             </span>
             <span style="font-size: 14px;">{{ altchain?.name }}</span>
           </div>
@@ -54,7 +55,7 @@
 
   <mat-drawer-content>
     <ng-container *ngIf="!isAltChainSelected;">
-      <mat-card class="alert-info">
+      <mat-card class="alert-info" style="margin-top: 1em;">
         <mat-card-content style="display: flex;">
           <mat-icon size="lg" style="padding-right: 5px;">info_outline</mat-icon>
           <span>No AltChain selected</span>

@@ -56,6 +56,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public isLoading = true;
   public tableLoading = false;
   public isLoadingConfiguration = false;
+  public showLogo: boolean = false;
 
   public operationsTotalCount: number = 0;
   public selectedOperationId: string = null;
@@ -84,9 +85,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.currentSelectionSubscription = this.dataShareService.currentAltChain.subscribe(
       (data: ConfiguredAltchain) => {
+        this.selectedAltChain = data;
         this.initValues();
         this.updateQueryParams();
-        this.selectedAltChain = data;
       }
     );
 
@@ -118,16 +119,23 @@ export class OperationsComponent implements OnInit, OnDestroy {
         switchMap(() =>
           this.minerService.getOperationList({
             altchainKey: this.selectedAltChain?.key || null,
-            status: this.form.controls['filter']?.value || 'Active',
+            status:
+              this.form.controls['filter']?.value?.toLowerCase() || 'active',
             limit: this.pageLimit,
             offset: this.pageOffset,
           })
         )
       )
       .subscribe((response) => {
+        this.isLoading = false;
+        if (
+          JSON.stringify(this.operationsDataSource.data) ===
+          JSON.stringify(response.operations)
+        ) {
+          return;
+        }
         this.operationsDataSource.data = response.operations.slice();
         this.operationsTotalCount = response.totalCount;
-        this.isLoading = false;
       });
 
     // Check the operation details API every 5 seconds
@@ -142,6 +150,12 @@ export class OperationsComponent implements OnInit, OnDestroy {
         )
       )
       .subscribe((workflow) => {
+        if (
+          JSON.stringify(this.operationWorkflows[workflow.operationId]) ===
+          JSON.stringify(workflow)
+        ) {
+          return;
+        }
         this.operationWorkflows[workflow.operationId] = workflow;
 
         // .subscribe((data: OperationDetailResponse) => {
@@ -159,6 +173,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.tableLoading = false;
     this.isLoadingConfiguration = false;
+    this.showLogo = false;
 
     this.operationsTotalCount = 0;
     this.selectedOperationId = null;
@@ -169,6 +184,8 @@ export class OperationsComponent implements OnInit, OnDestroy {
     this.pageOffset = 0;
 
     this.operationWorkflows = {};
+
+    this.form.controls['filter'].patchValue('Active');
   }
 
   public loadWorkFlow() {
@@ -228,7 +245,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     queryParams['selectedOperationId'] = this.selectedOperationId || null;
     queryParams['statusFilter'] =
       this.form.controls['filter']?.value &&
-      this.form.controls['filter']?.value != 'active'
+      this.form.controls['filter']?.value != 'Active'
         ? this.form.controls['filter']?.value
         : null;
     queryParams['pageLimit'] = this.pageLimit != 10 ? this.pageLimit : null;
@@ -549,12 +566,8 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   public getAltChainLogo(key: string) {
-    return key.includes('btc')
-      ? '/assets/images/bitcoin.png'
-      : `https://cryptoicons.org/api/icon/${key}/24`;
-  }
-
-  public showImg(chain: ConfiguredAltchain) {
-    chain.hasLogo = true;
+    return `https://cryptoicons.org/api/icon/${
+      key.includes('btc') ? 'btc' : key
+    }/24`;
   }
 }

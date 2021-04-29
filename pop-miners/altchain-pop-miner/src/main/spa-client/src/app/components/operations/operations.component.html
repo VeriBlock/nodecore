@@ -5,11 +5,12 @@
 
     <button mat-button type="button" (click)="openCoinConfigurationDialog()" [disabled]="isLoadingConfiguration" class="no-hover">
       <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px">
-        <mat-icon *ngIf="!selectedAltChain?.hasLogo">
-          settings
+
+        <mat-icon *ngIf="!showLogo">
+          <img src="/assets/images/default-coin.png" height="24px" width="24px" />
         </mat-icon>
-        <mat-icon [ngStyle]="{'display': selectedAltChain?.hasLogo ? 'inherit' : 'none'}">
-          <img [src]="getAltChainLogo(selectedAltChain?.key)" (load)="showImg(selectedAltChain)" height="24px" width="24px" />
+        <mat-icon [ngStyle]="{'display': showLogo ? 'inherit' : 'none'}">
+          <img [src]="getAltChainLogo(selectedAltChain?.key)" (load)="showLogo = true" height="24px" width="24px" />
         </mat-icon>
         <span>Coin Configuration</span>
       </div>
@@ -25,7 +26,7 @@
         Mine
       </div>
     </button>
-    <div fxLayout="row" fxLayoutAlign="space-between center" style="border-left: 1px white solid;">
+    <div fxLayout="row" fxLayoutAlign="center center" style="border-left: 1px white solid;">
       <button mat-icon-button type="button" matTooltip="Start custom mining operation" (click)="openMineDialog()"
         [disabled]="isLoadingConfiguration">
         <mat-icon>more_vert</mat-icon>

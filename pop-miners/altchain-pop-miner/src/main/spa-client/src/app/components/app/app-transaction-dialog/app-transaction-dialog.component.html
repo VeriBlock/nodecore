@@ -1,6 +1,6 @@
-<h1 mat-dialog-title>
+<h2 mat-dialog-title>
   <span>{{isDeposit ? 'Deposit' : 'Withdraw'}} (VBK)</span>
-</h1>
+</h2>
 
 <div mat-dialog-content>
   <ng-container *ngIf="isDeposit; else withdrawBlock">
@@ -37,8 +37,8 @@
 
         <span matSuffix>&nbsp; VBK</span>
 
-        <mat-hint (click)="setMaxAmount()" style="cursor: pointer; color: blue; text-decoration: underline;" align="end">Available:
-          {{vbkBalance }} VBK
+        <mat-hint (click)="setMaxAmount()" [ngClass]="{'available-funds': vbkBalance}" align="end">Available:
+          {{vbkBalance || 0}} VBK
         </mat-hint>
 
         <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>

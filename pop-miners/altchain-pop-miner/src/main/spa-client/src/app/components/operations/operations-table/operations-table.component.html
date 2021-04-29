@@ -1,7 +1,7 @@
 <ng-container *ngIf="!dataSource?.data?.length && !isLoading; else operationsTableBlock">
   <mat-card class="alert-info">
     <mat-card-content style="display: flex;">
-      <mat-icon size="lg" style="padding-right: 5px;">info</mat-icon>
+      <mat-icon size="lg" style="padding-right: 5px;">info_outline</mat-icon>
       <span>There are no operations matching the current filter</span>
     </mat-card-content>
   </mat-card>
@@ -57,7 +57,7 @@
             <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
               <ng-container [ngSwitch]="checkOperationStatus(element?.task)">
                 <ng-container *ngSwitchCase="'CURRENT'">
-                  <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="19"></mat-progress-spinner>
+                  <mat-spinner color="accent" [diameter]="19"></mat-spinner>
                 </ng-container>
                 <ng-container *ngSwitchDefault>
                   <mat-icon>{{ getIcon(checkOperationStatus(element?.task))}}</mat-icon>
@@ -96,9 +96,8 @@
                           <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
 
                             <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
-                              <mat-progress-spinner mode="indeterminate" color="accent" [diameter]="19.5"
-                                style="width: 25px; margin-left: 5px;">
-                              </mat-progress-spinner>
+                              <mat-spinner color="accent" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
+                              </mat-spinner>
                             </ng-container>
 
                             <ng-template #iconBlock>
@@ -127,8 +126,8 @@
                   <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
                 </table>
 
-                <button mat-button type="button" (click)="openLogsDialog('info')">Display Logs</button>
-                <button mat-button type="button" (click)="openLogsDialog('debug')">Display Debug Logs</button>
+                <button mat-button type="button" (click)="openLogsDialog('info')" [disabled]="isLoadingLogs">Display Logs</button>
+                <button mat-button type="button" (click)="openLogsDialog('debug')" [disabled]="isLoadingLogs">Display Debug Logs</button>
               </ng-template>
             </div>
           </div>
