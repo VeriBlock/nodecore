@@ -2,6 +2,7 @@
 
 @mixin dialog-theme($theme) {
   $accent: map-get($theme, accent);
+  $foreground: map-get($theme, foreground);
 
   .dialog .mat-dialog-container {
     overflow: hidden;
@@ -21,6 +22,11 @@
 
     .mat-dialog-actions {
       padding-bottom: 20px;
+    }
+
+    .dialog-subtitle {
+      color: mat-color($foreground, secondary-text);
+      font-size: 14px;
     }
   }
 }

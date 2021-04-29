@@ -4,7 +4,7 @@
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
       <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
         <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
-        <span>{{networkInfo}}</span>
+        <span>{{networkInfo.charAt(0).toUpperCase() + networkInfo.slice(1).toLowerCase()}}</span>
       </div>
 
       <div fxFlex="80" style="max-width: 100%; overflow: auto;">
