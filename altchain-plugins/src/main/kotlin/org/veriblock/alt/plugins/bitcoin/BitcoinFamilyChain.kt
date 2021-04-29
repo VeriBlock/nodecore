@@ -108,7 +108,7 @@ class BitcoinFamilyChain(
         val btcBlock: BtcBlock = try {
             rpcRequest("getblock", listOf(hash, 1))
         } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
+            if (e.errorCode == -1 || e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
                 return null
             } else {
