@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -330,9 +331,7 @@ class SpvPeerTable(
         pendingPeers.remove(peer.address)
         peers[peer.address] = peer
 
-        // TODO: Wallet related setup (bloom filter)
-
-        // Attach listeners
+        // Wallet related setup (bloom filter)
         peer.setFilter(bloomFilter)
 
         peer.sendMessage {
@@ -413,7 +412,8 @@ class SpvPeerTable(
         // Create a flow that emits in execution order
         val allMessagesFlow = requestAllMessages(event, timeoutInMillis)
         // Choose the first one to complete
-        allMessagesFlow.first()
+        allMessagesFlow.firstOrNull()
+            ?: error("Failed to get a response to ${event.resultsCase} from peers: all peers timed out")
     }
 
     suspend fun requestMessage(
