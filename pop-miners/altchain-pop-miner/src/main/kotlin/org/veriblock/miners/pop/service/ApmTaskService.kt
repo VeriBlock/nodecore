@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.first
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 import org.veriblock.core.altchain.AltchainPoPEndorsement
-import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -66,38 +65,6 @@ class ApmTaskService(
             val vbkContextBlockHash = publicationData.context[0]
             miner.network.getBlock(vbkContextBlockHash.asVbkHash())
                 ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
-
-            // Verify context bytes before submitting endorsement
-            if (AltchainPoPEndorsement.isValidEndorsement(publicationData.publicationData.contextInfo)) {
-                val altchainPoPEndorsement = AltchainPoPEndorsement(publicationData.publicationData.contextInfo)
-                try {
-                    val blockEvidence = operation.chain.extractBlockEvidence(altchainPoPEndorsement)
-                    if (operation.chain.getBlock(blockEvidence.height) == null){
-                        failOperation("The endorsement block height ${blockEvidence.height} is not present at the chain")
-                    }
-                    if (operation.chain.getBlock(blockEvidence.hash.toString()) == null) {
-                        failOperation("The endorsement block hash ${blockEvidence.hash} is not present at the chain")
-                    }
-                    if (operation.chain.getBlock(blockEvidence.previousHash.toString()) == null) {
-                        failOperation("The endorsement block hash ${blockEvidence.previousHash} is not present at the chain")
-                    }
-                    if (operation.chain.getBlock(blockEvidence.previousKeystone.toString()) == null) {
-                        failOperation("The endorsement block hash ${blockEvidence.previousKeystone} is not present at the chain")
-                    }
-                    if (operation.chain.getBlock(blockEvidence.secondKeystone.toString()) == null) {
-                        failOperation("The endorsement block hash ${blockEvidence.secondKeystone} is not present at the chain")
-                    }
-                } catch (exception: Exception) {
-                    failOperation("""
-                        Unable to extract the block evidence from the pop endorsement: 
-                        header: ${altchainPoPEndorsement.getHeader().toHex()},
-                        contextInfo: ${altchainPoPEndorsement.getContextInfo().toHex()},
-                        payoutInfo: ${altchainPoPEndorsement.getPayoutInfo().toHex()}
-                    """.trimIndent(), exception)
-                }
-            } else {
-                failOperation("Invalid endorsement data: ${publicationData.publicationData.contextInfo.toHex()}")
-            }
         }
 
         operation.runTask(
@@ -112,8 +79,34 @@ class ApmTaskService(
             logger.info(operation, "Submitting endorsement VBK transaction...")
             val transaction = try {
                 val endorsementData = SerializeDeserializeService.serialize(miningInstruction.publicationData)
-                endorsementData.checkForValidEndorsement {
-                    failOperation("Invalid endorsement data: ${endorsementData.toHex()}", it)
+                // Verify context bytes before submitting endorsement
+                val endorsement = try {
+                    AltchainPoPEndorsement(endorsementData)
+                } catch (e: Exception) {
+                    failOperation("Invalid endorsement data: ${endorsementData.toHex()}", e)
+                }
+                val blockEvidence = operation.chain.extractBlockEvidence(endorsement)
+                val endorsedBlock = operation.chain.getBlock(blockEvidence.hash.toString())
+                    ?: failOperation("The endorsed block hash ${blockEvidence.hash} is not present at the chain")
+                val previousBlock = operation.chain.getBlock(blockEvidence.previousHash.toString())
+                    ?: failOperation("The endorsed previous block hash ${blockEvidence.previousHash} is not present at the chain")
+                if (previousBlock.height != (endorsedBlock.height - 1).coerceAtLeast(0)) {
+                    failOperation("The endorsed previous block height doesn't match with the endorsed block height")
+                }
+                val keystoneSkip = when (endorsedBlock.height % operation.chain.config.keystonePeriod) {
+                    0 -> operation.chain.config.keystonePeriod
+                    1 -> operation.chain.config.keystonePeriod + 1
+                    else -> endorsedBlock.height % operation.chain.config.keystonePeriod
+                }
+                val previousKeystone = operation.chain.getBlock(blockEvidence.previousKeystone.toString())
+                    ?: failOperation("The endorsed previous keystone hash ${blockEvidence.previousKeystone} is not present at the chain")
+                if (previousKeystone.height != (endorsedBlock.height - keystoneSkip).coerceAtLeast(0)) {
+                    failOperation("The endorsed previous keystone height doesn't match with the endorsed block height")
+                }
+                val secondKeystone = operation.chain.getBlock(blockEvidence.secondKeystone.toString())
+                    ?: failOperation("The endorsed second previous keystone hash ${blockEvidence.secondKeystone} is not present at the chain")
+                if (secondKeystone.height != (endorsedBlock.height - keystoneSkip - operation.chain.config.keystonePeriod).coerceAtLeast(0)) {
+                    failOperation("The endorsed second previous keystone height doesn't match with the endorsed block height")
                 }
                 miner.network.submitEndorsement(
                     endorsementData,
