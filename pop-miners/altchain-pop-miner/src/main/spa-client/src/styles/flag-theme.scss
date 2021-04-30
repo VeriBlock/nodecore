@@ -2,7 +2,7 @@
 
 @mixin flag-theme($theme) {
   $foreground: map-get($theme, foreground);
-  $accent: map-get($theme, accent);
+  $primary: map-get($theme, primary);
   $background: map-get($theme, background);
 
   div {
@@ -10,9 +10,9 @@
       color: mat-color($foreground, text);
       border: solid mat-color($foreground, divider) 1px;
 
-      &.flag-accent {
-        background: mat-color($accent, 500);
-        color: mat-contrast($accent, 500);
+      &.flag-primary {
+        background: mat-color($primary, 500);
+        color: mat-contrast($primary, 500);
       }
 
       &.flag-mine {

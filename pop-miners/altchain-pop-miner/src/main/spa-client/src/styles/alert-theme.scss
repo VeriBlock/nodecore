@@ -1,8 +1,8 @@
 @import "~@angular/material/theming";
 
 @mixin alert-theme($theme) {
-  $primary: map-get($theme, primary);
   $accent: map-get($theme, accent);
+  $primary: map-get($theme, primary);
   $warn: map-get($theme, warn);
   $foreground: map-get($theme, foreground);
 
@@ -34,11 +34,12 @@
   }
 
   .text-success {
-    color: mat-color($primary);
+    color: mat-color($accent);
   }
 
+  // TODO check
   .text-warning {
-    color: mat-color($accent);
+    color: mat-color($warn, 100);
   }
 
   .text-danger {

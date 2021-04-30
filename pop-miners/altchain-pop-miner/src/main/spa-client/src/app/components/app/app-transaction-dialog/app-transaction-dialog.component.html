@@ -6,10 +6,10 @@
   <ng-container *ngIf="isDeposit; else withdrawBlock">
     <mat-form-field appearance="outline">
       <mat-label>Wallet Address</mat-label>
-      <input matInput type="text" [ngModel]="vbkAddress" readonly />
+      <input matInput type="text" [ngModel]="vbkAddress" readonly style="text-align: center;" />
 
-      <mat-icon matSuffix color="primary" matTooltip="Copy" [cdkCopyToClipboard]="vbkAddress" style="cursor: pointer;"
-        (click)="showSuccess()">
+      <mat-icon matSuffix color="primary" matTooltip="Copy" [cdkCopyToClipboard]="vbkAddress" (click)="showSuccess()"
+        style="cursor: pointer;">
         content_copy
       </mat-icon>
     </mat-form-field>

@@ -1,7 +1,7 @@
 @import "~@angular/material/theming";
 
 @mixin dialog-theme($theme) {
-  $accent: map-get($theme, accent);
+  $primary: map-get($theme, primary);
   $foreground: map-get($theme, foreground);
 
   .dialog .mat-dialog-container {
@@ -28,5 +28,9 @@
       font-weight: 400;
       font-size: 16px;
     }
+  }
+
+  .mat-focused .mat-form-field-required-marker {
+    color: inherit;
   }
 }

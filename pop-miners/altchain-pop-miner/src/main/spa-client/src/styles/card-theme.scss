@@ -1,7 +1,6 @@
 @import "~@angular/material/theming";
 
 @mixin card-theme($theme) {
-  $primary: map-get($theme, primary);
   $accent: map-get($theme, accent);
   $warn: map-get($theme, warn);
   $foreground: map-get($theme, foreground);
@@ -18,7 +17,7 @@
       .mat-badge.altchain-badge {
         .mat-badge-content {
           color: transparent;
-          box-shadow: 0px 0px 4px mat-color($primary);
+          box-shadow: 0px 0px 4px mat-color($accent);
           right: 1px;
           bottom: 2px;
         }

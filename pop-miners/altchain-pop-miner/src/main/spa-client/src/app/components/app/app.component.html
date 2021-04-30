@@ -12,7 +12,7 @@
           [ngClass]="{'is-active': selectedAltChain === altchain?.key}" (click)="changeAltChain(altchain)">
           <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
             <span matBadge="." matBadgePosition="below after" matBadgeOverlap="false" class="altchain-badge"
-              [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'" matBadgeSize="small">
+              [matBadgeColor]="altchain?.readyStatus?.isReady ? 'accent' : 'warn'" matBadgeSize="small">
               <img *ngIf="!altchain?.hasLogo" src="/assets/images/default-coin.png" height="48px" width="48px" />
               <img [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" [src]="getAltChainLogo(altchain?.key)"
                 (load)="showImg(altchain)" height="48px" width="48px" />
@@ -32,10 +32,10 @@
         </div>
 
         <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="15px" style="width: 100%;">
-          <button mat-raised-button type="button" color="accent" (click)="openTransactionDialog(true)">
+          <button mat-raised-button type="button" color="primary" (click)="openTransactionDialog(true)">
             Deposit
           </button>
-          <button mat-raised-button type="button" color="accent" (click)="openTransactionDialog(false)">
+          <button mat-raised-button type="button" color="primary" (click)="openTransactionDialog(false)">
             Withdraw
           </button>
         </div>

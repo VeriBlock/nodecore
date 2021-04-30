@@ -18,39 +18,6 @@ $custom-typography: mat-typography-config(
 @include mat-core($custom-typography);
 
 $vbk-primary: (
-  50: #ecf8e6,
-  100: #ceeec0,
-  200: #aee396,
-  300: #8ed76c,
-  400: #75cf4d,
-  500: #5dc62d,
-  600: #55c028,
-  700: #4bb922,
-  800: #41b11c,
-  900: #30a411,
-  A100: #dcffd4,
-  A200: #b2ffa1,
-  A400: #88ff6e,
-  A700: #73ff55,
-  contrast: (
-    50: #000000,
-    100: #000000,
-    200: #000000,
-    300: #000000,
-    400: #000000,
-    500: #000000,
-    600: #000000,
-    700: #000000,
-    800: #ffffff,
-    900: #ffffff,
-    A100: #000000,
-    A200: #000000,
-    A400: #000000,
-    A700: #000000,
-  ),
-);
-
-$vbk-accent: (
   50: #e6e6e8,
   100: #bfc0c6,
   200: #9596a1,
@@ -82,6 +49,39 @@ $vbk-accent: (
     A400: #ffffff,
     A500: #ffffff,
     A700: #ffffff,
+  ),
+);
+
+$vbk-accent: (
+  50: #ecf8e6,
+  100: #ceeec0,
+  200: #aee396,
+  300: #8ed76c,
+  400: #75cf4d,
+  500: #5dc62d,
+  600: #55c028,
+  700: #4bb922,
+  800: #41b11c,
+  900: #30a411,
+  A100: #dcffd4,
+  A200: #b2ffa1,
+  A400: #88ff6e,
+  A700: #73ff55,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #000000,
+    600: #000000,
+    700: #000000,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
   ),
 );
 
@@ -121,8 +121,8 @@ $vbk-warn: (
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.
-$app-primary: mat-palette($vbk-primary);
-$app-accent: mat-palette($vbk-accent, A500);
+$app-primary: mat-palette($vbk-primary, A500);
+$app-accent: mat-palette($vbk-accent);
 
 // The warn palette is optional (defaults to red).
 $app-warn: mat-palette($vbk-warn);

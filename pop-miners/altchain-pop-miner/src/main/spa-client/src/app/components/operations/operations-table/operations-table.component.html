@@ -57,7 +57,7 @@
             <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
               <ng-container [ngSwitch]="checkOperationStatus(element?.task)">
                 <ng-container *ngSwitchCase="'CURRENT'">
-                  <mat-spinner color="accent" [diameter]="19"></mat-spinner>
+                  <mat-spinner color="primary" [diameter]="19"></mat-spinner>
                 </ng-container>
                 <ng-container *ngSwitchDefault>
                   <mat-icon>{{ getIcon(checkOperationStatus(element?.task))}}</mat-icon>
@@ -96,7 +96,7 @@
                           <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
 
                             <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
-                              <mat-spinner color="accent" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
+                              <mat-spinner color="primary" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
                               </mat-spinner>
                             </ng-container>
 
