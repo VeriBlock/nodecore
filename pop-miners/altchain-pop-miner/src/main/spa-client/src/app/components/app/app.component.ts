@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router, Params } from '@angular/router';
 import { startWith, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin } from 'rxjs/internal/observable/forkJoin';
@@ -32,7 +33,7 @@ export class AppComponent implements OnInit {
   public vbkBalance: string;
   public isLoadingSettings = false;
 
-  public isAltChainSelected = null;
+  public selectedAltChain = null;
 
   constructor(
     private dataShareService: DataShareService,
@@ -40,7 +41,9 @@ export class AppComponent implements OnInit {
     private configService: ConfigService,
     private alertService: AlertService,
     private minerService: MinerService,
-    private dialog: MatDialog
+    private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -63,10 +66,25 @@ export class AppComponent implements OnInit {
         this.vbkAddress = response.vbkAddress;
         this.vbkBalance = (response.vbkBalance / 100_000_000).toString();
       });
+
+    // Clear params if for some reason there are available when page loads
+    if (!this.selectedAltChain) {
+      const queryParams: Params = {};
+      queryParams['selectedOperationId'] = null;
+      queryParams['statusFilter'] = null;
+      queryParams['pageLimit'] = null;
+      queryParams['pageOffset'] = null;
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: queryParams,
+        queryParamsHandling: 'merge',
+      });
+    }
   }
 
   public changeAltChain(data: ConfiguredAltchain) {
-    this.isAltChainSelected = data?.key || null;
+    this.selectedAltChain = data?.key || null;
     this.dataShareService.changeSelectedAltChain(data);
   }
 

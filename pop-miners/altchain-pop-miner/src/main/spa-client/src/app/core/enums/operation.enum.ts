@@ -15,4 +15,5 @@ export enum OperationStatus {
   CURRENT = 'CURRENT',
   DONE = 'DONE',
   FAILED = 'FAILED',
+  EMPTY = '',
 }

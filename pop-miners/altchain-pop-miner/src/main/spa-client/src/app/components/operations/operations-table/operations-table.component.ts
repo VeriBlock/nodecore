@@ -160,21 +160,6 @@ export class OperationsTableComponent implements OnInit, OnChanges {
       : 'collapsedOperation';
   }
 
-  public adjustLetters(task: string): string {
-    const wordsAndNumbers: string[] = task.toLowerCase().split('. ');
-    const words: string[] = wordsAndNumbers[1].split('_');
-
-    words.forEach((word, index) => {
-      words[index] = this.capitalizeFirstLetter(word);
-    });
-
-    return `${wordsAndNumbers[0]}. ${words.join(' ')}`;
-  }
-
-  public capitalizeFirstLetter(word: string): string {
-    return word.charAt(0).toUpperCase() + word.slice(1);
-  }
-
   public checkStatus(status: string): string {
     switch (status) {
       case OperationStatus.DONE:
@@ -196,7 +181,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
     return OperationStatus.CURRENT;
   }
 
-  public firstLetterUpperCase = (s: string): string => {
+  public capitalizeFirstLetter = (s: string): string => {
     if (typeof s !== 'string') return '';
     return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   };

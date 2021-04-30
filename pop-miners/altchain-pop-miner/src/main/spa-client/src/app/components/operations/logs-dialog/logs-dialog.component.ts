@@ -15,7 +15,7 @@ export class LogsDialogComponent {
     public data: { logs: string[]; operationId: number; level: string }
   ) {}
 
-  public firstLetterUpperCase = (s: string): string => {
+  public capitalizeFirstLetter = (s: string): string => {
     if (typeof s !== 'string') return '';
     return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   };

@@ -4,12 +4,12 @@
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
       <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
         <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
-        <span>{{networkInfo.charAt(0).toUpperCase() + networkInfo.slice(1).toLowerCase()}}</span>
+        <span *ngIf="networkInfo">{{networkInfo?.charAt(0)?.toUpperCase() + networkInfo?.slice(1)?.toLowerCase()}}</span>
       </div>
 
       <div fxFlex="80" style="max-width: 100%; overflow: auto;">
         <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0"
-          [ngClass]="{'is-active': isAltChainSelected === altchain?.key}" (click)="changeAltChain(altchain)">
+          [ngClass]="{'is-active': selectedAltChain === altchain?.key}" (click)="changeAltChain(altchain)">
           <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
             <span matBadge="." matBadgePosition="below after" [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'"
               matBadgeSize="small">
@@ -54,7 +54,7 @@
   </mat-drawer>
 
   <mat-drawer-content>
-    <ng-container *ngIf="!isAltChainSelected;">
+    <ng-container *ngIf="!selectedAltChain;">
       <mat-card class="alert-info" style="margin-top: 1em;">
         <mat-card-content style="display: flex;">
           <mat-icon size="lg" style="padding-right: 5px;">info_outline</mat-icon>
@@ -63,7 +63,7 @@
       </mat-card>
     </ng-container>
 
-    <router-outlet *ngIf="isAltChainSelected"></router-outlet>
+    <router-outlet *ngIf="selectedAltChain"></router-outlet>
   </mat-drawer-content>
 
 </mat-drawer-container>

@@ -1,3 +1,5 @@
+import { OperationStatus } from '@core/enums';
+
 export class OperationSummaryResponse {
   chain: string;
   endorsedBlockHeight?: number;
@@ -7,7 +9,31 @@ export class OperationSummaryResponse {
 }
 
 export class OperationDetailResponse extends OperationSummaryResponse {
-  stateDetail: any;
+  stateDetail: StateDetail;
+}
+
+export class StateDetail {
+  expectedRewardBlock?: string;
+  chainIdentifier?: string;
+  endorsedBlockHeight?: string;
+  publicationDataHeader?: string;
+  publicationDataContextInfo?: string;
+  publicationDataPayoutInfo?: string;
+  publicationDataPayoutInfoDisplay?: string;
+  vbkContextBlockHashes?: string;
+  btcContextBlockHashes?: string;
+  vbkEndorsementTxId?: string;
+  vbkEndorsementTxFee?: string;
+  vbkBlockOfProof?: string;
+  vbkBlockOfProofHeight?: string;
+  merklePath?: string;
+  altAtvId?: string;
+  altAtvBlock?: string;
+  altAtvCurrentConfirmations?: string;
+  altAtvRequiredConfirmations?: string;
+  payoutBlockHash?: string;
+  payoutAmount?: string;
+  failureReason?: string;
 }
 
 export class OperationSummaryListResponse {
@@ -16,7 +42,7 @@ export class OperationSummaryListResponse {
 }
 
 export class OperationWorkflowStage {
-  status: string;
+  status: OperationStatus;
   taskName: string;
   extraInformation: string;
 }

@@ -2,7 +2,7 @@
   <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="15px" style="width: 100%;">
     <span>Operation {{data.operationId}}
       <ng-container *ngIf="data?.level">
-        {{ firstLetterUpperCase(data.level)}}
+        {{ capitalizeFirstLetter(data.level)}}
       </ng-container> Logs
     </span>
     <button mat-icon-button mat-dialog-close class="no-hover">

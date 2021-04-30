@@ -25,6 +25,7 @@ import {
   OperationWorkflow,
   OperationWorkflowStage,
   MineRequest,
+  StateDetail,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
 
@@ -144,24 +145,21 @@ export class OperationsComponent implements OnInit, OnDestroy {
         startWith(0),
         switchMap(() =>
           this.selectedOperationId
-            ? // ? this.minerService.getOperation(this.selectedOperationId)
-              this.minerService.getOperationWorkflow(this.selectedOperationId)
+            ? this.minerService.getOperation(this.selectedOperationId)
             : EMPTY
         )
       )
-      .subscribe((workflow) => {
+      .subscribe((data: OperationDetailResponse) => {
         if (
-          JSON.stringify(this.operationWorkflows[workflow.operationId]) ===
-          JSON.stringify(workflow)
+          JSON.stringify(this.operationWorkflows[data.operationId]) ===
+          JSON.stringify(data)
         ) {
           return;
         }
-        this.operationWorkflows[workflow.operationId] = workflow;
 
-        // .subscribe((data: OperationDetailResponse) => {
-        //   this.operationWorkflows[data.operationId] = this.createWorkflowTable(
-        //     data
-        //   );
+        this.operationWorkflows[data.operationId] = this.createWorkflowTable(
+          data
+        );
       });
   }
 
@@ -190,15 +188,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
   public loadWorkFlow() {
     this.minerService
-      // .getOperation(this.selectedOperationId)
-      .getOperationWorkflow(this.selectedOperationId)
-      .subscribe((workflow) => {
-        this.operationWorkflows[this.selectedOperationId] = workflow;
-
-        // .subscribe((data: OperationDetailResponse) => {
-        //   this.operationWorkflows[
-        //     this.selectedOperationId
-        //   ] = this.createWorkflowTable(data);
+      .getOperation(this.selectedOperationId)
+      .subscribe((data: OperationDetailResponse) => {
+        this.operationWorkflows[data?.operationId] = this.createWorkflowTable(
+          data
+        );
       });
   }
 
@@ -263,8 +257,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
     this.configService.getAutoMineConfig('vbtc').subscribe((data) => {
       const dialogRef = this.dialog.open(CoinConfigurationDialogComponent, {
-        minWidth: '350px',
-        maxWidth: '500px',
+        width: '350px',
         panelClass: 'dialog',
         data: data,
         closeOnNavigation: true,
@@ -329,7 +322,6 @@ export class OperationsComponent implements OnInit, OnDestroy {
       });
   }
 
-  // TODO not used yet
   private createWorkflowTable(
     operation: OperationDetailResponse
   ): OperationWorkflow {
@@ -338,12 +330,19 @@ export class OperationsComponent implements OnInit, OnDestroy {
       stages: [],
     };
 
-    const currentStageNumber: number =
-      this.globalOperationStages.findIndex((x) => x === operation.state) || 8;
+    const isFailed = Boolean(operation?.stateDetail?.failureReason);
+
+    let currentStageNumber: number = this.globalOperationStages.findIndex(
+      (x) => x.toLowerCase() === operation?.state?.toLowerCase()
+    );
+
+    if (currentStageNumber !== 0 && !currentStageNumber) {
+      currentStageNumber = 8;
+    }
 
     this.globalOperationStages.forEach((stage, index) => {
       const eachStage: OperationWorkflowStage = {
-        status: this.getOperationStatus(stage, currentStageNumber),
+        status: this.getOperationStatus(stage, currentStageNumber, isFailed),
         taskName: `${index + 1}. ${this.globalOperationStages[index]}`,
         extraInformation: null,
       };
@@ -360,7 +359,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   private setStageExtraInformation(
-    status: string,
+    status: OperationStatus,
     operation: OperationDetailResponse,
     index: number
   ): string {
@@ -373,24 +372,33 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
       case OperationStatus.PENDING:
         return this.getPendingHint(operation, index);
-    }
 
-    return '';
+      case OperationStatus.FAILED:
+        return operation?.stateDetail?.failureReason;
+
+      default:
+        return '';
+    }
   }
 
   private getOperationStatus(
     selectedState: string,
-    currentStageNumber: number
-  ) {
+    currentStageNumber: number,
+    isFailed: boolean
+  ): OperationStatus {
     const selectedStateNumber: number = this.globalOperationStages.findIndex(
       (x) => x === selectedState
     );
 
-    return selectedStateNumber <= currentStageNumber
-      ? 'DONE'
-      : selectedStateNumber === currentStageNumber + 1
-      ? 'CURRENT'
-      : 'PENDING';
+    if (selectedStateNumber <= currentStageNumber) {
+      return OperationStatus.DONE;
+    }
+
+    if (selectedStateNumber === currentStageNumber + 1) {
+      return isFailed ? OperationStatus.FAILED : OperationStatus.CURRENT;
+    }
+
+    return isFailed ? OperationStatus.EMPTY : OperationStatus.PENDING;
   }
 
   private getExtraInformation(
@@ -411,16 +419,16 @@ export class OperationsComponent implements OnInit, OnDestroy {
         return this.translate.instant(
           'ApmOperationState_Done_Endorsement_Transaction',
           {
-            contextVbkTokenName: operation?.chain, // TODO tVBK?
+            contextVbkTokenName: operation?.chain,
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
           }
         );
       case 4:
         return this.translate.instant('ApmOperationState_Done_Block_Of_Proof', {
-          contextVbkTokenName: operation?.chain, // TODO tVBK?
+          contextVbkTokenName: operation?.chain,
           blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
-          blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProof?.height, // TODO from where?
+          blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProofHeight,
         });
       case 5:
         return this.translate.instant('ApmOperationState_Done_Proven');
@@ -434,17 +442,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
         );
       case 7:
         return operation?.stateDetail?.expectedRewardBlock &&
-          operation?.stateDetail?.address
+          operation?.stateDetail?.publicationDataPayoutInfoDisplay
           ? this.translate.instant('ApmOperationState_Done_Payout_Detected', {
               operationChainName: this.selectedAltChain?.name,
               payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
-              address: null,
+              address: operation?.stateDetail?.publicationDataPayoutInfoDisplay,
             })
           : this.translate.instant(
               'ApmOperationState_Done_Payout_Detected_No_Instruction',
-              {
-                operationChainName: this.selectedAltChain?.name,
-              }
+              { operationChainName: this.selectedAltChain?.name }
             );
       default:
         return '';
@@ -459,29 +465,23 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 3:
         return this.translate.instant(
           'ApmOperationState_Current_Endorsement_Tx_Confirmed',
-          {
-            contextVbkTokenName: operation?.chain, // TODO tVBK?
-          }
+          { contextVbkTokenName: operation?.chain }
         );
+
       case 6:
         return this.translate.instant(
           'ApmOperationState_Current_Submitted_Pop_Data',
-          {
-            operationChainName: this.selectedAltChain?.name,
-          }
+          { operationChainName: this.selectedAltChain?.name }
         );
+
       case 7:
-        const containingBlockHeight = parseInt(
-          operation?.stateDetail?.altAtvBlock.split('@')[1] || '0',
-          10
-        );
-        const requiredConfirmations =
-          parseInt(operation?.stateDetail?.expectedRewardBlock || '0', 10) -
-          containingBlockHeight;
+        if (!this.hasAllMiningInstructions(operation?.stateDetail)) {
+          return this.translate.instant(
+            'ApmOperationState_Payout_Detected_No_Instruction'
+          );
+        }
 
-        // if !miningInstruction?.let then ApmOperationState_Payout_Detected_No_Instruction
-
-        return !requiredConfirmations
+        return !operation?.stateDetail?.altAtvRequiredConfirmations
           ? this.translate.instant(
               'ApmOperationState_Current_Payout_Detected_No_Confirmation'
             )
@@ -489,14 +489,17 @@ export class OperationsComponent implements OnInit, OnDestroy {
               'ApmOperationState_Current_Payout_Detected_Confirmation',
               {
                 currentConfirmations:
-                  operation?.stateDetail?.currentConfirmations || '0',
-                requiredConfirmations,
+                  operation?.stateDetail?.altAtvCurrentConfirmations || '0',
+                requiredConfirmations:
+                  operation?.stateDetail?.altAtvRequiredConfirmations,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
-                address: null,
+                address:
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
             );
+
       default:
         return '';
     }
@@ -510,29 +513,23 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 3:
         return this.translate.instant(
           'ApmOperationState_Pending_Endorsement_Tx_Confirmed',
-          {
-            contextVbkTokenName: operation?.chain, // TODO tVBK?
-          }
+          { contextVbkTokenName: operation?.chain }
         );
+
       case 6:
         return this.translate.instant(
           'ApmOperationState_Pending_Submitted_Pop_Data',
-          {
-            operationChainName: this.selectedAltChain?.name,
-          }
+          { operationChainName: this.selectedAltChain?.name }
         );
+
       case 7:
-        const containingBlockHeight = parseInt(
-          operation?.stateDetail?.altAtvBlock.split('@')[1] || '0',
-          10
-        );
-        const requiredConfirmations =
-          parseInt(operation?.stateDetail?.expectedRewardBlock || '0', 10) -
-          containingBlockHeight;
+        if (!this.hasAllMiningInstructions(operation?.stateDetail)) {
+          return this.translate.instant(
+            'ApmOperationState_Payout_Detected_No_Instruction'
+          );
+        }
 
-        // if !miningInstruction?.let then ApmOperationState_Payout_Detected_No_Instruction
-
-        return !requiredConfirmations
+        return !operation?.stateDetail?.altAtvRequiredConfirmations
           ? this.translate.instant(
               'ApmOperationState_Current_Payout_Detected_No_Confirmation'
             )
@@ -540,29 +537,35 @@ export class OperationsComponent implements OnInit, OnDestroy {
               'ApmOperationState_Current_Payout_Detected_Confirmation',
               {
                 currentConfirmations:
-                  operation?.stateDetail?.currentConfirmations || '0',
-                requiredConfirmations,
+                  operation?.stateDetail?.altAtvCurrentConfirmations || '0',
+                requiredConfirmations:
+                  operation?.stateDetail?.altAtvRequiredConfirmations,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeight: null,
-                address: null,
+                payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+                address:
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
             );
+
       default:
         return '';
     }
   }
 
-  // private getStateFromFailedOperation(operation: OperationDetailResponse): MiningOperationState {
-  private getStateFromFailedOperation(operationStateDetail: any) {
-    // return {
-    // operationStateDetail.atvId != null -> ApmOperationState.SUBMITTED_POP_DATA
-    // operationStateDetail.merklePath != null -> ApmOperationState.PROVEN
-    // operationStateDetail.blockOfProof != null -> ApmOperationState.BLOCK_OF_PROOF
-    // operationStateDetail.endorsementTransaction != null -> ApmOperationState.ENDORSEMENT_TRANSACTION
-    // operationStateDetail.miningInstruction != null -> ApmOperationState.INSTRUCTION
-    //   else -> ApmOperationState.INITIAL
-    // }
+  private hasAllMiningInstructions(stateDetail: StateDetail): boolean {
+    const miningOperations: string[] = [
+      'chainIdentifier',
+      'endorsedBlockHeight',
+      'publicationDataHeader',
+      'publicationDataContextInfo',
+      'publicationDataPayoutInfo',
+      'publicationDataPayoutInfoDisplay',
+      'vbkContextBlockHashes',
+      'btcContextBlockHashes',
+    ];
+
+    return miningOperations.every((key) => stateDetail?.hasOwnProperty(key));
   }
 
   public getAltChainLogo(key: string) {
