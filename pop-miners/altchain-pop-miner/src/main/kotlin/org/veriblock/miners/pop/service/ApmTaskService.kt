@@ -12,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import org.koin.core.KoinComponent
 import org.koin.core.inject
+import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.altchain.checkForValidEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
@@ -65,6 +66,22 @@ class ApmTaskService(
             val vbkContextBlockHash = publicationData.context[0]
             miner.network.getBlock(vbkContextBlockHash.asVbkHash())
                 ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
+            // Verify context bytes before submitting endorsement
+            if (AltchainPoPEndorsement.isValidEndorsement(publicationData.publicationData.contextInfo)) {
+                val altchainPoPEndorsement = AltchainPoPEndorsement(publicationData.publicationData.contextInfo)
+                try {
+                    operation.chain.extractBlockEvidence(altchainPoPEndorsement)
+                } catch (exception: Exception) {
+                    failOperation("""
+                        Unable to extract the block evidence from the pop endorsement: 
+                        header: ${altchainPoPEndorsement.getHeader().toHex()},
+                        contextInfo: ${altchainPoPEndorsement.getContextInfo().toHex()},
+                        payoutInfo: ${altchainPoPEndorsement.getPayoutInfo().toHex()}
+                    """.trimIndent(), exception)
+                }
+            } else {
+                failOperation("Invalid endorsement data: ${publicationData.publicationData.contextInfo.toHex()}")
+            }
         }
 
         operation.runTask(
