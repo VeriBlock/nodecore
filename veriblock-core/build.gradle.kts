@@ -31,8 +31,9 @@ dependencies {
 
     // Logging
     api("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
-    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
+    implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
+    implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
     // NTP time utility
     implementation("com.lyft.kronos:kronos-java:0.0.1-alpha10")

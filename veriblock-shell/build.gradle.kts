@@ -29,8 +29,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.2")
 
     // Logging
-    implementation("org.apache.logging.log4j:log4j-api:2.13.3")
-    implementation("org.apache.logging.log4j:log4j-core:2.13.3")
+    implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
+    implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
 
     implementation("com.diogonunes:JCDP:2.0.3.1")
 

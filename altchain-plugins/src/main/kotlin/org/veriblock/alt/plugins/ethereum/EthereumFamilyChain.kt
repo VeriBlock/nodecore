@@ -68,11 +68,7 @@ class EthereumFamilyChain(
     private var payoutAddressScript: ByteArray? = null
 
     private suspend fun getPayoutAddressScript() = payoutAddressScript ?: run {
-        val script = if (payoutAddress.isHex()) {
-            payoutAddress.asHexBytes()
-        } else {
-            validateAddress(payoutAddress)
-        }
+        val script = validateAddress(payoutAddress)
         payoutAddressScript = script
         script
     }
@@ -114,11 +110,7 @@ class EthereumFamilyChain(
                 hash = it.hash.asEthHash(),
                 height = it.number.asEthHexInt(),
                 previousHash = it.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
-                confirmations = 0, // FIXME
-                version = 0, // FIXME
-                nonce = it.nonce.asEthHexLong(),
                 merkleRoot = it.transactionsRoot,
-                difficulty = it.difficulty.asEthHexInt().toDouble(),
                 coinbaseTransactionId = "TODO",
                 transactionIds = it.transactions,
                 endorsedBy = listOf(), // TODO
@@ -155,8 +147,9 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
+        val ethTxId = txId.toEthHash()
         logger.debug { "Retrieving transaction $txId..." }
-        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(txId), "2.0")
+        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(ethTxId), "2.0")
         return btcTransaction?.let { ethTransaction ->
             SecurityInheritingTransaction(
                 ethTransaction.txid,
@@ -246,8 +239,7 @@ class EthereumFamilyChain(
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
-        // TODO: extract correctly from param
-        return config.payoutAddress ?: "UNKNOWN_ADDRESS"
+        return addressData.toHex().toEthHash()
     }
 
     override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
@@ -294,6 +286,10 @@ class EthereumFamilyChain(
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
-        TODO("ETH addresses are not yet supported. Please, use the raw hex version of your address.")
+        val addressHex = address.asEthHash()
+        if (!addressHex.isHex()) {
+            throw IllegalArgumentException("Invalid ETH address: $address")
+        }
+        return addressHex.asHexBytes()
     }
 }

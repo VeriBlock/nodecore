@@ -8,14 +8,14 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import org.bouncycastle.util.Arrays
 import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.createLoggerFor
-import org.veriblock.alt.plugins.util.getBytes
+import org.veriblock.alt.plugins.util.segwitToBech32
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.crypto.*
@@ -39,7 +39,6 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
-import java.lang.IllegalStateException
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -109,7 +108,7 @@ class BitcoinFamilyChain(
         val btcBlock: BtcBlock = try {
             rpcRequest("getblock", listOf(hash, 1))
         } catch (e: RpcException) {
-            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
+            if (e.errorCode == -1 || e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
                 return null
             } else {
@@ -120,11 +119,7 @@ class BitcoinFamilyChain(
             hash = btcBlock.hash,
             height = btcBlock.height,
             previousHash = btcBlock.previousblockhash ?: "0000000000000000000000000000000000000000000000000000000000000000",
-            confirmations = btcBlock.confirmations,
-            version = btcBlock.version,
-            nonce = btcBlock.nonce,
             merkleRoot = btcBlock.merkleroot,
-            difficulty = btcBlock.difficulty,
             coinbaseTransactionId = btcBlock.tx[0],
             transactionIds = btcBlock.tx.drop(1),
             endorsedBy = btcBlock.pop.state.endorsedBy,
@@ -293,8 +288,17 @@ class BitcoinFamilyChain(
     }
 
     override fun extractAddressDisplay(addressData: ByteArray): String {
-        // TODO: extract correctly from param, use BitcoinJ maybe?
-        return config.payoutAddress ?: "UNKNOWN_ADDRESS"
+        return if (config.addressPrefix != null) {
+            val witnessProgram = ByteArray(addressData.size - 2)
+            addressData.copyInto(witnessProgram, 0,2, addressData.size)
+            try {
+                segwitToBech32(config.addressPrefix,0, witnessProgram)
+            } catch (exception: Exception) {
+                throw IllegalArgumentException("Can't extract the Bech32 address from the address data: ${addressData.toHex()}", exception)
+            }
+        } else {
+            config.payoutAddress ?: "UNKNOWN_ADDRESS"
+        }
     }
 
     private val crypto = Crypto()
@@ -304,8 +308,8 @@ class BitcoinFamilyChain(
         val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36).flip()
         val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
         val height = contextBuffer.getInt()
-        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
-        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64).flip()
+        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64).flip()
 
         return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
     }

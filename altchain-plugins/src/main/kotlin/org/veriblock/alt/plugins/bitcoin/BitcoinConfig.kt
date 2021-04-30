@@ -17,7 +17,8 @@ class BitcoinConfig(
     override val autoMineRounds: MutableSet<Int> = HashSet(),
     override val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
     val requestLogsPath: String? = null,
-    val daemonConnectionTimeout: Int = 5000
+    val daemonConnectionTimeout: Int = 5000,
+    val addressPrefix: String? = null
 ) : ChainConfig() {
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
@@ -31,6 +32,7 @@ class BitcoinConfig(
         configuration.autoMineRounds.toMutableSet(),
         configuration.payoutDetectionType,
         configuration.extraConfig["requestLogsPath"],
-        configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 5000
+        configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 5000,
+        configuration.addressPrefix
     )
 }
