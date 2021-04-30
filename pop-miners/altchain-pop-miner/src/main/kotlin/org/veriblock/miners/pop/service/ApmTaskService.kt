@@ -66,11 +66,27 @@ class ApmTaskService(
             val vbkContextBlockHash = publicationData.context[0]
             miner.network.getBlock(vbkContextBlockHash.asVbkHash())
                 ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
+
             // Verify context bytes before submitting endorsement
             if (AltchainPoPEndorsement.isValidEndorsement(publicationData.publicationData.contextInfo)) {
                 val altchainPoPEndorsement = AltchainPoPEndorsement(publicationData.publicationData.contextInfo)
                 try {
-                    operation.chain.extractBlockEvidence(altchainPoPEndorsement)
+                    val blockEvidence = operation.chain.extractBlockEvidence(altchainPoPEndorsement)
+                    if (operation.chain.getBlock(blockEvidence.height) == null){
+                        failOperation("The endorsement block height ${blockEvidence.height} is not present at the chain")
+                    }
+                    if (operation.chain.getBlock(blockEvidence.hash.toString()) == null) {
+                        failOperation("The endorsement block hash ${blockEvidence.hash} is not present at the chain")
+                    }
+                    if (operation.chain.getBlock(blockEvidence.previousHash.toString()) == null) {
+                        failOperation("The endorsement block hash ${blockEvidence.previousHash} is not present at the chain")
+                    }
+                    if (operation.chain.getBlock(blockEvidence.previousKeystone.toString()) == null) {
+                        failOperation("The endorsement block hash ${blockEvidence.previousKeystone} is not present at the chain")
+                    }
+                    if (operation.chain.getBlock(blockEvidence.secondKeystone.toString()) == null) {
+                        failOperation("The endorsement block hash ${blockEvidence.secondKeystone} is not present at the chain")
+                    }
                 } catch (exception: Exception) {
                     failOperation("""
                         Unable to extract the block evidence from the pop endorsement: 
