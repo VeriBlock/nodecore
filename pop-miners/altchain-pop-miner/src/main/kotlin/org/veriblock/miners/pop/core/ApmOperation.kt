@@ -151,9 +151,11 @@ class ApmOperation(
         }
         miningInstruction?.let { instruction ->
             result["chainIdentifier"] = instruction.publicationData.identifier.toString()
+            result["endorsedBlockHeight"] = instruction.endorsedBlockHeight.toString()
             result["publicationDataHeader"] = instruction.publicationData.header.toHex()
             result["publicationDataContextInfo"] = instruction.publicationData.contextInfo.toHex()
             result["publicationDataPayoutInfo"] = instruction.publicationData.payoutInfo.toHex()
+            result["publicationDataPayoutInfoDisplay"] = chain.extractAddressDisplay(instruction.publicationData.payoutInfo)
             result["vbkContextBlockHashes"] = instruction.context.joinToString { it.toHex() }
             result["btcContextBlockHashes"] = instruction.btcContext.joinToString { it.toHex() }
         }
@@ -163,6 +165,7 @@ class ApmOperation(
         }
         blockOfProof?.let {
             result["vbkBlockOfProof"] = it.hash.toString()
+            result["vbkBlockOfProofHeight"] = it.height.toString()
         }
         merklePath?.let {
             result["merklePath"] = it.toCompactString()
@@ -172,6 +175,8 @@ class ApmOperation(
         }
         atvBlock?.let {
             result["altAtvBlock"] = "${it.hash} @ ${it.height}"
+            result["altAtvCurrentConfirmations"] = currentConfirmations.toString()
+            result["altAtvRequiredConfirmations"] = requiredConfirmations.toString()
         }
         payoutBlockHash?.let {
             result["payoutBlockHash"] = it
