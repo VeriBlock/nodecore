@@ -15,10 +15,12 @@
       background-color: inherit;
       color: #e0e0e0;
 
-      .mat-badge {
+      .mat-badge.altchain-badge {
         .mat-badge-content {
           color: transparent;
           box-shadow: 0px 0px 4px mat-color($primary);
+          right: 1px;
+          bottom: 2px;
         }
 
         &.mat-badge-warn .mat-badge-content {

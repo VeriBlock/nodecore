@@ -11,8 +11,8 @@
         <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0"
           [ngClass]="{'is-active': selectedAltChain === altchain?.key}" (click)="changeAltChain(altchain)">
           <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
-            <span matBadge="." matBadgePosition="below after" [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'"
-              matBadgeSize="small">
+            <span matBadge="." matBadgePosition="below after" matBadgeOverlap="false" class="altchain-badge"
+              [matBadgeColor]="altchain?.readyStatus?.isReady ? 'primary' : 'warn'" matBadgeSize="small">
               <img *ngIf="!altchain?.hasLogo" src="/assets/images/default-coin.png" height="48px" width="48px" />
               <img [ngStyle]="{'display': altchain?.hasLogo ? 'inherit' : 'none'}" [src]="getAltChainLogo(altchain?.key)"
                 (load)="showImg(altchain)" height="48px" width="48px" />
