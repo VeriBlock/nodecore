@@ -37,9 +37,8 @@
     color: mat-color($accent);
   }
 
-  // TODO check
   .text-warning {
-    color: mat-color($warn, 100);
+    color: mat-color($primary);
   }
 
   .text-danger {

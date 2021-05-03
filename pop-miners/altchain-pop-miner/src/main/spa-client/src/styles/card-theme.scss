@@ -3,11 +3,78 @@
 @mixin card-theme($theme) {
   $accent: map-get($theme, accent);
   $warn: map-get($theme, warn);
-  $foreground: map-get($theme, foreground);
+  $background: map-get($theme, background);
+  $border-width: 2px;
+  $table-background-color: mat-color($background, background);
 
   mat-card {
     .mat-table {
       width: 100%;
+    }
+
+    &.operations-card {
+      background-color: inherit;
+
+      mat-paginator.mat-paginator {
+        background-color: $table-background-color;
+      }
+
+      table.mat-table {
+        background-color: $table-background-color;
+
+        tr.mat-header-row,
+        tr.mat-row {
+          background-color: white;
+
+          th.mat-header-cell,
+          td.mat-cell,
+          td.mat-footer-cell {
+            border-bottom-width: $border-width;
+            border-bottom-color: $table-background-color;
+          }
+
+          th.mat-header-cell {
+            border-bottom-width: calc(#{$border-width} + #{$border-width});
+          }
+
+          td.mat-cell:not(.mat-column-operationColumn) {
+            box-shadow: inset 0px 10px 3px -10px rgba(0, 0, 0, 0.07),
+              inset 0px -10px 3px -10px rgba(0, 0, 0, 0.07);
+          }
+        }
+
+        mat-paginator.mat-paginator,
+        tr.mat-header-row {
+          background-color: $table-background-color;
+        }
+
+        tr.operations-row {
+          background-color: $table-background-color;
+
+          table.mat-table {
+            padding-top: $border-width;
+            padding-bottom: $border-width;
+            margin-bottom: 0;
+
+            tr.mat-header-row,
+            tr.mat-row {
+              th.mat-header-cell,
+              td.mat-cell,
+              td.mat-footer-cell {
+                border-bottom-width: calc(#{$border-width} + #{$border-width});
+              }
+            }
+
+            button.mat-raised-button {
+              box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.06);
+            }
+          }
+        }
+
+        .element-operations-row {
+          background-color: $table-background-color;
+        }
+      }
     }
 
     &.altchains {

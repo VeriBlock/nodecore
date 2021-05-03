@@ -68,6 +68,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public pageOffset = 0;
 
   public operationWorkflows = {};
+  public APIOperationWorkflows = {};
 
   private currentSelectionSubscription: any;
 
@@ -151,12 +152,13 @@ export class OperationsComponent implements OnInit, OnDestroy {
       )
       .subscribe((data: OperationDetailResponse) => {
         if (
-          JSON.stringify(this.operationWorkflows[data.operationId]) ===
+          JSON.stringify(this.APIOperationWorkflows[data.operationId]) ===
           JSON.stringify(data)
         ) {
           return;
         }
 
+        this.APIOperationWorkflows[data.operationId] = data;
         this.operationWorkflows[data.operationId] = this.createWorkflowTable(
           data
         );

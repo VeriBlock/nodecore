@@ -76,59 +76,70 @@
         <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns?.length + 1">
           <div class="element-operations-row" [@operationExpand]="changeOperationRowState(element)">
 
-            <div style="padding-bottom: 1em;">
+            <ng-container *ngIf="!operationWorkflows[element.operationId]; else operationsBlock">
+              <vbk-progress-indicator [showSpinner]="true"></vbk-progress-indicator>
+            </ng-container>
 
-              <ng-container *ngIf="!operationWorkflows[element.operationId]; else operationsBlock">
-                <vbk-progress-indicator [showSpinner]="true"></vbk-progress-indicator>
-              </ng-container>
+            <ng-template #operationsBlock>
 
-              <ng-template #operationsBlock>
+              <table mat-table *ngIf="operationWorkflows[element.operationId]" [dataSource]="operationWorkflows[element.operationId].stages"
+                class="mat-elevation-z8">
 
-                <table mat-table *ngIf="operationWorkflows[element.operationId]"
-                  [dataSource]="operationWorkflows[element.operationId].stages" class="mat-elevation-z8">
+                <ng-container matColumnDef="statusColumn">
+                  <th mat-header-cell *matHeaderCellDef> Status </th>
+                  <td mat-cell *matCellDef="let element">
 
-                  <ng-container matColumnDef="statusColumn">
-                    <th mat-header-cell *matHeaderCellDef> Status </th>
-                    <td mat-cell *matCellDef="let element">
+                    <ng-container *ngIf="element?.status && element?.status !== 'PENDING'">
+                      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" [class]="checkStatus(element?.status)">
+                        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
 
-                      <ng-container *ngIf="element?.status && element?.status !== 'PENDING'">
-                        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" [class]="checkStatus(element?.status)">
-                          <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
+                          <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
+                            <mat-spinner color="primary" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
+                            </mat-spinner>
+                          </ng-container>
 
-                            <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
-                              <mat-spinner color="primary" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
-                              </mat-spinner>
-                            </ng-container>
+                          <ng-template #iconBlock>
+                            <mat-icon style="width: 25px;">{{ getIcon(element?.status)}}</mat-icon>
+                          </ng-template>
 
-                            <ng-template #iconBlock>
-                              <mat-icon style="width: 25px;">{{ getIcon(element?.status)}}</mat-icon>
-                            </ng-template>
-
-                            <span>{{ capitalizeFirstLetter(element?.status) }}</span>
-                          </div>
+                          <span>{{ capitalizeFirstLetter(element?.status) }}</span>
                         </div>
-                      </ng-container>
-                    </td>
-                  </ng-container>
+                      </div>
+                    </ng-container>
+                  </td>
+                </ng-container>
 
-                  <ng-container matColumnDef="taskColumn">
-                    <th mat-header-cell *matHeaderCellDef> Task </th>
-                    <td mat-cell *matCellDef="let element"> {{element?.taskName}} </td>
-                  </ng-container>
+                <ng-container matColumnDef="taskColumn">
+                  <th mat-header-cell *matHeaderCellDef> Task </th>
+                  <td mat-cell *matCellDef="let element"> {{element?.taskName}} </td>
+                </ng-container>
 
-                  <ng-container matColumnDef="detailsColumn">
-                    <th mat-header-cell *matHeaderCellDef> Description </th>
-                    <td mat-cell *matCellDef="let element"> {{element.extraInformation}} </td>
-                  </ng-container>
+                <ng-container matColumnDef="detailsColumn">
+                  <th mat-header-cell *matHeaderCellDef> Description </th>
+                  <td mat-cell *matCellDef="let element"> {{element.extraInformation}} </td>
+                </ng-container>
 
-                  <tr mat-header-row *matHeaderRowDef="['taskColumn', 'detailsColumn', 'statusColumn']"></tr>
-                  <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
-                </table>
+                <!-- Buttons column -->
+                <ng-container matColumnDef="buttonsColumn">
+                  <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns?.length + 1">
+                    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
 
-                <button mat-button type="button" (click)="openLogsDialog('info')" [disabled]="isLoadingLogs">Display Logs</button>
-                <button mat-button type="button" (click)="openLogsDialog('debug')" [disabled]="isLoadingLogs">Display Debug Logs</button>
-              </ng-template>
-            </div>
+                      <button mat-raised-button type="button" (click)="openLogsDialog('info')" [disabled]="isLoadingLogs">
+                        Display Logs
+                      </button>
+                      <button mat-raised-button type="button" (click)="openLogsDialog('debug')" [disabled]="isLoadingLogs">
+                        Display Debug Logs
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['taskColumn', 'detailsColumn', 'statusColumn']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
+                <tr mat-footer-row *matFooterRowDef="['buttonsColumn']" class="table-footer-buttons"></tr>
+              </table>
+
+            </ng-template>
           </div>
         </td>
       </ng-container>

@@ -53,7 +53,7 @@
 <vbk-progress-indicator [showSpinner]="isLoading"></vbk-progress-indicator>
 
 <ng-container *ngIf="!isLoading">
-  <mat-card>
+  <mat-card class="operations-card mat-elevation-z0">
     <mat-card-content>
       <!-- Table -->
       <vbk-operations-table [dataSource]="operationsDataSource" (pageChange)="pageChangeEmit($event)" [isLoading]="tableLoading"
