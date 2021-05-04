@@ -1,7 +1,7 @@
 <mat-toolbar>
   <mat-toolbar-row class="coin-header">
 
-    <h2>{{ selectedAltChain?.name }} ({{ selectedAltChain?.key?.toUpperCase() }})</h2>
+    <h2>{{ selectedAltChain?.name }} ({{ capitalizeAcronym(selectedAltChain?.key) }})</h2>
 
     <button mat-button type="button" (click)="openCoinConfigurationDialog()" [disabled]="isLoadingConfiguration" class="no-hover">
       <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px">

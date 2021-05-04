@@ -115,7 +115,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     });
 
     // Check the operation list API every 2 seconds
-    interval(2000)
+    interval(2_000)
       .pipe(
         startWith(0),
         switchMap(() =>
@@ -141,7 +141,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       });
 
     // Check the operation details API every 5 seconds
-    interval(5000)
+    interval(5_000)
       .pipe(
         startWith(0),
         switchMap(() =>
@@ -157,7 +157,6 @@ export class OperationsComponent implements OnInit, OnDestroy {
         ) {
           return;
         }
-
         this.APIOperationWorkflows[data.operationId] = data;
         this.operationWorkflows[data.operationId] = this.createWorkflowTable(
           data
@@ -412,11 +411,13 @@ export class OperationsComponent implements OnInit, OnDestroy {
         return this.translate.instant('ApmOperationState_Done_Initial', {
           operationId: operation?.operationId,
         });
+
       case 1:
         return this.translate.instant('ApmOperationState_Done_Instruction', {
           operationChainName: this.selectedAltChain?.name,
           operationEndorsedBlockHeight: operation?.endorsedBlockHeight,
         });
+
       case 2:
         return this.translate.instant(
           'ApmOperationState_Done_Endorsement_Transaction',
@@ -426,14 +427,17 @@ export class OperationsComponent implements OnInit, OnDestroy {
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
           }
         );
+
       case 4:
         return this.translate.instant('ApmOperationState_Done_Block_Of_Proof', {
           contextVbkTokenName: operation?.chain,
           blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
           blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProofHeight,
         });
+
       case 5:
         return this.translate.instant('ApmOperationState_Done_Proven');
+
       case 6:
         return this.translate.instant(
           'ApmOperationState_Done_Submitted_Pop_Data',
@@ -442,6 +446,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
             operationChainName: this.selectedAltChain?.name,
           }
         );
+
       case 7:
         return operation?.stateDetail?.expectedRewardBlock &&
           operation?.stateDetail?.publicationDataPayoutInfoDisplay
@@ -454,6 +459,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
               'ApmOperationState_Done_Payout_Detected_No_Instruction',
               { operationChainName: this.selectedAltChain?.name }
             );
+
       default:
         return '';
     }
@@ -570,9 +576,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
     return miningOperations.every((key) => stateDetail?.hasOwnProperty(key));
   }
 
-  public getAltChainLogo(key: string) {
+  public getAltChainLogo(key: string): string {
     return `https://cryptoicons.org/api/icon/${
       key.includes('btc') ? 'btc' : key
     }/24`;
+  }
+
+  public capitalizeAcronym(key: string): string {
+    return key?.length >= 4
+      ? `${key.charAt(0)}${key.slice(1).toUpperCase()}`
+      : key.toUpperCase();
   }
 }
