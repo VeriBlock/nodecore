@@ -19,7 +19,7 @@ export enum OperationWorkflowState {
   'Prove Endorsement Transaction',
   'Submit PoP Transaction',
   'Detect Payout',
-  'Complete and save',
+  'Complete and Save',
 }
 
 export enum OperationStatus {
