@@ -158,9 +158,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
           return;
         }
         this.APIOperationWorkflows[data.operationId] = data;
-        this.operationWorkflows[data.operationId] = this.createWorkflowTable(
-          data
-        );
+        this.operationWorkflows[data.operationId] = {
+          ...this.createWorkflowTable(data),
+        };
       });
   }
 
@@ -191,9 +191,10 @@ export class OperationsComponent implements OnInit, OnDestroy {
     this.minerService
       .getOperation(this.selectedOperationId)
       .subscribe((data: OperationDetailResponse) => {
-        this.operationWorkflows[data?.operationId] = this.createWorkflowTable(
-          data
-        );
+        this.APIOperationWorkflows[data.operationId] = data;
+        this.operationWorkflows[data?.operationId] = {
+          ...this.createWorkflowTable(data),
+        };
       });
   }
 
@@ -539,7 +540,13 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
         return !operation?.stateDetail?.altAtvRequiredConfirmations
           ? this.translate.instant(
-              'ApmOperationState_Current_Payout_Detected_No_Confirmation'
+              'ApmOperationState_Pending_Payout_Detected',
+              {
+                operationChainName: this.selectedAltChain?.name,
+                payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+                address:
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay,
+              }
             )
           : this.translate.instant(
               'ApmOperationState_Current_Payout_Detected_Confirmation',
