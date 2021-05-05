@@ -1,0 +1,41 @@
+<h2 mat-dialog-title>
+  <span>Coin Configuration</span>
+  <div class="dialog-subtitle"> Automine round </div>
+</h2>
+
+<div mat-dialog-content>
+  <div fxLayout="row wrap" fxLayoutAlign="space-evenly center">
+
+    <ng-container *ngIf="automineRounds?.length === 0; else roundsBlock">
+      <mat-card class="alert-info">
+        <mat-card-content style="display: flex;">
+          <mat-icon size="lg" style="padding-right: 5px;">info_outline</mat-icon>
+          <span>There are no rounds configured for this coin</span>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
+
+    <ng-template #roundsBlock>
+
+      <ng-container *ngFor="let automineRound of automineRounds; let i = index;">
+        <div style="padding-left: 0.5em; padding-bottom: 10px;" fxFlex="35">
+          <mat-slide-toggle [(ngModel)]="automineRounds[i].enabled" [checked]="automineRound?.enabled" color="primary">
+            round: {{ automineRound?.round }}
+          </mat-slide-toggle>
+        </div>
+      </ng-container>
+    </ng-template>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div mat-dialog-actions fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+
+  <button mat-raised-button type="button" (click)="onCancel()" color="warn">
+    <span>Cancel</span>
+  </button>
+
+  <button mat-raised-button type="button" (click)="onSave()" color="primary" [disabled]="automineRounds?.length === 0">
+    <span>Save</span>
+  </button>
+</div>

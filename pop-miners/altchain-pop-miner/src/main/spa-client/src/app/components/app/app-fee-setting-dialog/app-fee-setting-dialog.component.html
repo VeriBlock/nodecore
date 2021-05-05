@@ -1,0 +1,38 @@
+<h2 mat-dialog-title>
+  <span>VBK Fee Settings</span>
+</h2>
+
+<div mat-dialog-content>
+  <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fee per byte</mat-label>
+      <input matInput onmousewheel type="number" min="0" formControlName="feePerByte" required />
+      <span matSuffix>&nbsp; VBK</span>
+
+      <mat-error *ngIf="form.get('feePerByte').errors?.min">Not a valid number</mat-error>
+      <mat-error *ngIf="form.get('feePerByte').errors?.required">Required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Max fee</mat-label>
+      <input matInput onmousewheel type="number" min="0" formControlName="maxFee" required />
+      <span matSuffix>&nbsp; VBK</span>
+
+      <mat-error *ngIf="form.get('maxFee').errors?.min">Not a valid number</mat-error>
+      <mat-error *ngIf="form.get('maxFee').errors?.required">Required</mat-error>
+    </mat-form-field>
+  </div>
+</div>
+
+<!-- Action buttons -->
+<div mat-dialog-actions fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+
+  <button mat-raised-button type="button" (click)="onCancel()" color="warn">
+    <span>Cancel</span>
+  </button>
+
+  <button mat-raised-button type="button" (click)="onSave()" color="primary" [disabled]="form?.invalid">
+    <span>Save</span>
+  </button>
+</div>

@@ -76,7 +76,7 @@ fun CommandFactory.miningCommands(
         } ?: MiningOperationStatus.ACTIVE
         val limit = getOptionalParameter<Int>("limit") ?: 50
         val offset = getOptionalParameter<Int>("offset") ?: 0
-        val operations = minerService.getOperations(state, limit, offset).map {
+        val operations = minerService.getOperations(null, state, limit, offset).map {
             val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
                 " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutDelay()})"
             } ?: ""

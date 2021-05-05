@@ -1,0 +1,36 @@
+@import "~@angular/material/theming";
+
+@mixin dialog-theme($theme) {
+  $primary: map-get($theme, primary);
+  $foreground: map-get($theme, foreground);
+
+  .dialog .mat-dialog-container {
+    overflow: hidden;
+    font-size: 16px;
+    padding: 1em;
+    min-width: 200px;
+
+    .mat-dialog-title {
+      text-align: center;
+    }
+
+    .mat-dialog-content {
+      overflow: hidden;
+      height: 100%;
+      padding: 1em;
+    }
+
+    .mat-dialog-actions {
+      padding-bottom: 20px;
+    }
+
+    .dialog-subtitle {
+      font-weight: 400;
+      font-size: 16px;
+    }
+  }
+
+  .mat-focused .mat-form-field-required-marker {
+    color: inherit;
+  }
+}

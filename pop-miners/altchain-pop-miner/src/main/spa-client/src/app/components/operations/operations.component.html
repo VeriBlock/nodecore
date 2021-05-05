@@ -1,0 +1,65 @@
+<mat-toolbar>
+  <mat-toolbar-row class="coin-header">
+
+    <h2>{{ selectedAltChain?.name }} ({{ capitalizeAcronym(selectedAltChain?.key) }})</h2>
+
+    <button mat-button type="button" (click)="openCoinConfigurationDialog()" [disabled]="isLoadingConfiguration" class="no-hover">
+      <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px">
+
+        <mat-icon *ngIf="!showLogo">
+          <img src="/assets/images/default-coin.png" height="24px" width="24px" />
+        </mat-icon>
+        <mat-icon [ngStyle]="{'display': showLogo ? 'inherit' : 'none'}">
+          <img [src]="getAltChainLogo(selectedAltChain?.key)" (load)="showLogo = true" height="24px" width="24px" />
+        </mat-icon>
+        <span>Coin Configuration</span>
+      </div>
+    </button>
+  </mat-toolbar-row>
+</mat-toolbar>
+
+<div fxLayout="row" fxLayoutAlign="center center" style="width: 100%;">
+  <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-primary flag-mine">
+    <button mat-button (click)="startMineBlock()" matTooltip="Start new mining operation" [disabled]="isLoadingConfiguration"
+      style="padding: 0; font-size: 20px; text-align: center;">
+      <div style="min-width: 250px;" class="flag flag-primary flag-mine">
+        Mine
+      </div>
+    </button>
+    <div fxLayout="row" fxLayoutAlign="center center" style="border-left: 1px white solid;">
+      <button mat-icon-button type="button" matTooltip="Start custom mining operation" (click)="openMineDialog()"
+        [disabled]="isLoadingConfiguration">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<h1 fxLayout="row" fxLayoutAlign="space-between baseline" fxLayoutGap="5px" [formGroup]="form">
+  <b>Operations</b>
+
+  <div>
+    <mat-form-field appearance="outline">
+      <mat-label>Status:</mat-label>
+      <mat-select formControlName="filter" (selectionChange)="changeStatusFilter($event)">
+        <mat-option value="" disabled>Choose</mat-option>
+        <mat-option *ngFor="let filter of filters" [value]="filter">{{ filter }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</h1>
+
+<vbk-progress-indicator [showSpinner]="isLoading"></vbk-progress-indicator>
+
+<ng-container *ngIf="!isLoading">
+  <mat-card class="operations-card mat-elevation-z0">
+    <mat-card-content>
+      <!-- Table -->
+      <vbk-operations-table [dataSource]="operationsDataSource" (pageChange)="pageChangeEmit($event)" [isLoading]="tableLoading"
+        [pageOffset]="pageOffset" [defaultPageSize]="pageLimit" [totalLines]="operationsTotalCount"
+        [selectedOperationId]="selectedOperationId" [operationWorkflows]="operationWorkflows">
+      </vbk-operations-table>
+    </mat-card-content>
+  </mat-card>
+</ng-container>

@@ -1,63 +1,65 @@
-import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BrowserModule } from '@angular/platform-browser';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { MultiTranslateHttpLoader } from 'ngx-translate-multi-http-loader';
+import { TranslateLoader } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './component/app.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import {ErrorInterceptor} from "./service/interceptor/error.interceptor";
-import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
-import {ApiService} from "./service/api.service";
-import {MatTableModule} from "@angular/material/table";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {MatExpansionModule} from "@angular/material/expansion";
-import {MatPaginatorModule} from "@angular/material/paginator";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatInputModule} from "@angular/material/input";
-import {MatButtonModule} from "@angular/material/button";
-import {MatIconModule} from "@angular/material/icon";
-import {MatDialogModule} from "@angular/material/dialog";
-import {MineDialogComponent} from "./component/mine-dialog/mine-dialog.component";
-import {LogsDialogComponent} from "./component/logs-dialog/logs-dialog.component";
-import {ReactiveFormsModule} from "@angular/forms";
-import {MatSelectModule} from "@angular/material/select";
-import {MatListModule} from "@angular/material/list";
-import {MatToolbarModule} from '@angular/material/toolbar';
-import {MatButtonToggleModule} from "@angular/material/button-toggle";
-import {OperationsComponent} from "./component/operations.component";
+import { SharedModule } from '@shared/shared.module';
+import { CoreModule } from '@core/core.module';
+
+import { CoinConfigurationDialogComponent } from './components/operations/coin-configuration-dialog/coin-configuration-dialog.component';
+import { MineCustomBlockDialogComponent } from './components/operations/mine-custom-block-dialog/mine-custom-block-dialog.component';
+import { AppTransactionDialogComponent } from './components/app/app-transaction-dialog/app-transaction-dialog.component';
+import { AppFeeSettingDialogComponent } from './components/app/app-fee-setting-dialog/app-fee-setting-dialog.component';
+import { OperationsTableComponent } from '@components/operations/operations-table/operations-table.component';
+import { LogsDialogComponent } from '@components/operations/logs-dialog/logs-dialog.component';
+import { OperationsComponent } from '@components/operations/operations.component';
+import { AppComponent } from '@components/app/app.component';
+
+// AoT requires an exported function for factories
+export function HttpLoaderFactory(http: HttpClient) {
+  return new MultiTranslateHttpLoader(http, [
+    { prefix: './assets/i18n/ApmOperationExplainer/', suffix: '.json' },
+  ]);
+}
 
 @NgModule({
   declarations: [
+    AppFeeSettingDialogComponent,
     AppComponent,
+    CoinConfigurationDialogComponent,
+    OperationsTableComponent,
     OperationsComponent,
-    MineDialogComponent,
-    LogsDialogComponent
+    LogsDialogComponent,
+    AppTransactionDialogComponent,
+    MineCustomBlockDialogComponent,
   ],
   imports: [
-    BrowserModule,
+    BrowserAnimationsModule,
+    ReactiveFormsModule,
     AppRoutingModule,
     HttpClientModule,
-    BrowserAnimationsModule,
-    MatTableModule,
-    MatExpansionModule,
-    MatPaginatorModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatIconModule,
-    ReactiveFormsModule,
-    MatSelectModule,
-    MatListModule,
-    MatToolbarModule,
-    MatButtonToggleModule
+    FlexLayoutModule,
+    BrowserModule,
+    FormsModule,
+    CoreModule,
+    SharedModule,
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient],
+      },
+      useDefaultLang: true,
+      defaultLanguage: 'en',
+    }),
   ],
-  providers: [
-    {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-    ApiService,
-  ],
-  bootstrap: [AppComponent]
+  providers: [],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

@@ -17,6 +17,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import org.apache.logging.log4j.Level
+import org.veriblock.miners.pop.api.dto.AltChainReadyStatusResponse
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
@@ -30,6 +31,7 @@ import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.AltchainPopMinerService
+import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.plugin.PluginService
 
 class MiningController(
@@ -43,6 +45,7 @@ class MiningController(
 
     @Path("operations")
     class MinerOperationsPath(
+        @QueryParam("Operation altchain key (optional)") val altchainKey: String?,
         @QueryParam("Operation status (optional)") val status: String?,
         @QueryParam("Pagination limit (optional)") val limit: Int?,
         @QueryParam("Pagination offset (optional)") val offset: Int?
@@ -116,8 +119,8 @@ class MiningController(
             // Get the given offset filter
             val offset = location.offset ?: 0
             // Get the operations
-            val operations = miner.getOperations(status, limit, offset)
-            val count = miner.getOperationsCount(status)
+            val operations = miner.getOperations(location.altchainKey, status, limit, offset)
+            val count = miner.getOperationsCount(location.altchainKey, status)
             // Paginate and map operations
             val result = operations.map {
                 it.toSummaryResponse()
@@ -166,15 +169,28 @@ class MiningController(
             info("Get configured altchains")
         ) {
             val altchains = pluginService.getPlugins().values.map {
+                val altChainReadyResult = miner.checkAltChainReadyConditions(it.key)
+                val isAltChainReady = altChainReadyResult !is CheckResult.Failure
+                val readyStatusResponse = AltChainReadyStatusResponse(
+                    isAltChainReady,
+                    if (!isAltChainReady) {
+                        (altChainReadyResult as  CheckResult.Failure).error.message
+                    } else {
+                        null
+                    }
+                )
                 ConfiguredAltchain(
                     it.id,
                     it.key,
                     it.name,
-                    it.getPayoutDelay()
+                    it.getPayoutDelay(),
+                    readyStatusResponse
                 )
+
             }.sortedBy {
                 it.key
             }
+
             respond(ConfiguredAltchainList(altchains))
         }
     }

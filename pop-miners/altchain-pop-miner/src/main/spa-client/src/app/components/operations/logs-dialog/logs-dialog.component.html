@@ -1,0 +1,17 @@
+<h2 mat-dialog-title>
+  <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="15px" style="width: 100%;">
+    <span>Operation {{data.operationId}}
+      <ng-container *ngIf="data?.level">
+        {{ capitalizeFirstLetter(data.level)}}
+      </ng-container> Logs
+    </span>
+    <button mat-icon-button mat-dialog-close class="no-hover">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</h2>
+<mat-divider></mat-divider>
+
+<div mat-dialog-content>
+  <div *ngFor="let log of data.logs">{{log}}</div>
+</div>

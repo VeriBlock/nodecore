@@ -1,0 +1,161 @@
+<ng-container *ngIf="!dataSource?.data?.length && !isLoading; else operationsTableBlock">
+  <mat-card class="alert-info">
+    <mat-card-content style="display: flex;">
+      <mat-icon size="lg" style="padding-right: 5px;">info_outline</mat-icon>
+      <span>There are no operations matching the current filter</span>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+
+<ng-template #operationsTableBlock>
+
+  <mat-paginator [length]="totalLines" [pageSize]="defaultPageSize" [pageIndex]="pageOffset/defaultPageSize"
+    [pageSizeOptions]="pageSizeOptions" (page)="pageChangeEvent($event)" [disabled]="isLoading"></mat-paginator>
+
+  <div [class.overflow-container]="true">
+
+    <table mat-table [dataSource]="dataSource" multiTemplateDataRows>
+
+      <!-- Id Column -->
+      <ng-container matColumnDef="operationIdColumn">
+        <th mat-header-cell *matHeaderCellDef>
+          <div style="padding-left: 1em;">OPERATION ID</div>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="padding: 5px 0">
+            <button mat-icon-button type="button" [matTooltip]=" selectedOperationId === element?.operationId ? 'Collapse' : 'Expand'">
+              <mat-icon>{{selectedOperationId === element?.operationId ? 'unfold_less' : 'unfold_more'}}</mat-icon>
+            </button>
+            {{element?.operationId}}
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- State Column -->
+      <ng-container matColumnDef="stateColumn">
+        <th mat-header-cell *matHeaderCellDef>STATE</th>
+        <td mat-cell *matCellDef="let element">
+          {{element?.state}}
+        </td>
+      </ng-container>
+
+      <!-- Task Column -->
+      <ng-container matColumnDef="taskColumn">
+        <th mat-header-cell *matHeaderCellDef>TASK</th>
+        <td mat-cell *matCellDef="let element">
+          {{element?.task}}
+        </td>
+      </ng-container>
+
+      <!-- Operation Status Column-->
+      <ng-container matColumnDef="operationStatusColumn">
+        <th mat-header-cell *matHeaderCellDef>STATUS</th>
+        <td mat-cell *matCellDef="let element">
+
+          <div fxLayout="row" fxLayoutAlign="center center" [class]="checkStatus(checkOperationStatus(element?.task))">
+
+            <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
+              <ng-container [ngSwitch]="checkOperationStatus(element?.task)">
+                <ng-container *ngSwitchCase="'CURRENT'">
+                  <mat-spinner color="primary" [diameter]="19"></mat-spinner>
+                </ng-container>
+                <ng-container *ngSwitchDefault>
+                  <mat-icon>{{ getIcon(checkOperationStatus(element?.task))}}</mat-icon>
+                </ng-container>
+              </ng-container>
+
+              <span>{{ capitalizeFirstLetter(checkOperationStatus(element?.task)) }}</span>
+            </div>
+
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Operations Column -->
+      <ng-container matColumnDef="operationColumn">
+        <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns?.length + 1">
+          <div class="element-operations-row" [@operationExpand]="changeOperationRowState(element)">
+
+            <ng-container *ngIf="!operationWorkflows[element.operationId]; else operationsBlock">
+              <vbk-progress-indicator [showSpinner]="true"></vbk-progress-indicator>
+            </ng-container>
+
+            <ng-template #operationsBlock>
+
+              <table mat-table *ngIf="operationWorkflows[element.operationId]" [dataSource]="operationWorkflows[element.operationId].stages"
+                class="mat-elevation-z8">
+
+                <ng-container matColumnDef="statusColumn">
+                  <th mat-header-cell *matHeaderCellDef> Status </th>
+                  <td mat-cell *matCellDef="let element">
+
+                    <ng-container *ngIf="element?.status && element?.status !== 'PENDING'">
+                      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" [class]="checkStatus(element?.status)">
+                        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
+
+                          <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
+                            <mat-spinner color="primary" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
+                            </mat-spinner>
+                          </ng-container>
+
+                          <ng-template #iconBlock>
+                            <mat-icon style="width: 25px;">{{ getIcon(element?.status)}}</mat-icon>
+                          </ng-template>
+
+                          <span>{{ capitalizeFirstLetter(element?.status) }}</span>
+                        </div>
+                      </div>
+                    </ng-container>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="taskColumn">
+                  <th mat-header-cell *matHeaderCellDef> Task </th>
+                  <td mat-cell *matCellDef="let element"> {{element?.taskName}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="detailsColumn">
+                  <th mat-header-cell *matHeaderCellDef> Description </th>
+                  <td mat-cell *matCellDef="let element"> {{element.extraInformation}} </td>
+                </ng-container>
+
+                <!-- Buttons column -->
+                <ng-container matColumnDef="buttonsColumn">
+                  <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns?.length + 1">
+                    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+
+                      <button mat-raised-button type="button" (click)="openLogsDialog('info')" [disabled]="isLoadingLogs">
+                        Show Logs
+                      </button>
+                      <button mat-raised-button type="button" (click)="openLogsDialog('debug')" [disabled]="isLoadingLogs">
+                        Show Debug Logs
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['taskColumn', 'detailsColumn', 'statusColumn']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
+                <tr mat-footer-row *matFooterRowDef="['buttonsColumn']" class="table-footer-buttons"></tr>
+              </table>
+
+            </ng-template>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns" class="element-row"
+        [class.expanded-row]="selectedOperationId === row?.operationId" class="clickable" (click)="selectOperation(row)"></tr>
+
+      <!-- Expanding operation -->
+      <tr mat-row *matRowDef="let row; columns: ['operationColumn']" class="operations-row"></tr>
+    </table>
+    <vbk-progress-indicator [showSpinner]="isLoading"></vbk-progress-indicator>
+
+  </div>
+
+  <mat-paginator *ngIf="totalLines > defaultPageSize" [length]="totalLines" [pageSize]="defaultPageSize"
+    [pageIndex]="pageOffset/defaultPageSize" [pageSizeOptions]="pageSizeOptions" (page)="pageChangeEvent($event)" [disabled]="isLoading">
+  </mat-paginator>
+</ng-template>

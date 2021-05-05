@@ -1,0 +1,83 @@
+<h2 mat-dialog-title>
+  <span>{{isDeposit ? 'Deposit' : 'Withdraw'}} (VBK)</span>
+</h2>
+
+<div mat-dialog-content>
+  <ng-container *ngIf="isDeposit; else withdrawBlock">
+    <mat-form-field appearance="outline">
+      <mat-label>Wallet Address</mat-label>
+      <input matInput type="text" [ngModel]="vbkAddress" readonly style="text-align: center;" />
+
+      <mat-icon matSuffix color="primary" matTooltip="Copy" [cdkCopyToClipboard]="vbkAddress" (click)="showSuccess()"
+        style="cursor: pointer;">
+        content_copy
+      </mat-icon>
+    </mat-form-field>
+
+  </ng-container>
+
+  <ng-template #withdrawBlock>
+
+    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Recipient's wallet address</mat-label>
+        <input matInput type="text" maxlength="50" formControlName="destinationAddress" required />
+
+        <mat-hint>Please verify the wallet address. We cannot refund an incorrect withdrawal.</mat-hint>
+
+        <mat-error *ngIf="form.get('destinationAddress').errors?.maxlength">Up to
+          {{form.get('destinationAddress').errors?.maxlength.requiredLength}}
+          characters </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Withdrawal amount</mat-label>
+        <input matInput type="number" min="0" formControlName="amount" required />
+
+        <span matSuffix>&nbsp; VBK</span>
+
+        <mat-hint (click)="setMaxAmount()" [ngClass]="{'available-funds': vbkBalance}" align="end">Available:
+          {{vbkBalance || 0}} VBK
+        </mat-hint>
+
+        <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>
+        <mat-error *ngIf="form.get('amount').errors?.max">Not a valid number</mat-error>
+      </mat-form-field>
+    </div>
+  </ng-template>
+
+  <ng-container *ngIf="showAlert">
+    <mat-card class="alert-success" style="margin: 1em;">
+      <mat-card-content style="display: flex;">
+        <mat-icon size="lg" style="padding-right: 5px;">link</mat-icon>
+        <a [href]="getTxLink()" target="_tab" rel="noopener noreferrer">
+          <span>{{ tx }}</span>
+        </a>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>
+
+<!-- Action buttons -->
+<div mat-dialog-actions fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+
+  <ng-container *ngIf="isDeposit; else withdrawActionBlock">
+    <div fxFlex></div>
+
+    <button mat-raised-button type="button" (click)="onCancel()" color="primary">
+      <span>Done</span>
+    </button>
+  </ng-container>
+
+  <ng-template #withdrawActionBlock>
+
+    <button mat-raised-button type="button" (click)="onCancel()" color="warn">
+      <span>Cancel</span>
+    </button>
+
+    <button mat-raised-button type="button" (click)="onWithdraw()" color="primary" [disabled]="form?.invalid || submitInProgress">
+      <span>Withdraw VBK</span>
+    </button>
+  </ng-template>
+</div>
