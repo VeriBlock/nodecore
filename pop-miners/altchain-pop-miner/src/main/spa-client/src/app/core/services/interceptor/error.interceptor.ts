@@ -28,12 +28,14 @@ export class ErrorInterceptor implements HttpInterceptor {
         } else {
           // server status 0 or 5xx
           if (error?.status === 0 || error?.status >= 500) {
-            errorMessage = `Something went wrong. Can't reach the server.`;
+            errorMessage = `Error: APM Instance can't be reached. \nPlease, check that you have an Altchain PoP Miner running at ${
+              window?.location?.origin || 'localhost: 4200'
+            }`;
           } else if (error.error != null) {
             // Server-side errors
-            errorMessage = `Error Code: ${error.status}\nMessage: ${error.error.message}`;
+            errorMessage = `Error Code: ${error.status} \nMessage: ${error.error.message}`;
           } else {
-            errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+            errorMessage = `Error Code: ${error.status} \nMessage: ${error.message}`;
           }
         }
 

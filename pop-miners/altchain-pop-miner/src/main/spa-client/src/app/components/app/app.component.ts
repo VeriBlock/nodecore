@@ -124,28 +124,32 @@ export class AppComponent implements OnInit {
   public openFeeConfigurationDialog() {
     this.isLoadingSettings = true;
 
-    this.configService.getVbkFee().subscribe((data) => {
-      const dialogRef = this.dialog.open(AppFeeSettingDialogComponent, {
-        minWidth: '350px',
-        maxWidth: '500px',
-        panelClass: 'dialog',
-        data: data,
-        closeOnNavigation: true,
-      });
-      this.isLoadingSettings = false;
-
-      dialogRef
-        .afterClosed()
-        .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
-          if (result?.save) {
-            this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
-              this.alertService.addSuccess(
-                'Configuration updated successfully!'
-              );
-            });
-          }
+    this.configService
+      .getVbkFee()
+      .subscribe((data) => {
+        const dialogRef = this.dialog.open(AppFeeSettingDialogComponent, {
+          minWidth: '350px',
+          maxWidth: '500px',
+          panelClass: 'dialog',
+          data: data,
+          closeOnNavigation: true,
         });
-    });
+
+        dialogRef
+          .afterClosed()
+          .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
+            if (result?.save) {
+              this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
+                this.alertService.addSuccess(
+                  'Configuration updated successfully!'
+                );
+              });
+            }
+          });
+      })
+      .add(() => {
+        this.isLoadingSettings = false;
+      });
   }
 
   public getAltChainLogo(key: string) {
