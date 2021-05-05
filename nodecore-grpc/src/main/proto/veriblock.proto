@@ -1560,6 +1560,16 @@ message RpcGetDebugVTBsReply {
     repeated RpcVeriBlockPublication publications = 3;
 }
 
+message RpcGetContainingVTBsRequest {
+    bytes vbk_block_hash = 1 [(hex_encoded)=true];
+}
+
+message RpcGetContainingVTBsReply {
+    bool success = 1;
+    repeated RpcResult results = 2;
+    repeated RpcVeriBlockPublication publications = 3;
+}
+
 message RpcAddressIndexPair {
     bytes address = 1 [(address_encoded) = true];
     int64 starting_signature_index = 2;
