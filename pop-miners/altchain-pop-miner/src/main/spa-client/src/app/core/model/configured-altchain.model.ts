@@ -10,6 +10,7 @@ export class ConfiguredAltchain {
   readyStatus: AltChainReadyStatusResponse;
 
   hasLogo?: boolean;
+  selectedFilter?: string;
 }
 
 export class AltChainReadyStatusResponse {

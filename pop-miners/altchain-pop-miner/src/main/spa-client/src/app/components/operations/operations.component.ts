@@ -106,6 +106,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     // Get route's query params
     this.route.queryParams.subscribe((params) => {
       this.selectedOperationId = params.selectedOperationId || null;
+      this.selectedAltChain.selectedFilter = params.statusFilter;
 
       if (this.selectedOperationId) {
         this.loadWorkFlow();
@@ -194,7 +195,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
     this.operationWorkflows = {};
 
-    this.form.controls['filter'].patchValue('Active');
+    this.form.controls['filter'].patchValue(
+      this.selectedAltChain?.selectedFilter || 'Active'
+    );
   }
 
   public loadWorkFlow() {
