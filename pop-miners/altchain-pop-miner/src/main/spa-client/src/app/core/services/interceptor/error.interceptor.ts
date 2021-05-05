@@ -26,8 +26,11 @@ export class ErrorInterceptor implements HttpInterceptor {
           // Client-side errors
           errorMessage = `Error: ${error.error.message}`;
         } else {
-          // Server-side errors
-          if (error.error != null) {
+          // server status 0 or 5xx
+          if (error?.status === 0 || error?.status >= 500) {
+            errorMessage = `Something went wrong. Can't reach the server.`;
+          } else if (error.error != null) {
+            // Server-side errors
             errorMessage = `Error Code: ${error.status}\nMessage: ${error.error.message}`;
           } else {
             errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
