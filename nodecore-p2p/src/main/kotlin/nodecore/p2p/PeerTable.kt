@@ -113,7 +113,7 @@ class PeerTable(
     }
     
     fun shutdown() {
-        Threading.shutdown(Threading.PEER_TABLE_POOL)
+        Threading.PEER_TABLE_POOL.safeShutdown()
         warden.shutdown()
 
         for (peer in peers.values) {

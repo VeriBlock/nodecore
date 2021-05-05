@@ -29,7 +29,7 @@ class TrafficManager {
 
     fun shutdown() {
         logger.info("Shutting down traffic manager")
-        Threading.shutdown(Threading.TRAFFIC_MANAGER_THREAD)
+        Threading.TRAFFIC_MANAGER_THREAD.safeShutdown()
     }
 
     fun requestBlocks(blockRequests: List<BlockRequest>) {

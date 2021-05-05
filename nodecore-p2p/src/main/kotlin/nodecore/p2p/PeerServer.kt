@@ -56,7 +56,7 @@ class PeerServer(
     
     fun stop() {
         running.set(false)
-        Threading.shutdown(Threading.PEER_SERVER_THREAD)
-        Threading.shutdown(Threading.PEER_IO_POOL)
+        Threading.PEER_SERVER_THREAD.safeShutdown()
+        Threading.PEER_IO_POOL.safeShutdown()
     }
 }

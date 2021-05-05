@@ -27,7 +27,7 @@ import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.spv.Constants
+import org.veriblock.spv.SpvConstants
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.AddressCoinsIndex
 import org.veriblock.spv.model.AddressLight
@@ -70,7 +70,7 @@ class SpvService(
             localBlockchainHeight = blockchain.activeChain.tip.height,
             networkVersion = spvContext.networkParameters.name,
             dataDirectory = spvContext.directory.path,
-            programVersion = Constants.PROGRAM_VERSION ?: "UNKNOWN",
+            programVersion = SpvConstants.PROGRAM_VERSION ?: "UNKNOWN",
             nodecoreStartTime = spvContext.startTime.epochSecond,
             walletCacheSyncHeight = blockchain.activeChain.tip.height,
             walletState = when {

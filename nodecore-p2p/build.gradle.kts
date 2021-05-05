@@ -25,6 +25,13 @@ dependencies {
     implementation("org.apache.commons:commons-lang3:3.7")
     implementation("com.google.guava:guava:24.1-jre")
     implementation("dnsjava:dnsjava:3.3.0")
+
+    // Unit tests
+    testImplementation("junit:junit:4.12")
+    // Mocking
+    testImplementation("io.mockk:mockk:1.9.3")
+    // Test assertions
+    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

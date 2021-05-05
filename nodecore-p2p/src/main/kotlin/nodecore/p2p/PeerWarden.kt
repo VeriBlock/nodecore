@@ -35,7 +35,7 @@ class PeerWarden(
 
     fun shutdown() {
         logger.info("Shutting down peer warden")
-        Threading.shutdown(Threading.PEER_WARDEN_THREAD)
+        Threading.PEER_WARDEN_THREAD.safeShutdown()
     }
     
     private fun handleMisbehavior(peer: Peer, reason: PeerMisbehaviorEvent.Reason) {
