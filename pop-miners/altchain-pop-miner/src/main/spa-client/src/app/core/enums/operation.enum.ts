@@ -10,9 +10,21 @@ export enum OperationState {
   COMPLETED = 'Completed',
 }
 
+export enum OperationWorkflowState {
+  'Initial',
+  'Retrieve Mining Instruction',
+  'Submit Endorsement Transaction',
+  'Confirm Endorsement Transaction',
+  'Determine Block of Proof',
+  'Prove Endorsement Transaction',
+  'Submit PoP Transaction',
+  'Detect Payout',
+  'Complete and save',
+}
+
 export enum OperationStatus {
   PENDING = 'PENDING',
-  CURRENT = 'CURRENT',
+  ACTIVE = 'ACTIVE',
   DONE = 'DONE',
   FAILED = 'FAILED',
   EMPTY = '',

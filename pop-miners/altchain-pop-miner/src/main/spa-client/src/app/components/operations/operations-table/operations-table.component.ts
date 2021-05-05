@@ -24,7 +24,7 @@ import { MinerService } from '@core/services/miner.service';
 
 import { LogsDialogComponent } from '../logs-dialog/logs-dialog.component';
 import { OperationSummaryResponse } from '@core/model';
-import { OperationStatus } from '@core/enums';
+import { OperationStatus, OperationWorkflowState } from '@core/enums';
 
 @Component({
   selector: 'vbk-operations-table',
@@ -165,7 +165,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
       case OperationStatus.DONE:
         return 'text-success';
 
-      case OperationStatus.CURRENT:
+      case OperationStatus.ACTIVE:
         return 'text-warning';
 
       default:
@@ -178,11 +178,15 @@ export class OperationsTableComponent implements OnInit, OnChanges {
 
     if (task.toLowerCase().includes('done')) return OperationStatus.DONE;
 
-    return OperationStatus.CURRENT;
+    return OperationStatus.ACTIVE;
   }
 
   public capitalizeFirstLetter = (s: string): string => {
     if (typeof s !== 'string') return '';
     return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  };
+
+  public getWorkFlowTask = (i: number) => {
+    return OperationWorkflowState[i];
   };
 }

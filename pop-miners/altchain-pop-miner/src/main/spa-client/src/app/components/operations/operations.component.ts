@@ -10,6 +10,7 @@ import { startWith, switchMap } from 'rxjs/operators';
 import { EMPTY, interval } from 'rxjs';
 
 import { DataShareService } from '@core/services/data-share.service';
+import { NetworkService } from '@core/services/network.service';
 import { ConfigService } from '@core/services/config.service';
 import { AlertService } from '@core/services/alert.service';
 import { MinerService } from '@core/services/miner.service';
@@ -26,6 +27,7 @@ import {
   OperationWorkflowStage,
   MineRequest,
   StateDetail,
+  NetworkInfoResponse,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
 
@@ -40,6 +42,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   });
 
   public selectedAltChain: ConfiguredAltchain = null;
+  public operationChain: string = null;
 
   public filters: string[] = ['All', 'Active', 'Completed', 'Failed'];
   private globalOperationStages: string[] = [
@@ -74,6 +77,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
   constructor(
     private dataShareService: DataShareService,
+    private networkService: NetworkService,
     private configService: ConfigService,
     private translate: TranslateService,
     private alertService: AlertService,
@@ -85,6 +89,12 @@ export class OperationsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.networkService
+      .getNetworkInfo()
+      .subscribe((data: NetworkInfoResponse) => {
+        this.operationChain = data?.name === 'testnet' ? 'tVBK' : 'VBK';
+      });
+
     this.currentSelectionSubscription = this.dataShareService.currentAltChain.subscribe(
       (data: ConfiguredAltchain) => {
         this.selectedAltChain = data;
@@ -369,7 +379,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case OperationStatus.DONE:
         return this.getExtraInformation(operation, index);
 
-      case OperationStatus.CURRENT:
+      case OperationStatus.ACTIVE:
         return this.getCurrentHint(operation, index);
 
       case OperationStatus.PENDING:
@@ -397,7 +407,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     }
 
     if (selectedStateNumber === currentStageNumber + 1) {
-      return isFailed ? OperationStatus.FAILED : OperationStatus.CURRENT;
+      return isFailed ? OperationStatus.FAILED : OperationStatus.ACTIVE;
     }
 
     return isFailed ? OperationStatus.EMPTY : OperationStatus.PENDING;
@@ -423,7 +433,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
         return this.translate.instant(
           'ApmOperationState_Done_Endorsement_Transaction',
           {
-            contextVbkTokenName: operation?.chain,
+            contextVbkTokenName: this.operationChain,
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
           }
@@ -431,7 +441,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
       case 4:
         return this.translate.instant('ApmOperationState_Done_Block_Of_Proof', {
-          contextVbkTokenName: operation?.chain,
+          contextVbkTokenName: this.operationChain,
           blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
           blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProofHeight,
         });
@@ -474,7 +484,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 3:
         return this.translate.instant(
           'ApmOperationState_Current_Endorsement_Tx_Confirmed',
-          { contextVbkTokenName: operation?.chain }
+          { contextVbkTokenName: this.operationChain }
         );
 
       case 6:
@@ -522,7 +532,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 3:
         return this.translate.instant(
           'ApmOperationState_Pending_Endorsement_Tx_Confirmed',
-          { contextVbkTokenName: operation?.chain }
+          { contextVbkTokenName: this.operationChain }
         );
 
       case 6:

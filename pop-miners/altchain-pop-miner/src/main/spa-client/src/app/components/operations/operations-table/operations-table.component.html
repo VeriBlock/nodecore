@@ -56,7 +56,7 @@
 
             <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
               <ng-container [ngSwitch]="checkOperationStatus(element?.task)">
-                <ng-container *ngSwitchCase="'CURRENT'">
+                <ng-container *ngSwitchCase="'ACTIVE'">
                   <mat-spinner color="primary" [diameter]="19"></mat-spinner>
                 </ng-container>
                 <ng-container *ngSwitchDefault>
@@ -93,7 +93,7 @@
                       <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" [class]="checkStatus(element?.status)">
                         <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" class="flag-status">
 
-                          <ng-container *ngIf="element?.status === 'CURRENT'; else iconBlock">
+                          <ng-container *ngIf="element?.status === 'ACTIVE'; else iconBlock">
                             <mat-spinner color="primary" [diameter]="19.5" style="width: 25px; margin-left: 5px;">
                             </mat-spinner>
                           </ng-container>
@@ -111,7 +111,7 @@
 
                 <ng-container matColumnDef="taskColumn">
                   <th mat-header-cell *matHeaderCellDef> Task </th>
-                  <td mat-cell *matCellDef="let element"> {{element?.taskName}} </td>
+                  <td mat-cell *matCellDef="let element; let i = index;"> {{getWorkFlowTask(i)}} </td>
                 </ng-container>
 
                 <ng-container matColumnDef="detailsColumn">
