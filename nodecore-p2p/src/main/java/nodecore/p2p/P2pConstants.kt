@@ -6,9 +6,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.p2p
 
-object Constants {
-    val PROGRAM_NAME = Constants::class.java.getPackage().specificationTitle
-    val PROGRAM_VERSION = Constants::class.java.getPackage().implementationVersion
+object P2pConstants {
+    val PROGRAM_NAME = P2pConstants::class.java.getPackage().specificationTitle
+    val PROGRAM_VERSION = P2pConstants::class.java.getPackage().implementationVersion
     val FULL_PROGRAM_NAME_VERSION = "$PROGRAM_NAME v$PROGRAM_VERSION"
     val PLATFORM = System.getProperty("os.name") + " | " + System.getProperty("java.version")
 

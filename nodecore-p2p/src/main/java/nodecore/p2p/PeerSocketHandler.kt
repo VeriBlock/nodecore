@@ -131,9 +131,9 @@ class PeerSocketHandler(
                 val nextMessageSize = readChannel.readInt()
                 peer.state.recordBytesReceived(4L)
 
-                if (nextMessageSize > Constants.PEER_MESSAGE_SIZE_LIMIT) {
+                if (nextMessageSize > P2pConstants.PEER_MESSAGE_SIZE_LIMIT) {
                     logger.info {
-                        "Received a message size greater than the limit of ${Constants.PEER_MESSAGE_SIZE_LIMIT} bytes, message will be ignored"
+                        "Received a message size greater than the limit of ${P2pConstants.PEER_MESSAGE_SIZE_LIMIT} bytes, message will be ignored"
                     }
                     P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(peer, PeerMisbehaviorEvent.Reason.MESSAGE_SIZE))
                     return

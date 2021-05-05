@@ -97,7 +97,7 @@ class TrafficManager {
                 continue
             }
 
-            if (request.countPending() < Constants.CONCURRENT_TX_REQUESTS) {
+            if (request.countPending() < P2pConstants.CONCURRENT_TX_REQUESTS) {
                 peerEvents.getOrPut(request.peer) {
                     RpcTransactionRequest.newBuilder()
                 }.addTransactions(request.transaction)
@@ -246,7 +246,7 @@ class TrafficManager {
     }
 
     private fun PeerRequest.expired(): Boolean {
-        return Utility.hasElapsed(requestedAt, Constants.PEER_REQUEST_TIMEOUT)
+        return Utility.hasElapsed(requestedAt, P2pConstants.PEER_REQUEST_TIMEOUT)
     }
 
     private fun Collection<BlockRequest>.anyExpired(): Boolean {
@@ -254,7 +254,7 @@ class TrafficManager {
     }
 
     private fun Peer.isNotInGoodStanding(): Boolean {
-        return state.getUnfulfilledRequestCount() >= Constants.PEER_MAX_ADVERTISEMENTS
+        return state.getUnfulfilledRequestCount() >= P2pConstants.PEER_MAX_ADVERTISEMENTS
     }
 
     fun getBlockRequestLogSize(): Int = blockRequestLog.size

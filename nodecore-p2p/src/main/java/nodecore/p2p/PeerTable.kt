@@ -55,9 +55,9 @@ class PeerTable(
     val self: NodeMetadata = NodeMetadata(
         address = configuration.peerPublishAddress,
         port = configuration.peerBindPort,
-        application = Constants.FULL_PROGRAM_NAME_VERSION,
+        application = P2pConstants.FULL_PROGRAM_NAME_VERSION,
         protocolVersion = networkParameters.protocolVersion,
-        platform = if (configuration.peerSharePlatform) Constants.PLATFORM else "",
+        platform = if (configuration.peerSharePlatform) P2pConstants.PLATFORM else "",
         startTimestamp = Utility.getCurrentTimeSeconds(),
         canShareAddress = configuration.peerShareMyAddress,
         capabilities = PeerCapabilities.allCapabilities(),
@@ -327,8 +327,8 @@ class PeerTable(
     private fun groomPeers() {
         val peerList = ArrayList(peers.values)
         for (p in peerList) {
-            if (p.state.lastMessageReceivedAt < Utility.getCurrentTimeSeconds() - Constants.PEER_TIMEOUT) {
-                logger.info { "Removing peer ${p.address} because it has sent no messages in the last ${Constants.PEER_TIMEOUT} seconds" }
+            if (p.state.lastMessageReceivedAt < Utility.getCurrentTimeSeconds() - P2pConstants.PEER_TIMEOUT) {
+                logger.info { "Removing peer ${p.address} because it has sent no messages in the last ${P2pConstants.PEER_TIMEOUT} seconds" }
                 removePeer(p.addressKey)
             }
         }
