@@ -15,6 +15,9 @@ dependencies {
     implementation(project(":veriblock-core"))
     implementation(project(":nodecore-grpc"))
 
+    // Sockets
+    implementation("io.ktor:ktor-network-jvm:$ktorVersion")
+
     // Logging
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
