@@ -22,12 +22,11 @@ import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.RpcEvent
-import nodecore.p2p.events.PeerMisbehaviorEvent
+import nodecore.p2p.event.PeerMisbehaviorEvent
 import org.veriblock.core.utilities.createLogger
 import java.io.IOException
 import java.net.SocketException
 import java.util.HashMap
-import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val logger = createLogger {}

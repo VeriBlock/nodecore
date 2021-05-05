@@ -8,14 +8,13 @@ package nodecore.p2p
 
 import nodecore.api.grpc.RpcBlockRequest
 import nodecore.api.grpc.RpcTransactionRequest
-import nodecore.p2p.events.PeerMisbehaviorEvent
+import nodecore.p2p.event.PeerMisbehaviorEvent
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
 
-const val CONCURRENT_TX_REQUESTS = 3
 
 private val logger = createLogger {}
 
@@ -98,7 +97,7 @@ class TrafficManager {
                 continue
             }
 
-            if (request.countPending() < CONCURRENT_TX_REQUESTS) {
+            if (request.countPending() < Constants.CONCURRENT_TX_REQUESTS) {
                 peerEvents.getOrPut(request.peer) {
                     RpcTransactionRequest.newBuilder()
                 }.addTransactions(request.transaction)

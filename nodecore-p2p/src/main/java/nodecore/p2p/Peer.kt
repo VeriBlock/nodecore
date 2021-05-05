@@ -15,7 +15,7 @@ import io.ktor.util.network.port
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.withTimeout
 import nodecore.api.grpc.RpcEvent
-import nodecore.p2p.events.PeerMisbehaviorEvent
+import nodecore.p2p.event.PeerMisbehaviorEvent
 import java.lang.Exception
 import java.nio.channels.CancelledKeyException
 import org.veriblock.core.crypto.BloomFilter

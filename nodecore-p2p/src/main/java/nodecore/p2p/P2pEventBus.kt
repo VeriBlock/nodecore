@@ -40,9 +40,9 @@ import nodecore.api.grpc.RpcNetworkInfoRequest
 import nodecore.api.grpc.RpcNotFound
 import nodecore.api.grpc.RpcTransactionRequest
 import nodecore.api.grpc.RpcTransactionUnion
-import nodecore.p2p.events.P2pEvent
-import nodecore.p2p.events.PeerMisbehaviorEvent
-import nodecore.p2p.events.toP2pEvent
+import nodecore.p2p.event.P2pEvent
+import nodecore.p2p.event.PeerMisbehaviorEvent
+import nodecore.p2p.event.toP2pEvent
 import org.veriblock.core.Context
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.core.utilities.Event

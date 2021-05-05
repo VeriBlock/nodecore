@@ -19,4 +19,6 @@ object Constants {
     const val PEER_MAX_ADVERTISEMENTS = 50000
     const val PEER_MESSAGE_SIZE_LIMIT = 1024 * 1024 * 4 // 4 MB
     const val PEER_BAN_MESSAGE_SIZE_LIMIT = 1024 * 1024 * 16 // 16 MB
+
+    const val CONCURRENT_TX_REQUESTS = 3
 }

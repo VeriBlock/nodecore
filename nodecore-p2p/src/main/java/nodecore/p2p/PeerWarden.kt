@@ -9,7 +9,7 @@ package nodecore.p2p
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.ConcurrentHashMap
-import nodecore.p2p.events.PeerMisbehaviorEvent
+import nodecore.p2p.event.PeerMisbehaviorEvent
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.launchWithFixedDelay
 
