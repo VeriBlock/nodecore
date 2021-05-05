@@ -2,15 +2,15 @@
   <mat-drawer #drawer mode="side" opened disableClose>
 
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
-      <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
+      <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="5px">
         <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
-        <span *ngIf="networkInfo">{{networkInfo?.charAt(0)?.toUpperCase() + networkInfo?.slice(1)?.toLowerCase()}}</span>
+        <span *ngIf="networkInfo" class="inactive">{{networkInfo?.charAt(0)?.toUpperCase() + networkInfo?.slice(1)?.toLowerCase()}}</span>
       </div>
 
-      <div fxFlex="80" style="max-width: 100%; overflow: auto;">
+      <div fxFlex="80" style="overflow: auto;">
         <mat-card *ngFor="let altchain of configuredAltchains" class="altchains mat-elevation-z0"
           [ngClass]="{'is-active': selectedAltChain === altchain?.key}" (click)="changeAltChain(altchain)">
-          <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
+          <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" style="font-size: 48px; min-height: 48px;">
             <span matBadge="." matBadgePosition="below after" matBadgeOverlap="false" class="altchain-badge"
               [matBadgeColor]="altchain?.readyStatus?.isReady ? 'accent' : 'warn'" matBadgeSize="small">
               <img *ngIf="!altchain?.hasLogo" src="/assets/images/default-coin.png" height="48px" width="48px" />
@@ -22,27 +22,27 @@
         </mat-card>
       </div>
 
-      <div style="max-width: 100%;" fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px">
+      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px">
 
         <mat-divider></mat-divider>
 
-        <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="5px">
-          <span>Balance</span>
+        <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="5px" style="width: 100%;">
+          <span class="inactive">Balance</span>
           <span>{{ vbkBalance || '0.00' }} VBK</span>
         </div>
 
         <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="15px" style="width: 100%;">
-          <button mat-raised-button type="button" color="primary" (click)="openTransactionDialog(true)">
+          <button mat-raised-button type="button" color="primary" (click)="openTransactionDialog(true)" fxFlex="45">
             Deposit
           </button>
-          <button mat-raised-button type="button" color="primary" (click)="openTransactionDialog(false)">
+          <button mat-raised-button type="button" color="primary" (click)="openTransactionDialog(false)" fxFlex="45">
             Withdraw
           </button>
         </div>
 
         <mat-divider></mat-divider>
 
-        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" style="width: 95%;">
+        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" style="width: 100%;">
           <button mat-button type="button" (click)="openFeeConfigurationDialog()" [disabled]="isLoadingSettings" class="no-hover">
             <mat-icon aria-hidden="true">settings</mat-icon>
             <span>Settings</span>

@@ -85,8 +85,9 @@
               <table mat-table *ngIf="operationWorkflows[element.operationId]" [dataSource]="operationWorkflows[element.operationId].stages"
                 class="mat-elevation-z8">
 
+                <!-- Status column -->
                 <ng-container matColumnDef="statusColumn">
-                  <th mat-header-cell *matHeaderCellDef> Status </th>
+                  <th mat-header-cell *matHeaderCellDef> STATUS </th>
                   <td mat-cell *matCellDef="let element">
 
                     <ng-container *ngIf="element?.status && element?.status !== 'PENDING'">
@@ -109,19 +110,21 @@
                   </td>
                 </ng-container>
 
+                <!-- Task column -->
                 <ng-container matColumnDef="taskColumn">
-                  <th mat-header-cell *matHeaderCellDef> Task </th>
+                  <th mat-header-cell *matHeaderCellDef> TASK </th>
                   <td mat-cell *matCellDef="let element; let i = index;"> {{getWorkFlowTask(i)}} </td>
                 </ng-container>
 
+                <!-- Details column -->
                 <ng-container matColumnDef="detailsColumn">
-                  <th mat-header-cell *matHeaderCellDef> Description </th>
+                  <th mat-header-cell *matHeaderCellDef> DESCRIPTION </th>
                   <td mat-cell *matCellDef="let element"> {{element.extraInformation}} </td>
                 </ng-container>
 
                 <!-- Buttons column -->
                 <ng-container matColumnDef="buttonsColumn">
-                  <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns?.length + 1">
+                  <td mat-footer-cell *matFooterCellDef [attr.colspan]="displayedColumns?.length + 1" style="padding: 0">
                     <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
 
                       <button mat-raised-button type="button" (click)="openLogsDialog('info')" [disabled]="isLoadingLogs">
@@ -136,7 +139,7 @@
 
                 <tr mat-header-row *matHeaderRowDef="['taskColumn', 'detailsColumn', 'statusColumn']"></tr>
                 <tr mat-row *matRowDef="let row; columns: ['taskColumn', 'detailsColumn', 'statusColumn'];"></tr>
-                <tr mat-footer-row *matFooterRowDef="['buttonsColumn']" class="table-footer-buttons"></tr>
+                <tr mat-footer-row *matFooterRowDef="['buttonsColumn']"></tr>
               </table>
 
             </ng-template>

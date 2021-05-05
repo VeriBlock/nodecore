@@ -6,7 +6,6 @@ import { OperationSummaryResponse } from '@core/model';
 @Component({
   selector: 'vbk-logs-dialog',
   templateUrl: './logs-dialog.component.html',
-  styleUrls: ['./logs-dialog.component.scss'],
 })
 export class LogsDialogComponent {
   constructor(

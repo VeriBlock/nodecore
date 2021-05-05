@@ -6,6 +6,7 @@
   $background: map-get($theme, background);
   $border-width: 2px;
   $table-background-color: mat-color($background, background);
+  $inactive-text-color: map-get($mat-grey, 300);
 
   mat-card {
     .mat-table {
@@ -14,6 +15,8 @@
 
     &.operations-card {
       background-color: inherit;
+      padding-left: 0;
+      padding-right: 0;
 
       mat-paginator.mat-paginator {
         background-color: $table-background-color;
@@ -85,7 +88,7 @@
 
     &.altchains {
       background-color: inherit;
-      color: #e0e0e0;
+      color: $inactive-text-color; // #e0e0e0
 
       .mat-badge.altchain-badge {
         .mat-badge-content {

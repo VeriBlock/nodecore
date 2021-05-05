@@ -54,6 +54,10 @@ export class AppComponent implements OnInit {
       this.configuredAltchains =
         (results[0] as ConfiguredAltchainList)?.altchains || [];
       this.networkInfo = (results[1] as NetworkInfoResponse)?.name || null;
+
+      if (this.configuredAltchains?.length > 0) {
+        this.changeAltChain(this.configuredAltchains[0]);
+      }
     });
 
     // Check the miner data API every 61 seconds
