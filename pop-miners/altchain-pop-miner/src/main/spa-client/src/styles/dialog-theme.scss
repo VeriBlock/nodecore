@@ -4,6 +4,13 @@
   $primary: map-get($theme, primary);
   $foreground: map-get($theme, foreground);
 
+  .logs-dialog {
+    .mat-dialog-container {
+      font-size: 12px;
+      font-family: Courier Prime, monospace;
+    }
+  }
+
   .dialog .mat-dialog-container {
     overflow: hidden;
     font-size: 16px;

@@ -49,15 +49,17 @@ export class AppTransactionDialogComponent implements OnInit {
     this.vbkBalance = this.data.vbkBalance || null;
     this.isTestnet = this.data.isTestnet || false;
 
-    if (this.vbkBalance) {
+    if (!this.isDeposit) {
       this.form
         .get('amount')
-        .setValidators(Validators.max(parseFloat(this.vbkBalance)));
+        .setValidators(Validators.max(parseFloat(this.vbkBalance) || 0));
     }
   }
 
   public setMaxAmount() {
-    this.form.controls['amount'].patchValue(this.vbkBalance);
+    if (parseFloat(this.vbkBalance) > 0) {
+      this.form.controls['amount'].patchValue(this.vbkBalance);
+    }
   }
 
   public onCancel(): void {

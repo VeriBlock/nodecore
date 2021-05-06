@@ -3,13 +3,23 @@
 @mixin drawer-theme($theme) {
   $primary: map-get($theme, primary);
   $background: map-get($theme, background);
+  $foreground: map-get($theme, foreground);
+  $inactive-text-color: map-get($mat-grey, 300);
 
   .mat-drawer {
     background-color: mat-color($primary, 500);
     color: mat-contrast($primary, 500);
+
+    .inactive {
+      color: $inactive-text-color;
+    }
   }
 
   .mat-drawer-container {
     background-color: mat-color($background, background);
+
+    .foreground-icon-color {
+      color: mat-color($foreground, icon);
+    }
   }
 }

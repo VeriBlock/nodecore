@@ -8,20 +8,18 @@ mat-drawer-container {
 
   mat-drawer {
     flex: 1;
-    min-width: 200px;
-    max-width: 250px;
+    width: 260px;
     height: 100%;
-    padding: 1em 0.5em 1em 1em;
+    padding: 1em;
     text-align: center;
 
     mat-card {
-      width: 95%;
-      padding: 1em 0 1em 0.5em;
+      padding: 1em 0.5em;
       border-radius: 1em;
     }
 
     .mat-divider {
-      border-top-color: white;
+      border-top-color: #404463;
     }
   }
 

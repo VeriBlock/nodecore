@@ -118,6 +118,25 @@ $vbk-warn: (
   ),
 );
 
+$mat-light-theme-background: (
+  status-bar: map-get($mat-grey, 300),
+  app-bar: map-get($mat-grey, 100),
+  background: #f8f8fa,
+  // map-get($mat-grey, 50),
+  hover: rgba(black, 0.04),
+  card: white,
+  dialog: white,
+  disabled-button: rgba(black, 0.12),
+  raised-button: white,
+  focused-button: $dark-focused,
+  selected-button: map-get($mat-grey, 300),
+  selected-disabled-button: map-get($mat-grey, 400),
+  disabled-button-toggle: map-get($mat-grey, 200),
+  unselected-chip: map-get($mat-grey, 300),
+  disabled-list-option: map-get($mat-grey, 200),
+  tooltip: map-get($mat-grey, 700),
+);
+
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue.

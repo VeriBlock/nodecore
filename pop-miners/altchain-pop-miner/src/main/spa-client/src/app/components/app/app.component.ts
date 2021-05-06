@@ -47,24 +47,48 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    forkJoin([
-      this.minerService.getConfiguredAltchains(),
-      this.networkService.getNetworkInfo(),
-    ]).subscribe((results) => {
-      this.configuredAltchains =
-        (results[0] as ConfiguredAltchainList)?.altchains || [];
-      this.networkInfo = (results[1] as NetworkInfoResponse)?.name || null;
-    });
+    this.networkService
+      .getNetworkInfo()
+      .subscribe((data: NetworkInfoResponse) => {
+        this.networkInfo = data?.name || null;
+      });
 
     // Check the miner data API every 61 seconds
     interval(61_000)
       .pipe(
         startWith(0),
-        switchMap(() => this.minerService.getMinerInfo())
+        switchMap(() =>
+          forkJoin([
+            this.minerService.getConfiguredAltchains(),
+            this.minerService.getMinerInfo(),
+          ])
+        )
       )
-      .subscribe((response) => {
-        this.vbkAddress = response.vbkAddress;
-        this.vbkBalance = (response.vbkBalance / 100_000_000).toString();
+      .subscribe((results) => {
+        const returnedResults = [
+          ...(results[0] as ConfiguredAltchainList)?.altchains?.map((alt) => {
+            const newAltchain =
+              this.configuredAltchains.find(
+                (confAlt) => confAlt.id === alt.id
+              ) || {};
+
+            return { ...newAltchain, ...alt };
+          }),
+        ];
+
+        if (
+          JSON.stringify(this.configuredAltchains) !==
+          JSON.stringify(returnedResults)
+        ) {
+          this.configuredAltchains = [...returnedResults];
+        }
+
+        if (this.configuredAltchains?.length > 0 && !this.selectedAltChain) {
+          this.changeAltChain(this.configuredAltchains[0]);
+        }
+
+        this.vbkAddress = results[1].vbkAddress;
+        this.vbkBalance = (results[1].vbkBalance / 100_000_000).toString();
       });
 
     // Clear params if for some reason there are available when page loads
@@ -84,6 +108,15 @@ export class AppComponent implements OnInit {
   }
 
   public changeAltChain(data: ConfiguredAltchain) {
+    if (this.selectedAltChain) {
+      const index = this.configuredAltchains.findIndex(
+        (alt) => alt.key === this.selectedAltChain
+      );
+      if (index > -1) {
+        this.configuredAltchains[index].selectedFilter =
+          this.route.snapshot.queryParamMap.get('statusFilter') || undefined;
+      }
+    }
     this.selectedAltChain = data?.key || null;
     this.dataShareService.changeSelectedAltChain(data);
   }
@@ -91,28 +124,32 @@ export class AppComponent implements OnInit {
   public openFeeConfigurationDialog() {
     this.isLoadingSettings = true;
 
-    this.configService.getVbkFee().subscribe((data) => {
-      const dialogRef = this.dialog.open(AppFeeSettingDialogComponent, {
-        minWidth: '350px',
-        maxWidth: '500px',
-        panelClass: 'dialog',
-        data: data,
-        closeOnNavigation: true,
-      });
-      this.isLoadingSettings = false;
-
-      dialogRef
-        .afterClosed()
-        .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
-          if (result?.save) {
-            this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
-              this.alertService.addSuccess(
-                'Configuration updated successfully!'
-              );
-            });
-          }
+    this.configService
+      .getVbkFee()
+      .subscribe((data) => {
+        const dialogRef = this.dialog.open(AppFeeSettingDialogComponent, {
+          minWidth: '350px',
+          maxWidth: '500px',
+          panelClass: 'dialog',
+          data: data,
+          closeOnNavigation: true,
         });
-    });
+
+        dialogRef
+          .afterClosed()
+          .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
+            if (result?.save) {
+              this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
+                this.alertService.addSuccess(
+                  'Configuration updated successfully!'
+                );
+              });
+            }
+          });
+      })
+      .add(() => {
+        this.isLoadingSettings = false;
+      });
   }
 
   public getAltChainLogo(key: string) {
@@ -121,8 +158,8 @@ export class AppComponent implements OnInit {
     }/100`;
   }
 
-  public showImg(chain: ConfiguredAltchain) {
-    chain.hasLogo = true;
+  public showImg(index: number) {
+    this.configuredAltchains[index].hasLogo = true;
   }
 
   public openTransactionDialog(isDeposit: boolean) {
