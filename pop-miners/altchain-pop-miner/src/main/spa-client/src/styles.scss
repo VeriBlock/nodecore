@@ -34,7 +34,7 @@ body {
   a,
   button {
     &:not(.mat-mini-fab):not(.mat-icon-button) .mat-button-wrapper mat-icon {
-      margin-right: 0.5em;
+      margin-right: 10px;
     }
 
     &.no-hover .mat-button-focus-overlay {

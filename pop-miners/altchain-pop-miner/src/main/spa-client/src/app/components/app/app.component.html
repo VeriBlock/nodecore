@@ -3,7 +3,9 @@
 
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
       <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="5px">
-        <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
+        <a href="https://www.veriblock.org" target="_blank" rel="noopener noreferrer">
+          <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
+        </a>
         <span *ngIf="networkInfo" class="inactive">{{networkInfo?.charAt(0)?.toUpperCase() + networkInfo?.slice(1)?.toLowerCase()}}</span>
       </div>
 
@@ -22,7 +24,7 @@
         </mat-card>
       </div>
 
-      <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="10px">
+      <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px">
 
         <mat-divider></mat-divider>
 
@@ -42,13 +44,16 @@
 
         <mat-divider></mat-divider>
 
-        <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="5px" style="width: 100%;">
+        <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="15px" style="width: 100%;">
           <button mat-button type="button" (click)="openFeeConfigurationDialog()" [disabled]="isLoadingSettings" class="no-hover">
             <mat-icon aria-hidden="true">settings</mat-icon>
             <span>Settings</span>
           </button>
+          <a href="https://wiki.veriblock.org/index.php/Altchain_PoP_Miner" target="_blank" rel="noopener noreferrer"
+            style="color: inherit; font-size: 12px;">
+            <span>About APM</span>
+          </a>
         </div>
-
       </div>
     </div>
   </mat-drawer>

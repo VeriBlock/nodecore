@@ -53,8 +53,8 @@ export class AppComponent implements OnInit {
         this.networkInfo = data?.name || null;
       });
 
-    // Check the miner data API every 61 seconds
-    interval(61_000)
+    // Check the miner data API every 9 seconds
+    interval(9_000)
       .pipe(
         startWith(0),
         switchMap(() =>
