@@ -43,7 +43,6 @@ import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.DownloadStatusResponse
 import java.io.File
 import java.io.IOException
-import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = createLogger {}
@@ -183,12 +182,6 @@ class AltchainPopMinerService(
     fun getBalance(): Balance = network.latestBalance
 
     private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
-        // Check the last operation time
-        val lastOperationTime = getOperations().maxOfOrNull { it.createdAt }
-        val currentTime = LocalDateTime.now()
-        if (lastOperationTime != null && currentTime < lastOperationTime.plusSeconds(1)) {
-            return CheckResult.Failure(MineException("It's been less than a second since you started the previous mining operation! Please, wait at least 1 second to start a new mining operation"))
-        }
         // Verify if the miner is shutting down
         if (isShuttingDown) {
             return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
@@ -263,7 +256,7 @@ class AltchainPopMinerService(
         submit(operation)
         operations[operation.id] = operation
 
-        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name}" }
+        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" })}" }
 
         return operation.id
     }
