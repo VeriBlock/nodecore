@@ -7,6 +7,7 @@
 package nodecore.p2p
 
 import com.google.common.net.InetAddresses
+import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
@@ -43,6 +44,9 @@ class PeerTable(
     private val warden: PeerWarden,
     private val bootstrapper: PeerTableBootstrapper
 ) {
+    val socketDispatcher = Threading.PEER_SERVER_THREAD.asCoroutineDispatcher()
+    val selectorManager = ActorSelectorManager(socketDispatcher)
+
     private val coroutineDispatcher = Threading.PEER_TABLE_POOL.asCoroutineDispatcher()
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
 
@@ -73,10 +77,8 @@ class PeerTable(
 
     private val peers: MutableMap<String, Peer> = ConcurrentHashMap()
     private val peerCandidates: MutableMap<String, NodeMetadata> = ConcurrentHashMap()
-    private val blacklist: MutableMap<String, Ban> = ConcurrentHashMap()
+    private val denylist: MutableMap<String, Ban> = ConcurrentHashMap()
     private val doNotConnect: MutableMap<String, Int> = ConcurrentHashMap()
-
-    private lateinit var selectorManager: SelectorManager
 
     private var onConnected: Runnable? = null
     private var onDisconnected: Runnable? = null
@@ -180,8 +182,8 @@ class PeerTable(
             socket.close()
             return
         }
-        if (blacklist.containsKey(hostAddress)) {
-            logger.info("Incoming connection is from a blacklisted peer ({}), closing connection", hostAddress)
+        if (denylist.containsKey(hostAddress)) {
+            logger.info { "Incoming connection is from a denylisted peer ($hostAddress), closing connection" }
             socket.close()
             return
         }
@@ -258,7 +260,7 @@ class PeerTable(
     }
     
     fun clearBans() {
-        blacklist.clear()
+        denylist.clear()
     }
     
     fun updatePeer(peer: Peer) {
@@ -272,8 +274,8 @@ class PeerTable(
         }.forEach {
             removePeer(it.key)
         }
-        // Add that address to the blacklist
-        blacklist[address] = createTemporaryBan(address)
+        // Add that address to the denylist
+        denylist[address] = createTemporaryBan(address)
     }
     
     private fun addPeer(peer: Peer) {
@@ -281,15 +283,17 @@ class PeerTable(
             logger.debug { "${peer.address} cannot be added as a peer because it is this node" }
             return
         }
-        if (blacklist.containsKey(peer.address)) {
-            logger.info { "${peer.address} is currently blacklisted and cannot be added" }
+        if (denylist.containsKey(peer.address)) {
+            logger.info { "${peer.address} is currently denylisted and cannot be added" }
+        }
+
+        if (peers.isEmpty()) {
+            onConnected?.run()
         }
 
         peers[peer.addressKey] = peer
 
         logger.debug { "Added peer ${peer.addressKey}" }
-
-        onConnected?.run()
     }
     
     private fun removePeer(addressKey: String) {
@@ -334,7 +338,7 @@ class PeerTable(
         }
     }
     
-    private suspend fun ensureMinimumConnectedPeers() {
+    suspend fun ensureMinimumConnectedPeers() {
         val available = getAvailablePeers()
         val peerCount = available.size
         if (peerCount >= minimumPeerCount) {
@@ -343,9 +347,9 @@ class PeerTable(
         }
 
         if (peerCandidates.isEmpty()) {
-            logger.info("No peer candidates...")
+            logger.debug("No peer candidates...")
             if (peerCount > 0) {
-                logger.info("Requesting peer tables!")
+                logger.info("Requesting peer tables to $peerCount peers.")
                 requestPeerTables()
                 return
             } else {
@@ -436,17 +440,13 @@ class PeerTable(
     }
     
     private fun releaseExpiredBans() {
-        blacklist.values.removeIf { it.isExpired }
+        denylist.values.removeIf { it.isExpired }
     }
     
     private fun isNodeSelf(id: String, address: String): Boolean {
         return self.id == id || self.address == address
     }
 
-    fun setSelectorManager(selectorManager: SelectorManager) {
-        this.selectorManager = selectorManager
-    }
-    
     private fun isAddressPrivate(address: String): Boolean {
         if (InetAddresses.isInetAddress(address)) {
             val ipAddress = InetAddresses.forString(address)

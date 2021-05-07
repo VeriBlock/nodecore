@@ -73,8 +73,6 @@ class PeerSocketHandler(
                     logger.warn("Exception closing socket", e)
                 }
             }
-
-            P2pEventBus.peerDisconnected.trigger(peer)
         }
     }
 
@@ -89,7 +87,7 @@ class PeerSocketHandler(
             logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress}: $e" }
         } catch (e: ClosedSendChannelException) {
             logger.debug { "Trying to send message to peer ${socket.remoteAddress} when the socket was already closed" }
-            stop()
+            peer.disconnect()
         }
     }
 
@@ -107,15 +105,19 @@ class PeerSocketHandler(
                 peer.state.recordBytesSent(message.size + 4L)
             } catch (e: InterruptedException) {
                 logger.debug("Output stream thread shutting down")
+                handleSocketError(e)
                 break
             } catch (e: CancellationException) {
                 logger.debug("Output stream thread shutting down")
+                handleSocketError(e)
                 break
             } catch (e: IOException) {
                 logger.info("Socket closed")
+                handleSocketError(e)
                 break
             } catch (e: SocketException) {
                 logger.info("Socket closed")
+                handleSocketError(e)
                 break
             } catch (e: Exception) {
                 logger.error(e) { "Error in output stream thread!" }
@@ -169,12 +171,22 @@ class PeerSocketHandler(
         return running.get()
     }
 
+    private val errored = AtomicBoolean(false)
+
     private fun handleSocketError(t: Throwable) {
         socket.close()
+
+        if (errored.getAndSet(true)) {
+            return
+        }
 
         coroutineScope.launch {
             if (ownsConnection) {
                 delay(5000L)
+            }
+
+            if (peer.status == Peer.Status.Closed || peer.status == Peer.Status.Errored) {
+                return@launch
             }
 
             var recoverSuccess = false

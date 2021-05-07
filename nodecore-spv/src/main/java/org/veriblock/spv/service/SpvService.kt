@@ -7,12 +7,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.service
 
+import com.google.protobuf.ByteString
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
+import nodecore.api.grpc.RpcAdvertiseTransaction
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsReply
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
+import nodecore.api.grpc.RpcTransactionAnnounce
+import nodecore.p2p.PeerTable
+import nodecore.p2p.buildMessage
 import org.veriblock.core.*
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
@@ -29,19 +34,21 @@ import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvConstants
 import org.veriblock.spv.SpvContext
+import org.veriblock.spv.SpvState
 import org.veriblock.spv.model.AddressCoinsIndex
 import org.veriblock.spv.model.AddressLight
 import org.veriblock.spv.model.BlockHeader
 import org.veriblock.spv.model.DownloadStatus
+import org.veriblock.spv.model.DownloadStatusResponse
 import org.veriblock.spv.model.LedgerContext
 import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.StoredVeriBlockBlock
 import org.veriblock.spv.model.Transaction
+import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.model.asLightAddress
-import org.veriblock.spv.net.SpvPeerTable
+import org.veriblock.spv.net.AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING
 import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
-import org.veriblock.spv.util.buildMessage
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -50,14 +57,14 @@ private val logger = createLogger {}
 
 class SpvService(
     private val spvContext: SpvContext,
-    private val peerTable: SpvPeerTable,
+    private val peerTable: PeerTable,
     private val transactionService: TransactionService,
     private val addressManager: AddressManager,
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val blockchain: Blockchain
 ) {
     fun getStateInfo(): StateInfo {
-        val downloadStatus = peerTable.getDownloadStatus()
+        val downloadStatus = getDownloadStatus()
         val blockchainState = if (downloadStatus.downloadStatus == DownloadStatus.READY) BlockchainState.LOADED else BlockchainState.LOADING
         val operatingState = OperatingState.STARTED
         val networkState = if (downloadStatus.downloadStatus == DownloadStatus.DISCOVERING) NetworkState.DISCONNECTED else NetworkState.CONNECTED
@@ -65,8 +72,8 @@ class SpvService(
             blockchainState = blockchainState,
             operatingState = operatingState,
             networkState = networkState,
-            connectedPeerCount = peerTable.getAvailablePeers(),
-            networkHeight = peerTable.getBestBlockHeight().coerceAtLeast(blockchain.activeChain.tip.height),
+            connectedPeerCount = peerTable.getAvailablePeers().size,
+            networkHeight = SpvState.getNetworkHeight(),
             localBlockchainHeight = blockchain.activeChain.tip.height,
             networkVersion = spvContext.networkParameters.name,
             dataDirectory = spvContext.directory.path,
@@ -130,9 +137,7 @@ class SpvService(
     }
 
     fun getSignatureIndex(addresses: List<AddressLight>): List<AddressSignatureIndex> {
-        return if (addresses.isNotEmpty()) {
-            addresses
-        } else {
+        return addresses.ifEmpty {
             listOf(addressManager.defaultAddress.hash.asLightAddress())
         }.map { address ->
             val addr = Address(address.get())
@@ -382,4 +387,45 @@ class SpvService(
             ?: throw IllegalStateException(
                 "Requested signature index for address which is not present in AddressState"
             )
+
+    fun getDownloadStatus(): DownloadStatusResponse {
+        val currentHeight = blockchain.activeChain.tip.height
+        val bestBlockHeight = SpvState.downloadPeer?.let { SpvState.getPeerHeight(it) } ?: 0
+        val status: DownloadStatus = when {
+            SpvState.downloadPeer == null || (currentHeight == 0 && bestBlockHeight == 0) ->
+                DownloadStatus.DISCOVERING
+            bestBlockHeight > 0 && bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
+                DownloadStatus.READY
+            else ->
+                DownloadStatus.DOWNLOADING
+        }
+        return DownloadStatusResponse(status, currentHeight, bestBlockHeight)
+    }
 }
+
+fun PeerTable.advertise(transaction: Transaction) {
+    val advertise = buildMessage {
+        advertiseTx = RpcAdvertiseTransaction.newBuilder()
+            .addTransactions(
+                RpcTransactionAnnounce.newBuilder()
+                    .setType(
+                        if (transaction.transactionTypeIdentifier === TransactionTypeIdentifier.PROOF_OF_PROOF) {
+                            RpcTransactionAnnounce.Type.PROOF_OF_PROOF
+                        } else {
+                            RpcTransactionAnnounce.Type.NORMAL
+                        }
+                    )
+                    .setTxId(ByteString.copyFrom(transaction.txId.bytes))
+                    .build()
+            )
+            .build()
+    }
+    for (peer in getAvailablePeers()) {
+        try {
+            peer.send(advertise)
+        } catch (ex: Exception) {
+            logger.error(ex.message, ex)
+        }
+    }
+}
+

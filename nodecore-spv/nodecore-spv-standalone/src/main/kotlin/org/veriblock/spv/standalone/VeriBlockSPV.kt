@@ -81,12 +81,12 @@ private fun run(): Int {
     var errored = false
     try {
         logger.info { "Looking for peers..." }
-        spvContext.peerTable.start()
+        spvContext.start()
         runBlocking {
-            var status = spvContext.peerTable.getDownloadStatus()
+            var status = spvContext.spvService.getDownloadStatus()
             while (status.downloadStatus == DownloadStatus.DISCOVERING) {
                 delay(1000L)
-                status = spvContext.peerTable.getDownloadStatus()
+                status = spvContext.spvService.getDownloadStatus()
             }
             if (status.downloadStatus == DownloadStatus.DOWNLOADING) {
                 val progPowHeight = Context.get().networkParameters.progPowForkHeight.toLong()
@@ -100,7 +100,7 @@ private fun run(): Int {
                         while (status.downloadStatus == DownloadStatus.DOWNLOADING && status.currentHeight < progPowHeight) {
                             progressBar.stepTo(status.currentHeight.toLong() - initialHeight)
                             delay(1000L)
-                            status = spvContext.peerTable.getDownloadStatus()
+                            status = spvContext.spvService.getDownloadStatus()
                         }
                         progressBar.stepTo(progPowHeight - initialHeight)
                     }
@@ -118,7 +118,7 @@ private fun run(): Int {
                         progressBar.maxHint(status.bestHeight.toLong() - progPowInitialHeight)
                         progressBar.stepTo(status.currentHeight.toLong() - progPowInitialHeight)
                         delay(1000L)
-                        status = spvContext.peerTable.getDownloadStatus()
+                        status = spvContext.spvService.getDownloadStatus()
                     }
                     progressBar.maxHint(status.bestHeight.toLong() - progPowInitialHeight)
                     progressBar.stepTo(status.bestHeight.toLong() - progPowInitialHeight)
@@ -130,7 +130,7 @@ private fun run(): Int {
             logger.info { it.toString() }
         }
 
-        logger.info { "SPV is ready. Current blockchain height: ${spvContext.peerTable.getDownloadStatus().currentHeight}" }
+        logger.info { "SPV is ready. Current blockchain height: ${spvContext.spvService.getDownloadStatus().currentHeight}" }
         logger.info { "To get started:" }
         logger.info { "Type 'getnewaddress' to create a new address" }
         logger.info { "Type 'importwallet <sourceLocation>' to import an existing wallet" }

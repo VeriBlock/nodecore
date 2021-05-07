@@ -3,12 +3,17 @@ package org.veriblock.spv.net.impl
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import nodecore.api.grpc.RpcEvent
+import nodecore.api.grpc.RpcTransactionAnnounce
+import nodecore.api.grpc.RpcTransactionRequest
+import nodecore.api.grpc.utilities.extensions.toByteString
+import nodecore.p2p.Peer
+import nodecore.p2p.PeerTable
+import nodecore.p2p.event.P2pEvent
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
-import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
 import org.veriblock.core.crypto.EMPTY_VBK_TX
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
@@ -16,23 +21,24 @@ import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.asStandardAddress
-import org.veriblock.spv.net.P2PService
-import org.veriblock.spv.net.SpvPeer
+import org.veriblock.spv.net.PeerEventListener
 import org.veriblock.spv.service.PendingTransactionContainer
 
-class P2PServiceTest {
+class PeerEventListenerTest {
     private lateinit var spvContext: SpvContext
     private lateinit var pendingTransactionContainer: PendingTransactionContainer
-    private lateinit var peer: SpvPeer
-    private lateinit var p2PService: P2PService
+    private lateinit var peerTable: PeerTable
+    private lateinit var peer: Peer
+    private lateinit var peerEventListener: PeerEventListener
 
     @Before
     fun setUp() {
         Context.set(defaultTestNetParameters)
         spvContext = SpvContext(SpvConfig(defaultTestNetParameters, connectDirectlyTo = listOf("localhost")))
         pendingTransactionContainer = mockk(relaxed = true)
+        peerTable = mockk(relaxed = true)
         peer = mockk(relaxed = true)
-        p2PService = P2PService(pendingTransactionContainer, spvContext.networkParameters)
+        peerEventListener = PeerEventListener(spvContext, peerTable, mockk(relaxed = true), pendingTransactionContainer)
     }
 
     @Test
@@ -40,13 +46,25 @@ class P2PServiceTest {
         val txIds = listOf(EMPTY_VBK_TX)
 
         every { pendingTransactionContainer.getTransaction(any()) } returns null
-        every { peer.sendMessage((any<RpcEvent>())) } returns Unit
+        every { peer.send((any())) } returns true
 
-        p2PService.onTransactionRequest(txIds, peer)
+        peerEventListener.onTransactionRequest(createTxRequest(txIds))
 
         verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(any()) }
-        verify(exactly = 1 ) { peer.sendMessage(any<RpcEvent>()) }
+        verify(exactly = 1 ) { peer.send(any()) }
     }
+
+    private fun createTxRequest(txIds: List<VbkTxId>) = P2pEvent(
+        peer, "", false,
+        RpcTransactionRequest.newBuilder().apply {
+            addAllTransactions(txIds.map {
+                RpcTransactionAnnounce.newBuilder().apply {
+                    type = RpcTransactionAnnounce.Type.NORMAL
+                    txId = it.bytes.toByteString()
+                }.build()
+            })
+        }.build()
+    )
 
     @Test
     fun onTransactionRequestWhenFindTx() {
@@ -62,11 +80,11 @@ class P2PServiceTest {
         standardTransaction.addSignature(sign, pub)
 
         every { pendingTransactionContainer.getTransaction(txIds[0]) } returns standardTransaction
-        every { peer.sendMessage((any())) } returns Unit
+        every { peer.send((any())) } returns true
 
-        p2PService.onTransactionRequest(txIds, peer)
+        peerEventListener.onTransactionRequest(createTxRequest(txIds))
 
         verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(txIds[0]) }
-        verify(exactly = 1 ) { peer.sendMessage(any()) }
+        verify(exactly = 1 ) { peer.send(any()) }
     }
 }

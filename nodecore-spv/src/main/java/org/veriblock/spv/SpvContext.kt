@@ -8,8 +8,19 @@
 package org.veriblock.spv
 
 import io.ktor.util.network.*
+import kotlinx.coroutines.launch
+import nodecore.api.grpc.RpcBlockInfo
+import nodecore.api.grpc.RpcHeartbeat
+import nodecore.api.grpc.utilities.extensions.toByteString
+import nodecore.p2p.DnsResolver
+import nodecore.p2p.P2pConfiguration
+import nodecore.p2p.PeerTable
+import nodecore.p2p.PeerTableBootstrapper
+import nodecore.p2p.PeerWarden
+import nodecore.p2p.buildMessage
 import org.veriblock.core.ConfigurationException
 import org.veriblock.core.Context
+import org.veriblock.core.launchWithFixedDelay
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.core.utilities.createLogger
@@ -23,6 +34,7 @@ import org.veriblock.spv.net.*
 import org.veriblock.spv.service.*
 import org.veriblock.spv.util.AddressStateChangeEvent
 import org.veriblock.spv.util.SpvEventBus.addressStateUpdatedEvent
+import org.veriblock.spv.util.Threading
 import org.veriblock.spv.wallet.PendingTransactionDownloadedListener
 import java.io.File
 import java.net.URI
@@ -47,8 +59,7 @@ class SpvContext(
     val blockStore: BlockStore
     val blockchain: Blockchain
     val spvService: SpvService
-    val peerTable: SpvPeerTable
-    val p2PService: P2PService
+    val peerTable: PeerTable
     val addressManager: AddressManager
     val transactionService: TransactionService
     val pendingTransactionContainer: PendingTransactionContainer
@@ -109,12 +120,16 @@ class SpvContext(
             transactionPool = TransactionPool()
             blockchain = Blockchain(blockStore)
             pendingTransactionContainer = PendingTransactionContainer()
-            p2PService = P2PService(pendingTransactionContainer, networkParameters)
             addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
-            peerTable = SpvPeerTable(this, p2PService, peerDiscovery, pendingTransactionContainer)
+
+            val p2pConfiguration = P2pConfiguration(networkParameters = config.networkParameters, peerBootstrapEnabled = true, bootstrappingDnsSeeds = config.networkParameters.bootstrapDns?.let { listOf(it) } ?: emptyList())
+            val warden = PeerWarden(p2pConfiguration)
+            val bootstrapper = PeerTableBootstrapper(p2pConfiguration, DnsResolver())
+            peerTable = PeerTable(p2pConfiguration, warden, bootstrapper)
+
             transactionService = TransactionService(addressManager, networkParameters)
             spvService = SpvService(
                 this, peerTable, transactionService, addressManager,
@@ -126,6 +141,38 @@ class SpvContext(
             logger.debugWarn(e) { "Could not initialize SPV Context" }
             throw RuntimeException(e)
         }
+    }
+
+    fun start() {
+        peerTable.initialize(
+            onConnected = {
+                logger.info { "Connected!" }
+            },
+            onDisconnected = {
+                logger.info { "Disconnected!" }
+            }
+        )
+        startPendingTransactionsUpdateTask()
+        startAddressStateUpdateTask()
+
+        Threading.PEER_TABLE_SCOPE.launchWithFixedDelay(40_000, 120_000) {
+            val lastBlock = blockchain.getChainHeadBlock()
+            val heartbeat = buildMessage {
+                heartbeat = RpcHeartbeat.newBuilder().apply {
+                    block = RpcBlockInfo.newBuilder().apply {
+                        number = lastBlock.height
+                        hash = lastBlock.hash.bytes.toByteString()
+                    }.build()
+                }.build()
+            }
+            launch {
+                peerTable.getAvailablePeers().forEach {
+                    it.send(heartbeat)
+                }
+            }
+        }
+
+        PeerEventListener(this, peerTable, blockchain, pendingTransactionContainer)
     }
 
     fun shutdown() {

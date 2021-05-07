@@ -33,7 +33,7 @@ class TransactionPool {
         }
     }
 
-    fun record(txId: VbkTxId, peerAddress: NetworkAddress): Int = lock.withLock {
+    fun record(txId: VbkTxId, peerAddress: String): Int = lock.withLock {
         purge()
         val tx = getOrCreate(txId)
         val wasNew = tx.recordBroadcast(peerAddress)

@@ -368,10 +368,10 @@ class AltchainPopMinerService(
         val spvContext = SpvContext(
             SpvConfig(networkParameters, dataDir = context.dataDir, connectDirectlyTo = config.connectDirectlyTo, trustPeerHashes = true)
         )
-        spvContext.peerTable.start()
+        spvContext.start()
         GlobalScope.launch {
             while (true) {
-                val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
+                val status: DownloadStatusResponse = spvContext.spvService.getDownloadStatus()
                 if (status.downloadStatus.isDiscovering()) {
                     logger.info { "SPV: Waiting for peers response." }
                 } else if (status.downloadStatus.isDownloading()) {
