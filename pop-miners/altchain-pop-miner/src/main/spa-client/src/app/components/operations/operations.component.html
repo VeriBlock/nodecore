@@ -33,7 +33,7 @@
       <button mat-icon-button type="button" matTooltip="Start custom mining operation" (click)="openMineDialog()"
         [disabled]="isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady"
         [ngStyle]="{'cursor': isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady ? 'not-allowed' : ''}">
-        <mat-icon>more_vert</mat-icon>
+        <mat-icon class="custom-mine-button">more_vert</mat-icon>
       </button>
     </div>
   </div>
