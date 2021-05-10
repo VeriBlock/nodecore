@@ -41,16 +41,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
     filter: 'Active',
   });
 
-  private hardCodedBaseUrl = {
-    tVBK: {
-      tx: 'https://testnet.explore.veriblock.org/tx/',
-      block: 'https://testnet.explore.veriblock.org/block/',
-    },
-    vbtc: {
-      tx: 'https://testnet.explore.vbtc.veriblock.org/tx/',
-      block: 'https://testnet.explore.vbtc.veriblock.org/block-height/',
-    },
-  };
+  private hardCodedList = [
+    'vbtc',
+    'phl',
+    'pexa',
+    'bitc',
+    'vetc',
+    'VBK',
+    'tVBK',
+  ];
 
   public selectedAltChain: ConfiguredAltchain = null;
   public operationChain: string = null;
@@ -440,10 +439,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 1:
         return this.translate.instant('ApmOperationState_Done_Instruction', {
           operationChainName: this.selectedAltChain?.name,
-          operationEndorsedBlockHeightHref: `${
-            this.hardCodedBaseUrl[this.selectedAltChain?.key.toLowerCase()]
-              ?.block || 'failed'
-          }${operation?.endorsedBlockHeight}`,
+          operationEndorsedBlockHeightHref: this.getBaseUrl(
+            this.selectedAltChain?.key.toLowerCase(),
+            'block-height',
+            operation?.endorsedBlockHeight.toString()
+          ),
           operationEndorsedBlockHeight: operation?.endorsedBlockHeight,
         });
 
@@ -452,9 +452,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
           'ApmOperationState_Done_Endorsement_Transaction',
           {
             contextVbkTokenName: this.operationChain,
-            transactionTxHref: `${
-              this.hardCodedBaseUrl[this.operationChain]?.tx || 'failed'
-            }${operation?.stateDetail?.vbkEndorsementTxId}`,
+            transactionTxHref: this.getBaseUrl(
+              this.operationChain,
+              'tx',
+              operation?.stateDetail?.vbkEndorsementTxId
+            ),
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
           }
@@ -463,13 +465,17 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 4:
         return this.translate.instant('ApmOperationState_Done_Block_Of_Proof', {
           contextVbkTokenName: this.operationChain,
-          blockOfProofHashHref: `${
-            this.hardCodedBaseUrl[this.operationChain]?.block || 'failed'
-          }${operation?.stateDetail?.vbkBlockOfProof}`,
+          blockOfProofHashHref: this.getBaseUrl(
+            this.operationChain,
+            'block',
+            operation?.stateDetail?.vbkBlockOfProof
+          ),
           blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
-          blockOfProofHeightHref: `${
-            this.hardCodedBaseUrl[this.operationChain]?.block || 'failed'
-          }${operation?.stateDetail?.vbkBlockOfProofHeight}`,
+          blockOfProofHeightHref: this.getBaseUrl(
+            this.operationChain,
+            'block',
+            operation?.stateDetail?.vbkBlockOfProofHeight
+          ),
           blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProofHeight,
         });
 
@@ -480,6 +486,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
         return this.translate.instant(
           'ApmOperationState_Done_Submitted_Pop_Data',
           {
+            operationAtvIdHref: this.getBaseUrl(
+              this.selectedAltChain?.key.toLowerCase(),
+              'atv',
+              operation?.stateDetail?.altAtvId
+            ),
             operationAtvId: operation?.stateDetail?.altAtvId,
             operationChainName: this.selectedAltChain?.name,
           }
@@ -490,11 +501,17 @@ export class OperationsComponent implements OnInit, OnDestroy {
           operation?.stateDetail?.publicationDataPayoutInfoDisplay
           ? this.translate.instant('ApmOperationState_Done_Payout_Detected', {
               operationChainName: this.selectedAltChain?.name,
-              payoutBlockHeightHref: `${
-                this.hardCodedBaseUrl[this.selectedAltChain?.key.toLowerCase()]
-                  ?.block || 'failed'
-              }${operation?.stateDetail?.expectedRewardBlock}`,
+              payoutBlockHeightHref: this.getBaseUrl(
+                this.selectedAltChain?.key.toLowerCase(),
+                'block-height',
+                operation?.stateDetail?.expectedRewardBlock
+              ),
               payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+              addressHref: this.getBaseUrl(
+                this.selectedAltChain?.key.toLowerCase(),
+                'address',
+                operation?.stateDetail?.publicationDataPayoutInfoDisplay
+              ),
               address: operation?.stateDetail?.publicationDataPayoutInfoDisplay,
             })
           : this.translate.instant(
@@ -542,9 +559,24 @@ export class OperationsComponent implements OnInit, OnDestroy {
                   operation?.stateDetail?.altAtvCurrentConfirmations || '0',
                 requiredConfirmations:
                   operation?.stateDetail?.altAtvRequiredConfirmations,
+                operationAtvIdHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'atv',
+                  operation?.stateDetail?.altAtvId
+                ),
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
+                payoutBlockHeightHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'block-height',
+                  operation?.stateDetail?.expectedRewardBlock
+                ),
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+                addressHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'address',
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay
+                ),
                 address:
                   operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
@@ -584,12 +616,17 @@ export class OperationsComponent implements OnInit, OnDestroy {
               'ApmOperationState_Pending_Payout_Detected',
               {
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref: `${
-                  this.hardCodedBaseUrl[
-                    this.selectedAltChain?.key.toLowerCase()
-                  ]?.block || 'failed'
-                }${operation?.stateDetail?.expectedRewardBlock}`,
+                payoutBlockHeightHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'block-height',
+                  operation?.stateDetail?.expectedRewardBlock
+                ),
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+                addressHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'address',
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay
+                ),
                 address:
                   operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
@@ -603,12 +640,17 @@ export class OperationsComponent implements OnInit, OnDestroy {
                   operation?.stateDetail?.altAtvRequiredConfirmations,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref: `${
-                  this.hardCodedBaseUrl[
-                    this.selectedAltChain?.key.toLowerCase()
-                  ]?.block || 'failed'
-                }${operation?.stateDetail?.expectedRewardBlock}`,
+                payoutBlockHeightHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'block-height',
+                  operation?.stateDetail?.expectedRewardBlock
+                ),
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
+                addressHref: this.getBaseUrl(
+                  this.selectedAltChain?.key.toLowerCase(),
+                  'address',
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay
+                ),
                 address:
                   operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
@@ -644,5 +686,21 @@ export class OperationsComponent implements OnInit, OnDestroy {
     return key?.length >= 4
       ? `${key.charAt(0)}${key.slice(1).toUpperCase()}`
       : key.toUpperCase();
+  }
+
+  private getBaseUrl(coin: string, link: string, id: string): string {
+    if (!this.hardCodedList.includes(coin)) {
+      return '';
+    }
+
+    if (coin === 'vetc') {
+      const newLink = link === 'block-height' ? 'block' : link;
+      return `http://65.21.85.75:30305/#/${newLink}/${id}`;
+    }
+
+    const isTestnet = this.operationChain === 'tVBK' ? 'testnet.' : '';
+    return `https://${isTestnet}explore.${
+      coin === 'VBK' || coin === 'tVBK' ? '' : coin + '.'
+    }veriblock.org/${link}/${id}`;
   }
 }
