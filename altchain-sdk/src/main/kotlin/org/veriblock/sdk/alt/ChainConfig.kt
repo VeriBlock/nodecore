@@ -2,6 +2,13 @@ package org.veriblock.sdk.alt
 
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 
+data class ExplorerBaseUrls(
+    val blockByHeight: String? = null,
+    val blockByHash: String? = null,
+    val transactionById: String? = null,
+    val atvById: String? = null
+)
+
 abstract class ChainConfig {
     abstract val host: String
     abstract val auth: HttpAuthConfig?
@@ -13,6 +20,7 @@ abstract class ChainConfig {
     abstract val blockRoundIndices: List<Int>
     open val autoMineRounds: MutableSet<Int> = HashSet()
     abstract val payoutDetectionType: PayoutDetectionType
+    abstract val explorerBaseUrls: ExplorerBaseUrls
 
     val availableRoundIndices: Set<Int> get() = blockRoundIndices.distinct().toSet()
 

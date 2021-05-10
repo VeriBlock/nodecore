@@ -116,5 +116,6 @@ data class WithdrawResponse(
 
 @Response("The configured network")
 data class NetworkInfoResponse(
-    val name: String
+    val name: String,
+    val explorerBaseUrls: ExplorerBaseUrlsResponse
 )

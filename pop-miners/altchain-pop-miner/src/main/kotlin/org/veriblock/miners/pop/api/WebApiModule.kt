@@ -13,7 +13,7 @@ val webApiModule = module {
     single { DiagnosticController(get()) }
     single { ConfigurationController(get(), get(), get()) }
     single { WalletController(get()) }
-    single { NetworkController(get()) }
+    single { NetworkController(get(), get()) }
     single { QuitController() }
 
     single {

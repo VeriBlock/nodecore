@@ -1,6 +1,7 @@
 package org.veriblock.alt.plugins.bitcoin
 
 import org.veriblock.sdk.alt.ChainConfig
+import org.veriblock.sdk.alt.ExplorerBaseUrls
 import org.veriblock.sdk.alt.PayoutDetectionType
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 import org.veriblock.sdk.alt.plugin.PluginConfig
@@ -16,6 +17,7 @@ class BitcoinConfig(
     override val blockRoundIndices: List<Int> = listOf(4, 2, 3, 1, 2),
     override val autoMineRounds: MutableSet<Int> = HashSet(),
     override val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
+    override val explorerBaseUrls: ExplorerBaseUrls,
     val requestLogsPath: String? = null,
     val daemonConnectionTimeout: Int = 5000,
     val addressPrefix: String? = null
@@ -31,6 +33,7 @@ class BitcoinConfig(
         configuration.blockRoundIndices ?: listOf(4, 2, 3, 1, 2),
         configuration.autoMineRounds.toMutableSet(),
         configuration.payoutDetectionType,
+        configuration.explorerBaseUrls,
         configuration.extraConfig["requestLogsPath"],
         configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 5000,
         configuration.addressPrefix
