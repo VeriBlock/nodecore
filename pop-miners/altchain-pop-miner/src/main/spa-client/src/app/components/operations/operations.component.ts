@@ -28,6 +28,7 @@ import {
   MineRequest,
   StateDetail,
   NetworkInfoResponse,
+  ExplorerBaseUrlsResponse,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
 
@@ -53,6 +54,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
   public selectedAltChain: ConfiguredAltchain = null;
   public operationChain: string = null;
+  public networkExplorerBaseUrl: ExplorerBaseUrlsResponse;
 
   public filters: string[] = ['All', 'Active', 'Completed', 'Failed'];
   private globalOperationStages: string[] = [
@@ -104,6 +106,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
       .getNetworkInfo()
       .subscribe((data: NetworkInfoResponse) => {
         this.operationChain = data?.name === 'testnet' ? 'tVBK' : 'VBK';
+        this.networkExplorerBaseUrl = data.explorerBaseUrls;
       });
 
     this.currentSelectionSubscription =
@@ -447,11 +450,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 1:
         return this.translate.instant('ApmOperationState_Done_Instruction', {
           operationChainName: this.selectedAltChain?.name,
-          operationEndorsedBlockHeightHref: this.getBaseUrl(
-            this.selectedAltChain?.key.toLowerCase(),
-            'block-height',
-            operation?.endorsedBlockHeight.toString()
-          ),
+          operationEndorsedBlockHeightHref:
+            this.selectedAltChain?.explorerBaseUrls?.blockByHeight +
+            operation?.endorsedBlockHeight.toString(),
           operationEndorsedBlockHeight: operation?.endorsedBlockHeight,
         });
 
@@ -460,11 +461,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
           'ApmOperationState_Done_Endorsement_Transaction',
           {
             contextVbkTokenName: this.operationChain,
-            transactionTxHref: this.getBaseUrl(
-              this.operationChain,
-              'tx',
-              operation?.stateDetail?.vbkEndorsementTxId
-            ),
+            transactionTxHref:
+              this.networkExplorerBaseUrl?.transactionById +
+              operation?.stateDetail?.vbkEndorsementTxId,
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
           }
@@ -473,11 +472,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
       case 4:
         return this.translate.instant('ApmOperationState_Done_Block_Of_Proof', {
           contextVbkTokenName: this.operationChain,
-          blockOfProofHashHref: this.getBaseUrl(
-            this.operationChain,
-            'block',
-            operation?.stateDetail?.vbkBlockOfProof
-          ),
+          blockOfProofHashHref:
+            this.networkExplorerBaseUrl?.blockByHash +
+            operation?.stateDetail?.vbkBlockOfProof,
           blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
           blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProofHeight,
         });
@@ -489,11 +486,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
         return this.translate.instant(
           'ApmOperationState_Done_Submitted_Pop_Data',
           {
-            operationAtvIdHref: this.getBaseUrl(
-              this.selectedAltChain?.key.toLowerCase(),
-              'atv',
-              operation?.stateDetail?.altAtvId
-            ),
+            operationAtvIdHref:
+              this.selectedAltChain?.explorerBaseUrls?.atvById +
+              operation?.stateDetail?.altAtvId,
             operationAtvId: operation?.stateDetail?.altAtvId,
             operationChainName: this.selectedAltChain?.name,
           }
@@ -504,17 +499,13 @@ export class OperationsComponent implements OnInit, OnDestroy {
           operation?.stateDetail?.publicationDataPayoutInfoDisplay
           ? this.translate.instant('ApmOperationState_Done_Payout_Detected', {
               operationChainName: this.selectedAltChain?.name,
-              payoutBlockHeightHref: this.getBaseUrl(
-                this.selectedAltChain?.key.toLowerCase(),
-                'block-height',
-                operation?.stateDetail?.expectedRewardBlock
-              ),
+              payoutBlockHeightHref:
+                this.selectedAltChain?.explorerBaseUrls?.blockByHash +
+                operation?.stateDetail?.expectedRewardBlock,
               payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
-              addressHref: this.getBaseUrl(
-                this.selectedAltChain?.key.toLowerCase(),
-                'address',
-                operation?.stateDetail?.publicationDataPayoutInfoDisplay
-              ),
+              addressHref:
+                this.selectedAltChain?.explorerBaseUrls?.address +
+                operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               address: operation?.stateDetail?.publicationDataPayoutInfoDisplay,
             })
           : this.translate.instant(
@@ -562,24 +553,18 @@ export class OperationsComponent implements OnInit, OnDestroy {
                   operation?.stateDetail?.altAtvCurrentConfirmations || '0',
                 requiredConfirmations:
                   operation?.stateDetail?.altAtvRequiredConfirmations,
-                operationAtvIdHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'atv',
-                  operation?.stateDetail?.altAtvId
-                ),
+                operationAtvIdHref:
+                  this.selectedAltChain?.explorerBaseUrls?.atvById +
+                  operation?.stateDetail?.altAtvId,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'block-height',
-                  operation?.stateDetail?.expectedRewardBlock
-                ),
+                payoutBlockHeightHref:
+                  this.selectedAltChain?.explorerBaseUrls?.blockByHash +
+                  operation?.stateDetail?.expectedRewardBlock,
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
-                addressHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'address',
-                  operation?.stateDetail?.publicationDataPayoutInfoDisplay
-                ),
+                addressHref:
+                  this.selectedAltChain?.explorerBaseUrls?.address +
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay,
                 address:
                   operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
@@ -619,17 +604,13 @@ export class OperationsComponent implements OnInit, OnDestroy {
               'ApmOperationState_Pending_Payout_Detected',
               {
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'block-height',
-                  operation?.stateDetail?.expectedRewardBlock
-                ),
+                payoutBlockHeightHref:
+                  this.selectedAltChain?.explorerBaseUrls?.blockByHash +
+                  operation?.stateDetail?.expectedRewardBlock,
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
-                addressHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'address',
-                  operation?.stateDetail?.publicationDataPayoutInfoDisplay
-                ),
+                addressHref:
+                  this.selectedAltChain?.explorerBaseUrls?.address +
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay,
                 address:
                   operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
@@ -643,17 +624,13 @@ export class OperationsComponent implements OnInit, OnDestroy {
                   operation?.stateDetail?.altAtvRequiredConfirmations,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'block-height',
-                  operation?.stateDetail?.expectedRewardBlock
-                ),
+                payoutBlockHeightHref:
+                  this.selectedAltChain?.explorerBaseUrls?.blockByHash +
+                  operation?.stateDetail?.expectedRewardBlock,
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
-                addressHref: this.getBaseUrl(
-                  this.selectedAltChain?.key.toLowerCase(),
-                  'address',
-                  operation?.stateDetail?.publicationDataPayoutInfoDisplay
-                ),
+                addressHref:
+                  this.selectedAltChain?.explorerBaseUrls?.address +
+                  operation?.stateDetail?.publicationDataPayoutInfoDisplay,
                 address:
                   operation?.stateDetail?.publicationDataPayoutInfoDisplay,
               }
@@ -691,19 +668,19 @@ export class OperationsComponent implements OnInit, OnDestroy {
       : key.toUpperCase();
   }
 
-  private getBaseUrl(coin: string, link: string, id: string): string {
-    if (!this.hardCodedList.includes(coin)) {
-      return '';
-    }
+  // private getBaseUrl(coin: string, link: string, id: string): string {
+  //   if (!this.hardCodedList.includes(coin)) {
+  //     return '';
+  //   }
 
-    if (coin === 'vetc') {
-      const newLink = link === 'block-height' ? 'block' : link;
-      return `http://65.21.85.75:30305/#/${newLink}/${id}`;
-    }
+  //   if (coin === 'vetc') {
+  //     const newLink = link === 'block-height' ? 'block' : link;
+  //     return `http://65.21.85.75:30305/#/${newLink}/${id}`;
+  //   }
 
-    const isTestnet = this.operationChain === 'tVBK' ? 'testnet.' : '';
-    return `https://${isTestnet}explore.${
-      coin === 'VBK' || coin === 'tVBK' ? '' : coin + '.'
-    }veriblock.org/${link}/${id}`;
-  }
+  //   const isTestnet = this.operationChain === 'tVBK' ? 'testnet.' : '';
+  //   return `https://${isTestnet}explore.${
+  //     coin === 'VBK' || coin === 'tVBK' ? '' : coin + '.'
+  //   }veriblock.org/${link}/${id}`;
+  // }
 }
