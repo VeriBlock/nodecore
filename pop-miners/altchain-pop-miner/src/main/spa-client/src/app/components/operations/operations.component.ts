@@ -594,9 +594,6 @@ export class OperationsComponent implements OnInit, OnDestroy {
               'ApmOperationState_Pending_Payout_Detected',
               {
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref:
-                  this.selectedAltChain?.explorerBaseUrls?.blockByHash +
-                  operation?.stateDetail?.expectedRewardBlock,
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
                 addressHref:
                   this.selectedAltChain?.explorerBaseUrls?.address +
@@ -614,9 +611,6 @@ export class OperationsComponent implements OnInit, OnDestroy {
                   operation?.stateDetail?.altAtvRequiredConfirmations,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
-                payoutBlockHeightHref:
-                  this.selectedAltChain?.explorerBaseUrls?.blockByHash +
-                  operation?.stateDetail?.expectedRewardBlock,
                 payoutBlockHeight: operation?.stateDetail?.expectedRewardBlock,
                 addressHref:
                   this.selectedAltChain?.explorerBaseUrls?.address +

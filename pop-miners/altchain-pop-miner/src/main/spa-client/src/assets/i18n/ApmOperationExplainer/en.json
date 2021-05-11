@@ -11,10 +11,10 @@
   "ApmOperationState_Current_Endorsement_Tx_Confirmed": "Waiting for {{contextVbkTokenName}} endorsement transaction to appear in a block",
   "ApmOperationState_Current_Submitted_Pop_Data": "Submitting PoP Data to {{operationChainName}}",
   "ApmOperationState_Current_Payout_Detected_No_Confirmation": "Waiting for ATV to be mined in a block...",
-  "ApmOperationState_Current_Payout_Detected_Confirmation": "Got {{currentConfirmations}}/{{requiredConfirmations}} confirmations for ATV: <a href='{{operationAtvIdHref}}' target='_blank' rel='noopener noreferrer'>{{operationAtvId}}</a> to be paid in {{operationChainName}} block @ <a href='{{payoutBlockHeightHref}}' target='_blank' rel='noopener noreferrer'>{{payoutBlockHeight}}</a> to {{operationChainName}} address <a href='{{addressHref}}' target='_blank' rel='noopener noreferrer'>{{address}}</a>",
+  "ApmOperationState_Current_Payout_Detected_Confirmation": "Got {{currentConfirmations}}/{{requiredConfirmations}} confirmations for ATV: <a href='{{operationAtvIdHref}}' target='_blank' rel='noopener noreferrer'>{{operationAtvId}}</a> to be paid in {{operationChainName}} block @ {{payoutBlockHeight}} to {{operationChainName}} address <a href='{{addressHref}}' target='_blank' rel='noopener noreferrer'>{{address}}</a>",
 
   "ApmOperationState_Pending_Endorsement_Tx_Confirmed": "Will wait for {{contextVbkTokenName}} endorsement transaction to appear in a block",
   "ApmOperationState_Pending_Submitted_Pop_Data": "Will submit PoP Data to {{operationChainName}}",
-  "ApmOperationState_Pending_Payout_Detected": "Will wait for reward to be paid in {{operationChainName}} block @ <a href='{{payoutBlockHeightHref}}' target='_blank' rel='noopener noreferrer'>{{payoutBlockHeight}}</a> to {{operationChainName}} address <a href='{{addressHref}}' target='_blank' rel='noopener noreferrer'>{{address}}</a>",
+  "ApmOperationState_Pending_Payout_Detected": "Will wait for reward to be paid in {{operationChainName}} block @ {{payoutBlockHeight}} to {{operationChainName}} address <a href='{{addressHref}}' target='_blank' rel='noopener noreferrer'>{{address}}</a>",
   "ApmOperationState_Payout_Detected_No_Instruction": "Waiting for reward to be paid"
 }
