@@ -42,16 +42,6 @@ export class OperationsComponent implements OnInit, OnDestroy {
     filter: 'Active',
   });
 
-  private hardCodedList = [
-    'vbtc',
-    'phl',
-    'pexa',
-    'bitc',
-    'vetc',
-    'VBK',
-    'tVBK',
-  ];
-
   public selectedAltChain: ConfiguredAltchain = null;
   public operationChain: string = null;
   public networkExplorerBaseUrl: ExplorerBaseUrlsResponse;
@@ -462,7 +452,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
           {
             contextVbkTokenName: this.operationChain,
             transactionTxHref:
-              this.networkExplorerBaseUrl?.transactionById +
+              this.networkExplorerBaseUrl?.transaction +
               operation?.stateDetail?.vbkEndorsementTxId,
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
@@ -487,7 +477,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
           'ApmOperationState_Done_Submitted_Pop_Data',
           {
             operationAtvIdHref:
-              this.selectedAltChain?.explorerBaseUrls?.atvById +
+              this.selectedAltChain?.explorerBaseUrls?.atv +
               operation?.stateDetail?.altAtvId,
             operationAtvId: operation?.stateDetail?.altAtvId,
             operationChainName: this.selectedAltChain?.name,
@@ -554,7 +544,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
                 requiredConfirmations:
                   operation?.stateDetail?.altAtvRequiredConfirmations,
                 operationAtvIdHref:
-                  this.selectedAltChain?.explorerBaseUrls?.atvById +
+                  this.selectedAltChain?.explorerBaseUrls?.atv +
                   operation?.stateDetail?.altAtvId,
                 operationAtvId: operation?.stateDetail?.altAtvId,
                 operationChainName: this.selectedAltChain?.name,
@@ -667,20 +657,4 @@ export class OperationsComponent implements OnInit, OnDestroy {
       ? `${key.charAt(0)}${key.slice(1).toUpperCase()}`
       : key.toUpperCase();
   }
-
-  // private getBaseUrl(coin: string, link: string, id: string): string {
-  //   if (!this.hardCodedList.includes(coin)) {
-  //     return '';
-  //   }
-
-  //   if (coin === 'vetc') {
-  //     const newLink = link === 'block-height' ? 'block' : link;
-  //     return `http://65.21.85.75:30305/#/${newLink}/${id}`;
-  //   }
-
-  //   const isTestnet = this.operationChain === 'tVBK' ? 'testnet.' : '';
-  //   return `https://${isTestnet}explore.${
-  //     coin === 'VBK' || coin === 'tVBK' ? '' : coin + '.'
-  //   }veriblock.org/${link}/${id}`;
-  // }
 }

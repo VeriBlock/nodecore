@@ -20,9 +20,9 @@ export class AltChainReadyStatusResponse {
 }
 
 export class ExplorerBaseUrlsResponse {
-  atvById: string;
+  atv: string;
   blockByHash: string;
   blockByHeight: string;
-  transactionById: string;
+  transaction: string;
   address: string;
 }
