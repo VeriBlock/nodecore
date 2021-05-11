@@ -47,6 +47,14 @@
         </td>
       </ng-container>
 
+      <!-- Endorsement Column -->
+      <ng-container matColumnDef="endorsementColumn">
+        <th mat-header-cell *matHeaderCellDef>ENDORSED BLOCK HEIGHT</th>
+        <td mat-cell *matCellDef="let element">
+          {{element?.endorsedBlockHeight}}
+        </td>
+      </ng-container>
+
       <!-- Operation Status Column-->
       <ng-container matColumnDef="operationStatusColumn">
         <th mat-header-cell *matHeaderCellDef>STATUS</th>
