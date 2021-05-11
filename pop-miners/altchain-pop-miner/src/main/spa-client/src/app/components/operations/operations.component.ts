@@ -75,7 +75,8 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public operationsTotalCount: number = 0;
   public selectedOperationId: string = null;
 
-  public operationsDataSource = new MatTableDataSource<OperationSummaryResponse>();
+  public operationsDataSource =
+    new MatTableDataSource<OperationSummaryResponse>();
 
   public pageLimit = 10;
   public pageOffset = 0;
@@ -105,19 +106,20 @@ export class OperationsComponent implements OnInit, OnDestroy {
         this.operationChain = data?.name === 'testnet' ? 'tVBK' : 'VBK';
       });
 
-    this.currentSelectionSubscription = this.dataShareService.currentAltChain.subscribe(
-      (data: ConfiguredAltchain) => {
-        if (JSON.stringify(data) !== JSON.stringify(this.selectedAltChain)) {
-          const tempAltChain = { ...this.selectedAltChain };
-          this.selectedAltChain = data;
+    this.currentSelectionSubscription =
+      this.dataShareService.currentAltChain.subscribe(
+        (data: ConfiguredAltchain) => {
+          if (JSON.stringify(data) !== JSON.stringify(this.selectedAltChain)) {
+            const tempAltChain = { ...this.selectedAltChain };
+            this.selectedAltChain = data;
 
-          if (tempAltChain.id !== data.id || tempAltChain.key !== data.key) {
-            this.initValues();
-            this.updateQueryParams();
+            if (tempAltChain.id !== data.id || tempAltChain.key !== data.key) {
+              this.initValues();
+              this.updateQueryParams();
+            }
           }
         }
-      }
-    );
+      );
 
     // Get route's query params
     this.route.queryParams.subscribe((params) => {
@@ -477,11 +479,6 @@ export class OperationsComponent implements OnInit, OnDestroy {
             operation?.stateDetail?.vbkBlockOfProof
           ),
           blockOfProofHash: operation?.stateDetail?.vbkBlockOfProof,
-          blockOfProofHeightHref: this.getBaseUrl(
-            this.operationChain,
-            'block',
-            operation?.stateDetail?.vbkBlockOfProofHeight
-          ),
           blockOfProofHeight: operation?.stateDetail?.vbkBlockOfProofHeight,
         });
 
