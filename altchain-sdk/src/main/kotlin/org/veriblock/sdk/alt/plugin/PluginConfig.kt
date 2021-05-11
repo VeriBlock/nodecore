@@ -1,5 +1,6 @@
 package org.veriblock.sdk.alt.plugin
 
+import org.veriblock.sdk.alt.ExplorerBaseUrls
 import org.veriblock.sdk.alt.PayoutDetectionType
 
 data class PluginConfig(
@@ -16,6 +17,7 @@ data class PluginConfig(
     val blockRoundIndices: List<Int>? = null,
     val autoMineRounds: List<Int> = emptyList(),
     val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
+    val explorerBaseUrls: ExplorerBaseUrls = ExplorerBaseUrls(),
     val extraConfig: Map<String, String> = emptyMap(),
     val addressPrefix: String? = null
 )

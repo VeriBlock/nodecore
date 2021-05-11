@@ -2,6 +2,7 @@ package org.veriblock.alt.plugins.test
 
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ChainConfig
+import org.veriblock.sdk.alt.ExplorerBaseUrls
 import org.veriblock.sdk.alt.PayoutDetectionType
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 import org.veriblock.sdk.alt.plugin.PluginConfig
@@ -15,6 +16,7 @@ class TestConfig(
     override val payoutDelay: Int = 100,
     override val blockRoundIndices: List<Int> = (1..keystonePeriod).map { 1 }.toList(),
     override val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.COINBASE,
+    override val explorerBaseUrls: ExplorerBaseUrls,
     val autoMinePeriod: Int? = null
 ) : ChainConfig() {
     override val auth: HttpAuthConfig? = null
@@ -28,6 +30,7 @@ class TestConfig(
         configuration.payoutDelay ?: 100,
         configuration.blockRoundIndices ?: listOf(4, 1, 2, 1, 2),
         configuration.payoutDetectionType,
+        configuration.explorerBaseUrls,
         configuration.extraConfig["autoMinePeriod"]?.toIntOrNull()
     )
 }

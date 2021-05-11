@@ -27,6 +27,7 @@ import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.OperationWorkflow
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
+import org.veriblock.miners.pop.api.dto.toExplorerBaseUrlsResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.service.ApmOperationExplainer
@@ -184,7 +185,8 @@ class MiningController(
                     it.key,
                     it.name,
                     it.getPayoutDelay(),
-                    readyStatusResponse
+                    readyStatusResponse,
+                    it.config.explorerBaseUrls.toExplorerBaseUrlsResponse()
                 )
 
             }.sortedBy {
