@@ -203,10 +203,11 @@ class AltchainPopMinerService(
         if (!network.isSynchronized()) {
             return CheckResult.Failure(MineException("SPV is not synchronized: ${network.latestSpvStateInfo.getSynchronizedMessage()}"))
         }
-
         // Specific checks for the alt chain
-        checkAltChainReadyConditions(chain.key, chain, monitor)
-
+        val altchainConditions = checkAltChainReadyConditions(chain.key, chain, monitor)
+        if (altchainConditions is CheckResult.Failure) {
+            return altchainConditions
+        }
         // Verify if the block is too old to be mined
         if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
             return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
