@@ -26,8 +26,8 @@ class NetworkController(
             val explorerBaseUrlsResponse = ExplorerBaseUrlsResponse(
                 blockByHeight = "$vbkBaseUrl/block/",
                 blockByHash ="$vbkBaseUrl/block/",
-                transactionById = "$vbkBaseUrl/tx/",
-                atvById = "$vbkBaseUrl/tx/"
+                transaction = "$vbkBaseUrl/tx/",
+                address = "$vbkBaseUrl/address/"
             )
             respond(NetworkInfoResponse(networkType, explorerBaseUrlsResponse))
         }
