@@ -95,7 +95,8 @@ data class ConfiguredAltchain(
     val key: String,
     val name: String,
     val payoutDelay: Int,
-    val readyStatus: AltChainReadyStatusResponse
+    val readyStatus: AltChainReadyStatusResponse,
+    val baseUrlsResponse: ExplorerBaseUrlsResponse
 )
 
 data class AltChainReadyStatusResponse(
