@@ -81,6 +81,13 @@ export class AppComponent implements OnInit {
           JSON.stringify(returnedResults)
         ) {
           this.configuredAltchains = [...returnedResults];
+          if (Boolean(this.selectedAltChain)) {
+            this.changeAltChain(
+              this.configuredAltchains.find(
+                (alt) => alt.key === this.selectedAltChain
+              )
+            );
+          }
         }
 
         if (this.configuredAltchains?.length > 0 && !this.selectedAltChain) {

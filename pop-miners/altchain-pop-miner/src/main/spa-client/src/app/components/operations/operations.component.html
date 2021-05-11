@@ -19,17 +19,21 @@
 </mat-toolbar>
 
 <div fxLayout="row" fxLayoutAlign="center center" style="width: 100%;">
-  <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-primary flag-mine">
-    <button mat-button (click)="startMineBlock()" matTooltip="Start new mining operation" [disabled]="isLoadingConfiguration"
-      style="padding: 0; font-size: 20px; text-align: center;">
+  <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-primary flag-mine"
+    [matTooltip]="!selectedAltChain?.readyStatus?.isReady ? selectedAltChain?.readyStatus?.reason : ''">
+    <button mat-button (click)="startMineBlock()" matTooltip="Start new mining operation"
+      [disabled]="isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady"
+      style="padding: 0; font-size: 20px; text-align: center;"
+      [ngStyle]="{'cursor': isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady ? 'not-allowed' : ''}">
       <div style="min-width: 250px;" class="flag flag-primary flag-mine">
         Mine
       </div>
     </button>
     <div fxLayout="row" fxLayoutAlign="center center" style="border-left: 1px white solid;">
       <button mat-icon-button type="button" matTooltip="Start custom mining operation" (click)="openMineDialog()"
-        [disabled]="isLoadingConfiguration">
-        <mat-icon>more_vert</mat-icon>
+        [disabled]="isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady"
+        [ngStyle]="{'cursor': isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady ? 'not-allowed' : ''}">
+        <mat-icon class="custom-mine-button">more_vert</mat-icon>
       </button>
     </div>
   </div>
