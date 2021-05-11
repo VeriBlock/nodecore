@@ -26,5 +26,9 @@
       border-radius: 1em;
       background-color: mat-color($background, background);
     }
+
+    .custom-mine-button {
+      color: mat-contrast($primary, 500);
+    }
   }
 }
