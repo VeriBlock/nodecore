@@ -1,14 +1,13 @@
 package org.veriblock.miners.pop.storage
 
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -24,8 +23,9 @@ open class ApmOperationRepository(
         limit: Int = 50,
         offset: Int = 0
     ): List<ApmOperationStateRecord> = transaction(database) {
-        operationsFilterSelect(chainId, status).orderBy(
-            ApmOperationStateTable.createdAt
+        operationsFilterSelect(chainId, status).orderBy (
+            ApmOperationStateTable.createdAt,
+            SortOrder.DESC
         ).limit(
             limit, offset.toLong()
         ).map {

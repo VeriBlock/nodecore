@@ -152,7 +152,7 @@ class AltchainPopMinerService(
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.values.asSequence()
                 .filter { altchainKey == null || it.chain.key == altchainKey }
-                .sortedBy { it.createdAt }
+                .sortedByDescending { it.createdAt }
                 .drop(offset)
                 .take(limit)
                 .toList()
