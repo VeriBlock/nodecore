@@ -5,8 +5,9 @@ import org.veriblock.sdk.alt.plugin.HttpAuthConfig
 data class ExplorerBaseUrls(
     val blockByHeight: String? = null,
     val blockByHash: String? = null,
-    val transactionById: String? = null,
-    val atvById: String? = null
+    val transaction: String? = null,
+    val address: String? = null,
+    val atv: String? = null
 )
 
 abstract class ChainConfig {

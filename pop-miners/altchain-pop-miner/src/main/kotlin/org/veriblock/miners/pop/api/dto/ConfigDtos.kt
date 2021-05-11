@@ -26,13 +26,15 @@ class VbkFeeConfigDto(
 data class ExplorerBaseUrlsResponse(
     val blockByHeight: String?,
     val blockByHash: String?,
-    val transactionById: String?,
-    val atvById: String?
+    val transaction: String?,
+    val address: String?,
+    val atv: String? = null
 )
 
 fun ExplorerBaseUrls.toExplorerBaseUrlsResponse() = ExplorerBaseUrlsResponse(
     blockByHeight,
     blockByHash,
-    transactionById,
-    atvById
+    transaction,
+    address,
+    atv
 )
