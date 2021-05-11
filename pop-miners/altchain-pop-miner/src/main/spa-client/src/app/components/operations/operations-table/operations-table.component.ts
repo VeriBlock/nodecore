@@ -62,6 +62,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
     'operationIdColumn',
     'stateColumn',
     'taskColumn',
+    'endorsementColumn',
     'operationStatusColumn',
   ];
 

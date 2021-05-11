@@ -17,6 +17,11 @@ table.mat-table {
         min-width: 100px;
       }
 
+      &.mat-column-endorsementColumn {
+        min-width: 120px;
+        text-align: right;
+      }
+
       &.mat-column-operationStatusColumn {
         text-align: center;
         min-width: 120px;

@@ -95,7 +95,8 @@ data class ConfiguredAltchain(
     val key: String,
     val name: String,
     val payoutDelay: Int,
-    val readyStatus: AltChainReadyStatusResponse
+    val readyStatus: AltChainReadyStatusResponse,
+    val explorerBaseUrls: ExplorerBaseUrlsResponse
 )
 
 data class AltChainReadyStatusResponse(
@@ -116,5 +117,6 @@ data class WithdrawResponse(
 
 @Response("The configured network")
 data class NetworkInfoResponse(
-    val name: String
+    val name: String,
+    val explorerBaseUrls: ExplorerBaseUrlsResponse
 )

@@ -161,7 +161,7 @@ class SecurityInheritingMonitor(
      * Checks for the best chain's block height. If it changed, it handles all registered listeners.
      * Automining is also triggered here.
      */
-    private suspend fun poll() {
+    private suspend fun poll() = coroutineScope {
         try {
             // Verify if we can make a connection with the Altchain
             val pinged = checkSuccess { chain.getBestBlockHeight() }
@@ -229,16 +229,22 @@ class SecurityInheritingMonitor(
                         accessible.set(false)
                         EventBus.altChainNotAccessibleEvent.trigger(chainId)
                     }
-                    return
+                    return@coroutineScope
                 }
 
-                if (bestBlockHeight != this.bestBlockHeight.value) {
-                    logger.debug { "New chain head detected!" }
-                    if (this.bestBlockHeight.value != -1 && chain.shouldAutoMine(bestBlockHeight)) {
-                        miner.mine(chainId, bestBlockHeight)
+                if (bestBlockHeight != this@SecurityInheritingMonitor.bestBlockHeight.value) {
+                    logger.debug { "New chain head detected @${bestBlockHeight}" }
+
+                    if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
+                        logger.info { "Auto mining block(s) ${((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).joinToString()}" }
+                        ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
+                            if (chain.shouldAutoMine(blockHeight)) {
+                                miner.mine(chainId, blockHeight)
+                            }
+                        }
                     }
 
-                    this.bestBlockHeight.value = bestBlockHeight
+                    this@SecurityInheritingMonitor.bestBlockHeight.value = bestBlockHeight
 
                     val block = getBlockAtHeight(bestBlockHeight)
                         ?: error("Unable to find block at tip height $bestBlockHeight")
