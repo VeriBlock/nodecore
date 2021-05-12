@@ -14,10 +14,10 @@ import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.nullableRpcRequest
 import org.veriblock.alt.plugins.rpcRequest
+import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.toEthHash
 import org.veriblock.alt.plugins.util.asEthHex
 import org.veriblock.alt.plugins.util.asEthHexInt
-import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.asEthHash
 import org.veriblock.core.altchain.AltchainPoPEndorsement
@@ -105,18 +105,23 @@ class EthereumFamilyChain(
         val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $hash..." }
         val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
-        return block?.let {
+        val popBlock: EthPopBlockData? = try {
+            rpcRequest("pop_getBlockByHash", listOf(ethHash), "2.0")
+        } catch (exception: RpcException) {
+            throw exception
+        }
+        return block?.let { ethBlock ->
             SecurityInheritingBlock(
-                hash = it.hash.asEthHash(),
-                height = it.number.asEthHexInt(),
-                previousHash = it.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
-                merkleRoot = it.transactionsRoot,
+                hash = ethBlock.hash.asEthHash(),
+                height = ethBlock.number.asEthHexInt(),
+                previousHash = ethBlock.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
+                merkleRoot = ethBlock.transactionsRoot,
                 coinbaseTransactionId = "TODO",
-                transactionIds = it.transactions,
-                endorsedBy = listOf(), // TODO
-                knownVbkHashes = listOf(), // TODO
-                veriBlockPublicationIds = listOf(), // TODO
-                bitcoinPublicationIds = listOf() // TODO
+                transactionIds = ethBlock.transactions,
+                endorsedBy = popBlock?.pop?.state?.endorsedBy ?: listOf(),
+                knownVbkHashes = popBlock?.pop?.data?.context?.map { it.id } ?: listOf(),
+                veriBlockPublicationIds = popBlock?.pop?.data?.atvs?.map { it.id } ?: listOf(),
+                bitcoinPublicationIds = popBlock?.pop?.data?.vtbs ?: listOf()
             )
         }
     }
