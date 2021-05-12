@@ -90,19 +90,23 @@
               font-size: 12px;
               font-weight: 400;
             }
+
+            a {
+              text-decoration: none;
+              color: mat-color($primary);
+
+              &[href^="undefined"] {
+                color: inherit;
+                cursor: default;
+                pointer-events: none;
+              }
+            }
           }
         }
 
         .element-operations-row {
           background-color: $table-background-color;
         }
-      }
-
-      a[href=""] {
-        color: inherit;
-        text-decoration: none;
-        cursor: default;
-        pointer-events: none;
       }
     }
 
