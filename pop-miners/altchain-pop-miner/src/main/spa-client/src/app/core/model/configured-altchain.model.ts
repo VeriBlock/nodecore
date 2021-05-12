@@ -8,6 +8,7 @@ export class ConfiguredAltchain {
   name: string;
   payoutDelay: number;
   readyStatus: AltChainReadyStatusResponse;
+  explorerBaseUrls: ExplorerBaseUrlsResponse;
 
   hasLogo?: boolean;
   selectedFilter?: string;
@@ -16,4 +17,12 @@ export class ConfiguredAltchain {
 export class AltChainReadyStatusResponse {
   isReady: boolean;
   reason?: string;
+}
+
+export class ExplorerBaseUrlsResponse {
+  atv: string;
+  blockByHash: string;
+  blockByHeight: string;
+  transaction: string;
+  address: string;
 }

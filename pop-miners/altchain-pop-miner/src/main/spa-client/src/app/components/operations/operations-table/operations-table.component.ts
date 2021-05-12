@@ -188,4 +188,8 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   public getWorkFlowTask = (i: number) => {
     return OperationWorkflowState[i];
   };
+
+  public getClassForStatusRow(task: string): string {
+    return !task ? '' : `status-border status-${task.toLowerCase()}`;
+  }
 }

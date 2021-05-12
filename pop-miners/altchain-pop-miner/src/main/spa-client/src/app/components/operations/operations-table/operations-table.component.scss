@@ -14,7 +14,8 @@ table.mat-table {
       }
 
       &.mat-column-stateColumn {
-        min-width: 100px;
+        min-width: 200px;
+        padding-right: 0.5em;
       }
 
       &.mat-column-endorsementColumn {

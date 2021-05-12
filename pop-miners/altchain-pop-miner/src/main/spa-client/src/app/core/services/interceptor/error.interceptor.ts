@@ -26,8 +26,8 @@ export class ErrorInterceptor implements HttpInterceptor {
           // Client-side errors
           errorMessage = `Error: ${error.error.message}`;
         } else {
-          // server status 0 or 5xx
-          if (error?.status === 0 || error?.status >= 500) {
+          // APM not running
+          if (error?.status === 0) {
             errorMessage = `Error: APM Instance can't be reached. \nPlease, check that you have an Altchain PoP Miner running at ${
               window?.location?.origin || 'localhost: 4200'
             }`;

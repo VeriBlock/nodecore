@@ -55,12 +55,6 @@ export class MinerService {
     );
   }
 
-  getOperationWorkflow(id: string): Observable<OperationWorkflow> {
-    return this.http.get<OperationWorkflow>(
-      `${this.baseUrl}/operations/${id}/workflow`
-    );
-  }
-
   getOperationLogs(id: string, level: string): Observable<string[]> {
     return this.http.get<string[]>(
       `${this.baseUrl}/operations/${id}/logs?level=${level}`
