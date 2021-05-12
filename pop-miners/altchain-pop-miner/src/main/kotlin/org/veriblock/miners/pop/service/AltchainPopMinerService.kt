@@ -152,14 +152,14 @@ class AltchainPopMinerService(
         return if (status == MiningOperationStatus.ACTIVE) {
             operations.values.asSequence()
                 .filter { altchainKey == null || it.chain.key == altchainKey }
-                .sortedBy { it.createdAt }
+                .sortedWith(compareByDescending<ApmOperation> { it.createdAt }.thenByDescending { it.endorsedBlockHeight })
                 .drop(offset)
                 .take(limit)
                 .toList()
         } else {
             operationService.getOperations(altchainKey, status, limit, offset) { txId ->
                 transactionMonitor.getTransaction(txId)
-            }
+            }.sortedByDescending { it.endorsedBlockHeight }
         }
     }
 
