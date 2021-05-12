@@ -177,9 +177,7 @@ export class OperationsTableComponent implements OnInit, OnChanges {
   public checkOperationStatus(task: string): string {
     if (task.toLowerCase().includes('failed')) return OperationStatus.FAILED;
 
-    if (task.toLowerCase().includes('done')) return OperationStatus.DONE;
-
-    return OperationStatus.ACTIVE;
+    return !task ? OperationStatus.DONE : OperationStatus.ACTIVE;
   }
 
   public capitalizeFirstLetter = (s: string): string => {
