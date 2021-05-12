@@ -53,15 +53,20 @@ object Threading {
             .setNameFormat("peer-input-%d")
             .build()
     )
+    val EVENT_EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("event-listener")
+            .build()
+    )
     val HASH_EXECUTOR: ExecutorService = Executors.newFixedThreadPool(
         Runtime.getRuntime().availableProcessors(),
         ThreadFactoryBuilder()
             .setNameFormat("progpow-%d")
             .build()
     )
-    val EVENT_EXECUTOR: ExecutorService = Executors.newSingleThreadExecutor(
+    val BLOCK_PROCESSOR: ExecutorService = Executors.newSingleThreadExecutor(
         ThreadFactoryBuilder()
-            .setNameFormat("event-listener")
+            .setNameFormat("block-processor")
             .build()
     )
 
@@ -78,6 +83,7 @@ object Threading {
             CompletableFuture.runAsync { shutdown(PEER_INPUT_POOL) },
             CompletableFuture.runAsync { shutdown(EVENT_EXECUTOR) },
             CompletableFuture.runAsync { shutdown(HASH_EXECUTOR) },
+            CompletableFuture.runAsync { shutdown(BLOCK_PROCESSOR) },
         )
         shutdownTasks.get()
     }

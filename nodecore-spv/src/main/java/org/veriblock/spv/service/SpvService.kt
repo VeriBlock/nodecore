@@ -428,4 +428,3 @@ fun PeerTable.advertise(transaction: Transaction) {
         }
     }
 }
-

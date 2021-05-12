@@ -54,6 +54,7 @@ import org.veriblock.spv.SpvState
 import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.service.Blockchain
+import org.veriblock.spv.service.NetworkBlock
 import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
@@ -237,24 +238,6 @@ class PeerEventListener(
         event.acknowledge()
 
         val advertiseBlocks = event.content
-        if (advertiseBlocks.headersCount >= 1000) {
-            logger.debug { "Received advertisement of ${advertiseBlocks.headersCount} blocks" }
-
-            // Extract latest keystones and ask for more
-            val extractedKeystones = advertiseBlocks.headersList.asSequence()
-                // Using the peer's supplied hash because we're using it only to request more blocks. No exercise of trust is made here.
-                .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), it.hash.toByteArray().asVbkHash()) }
-                .filter { it.height % 20 == 0 }
-                .sortedByDescending { it.height }
-                .take(10)
-                .toList()
-            logger.debug { "Received keystones ${extractedKeystones.map { it.height }}" }
-            event.producer.requestBlockDownload(extractedKeystones)
-        } else if (SpvState.getPeerHeight(event.producer) == 0) { // FIXME: Remove after we're able to retrieve best block height
-            val lastHeader = advertiseBlocks.headersList.last().header.toByteArray()
-            val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
-            SpvState.putNetworkHeight(event.producer.addressKey, lastHeight)
-        }
 
         logger.debug {
             val lastBlock = MessageSerializer.deserialize(advertiseBlocks.headersList.last())
@@ -278,7 +261,32 @@ class PeerEventListener(
 
         val allBlocksAccepted = veriBlockBlocks
             .sortedBy { it.height }
-            .all { blockchain.acceptBlock(it) }
+            .all {
+                blockchain.addNetworkBlock(NetworkBlock(it, event.producer))
+            }
+
+        if (advertiseBlocks.headersCount >= 1000) {
+            if (!allBlocksAccepted) {
+                startBlockchainDownload(event.producer)
+            } else {
+                logger.debug { "Received advertisement of ${advertiseBlocks.headersCount} blocks" }
+
+                // Extract latest keystones and ask for more
+                val extractedKeystones = advertiseBlocks.headersList.asSequence()
+                    // Using the peer's supplied hash because we're using it only to request more blocks. No exercise of trust is made here.
+                    .map { SerializeDeserializeService.parseVeriBlockBlock(it.header.toByteArray(), it.hash.toByteArray().asVbkHash()) }
+                    .filter { it.height % 20 == 0 }
+                    .sortedByDescending { it.height }
+                    .take(10)
+                    .toList()
+                logger.debug { "Received keystones ${extractedKeystones.map { it.height }}" }
+                event.producer.requestBlockDownload(extractedKeystones)
+            }
+        } else if (SpvState.getPeerHeight(event.producer) == 0) { // FIXME: Remove after we're able to retrieve best block height
+            val lastHeader = advertiseBlocks.headersList.last().header.toByteArray()
+            val lastHeight = BlockUtility.extractBlockHeightFromBlockHeader(lastHeader)
+            SpvState.putNetworkHeight(event.producer.addressKey, lastHeight)
+        }
 
         // TODO(warchant): if allBlocksAccepted == false here, block can not be connected or invalid
         // maybe ban peer? for now, do nothing

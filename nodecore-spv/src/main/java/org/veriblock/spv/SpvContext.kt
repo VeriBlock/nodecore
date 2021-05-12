@@ -17,6 +17,8 @@ import nodecore.p2p.P2pConfiguration
 import nodecore.p2p.PeerTable
 import nodecore.p2p.PeerTableBootstrapper
 import nodecore.p2p.PeerWarden
+import nodecore.p2p.addressKey
+import nodecore.p2p.asNetworkAddress
 import nodecore.p2p.buildMessage
 import org.veriblock.core.ConfigurationException
 import org.veriblock.core.Context
@@ -71,31 +73,6 @@ class SpvContext(
     val startTime: Instant = Instant.now()
 
     init {
-        // For now we'll be using either direct discovery or DNS discovery, not a mix.
-        // This will change whenever other use cases appear.
-        val peerDiscovery = if (config.connectDirectlyTo.isNotEmpty()) {
-            DirectDiscovery(config.connectDirectlyTo.map {
-                try {
-                    val input =
-                        // workaround: add p2p:// scheme, because URI must contain (any) scheme
-                        if (it.contains("://")) it else "p2p://${it}"
-
-                    val uri = URI.create(input)
-                    // if port is not provided, use standard port from networkParameters
-                    val port = if (uri.port == -1) networkParameters.p2pPort else uri.port
-                    NetworkAddress(uri.host, port)
-                } catch (e: Exception) {
-                    throw ConfigurationException("Wrong format for peer address ${it}, it should be host:port")
-                }
-            })
-        } else {
-            networkParameters.bootstrapDns?.let {
-                DnsDiscovery(it, networkParameters.p2pPort)
-            } ?: error("Unable to create Peer Discovery for $networkParameters, as doesn't have any configured bootstrap DNS.")
-        }
-
-        logger.info { "Using ${peerDiscovery.name()} discovery" }
-
         if (trustPeerHashes) {
             logger.warn {
                 "Fast sync mode is enabled." +
@@ -125,7 +102,34 @@ class SpvContext(
             addressManager.load(walletFile)
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
 
-            val p2pConfiguration = P2pConfiguration(networkParameters = config.networkParameters, peerBootstrapEnabled = true, bootstrappingDnsSeeds = config.networkParameters.bootstrapDns?.let { listOf(it) } ?: emptyList())
+            val externalPeerEndpoints = config.connectDirectlyTo.map {
+                try {
+                    // workaround: add p2p:// scheme, because URI must contain (any) scheme
+                    val input = if (it.contains("://")) it else "p2p://${it}"
+
+                    val uri = URI.create(input)
+                    // if port is not provided, use standard port from networkParameters
+                    val port = if (uri.port == -1) networkParameters.p2pPort else uri.port
+                    NetworkAddress(uri.host, port)
+                } catch (e: Exception) {
+                    throw ConfigurationException("Wrong format for peer address ${it}, it should be host:port")
+                }
+            }
+            val bootstrappingDnsSeeds = config.networkParameters.bootstrapDns?.let { listOf(it) } ?: emptyList()
+            val p2pConfiguration = P2pConfiguration(
+                networkParameters = config.networkParameters,
+                // For now we'll be using either direct discovery or DNS discovery, not a mix.
+                // This will change whenever other use cases appear.
+                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty(),
+                bootstrappingDnsSeeds = bootstrappingDnsSeeds,
+                externalPeerEndpoints = externalPeerEndpoints
+            )
+            if (p2pConfiguration.peerBootstrapEnabled) {
+                logger.info { "Using bootstrap discovery" }
+            } else {
+                logger.info { "Using direct discovery (${p2pConfiguration.externalPeerEndpoints.joinToString { it.addressKey }})" }
+            }
+
             val warden = PeerWarden(p2pConfiguration)
             val bootstrapper = PeerTableBootstrapper(p2pConfiguration, DnsResolver())
             peerTable = PeerTable(p2pConfiguration, warden, bootstrapper)
@@ -138,8 +142,7 @@ class SpvContext(
 
             Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "ShutdownHook nodecore-spv"))
         } catch (e: Exception) {
-            logger.debugWarn(e) { "Could not initialize SPV Context" }
-            throw RuntimeException(e)
+            throw RuntimeException("Could not initialize SPV Context", e)
         }
     }
 
