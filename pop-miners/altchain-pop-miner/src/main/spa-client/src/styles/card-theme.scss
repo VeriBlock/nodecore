@@ -30,6 +30,7 @@
         tr.mat-footer-row {
           height: 58px;
         }
+
         .status-border {
           // border-top-left-radius: 6px;
           // border-bottom-left-radius: 6px;
@@ -75,8 +76,18 @@
           table.mat-table {
             margin-bottom: 0;
 
+            tr.mat-row,
+            tr.mat-footer-row {
+              height: 48px;
+
+              .mat-cell {
+                font-size: 12px;
+              }
+            }
+
             button.mat-raised-button {
               box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.06);
+              font-size: 12px;
               font-weight: 400;
             }
           }
