@@ -7,11 +7,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.service
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.launch
 import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.miner.getNextWorkRequired
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.Constants
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -19,6 +25,7 @@ import org.veriblock.sdk.models.VerificationException
 import org.veriblock.sdk.services.ValidationService
 import org.veriblock.spv.model.StoredVeriBlockBlock
 import org.veriblock.spv.util.SpvEventBus
+import org.veriblock.spv.util.Threading
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -35,8 +42,14 @@ class Blockchain(
     val networkParameters get() = blockStore.networkParameters
     val lock = ReentrantLock()
 
+    private val networkBlockQueue = Channel<NetworkBlock>(UNLIMITED)
+
     init {
         reindex()
+
+        CoroutineScope(Threading.BLOCK_PROCESSOR.asCoroutineDispatcher()).launch {
+            processNetworkBlocks()
+        }
     }
 
     /**
@@ -83,7 +96,6 @@ class Blockchain(
 
         logger.info { "Successfully initialized Blockchain with ${blockIndex.size} blocks" }
     }
-
 
     /**
      * Getter for block index.
@@ -209,6 +221,7 @@ class Blockchain(
         return getChainWithTip(activeChain.tip.smallHash, 100).asSequence()
             .map { it.header }
             .filter { it.isKeystone() }
+            .sortedBy { it.height }
             .toList()
     }
 
@@ -357,5 +370,41 @@ class Blockchain(
         }
 
         return true
+    }
+
+    fun addNetworkBlock(networkBlock: NetworkBlock): Boolean {
+        val currentTipHeight = getChainHeadIndex().height
+        if (networkBlock.block.height < currentTipHeight + 10_000) {
+            return false
+        }
+        networkBlockQueue.offer(networkBlock)
+        logger.debug { "Added block ${networkBlock.block} to network block queue" }
+        return true
+    }
+
+    private suspend fun processNetworkBlocks() {
+        while (true) {
+            try {
+                val currentTipHeight = getChainHeadIndex().height
+                val netBlock = try {
+                    networkBlockQueue.receive()
+                } catch (e: InterruptedException) {
+                    break
+                } catch (e: NoSuchElementException) {
+                    break
+                }
+
+                val block = netBlock.block
+                if (block.height > currentTipHeight + 1) {
+                    // It won't connect, re-add to queue and continue
+                    networkBlockQueue.offer(netBlock)
+                    continue
+                }
+                val accepted = acceptBlock(block)
+                // TODO If not accepted, trigger misbehavior to source?
+            } catch (e: Exception) {
+                logger.debugWarn(e) { "Error processing blocks!" }
+            }
+        }
     }
 }

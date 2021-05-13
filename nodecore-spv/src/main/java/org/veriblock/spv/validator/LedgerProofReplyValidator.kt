@@ -1,10 +1,8 @@
 package org.veriblock.spv.validator
 
 import nodecore.api.grpc.RpcLedgerProofReply
-import org.slf4j.LoggerFactory
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.extensions.ledger.LedgerProofWithContext
-import org.veriblock.spv.net.SpvPeerTable
 
 private val logger = createLogger {}
 

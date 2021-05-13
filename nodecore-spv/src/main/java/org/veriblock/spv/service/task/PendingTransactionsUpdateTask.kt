@@ -7,6 +7,7 @@ import nodecore.api.grpc.RpcTransaction
 import nodecore.api.grpc.RpcTransactionInfo
 import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.p2p.buildMessage
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -16,8 +17,8 @@ import org.veriblock.spv.service.OutputData
 import org.veriblock.spv.service.TransactionData
 import org.veriblock.spv.service.TransactionInfo
 import org.veriblock.spv.service.TransactionType
+import org.veriblock.spv.service.advertise
 import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
-import org.veriblock.spv.util.buildMessage
 import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
 

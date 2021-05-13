@@ -9,13 +9,13 @@ import nodecore.api.grpc.RpcLedgerProofReply
 import nodecore.api.grpc.RpcLedgerProofRequest
 import nodecore.api.grpc.utilities.extensions.asBase58ByteString
 import nodecore.api.grpc.utilities.extensions.toBase58
+import nodecore.p2p.buildMessage
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.mapper.LedgerProofReplyMapper
 import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
-import org.veriblock.spv.util.buildMessage
 import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
 import org.veriblock.spv.validator.LedgerProofReplyValidator

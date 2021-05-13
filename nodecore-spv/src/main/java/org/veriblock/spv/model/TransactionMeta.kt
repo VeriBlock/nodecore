@@ -20,7 +20,7 @@ class TransactionMeta(
     private val appearsInBlock: MutableList<VbkHash> = ArrayList()
     var appearsAtChainHeight = -1
     var depth = 0
-    private val seenByPeers: MutableSet<NetworkAddress> = HashSet()
+    private val seenByPeers: MutableSet<String> = HashSet()
     var state = MetaState.UNKNOWN
         private set
     var appearsInBestChainBlock: VbkHash? = null
@@ -41,7 +41,7 @@ class TransactionMeta(
     val broadcastPeerCount: Int
         get() = seenByPeers.size
 
-    fun recordBroadcast(peer: NetworkAddress): Boolean {
+    fun recordBroadcast(peer: String): Boolean {
         val added = seenByPeers.add(peer)
         if (!added) {
             return false

@@ -63,6 +63,10 @@ class StoredVeriBlockBlock(
         return Objects.hash(hash, header, work)
     }
 
+    override fun toString(): String {
+        return header.toString()
+    }
+
     companion object {
         const val SIZE = 24 + 64 + 12
         const val CHAIN_WORK_BYTES = 12

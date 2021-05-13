@@ -60,7 +60,7 @@ class PeerWarden(
         peerScores[peer.address] = revisedScore
 
         if (revisedScore >= peerBanThreshold) {
-            logger.info("Peer {} has exceeded the ban threshold", peer.address)
+            logger.info { "Peer ${peer.address} has exceeded the ban threshold and will be banned" }
             P2pEventBus.peerBanned.trigger(peer)
         }
     }

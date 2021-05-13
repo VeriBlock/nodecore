@@ -70,6 +70,7 @@ class Peer(
         }
 
         status = Status.Closed
+        P2pEventBus.peerDisconnected.trigger(this)
         socketHandler.stop()
     }
 
@@ -179,3 +180,15 @@ class Peer(
         expectedResponses.remove(request.id)
     }
 }
+
+inline fun Peer.sendMessage(crossinline buildBlock: RpcEvent.Builder.() -> Unit) = send(
+    buildMessage(buildBlock = buildBlock)
+)
+
+suspend inline fun Peer.requestMessage(
+    timeoutInMillis: Long = 5000L,
+    crossinline buildBlock: RpcEvent.Builder.() -> Unit
+) = requestMessage(
+    buildMessage(buildBlock = buildBlock),
+    timeoutInMillis
+)

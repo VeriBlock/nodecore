@@ -6,12 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.p2p
 
-import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.sockets.aSocket
 import io.ktor.util.network.NetworkAddress
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.veriblock.core.utilities.createLogger
 import java.util.concurrent.atomic.AtomicBoolean
@@ -23,22 +21,19 @@ class PeerServer(
     private val peerTable: PeerTable
 ) {
     private val bindAddress = NetworkAddress(configuration.peerBindAddress, configuration.peerBindPort)
-    private val dispatcher = Threading.PEER_SERVER_THREAD.asCoroutineDispatcher()
-    private val selectorManager = ActorSelectorManager(dispatcher)
 
     private val running = AtomicBoolean(false)
 
     fun start() {
         running.set(true)
-        peerTable.setSelectorManager(selectorManager)
-        CoroutineScope(dispatcher).launch {
+        CoroutineScope(peerTable.socketDispatcher).launch {
             run()
         }
     }
     
     private suspend fun run() {
         try {
-            val serverSocket = aSocket(selectorManager).tcp().bind(bindAddress)
+            val serverSocket = aSocket(peerTable.selectorManager).tcp().bind(bindAddress)
             while (running.get()) {
                 try {
                     val socket = serverSocket.accept()
