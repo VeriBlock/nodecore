@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
 import { startWith, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { forkJoin } from 'rxjs/internal/observable/forkJoin';
-import { interval } from 'rxjs/internal/observable/interval';
+import { forkJoin, interval } from 'rxjs';
 
 import { DataShareService } from '@core/services/data-share.service';
 import { NetworkService } from '@core/services/network.service';
@@ -27,7 +26,7 @@ import {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  public networkInfo: string = null;
+  public networkInfo: NetworkInfoResponse = null;
   public configuredAltchains: ConfiguredAltchain[] = [];
   public vbkAddress: string;
   public vbkBalance: string;
@@ -50,7 +49,7 @@ export class AppComponent implements OnInit {
     this.networkService
       .getNetworkInfo()
       .subscribe((data: NetworkInfoResponse) => {
-        this.networkInfo = data?.name || null;
+        this.networkInfo = data || null;
       });
 
     // Check the miner data API every 9 seconds
@@ -178,9 +177,16 @@ export class AppComponent implements OnInit {
         isDeposit,
         vbkAddress: this.vbkAddress,
         vbkBalance: this.vbkBalance,
-        isTestnet: this.networkInfo === 'testnet',
+        isTestnet: this.networkInfo?.name !== 'mainnet',
       },
       closeOnNavigation: true,
     });
+  }
+
+  public getExplorerUrl(): string {
+    return (
+      this.networkInfo?.explorerBaseUrls?.transaction?.split('/tx')[0] ||
+      undefined
+    );
   }
 }

@@ -3,10 +3,12 @@
 
     <div fxLayout="column" fxLayoutAlign="space-between stretch" fxLayoutGap="10px" style="height: 100%;">
       <div fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="5px">
-        <a href="https://www.veriblock.org" target="_blank" rel="noopener noreferrer">
+        <a [href]="getExplorerUrl()" target="_blank" rel="noopener noreferrer">
           <img src="/assets/images/VeriBlock_Logo_r.png" style="display:block;" width="156px" height="30px" />
         </a>
-        <span *ngIf="networkInfo" class="inactive">{{networkInfo?.charAt(0)?.toUpperCase() + networkInfo?.slice(1)?.toLowerCase()}}</span>
+        <span *ngIf="networkInfo?.name" class="inactive">
+          {{networkInfo?.name?.charAt(0)?.toUpperCase() + networkInfo?.name?.slice(1)?.toLowerCase()}}
+        </span>
       </div>
 
       <div fxFlex="80" style="overflow: auto;">
