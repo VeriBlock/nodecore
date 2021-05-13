@@ -5,8 +5,11 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import nodecore.p2p.Peer
 import nodecore.p2p.PeerTable
 import org.junit.Before
 import org.junit.Test
@@ -45,6 +48,7 @@ import java.security.KeyPairGenerator
 
 class AdminApiServiceTest {
     private lateinit var spvContext: SpvContext
+    private lateinit var availablePeer: Peer
     private lateinit var peerTable: PeerTable
     private lateinit var transactionService: TransactionService
     private lateinit var addressManager: AddressManager
@@ -58,7 +62,10 @@ class AdminApiServiceTest {
     fun setUp() {
         Context.set(defaultTestNetParameters)
         spvContext = SpvContext(SpvConfig(defaultTestNetParameters, connectDirectlyTo = listOf("localhost")))
-        peerTable = mockk(relaxed = true)
+        availablePeer = mockk(relaxed = true)
+        peerTable = mockk(relaxed = true) {
+            every { getAvailablePeers() } returns listOf(availablePeer)
+        }
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)
         transactionContainer = mockk(relaxed = true)
@@ -98,7 +105,7 @@ class AdminApiServiceTest {
 
         verify(exactly = 1) { transactionService.createTransactionsByOutputList(any(), any()) }
         verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
-        verify(exactly = 1) { peerTable.advertise(any()) }
+        verify(exactly = 1) { availablePeer.send(any()) }
 
         reply.firstOrNull() shouldNotBe null
         reply.first() shouldBe transaction.txId
