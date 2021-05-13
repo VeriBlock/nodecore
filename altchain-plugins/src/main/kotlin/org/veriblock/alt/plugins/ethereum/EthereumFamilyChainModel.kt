@@ -42,7 +42,7 @@ internal class EthPopData(
 )
 
 internal class EthPopState(
-    val endorsedBy: List<String>
+    val endorsedBy: List<ByteArray>
 )
 
 internal class Atv(
