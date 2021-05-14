@@ -14,6 +14,7 @@ import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.nullableRpcRequest
 import org.veriblock.alt.plugins.rpcRequest
+import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.toEthHash
 import org.veriblock.alt.plugins.util.asEthHex
 import org.veriblock.alt.plugins.util.asEthHexInt
@@ -104,7 +105,15 @@ class EthereumFamilyChain(
         val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $hash..." }
         val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
-        val popBlock: EthPopBlockData? = nullableRpcRequest("pop_getBlockByHash", listOf(ethHash), "2.0")
+        val popBlock: EthPopBlockData? = try {
+            nullableRpcRequest("pop_getBlockByHash", listOf(ethHash), "2.0")
+        } catch (exception: RpcException) {
+            if (exception.errorCode == -32000) {
+                null
+            } else {
+                throw exception
+            }
+        }
         return block?.let { ethBlock ->
             SecurityInheritingBlock(
                 hash = ethBlock.hash.asEthHash(),
