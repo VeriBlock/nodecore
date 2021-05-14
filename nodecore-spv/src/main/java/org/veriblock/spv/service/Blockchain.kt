@@ -374,7 +374,7 @@ class Blockchain(
 
     fun addNetworkBlock(networkBlock: NetworkBlock): Boolean {
         val currentTipHeight = getChainHeadIndex().height
-        if (networkBlock.block.height < currentTipHeight + 10_000) {
+        if (networkBlock.block.height > currentTipHeight + 10_000) {
             return false
         }
         networkBlockQueue.offer(networkBlock)
