@@ -1,13 +1,10 @@
 package org.veriblock.spv.service
 
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.Address
 import org.veriblock.spv.model.Transaction
-import java.util.ArrayList
-import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 
 class PendingTransactionContainer {
