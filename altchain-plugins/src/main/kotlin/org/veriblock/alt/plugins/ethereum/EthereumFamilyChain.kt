@@ -45,6 +45,7 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
+import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private val logger = createLogger {}
@@ -264,10 +265,45 @@ class EthereumFamilyChain(
 
     override suspend fun getBlockChainInfo(): StateInfo {
         return try {
-            StateInfo(0,0,0, true, false, "testnet") // FIXME
+            val ethBestBlockHeight = getBestBlockHeight()
+            val ethNetworkType = getNetworkType()
+            val ethSyncStatus = getSyncStatus()
+            val isSynchronized = ethSyncStatus.currentBlock == null && ethSyncStatus.highestBlock == null && ethSyncStatus.startingBlock == null
+            val networkHeight = if (!isSynchronized) {
+                ethSyncStatus.highestBlock!!
+            } else {
+                ethBestBlockHeight
+            }
+            val localBlockchainHeight = if (!isSynchronized) {
+                ethSyncStatus.currentBlock!!
+            } else {
+                ethBestBlockHeight
+            }
+            val blockDifference = if (!isSynchronized) {
+                abs(ethSyncStatus.highestBlock!! - ethSyncStatus.currentBlock!!)
+            } else {
+                0
+            }
+            StateInfo(networkHeight, localBlockchainHeight, blockDifference, isSynchronized, false, ethNetworkType)
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
+        }
+    }
+
+    private suspend fun getSyncStatus() = try {
+        rpcRequest<Boolean>("eth_syncing", emptyList<String>(), "2.0")
+        EthSyncStatus()
+    } catch (exception: IllegalStateException) {
+        rpcRequest("eth_syncing", emptyList<String>(), "2.0")
+    }
+
+    private suspend fun getNetworkType(): String {
+        val popParams = getPopParams()
+        return when(popParams.networkId) {
+            1L -> "mainnet"
+            2L, 3L, 4L, 42L -> "testnet"
+            else -> "unknown"
         }
     }
 
