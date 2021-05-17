@@ -210,11 +210,6 @@ class AltchainPopMinerService(
         if (altchainConditions is CheckResult.Failure) {
             return altchainConditions
         }
-        // Verify the limit for the unconfirmed endorsement transactions
-        val count = operations.values.count { it.chain.id == chain.id && ApmOperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
-        if (count >= MEMPOOL_CHAIN_LIMIT) {
-            return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the Bitcoin network"))
-        }
         // Verify if the block is too old to be mined
         if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
             return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
@@ -238,6 +233,11 @@ class AltchainPopMinerService(
         // Verify the synchronized status
         if (!monitor.isSynchronized()) {
             return CheckResult.Failure(MineException("The chain ${chain.name} is not synchronized: ${monitor.latestBlockChainInfo.getSynchronizedMessage()}"))
+        }
+        // Verify the limit for the unconfirmed endorsement transactions
+        val count = operations.values.count { it.chain.id == chain.id && ApmOperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
+        if (count >= MEMPOOL_CHAIN_LIMIT) {
+            return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the ${chain.name} network"))
         }
         return CheckResult.Success()
     }
