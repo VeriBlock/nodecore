@@ -237,9 +237,9 @@ class SecurityInheritingMonitor(
                     logger.debug { "New chain head detected @${bestBlockHeight}" }
 
                     if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
-                        logger.info { "Auto mining block(s) ${((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).joinToString()}" }
                         ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
                             if (chain.shouldAutoMine(blockHeight)) {
+                                logger.debug { "Auto mining block @$blockHeight" }
                                 try {
                                     miner.mine(chainId, blockHeight)
                                 } catch (e: MineException) {
