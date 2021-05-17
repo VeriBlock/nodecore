@@ -137,3 +137,9 @@ internal class EthPoPParams(
     val vbkBootstrap: Int
 )
 
+internal class EthSyncStatus(
+    val startingBlock: Int? = null,
+    val currentBlock: Int? = null,
+    val highestBlock: Int? = null
+)
+
