@@ -264,7 +264,7 @@ class AltchainPopMinerService(
         submit(operation)
         operations[operation.id] = operation
 
-        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" })}" }
+        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" } ?: "")}" }
 
         return operation.id
     }
