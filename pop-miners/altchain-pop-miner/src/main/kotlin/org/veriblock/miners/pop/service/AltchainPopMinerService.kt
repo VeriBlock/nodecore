@@ -31,7 +31,9 @@ import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
 import org.veriblock.miners.pop.transactionmonitor.loadTransactionMonitor
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.MEMPOOL_CHAIN_LIMIT
 import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
@@ -208,6 +210,11 @@ class AltchainPopMinerService(
         if (altchainConditions is CheckResult.Failure) {
             return altchainConditions
         }
+        // Verify the limit for the unconfirmed endorsement transactions
+        val count = operations.values.count { ApmOperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
+        if (count >= MEMPOOL_CHAIN_LIMIT) {
+            return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the VeriBlock network"))
+        }
         // Verify if the block is too old to be mined
         if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
             return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
@@ -257,7 +264,7 @@ class AltchainPopMinerService(
         submit(operation)
         operations[operation.id] = operation
 
-        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" })}" }
+        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" } ?: "")}" }
 
         return operation.id
     }

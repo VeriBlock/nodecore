@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.veriblock.core.MineException
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.Utility
@@ -236,10 +237,14 @@ class SecurityInheritingMonitor(
                     logger.debug { "New chain head detected @${bestBlockHeight}" }
 
                     if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
-                        logger.info { "Auto mining block(s) ${((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).joinToString()}" }
                         ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
                             if (chain.shouldAutoMine(blockHeight)) {
-                                miner.mine(chainId, blockHeight)
+                                logger.debug { "Auto mining block @$blockHeight" }
+                                try {
+                                    miner.mine(chainId, blockHeight)
+                                } catch (e: MineException) {
+                                    logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
+                                }
                             }
                         }
                     }
