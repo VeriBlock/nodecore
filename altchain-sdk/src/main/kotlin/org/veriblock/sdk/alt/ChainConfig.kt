@@ -13,6 +13,7 @@ data class ExplorerBaseUrls(
 abstract class ChainConfig {
     abstract val host: String
     abstract val auth: HttpAuthConfig?
+    abstract val blockPeriodSeconds: Int
     abstract val keystonePeriod: Int
     abstract val neededConfirmations: Int
     abstract val spFinalityDelay: Int

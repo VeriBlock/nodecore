@@ -10,6 +10,7 @@ data class PluginConfig(
     val host: String? = null,
     val auth: HttpAuthConfig? = null,
     val payoutAddress: String? = null,
+    val blockPeriodSeconds: Int? = null,
     val keystonePeriod: Int? = null,
     val neededConfirmations: Int? = null,
     val spFinalityDelay: Int? = null,
