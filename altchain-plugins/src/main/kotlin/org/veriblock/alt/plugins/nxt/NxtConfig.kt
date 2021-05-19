@@ -10,6 +10,7 @@ class NxtConfig(
     override val host: String = "http://localhost:8332",
     override val auth: HttpAuthConfig? = null,
     override val payoutAddress: String? = null,
+    override val blockPeriodSeconds: Int = 5, // TODO
     override val keystonePeriod: Int = 10,
     override val neededConfirmations: Int = 10,
     override val spFinalityDelay: Int = 100,
@@ -23,6 +24,7 @@ class NxtConfig(
         configuration.host ?: "http://localhost:8332",
         configuration.auth,
         configuration.payoutAddress,
+        configuration.blockPeriodSeconds ?: 5, // TODO
         configuration.keystonePeriod ?: 10,
         configuration.neededConfirmations ?: 20,
         configuration.spFinalityDelay ?: 100,
