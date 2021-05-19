@@ -15,7 +15,7 @@ class EthereumConfig(
     override val neededConfirmations: Int = 10,
     override val spFinalityDelay: Int = 100,
     override val payoutDelay: Int = 400,
-    override val blockRoundIndices: List<Int> = (0..keystonePeriod).map {
+    override val blockRoundIndices: List<Int> = (0 until keystonePeriod).map {
         if (it == 0) {
             4
         } else {
@@ -37,7 +37,7 @@ class EthereumConfig(
         configuration.neededConfirmations ?: 10,
         configuration.spFinalityDelay ?: 100,
         configuration.payoutDelay ?: 400,
-        configuration.blockRoundIndices ?: (0..(configuration.keystonePeriod ?: 40)).map {
+        configuration.blockRoundIndices ?: (0 until (configuration.keystonePeriod ?: 40)).map {
             if (it == 0) {
                 4
             } else {
