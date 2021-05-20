@@ -1,6 +1,9 @@
 package org.veriblock.spv.service
 
 import java.math.BigInteger
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 class Chain(
     tip: BlockIndex,
@@ -9,12 +12,14 @@ class Chain(
 ) {
     private var chain = ArrayList<BlockIndex>()
 
+    val lock = ReentrantReadWriteLock()
+
     init {
         chain.add(tip)
     }
 
     // get by height
-    operator fun get(index: Int): BlockIndex? {
+    operator fun get(index: Int): BlockIndex? = lock.read {
         if (index < 0 || index >= chain.size) return null
         return chain[index]
     }
@@ -25,12 +30,14 @@ class Chain(
     }
 
     val tip: BlockIndex
-        get() = chain[chain.size - 1]
+        get() = lock.read {
+            chain[chain.size - 1]
+        }
 
     val first: BlockIndex
         get() = chain[0]
 
-    fun setTip(block: BlockIndex, cumulativeWork: BigInteger) {
+    fun setTip(block: BlockIndex, cumulativeWork: BigInteger) = lock.write {
         tipWork = cumulativeWork
         if (chain.isNotEmpty() && tip == block.prev) {
             chain.add(block)

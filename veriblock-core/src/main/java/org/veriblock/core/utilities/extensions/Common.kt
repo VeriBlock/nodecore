@@ -115,21 +115,3 @@ fun String.asDecimalCoinToAtomicLong(): Long {
     }
     return result.toLong()
 }
-
-inline fun <T> ReadWriteLock.withReadLock(action: () -> T): T {
-    readLock().lock()
-    try {
-        return action()
-    } finally {
-        readLock().unlock()
-    }
-}
-
-inline fun <T> ReadWriteLock.withWriteLock(action: () -> T): T {
-    writeLock().lock()
-    try {
-        return action()
-    } finally {
-        writeLock().unlock()
-    }
-}
