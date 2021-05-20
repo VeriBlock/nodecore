@@ -43,6 +43,9 @@ class SpvGateway(
         //spvService.peerTable.shutdown()
     }
 
+    fun isOnActiveChain(hash: AnyVbkHash): Boolean =
+        spvService.isOnActiveChain(hash)
+
     fun getLastBlock(): VeriBlockBlock {
         return try {
             val lastBlock = spvService.getLastVbkBlockHeader()

@@ -63,6 +63,9 @@ class SpvService(
     private val pendingTransactionContainer: PendingTransactionContainer,
     private val blockchain: Blockchain
 ) {
+    fun isOnActiveChain(hash: AnyVbkHash): Boolean =
+        blockchain.isOnActiveChain(hash)
+
     fun getStateInfo(): StateInfo {
         val downloadStatus = getDownloadStatus()
         val blockchainState = if (downloadStatus.downloadStatus == DownloadStatus.READY) BlockchainState.LOADED else BlockchainState.LOADING
