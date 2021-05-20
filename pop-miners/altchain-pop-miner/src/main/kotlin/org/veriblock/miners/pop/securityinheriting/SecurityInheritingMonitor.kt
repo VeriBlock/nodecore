@@ -277,45 +277,44 @@ class SecurityInheritingMonitor(
             try {
                 if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
                     logger.debug { "New block $newBlock is not on the main chain, skipping..." }
-                } else {
-                    logger.debug { "New block $newBlock is on the main chain" }
+                    return@collect
+                }
+                logger.debug { "New block $newBlock is on the main chain" }
 
-                    var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
-                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                        ?: return@collect
+                var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
+                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                    ?: return@collect
+                while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
+                    logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
+                    bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
+                    ?: return@collect // Dead end
+                }
 
-                    while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
-                        logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
-                        bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
-                            ?: return@collect // Dead end
-                    }
+                if (bestKnownBlock.height == newBlock.height) {
+                    return@collect
+                }
 
-                    if (bestKnownBlock.height == newBlock.height) {
-                        return@collect
-                    }
+                val contextBlocks = generateSequence(newBlock) {
+                    miner.gateway.getBlock(it.previousBlock)
+                }.takeWhile {
+                    it.hash != bestKnownBlock.hash
+                }.sortedBy {
+                    it.height
+                }.toList()
 
-                    val contextBlocks = generateSequence(newBlock) {
-                        miner.gateway.getBlock(it.previousBlock)
-                    }.takeWhile {
-                        it.hash != bestKnownBlock.hash
-                    }.sortedBy {
-                        it.height
-                    }.toList()
-
-                    val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-                    val successfulSubmissions = contextBlocks.asFlow()
-                        .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
-                        .map { contextBlock ->
-                            val result = chain.submitPopVbk(contextBlock)
-                            if (!result.accepted) {
-                                logger.debug { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
-                            }
-                            result
+                val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+                val successfulSubmissions = contextBlocks.asFlow()
+                    .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
+                    .map { contextBlock ->
+                        val result = chain.submitPopVbk(contextBlock)
+                        if (!result.accepted) {
+                            logger.debug { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
                         }
-                        .count { it.accepted }
-                    if (successfulSubmissions > 0) {
-                        logger.info { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
+                        result
                     }
+                    .count { it.accepted }
+                if (successfulSubmissions > 0) {
+                    logger.info { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
                 }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
