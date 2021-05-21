@@ -164,7 +164,7 @@ class ApmOperation(
         endorsementTransaction?.let {
             result["vbkEndorsementTxId"] = it.txId
             result["vbkEndorsementTxFee"] = it.fee.formatAtomicLongWithDecimal()
-            result["vbkEndorsementTxFeePerByte"] = it.feePerByte.formatAtomicLongWithDecimal()
+            result["vbkEndorsementTxFeePerByte"] = it.feePerByte.toString()
         }
         blockOfProof?.let {
             result["vbkBlockOfProof"] = it.hash.toString()
