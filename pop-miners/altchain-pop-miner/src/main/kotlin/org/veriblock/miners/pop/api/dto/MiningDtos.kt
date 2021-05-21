@@ -10,6 +10,8 @@ package org.veriblock.miners.pop.api.dto
 import com.papsign.ktor.openapigen.annotations.Request
 import com.papsign.ktor.openapigen.annotations.Response
 import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.sdk.models.StateInfo
+
 
 @Response("Basic miner information")
 data class MinerInfoResponse(
@@ -95,6 +97,7 @@ data class ConfiguredAltchain(
     val key: String,
     val name: String,
     val payoutDelay: Int,
+    val syncStatus: AltChainSyncStatusResponse,
     val readyStatus: AltChainReadyStatusResponse,
     val explorerBaseUrls: ExplorerBaseUrlsResponse
 )
@@ -102,6 +105,11 @@ data class ConfiguredAltchain(
 data class AltChainReadyStatusResponse(
     val isReady: Boolean,
     val reason: String?
+)
+
+data class AltChainSyncStatusResponse(
+    val networkHeight: Int,
+    val localBlockchainHeight: Int
 )
 
 @Request("A request to withdraw VBKs to address")
@@ -119,4 +127,9 @@ data class WithdrawResponse(
 data class NetworkInfoResponse(
     val name: String,
     val explorerBaseUrls: ExplorerBaseUrlsResponse
+)
+
+fun StateInfo?.toAltChainSyncStatusResponse(): AltChainSyncStatusResponse = AltChainSyncStatusResponse(
+    this?.networkHeight ?: 0,
+    this?.localBlockchainHeight ?: 0
 )

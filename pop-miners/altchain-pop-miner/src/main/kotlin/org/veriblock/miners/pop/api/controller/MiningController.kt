@@ -26,6 +26,7 @@ import org.veriblock.miners.pop.api.dto.OperationDetailResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
 import org.veriblock.miners.pop.api.dto.OperationWorkflow
+import org.veriblock.miners.pop.api.dto.toAltChainSyncStatusResponse
 import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toExplorerBaseUrlsResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
@@ -171,11 +172,12 @@ class MiningController(
         ) {
             val altchains = pluginService.getPlugins().values.map {
                 val altChainReadyResult = miner.checkAltChainReadyConditions(it.key)
+                val stateInfo = miner.getStateInfo(it.key)
                 val isAltChainReady = altChainReadyResult !is CheckResult.Failure
                 val readyStatusResponse = AltChainReadyStatusResponse(
                     isAltChainReady,
                     if (!isAltChainReady) {
-                        (altChainReadyResult as  CheckResult.Failure).error.message
+                        (altChainReadyResult as CheckResult.Failure).error.message
                     } else {
                         null
                     }
@@ -185,6 +187,7 @@ class MiningController(
                     it.key,
                     it.name,
                     it.getPayoutDelay(),
+                    stateInfo.toAltChainSyncStatusResponse(),
                     readyStatusResponse,
                     it.config.explorerBaseUrls.toExplorerBaseUrlsResponse()
                 )

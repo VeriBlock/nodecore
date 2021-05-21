@@ -39,6 +39,7 @@ import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
@@ -387,4 +388,7 @@ class AltchainPopMinerService(
 
         return spvContext
     }
+
+    fun getStateInfo(chainId: String): StateInfo? =
+        securityInheritingService.getMonitor(chainId)?.latestBlockChainInfo
 }
