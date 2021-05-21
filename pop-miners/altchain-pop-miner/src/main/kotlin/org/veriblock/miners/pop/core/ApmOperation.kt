@@ -208,11 +208,13 @@ class ApmSpTransaction(
     ).atomicUnits
 
     val feePerByte: Long get() {
-        val publicationData = transaction.publicationData?.let { publicationData ->
+        val publicationDataSize = transaction.publicationData?.let { publicationData ->
             SerializeDeserializeService.serialize(publicationData)
-        } ?: byteArrayOf()
-        val signatureIndex = transaction.signatureIndex
-        val transactionSize = TransactionService.predictAltChainEndorsementTransactionSize(publicationData.size, signatureIndex)
+        }?.size ?: 0
+        val transactionSize = TransactionService.predictAltChainEndorsementTransactionSize(
+            dataLength = publicationDataSize,
+            sigIndex = transaction.signatureIndex
+        )
         return fee / transactionSize
     }
 }
