@@ -9,8 +9,6 @@ import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
 import org.veriblock.sdk.alt.PayoutDetectionType
-import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
 
 class ApmOperationExplainer(
     val context: ApmContext
@@ -81,13 +79,7 @@ class ApmOperationExplainer(
         }
         ApmOperationState.ENDORSEMENT_TRANSACTION -> {
             val transaction = operation.endorsementTransaction
-            val publicationData = operation.miningInstruction?.publicationData?.let { publicationData ->
-                SerializeDeserializeService.serialize(publicationData)
-            } ?: byteArrayOf()
-            val signatureIndex = transaction?.transaction?.signatureIndex ?: 0
-            val transactionSize = predictAltChainEndorsementTransactionSize(publicationData.size, signatureIndex)
-            val transactionFee = transaction?.fee ?:0
-            "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId} (fee: ${transactionFee.formatAtomicLongWithDecimal()}, fee per byte: ${transactionFee / transactionSize}"
+            "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId} (fee: ${transaction?.fee?.formatAtomicLongWithDecimal()}, fee per byte: ${transaction?.feePerByte?.formatAtomicLongWithDecimal()}"
         }
         ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
             ""
