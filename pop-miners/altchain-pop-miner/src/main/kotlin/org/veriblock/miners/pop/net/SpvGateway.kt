@@ -127,7 +127,7 @@ class SpvGateway(
             stateInfo.networkHeight,
             stateInfo.localBlockchainHeight,
             blockDifference,
-            stateInfo.networkHeight > 0 && blockDifference < 4,
+            stateInfo.networkHeight > 0 && blockDifference < 10,
             networkVersion = stateInfo.networkVersion
         )
     }

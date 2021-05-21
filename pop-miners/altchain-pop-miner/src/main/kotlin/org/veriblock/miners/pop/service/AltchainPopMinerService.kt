@@ -183,7 +183,7 @@ class AltchainPopMinerService(
 
     fun getBalance(): Balance = network.latestBalance
 
-    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
+    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, blockHeight: Int?): CheckResult  {
         // Verify if the miner is shutting down
         if (isShuttingDown) {
             return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
@@ -216,8 +216,12 @@ class AltchainPopMinerService(
             return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the VeriBlock network"))
         }
         // Verify if the block is too old to be mined
-        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
-            return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
+        if (blockHeight != null && blockHeight < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
+            return CheckResult.Failure(MineException("The block @ $blockHeight is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
+        }
+        // Verify if the block is too old to be mined
+        if (blockHeight != null && blockHeight > monitor.latestBlockChainInfo.localBlockchainHeight) {
+            return CheckResult.Failure(MineException("There is no block @ $blockHeight known by the $chain daemon. The latest known block is at height ${monitor.latestBlockChainInfo.localBlockchainHeight}."))
         }
         return CheckResult.Success()
     }
