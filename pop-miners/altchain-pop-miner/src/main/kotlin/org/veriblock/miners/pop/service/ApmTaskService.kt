@@ -320,7 +320,7 @@ class ApmTaskService(
             ?: failTask("ATV=${atvId} block should be set")
 
         // this should be instant
-        val payoutBlock = chainMonitor.getBlockAtHeight(atvBlock.height)
+        val payoutBlock = chainMonitor.getBlockAtHeight(payoutBlockHeight)
         // we know payout block hash, so give `getTransaction` a hint where to search.
         // in reality, this is required for BTC-plugin, because not all nodes may have 'txindex=1' enabled,
         // and if it is disabled (by default), this call fails immediately. A hint resolves this situation
