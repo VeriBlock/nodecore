@@ -456,6 +456,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
               operation?.stateDetail?.vbkEndorsementTxId,
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
+            transactionFeePerByte: operation?.stateDetail?.vbkEndorsementTxFeePerByte,
           }
         );
 
