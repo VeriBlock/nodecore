@@ -79,7 +79,7 @@ class ApmOperationExplainer(
         }
         ApmOperationState.ENDORSEMENT_TRANSACTION -> {
             val transaction = operation.endorsementTransaction
-            "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId} (fee: ${transaction?.fee?.formatAtomicLongWithDecimal()}, fee per byte: ${transaction?.feePerByte?.formatAtomicLongWithDecimal()}"
+            "${context.vbkTokenName} endorsement transaction id: ${transaction?.txId} (fee: ${transaction?.fee?.formatAtomicLongWithDecimal()}, fee per byte: ${transaction?.feePerByte?.formatAtomicLongWithDecimal()})"
         }
         ApmOperationState.ENDORSEMENT_TX_CONFIRMED ->
             ""
