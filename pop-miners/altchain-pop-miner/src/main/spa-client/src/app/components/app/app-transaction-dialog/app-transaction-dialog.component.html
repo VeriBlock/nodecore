@@ -33,7 +33,8 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Withdrawal amount</mat-label>
-        <input matInput type="number" min="0" formControlName="amount" required oninput="this.value = Math.abs(this.value);" />
+        <input matInput type="number" min="0" [max]="vbkBalance" formControlName="amount" required (input)="checkNumberFormat()"
+          (keydown)="disableNumberFormat($event)" />
 
         <span matSuffix>&nbsp; VBK</span>
 

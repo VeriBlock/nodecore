@@ -120,4 +120,22 @@ export class AppTransactionDialogComponent implements OnInit {
   public showSuccess(): void {
     this.alertService.addSuccess('Address copied to clipboard successfully');
   }
+
+  public checkNumberFormat() {
+    if (this.form.value?.amount) {
+      this.form.controls['amount'].patchValue(
+        String(this.form.value.amount).replace(/[^0-9.,]/g, '')
+      );
+    }
+
+    if (this.form.value?.amount > this.vbkBalance) {
+      this.form.controls['amount'].patchValue(this.vbkBalance);
+    }
+  }
+
+  public disableNumberFormat(e: KeyboardEvent) {
+    if (e.key === '-' || e.key === '+') {
+      e.preventDefault();
+    }
+  }
 }
