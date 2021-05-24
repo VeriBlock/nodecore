@@ -3,17 +3,18 @@
 </h2>
 
 <div mat-dialog-content>
-  <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+  <form fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
     <mat-form-field appearance="outline">
       <mat-label>Block</mat-label>
       <input matInput onmousewheel type="number" min="0" [max]="maxNumber" formControlName="blockNumber" required
         (keydown.enter)="form.valid ? onSave() : null" (keydown)="disableNumberFormat($event)" (input)="checkNumberFormat()" />
 
+      <mat-error *ngIf="form.get('blockNumber').errors?.required">Required</mat-error>
       <mat-error *ngIf="form.get('blockNumber').errors?.min">Not a valid number</mat-error>
       <mat-error *ngIf="form.get('blockNumber').errors?.max">Not a valid number (max = {{maxNumber.toLocaleString()}})</mat-error>
     </mat-form-field>
-  </div>
+  </form>
 </div>
 
 <!-- Action buttons -->
