@@ -37,8 +37,12 @@ internal class EthPop(
 
 internal class EthPopData(
     val atvs: List<Atv>,
-    val vtbs: List<String>,
+    val vtbs: List<Vtb>,
     val context: List<Vbk>
+)
+
+internal class Vtb(
+    val id: String
 )
 
 internal class EthPopState(
