@@ -220,7 +220,7 @@ class SecurityInheritingMonitor(
                     EventBus.altChainReadyEvent.trigger(chainId)
                 }
 
-                // At this point the APM<->Altchain conection is fine and the Altchain is synchronized so
+                // At this point the APM<->Altchain connection is fine and the Altchain is synchronized so
                 // APM can continue with its work
                 val bestBlockHeight: Int = try {
                     chain.getBestBlockHeight()
@@ -233,9 +233,14 @@ class SecurityInheritingMonitor(
                     return@coroutineScope
                 }
 
+                // Should not happen, some altchain blocks appear faster than we update the sync information
+                if (latestBlockChainInfo.localBlockchainHeight < bestBlockHeight) {
+                    latestBlockChainInfo = chain.getBlockChainInfo()
+                    logger.debug { "${chain.name} blocks are appearing too fast, forcing the block chain sync info update..." }
+                }
+
                 if (bestBlockHeight != this@SecurityInheritingMonitor.bestBlockHeight.value) {
                     logger.debug { "New chain head detected @${bestBlockHeight}" }
-
                     if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
                         ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
                             if (chain.shouldAutoMine(blockHeight)) {
