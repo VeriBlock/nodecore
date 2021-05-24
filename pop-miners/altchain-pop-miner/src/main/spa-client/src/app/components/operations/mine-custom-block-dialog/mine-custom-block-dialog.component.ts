@@ -47,4 +47,22 @@ export class MineCustomBlockDialogComponent implements OnInit {
       data: this.form.controls['blockNumber']?.value,
     });
   }
+
+  public checkNumberFormat() {
+    if (this.form.value?.blockNumber) {
+      this.form.controls['blockNumber'].patchValue(
+        String(this.form.value.blockNumber).replace(/[^0-9]/g, '')
+      );
+    }
+
+    if (this.form.value?.blockNumber > this.maxNumber) {
+      this.form.controls['blockNumber'].patchValue(this.maxNumber - 1);
+    }
+  }
+
+  public disableNumberFormat(e: KeyboardEvent) {
+    if (e.key === '.' || e.key === ',' || e.key === '-' || e.key === '+') {
+      e.preventDefault();
+    }
+  }
 }
