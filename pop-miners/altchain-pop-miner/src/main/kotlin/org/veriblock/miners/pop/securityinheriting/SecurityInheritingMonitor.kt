@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.veriblock.core.MineException
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.Utility
@@ -236,10 +237,14 @@ class SecurityInheritingMonitor(
                     logger.debug { "New chain head detected @${bestBlockHeight}" }
 
                     if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
-                        logger.info { "Auto mining block(s) ${((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).joinToString()}" }
                         ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
                             if (chain.shouldAutoMine(blockHeight)) {
-                                miner.mine(chainId, blockHeight)
+                                logger.debug { "Auto mining block @$blockHeight" }
+                                try {
+                                    miner.mine(chainId, blockHeight)
+                                } catch (e: MineException) {
+                                    logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
+                                }
                             }
                         }
                     }
@@ -270,10 +275,20 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VBK context for ${chain.name}")
         SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
             try {
-                val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
-                val bestKnownBlock = miner.gateway.getBlock(bestKnownBlockHash)
-                    // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+                if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
+                    logger.debug { "New block $newBlock is not on the main chain, skipping..." }
+                    return@collect
+                }
+                logger.debug { "New block $newBlock is on the main chain" }
+
+                var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
+                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
                     ?: return@collect
+                while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
+                    logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
+                    bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
+                    ?: return@collect // Dead end
+                }
 
                 if (bestKnownBlock.height == newBlock.height) {
                     return@collect
@@ -282,7 +297,7 @@ class SecurityInheritingMonitor(
                 val contextBlocks = generateSequence(newBlock) {
                     miner.gateway.getBlock(it.previousBlock)
                 }.takeWhile {
-                    it.hash != bestKnownBlockHash
+                    it.hash != bestKnownBlock.hash
                 }.sortedBy {
                     it.height
                 }.toList()

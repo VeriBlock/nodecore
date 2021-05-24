@@ -1,7 +1,7 @@
 {
   "ApmOperationState_Done_Initial": "Created APM operation id: {{ operationId }}",
   "ApmOperationState_Done_Instruction": "Endorsed {{operationChainName}} block height: <a href='{{operationEndorsedBlockHeightHref}}' target='_blank' rel='noopener noreferrer'>{{operationEndorsedBlockHeight}}</a>",
-  "ApmOperationState_Done_Endorsement_Transaction": "{{contextVbkTokenName}} endorsement transaction id: <a href='{{transactionTxHref}}' target='_blank' rel='noopener noreferrer'>{{transactionTxId}}</a> (fee: {{transactionFee}})",
+  "ApmOperationState_Done_Endorsement_Transaction": "{{contextVbkTokenName}} endorsement transaction id: <a href='{{transactionTxHref}}' target='_blank' rel='noopener noreferrer'>{{transactionTxId}}</a> (fee: {{transactionFee}}, fee per byte: {{transactionFeePerByte}})",
   "ApmOperationState_Done_Block_Of_Proof": "{{contextVbkTokenName}} Block of Proof: <a href='{{blockOfProofHashHref}}' target='_blank' rel='noopener noreferrer'>{{blockOfProofHash}} @ {{blockOfProofHeight}}</a>",
   "ApmOperationState_Done_Proven": "Merkle path has been verified",
   "ApmOperationState_Done_Submitted_Pop_Data": "ATV: <a href='{{operationAtvIdHref}}' target='_blank' rel='noopener noreferrer'>{{operationAtvId}}</a> submitted to {{operationChainName}}!",

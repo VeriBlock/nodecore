@@ -237,16 +237,9 @@ object SerializeDeserializeService {
         stream.writeSingleByteLengthValue(serializeHeaders(veriBlockBlock))
     }
 
-    fun serialize(veriBlockBlock: VeriBlockBlock): ByteArray {
-        try {
-            ByteArrayOutputStream().use { stream ->
-                serialize(veriBlockBlock, stream)
-                return stream.toByteArray()
-            }
-        } catch (ignore: IOException) {
-            // Should not happen
-        }
-        return byteArrayOf()
+    fun serialize(veriBlockBlock: VeriBlockBlock): ByteArray = ByteArrayOutputStream().use { stream ->
+        serialize(veriBlockBlock, stream)
+        return stream.toByteArray()
     }
 
     fun serializeHeaders(veriBlockBlock: VeriBlockBlock): ByteArray {

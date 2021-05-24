@@ -64,7 +64,7 @@ class ApiServer(
             return
         }
 
-        logger.info { "Starting HTTP API on port $host:$port" }
+        logger.info { "Starting HTTP Service on $host:$port" }
 
         server = embeddedServer(Netty, host = host, port = port) {
             install(DefaultHeaders)
@@ -145,8 +145,6 @@ class ApiServer(
                 ignoreIfContains = "^/api/".toRegex()
             }
         }.start()
-
-        logger.info { "Hosting experimental user interface at http://localhost:$port" }
     }
 
     fun shutdown() {

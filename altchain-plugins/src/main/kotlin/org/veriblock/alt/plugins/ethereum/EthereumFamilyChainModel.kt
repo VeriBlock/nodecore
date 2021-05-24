@@ -26,6 +26,33 @@ internal data class EthBlock(
     val miner: String
 )
 
+internal data class EthPopBlockData(
+    val pop: EthPop
+)
+
+internal class EthPop(
+    val data: EthPopData,
+    val state: EthPopState
+)
+
+internal class EthPopData(
+    val atvs: List<Atv>,
+    val vtbs: List<String>,
+    val context: List<Vbk>
+)
+
+internal class EthPopState(
+    val endorsedBy: List<String>
+)
+
+internal class Atv(
+    val id: String
+)
+
+internal class Vbk(
+    val id: String
+)
+
 internal data class EthTransaction(
     val txid: String,
     val confirmations: Int,
@@ -43,15 +70,6 @@ internal data class EthScriptPubKey(
     val hex: String,
     val reqSigs: Int,
     val type: String
-)
-
-internal data class EthPopData(
-    val state: EthPopStateData
-)
-
-internal data class EthPopStateData(
-    val endorsedBy: List<String>,
-    val stored: EthPopStoredStateData
 )
 
 internal data class EthPopStoredStateData(
@@ -102,75 +120,6 @@ internal data class SpBtcBlock(
     val height: Int
 )
 
-internal data class BlockChainInfo(
-    val chain: String,
-    val blocks: Int,
-    val headers: Int,
-    val initialblockdownload: Boolean
-)
-
-internal data class EthBlockBlock(
-    val chainWork: String?,
-    val height: Int?,
-    val header: EthBlockHeader?,
-    val status: Int?,
-    val vbkRefs: List<Int?>?,
-    val blockOfProofEndorsements: List<String?>?
-)
-
-internal data class EthBlockHeader(
-    val hash: String?,
-    val version: Int?,
-    val previousBlock: String?,
-    val merkleRoot: String?,
-    val timestamp: Int?,
-    val bits: Long?,
-    val nonce: Int?
-)
-
-internal data class VbkBlock(
-    val chainWork: String?,
-    val containingEndorsements: List<String?>?,
-    val endorsedBy: List<Int?>?,
-    val height: Int?,
-    val header: VbkBlockHeader?,
-    val status: Int?,
-    val ref: Int?,
-    val stored: StoredVtbIds?,
-    val blockOfProofEndorsements: List<String?>?
-)
-
-internal data class VbkBlockHeader(
-    val id: String?,
-    val hash: String?,
-    val height: Int?,
-    val version: Short?,
-    val previousBlock: String?,
-    val previousKeystone: String?,
-    val secondPreviousKeystone: String?,
-    val merkleRoot: String?,
-    val timestamp: Int?,
-    val difficulty: Int?,
-    val nonce: Long?,
-    val stored: StoredVtbIds?,
-    val blockOfProofEndorsements: List<String?>?
-)
-
-internal data class StoredVtbIds(
-    val vtbids: List<String?>?
-)
-
-internal data class ValidationData(
-    val id: String,
-    val validity: ValidityInfo
-)
-
-internal data class ValidityInfo(
-    val state: String,
-    val code: String,
-    val message: String
-)
-
 internal data class AddressValidationResponse(
     val isvalid: Boolean,
     val address: String?,
@@ -186,5 +135,11 @@ internal class EthPoPParams(
     val networkId: Long,
     val popPayoutDelay: Int,
     val vbkBootstrap: Int
+)
+
+internal class EthSyncStatus(
+    val startingBlock: Int? = null,
+    val currentBlock: Int? = null,
+    val highestBlock: Int? = null
 )
 

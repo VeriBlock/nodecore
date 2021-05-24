@@ -10,24 +10,20 @@ package org.veriblock.spv.wallet
 import org.veriblock.core.contracts.Balance
 import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.core.utilities.extensions.withReadLock
-import org.veriblock.core.utilities.extensions.withWriteLock
 import java.util.LinkedHashMap
-import java.util.Objects
-import java.util.concurrent.locks.ReadWriteLock
-import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.withLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 class AddressLedger(
     val address: String,
     val startingBalance: Coin,
     val startingSignatureIndex: Long
 ) {
-    private val lock: ReadWriteLock = ReentrantReadWriteLock(true)
+    private val lock = ReentrantReadWriteLock(true)
     private val entries: LinkedHashMap<Sha256Hash, LedgerEntry> = LinkedHashMap()
 
-    fun getCurrentBalance(): Balance = lock.withReadLock {
+    fun getCurrentBalance(): Balance = lock.read {
         val current = Balance(startingBalance)
         for (entry in entries.values) {
             if (entry.status == LedgerEntry.Status.PENDING) {
@@ -41,7 +37,7 @@ class AddressLedger(
         current
     }
 
-    fun getCurrentSignatureIndex(): SignatureIndex = lock.withReadLock {
+    fun getCurrentSignatureIndex(): SignatureIndex = lock.read {
         SignatureIndex(
             value = entries.values.asSequence()
                 .filter { it.status != LedgerEntry.Status.PENDING }
@@ -58,7 +54,7 @@ class AddressLedger(
         return entries.values
     }
 
-    fun add(entry: LedgerEntry) = lock.withWriteLock {
+    fun add(entry: LedgerEntry) = lock.write {
         entries[entry.key] = entry
     }
 }

@@ -10,6 +10,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 class TestConfig(
     override val host: String = "http://localhost:10600/api",
     override val payoutAddress: String = "MY_TEST_ADDRESS".toByteArray().toHex(),
+    override val blockPeriodSeconds: Int = 5,
     override val keystonePeriod: Int = 10,
     override val neededConfirmations: Int = 20,
     override val spFinalityDelay: Int = 32,
@@ -24,6 +25,7 @@ class TestConfig(
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
         configuration.payoutAddress ?: "MY_TEST_ADDRESS".toByteArray().toHex(),
+        configuration.blockPeriodSeconds ?: 5,
         configuration.keystonePeriod ?: 5,
         configuration.neededConfirmations ?: 10,
         configuration.spFinalityDelay ?: 32,

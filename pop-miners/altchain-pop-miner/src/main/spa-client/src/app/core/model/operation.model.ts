@@ -24,6 +24,7 @@ export class StateDetail {
   btcContextBlockHashes?: string;
   vbkEndorsementTxId?: string;
   vbkEndorsementTxFee?: string;
+  vbkEndorsementTxFeePerByte?: string;
   vbkBlockOfProof?: string;
   vbkBlockOfProofHeight?: string;
   merklePath?: string;

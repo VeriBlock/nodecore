@@ -13,6 +13,7 @@ data class ExplorerBaseUrls(
 abstract class ChainConfig {
     abstract val host: String
     abstract val auth: HttpAuthConfig?
+    abstract val blockPeriodSeconds: Int
     abstract val keystonePeriod: Int
     abstract val neededConfirmations: Int
     abstract val spFinalityDelay: Int
@@ -40,7 +41,8 @@ abstract class ChainConfig {
             "The keystone period must be a positive non-zero number!"
         }
         require(blockRoundIndices.size == keystonePeriod) {
-            "You must specify a round index for each block along the keystone period! ($keystonePeriod)"
+            "You must specify exactly a round index for each block along the keystone period ($keystonePeriod)!" +
+                " Specified round indices: ${blockRoundIndices.size}."
         }
         val roundIndices = availableRoundIndices
         for (enabledRound in autoMineRounds) {

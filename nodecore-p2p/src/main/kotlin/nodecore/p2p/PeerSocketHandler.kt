@@ -87,7 +87,7 @@ class PeerSocketHandler(
             logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress}: $e" }
         } catch (e: ClosedSendChannelException) {
             logger.debug { "Trying to send message to peer ${socket.remoteAddress} when the socket was already closed" }
-            peer.disconnect()
+            handleSocketError(e)
         }
     }
 

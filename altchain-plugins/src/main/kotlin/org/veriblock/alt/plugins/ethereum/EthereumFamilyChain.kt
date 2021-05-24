@@ -14,10 +14,10 @@ import org.veriblock.alt.plugins.HttpSecurityInheritingChain
 import org.veriblock.alt.plugins.createHttpClient
 import org.veriblock.alt.plugins.nullableRpcRequest
 import org.veriblock.alt.plugins.rpcRequest
+import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.toEthHash
 import org.veriblock.alt.plugins.util.asEthHex
 import org.veriblock.alt.plugins.util.asEthHexInt
-import org.veriblock.alt.plugins.util.asEthHexLong
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.asEthHash
 import org.veriblock.core.altchain.AltchainPoPEndorsement
@@ -45,6 +45,7 @@ import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.nio.ByteBuffer
+import kotlin.math.abs
 import kotlin.math.roundToLong
 
 private val logger = createLogger {}
@@ -105,18 +106,27 @@ class EthereumFamilyChain(
         val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $hash..." }
         val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
-        return block?.let {
+        val popBlock: EthPopBlockData? = try {
+            nullableRpcRequest("pop_getBlockByHash", listOf(ethHash), "2.0")
+        } catch (exception: RpcException) {
+            if (exception.errorCode == -32000) {
+                null
+            } else {
+                throw exception
+            }
+        }
+        return block?.let { ethBlock ->
             SecurityInheritingBlock(
-                hash = it.hash.asEthHash(),
-                height = it.number.asEthHexInt(),
-                previousHash = it.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
-                merkleRoot = it.transactionsRoot,
+                hash = ethBlock.hash.asEthHash(),
+                height = ethBlock.number.asEthHexInt(),
+                previousHash = ethBlock.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
+                merkleRoot = ethBlock.transactionsRoot,
                 coinbaseTransactionId = "TODO",
-                transactionIds = it.transactions,
-                endorsedBy = listOf(), // TODO
-                knownVbkHashes = listOf(), // TODO
-                veriBlockPublicationIds = listOf(), // TODO
-                bitcoinPublicationIds = listOf() // TODO
+                transactionIds = ethBlock.transactions,
+                endorsedBy = popBlock?.pop?.state?.endorsedBy ?: listOf(),
+                knownVbkHashes = popBlock?.pop?.data?.context?.map { it.id } ?: listOf(),
+                veriBlockPublicationIds = popBlock?.pop?.data?.atvs?.map { it.id } ?: listOf(),
+                bitcoinPublicationIds = popBlock?.pop?.data?.vtbs ?: listOf()
             )
         }
     }
@@ -255,10 +265,45 @@ class EthereumFamilyChain(
 
     override suspend fun getBlockChainInfo(): StateInfo {
         return try {
-            StateInfo(0,0,0, true, false, "testnet") // FIXME
+            val ethBestBlockHeight = getBestBlockHeight()
+            val ethNetworkType = getNetworkType()
+            val ethSyncStatus = getSyncStatus()
+            val isSynchronized = ethSyncStatus.currentBlock == null && ethSyncStatus.highestBlock == null && ethSyncStatus.startingBlock == null
+            val networkHeight = if (!isSynchronized) {
+                ethSyncStatus.highestBlock!!
+            } else {
+                ethBestBlockHeight
+            }
+            val localBlockchainHeight = if (!isSynchronized) {
+                ethSyncStatus.currentBlock!!
+            } else {
+                ethBestBlockHeight
+            }
+            val blockDifference = if (!isSynchronized) {
+                abs(ethSyncStatus.highestBlock!! - ethSyncStatus.currentBlock!!)
+            } else {
+                0
+            }
+            StateInfo(networkHeight, localBlockchainHeight, blockDifference, isSynchronized, false, ethNetworkType)
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
             StateInfo()
+        }
+    }
+
+    private suspend fun getSyncStatus() = try {
+        rpcRequest<Boolean>("eth_syncing", emptyList<String>(), "2.0")
+        EthSyncStatus()
+    } catch (exception: IllegalStateException) {
+        rpcRequest("eth_syncing", emptyList<String>(), "2.0")
+    }
+
+    private suspend fun getNetworkType(): String {
+        val popParams = getPopParams()
+        return when(popParams.networkId) {
+            1L -> "mainnet"
+            2L, 3L, 4L, 42L -> "testnet"
+            else -> "unknown"
         }
     }
 

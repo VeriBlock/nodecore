@@ -20,6 +20,8 @@ import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
+import org.veriblock.sdk.services.SerializeDeserializeService
+import org.veriblock.spv.service.TransactionService
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -162,6 +164,7 @@ class ApmOperation(
         endorsementTransaction?.let {
             result["vbkEndorsementTxId"] = it.txId
             result["vbkEndorsementTxFee"] = it.fee.formatAtomicLongWithDecimal()
+            result["vbkEndorsementTxFeePerByte"] = it.feePerByte.toString()
         }
         blockOfProof?.let {
             result["vbkBlockOfProof"] = it.hash.toString()
@@ -203,4 +206,15 @@ class ApmSpTransaction(
             total.add(out)
         }
     ).atomicUnits
+
+    val feePerByte: Long get() {
+        val publicationDataSize = transaction.publicationData?.let { publicationData ->
+            SerializeDeserializeService.serialize(publicationData)
+        }?.size ?: 0
+        val transactionSize = TransactionService.predictAltChainEndorsementTransactionSize(
+            dataLength = publicationDataSize,
+            sigIndex = transaction.signatureIndex
+        )
+        return fee / transactionSize
+    }
 }

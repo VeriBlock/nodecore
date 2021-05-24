@@ -31,12 +31,15 @@ import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
 import org.veriblock.miners.pop.transactionmonitor.loadTransactionMonitor
 import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.MEMPOOL_CHAIN_LIMIT
 import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
@@ -181,7 +184,7 @@ class AltchainPopMinerService(
 
     fun getBalance(): Balance = network.latestBalance
 
-    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, block: Int?): CheckResult  {
+    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, blockHeight: Int?): CheckResult  {
         // Verify if the miner is shutting down
         if (isShuttingDown) {
             return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
@@ -208,9 +211,18 @@ class AltchainPopMinerService(
         if (altchainConditions is CheckResult.Failure) {
             return altchainConditions
         }
+        // Verify the limit for the unconfirmed endorsement transactions
+        val count = operations.values.count { ApmOperationState.ENDORSEMENT_TRANSACTION.hasType(it.state) }
+        if (count >= MEMPOOL_CHAIN_LIMIT) {
+            return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the VeriBlock network"))
+        }
         // Verify if the block is too old to be mined
-        if (block != null && block < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
-            return CheckResult.Failure(MineException("The block @ $block is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
+        if (blockHeight != null && blockHeight < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
+            return CheckResult.Failure(MineException("The block @ $blockHeight is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
+        }
+        // Verify if the block is too old to be mined
+        if (blockHeight != null && blockHeight > monitor.latestBlockChainInfo.localBlockchainHeight) {
+            return CheckResult.Failure(MineException("There is no block @ $blockHeight known by the $chain daemon. The latest known block is at height ${monitor.latestBlockChainInfo.localBlockchainHeight}."))
         }
         return CheckResult.Success()
     }
@@ -257,7 +269,7 @@ class AltchainPopMinerService(
         submit(operation)
         operations[operation.id] = operation
 
-        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" })}" }
+        logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" } ?: "")}" }
 
         return operation.id
     }
@@ -380,4 +392,7 @@ class AltchainPopMinerService(
 
         return spvContext
     }
+
+    fun getStateInfo(chainId: String): StateInfo? =
+        securityInheritingService.getMonitor(chainId)?.latestBlockChainInfo
 }
