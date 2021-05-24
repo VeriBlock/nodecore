@@ -222,7 +222,7 @@ class AltchainPopMinerService(
         }
         // Verify if the block is too old to be mined
         if (blockHeight != null && blockHeight > monitor.latestBlockChainInfo.localBlockchainHeight) {
-            return CheckResult.Failure(MineException("There is no block @ $blockHeight known by the $chain daemon. The latest known block is at height ${monitor.latestBlockChainInfo.localBlockchainHeight}."))
+            return CheckResult.Failure(MineException("There is no block @ $blockHeight known by the ${chain.name} daemon. The latest known block is at height ${monitor.latestBlockChainInfo.localBlockchainHeight}."))
         }
         return CheckResult.Success()
     }
