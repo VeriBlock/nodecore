@@ -7,10 +7,11 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Block</mat-label>
-      <input matInput onmousewheel type="number" min="0" formControlName="blockNumber" required
+      <input matInput onmousewheel type="number" min="0" [max]="maxNumber" formControlName="blockNumber" required
         (keydown.enter)="form.valid ? onSave() : null" />
 
       <mat-error *ngIf="form.get('blockNumber').errors?.min">Not a valid number</mat-error>
+      <mat-error *ngIf="form.get('blockNumber').errors?.max">Not a valid number (max = {{maxNumber.toLocaleString()}})</mat-error>
     </mat-form-field>
   </div>
 </div>

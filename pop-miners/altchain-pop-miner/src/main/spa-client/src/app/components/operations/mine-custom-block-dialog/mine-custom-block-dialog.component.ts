@@ -8,11 +8,17 @@ import { AlertService } from '@core/services/alert.service';
   templateUrl: './mine-custom-block-dialog.component.html',
 })
 export class MineCustomBlockDialogComponent implements OnInit {
+  public maxNumber = 2147483647;
+
   public blockNumber: number;
   public form = this.formBuilder.group({
     blockNumber: [
       null,
-      Validators.compose([Validators.min(0), Validators.required]),
+      Validators.compose([
+        Validators.min(0),
+        Validators.max(this.maxNumber),
+        Validators.required,
+      ]),
     ],
   });
 
