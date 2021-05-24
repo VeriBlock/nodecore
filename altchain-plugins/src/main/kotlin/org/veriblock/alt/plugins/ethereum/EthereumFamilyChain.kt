@@ -126,7 +126,7 @@ class EthereumFamilyChain(
                 endorsedBy = popBlock?.pop?.state?.endorsedBy ?: listOf(),
                 knownVbkHashes = popBlock?.pop?.data?.context?.map { it.id } ?: listOf(),
                 veriBlockPublicationIds = popBlock?.pop?.data?.atvs?.map { it.id } ?: listOf(),
-                bitcoinPublicationIds = popBlock?.pop?.data?.vtbs ?: listOf()
+                bitcoinPublicationIds = popBlock?.pop?.data?.vtbs?.map { it.id } ?: listOf()
             )
         }
     }
