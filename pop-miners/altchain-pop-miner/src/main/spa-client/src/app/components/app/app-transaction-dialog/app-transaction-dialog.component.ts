@@ -128,13 +128,13 @@ export class AppTransactionDialogComponent implements OnInit {
       );
     }
 
-    if (this.form.value?.amount > this.vbkBalance) {
+    if (parseFloat(this.form.value?.amount) > parseFloat(this.vbkBalance)) {
       this.form.controls['amount'].patchValue(this.vbkBalance);
     }
   }
 
   public disableNumberFormat(e: KeyboardEvent) {
-    if (e.key === '-' || e.key === '+') {
+    if (e.key === '-' || e.key === '+' || e.key === 'e') {
       e.preventDefault();
     }
   }
