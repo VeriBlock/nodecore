@@ -314,6 +314,9 @@ export class OperationsComponent implements OnInit, OnDestroy {
       maxWidth: '500px',
       panelClass: 'dialog',
       closeOnNavigation: true,
+      data: {
+        maxHeight: this.selectedAltChain?.syncStatus?.localBlockchainHeight,
+      },
     });
 
     dialogRef
@@ -456,7 +459,8 @@ export class OperationsComponent implements OnInit, OnDestroy {
               operation?.stateDetail?.vbkEndorsementTxId,
             transactionTxId: operation?.stateDetail?.vbkEndorsementTxId,
             transactionFee: operation?.stateDetail?.vbkEndorsementTxFee,
-            transactionFeePerByte: operation?.stateDetail?.vbkEndorsementTxFeePerByte,
+            transactionFeePerByte:
+              operation?.stateDetail?.vbkEndorsementTxFeePerByte,
           }
         );
 

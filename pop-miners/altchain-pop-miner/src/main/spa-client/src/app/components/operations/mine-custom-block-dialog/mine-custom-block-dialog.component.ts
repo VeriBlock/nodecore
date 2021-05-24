@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { AlertService } from '@core/services/alert.service';
 
 @Component({
@@ -12,23 +12,29 @@ export class MineCustomBlockDialogComponent implements OnInit {
 
   public blockNumber: number;
   public form = this.formBuilder.group({
-    blockNumber: [
-      null,
-      Validators.compose([
-        Validators.min(0),
-        Validators.max(this.maxNumber),
-        Validators.required,
-      ]),
-    ],
+    blockNumber: null,
   });
 
   constructor(
     public dialogRef: MatDialogRef<MineCustomBlockDialogComponent>,
     private alertService: AlertService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+
+    @Inject(MAT_DIALOG_DATA)
+    public data: { maxHeight: number }
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.maxNumber = this.data?.maxHeight || this.maxNumber;
+
+    this.form
+      .get('blockNumber')
+      .setValidators([
+        Validators.min(0),
+        Validators.max(this.maxNumber),
+        Validators.required,
+      ]);
+  }
 
   public onCancel(): void {
     this.dialogRef.close({ save: false });
