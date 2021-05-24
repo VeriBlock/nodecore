@@ -16,7 +16,7 @@ export class AppTransactionDialogComponent implements OnInit {
       '',
       Validators.compose([Validators.maxLength(50), Validators.required]),
     ],
-    amount: ['', Validators.compose([Validators.min(0), Validators.required])],
+    amount: '',
   });
 
   public isDeposit = true;
@@ -52,7 +52,11 @@ export class AppTransactionDialogComponent implements OnInit {
     if (!this.isDeposit) {
       this.form
         .get('amount')
-        .setValidators(Validators.max(parseFloat(this.vbkBalance) || 0));
+        .setValidators([
+          Validators.max(parseFloat(this.vbkBalance) || 0),
+          Validators.min(0),
+          Validators.required,
+        ]);
     }
   }
 
@@ -71,6 +75,11 @@ export class AppTransactionDialogComponent implements OnInit {
       this.alertService.addWarning(
         'Please check the form and fix the errors indicated'
       );
+      return;
+    }
+
+    if (this.form.value.amount === 0) {
+      this.alertService.addWarning('Withdraw amount can not be zero');
       return;
     }
 
