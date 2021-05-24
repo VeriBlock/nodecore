@@ -3,7 +3,7 @@
 </h2>
 
 <div mat-dialog-content>
-  <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+  <form fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
     <mat-form-field appearance="outline">
       <mat-label>Fee per byte</mat-label>
@@ -22,7 +22,7 @@
       <mat-error *ngIf="form.get('maxFee').errors?.min">Not a valid number</mat-error>
       <mat-error *ngIf="form.get('maxFee').errors?.required">Required</mat-error>
     </mat-form-field>
-  </div>
+  </form>
 </div>
 
 <!-- Action buttons -->

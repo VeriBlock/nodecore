@@ -18,7 +18,7 @@
 
   <ng-template #withdrawBlock>
 
-    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+    <form fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
       <mat-form-field appearance="outline">
         <mat-label>Recipient's wallet address</mat-label>
@@ -45,7 +45,7 @@
         <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>
         <mat-error *ngIf="form.get('amount').errors?.max">Not enough funds</mat-error>
       </mat-form-field>
-    </div>
+    </form>
   </ng-template>
 
   <ng-container *ngIf="showAlert">
