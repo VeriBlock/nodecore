@@ -61,13 +61,19 @@ export class MineCustomBlockDialogComponent implements OnInit {
       );
     }
 
-    if (this.form.value?.blockNumber > this.maxNumber) {
+    if (parseFloat(this.form.value?.blockNumber) > this.maxNumber) {
       this.form.controls['blockNumber'].patchValue(this.maxNumber - 1);
     }
   }
 
   public disableNumberFormat(e: KeyboardEvent) {
-    if (e.key === '.' || e.key === ',' || e.key === '-' || e.key === '+') {
+    if (
+      e.key === '.' ||
+      e.key === ',' ||
+      e.key === '-' ||
+      e.key === '+' ||
+      e.key === 'e'
+    ) {
       e.preventDefault();
     }
   }
