@@ -34,7 +34,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Withdrawal amount</mat-label>
         <input matInput type="number" min="0" [max]="vbkBalance" formControlName="amount" required (input)="checkNumberFormat()"
-          (keydown)="disableNumberFormat($event)" />
+          (keydown)="disableNumberFormat($event)" step="0.000001" />
 
         <span matSuffix>&nbsp; VBK</span>
 

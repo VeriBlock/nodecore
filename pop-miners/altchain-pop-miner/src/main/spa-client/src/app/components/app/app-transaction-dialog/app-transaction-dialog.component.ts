@@ -123,9 +123,21 @@ export class AppTransactionDialogComponent implements OnInit {
 
   public checkNumberFormat() {
     if (this.form.value?.amount) {
-      this.form.controls['amount'].patchValue(
-        String(this.form.value.amount).replace(/[^0-9.,]/g, '')
+      if (String(this.form.value.amount).match(/[^0-9.,]/g)) {
+        this.form.controls['amount'].patchValue(
+          String(this.form.value.amount).replace(/[^0-9.,]/g, '')
+        );
+      }
+
+      const decimalPlaces: string[] = String(this.form.value?.amount)?.split(
+        '.'
       );
+
+      if (decimalPlaces?.length > 1 && decimalPlaces[1].length > 7) {
+        this.form.controls['amount'].patchValue(
+          parseFloat(`${decimalPlaces[0]}.${decimalPlaces[1].slice(0, 7)}`)
+        );
+      }
     }
 
     if (parseFloat(this.form.value?.amount) > parseFloat(this.vbkBalance)) {
