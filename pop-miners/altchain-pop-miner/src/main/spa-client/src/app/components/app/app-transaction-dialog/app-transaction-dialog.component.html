@@ -18,11 +18,11 @@
 
   <ng-template #withdrawBlock>
 
-    <div fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+    <form fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
       <mat-form-field appearance="outline">
         <mat-label>Recipient's wallet address</mat-label>
-        <input matInput type="text" maxlength="50" formControlName="destinationAddress" required />
+        <input matInput type="text" maxlength="50" pattern="[a-zA-Z0-9]+" formControlName="destinationAddress" required />
 
         <mat-hint>Please verify the wallet address. We cannot refund an incorrect withdrawal.</mat-hint>
 
@@ -33,7 +33,8 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Withdrawal amount</mat-label>
-        <input matInput type="number" min="0" formControlName="amount" required />
+        <input matInput type="number" min="0" [max]="vbkBalance" formControlName="amount" required (input)="checkNumberFormat()"
+          (keydown)="disableNumberFormat($event)" />
 
         <span matSuffix>&nbsp; VBK</span>
 
@@ -42,9 +43,9 @@
         </mat-hint>
 
         <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>
-        <mat-error *ngIf="form.get('amount').errors?.max">Not a valid number</mat-error>
+        <mat-error *ngIf="form.get('amount').errors?.max">Not enough funds</mat-error>
       </mat-form-field>
-    </div>
+    </form>
   </ng-template>
 
   <ng-container *ngIf="showAlert">
@@ -76,7 +77,8 @@
       <span>Cancel</span>
     </button>
 
-    <button mat-raised-button type="button" (click)="onWithdraw()" color="primary" [disabled]="form?.invalid || submitInProgress">
+    <button mat-raised-button type="button" (click)="onWithdraw()" color="primary"
+      [disabled]="form?.invalid || submitInProgress || form?.value?.amount === 0">
       <span>Withdraw VBK</span>
     </button>
   </ng-template>

@@ -14,7 +14,6 @@ import {
   OperationGetListParams,
   OperationSummaryListResponse,
   OperationSummaryResponse,
-  OperationWorkflow,
 } from '@core/model';
 
 /*

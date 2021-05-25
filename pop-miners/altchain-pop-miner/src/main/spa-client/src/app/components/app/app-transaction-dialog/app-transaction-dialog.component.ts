@@ -16,7 +16,7 @@ export class AppTransactionDialogComponent implements OnInit {
       '',
       Validators.compose([Validators.maxLength(50), Validators.required]),
     ],
-    amount: ['', Validators.compose([Validators.min(0), Validators.required])],
+    amount: '',
   });
 
   public isDeposit = true;
@@ -52,7 +52,11 @@ export class AppTransactionDialogComponent implements OnInit {
     if (!this.isDeposit) {
       this.form
         .get('amount')
-        .setValidators(Validators.max(parseFloat(this.vbkBalance) || 0));
+        .setValidators([
+          Validators.max(parseFloat(this.vbkBalance) || 0),
+          Validators.min(0),
+          Validators.required,
+        ]);
     }
   }
 
@@ -71,6 +75,11 @@ export class AppTransactionDialogComponent implements OnInit {
       this.alertService.addWarning(
         'Please check the form and fix the errors indicated'
       );
+      return;
+    }
+
+    if (this.form.value.amount === 0) {
+      this.alertService.addWarning('Withdraw amount can not be zero');
       return;
     }
 
@@ -110,5 +119,23 @@ export class AppTransactionDialogComponent implements OnInit {
 
   public showSuccess(): void {
     this.alertService.addSuccess('Address copied to clipboard successfully');
+  }
+
+  public checkNumberFormat() {
+    if (this.form.value?.amount) {
+      this.form.controls['amount'].patchValue(
+        String(this.form.value.amount).replace(/[^0-9.,]/g, '')
+      );
+    }
+
+    if (parseFloat(this.form.value?.amount) > parseFloat(this.vbkBalance)) {
+      this.form.controls['amount'].patchValue(this.vbkBalance);
+    }
+  }
+
+  public disableNumberFormat(e: KeyboardEvent) {
+    if (e.key === '-' || e.key === '+' || e.key === 'e') {
+      e.preventDefault();
+    }
   }
 }
