@@ -19,6 +19,5 @@ class P2pConfiguration(
     val peerSharePlatform: Boolean = false,
     val peerPublishAddress: String = "",
     val peerShareMyAddress: Boolean = false,
-    val isSpv: Boolean = false,
-    val vtbEnabled: Boolean = false
+    val isSpv: Boolean = false
 )

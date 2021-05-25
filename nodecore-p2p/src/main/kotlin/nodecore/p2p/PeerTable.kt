@@ -66,12 +66,7 @@ class PeerTable(
         capabilities = if (configuration.isSpv) {
             PeerCapabilities.spvCapabilities()
         } else {
-            val except = if (configuration.vtbEnabled) {
-                emptySet()
-            } else {
-                setOf(PeerCapabilities.Capabilities.VtbRequests)
-            }
-            PeerCapabilities.allCapabilities(except)
+            PeerCapabilities.allCapabilities()
         },
         id = UUID.randomUUID().toString()
     )
