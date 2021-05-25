@@ -48,7 +48,7 @@ class PeerCapabilitiesTests {
     fun toBitVectorWithAll() {
         val peerCapabilities = PeerCapabilities.allCapabilities()
         val bitVector = peerCapabilities.toBitVector()
-        bitVector shouldBe 511L
+        bitVector shouldBe 1023L
     }
 
     @Test
