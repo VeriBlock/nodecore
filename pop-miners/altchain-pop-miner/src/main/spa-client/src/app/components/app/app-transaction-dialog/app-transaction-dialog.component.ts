@@ -100,11 +100,6 @@ export class AppTransactionDialogComponent implements OnInit {
 
         this.tx = res.ids[0];
         this.showAlert = true;
-
-        setTimeout(() => {
-          this.tx = null;
-          this.showAlert = false;
-        }, 15000);
       })
       .add(() => {
         this.submitInProgress = false;
@@ -121,26 +116,24 @@ export class AppTransactionDialogComponent implements OnInit {
     this.alertService.addSuccess('Address copied to clipboard successfully');
   }
 
-  public checkNumberFormat() {
-    if (this.form.value?.amount) {
-      if (String(this.form.value.amount).match(/[^0-9.,]/g)) {
+  public checkNumberFormat(e) {
+    if (e.target?.value) {
+      if (e.target.value.match(/[^0-9.,]/g)) {
         this.form.controls['amount'].patchValue(
-          String(this.form.value.amount).replace(/[^0-9.,]/g, '')
+          e.target.value.replace(/[^0-9.,]/g, '')
         );
       }
 
-      const decimalPlaces: string[] = String(this.form.value?.amount)?.split(
-        '.'
-      );
-
-      if (decimalPlaces?.length > 1 && decimalPlaces[1].length > 7) {
+      if (e.target.value.match(/^\d*\.?\,?\d{8,}$/g)) {
         this.form.controls['amount'].patchValue(
-          parseFloat(`${decimalPlaces[0]}.${decimalPlaces[1].slice(0, 7)}`)
+          Math.round(
+            (parseFloat(e.target.value) + Number.EPSILON) * 100000000
+          ) / 100000000
         );
       }
     }
 
-    if (parseFloat(this.form.value?.amount) > parseFloat(this.vbkBalance)) {
+    if (parseFloat(e.target?.value) > parseFloat(this.vbkBalance)) {
       this.form.controls['amount'].patchValue(this.vbkBalance);
     }
   }

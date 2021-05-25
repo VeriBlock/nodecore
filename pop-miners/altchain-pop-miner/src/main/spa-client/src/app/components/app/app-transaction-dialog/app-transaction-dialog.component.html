@@ -18,7 +18,7 @@
 
   <ng-template #withdrawBlock>
 
-    <form fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+    <form fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
       <mat-form-field appearance="outline">
         <mat-label>Recipient's wallet address</mat-label>
@@ -33,8 +33,8 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Withdrawal amount</mat-label>
-        <input matInput type="number" min="0" [max]="vbkBalance" formControlName="amount" required (input)="checkNumberFormat()"
-          (keydown)="disableNumberFormat($event)" step="0.000001" />
+        <input matInput type="number" min="0" [max]="vbkBalance" formControlName="amount" (input)="checkNumberFormat($event)"
+          (keydown)="disableNumberFormat($event)" step="0.00000001" required />
 
         <span matSuffix>&nbsp; VBK</span>
 
@@ -45,19 +45,24 @@
         <mat-error *ngIf="form.get('amount').errors?.min">Not a valid number</mat-error>
         <mat-error *ngIf="form.get('amount').errors?.max">Not enough funds</mat-error>
       </mat-form-field>
+
+      <ng-container *ngIf="showAlert">
+        <mat-card class="alert-success">
+          <mat-card-content style="display: flex;" style="width: 100%">
+            <span>Transaction successful!</span>
+          </mat-card-content>
+        </mat-card>
+        <div class="alert">
+          <mat-card-content style="display: flex; margin: 1em; font-size: 12px;">
+            <mat-icon size="lg" style="padding-right: 5px;">link</mat-icon>
+            <a [href]="getTxLink()" target="_tab" rel="noopener noreferrer">
+              <span>{{ tx }}</span>
+            </a>
+          </mat-card-content>
+        </div>
+      </ng-container>
     </form>
   </ng-template>
-
-  <ng-container *ngIf="showAlert">
-    <mat-card class="alert-success" style="margin: 1em;">
-      <mat-card-content style="display: flex;">
-        <mat-icon size="lg" style="padding-right: 5px;">link</mat-icon>
-        <a [href]="getTxLink()" target="_tab" rel="noopener noreferrer">
-          <span>{{ tx }}</span>
-        </a>
-      </mat-card-content>
-    </mat-card>
-  </ng-container>
 </div>
 
 <!-- Action buttons -->
@@ -73,13 +78,23 @@
 
   <ng-template #withdrawActionBlock>
 
-    <button mat-raised-button type="button" (click)="onCancel()" color="warn">
-      <span>Cancel</span>
-    </button>
+    <ng-container *ngIf="!showAlert; else doneBtnBlock">
+      <button mat-raised-button type="button" (click)="onCancel()" color="warn">
+        <span>Cancel</span>
+      </button>
 
-    <button mat-raised-button type="button" (click)="onWithdraw()" color="primary"
-      [disabled]="form?.invalid || submitInProgress || form?.value?.amount === 0">
-      <span>Withdraw VBK</span>
-    </button>
+      <button mat-raised-button type="button" (click)="onWithdraw()" color="primary"
+        [disabled]="form?.invalid || submitInProgress || form?.value?.amount === 0">
+        <span>Withdraw VBK</span>
+      </button>
+    </ng-container>
+
+    <ng-template #doneBtnBlock>
+      <div fxFlex></div>
+      <button mat-raised-button type="button" (click)="onCancel()" color="primary">
+        <span>Done</span>
+      </button>
+    </ng-template>
+
   </ng-template>
 </div>
