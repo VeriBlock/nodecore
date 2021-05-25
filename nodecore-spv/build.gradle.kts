@@ -23,10 +23,10 @@ configurations.all {
 }
 
 dependencies {
-    implementation(project(":veriblock-core"))
-    implementation(project(":veriblock-extensions"))
-    implementation(project(":nodecore-grpc"))
-    implementation(project(":nodecore-p2p"))
+    api(project(":veriblock-core"))
+    api(project(":veriblock-extensions"))
+    api(project(":nodecore-grpc"))
+    api(project(":nodecore-p2p"))
 
     implementation("io.ktor:ktor-network-jvm:$ktorVersion")
 

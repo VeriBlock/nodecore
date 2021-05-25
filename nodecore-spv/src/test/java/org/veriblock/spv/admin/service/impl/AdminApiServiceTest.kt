@@ -5,8 +5,6 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import nodecore.p2p.Peer
@@ -20,7 +18,6 @@ import org.veriblock.core.ImportException
 import org.veriblock.core.SendCoinsException
 import org.veriblock.core.WalletException
 import org.veriblock.core.WalletLockedException
-import org.veriblock.core.crypto.EMPTY_BITCOIN_HASH
 import org.veriblock.core.crypto.EMPTY_VBK_TX
 import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.core.types.Pair
@@ -42,7 +39,6 @@ import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.Blockchain
 import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.service.TransactionService
-import org.veriblock.spv.service.advertise
 import java.io.IOException
 import java.security.KeyPairGenerator
 
@@ -64,7 +60,7 @@ class AdminApiServiceTest {
         spvContext = SpvContext(SpvConfig(defaultTestNetParameters, connectDirectlyTo = listOf("localhost")))
         availablePeer = mockk(relaxed = true)
         peerTable = mockk(relaxed = true) {
-            every { getAvailablePeers() } returns listOf(availablePeer)
+            every { getConnectedPeers() } returns listOf(availablePeer)
         }
         transactionService = mockk(relaxed = true)
         addressManager = mockk(relaxed = true)

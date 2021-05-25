@@ -29,12 +29,12 @@ import nodecore.api.grpc.RpcNotFound
 import nodecore.api.grpc.RpcTransactionRequest
 import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.p2p.P2pConfiguration
 import nodecore.p2p.P2pConstants
 import nodecore.p2p.P2pEventBus
 import nodecore.p2p.Peer
 import nodecore.p2p.PeerCapabilities
 import nodecore.p2p.PeerTable
-import nodecore.p2p.TrafficManager
 import nodecore.p2p.buildMessage
 import nodecore.p2p.event.P2pEvent
 import nodecore.p2p.event.PeerMisbehaviorEvent
@@ -202,7 +202,7 @@ class PeerEventListener(
         logger.debug("Network info request received from {}", event.producer.address)
         event.acknowledge()
 
-        val availablePeers = peerTable.getAvailablePeers().filter { it.canShareAddress }
+        val availablePeers = peerTable.getConnectedPeers().filter { it.canShareAddress }
 
         val replyBuilder = RpcNetworkInfoReply.newBuilder()
         for (peer in availablePeers) {

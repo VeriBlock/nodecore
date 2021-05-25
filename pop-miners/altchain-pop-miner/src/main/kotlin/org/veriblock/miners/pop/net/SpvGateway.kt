@@ -12,6 +12,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.p2p.NoPeersException
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.Sha256Hash
@@ -93,7 +94,12 @@ class SpvGateway(
             .setBtcContextHash(ByteStringUtility.hexToByteString(btcContextHash))
             .build()
 
-        val reply = spvService.getVeriBlockPublications(request)
+        val reply = try {
+            spvService.getVeriBlockPublications(request)
+        } catch (e: NoPeersException) {
+            logger.debug(e) { "Unable to retrieve VeriBlock publications" }
+            return emptyList()
+        }
 
         if (reply.success) {
             return reply.publicationsList.map {

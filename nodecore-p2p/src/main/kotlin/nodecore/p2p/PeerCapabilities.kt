@@ -11,10 +11,10 @@ import nodecore.p2p.PeerCapabilities
 import org.apache.commons.lang3.EnumUtils
 
 class PeerCapabilities(
-    private val capabilities: EnumSet<Capabilities>
+    private val capabilities: Set<Capabilities>
 ) {
     enum class Capabilities {
-        Transaction, Block, Query, Sync, NetworkInfo, BatchSync, Advertise, AdvertiseTx, SpvRequests
+        Transaction, Block, Query, Sync, NetworkInfo, BatchSync, Advertise, AdvertiseTx, SpvRequests, VtbRequests
     }
     
     private constructor(bitVector: Long) : this(EnumUtils.processBitVector(Capabilities::class.java, bitVector))
@@ -36,17 +36,27 @@ class PeerCapabilities(
             Capabilities.NetworkInfo,
             Capabilities.BatchSync
         )
+        private val SPV_CAPABILITIES = EnumSet.of(
+            Capabilities.Transaction,
+            Capabilities.Query,
+            Capabilities.NetworkInfo,
+        )
 
         private val ALL = EnumSet.allOf(Capabilities::class.java)
 
         @JvmStatic
-        fun allCapabilities(): PeerCapabilities {
-            return PeerCapabilities(ALL)
+        fun allCapabilities(except: Set<Capabilities> = emptySet()): PeerCapabilities {
+            return PeerCapabilities(ALL - except)
         }
 
         @JvmStatic
         fun defaultCapabilities(): PeerCapabilities {
             return PeerCapabilities(INITIAL_CAPABILITIES)
+        }
+
+        @JvmStatic
+        fun spvCapabilities(): PeerCapabilities {
+            return PeerCapabilities(SPV_CAPABILITIES)
         }
 
         @JvmStatic

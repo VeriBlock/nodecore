@@ -75,7 +75,7 @@ class SpvService(
             blockchainState = blockchainState,
             operatingState = operatingState,
             networkState = networkState,
-            connectedPeerCount = peerTable.getAvailablePeers().size,
+            connectedPeerCount = peerTable.getConnectedPeers().size,
             networkHeight = SpvState.getNetworkHeight(),
             localBlockchainHeight = blockchain.activeChain.tip.height,
             networkVersion = spvContext.networkParameters.name,
@@ -423,7 +423,7 @@ fun PeerTable.advertise(transaction: Transaction) {
             )
             .build()
     }
-    for (peer in getAvailablePeers()) {
+    for (peer in getConnectedPeers()) {
         try {
             peer.send(advertise)
         } catch (ex: Exception) {

@@ -18,7 +18,6 @@ import nodecore.p2p.PeerTable
 import nodecore.p2p.PeerTableBootstrapper
 import nodecore.p2p.PeerWarden
 import nodecore.p2p.addressKey
-import nodecore.p2p.asNetworkAddress
 import nodecore.p2p.buildMessage
 import org.veriblock.core.ConfigurationException
 import org.veriblock.core.Context
@@ -26,7 +25,6 @@ import org.veriblock.core.launchWithFixedDelay
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.params.defaultMainNetParameters
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.sdk.models.Address
 import org.veriblock.spv.model.LedgerContext
@@ -55,6 +53,7 @@ class SpvContext(
 ) {
     val networkParameters: NetworkParameters = config.networkParameters
 
+    private val p2pConfiguration: P2pConfiguration
     val directory: File
     val filePrefix: String
     val transactionPool: TransactionPool
@@ -116,13 +115,14 @@ class SpvContext(
                 }
             }
             val bootstrappingDnsSeeds = config.networkParameters.bootstrapDns?.let { listOf(it) } ?: emptyList()
-            val p2pConfiguration = P2pConfiguration(
+            p2pConfiguration = P2pConfiguration(
                 networkParameters = config.networkParameters,
                 // For now we'll be using either direct discovery or DNS discovery, not a mix.
                 // This will change whenever other use cases appear.
                 peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty(),
                 bootstrappingDnsSeeds = bootstrappingDnsSeeds,
-                externalPeerEndpoints = externalPeerEndpoints
+                externalPeerEndpoints = externalPeerEndpoints,
+                isSpv = true
             )
             if (p2pConfiguration.peerBootstrapEnabled) {
                 logger.info { "Using bootstrap discovery" }
@@ -169,7 +169,7 @@ class SpvContext(
                 }.build()
             }
             launch {
-                peerTable.getAvailablePeers().forEach {
+                peerTable.getConnectedPeers().forEach {
                     it.send(heartbeat)
                 }
             }

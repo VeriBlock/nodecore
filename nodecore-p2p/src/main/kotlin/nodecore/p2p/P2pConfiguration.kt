@@ -9,7 +9,7 @@ class P2pConfiguration(
     val peerBindAddress: String = "0.0.0.0",
     val peerBindPort: Int = 6500,
     val peerMinCount: Int = 8,
-    val peerMaxCount: Int = 20,
+    val peerMaxCount: Int = 15,
     val peerBanThreshold: Int = 100,
     val peerBootstrapEnabled: Boolean = false,
     val bootstrapLimit: Int = 4,
@@ -18,5 +18,7 @@ class P2pConfiguration(
     val externalPeerEndpoints: List<NetworkAddress> = emptyList(),
     val peerSharePlatform: Boolean = false,
     val peerPublishAddress: String = "",
-    val peerShareMyAddress: Boolean = false
+    val peerShareMyAddress: Boolean = false,
+    val isSpv: Boolean = false,
+    val vtbEnabled: Boolean = false
 )

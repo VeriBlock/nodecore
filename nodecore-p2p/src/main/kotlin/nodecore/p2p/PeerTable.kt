@@ -8,7 +8,6 @@ package nodecore.p2p
 
 import com.google.common.net.InetAddresses
 import io.ktor.network.selector.ActorSelectorManager
-import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
 import io.ktor.util.network.NetworkAddress
@@ -64,7 +63,16 @@ class PeerTable(
         platform = if (configuration.peerSharePlatform) P2pConstants.PLATFORM else "",
         startTimestamp = Utility.getCurrentTimeSeconds(),
         canShareAddress = configuration.peerShareMyAddress,
-        capabilities = PeerCapabilities.allCapabilities(),
+        capabilities = if (configuration.isSpv) {
+            PeerCapabilities.spvCapabilities()
+        } else {
+            val except = if (configuration.vtbEnabled) {
+                emptySet()
+            } else {
+                setOf(PeerCapabilities.Capabilities.VtbRequests)
+            }
+            PeerCapabilities.allCapabilities(except)
+        },
         id = UUID.randomUUID().toString()
     )
 
@@ -113,7 +121,7 @@ class PeerTable(
             upkeep()
         }
     }
-    
+
     fun shutdown() {
         Threading.PEER_TABLE_POOL.safeShutdown()
         warden.shutdown()
@@ -122,7 +130,7 @@ class PeerTable(
             peer.disconnect()
         }
     }
-    
+
     private suspend fun establishConnectionWithConfiguredPeers(peers: List<NetworkAddress>) {
         // Filter out ones that have already been added
         val filtered = peers.filter {
@@ -130,13 +138,13 @@ class PeerTable(
         }
 
         logger.info { "Establishing connection with ${filtered.size} / ${peers.size} configured peers." }
-        
+
         // Attempt to connect with the peer and add if successful
         for (address in filtered) {
             attemptOutboundPeerConnect(address.address, address.port)
         }
     }
-    
+
     private suspend fun attemptOutboundPeerConnect(address: String, port: Int): Peer? {
         val peer = createOutboundPeer(address, port)
             // TODO: Retry connections?
@@ -160,13 +168,13 @@ class PeerTable(
         }
         return null
     }
-    
+
     private fun requestPeerTables() {
         val event = buildMessage {
             networkInfoRequest = RpcNetworkInfoRequest.newBuilder().build()
         }
 
-        getAvailablePeers().forEach {
+        getConnectedPeers().forEach {
             try {
                 it.send(event)
             } catch (e: Exception) {
@@ -220,21 +228,21 @@ class PeerTable(
             }.build()
         })
     }
-    
+
     fun processRemotePeerTable(peers: List<NodeMetadata>) {
         for (node in peers) {
             addPeerCandidate(node)
         }
     }
 
-    fun getAvailablePeers(): List<Peer> = peers.values.filter {
+    fun getConnectedPeers(): List<Peer> = peers.values.filter {
         it.status == Peer.Status.Connected
     }
 
-    fun getUnavailablePeers(): List<Peer> = peers.values.filter {
+    fun getDisconnectedPeers(): List<Peer> = peers.values.filter {
         it.status != Peer.Status.Connected
     }
-    
+
     private fun addPeerCandidate(node: NodeMetadata) {
         // TODO: Remove once this is no longer needed
         val candidate = if (node.port !in 0..50000) {
@@ -254,19 +262,19 @@ class PeerTable(
         peerCandidates[candidate.addressKey] = candidate
         logger.debug { "Added ${candidate.addressKey} as a peer candidate" }
     }
-    
+
     fun getPeerCandidates(): List<NodeMetadata> {
         return ArrayList(peerCandidates.values)
     }
-    
+
     fun clearBans() {
         denylist.clear()
     }
-    
+
     fun updatePeer(peer: Peer) {
         peers.replace(peer.addressKey, peer)
     }
-    
+
     private fun banAddress(address: String) {
         // Remove all peers connected from that address
         peers.entries.asSequence().filter {
@@ -277,7 +285,7 @@ class PeerTable(
         // Add that address to the denylist
         denylist[address] = createTemporaryBan(address)
     }
-    
+
     private fun addPeer(peer: Peer) {
         if (isNodeSelf(peer.id, peer.address)) {
             logger.debug { "${peer.address} cannot be added as a peer because it is this node" }
@@ -295,7 +303,7 @@ class PeerTable(
 
         logger.debug { "Added peer ${peer.addressKey}" }
     }
-    
+
     private fun removePeer(addressKey: String) {
         val peer = peers.remove(addressKey)
         peer?.disconnect()
@@ -303,23 +311,23 @@ class PeerTable(
         peerCandidates.remove(addressKey)
         logger.info { "Removed $addressKey from peer list" }
 
-        if (getAvailablePeers().isEmpty()) {
+        if (getConnectedPeers().isEmpty()) {
             onDisconnected?.run()
         }
     }
-    
+
     private suspend fun upkeep() {
         try {
             groomPeers()
             releaseDoNotConnect()
             logger.debug("Ensure min peers...")
             ensureMinimumConnectedPeers()
-            if (getAvailablePeers().isEmpty()) {
+            if (getConnectedPeers().isEmpty()) {
                 logger.info("After attempting to ensure minimum peers we still have 0, removing all do-not-connect constraints...")
                 // TODO: revisit clearing DNC
                 doNotConnect.clear()
                 ensureMinimumConnectedPeers()
-                logger.info { "After removing do-not-connect constraints, we have ${getAvailablePeers().size} available peers." }
+                logger.info { "After removing do-not-connect constraints, we have ${getConnectedPeers().size} available peers." }
             }
             logger.debug("Releasing bans...")
             releaseExpiredBans()
@@ -327,7 +335,7 @@ class PeerTable(
             logger.error(e.message, e)
         }
     }
-    
+
     private fun groomPeers() {
         val peerList = ArrayList(peers.values)
         for (p in peerList) {
@@ -337,10 +345,11 @@ class PeerTable(
             }
         }
     }
-    
+
     suspend fun ensureMinimumConnectedPeers() {
-        val available = getAvailablePeers()
-        val peerCount = available.size
+        val available = getConnectedPeers()
+        // Take into account only the peers that can supply blocks (full nodes)
+        val peerCount = available.count { it.capabilities.hasCapability(PeerCapabilities.Capabilities.Block) }
         if (peerCount >= minimumPeerCount) {
             logger.debug("Minimum peer threshold met!")
             return
@@ -369,9 +378,9 @@ class PeerTable(
 
         var peerAttempts = 6
         for (candidate in candidates) {
-            if (getAvailablePeers().size < minimumPeerCount && peerAttempts > 0) {
+            if (getConnectedPeers().size < minimumPeerCount && peerAttempts > 0) {
                 peerCandidates.remove(candidate.addressKey)
-                
+
                 // Skip if it's already an established peer, waiting to connect or in the do not connect list
                 if (peers.containsKey(candidate.addressKey) || doNotConnect.containsKey(candidate.address)) {
                     continue
@@ -418,10 +427,16 @@ class PeerTable(
     suspend fun requestMessage(
         event: RpcEvent,
         timeoutInMillis: Long = 5000L,
+        neededCapability: PeerCapabilities.Capabilities? = null,
         quantifier: ((RpcEvent) -> Int)
     ): RpcEvent = coroutineScope {
         // Perform the request for all the peers asynchronously
-        peers.values.map {
+        val peerToRequest = if (neededCapability != null) {
+            peers.values.filter { it.capabilities.hasCapability(neededCapability) }
+        } else {
+            peers.values
+        }
+        peerToRequest.map {
             async {
                 try {
                     it.requestMessage(event, timeoutInMillis)
@@ -432,17 +447,17 @@ class PeerTable(
         }.awaitAll()
             .filterNotNull()
             .maxByOrNull { quantifier(it) }
-            ?: error("All requests timed out ($timeoutInMillis ms)")
+            ?: throw NoPeersException("No peers were able to fulfill the request")
     }
-    
+
     private fun releaseDoNotConnect() {
         doNotConnect.values.removeIf { Utility.getCurrentTimeSeconds() >= it }
     }
-    
+
     private fun releaseExpiredBans() {
         denylist.values.removeIf { it.isExpired }
     }
-    
+
     private fun isNodeSelf(id: String, address: String): Boolean {
         return self.id == id || self.address == address
     }
@@ -483,3 +498,5 @@ class PeerTable(
         removePeer(peer.addressKey)
     }
 }
+
+class NoPeersException(override val message: String) : RuntimeException()
