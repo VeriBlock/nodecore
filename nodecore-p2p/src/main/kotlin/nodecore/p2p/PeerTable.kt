@@ -58,7 +58,7 @@ class PeerTable(
     val self: NodeMetadata = NodeMetadata(
         address = configuration.peerPublishAddress,
         port = configuration.peerBindPort,
-        application = P2pConstants.FULL_PROGRAM_NAME_VERSION,
+        application = configuration.fullProgramNameVersion,
         protocolVersion = networkParameters.protocolVersion,
         platform = if (configuration.peerSharePlatform) P2pConstants.PLATFORM else "",
         startTimestamp = Utility.getCurrentTimeSeconds(),
