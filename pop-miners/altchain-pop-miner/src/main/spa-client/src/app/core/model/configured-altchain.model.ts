@@ -9,9 +9,15 @@ export class ConfiguredAltchain {
   payoutDelay: number;
   readyStatus: AltChainReadyStatusResponse;
   explorerBaseUrls: ExplorerBaseUrlsResponse;
+  syncStatus: AltChainSyncStatusResponse;
 
   hasLogo?: boolean;
   selectedFilter?: string;
+}
+
+export class AltChainSyncStatusResponse {
+  localBlockchainHeight: number;
+  networkHeight: number;
 }
 
 export class AltChainReadyStatusResponse {
