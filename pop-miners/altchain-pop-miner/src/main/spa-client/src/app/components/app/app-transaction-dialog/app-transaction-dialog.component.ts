@@ -106,10 +106,14 @@ export class AppTransactionDialogComponent implements OnInit {
       });
   }
 
-  public getTxLink(): string {
-    return `https://${
-      this.isTestnet ? 'testnet.' : ''
-    }explore.veriblock.org/tx/${this.tx}`;
+  public openLink() {
+    window.open(
+      `https://${this.isTestnet ? 'testnet.' : ''}explore.veriblock.org/tx/${
+        this.tx
+      }`,
+      '_tab',
+      'noopener noreferrer'
+    );
   }
 
   public showSuccess(): void {

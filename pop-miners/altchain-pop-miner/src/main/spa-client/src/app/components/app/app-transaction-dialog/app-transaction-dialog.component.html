@@ -46,20 +46,15 @@
         <mat-error *ngIf="form.get('amount').errors?.max">Not enough funds</mat-error>
       </mat-form-field>
 
-      <ng-container *ngIf="showAlert">
-        <mat-card class="alert-success">
-          <mat-card-content style="display: flex;" style="width: 100%">
-            <span>Transaction successful!</span>
-          </mat-card-content>
-        </mat-card>
-        <div class="alert">
-          <mat-card-content style="display: flex; margin: 1em; font-size: 12px;">
-            <mat-icon size="lg" style="padding-right: 5px;">link</mat-icon>
-            <a [href]="getTxLink()" target="_tab" rel="noopener noreferrer">
-              <span>{{ tx }}</span>
-            </a>
-          </mat-card-content>
-        </div>
+      <ng-container *ngIf="showAlert && tx">
+        <mat-form-field appearance="outline">
+          <mat-label>Transaction link</mat-label>
+          <input matInput type="text" [value]="tx" readonly style="text-align: center; font-size: 12px;" />
+
+          <mat-icon matSuffix color="primary" matTooltip="Open" (click)="openLink()" style="cursor: pointer;">
+            link
+          </mat-icon>
+        </mat-form-field>
       </ng-container>
     </form>
   </ng-template>
