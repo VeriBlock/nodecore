@@ -1,9 +1,9 @@
-<h2 mat-dialog-title>
+<div mat-dialog-title>
   <span>Coin Configuration</span>
-  <div class="dialog-subtitle"> Automine round </div>
-</h2>
+</div>
 
 <div mat-dialog-content>
+  <div class="dialog-content-subtitle"> Automine round </div>
   <div fxLayout="row wrap" fxLayoutAlign="space-evenly center">
 
     <ng-container *ngIf="automineRounds?.length === 0; else roundsBlock">
