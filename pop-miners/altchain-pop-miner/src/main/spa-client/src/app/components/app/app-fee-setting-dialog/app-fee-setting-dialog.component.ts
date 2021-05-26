@@ -2,6 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { AlertService } from '@core/services/alert.service';
+import { QuitService } from '@core/services/quit.service';
 
 import { VbkFeeConfig } from '@core/model';
 
@@ -21,10 +22,13 @@ export class AppFeeSettingDialogComponent implements OnInit {
     ],
   });
 
+  public isRestarting = false;
+
   constructor(
     public dialogRef: MatDialogRef<AppFeeSettingDialogComponent>,
     private alertService: AlertService,
     private formBuilder: FormBuilder,
+    private quitService: QuitService,
 
     @Inject(MAT_DIALOG_DATA)
     public data: VbkFeeConfig
@@ -50,5 +54,18 @@ export class AppFeeSettingDialogComponent implements OnInit {
     }
 
     this.dialogRef.close({ save: true, feeConfig: this.form.value });
+  }
+
+  public onRestart(): void {
+    this.isRestarting = true;
+
+    this.quitService
+      .postQuitRestart(true)
+      .subscribe()
+      .add(() => {
+        setTimeout(() => {
+          this.isRestarting = false;
+        }, 15000);
+      });
   }
 }

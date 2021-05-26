@@ -4,7 +4,7 @@
     <h2>{{ selectedAltChain?.name }} ({{ capitalizeAcronym(selectedAltChain?.key) }})</h2>
 
     <button mat-button type="button" (click)="openCoinConfigurationDialog()" [disabled]="isLoadingConfiguration" class="no-hover">
-      <div fxLayout=" row" fxLayoutAlign="start center" fxLayoutGap="10px">
+      <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
 
         <mat-icon *ngIf="!showLogo">
           <img src="/assets/images/default-coin.png" height="24px" width="24px" />

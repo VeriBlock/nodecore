@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>
+<div mat-dialog-title>
   <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="15px" style="width: 100%;">
     <span>Operation {{data.operationId}}
       <ng-container *ngIf="data?.level">
@@ -9,9 +9,10 @@
       <mat-icon>close</mat-icon>
     </button>
   </div>
-  <mat-divider></mat-divider>
-</h2>
+</div>
 
 <div mat-dialog-content>
-  <div *ngFor="let log of data.logs">{{log}}</div>
+  <div style="margin: 0 0.5em; overflow: auto;">
+    <div *ngFor="let log of data.logs">{{log}}</div>
+  </div>
 </div>
