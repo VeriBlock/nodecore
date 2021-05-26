@@ -35,6 +35,15 @@
       font-weight: 400;
       font-size: 16px;
     }
+
+    .mat-form-field {
+      .input-link {
+        color: mat-color($primary);
+        text-align: center;
+        font-size: 12px;
+        cursor: pointer;
+      }
+    }
   }
 
   .mat-focused .mat-form-field-required-marker {

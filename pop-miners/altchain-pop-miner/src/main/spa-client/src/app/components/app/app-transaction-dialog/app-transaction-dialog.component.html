@@ -49,7 +49,7 @@
       <ng-container *ngIf="showAlert && tx">
         <mat-form-field appearance="outline">
           <mat-label>Transaction link</mat-label>
-          <input matInput type="text" [value]="tx" readonly style="text-align: center; font-size: 12px;" />
+          <input matInput class="input-link" type="text" [value]="tx" readonly (click)="openLink()" />
 
           <mat-icon matSuffix color="primary" matTooltip="Open" (click)="openLink()" style="cursor: pointer;">
             link
