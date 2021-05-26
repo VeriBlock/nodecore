@@ -122,7 +122,8 @@ class SpvContext(
                 peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty(),
                 bootstrappingDnsSeeds = bootstrappingDnsSeeds,
                 externalPeerEndpoints = externalPeerEndpoints,
-                isSpv = true
+                isSpv = true,
+                fullProgramNameVersion = SpvConstants.FULL_PROGRAM_NAME_VERSION
             )
             if (p2pConfiguration.peerBootstrapEnabled) {
                 logger.info { "Using bootstrap discovery" }

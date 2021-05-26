@@ -24,6 +24,8 @@ data class NodeMetadata(
 
     // FIXME: Convert to extension function when it's no longer called from java code
     fun toRpcNodeInfo(): RpcNodeInfo = RpcNodeInfo.newBuilder().also {
+        it.address = address
+        it.port = port
         it.application = application
         it.protocolVersion = protocolVersion
         it.platform = platform
@@ -31,7 +33,6 @@ data class NodeMetadata(
         it.share = canShareAddress
         it.capabilities = capabilities.toBitVector()
         it.id = id
-        it.port = port
     }.build()
 }
 

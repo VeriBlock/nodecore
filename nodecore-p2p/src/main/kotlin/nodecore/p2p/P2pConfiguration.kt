@@ -20,5 +20,5 @@ class P2pConfiguration(
     val peerPublishAddress: String = "",
     val peerShareMyAddress: Boolean = false,
     val isSpv: Boolean = false,
-    val vtbEnabled: Boolean = false
+    val fullProgramNameVersion: String = P2pConstants.FULL_PROGRAM_NAME_VERSION
 )

@@ -126,7 +126,7 @@ class ApmTaskService(
 
             val walletTransaction = miner.transactionMonitor.getTransaction(transaction.id)
             operation.setTransaction(ApmSpTransaction(walletTransaction))
-            logger.info(operation, "Successfully added the VBK transaction: ${walletTransaction.id}!")
+            logger.info(operation, "Successfully sent the VBK transaction ${walletTransaction.id}")
             logger.debug(
                 operation, "Transaction ${transaction.id} networkByte=${transaction.networkByte} signatureIndex=${transaction.signatureIndex}"
             )

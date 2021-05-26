@@ -25,7 +25,6 @@ export class AppTransactionDialogComponent implements OnInit {
   public isTestnet = false;
 
   public submitInProgress = false;
-  public showAlert = false;
   public tx: string = null;
 
   constructor(
@@ -99,36 +98,44 @@ export class AppTransactionDialogComponent implements OnInit {
         this.alertService.addSuccess('Operation successful');
 
         this.tx = res.ids[0];
-        this.showAlert = true;
-
-        setTimeout(() => {
-          this.tx = null;
-          this.showAlert = false;
-        }, 15000);
       })
       .add(() => {
         this.submitInProgress = false;
       });
   }
 
-  public getTxLink(): string {
-    return `https://${
-      this.isTestnet ? 'testnet.' : ''
-    }explore.veriblock.org/tx/${this.tx}`;
+  public openLink() {
+    window.open(
+      `https://${this.isTestnet ? 'testnet.' : ''}explore.veriblock.org/tx/${
+        this.tx
+      }`,
+      '_tab',
+      'noopener noreferrer'
+    );
   }
 
   public showSuccess(): void {
     this.alertService.addSuccess('Address copied to clipboard successfully');
   }
 
-  public checkNumberFormat() {
-    if (this.form.value?.amount) {
-      this.form.controls['amount'].patchValue(
-        String(this.form.value.amount).replace(/[^0-9.,]/g, '')
-      );
+  public checkNumberFormat(e) {
+    if (e.target?.value) {
+      if (e.target.value.match(/[^0-9.,]/g)) {
+        this.form.controls['amount'].patchValue(
+          e.target.value.replace(/[^0-9.,]/g, '')
+        );
+      }
+
+      if (e.target.value.match(/^\d*\.?\,?\d{8,}$/g)) {
+        this.form.controls['amount'].patchValue(
+          Math.round(
+            (parseFloat(e.target.value) + Number.EPSILON) * 100000000
+          ) / 100000000
+        );
+      }
     }
 
-    if (parseFloat(this.form.value?.amount) > parseFloat(this.vbkBalance)) {
+    if (parseFloat(e.target?.value) > parseFloat(this.vbkBalance)) {
       this.form.controls['amount'].patchValue(this.vbkBalance);
     }
   }

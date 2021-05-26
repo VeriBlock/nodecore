@@ -26,6 +26,9 @@ class PeerCapabilities(
     fun hasCapability(capability: Capabilities): Boolean {
         return capabilities.contains(capability)
     }
+
+    fun except(capabilities: Set<Capabilities>): PeerCapabilities =
+        PeerCapabilities(this.capabilities - capabilities)
     
     companion object {
         private val INITIAL_CAPABILITIES = EnumSet.of(
@@ -45,8 +48,8 @@ class PeerCapabilities(
         private val ALL = EnumSet.allOf(Capabilities::class.java)
 
         @JvmStatic
-        fun allCapabilities(except: Set<Capabilities> = emptySet()): PeerCapabilities {
-            return PeerCapabilities(ALL - except)
+        fun allCapabilities(): PeerCapabilities {
+            return PeerCapabilities(ALL)
         }
 
         @JvmStatic

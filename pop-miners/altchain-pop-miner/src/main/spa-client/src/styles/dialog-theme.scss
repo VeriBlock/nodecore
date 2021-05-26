@@ -41,6 +41,15 @@
         padding-bottom: 1em;
       }
     }
+
+    .mat-form-field {
+      .input-link {
+        color: mat-color($primary);
+        text-align: center;
+        font-size: 12px;
+        cursor: pointer;
+      }
+    }
   }
 
   .logs-dialog .mat-dialog-content {

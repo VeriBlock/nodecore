@@ -65,7 +65,11 @@
       <mat-card class="alert-info" style="margin-top: 1em;">
         <mat-card-content style="display: flex;">
           <mat-icon size="lg" style="padding-right: 5px;">info_outline</mat-icon>
-          <span>No AltChain selected</span>
+          <span>
+            {{ networkError
+            ? 'Server is restarting, please wait for the initial configuration to load'
+            : 'No AltChain selected' }}
+          </span>
         </mat-card-content>
       </mat-card>
     </ng-container>

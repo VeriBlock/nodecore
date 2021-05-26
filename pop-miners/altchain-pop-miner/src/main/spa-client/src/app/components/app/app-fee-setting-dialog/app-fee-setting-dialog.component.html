@@ -1,9 +1,9 @@
 <div mat-dialog-title>
-  <span>VBK Fee Settings</span>
+  <span>Settings</span>
 </div>
 
 <div mat-dialog-content>
-  <form fxLayout="column" fxLayoutAlign="center start" fxLayoutGap="15px" [formGroup]="form" novalidate>
+  <form fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="15px" [formGroup]="form" novalidate>
 
     <mat-form-field appearance="outline">
       <mat-label>Fee per byte</mat-label>
@@ -22,6 +22,11 @@
       <mat-error *ngIf="form.get('maxFee').errors?.min">Not a valid number</mat-error>
       <mat-error *ngIf="form.get('maxFee').errors?.required">Required</mat-error>
     </mat-form-field>
+
+    <button mat-raised-button type="button" (click)="onRestart()" [disabled]="isRestarting">
+      <mat-icon>autorenew</mat-icon>
+      <span>Restart APM</span>
+    </button>
   </form>
 </div>
 
@@ -32,7 +37,7 @@
     <span>Cancel</span>
   </button>
 
-  <button mat-raised-button type="button" (click)="onSave()" color="primary" [disabled]="form?.invalid">
+  <button mat-raised-button type="button" (click)="onSave()" color="primary" [disabled]="form?.invalid || isRestarting">
     <span>Save</span>
   </button>
 </div>
