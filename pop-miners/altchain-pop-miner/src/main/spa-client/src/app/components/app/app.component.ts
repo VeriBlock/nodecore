@@ -122,6 +122,7 @@ export class AppComponent implements OnInit {
 
   private disableChains() {
     this.selectedAltChain = null;
+    this.vbkBalance = null;
     this.networkError = true;
 
     this.configuredAltchains = [
