@@ -194,8 +194,7 @@ export class AppComponent implements OnInit {
 
   public openTransactionDialog(isDeposit: boolean) {
     this.dialog.open(AppTransactionDialogComponent, {
-      minWidth: '500px',
-      maxWidth: '800px',
+      width: '550px',
       panelClass: 'dialog',
       data: {
         isDeposit,
