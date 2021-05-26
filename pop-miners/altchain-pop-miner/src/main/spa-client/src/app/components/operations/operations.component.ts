@@ -339,7 +339,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
               save: boolean;
               data: { maxHeight: number; feePerByte: number; maxFee: number };
             }) => {
-              const { maxHeight, feePerByte, maxFee } = result?.data;
+              const { maxHeight, feePerByte, maxFee } = result?.data || {};
 
               if (!result?.save) return;
 

@@ -1,5 +1,5 @@
 <h2 mat-dialog-title>
-  <span>Mine Custom Block</span>
+  <span>Custom Mining Operation</span>
 </h2>
 
 <div mat-dialog-content>
@@ -15,9 +15,11 @@
       <mat-error *ngIf="form.get('blockNumber').errors?.max">Not a valid number (max = {{maxNumber.toLocaleString()}})</mat-error>
     </mat-form-field>
 
-    <div>
-      Default VBK Fee Settings
-    </div>
+    <ng-container *ngIf="form.controls['feePerByte'].disabled">
+      <button mat-raised-button type="button" (click)="enableFeeInput()" color="primary" style="width: 100%;">
+        <span>Toggle Fee Settings</span>
+      </button>
+    </ng-container>
 
     <mat-form-field appearance="outline">
       <mat-label>Fee per byte</mat-label>
