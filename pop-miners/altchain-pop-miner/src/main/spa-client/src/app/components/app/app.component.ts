@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
-import { startWith, switchMap } from 'rxjs/operators';
+import { delay, retryWhen, startWith, switchMap, take } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, interval } from 'rxjs';
 
@@ -26,6 +26,7 @@ import {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
+  public networkError = false;
   public networkInfo: NetworkInfoResponse = null;
   public configuredAltchains: ConfiguredAltchain[] = [];
   public vbkAddress: string;
@@ -61,9 +62,15 @@ export class AppComponent implements OnInit {
             this.minerService.getConfiguredAltchains(),
             this.minerService.getMinerInfo(),
           ])
-        )
+        ),
+        retryWhen((errors) => {
+          this.disableChains();
+          return errors.pipe(delay(10000), take(10));
+        })
       )
       .subscribe((results) => {
+        this.networkError = false;
+
         const returnedResults = [
           ...(results[0] as ConfiguredAltchainList)?.altchains?.map((alt) => {
             const newAltchain =
@@ -113,7 +120,24 @@ export class AppComponent implements OnInit {
     }
   }
 
+  private disableChains() {
+    this.selectedAltChain = null;
+    this.vbkBalance = null;
+    this.networkError = true;
+
+    this.configuredAltchains = [
+      ...this.configuredAltchains.map((chain) => {
+        chain.readyStatus.isReady = false;
+        return chain;
+      }),
+    ];
+    if (Boolean(this.selectedAltChain)) {
+      this.changeAltChain(null);
+    }
+  }
+
   public changeAltChain(data: ConfiguredAltchain) {
+    if (this.networkError && !this.selectedAltChain) return;
     if (this.selectedAltChain) {
       const index = this.configuredAltchains.findIndex(
         (alt) => alt.key === this.selectedAltChain
