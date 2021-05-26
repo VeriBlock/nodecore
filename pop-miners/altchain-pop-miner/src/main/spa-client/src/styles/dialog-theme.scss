@@ -9,11 +9,13 @@
     .mat-dialog-container {
       overflow: hidden;
       font-size: 16px;
-      padding: 1em;
+      padding: 0 1em 1em;
       min-width: 200px;
 
       .mat-dialog-title {
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         font-size: 16px;
         font-weight: 400;
         min-height: 38px;
@@ -22,6 +24,7 @@
 
       .mat-dialog-content {
         border-top: 1px solid mat-color($foreground, divider);
+        box-shadow: inset 0px 4px 4px -4px rgb(0 0 0 / 25%);
         overflow: hidden;
         height: 100%;
         padding: 1em;
@@ -31,9 +34,11 @@
         padding-bottom: 20px;
       }
 
-      .dialog-subtitle {
+      .dialog-content-subtitle {
+        text-align: center;
         font-weight: 400;
         font-size: 14px;
+        padding-bottom: 1em;
       }
     }
   }
