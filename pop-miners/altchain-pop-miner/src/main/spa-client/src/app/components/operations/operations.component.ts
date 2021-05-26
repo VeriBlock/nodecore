@@ -309,22 +309,57 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   public openMineDialog() {
-    const dialogRef = this.dialog.open(MineCustomBlockDialogComponent, {
-      minWidth: '350px',
-      maxWidth: '500px',
-      panelClass: 'dialog',
-      closeOnNavigation: true,
-      data: {
-        maxHeight: this.selectedAltChain?.syncStatus?.localBlockchainHeight,
-      },
-    });
+    this.isLoadingConfiguration = true;
 
-    dialogRef
-      .afterClosed()
-      .subscribe((result: { save: boolean; data: number }) => {
-        if (result?.save) {
-          this.startMineBlock(result.data || null);
-        }
+    let defaultFeePerByte = null;
+    let defaultMaxFee = null;
+
+    this.configService
+      .getVbkFee()
+      .subscribe((data) => {
+        defaultFeePerByte = data.feePerByte;
+        defaultMaxFee = data.maxFee;
+
+        const dialogRef = this.dialog.open(MineCustomBlockDialogComponent, {
+          minWidth: '350px',
+          maxWidth: '500px',
+          panelClass: 'dialog',
+          closeOnNavigation: true,
+          data: {
+            maxHeight: this.selectedAltChain?.syncStatus?.localBlockchainHeight,
+            feePerByte: defaultFeePerByte,
+            maxFee: defaultMaxFee,
+          },
+        });
+
+        dialogRef
+          .afterClosed()
+          .subscribe(
+            (result: {
+              save: boolean;
+              data: { maxHeight: number; feePerByte: number; maxFee: number };
+            }) => {
+              const { maxHeight, feePerByte, maxFee } = result?.data;
+
+              if (!result?.save) return;
+
+              if (
+                defaultFeePerByte !== feePerByte ||
+                defaultMaxFee !== maxFee
+              ) {
+                this.configService
+                  .putVbkFee({ feePerByte, maxFee })
+                  .subscribe(() => {
+                    this.startMineBlock(maxHeight || null);
+                  });
+              } else {
+                this.startMineBlock(maxHeight || null);
+              }
+            }
+          );
+      })
+      .add(() => {
+        this.isLoadingConfiguration = false;
       });
   }
 
@@ -336,6 +371,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
     if (blockNumber) {
       request.height = blockNumber;
     }
+    console.log(request, blockNumber);
 
     this.isLoadingConfiguration = true;
 

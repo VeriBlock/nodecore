@@ -13,6 +13,14 @@ export class MineCustomBlockDialogComponent implements OnInit {
   public blockNumber: number;
   public form = this.formBuilder.group({
     blockNumber: null,
+    feePerByte: [
+      null,
+      Validators.compose([Validators.min(0), Validators.required]),
+    ],
+    maxFee: [
+      null,
+      Validators.compose([Validators.min(0), Validators.required]),
+    ],
   });
 
   constructor(
@@ -21,7 +29,7 @@ export class MineCustomBlockDialogComponent implements OnInit {
     private formBuilder: FormBuilder,
 
     @Inject(MAT_DIALOG_DATA)
-    public data: { maxHeight: number }
+    public data: { maxHeight: number; feePerByte: number; maxFee: number }
   ) {}
 
   ngOnInit(): void {
@@ -34,6 +42,12 @@ export class MineCustomBlockDialogComponent implements OnInit {
         Validators.max(this.maxNumber),
         Validators.required,
       ]);
+
+    this.form.patchValue({
+      blockNumber: this.data?.maxHeight || null,
+      feePerByte: this.data?.feePerByte || null,
+      maxFee: this.data?.maxFee || null,
+    });
   }
 
   public onCancel(): void {
@@ -50,7 +64,11 @@ export class MineCustomBlockDialogComponent implements OnInit {
 
     this.dialogRef.close({
       save: true,
-      data: this.form.controls['blockNumber']?.value,
+      data: {
+        maxHeight: this.form.value?.blockNumber,
+        feePerByte: this.form.value?.feePerByte,
+        maxFee: this.form.value?.maxFee,
+      },
     });
   }
 
