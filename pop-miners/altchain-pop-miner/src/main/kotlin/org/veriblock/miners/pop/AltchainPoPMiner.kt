@@ -92,6 +92,18 @@ private fun run(autoRestart: Boolean): Int {
         if (pluginService.getPlugins().isEmpty()) {
             error("In order for APM to run, at least one altchain plugin must be configured properly.")
         }
+
+        pluginService.getPlugins().values.forEach { securityInheritingChain ->
+            checkNotNull(securityInheritingChain.config.payoutAddress) {
+                "${securityInheritingChain.name}'s payoutAddress (${securityInheritingChain.key}.payoutAddress) must be configured!"
+            }
+            if (securityInheritingChain.config.payoutAddress.isNullOrEmpty() || securityInheritingChain.config.payoutAddress == "INSERT PAYOUT ADDRESS") {
+                error(
+                    "'${securityInheritingChain.config.payoutAddress}' is not a valid value for the ${securityInheritingChain.name}'s payoutAddress configuration (${securityInheritingChain.key}.payoutAddress). Please set up a valid payout address"
+                )
+            }
+        }
+
         minerService.initialize()
         minerService.start()
         securityInheritingService.start(minerService)
