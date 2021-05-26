@@ -22,7 +22,7 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Recipient's wallet address</mat-label>
-        <input matInput type="text" maxlength="50" pattern="[a-zA-Z0-9]+" formControlName="destinationAddress" required />
+        <input matInput type="text" maxlength="50" pattern="[a-zA-Z0-9]+" formControlName="destinationAddress" required [readOnly]="tx" />
 
         <mat-hint>Please verify the wallet address. We cannot refund an incorrect withdrawal.</mat-hint>
 
@@ -34,7 +34,7 @@
       <mat-form-field appearance="outline">
         <mat-label>Withdrawal amount</mat-label>
         <input matInput type="number" min="0" [max]="vbkBalance" formControlName="amount" (input)="checkNumberFormat($event)"
-          (keydown)="disableNumberFormat($event)" step="0.00000001" required />
+          (keydown)="disableNumberFormat($event)" step="0.00000001" required [readOnly]="tx" />
 
         <span matSuffix>&nbsp; VBK</span>
 
@@ -46,7 +46,7 @@
         <mat-error *ngIf="form.get('amount').errors?.max">Not enough funds</mat-error>
       </mat-form-field>
 
-      <ng-container *ngIf="showAlert && tx">
+      <ng-container *ngIf="tx">
         <mat-form-field appearance="outline">
           <mat-label>Transaction link</mat-label>
           <input matInput class="input-link" type="text" [value]="tx" readonly (click)="openLink()" />
@@ -73,7 +73,7 @@
 
   <ng-template #withdrawActionBlock>
 
-    <ng-container *ngIf="!showAlert; else doneBtnBlock">
+    <ng-container *ngIf="!tx; else doneBtnBlock">
       <button mat-raised-button type="button" (click)="onCancel()" color="warn">
         <span>Cancel</span>
       </button>

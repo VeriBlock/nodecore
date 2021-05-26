@@ -25,7 +25,6 @@ export class AppTransactionDialogComponent implements OnInit {
   public isTestnet = false;
 
   public submitInProgress = false;
-  public showAlert = false;
   public tx: string = null;
 
   constructor(
@@ -99,7 +98,6 @@ export class AppTransactionDialogComponent implements OnInit {
         this.alertService.addSuccess('Operation successful');
 
         this.tx = res.ids[0];
-        this.showAlert = true;
       })
       .add(() => {
         this.submitInProgress = false;
