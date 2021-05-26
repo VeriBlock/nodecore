@@ -9,7 +9,7 @@
     .mat-dialog-container {
       overflow: hidden;
       font-size: 16px;
-      padding: 0 1em 1em;
+      padding: 6px 1em 1em;
       min-width: 200px;
 
       .mat-dialog-title {
@@ -19,7 +19,7 @@
         font-size: 16px;
         font-weight: 400;
         min-height: 38px;
-        margin: 0;
+        margin: 0 0 6px;
       }
 
       .mat-dialog-content {
