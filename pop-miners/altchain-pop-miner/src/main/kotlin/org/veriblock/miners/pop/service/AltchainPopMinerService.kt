@@ -13,6 +13,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.veriblock.core.MineException
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.contracts.Balance
@@ -216,13 +217,18 @@ class AltchainPopMinerService(
         if (count >= MEMPOOL_CHAIN_LIMIT) {
             return CheckResult.Failure(MineException("Too Many Pending Transaction operations. Creating additional operations at this time would result in rejection on the VeriBlock network"))
         }
+        val latestKnownHeight = try {
+            runBlocking { chain.getBestBlockHeight() }
+        } catch (ignored: Exception) {
+            monitor.latestBlockChainInfo.localBlockchainHeight
+        }
         // Verify if the block is too old to be mined
-        if (blockHeight != null && blockHeight < monitor.latestBlockChainInfo.localBlockchainHeight - chain.getPayoutDelay() * 0.8) {
+        if (blockHeight != null && blockHeight < latestKnownHeight - chain.getPayoutDelay() * 0.8) {
             return CheckResult.Failure(MineException("The block @ $blockHeight is too old to be mined. Its endorsement wouldn't be accepted by the ${chain.name} network."))
         }
         // Verify if the block is too old to be mined
-        if (blockHeight != null && blockHeight > monitor.latestBlockChainInfo.localBlockchainHeight) {
-            return CheckResult.Failure(MineException("There is no block @ $blockHeight known by the ${chain.name} daemon. The latest known block is at height ${monitor.latestBlockChainInfo.localBlockchainHeight}."))
+        if (blockHeight != null && blockHeight > latestKnownHeight) {
+            return CheckResult.Failure(MineException("There is no block @ $blockHeight known by the ${chain.name} daemon. The latest known block is at height ${latestKnownHeight}."))
         }
         return CheckResult.Success()
     }
