@@ -107,12 +107,12 @@ export class AppComponent implements OnInit {
           }
         }
 
+        this.vbkAddress = results[1].vbkAddress;
+        this.vbkBalance = (results[1].vbkBalance / 100_000_000).toString();
+
         if (this.configuredAltchains?.length > 0 && !this.selectedAltChain) {
           this.changeAltChain(this.configuredAltchains[0]);
         }
-
-        this.vbkAddress = results[1].vbkAddress;
-        this.vbkBalance = (results[1].vbkBalance / 100_000_000).toString();
       });
 
     // Clear params if for some reason there are available when page loads
@@ -152,8 +152,10 @@ export class AppComponent implements OnInit {
         this.vbkBalance === null ||
         this.vbkBalance === undefined) &&
       !this.selectedAltChain
-    )
+    ) {
       return;
+    }
+
     if (this.selectedAltChain) {
       const index = this.configuredAltchains.findIndex(
         (alt) => alt.key === this.selectedAltChain
