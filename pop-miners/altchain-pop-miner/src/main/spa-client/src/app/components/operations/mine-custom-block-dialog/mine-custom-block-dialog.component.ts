@@ -9,17 +9,26 @@ import { AlertService } from '@core/services/alert.service';
 })
 export class MineCustomBlockDialogComponent implements OnInit {
   public maxNumber = 2147483647;
+  private maxFeeNumber = 99999999;
 
   public blockNumber: number;
   public form = this.formBuilder.group({
     blockNumber: null,
     feePerByte: [
       null,
-      Validators.compose([Validators.min(0), Validators.required]),
+      Validators.compose([
+        Validators.min(1),
+        Validators.max(this.maxFeeNumber),
+        Validators.required,
+      ]),
     ],
     maxFee: [
       null,
-      Validators.compose([Validators.min(0), Validators.required]),
+      Validators.compose([
+        Validators.min(1),
+        Validators.max(this.maxFeeNumber),
+        Validators.required,
+      ]),
     ],
   });
 
@@ -38,7 +47,7 @@ export class MineCustomBlockDialogComponent implements OnInit {
     this.form
       .get('blockNumber')
       .setValidators([
-        Validators.min(0),
+        Validators.min(1),
         Validators.max(this.maxNumber),
         Validators.required,
       ]);
@@ -74,15 +83,51 @@ export class MineCustomBlockDialogComponent implements OnInit {
     });
   }
 
-  public checkNumberFormat() {
-    if (this.form.value?.blockNumber) {
-      this.form.controls['blockNumber'].patchValue(
-        String(this.form.value.blockNumber).replace(/[^0-9]/g, '')
-      );
+  public checkNumberFormat(e, name: string) {
+    if (e.target?.value) {
+      if (e.target.value.match(/[^0-9]/g)) {
+        this.form.controls[name].patchValue(
+          e.target.value.replace(/[^0-9]/g, '')
+        );
+      }
     }
 
-    if (parseFloat(this.form.value?.blockNumber) > this.maxNumber) {
-      this.form.controls['blockNumber'].patchValue(this.maxNumber - 1);
+    const selectedInputValue: number = parseFloat(e.target?.value);
+
+    switch (name) {
+      case 'blockNumber':
+        if (selectedInputValue > this.maxNumber) {
+          this.form.controls['blockNumber'].patchValue(this.maxNumber - 1);
+        }
+        break;
+
+      case 'feePerByte':
+        const maxFeeLimit =
+          parseFloat(this.form?.value?.maxFee) || this.data?.maxFee;
+
+        if (this.form.controls['maxFee'].enabled) {
+          if (selectedInputValue > this.maxFeeNumber) {
+            this.form.controls['feePerByte'].patchValue(this.maxFeeNumber);
+            this.form.controls['maxFee'].patchValue(this.maxFeeNumber);
+          } else if (selectedInputValue > maxFeeLimit) {
+            this.form.controls['maxFee'].patchValue(selectedInputValue);
+          }
+        } else if (selectedInputValue > maxFeeLimit) {
+          this.form.controls['feePerByte'].patchValue(maxFeeLimit);
+        }
+        break;
+
+      case 'maxFee':
+        if (selectedInputValue > this.maxFeeNumber) {
+          this.form.controls['maxFee'].patchValue(this.maxFeeNumber);
+        }
+        if (selectedInputValue < parseFloat(this.form?.value?.feePerByte)) {
+          this.form.controls['feePerByte'].patchValue(selectedInputValue);
+        }
+        break;
+
+      default:
+        break;
     }
   }
 
@@ -95,6 +140,10 @@ export class MineCustomBlockDialogComponent implements OnInit {
       e.key === 'e'
     ) {
       e.preventDefault();
+    }
+
+    if (e.key === 'Enter' && this.form.valid) {
+      this.onSave();
     }
   }
 

@@ -7,19 +7,24 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Fee per byte</mat-label>
-      <input matInput onmousewheel type="number" min="0" formControlName="feePerByte" required />
+      <input matInput onmousewheel type="number" min="1" formControlName="feePerByte" (keydown)="disableNumberFormat($event)"
+        (input)="checkNumberFormat($event, 'feePerByte')" required />
       <span matSuffix>&nbsp; VBK (Atomic units)</span>
 
       <mat-error *ngIf="form.get('feePerByte').errors?.min">Not a valid number</mat-error>
+      <mat-error *ngIf="form.get('feePerByte').errors?.max">Not a valid number (max {{form.get('feePerByte').errors?.max?.max}})
+      </mat-error>
       <mat-error *ngIf="form.get('feePerByte').errors?.required">Required</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Max fee</mat-label>
-      <input matInput onmousewheel type="number" min="0" formControlName="maxFee" required />
+      <input matInput onmousewheel type="number" min="1" formControlName="maxFee" required (keydown)="disableNumberFormat($event)"
+        (input)="checkNumberFormat($event, 'maxFee')" />
       <span matSuffix>&nbsp; VBK (Atomic units)</span>
 
       <mat-error *ngIf="form.get('maxFee').errors?.min">Not a valid number</mat-error>
+      <mat-error *ngIf="form.get('maxFee').errors?.max">Not a valid number (max {{form.get('maxFee').errors?.max?.max}})</mat-error>
       <mat-error *ngIf="form.get('maxFee').errors?.required">Required</mat-error>
     </mat-form-field>
 
