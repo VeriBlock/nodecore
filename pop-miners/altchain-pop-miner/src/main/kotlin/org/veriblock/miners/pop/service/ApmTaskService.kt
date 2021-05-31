@@ -91,7 +91,7 @@ class ApmTaskService(
                 val previousBlock = operation.chain.getBlock(blockEvidence.previousHash.toString())
                     ?: failOperation("The endorsed previous block hash ${blockEvidence.previousHash} is not present at the chain")
                 if (previousBlock.height != (endorsedBlock.height - 1).coerceAtLeast(0)) {
-                    failOperation("The endorsed previous block height doesn't match with the endorsed block height")
+                    failOperation("The endorsed previous block height (${previousBlock.height}) doesn't match with the endorsed block height (${(endorsedBlock.height - 1).coerceAtLeast(0)})")
                 }
                 val keystoneSkip = when (endorsedBlock.height % operation.chain.config.keystonePeriod) {
                     0 -> operation.chain.config.keystonePeriod
@@ -101,12 +101,12 @@ class ApmTaskService(
                 val previousKeystone = operation.chain.getBlock(blockEvidence.previousKeystone.toString())
                     ?: failOperation("The endorsed previous keystone hash ${blockEvidence.previousKeystone} is not present at the chain")
                 if (previousKeystone.height != (endorsedBlock.height - keystoneSkip).coerceAtLeast(0)) {
-                    failOperation("The endorsed previous keystone height doesn't match with the endorsed block height")
+                    failOperation("The endorsed previous keystone height (${previousKeystone.height}) doesn't match with the endorsed block height (${(endorsedBlock.height - keystoneSkip).coerceAtLeast(0)})")
                 }
                 val secondKeystone = operation.chain.getBlock(blockEvidence.secondKeystone.toString())
                     ?: failOperation("The endorsed second previous keystone hash ${blockEvidence.secondKeystone} is not present at the chain")
                 if (secondKeystone.height != (endorsedBlock.height - keystoneSkip - operation.chain.config.keystonePeriod).coerceAtLeast(0)) {
-                    failOperation("The endorsed second previous keystone height doesn't match with the endorsed block height")
+                    failOperation("The endorsed second previous keystone height (${secondKeystone.height}) doesn't match with the endorsed block height (${(endorsedBlock.height - keystoneSkip - operation.chain.config.keystonePeriod).coerceAtLeast(0)})")
                 }
                 miner.network.submitEndorsement(
                     endorsementData,
