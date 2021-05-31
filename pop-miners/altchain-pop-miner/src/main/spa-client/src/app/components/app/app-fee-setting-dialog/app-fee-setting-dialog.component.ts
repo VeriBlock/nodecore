@@ -61,11 +61,11 @@ export class AppFeeSettingDialogComponent implements OnInit {
 
     this.quitService
       .postQuitRestart(true)
-      .subscribe()
+      .subscribe(() => {
+        this.dialogRef.close({ save: false, restart: true });
+      })
       .add(() => {
-        setTimeout(() => {
-          this.isRestarting = false;
-        }, 15000);
+        this.isRestarting = false;
       });
   }
 }

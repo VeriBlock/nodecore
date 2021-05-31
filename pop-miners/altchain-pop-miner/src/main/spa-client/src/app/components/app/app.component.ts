@@ -1,6 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
-import { delay, retryWhen, startWith, switchMap, take } from 'rxjs/operators';
+import {
+  delay,
+  retryWhen,
+  startWith,
+  switchMap,
+  takeWhile,
+} from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin, interval } from 'rxjs';
 
@@ -64,8 +70,13 @@ export class AppComponent implements OnInit {
           ])
         ),
         retryWhen((errors) => {
-          this.disableChains();
-          return errors.pipe(delay(10000), take(10));
+          return errors.pipe(
+            delay(15000),
+            takeWhile((error) => {
+              this.disableChains();
+              return error.includes("APM Instance can't be reached");
+            })
+          );
         })
       )
       .subscribe((results) => {
@@ -96,12 +107,12 @@ export class AppComponent implements OnInit {
           }
         }
 
+        this.vbkAddress = results[1].vbkAddress;
+        this.vbkBalance = (results[1].vbkBalance / 100_000_000).toString();
+
         if (this.configuredAltchains?.length > 0 && !this.selectedAltChain) {
           this.changeAltChain(this.configuredAltchains[0]);
         }
-
-        this.vbkAddress = results[1].vbkAddress;
-        this.vbkBalance = (results[1].vbkBalance / 100_000_000).toString();
       });
 
     // Clear params if for some reason there are available when page loads
@@ -123,7 +134,6 @@ export class AppComponent implements OnInit {
   private disableChains() {
     this.selectedAltChain = null;
     this.vbkBalance = null;
-    this.networkError = true;
 
     this.configuredAltchains = [
       ...this.configuredAltchains.map((chain) => {
@@ -137,7 +147,15 @@ export class AppComponent implements OnInit {
   }
 
   public changeAltChain(data: ConfiguredAltchain) {
-    if (this.networkError && !this.selectedAltChain) return;
+    if (
+      (this.networkError ||
+        this.vbkBalance === null ||
+        this.vbkBalance === undefined) &&
+      !this.selectedAltChain
+    ) {
+      return;
+    }
+
     if (this.selectedAltChain) {
       const index = this.configuredAltchains.findIndex(
         (alt) => alt.key === this.selectedAltChain
@@ -167,15 +185,28 @@ export class AppComponent implements OnInit {
 
         dialogRef
           .afterClosed()
-          .subscribe((result: { save: boolean; feeConfig: VbkFeeConfig }) => {
-            if (result?.save) {
-              this.configService.putVbkFee(result?.feeConfig).subscribe(() => {
-                this.alertService.addSuccess(
-                  'Configuration updated successfully!'
-                );
-              });
+          .subscribe(
+            (result: {
+              save: boolean;
+              feeConfig: VbkFeeConfig;
+              restart?: boolean;
+            }) => {
+              if (result?.save) {
+                this.configService
+                  .putVbkFee(result?.feeConfig)
+                  .subscribe(() => {
+                    this.alertService.addSuccess(
+                      'Configuration updated successfully!'
+                    );
+                  });
+              }
+
+              if (result?.restart) {
+                this.networkError = true;
+                this.disableChains();
+              }
             }
-          });
+          );
       })
       .add(() => {
         this.isLoadingSettings = false;
