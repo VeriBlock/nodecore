@@ -49,7 +49,6 @@ export class MineCustomBlockDialogComponent implements OnInit {
       maxFee: this.data?.maxFee || null,
     });
 
-    this.form.controls['feePerByte'].disable();
     this.form.controls['maxFee'].disable();
   }
 
@@ -97,14 +96,9 @@ export class MineCustomBlockDialogComponent implements OnInit {
     ) {
       e.preventDefault();
     }
-
-    if (e.key === 'Tab') {
-      this.enableFeeInput();
-    }
   }
 
   public enableFeeInput() {
-    this.form.controls['feePerByte'].enable();
     this.form.controls['maxFee'].enable();
   }
 }
