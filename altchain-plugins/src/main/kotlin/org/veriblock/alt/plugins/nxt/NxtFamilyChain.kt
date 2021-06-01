@@ -177,7 +177,11 @@ class NxtFamilyChain(
     override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence = TODO()
 
     override suspend fun getBlockChainInfo(): StateInfo = TODO()
-    
+
+    override fun validatePayoutAddress() {
+        TODO("Not yet implemented")
+    }
+
     private fun Any.toJson() = Gson().toJson(this)
 }
 

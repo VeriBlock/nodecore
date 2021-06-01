@@ -61,12 +61,12 @@ class BitcoinFamilyChain(
     override val name: String = configuration.name
         ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
-    private val payoutAddress: String? = configuration.payoutAddress
+    private lateinit var payoutAddress: String
 
     private var payoutAddressScript: ByteArray? = null
 
     private suspend fun getPayoutAddressScript() = payoutAddressScript ?: run {
-        val script = if (payoutAddress!!.isHex()) {
+        val script = if (payoutAddress.isHex()) {
             payoutAddress.asHexBytes()
         } else {
             validateAddress(payoutAddress)
@@ -377,6 +377,18 @@ class BitcoinFamilyChain(
                 throw e
             }
         }
+    }
+
+    override fun validatePayoutAddress() {
+        checkNotNull(config.payoutAddress) {
+            "$name's payoutAddress ($key.payoutAddress) must be configured!"
+        }
+        if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
+        }
+        payoutAddress = config.payoutAddress
     }
 
     private suspend fun validateAddress(address: String): ByteArray {

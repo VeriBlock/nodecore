@@ -64,12 +64,12 @@ class EthereumFamilyChain(
     override val name: String = configuration.name
         ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
-    private val payoutAddress: String? = config.payoutAddress
+    private lateinit var payoutAddress: String
 
     private var payoutAddressScript: ByteArray? = null
 
     private suspend fun getPayoutAddressScript() = payoutAddressScript ?: run {
-        val script = validateAddress(payoutAddress!!)
+        val script = validateAddress(payoutAddress)
         payoutAddressScript = script
         script
     }
@@ -319,6 +319,18 @@ class EthereumFamilyChain(
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
         TODO("Not yet implemented (getBtcBlock)") // pop_getBtcBlockByHash
+    }
+
+    override fun validatePayoutAddress() {
+        checkNotNull(config.payoutAddress) {
+            "$name's payoutAddress ($key.payoutAddress) must be configured!"
+        }
+        if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
+        }
+        payoutAddress = config.payoutAddress
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
