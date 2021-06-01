@@ -17,8 +17,8 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import java.nio.ByteBuffer
 
-@PluginSpec(name = "PlaceholdersFamily", key = "phl")
-class PlaceholdersFamilyChain(
+@PluginSpec(name = "PexaFamily", key = "phx")
+class PexaFamilyChain(
     override val key: String,
     configuration: PluginConfig
 ) : BitcoinFamilyChain(key, configuration) {
