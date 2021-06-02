@@ -387,12 +387,12 @@ open class BitcoinFamilyChain(
         checkNotNull(config.payoutAddress) {
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
-        if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
+        if (config.payoutAddress?.isEmpty() == true || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
             error(
                 "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
             )
         }
-        payoutAddress = config.payoutAddress
+        payoutAddress = config.payoutAddress!!
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
