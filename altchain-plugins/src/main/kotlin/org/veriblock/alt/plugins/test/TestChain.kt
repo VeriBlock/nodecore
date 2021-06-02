@@ -185,6 +185,10 @@ class TestChain(
         TODO("Not yet implemented")
     }
 
+    override fun validatePayoutAddress() {
+        TODO("Not yet implemented")
+    }
+
 //    override suspend fun submit(
 //        contextBlocks: List<VeriBlockBlock>,
 //        atvs: List<AltPublication>,
