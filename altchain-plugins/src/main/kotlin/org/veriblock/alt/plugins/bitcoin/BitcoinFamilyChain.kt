@@ -39,6 +39,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.lang.RuntimeException
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -61,11 +62,14 @@ open class BitcoinFamilyChain(
     override val name: String = configuration.name
         ?: error("Failed to load altchain plugin $key: please configure the chain 'name'!")
 
-    private val payoutAddress: String
+    private lateinit var payoutAddress: String
 
     private var payoutAddressScript: ByteArray? = null
 
     private suspend fun getPayoutAddressScript() = payoutAddressScript ?: run {
+        if (!::payoutAddress.isInitialized) {
+            throw RuntimeException("Trying to access the 'payoutAddress' before it was initialized! 'validatePayoutAddress()' must be called first")
+        }
         val script = if (payoutAddress.isHex()) {
             payoutAddress.asHexBytes()
         } else {
@@ -87,15 +91,6 @@ open class BitcoinFamilyChain(
 
     init {
         config.checkValidity()
-        checkNotNull(config.payoutAddress) {
-            "$name's payoutAddress ($key.payoutAddress) must be configured!"
-        }
-        if (config.payoutAddress!!.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
-            error(
-                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
-            )
-        }
-        payoutAddress = config.payoutAddress!!
     }
 
     override suspend fun getBestBlockHeight(): Int {
@@ -386,6 +381,18 @@ open class BitcoinFamilyChain(
                 throw e
             }
         }
+    }
+
+    override fun validatePayoutAddress() {
+        checkNotNull(config.payoutAddress) {
+            "$name's payoutAddress ($key.payoutAddress) must be configured!"
+        }
+        if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
+            error(
+                "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
+            )
+        }
+        payoutAddress = config.payoutAddress
     }
 
     private suspend fun validateAddress(address: String): ByteArray {

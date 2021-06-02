@@ -150,10 +150,10 @@ class SpvContext(
     fun start() {
         peerTable.initialize(
             onConnected = {
-                logger.info { "Connected!" }
+                logger.info { "SPV Connected" }
             },
             onDisconnected = {
-                logger.info { "Disconnected!" }
+                logger.info { "SPV Disconnected" }
             }
         )
         startPendingTransactionsUpdateTask()

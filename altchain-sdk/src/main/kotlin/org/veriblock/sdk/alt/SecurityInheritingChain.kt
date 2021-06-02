@@ -145,6 +145,8 @@ interface SecurityInheritingChain {
      */
     fun shouldAutoMine(blockHeight: Int): Boolean = config.shouldAutoMine(blockHeight)
 
+    fun validatePayoutAddress()
+
     /**
      * @return the block chain information
      */

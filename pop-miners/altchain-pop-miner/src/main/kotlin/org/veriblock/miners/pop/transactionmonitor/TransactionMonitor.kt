@@ -8,17 +8,14 @@
 
 package org.veriblock.miners.pop.transactionmonitor
 
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.core.MerkleTree
 import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.spv.util.SpvEventBus
@@ -27,7 +24,6 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Collections
-import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -110,38 +106,6 @@ class TransactionMonitor(
     fun getTransaction(transactionId: VbkTxId): WalletTransaction {
         return transactions[transactionId]
             ?: error("Unable to find VBK transaction $transactionId in the monitored address ($address)")
-    }
-
-    private fun removeConfirmations(amount: Int) = lock.withLock {
-        for (tx in transactions.values) {
-            val meta = tx.transactionMeta
-            if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
-                if (amount < meta.depth) {
-                    meta.depth = meta.depth - amount
-                } else {
-                    meta.setState(TransactionMeta.MetaState.PENDING)
-                    tx.merklePath = null
-                }
-            }
-        }
-    }
-
-    private fun filterTransactionsFrom(block: FullBlock): Map<Sha256Hash, WalletTransaction> {
-        val relevantTransactions = HashMap<Sha256Hash, WalletTransaction>()
-
-        val merkleTree: MerkleTree by lazy {
-            MerkleTree.of(block)
-        }
-
-        block.normalTransactions.forEachIndexed { i, transaction ->
-            if (transaction.isRelevant()) {
-                val walletTransaction = WalletTransaction.wrap(transaction)
-                walletTransaction.merklePath = merkleTree.getMerklePath(transaction.id, i, true)
-
-                relevantTransactions[transaction.id] = walletTransaction
-            }
-        }
-        return relevantTransactions
     }
 
     override fun equals(other: Any?): Boolean {

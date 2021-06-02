@@ -96,9 +96,9 @@ class SpvService(
     // if sourceAddress is null, use all available addresses
     suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {
         val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
-        val totalOutputAmount = outputs.map {
+        val totalOutputAmount = outputs.sumOf {
             it.amount.atomicUnits
-        }.sum()
+        }
         if (sourceAddress == null) {
             addressCoinsIndexList.addAll(
                 spvContext
@@ -395,7 +395,7 @@ class SpvService(
         val currentHeight = blockchain.activeChain.tip.height
         val bestBlockHeight = SpvState.downloadPeer?.let { SpvState.getPeerHeight(it) } ?: 0
         val status: DownloadStatus = when {
-            SpvState.downloadPeer == null || (currentHeight == 0 && bestBlockHeight == 0) ->
+            SpvState.downloadPeer == null || currentHeight == 0 || bestBlockHeight == 0 ->
                 DownloadStatus.DISCOVERING
             bestBlockHeight > 0 && bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
                 DownloadStatus.READY
