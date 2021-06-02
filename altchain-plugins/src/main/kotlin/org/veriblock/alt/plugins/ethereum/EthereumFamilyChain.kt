@@ -44,6 +44,7 @@ import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.lang.RuntimeException
 import java.nio.ByteBuffer
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -69,6 +70,9 @@ class EthereumFamilyChain(
     private var payoutAddressScript: ByteArray? = null
 
     private suspend fun getPayoutAddressScript() = payoutAddressScript ?: run {
+        if (!::payoutAddress.isInitialized) {
+            throw RuntimeException("Trying to access the 'payoutAddress' before it was initialized! 'validatePayoutAddress()' must be called first")
+        }
         val script = validateAddress(payoutAddress)
         payoutAddressScript = script
         script
