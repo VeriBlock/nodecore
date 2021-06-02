@@ -361,6 +361,8 @@ class PeerTable(
                     val morePeers = bootstrapper.getNext(bootstrapPeerLimit)
                     establishConnectionWithConfiguredPeers(morePeers)
                     return
+                } else if (externalPeers.isNotEmpty()) {
+                    establishConnectionWithConfiguredPeers(externalPeers)
                 } else {
                     logger.info("bootstrap not enabled and no peers!")
                 }
