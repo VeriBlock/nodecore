@@ -52,6 +52,7 @@ import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEnd
 import java.io.File
 import java.io.IOException
 import java.util.*
+import kotlin.math.absoluteValue
 
 private val logger = createLogger {}
 

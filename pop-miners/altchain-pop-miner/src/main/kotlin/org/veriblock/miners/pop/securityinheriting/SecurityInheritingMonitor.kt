@@ -319,7 +319,7 @@ class SecurityInheritingMonitor(
                     }
                     .count { it.accepted }
                 if (successfulSubmissions > 0) {
-                    logger.info { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
+                    logger.debug { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
                 }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
@@ -379,7 +379,7 @@ class SecurityInheritingMonitor(
                     }
                     .count { it.accepted }
                 if (successfulSubmissions > 0) {
-                    logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+                    logger.debug { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
                 }
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
