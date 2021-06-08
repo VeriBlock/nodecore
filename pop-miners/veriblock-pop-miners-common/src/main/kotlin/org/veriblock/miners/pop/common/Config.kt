@@ -18,7 +18,13 @@ data class NodeCoreRpcConfig(
 
 data class ApiConfig(
     val host: String = "127.0.0.1",
-    val port: Int = 10500
+    val port: Int = 10500,
+    val auth: Auth? = null
+)
+
+data class Auth(
+    val username: String,
+    val password: String
 )
 
 class BitcoinConfig(

@@ -23,11 +23,11 @@ import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.auth.*
 import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.jackson.jackson
 import io.ktor.locations.Locations
@@ -41,6 +41,9 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.miners.pop.api.auth.BasicProvider
+import org.veriblock.miners.pop.api.auth.basicAuth
+import org.veriblock.miners.pop.api.auth.installAuth
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
 import org.veriblock.miners.pop.service.Metrics
@@ -56,6 +59,8 @@ class ApiServer(
 ) {
     private val port: Int = configuration.getInt("miner.api.port") ?: 8080
     private val host: String = configuration.getString("miner.api.host") ?: "0.0.0.0"
+    private val authUsername: String? = configuration.getString("miner.api.authUsername")
+    private val authPassword: String? = configuration.getString("miner.api.authPassword")
 
     private var server: ApplicationEngine? = null
 
@@ -75,6 +80,16 @@ class ApiServer(
                 allowNonSimpleContentTypes = true
             }
 
+            val basicAuthProvider = BasicProvider(
+                authName = "basicAuth",
+                optional = (authUsername == null || authPassword == null)
+            )
+            installAuth(
+                basicAuthProvider = basicAuthProvider,
+                authUsername = authUsername,
+                authPassword = authPassword
+            )
+
             install(OpenAPIGen) {
                 info {
                     version = API_VERSION
@@ -85,6 +100,7 @@ class ApiServer(
                         email = "https://veriblock.org"
                     }
                 }
+                addModules(basicAuthProvider)
                 replaceModule(DefaultSchemaNamer, object : SchemaNamer {
                     val regex = Regex("[A-Za-z0-9_.]+")
                     override fun get(type: KType): String {
@@ -119,22 +135,29 @@ class ApiServer(
 
             install(Locations)
             routing {
-                get("openapi.json") {
-                    val application = application
-                    call.respond(application.openAPIGen.api)
-                }
-                get("api") {
-                    call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
-                }
-                get("metrics") {
-                    call.respond(Metrics.registry.scrape())
+                authenticate(
+                    basicAuthProvider.authName,
+                    optional = (authUsername == null || authPassword == null)
+                ) {
+                    get("openapi.json") {
+                        val application = application
+                        call.respond(application.openAPIGen.api)
+                    }
+                    get("api") {
+                        call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
+                    }
+                    get("metrics") {
+                        call.respond(Metrics.registry.scrape())
+                    }
                 }
             }
             apiRouting {
-                route("api") {
-                    for (controller in controllers) {
-                        with(controller) {
-                            registerApi()
+                basicAuth(basicAuthProvider) {
+                    route("api") {
+                        for (controller in controllers) {
+                            with(controller) {
+                                registerApi()
+                            }
                         }
                     }
                 }

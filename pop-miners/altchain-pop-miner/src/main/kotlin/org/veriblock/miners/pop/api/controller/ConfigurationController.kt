@@ -1,12 +1,20 @@
+// VeriBlock NodeCore
+// Copyright 2017-2021 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 package org.veriblock.miners.pop.api.controller
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.put
+import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
+import com.papsign.ktor.openapigen.route.path.auth.get
+import com.papsign.ktor.openapigen.route.path.auth.put
 import com.papsign.ktor.openapigen.route.response.respond
+import io.ktor.auth.*
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.api.dto.AutoMineConfigDto
 import org.veriblock.miners.pop.api.dto.AutoMineRound
@@ -32,14 +40,14 @@ class ConfigurationController(
     @Path("config/vbk-fee")
     class VbkFeePath
 
-    override fun NormalOpenAPIRoute.registerApi() {
-        get<ConfigPath, Map<String, String>>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() {
+        get<ConfigPath, Map<String, String>, UserIdPrincipal>(
             info("Get all configuration values")
         ) {
             val configValues = configuration.list()
             respond(configValues)
         }
-        put<ConfigPath, Unit, SetConfigRequest>(
+        put<ConfigPath, Unit, SetConfigRequest, UserIdPrincipal>(
             info("Sets a new value for a config property (needs restart)")
         ) { _, request ->
             if (request.key == null) {
@@ -56,7 +64,7 @@ class ConfigurationController(
             configuration.saveOverriddenProperties()
             respond(Unit)
         }
-        get<AutominePath, AutoMineConfigDto>(
+        get<AutominePath, AutoMineConfigDto, UserIdPrincipal>(
             info("Get the automine config")
         ) { location ->
             val chain = pluginService[location.chain]
@@ -68,7 +76,7 @@ class ConfigurationController(
             )
             respond(configValues)
         }
-        put<AutominePath, Unit, AutoMineConfigDto>(
+        put<AutominePath, Unit, AutoMineConfigDto, UserIdPrincipal>(
             info("Set the automine config")
         ) { location, request ->
             val chain = pluginService[location.chain]
@@ -85,7 +93,7 @@ class ConfigurationController(
             }
             respond(Unit)
         }
-        get<VbkFeePath, VbkFeeConfigDto>(
+        get<VbkFeePath, VbkFeeConfigDto, UserIdPrincipal>(
             info("Gets the current VBK fee config")
         ) {
             val configValues = VbkFeeConfigDto(
@@ -94,7 +102,7 @@ class ConfigurationController(
             )
             respond(configValues)
         }
-        put<VbkFeePath, Unit, VbkFeeConfigDto>(
+        put<VbkFeePath, Unit, VbkFeeConfigDto, UserIdPrincipal>(
             info("Sets the current VBK fee config")
         ) { _, request ->
             if (request.maxFee != null) {

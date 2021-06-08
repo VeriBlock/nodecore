@@ -17,6 +17,7 @@ private val logger = KotlinLogging.logger {}
 class BadRequestException(override val message: String) : Exception()
 class NotFoundException(override val message: String) : Exception()
 class CallFailureException(override val message: String) : Exception()
+class BadPrincipalException : Exception()
 
 data class ApiError(
     val message: String

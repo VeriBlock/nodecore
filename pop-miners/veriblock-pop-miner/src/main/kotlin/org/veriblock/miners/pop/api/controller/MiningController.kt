@@ -11,10 +11,11 @@ import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
+import com.papsign.ktor.openapigen.route.path.auth.get
+import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
+import io.ktor.auth.*
 import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.api.model.MineRequest
 import org.veriblock.miners.pop.api.model.MineResultResponse
@@ -53,8 +54,8 @@ class MiningController(
         @QueryParam("Log level (optional, INFO by default)") val level: String?
     )
 
-    override fun NormalOpenAPIRoute.registerApi() {
-        post<MineActionPath, MineResultResponse, MineRequest>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() {
+        post<MineActionPath, MineResultResponse, MineRequest, UserIdPrincipal>(
             info("Start mining operation")
         ) { _, request ->
             val result = minerService.mine(request.block)
@@ -62,7 +63,7 @@ class MiningController(
             val responseModel = result.toResponse()
             respond(responseModel)
         }
-        get<MinerPath, MinerInfoResponse>(
+        get<MinerPath, MinerInfoResponse, UserIdPrincipal>(
             info("Get miner data")
         ) {
             val responseModel = MinerInfoResponse(
@@ -73,7 +74,7 @@ class MiningController(
             )
             respond(responseModel)
         }
-        get<MinerOperationsPath, OperationSummaryListResponse>(
+        get<MinerOperationsPath, OperationSummaryListResponse, UserIdPrincipal>(
             info("Get operations list")
         ) {
             val operationSummaries = minerService.listOperations()
@@ -81,7 +82,7 @@ class MiningController(
             val responseModel = operationSummaries.map { it.toResponse() }
             respond(OperationSummaryListResponse(responseModel))
         }
-        get<MinerOperationPath, OperationDetailResponse>(
+        get<MinerOperationPath, OperationDetailResponse, UserIdPrincipal>(
             info("Get operation details")
         ) { location ->
             val id = location.id
@@ -92,13 +93,13 @@ class MiningController(
             val responseModel = operationState.toResponse()
             respond(responseModel)
         }
-        post<CancelOperationPath, Unit, Unit>(
+        post<CancelOperationPath, Unit, Unit, UserIdPrincipal>(
             info("Cancel an operation")
         ) { location, _ ->
             val result = minerService.cancelOperation(location.id)
             respond(result)
         }
-        get<MinerOperationLogsPath, List<String>>(
+        get<MinerOperationLogsPath, List<String>, UserIdPrincipal>(
             info("Get the operation logs")
         ) { location ->
             val level: Level = Level.toLevel(location.level, Level.INFO)

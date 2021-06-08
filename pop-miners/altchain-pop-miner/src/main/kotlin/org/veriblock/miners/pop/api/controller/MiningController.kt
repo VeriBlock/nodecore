@@ -11,11 +11,12 @@ import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
+import com.papsign.ktor.openapigen.route.path.auth.get
+import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.auth.*
 import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.api.dto.AltChainReadyStatusResponse
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
@@ -53,13 +54,6 @@ class MiningController(
         @QueryParam("Pagination offset (optional)") val offset: Int?
     )
 
-    @Path("operations/count")
-    class MinerOperationsCountPath(
-        @QueryParam("Operation status (optional)") val status: String?,
-        @QueryParam("Pagination limit (optional)") val limit: Int?,
-        @QueryParam("Pagination offset (optional)") val offset: Long?
-    )
-
     @Path("operations/{id}")
     class MinerOperationPath(
         @PathParam("Operation ID") val id: String
@@ -84,8 +78,8 @@ class MiningController(
     @Path("configured-altchains")
     class MinerConfiguredAltchainsPath
 
-    override fun NormalOpenAPIRoute.registerApi() = route("miner") {
-        get<Unit, MinerInfoResponse>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() = route("miner") {
+        get<Unit, MinerInfoResponse, UserIdPrincipal>(
             info("Get miner data")
         ) {
             val responseModel = MinerInfoResponse(
@@ -94,7 +88,7 @@ class MiningController(
             )
             respond(responseModel)
         }
-        post<MineActionPath, OperationSummaryResponse, MineRequest>(
+        post<MineActionPath, OperationSummaryResponse, MineRequest, UserIdPrincipal>(
             info("Start mining operation")
         ) { _, mineRequest ->
             val operationId = miner.mine(mineRequest.chainSymbol, mineRequest.height)
@@ -108,7 +102,7 @@ class MiningController(
                 )
             )
         }
-        get<MinerOperationsPath, OperationSummaryListResponse>(
+        get<MinerOperationsPath, OperationSummaryListResponse, UserIdPrincipal>(
             info("Get operations list")
         ) { location ->
             // Get the given status filter
@@ -129,7 +123,7 @@ class MiningController(
             }.toList()
             respond(OperationSummaryListResponse(result, count))
         }
-        get<MinerOperationPath, OperationDetailResponse>(
+        get<MinerOperationPath, OperationDetailResponse, UserIdPrincipal>(
             info("Get operation details")
         ) { location ->
             val id = location.id
@@ -140,13 +134,13 @@ class MiningController(
             val responseModel = operationState.toDetailedResponse()
             respond(responseModel)
         }
-        post<CancelOperationPath, Unit, Unit>(
+        post<CancelOperationPath, Unit, Unit, UserIdPrincipal>(
             info("Cancel an operation")
         ) { location, _ ->
             val result = miner.cancelOperation(location.id)
             respond(result)
         }
-        get<MinerOperationLogsPath, List<String>>(
+        get<MinerOperationLogsPath, List<String>, UserIdPrincipal>(
             info("Get the operation logs")
         ) { location ->
             val level: Level = Level.toLevel(location.level, Level.INFO)
@@ -156,7 +150,7 @@ class MiningController(
             val responseModel = operation.getLogs(level).map { it.toString() }
             respond(responseModel)
         }
-        get<MinerOperationWorkflowPath, OperationWorkflow>(
+        get<MinerOperationWorkflowPath, OperationWorkflow, UserIdPrincipal>(
             info("Get operation workflow")
         ) { location ->
             val id = location.id
@@ -167,7 +161,7 @@ class MiningController(
             val workflow = operationExplainer.explainOperation(operation)
             respond(workflow)
         }
-        get<MinerConfiguredAltchainsPath, ConfiguredAltchainList>(
+        get<MinerConfiguredAltchainsPath, ConfiguredAltchainList, UserIdPrincipal>(
             info("Get configured altchains")
         ) {
             val altchains = pluginService.getPlugins().values.map {
