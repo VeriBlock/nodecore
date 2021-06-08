@@ -23,7 +23,7 @@ import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.install
-import io.ktor.auth.*
+import io.ktor.auth.authenticate
 import io.ktor.features.CORS
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
@@ -59,8 +59,8 @@ class ApiServer(
 ) {
     private val port: Int = configuration.getInt("miner.api.port") ?: 8080
     private val host: String = configuration.getString("miner.api.host") ?: "0.0.0.0"
-    private val authUsername: String? = configuration.getString("miner.api.authUsername")
-    private val authPassword: String? = configuration.getString("miner.api.authPassword")
+    private val authUsername: String? = configuration.getString("miner.api.auth.username")
+    private val authPassword: String? = configuration.getString("miner.api.auth.password")
 
     private var server: ApplicationEngine? = null
 

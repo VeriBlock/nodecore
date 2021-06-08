@@ -13,7 +13,7 @@ import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import mu.KotlinLogging
 import org.veriblock.miners.pop.EventBus
 import java.lang.Thread.sleep

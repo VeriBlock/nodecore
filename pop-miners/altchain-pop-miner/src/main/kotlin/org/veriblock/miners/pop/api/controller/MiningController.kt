@@ -16,7 +16,7 @@ import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.api.dto.AltChainReadyStatusResponse
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
@@ -32,8 +32,8 @@ import org.veriblock.miners.pop.api.dto.toDetailedResponse
 import org.veriblock.miners.pop.api.dto.toExplorerBaseUrlsResponse
 import org.veriblock.miners.pop.api.dto.toSummaryResponse
 import org.veriblock.miners.pop.core.MiningOperationStatus
-import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.AltchainPopMinerService
+import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.plugin.PluginService
 

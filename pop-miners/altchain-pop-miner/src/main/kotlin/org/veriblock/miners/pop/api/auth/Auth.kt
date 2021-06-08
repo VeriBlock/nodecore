@@ -1,8 +1,11 @@
 package org.veriblock.miners.pop.api.auth
 
 import com.papsign.ktor.openapigen.model.Described
-import io.ktor.application.*
-import io.ktor.auth.*
+import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.auth.Authentication
+import io.ktor.auth.UserIdPrincipal
+import io.ktor.auth.basic
 
 fun Application.installAuth(
     basicAuthProvider: BasicProvider,

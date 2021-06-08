@@ -13,7 +13,7 @@ import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.miners.pop.api.dto.WithdrawRequest

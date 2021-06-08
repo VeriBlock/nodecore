@@ -12,7 +12,7 @@ import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.veriblock.miners.pop.service.DiagnosticService
 import org.veriblock.sdk.models.DiagnosticInformation
 

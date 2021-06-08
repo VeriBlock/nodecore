@@ -14,13 +14,13 @@ import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.path.auth.put
 import com.papsign.ktor.openapigen.route.response.respond
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.Configuration
+import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.api.dto.AutoMineConfigDto
 import org.veriblock.miners.pop.api.dto.AutoMineRound
 import org.veriblock.miners.pop.api.dto.SetConfigRequest
 import org.veriblock.miners.pop.api.dto.VbkFeeConfigDto
-import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.sdk.alt.plugin.PluginService
 
 class ConfigurationController(

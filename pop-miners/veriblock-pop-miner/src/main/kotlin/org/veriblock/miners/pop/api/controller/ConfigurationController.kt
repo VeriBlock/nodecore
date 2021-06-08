@@ -15,7 +15,7 @@ import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.path.auth.put
 import com.papsign.ktor.openapigen.route.response.respond
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.AutoMineConfig
 import org.veriblock.miners.pop.api.model.SetConfigRequest

@@ -9,10 +9,12 @@ import com.papsign.ktor.openapigen.modules.providers.AuthProvider
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.throws
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.http.*
-import io.ktor.util.pipeline.*
+import io.ktor.application.ApplicationCall
+import io.ktor.auth.UserIdPrincipal
+import io.ktor.auth.authenticate
+import io.ktor.auth.authentication
+import io.ktor.http.HttpStatusCode
+import io.ktor.util.pipeline.PipelineContext
 import org.veriblock.miners.pop.api.controller.BadPrincipalException
 
 inline fun<T> NormalOpenAPIRoute.basicAuth(

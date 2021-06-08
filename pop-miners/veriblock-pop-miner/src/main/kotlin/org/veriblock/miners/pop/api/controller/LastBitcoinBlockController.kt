@@ -12,7 +12,7 @@ import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.response.respond
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.bitcoinj.core.Utils
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.api.models.ShowLastBitcoinBlockResponse

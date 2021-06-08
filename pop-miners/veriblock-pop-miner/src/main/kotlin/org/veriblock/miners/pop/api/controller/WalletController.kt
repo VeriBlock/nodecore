@@ -11,7 +11,7 @@ import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.post
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.veriblock.miners.pop.api.model.WithdrawRequest
 import org.veriblock.miners.pop.model.result.Result
 import org.veriblock.miners.pop.service.MinerService

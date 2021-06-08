@@ -15,7 +15,7 @@ import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
-import io.ktor.auth.*
+import io.ktor.auth.UserIdPrincipal
 import org.apache.logging.log4j.Level
 import org.veriblock.miners.pop.api.model.MineRequest
 import org.veriblock.miners.pop.api.model.MineResultResponse
