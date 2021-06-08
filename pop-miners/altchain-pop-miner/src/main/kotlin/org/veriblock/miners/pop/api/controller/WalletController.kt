@@ -1,11 +1,19 @@
+// VeriBlock NodeCore
+// Copyright 2017-2021 Xenios SEZC
+// All rights reserved.
+// https://www.veriblock.org
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 package org.veriblock.miners.pop.api.controller
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
+import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
 import org.veriblock.miners.pop.api.dto.WithdrawRequest
@@ -22,8 +30,8 @@ class WalletController(
     @Path("withdraw")
     class WithdrawPath
 
-    override fun NormalOpenAPIRoute.registerApi() = route("wallet") {
-        post<WithdrawPath, WithdrawResponse, WithdrawRequest>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() = route("wallet") {
+        post<WithdrawPath, WithdrawResponse, WithdrawRequest, UserIdPrincipal>(
             info("Withdraw VBKs to Address")
         ) { _, request ->
             val atomicAmount = Utility.convertDecimalCoinToAtomicLong(request.amount)

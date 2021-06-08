@@ -9,9 +9,10 @@ package org.veriblock.miners.pop.api.controller
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
+import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
+import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.response.respond
+import io.ktor.auth.UserIdPrincipal
 import org.bitcoinj.core.Utils
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.api.models.ShowLastBitcoinBlockResponse
@@ -25,8 +26,8 @@ class LastBitcoinBlockController(
     @Path("lastbitcoinblock")
     class LastBitcoinBlockPath
 
-    override fun NormalOpenAPIRoute.registerApi() {
-        get<LastBitcoinBlockPath, ShowLastBitcoinBlockResponse>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() {
+        get<LastBitcoinBlockPath, ShowLastBitcoinBlockResponse, UserIdPrincipal>(
             info("Get latest bitcoin block known by the PoP Miner")
         ) {
             val lastBlock = minerService.getLastBitcoinBlock()

@@ -10,9 +10,10 @@ package org.veriblock.miners.pop.api.controller
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
+import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
+import io.ktor.auth.UserIdPrincipal
 import mu.KotlinLogging
 import org.veriblock.miners.pop.EventBus
 import java.lang.Thread.sleep
@@ -27,8 +28,8 @@ class QuitController : ApiController {
         @QueryParam("External quit") val restart: Boolean?
     )
 
-    override fun NormalOpenAPIRoute.registerApi() {
-        post<QuitPath, Unit, Unit>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() {
+        post<QuitPath, Unit, Unit, UserIdPrincipal>(
             info("Exits the application")
         ) { location, _ ->
             logger.info("Terminating the miner now")

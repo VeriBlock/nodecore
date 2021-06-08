@@ -22,6 +22,7 @@ import com.papsign.ktor.openapigen.schema.namer.SchemaNamer
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.auth.authenticate
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
@@ -37,6 +38,9 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import mu.KotlinLogging
 import org.veriblock.miners.pop.VpmConfig
+import org.veriblock.miners.pop.api.auth.BasicProvider
+import org.veriblock.miners.pop.api.auth.basicAuth
+import org.veriblock.miners.pop.api.auth.installAuth
 import org.veriblock.miners.pop.api.controller.ApiController
 import org.veriblock.miners.pop.api.controller.statusPages
 import org.veriblock.miners.pop.service.Metrics
@@ -47,7 +51,7 @@ private val logger = KotlinLogging.logger {}
 const val API_VERSION = "0.3"
 
 class ApiServer(
-    vpmConfig: VpmConfig,
+    private val vpmConfig: VpmConfig,
     private val controllers: List<ApiController>
 ) {
     private val config = vpmConfig.api
@@ -65,6 +69,16 @@ class ApiServer(
             install(DefaultHeaders)
             install(CallLogging)
 
+            val basicAuthProvider = BasicProvider(
+                authName = "basicAuth",
+                optional = vpmConfig.api.auth == null
+            )
+            installAuth(
+                basicAuthProvider = basicAuthProvider,
+                authUsername = vpmConfig.api.auth?.username,
+                authPassword = vpmConfig.api.auth?.password
+            )
+
             install(OpenAPIGen) {
                 info {
                     version = API_VERSION
@@ -75,6 +89,7 @@ class ApiServer(
                         email = "https://veriblock.org"
                     }
                 }
+                addModules(basicAuthProvider)
                 replaceModule(DefaultSchemaNamer, object : SchemaNamer {
                     val regex = Regex("[A-Za-z0-9_.]+")
                     override fun get(type: KType): String {
@@ -109,23 +124,30 @@ class ApiServer(
 
             install(Locations)
             routing {
-                get("openapi.json") {
-                    val application = application
-                    call.respond(application.openAPIGen.api)
-                }
-                get("api") {
-                    call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
-                }
-                get("metrics") {
-                    call.respond(Metrics.registry.scrape())
+                authenticate(
+                    basicAuthProvider.authName,
+                    optional = vpmConfig.api.auth == null
+                ) {
+                    get("openapi.json") {
+                        val application = application
+                        call.respond(application.openAPIGen.api)
+                    }
+                    get("api") {
+                        call.respondRedirect("/swagger-ui/index.html?url=/openapi.json", true)
+                    }
+                    get("metrics") {
+                        call.respond(Metrics.registry.scrape())
+                    }
                 }
             }
 
             apiRouting {
-                route("api") {
-                    for (controller in controllers) {
-                        with(controller) {
-                            registerApi()
+                basicAuth(basicAuthProvider) {
+                    route("api") {
+                        for (controller in controllers) {
+                            with(controller) {
+                                registerApi()
+                            }
                         }
                     }
                 }
