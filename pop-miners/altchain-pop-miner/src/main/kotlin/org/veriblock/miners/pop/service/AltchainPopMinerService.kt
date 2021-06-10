@@ -26,6 +26,7 @@ import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.debugError
+import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.miners.pop.net.VeriBlockNetwork
 import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
@@ -367,12 +368,21 @@ class AltchainPopMinerService(
             try {
                 file.loadTransactionMonitor(context, gateway)
             } catch (e: Exception) {
-                throw IOException("Unable to load the transaction monitoring data", e)
+                logger.debugWarn(e) { "Unable to load the transaction monitoring data, trying to recreate..." }
+                if (file.delete()) {
+                    createTransactionMonitor()
+                } else {
+                    throw IOException("Unable to load the transaction monitoring data", e)
+                }
             }
         } else {
-            val address = Address(spvContext.addressManager.defaultAddress.hash)
-            TransactionMonitor(context, gateway, address)
+            createTransactionMonitor()
         }
+    }
+
+    private fun createTransactionMonitor(): TransactionMonitor {
+        val address = Address(spvContext.addressManager.defaultAddress.hash)
+        return TransactionMonitor(context, gateway, address)
     }
 
     private fun initSpvContext(networkParameters: NetworkParameters): SpvContext {
