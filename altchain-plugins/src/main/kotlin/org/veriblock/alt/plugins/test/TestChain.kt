@@ -212,7 +212,7 @@ class TestChain(
         return String(addressData)
     }
 
-    override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
+    override suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
         val context = altchainPopEndorsement.getContextInfo()
         val hash = context.copyOfRange(0, 4)
         return BlockEvidence(

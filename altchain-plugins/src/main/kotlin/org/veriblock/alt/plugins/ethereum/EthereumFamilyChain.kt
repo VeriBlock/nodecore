@@ -46,6 +46,8 @@ import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.lang.RuntimeException
 import java.nio.ByteBuffer
+import org.veriblock.alt.plugins.bitcoin.BtcBlockEvidence
+import org.veriblock.core.contracts.asEgBlockHash
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -247,15 +249,15 @@ class EthereumFamilyChain(
         return addressData.toHex().toEthHash()
     }
 
-    override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
-        val hash = Hash.keccak256(altchainPopEndorsement.getHeader())
-        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
-        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
-        val height = contextBuffer.getInt()
-        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
-        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
-
-        return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
+    override suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
+        val blockEvidence: BtcBlockEvidence = rpcRequest("pop_extractBlockInfo", listOf(altchainPopEndorsement.getRawData().toHex()))
+        return BlockEvidence(
+            blockEvidence.height,
+            blockEvidence.hash.asEgBlockHash(),
+            blockEvidence.previousHash.asEgBlockHash(),
+            blockEvidence.previousKeystone.asEgBlockHash(),
+            blockEvidence.secondPreviousKeystone?.asEgBlockHash()
+        )
     }
 
     override suspend fun getBlockChainInfo(): StateInfo {

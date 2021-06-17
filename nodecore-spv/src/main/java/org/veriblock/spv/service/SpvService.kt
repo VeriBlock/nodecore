@@ -322,7 +322,16 @@ class SpvService(
 
     fun createAltChainEndorsement(publicationData: ByteArray, sourceAddress: Address, feePerByte: Long, maxFee: Long): AltChainEndorsement {
         try {
-            val signatureIndex = getSignatureIndex(sourceAddress) + 1
+            val ledgerSignatureIndex = spvContext.getAllAddressesState().values.find {
+                it.address == sourceAddress
+            }?.ledgerValue?.signatureIndex
+
+            val localSignatureIndex = getSignatureIndex(sourceAddress)
+            val signatureIndex = if (ledgerSignatureIndex != null && (ledgerSignatureIndex - localSignatureIndex).absoluteValue > 10) {
+                ledgerSignatureIndex
+            } else {
+                localSignatureIndex
+            } + 1
             val fee = feePerByte * predictAltChainEndorsementTransactionSize(publicationData.size, signatureIndex)
             if (fee > maxFee) {
                 throw EndorsementCreationException("Calculated fee $fee was above the maximum configured amount $maxFee")

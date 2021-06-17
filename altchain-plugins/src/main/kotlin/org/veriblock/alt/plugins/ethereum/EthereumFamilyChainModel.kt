@@ -147,3 +147,11 @@ internal class EthSyncStatus(
     val highestBlock: Int? = null
 )
 
+data class EtcBlockEvidence(
+    val height: Int,
+    val hash: String,
+    val previousHash: String,
+    val previousKeystone: String,
+    val secondPreviousKeystone: String? = null
+)
+

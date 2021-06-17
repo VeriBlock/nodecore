@@ -8,6 +8,8 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
+import org.veriblock.core.contracts.EgBlockHash
+
 internal data class BtcContextInfo(
     val serialized: String
 )
@@ -185,4 +187,12 @@ internal data class AddressValidationResponse(
     val iswitness: Boolean?,
     val witness_version: String?,
     val witness_program: String?
+)
+
+data class BtcBlockEvidence(
+    val height: Int,
+    val hash: String,
+    val previousHash: String,
+    val previousKeystone: String,
+    val secondPreviousKeystone: String? = null
 )

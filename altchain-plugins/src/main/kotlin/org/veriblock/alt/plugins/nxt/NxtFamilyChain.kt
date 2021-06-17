@@ -174,7 +174,7 @@ class NxtFamilyChain(
 
     override fun extractAddressDisplay(addressData: ByteArray): String = TODO()
 
-    override fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence = TODO()
+    override suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence = TODO()
 
     override suspend fun getBlockChainInfo(): StateInfo = TODO()
 
