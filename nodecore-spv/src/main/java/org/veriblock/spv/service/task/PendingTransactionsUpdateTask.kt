@@ -21,6 +21,7 @@ import org.veriblock.spv.service.advertise
 import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
 import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
+import kotlin.system.exitProcess
 
 private val logger = createLogger {}
 
@@ -29,6 +30,7 @@ fun SpvContext.startPendingTransactionsUpdateTask() {
         requestPendingTransactions()
     }.invokeOnFailure { t ->
         logger.debugError(t) { "The pending transactions update task has failed" }
+        exitProcess(1)
     }
 }
 
