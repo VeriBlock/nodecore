@@ -11,6 +11,7 @@ package org.veriblock.alt.plugins.util
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import org.veriblock.alt.plugins.HttpException
 import org.veriblock.alt.plugins.fromJson
@@ -47,7 +48,7 @@ inline fun <reified T> RpcResponse.handle(): T = try {
     when {
         error != null ->
             throw RpcException(error.code, error.message)
-        result !is JsonNull && result.toString() != "\"0x\"" ->
+        result !is JsonNull && result is JsonObject -> //&& result.toString() != "\"0x\"" ->
             result.fromJson<T>(type)
         else ->
             throw NullResultException()

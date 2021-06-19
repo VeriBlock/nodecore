@@ -142,9 +142,11 @@ internal class EthPoPParams(
 )
 
 internal class EthSyncStatus(
-    val startingBlock: Int? = null,
-    val currentBlock: Int? = null,
-    val highestBlock: Int? = null
+    val startingBlock: String? = null,
+    val currentBlock: String? = null,
+    val highestBlock: String? = null,
+    val knownStates: String? = null,
+    val pulledStates: String? = null
 )
 
 data class EtcBlockEvidence(

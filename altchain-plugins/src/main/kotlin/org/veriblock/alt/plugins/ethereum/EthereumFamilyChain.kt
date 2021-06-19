@@ -100,7 +100,7 @@ class EthereumFamilyChain(
     override suspend fun getBlock(hash: String): SecurityInheritingBlock? {
         val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $hash..." }
-        val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, true), "2.0")
+        val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, false), "2.0")
         val popBlock: EthPopBlockData? = try {
             nullableRpcRequest("pop_getBlockByHash", listOf(ethHash), "2.0")
         } catch (exception: RpcException) {
@@ -144,7 +144,7 @@ class EthereumFamilyChain(
         val blockHash = getBlockHash(height)
             ?: return false
         // Get raw block
-        val rawBlock: String = rpcRequest("eth_getBlockByHash", listOf(blockHash, true), "2.0")
+        val rawBlock: String = rpcRequest("eth_getBlockByHash", listOf(blockHash, false), "2.0")
         // Extract header
         val header: ByteArray = Arrays.copyOf(rawBlock.asHexBytes(), blockHeaderToCheck.size)
         // Check header
@@ -265,17 +265,17 @@ class EthereumFamilyChain(
             val ethSyncStatus = getSyncStatus()
             val isSynchronized = ethSyncStatus.currentBlock == null && ethSyncStatus.highestBlock == null && ethSyncStatus.startingBlock == null
             val networkHeight = if (!isSynchronized) {
-                ethSyncStatus.highestBlock!!
+                ethSyncStatus.highestBlock!!.asEthHexInt()
             } else {
                 ethBestBlockHeight
             }
             val localBlockchainHeight = if (!isSynchronized) {
-                ethSyncStatus.currentBlock!!
+                ethSyncStatus.currentBlock!!.asEthHexInt()
             } else {
                 ethBestBlockHeight
             }
             val blockDifference = if (!isSynchronized) {
-                abs(ethSyncStatus.highestBlock!! - ethSyncStatus.currentBlock!!)
+                abs(ethSyncStatus.highestBlock!!.asEthHexInt() - ethSyncStatus.currentBlock!!.asEthHexInt())
             } else {
                 0
             }
@@ -287,10 +287,10 @@ class EthereumFamilyChain(
     }
 
     private suspend fun getSyncStatus() = try {
-        rpcRequest<Boolean>("eth_syncing", emptyList<String>(), "2.0")
-        EthSyncStatus()
+        nullableRpcRequest<EthSyncStatus>("eth_syncing", emptyList<String>(), "2.0")
+            ?: EthSyncStatus()
     } catch (exception: IllegalStateException) {
-        rpcRequest("eth_syncing", emptyList<String>(), "2.0")
+        EthSyncStatus()
     }
 
     private suspend fun getNetworkType(): String {
