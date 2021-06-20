@@ -26,7 +26,7 @@ class EthereumConfig(
     override val payoutDetectionType: PayoutDetectionType = PayoutDetectionType.BALANCE_DELTA,
     override val explorerBaseUrls: ExplorerBaseUrls,
     val requestLogsPath: String? = null,
-    val daemonConnectionTimeout: Int = 5000
+    val daemonConnectionTimeout: Int = 10_000
 ) : ChainConfig() {
     constructor(configuration: PluginConfig) : this(
         configuration.host ?: "http://localhost:18332",
@@ -48,6 +48,6 @@ class EthereumConfig(
         configuration.payoutDetectionType,
         configuration.explorerBaseUrls,
         configuration.extraConfig["requestLogsPath"],
-        configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 5000
+        configuration.extraConfig["daemonConnectionTimeout"]?.toInt() ?: 10_000
     )
 }
