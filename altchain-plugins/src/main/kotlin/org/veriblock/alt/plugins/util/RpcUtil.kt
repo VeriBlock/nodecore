@@ -50,7 +50,7 @@ inline fun <reified T> RpcResponse.handle(): T = try {
             throw RpcException(error.code, error.message)
         result !is JsonNull
             && result.toString() != "\"0x\""
-            && result.toString() != "\"false\"" ->
+            && result.toString() != "false" ->
             result.fromJson<T>(type)
         else ->
             throw NullResultException()

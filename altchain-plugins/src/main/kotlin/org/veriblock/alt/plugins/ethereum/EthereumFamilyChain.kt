@@ -101,29 +101,25 @@ class EthereumFamilyChain(
         val ethHash = hash.toEthHash()
         logger.debug { "Retrieving block $hash..." }
         val block: EthBlock? = nullableRpcRequest("eth_getBlockByHash", listOf(ethHash, false), "2.0")
-        val popBlock: EthPopBlockData? = try {
-            nullableRpcRequest("pop_getBlockByHash", listOf(ethHash), "2.0")
-        } catch (exception: RpcException) {
-            if (exception.errorCode == -32000) {
-                null
-            } else {
-                throw exception
-            }
+        val popBlock: EthPopBlockData? = block?.let { ethBlock ->
+            getPopBlockByBlockHash(ethBlock.hash)
         }
-        return block?.let { ethBlock ->
-            SecurityInheritingBlock(
-                hash = ethBlock.hash.asEthHash(),
-                height = ethBlock.number.asEthHexInt(),
-                previousHash = ethBlock.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
-                merkleRoot = ethBlock.transactionsRoot,
-                coinbaseTransactionId = "TODO",
-                transactionIds = ethBlock.transactions,
-                endorsedBy = popBlock?.pop?.state?.endorsedBy ?: listOf(),
-                knownVbkHashes = popBlock?.pop?.data?.context?.map { it.id } ?: listOf(),
-                veriBlockPublicationIds = popBlock?.pop?.data?.atvs?.map { it.id } ?: listOf(),
-                bitcoinPublicationIds = popBlock?.pop?.data?.vtbs?.map { it.id } ?: listOf()
-            )
-        }
+        return block?.toSecurityInheritingBlock(popBlock)
+    }
+
+    private fun EthBlock?.toSecurityInheritingBlock(popBlock: EthPopBlockData?): SecurityInheritingBlock? = this?.let { ethBlock ->
+        SecurityInheritingBlock(
+            hash = ethBlock.hash.asEthHash(),
+            height = ethBlock.number.asEthHexInt(),
+            previousHash = ethBlock.parentHash?.asEthHash() ?: "0000000000000000000000000000000000000000000000000000000000000000",
+            merkleRoot = ethBlock.transactionsRoot,
+            coinbaseTransactionId = "TODO",
+            transactionIds = ethBlock.transactions,
+            endorsedBy = popBlock?.pop?.state?.endorsedBy ?: listOf(),
+            knownVbkHashes = popBlock?.pop?.data?.context?.map { it.id } ?: listOf(),
+            veriBlockPublicationIds = popBlock?.pop?.data?.atvs?.map { it.id } ?: listOf(),
+            bitcoinPublicationIds = popBlock?.pop?.data?.vtbs?.map { it.id } ?: listOf()
+        )
     }
 
     private suspend fun getBlockHash(height: Int): String? {
@@ -134,9 +130,22 @@ class EthereumFamilyChain(
 
     override suspend fun getBlock(height: Int): SecurityInheritingBlock? {
         logger.debug { "Retrieving block @ $height..." }
-        val blockHash = getBlockHash(height)
-            ?: return null
-        return getBlock(blockHash)
+        val ethBlockNumber = height.asEthHex()
+        val block: EthBlock? = nullableRpcRequest("eth_getBlockByNumber", listOf(ethBlockNumber, false), "2.0")
+        val popBlock: EthPopBlockData? = block?.let { ethBlock ->
+            getPopBlockByBlockHash(ethBlock.hash)
+        }
+        return block?.toSecurityInheritingBlock(popBlock)
+    }
+
+    private suspend fun getPopBlockByBlockHash(hash: String): EthPopBlockData? = try {
+        nullableRpcRequest("pop_getBlockByHash", listOf(hash), "2.0")
+    } catch (exception: RpcException) {
+        if (exception.errorCode == -32000) {
+            null
+        } else {
+            throw exception
+        }
     }
 
     override suspend fun checkBlockIsOnMainChain(height: Int, blockHeaderToCheck: ByteArray): Boolean {
@@ -263,22 +272,23 @@ class EthereumFamilyChain(
             val ethBestBlockHeight = getBestBlockHeight()
             val ethNetworkType = getNetworkType()
             val ethSyncStatus = getSyncStatus()
-            val isSynchronized = ethSyncStatus.currentBlock == null && ethSyncStatus.highestBlock == null && ethSyncStatus.startingBlock == null
-            val networkHeight = if (!isSynchronized) {
+            val isNodeSynchronizing = ethSyncStatus.currentBlock == null && ethSyncStatus.highestBlock == null && ethSyncStatus.startingBlock == null
+            val networkHeight = if (!isNodeSynchronizing) {
                 ethSyncStatus.highestBlock!!.asEthHexInt()
             } else {
                 ethBestBlockHeight
             }
-            val localBlockchainHeight = if (!isSynchronized) {
+            val localBlockchainHeight = if (!isNodeSynchronizing) {
                 ethSyncStatus.currentBlock!!.asEthHexInt()
             } else {
                 ethBestBlockHeight
             }
-            val blockDifference = if (!isSynchronized) {
+            val blockDifference = if (!isNodeSynchronizing) {
                 abs(ethSyncStatus.highestBlock!!.asEthHexInt() - ethSyncStatus.currentBlock!!.asEthHexInt())
             } else {
                 0
             }
+            val isSynchronized = blockDifference < 16
             StateInfo(networkHeight, localBlockchainHeight, blockDifference, isSynchronized, false, ethNetworkType)
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to perform the getblockchaininfo rpc call to ${config.host} (is it reachable?)" }
