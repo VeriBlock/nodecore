@@ -32,7 +32,7 @@ fun <T> JsonElement.fromJson(type: Type): T = gson.fromJson(this, type)
 fun createHttpClient(
     authConfig: HttpAuthConfig? = null,
     contentTypes: List<ContentType>? = null,
-    connectionTimeout: Int = 5_000
+    connectionTimeout: Int = 10_000
 ) = HttpClient(Apache) {
     Json {
         if (contentTypes != null) {
