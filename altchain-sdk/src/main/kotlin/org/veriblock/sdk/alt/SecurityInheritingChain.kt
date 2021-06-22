@@ -133,7 +133,7 @@ interface SecurityInheritingChain {
     /**
      * Extracts a block endorsement from the given data (coming from a VBK PoP Transaction)
      */
-    suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence
+    suspend fun extractBlockEvidence(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence>
 
     /**
      * Whether or not this chain is configured to perform any automining

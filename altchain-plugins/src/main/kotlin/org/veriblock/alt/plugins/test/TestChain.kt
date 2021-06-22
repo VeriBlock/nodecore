@@ -212,16 +212,18 @@ class TestChain(
         return String(addressData)
     }
 
-    override suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
-        val context = altchainPopEndorsement.getContextInfo()
-        val hash = context.copyOfRange(0, 4)
-        return BlockEvidence(
-            Utility.byteArrayToInt(hash),
-            hash.toHex().asEgBlockHash(),
-            context.copyOfRange(4, 8).toHex().asEgBlockHash(),
-            context.copyOfRange(8, 12).toHex().asEgBlockHash(),
-            context.copyOfRange(12, 16).toHex().asEgBlockHash()
-        )
+    override suspend fun extractBlockEvidence(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+        return altchainPopEndorsements.map { altchainPopEndorsement ->
+            val context = altchainPopEndorsement.getContextInfo()
+            val hash = context.copyOfRange(0, 4)
+            BlockEvidence(
+                Utility.byteArrayToInt(hash),
+                hash.toHex().asEgBlockHash(),
+                context.copyOfRange(4, 8).toHex().asEgBlockHash(),
+                context.copyOfRange(8, 12).toHex().asEgBlockHash(),
+                context.copyOfRange(12, 16).toHex().asEgBlockHash()
+            )
+        }
     }
 
     private fun createBlock(height: Int): TestBlock {

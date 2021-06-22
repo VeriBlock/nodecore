@@ -80,12 +80,14 @@ class ApmTaskService(
             val transaction = try {
                 val endorsementData = SerializeDeserializeService.serialize(miningInstruction.publicationData)
                 // Verify context bytes before submitting endorsement
-                val endorsement = try {
+                val endorsement: AltchainPoPEndorsement = try {
                     AltchainPoPEndorsement(endorsementData)
                 } catch (e: Exception) {
                     failOperation("Invalid endorsement data: ${endorsementData.toHex()}", e)
                 }
-                val blockEvidence = operation.chain.extractBlockEvidence(endorsement)
+                val blockEvidences = operation.chain.extractBlockEvidence(listOf(endorsement))
+                val blockEvidence = blockEvidences.firstOrNull()
+                    ?: failOperation("The block is not endorsed")
                 val endorsedBlock = operation.chain.getBlock(blockEvidence.hash.toString())
                     ?: failOperation("The endorsed block hash ${blockEvidence.hash} is not present at the chain")
                 val previousBlock = operation.chain.getBlock(blockEvidence.previousHash.toString())

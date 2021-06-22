@@ -294,15 +294,20 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
-        val blockEvidence: BtcBlockEvidence = rpcRequest("extractblockinfo", listOf(altchainPopEndorsement.getRawData().toHex()))
-        return BlockEvidence(
-            blockEvidence.height,
-            blockEvidence.hash.asEgBlockHash(),
-            blockEvidence.previousHash.asEgBlockHash(),
-            blockEvidence.previousKeystone.asEgBlockHash(),
-            blockEvidence.secondPreviousKeystone?.asEgBlockHash()
-        )
+    override suspend fun extractBlockEvidence(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+        val hexPopEndorsements = altchainPopEndorsements.map { altchainPopEndorsement ->
+            altchainPopEndorsement.getRawData().toHex()
+        }
+        val blockEvidence: List<BtcBlockEvidence> = rpcRequest("extractblockinfo", listOf(hexPopEndorsements))
+        return blockEvidence.map { btcBlockEvidence ->
+            BlockEvidence(
+                btcBlockEvidence.height,
+                btcBlockEvidence.hash.asEgBlockHash(),
+                btcBlockEvidence.previousHash.asEgBlockHash(),
+                btcBlockEvidence.previousKeystone.asEgBlockHash(),
+                btcBlockEvidence.secondPreviousKeystone?.asEgBlockHash()
+            )
+        }
     }
 
     override suspend fun getBlockChainInfo(): StateInfo {
