@@ -85,9 +85,8 @@ class ApmTaskService(
                 } catch (e: Exception) {
                     failOperation("Invalid endorsement data: ${endorsementData.toHex()}", e)
                 }
-                val blockEvidences = operation.chain.extractBlockEvidence(listOf(endorsement))
-                val blockEvidence = blockEvidences.firstOrNull()
-                    ?: failOperation("The block is not endorsed")
+                val blockEvidences = operation.chain.extractBlockEvidences(listOf(endorsement))
+                val blockEvidence = blockEvidences.first()
                 val endorsedBlock = operation.chain.getBlock(blockEvidence.hash.toString())
                     ?: failOperation("The endorsed block hash ${blockEvidence.hash} is not present at the chain")
                 val previousBlock = operation.chain.getBlock(blockEvidence.previousHash.toString())

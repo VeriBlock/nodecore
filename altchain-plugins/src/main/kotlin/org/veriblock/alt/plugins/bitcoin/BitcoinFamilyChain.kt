@@ -294,7 +294,7 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun extractBlockEvidence(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
         val hexPopEndorsements = altchainPopEndorsements.map { altchainPopEndorsement ->
             altchainPopEndorsement.getRawData().toHex()
         }

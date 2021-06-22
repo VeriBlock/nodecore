@@ -256,7 +256,7 @@ class EthereumFamilyChain(
         return addressData.toHex().toEthHash()
     }
 
-    override suspend fun extractBlockEvidence(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
         return altchainPopEndorsements.map { altchainPopEndorsement ->
             val hash = Hash.keccak256(altchainPopEndorsement.getHeader())
             val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
