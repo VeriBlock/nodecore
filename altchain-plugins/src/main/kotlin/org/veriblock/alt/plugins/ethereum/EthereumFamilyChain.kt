@@ -256,15 +256,16 @@ class EthereumFamilyChain(
         return addressData.toHex().toEthHash()
     }
 
-    override suspend fun extractBlockEvidence(altchainPopEndorsement: AltchainPoPEndorsement): BlockEvidence {
-        val hash = Hash.keccak256(altchainPopEndorsement.getHeader())
-        val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
-        val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
-        val height = contextBuffer.int
-        val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
-        val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
-
-        return BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
+    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+        return altchainPopEndorsements.map { altchainPopEndorsement ->
+            val hash = Hash.keccak256(altchainPopEndorsement.getHeader())
+            val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
+            val contextBuffer = ByteBuffer.wrap(altchainPopEndorsement.getContextInfo())
+            val height = contextBuffer.int
+            val previousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+            val secondPreviousKeystone = SerializerUtility.readSingleByteLenValue(contextBuffer, 8, 64)
+            BlockEvidence(height, hash, previousHash, previousKeystone, secondPreviousKeystone)
+        }
     }
 
     override suspend fun getBlockChainInfo(): StateInfo {
