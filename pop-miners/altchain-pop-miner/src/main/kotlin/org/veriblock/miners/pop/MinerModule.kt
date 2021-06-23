@@ -38,7 +38,7 @@ val minerModule = module {
     single { SecurityInheritingService(get(), get(), get()) }
     single {
         CommandFactory().apply {
-            configure(get(), get(), get(), get(), get(), get(), get())
+            configure(get(), get(), get(), get(), get(), get(), get(), get())
         }
     }
     single { Shell(get()) }

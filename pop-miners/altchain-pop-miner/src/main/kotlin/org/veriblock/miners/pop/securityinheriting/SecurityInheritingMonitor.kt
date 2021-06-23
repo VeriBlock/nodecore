@@ -54,6 +54,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import org.veriblock.sdk.models.VeriBlockBlock
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -138,12 +139,12 @@ class SecurityInheritingMonitor(
 
             // Start submitting context and VTBs
             launch {
-                submitContext()
+                autoSubmitContext()
             }.invokeOnFailure {
                 logger.error(it) { "${chain.name} context submission task has failed" }
             }
             launch {
-                submitVtbs()
+                autoSubmitVtbs()
             }.invokeOnFailure {
                 logger.error(it) { "${chain.name} VTB submission task has failed" }
             }
@@ -276,111 +277,22 @@ class SecurityInheritingMonitor(
         firstPoll = false
     }
 
-    private suspend fun submitContext() = coroutineScope {
+    private suspend fun autoSubmitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK context for ${chain.name}")
         SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
             try {
-                if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
-                    logger.debug { "New block $newBlock is not on the main chain, skipping..." }
-                    return@collect
-                }
-                logger.debug { "New block $newBlock is on the main chain" }
-
-                var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
-                // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-                    ?: return@collect
-                while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
-                    logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
-                    bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
-                    ?: return@collect // Dead end
-                }
-
-                if (bestKnownBlock.height == newBlock.height) {
-                    return@collect
-                }
-
-                val contextBlocks = generateSequence(newBlock) {
-                    miner.gateway.getBlock(it.previousBlock)
-                }.takeWhile {
-                    it.hash != bestKnownBlock.hash
-                }.sortedBy {
-                    it.height
-                }.toList()
-
-                val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-                val successfulSubmissions = contextBlocks.asFlow()
-                    .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
-                    .map { contextBlock ->
-                        val result = chain.submitPopVbk(contextBlock)
-                        if (!result.accepted) {
-                            logger.debug { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
-                        }
-                        result
-                    }
-                    .count { it.accepted }
-                if (successfulSubmissions > 0) {
-                    logger.debug { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
-                }
+                if (submitContextBlock(newBlock)) return@collect
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
         }
     }
 
-    private suspend fun submitVtbs() = coroutineScope {
+    private suspend fun autoSubmitVtbs() = coroutineScope {
         logger.info("Starting continuous submission of VTBs for ${chain.name}")
         while (true) {
             try {
-                val instruction = chain.getMiningInstructionByHeight()
-                val vbkContextBlockHash = instruction.context.first().asVbkHash()
-                val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash) ?: run {
-                    // Maybe our peer doesn't know about that block yet. Let's wait a few seconds and give it another chance
-                    delay(30_000L)
-                    miner.gateway.getBlock(vbkContextBlockHash)
-                }
-                if (vbkContextBlock == null) {
-                    // The altchain has knowledge of a block we don't even know. Let's try again after a while
-                    delay(30_000L)
-                    continue
-                }
-                logger.info {
-                    "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
-                        " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
-                }
-
-                // Wait for the next keystone to be mined
-                val keystone = SpvEventBus.newBlockFlow.filter {
-                    it.height % 20 == 0 && it.height > vbkContextBlock.height
-                }.first()
-
-                logger.info { "Got keystone for ${chain.name}'s VTBs: ${keystone.hash} @ ${keystone.height}. Retrieving publication data..." }
-                // Fetch and wait for veriblock publications (VTBs)
-                val vtbs = miner.network.getVeriBlockPublications(
-                    keystone.hash.toString(),
-                    instruction.context.first().toHex(),
-                    instruction.btcContext.first().toHex()
-                )
-                // Validate the retrieved data
-                verifyPublications(instruction, vtbs)
-
-                logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
-
-                // Submit them to the blockchain
-                vtbs.forEach {
-                    chain.submitPopVtb(it)
-                }
-                val successfulSubmissions = vtbs.asFlow()
-                    .map { vtb ->
-                        val result = chain.submitPopVtb(vtb)
-                        if (!result.accepted) {
-                            logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
-                        }
-                        result
-                    }
-                    .count { it.accepted }
-                if (successfulSubmissions > 0) {
-                    logger.debug { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
-                }
+                submitVtbs()
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
@@ -388,6 +300,101 @@ class SecurityInheritingMonitor(
                 logger.error(t) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
             }
+        }
+    }
+
+    suspend fun submitContextBlock(newBlock: VeriBlockBlock): Boolean {
+        if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
+            logger.debug { "New block $newBlock is not on the main chain, skipping..." }
+            return true
+        }
+        logger.debug { "New block $newBlock is on the main chain" }
+
+        var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
+        // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
+            ?: return true
+        while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
+            logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
+            bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
+                ?: return true // Dead end
+        }
+
+        if (bestKnownBlock.height == newBlock.height) {
+            return true
+        }
+
+        val contextBlocks = generateSequence(newBlock) {
+            miner.gateway.getBlock(it.previousBlock)
+        }.takeWhile {
+            it.hash != bestKnownBlock.hash
+        }.sortedBy {
+            it.height
+        }.toList()
+
+        val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+        val successfulSubmissions = contextBlocks.asFlow()
+            .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
+            .map { contextBlock ->
+                val result = chain.submitPopVbk(contextBlock)
+                if (!result.accepted) {
+                    logger.debug { "VBK context block $contextBlock was not accepted in ${chain.name}'s PoP mempool." }
+                }
+                result
+            }
+            .count { it.accepted }
+        if (successfulSubmissions > 0) {
+            logger.debug { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
+        }
+        return false
+    }
+
+    suspend fun submitVtbs() {
+        val instruction = chain.getMiningInstructionByHeight()
+        val vbkContextBlockHash = instruction.context.first().asVbkHash()
+        val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash)
+        while (vbkContextBlock == null) {
+            // The altchain has knowledge of a block we don't even know. Let's try again after a while
+            logger.info { "${chain.name}'s last known block $vbkContextBlockHash is not known by APM. Trying to submit VTBs later..." }
+            delay(20_000L)
+            return submitVtbs()
+        }
+        logger.info {
+            "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
+                " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
+        }
+
+        // Wait for the next keystone to be mined
+        val keystone = SpvEventBus.newBlockFlow.filter {
+            it.height % 20 == 0 && it.height > vbkContextBlock.height
+        }.first()
+
+        logger.info { "Got keystone for ${chain.name}'s VTBs: ${keystone.hash} @ ${keystone.height}. Retrieving publication data..." }
+        // Fetch and wait for veriblock publications (VTBs)
+        val vtbs = miner.network.getVeriBlockPublications(
+            keystone.hash.toString(),
+            instruction.context.first().toHex(),
+            instruction.btcContext.first().toHex()
+        )
+        // Validate the retrieved data
+        verifyPublications(instruction, vtbs)
+
+        logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
+
+        // Submit them to the blockchain
+        vtbs.forEach {
+            chain.submitPopVtb(it)
+        }
+        val successfulSubmissions = vtbs.asFlow()
+            .map { vtb ->
+                val result = chain.submitPopVtb(vtb)
+                if (!result.accepted) {
+                    logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                }
+                result
+            }
+            .count { it.accepted }
+        if (successfulSubmissions > 0) {
+            logger.debug { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
         }
     }
 
