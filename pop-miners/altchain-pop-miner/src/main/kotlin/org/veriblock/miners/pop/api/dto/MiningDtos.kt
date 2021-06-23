@@ -12,11 +12,17 @@ import com.papsign.ktor.openapigen.annotations.Response
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.sdk.models.StateInfo
 
-
 @Response("Basic miner information")
 data class MinerInfoResponse(
     val vbkAddress: String,
-    val vbkBalance: Long
+    val vbkBalance: Long,
+    val status: MinerStatusResponse
+)
+
+@Response("Basic miner status")
+data class MinerStatusResponse(
+    val isReady: Boolean,
+    val reason: String?
 )
 
 @Request("Mining request with target altchain symbol and optional endorsed block height")

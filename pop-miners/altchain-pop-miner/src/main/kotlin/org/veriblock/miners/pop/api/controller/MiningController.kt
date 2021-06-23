@@ -23,6 +23,7 @@ import org.veriblock.miners.pop.api.dto.ConfiguredAltchain
 import org.veriblock.miners.pop.api.dto.ConfiguredAltchainList
 import org.veriblock.miners.pop.api.dto.MineRequest
 import org.veriblock.miners.pop.api.dto.MinerInfoResponse
+import org.veriblock.miners.pop.api.dto.MinerStatusResponse
 import org.veriblock.miners.pop.api.dto.OperationDetailResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryListResponse
 import org.veriblock.miners.pop.api.dto.OperationSummaryResponse
@@ -82,9 +83,14 @@ class MiningController(
         get<Unit, MinerInfoResponse, UserIdPrincipal>(
             info("Get miner data")
         ) {
+            val ready = miner.checkReadyConditions()
             val responseModel = MinerInfoResponse(
                 vbkAddress = miner.getAddress(),
-                vbkBalance = miner.getBalance().confirmedBalance.atomicUnits
+                vbkBalance = miner.getBalance().confirmedBalance.atomicUnits,
+                status = MinerStatusResponse(
+                    ready is CheckResult.Success,
+                    (ready as? CheckResult.Failure)?.error?.message
+                )
             )
             respond(responseModel)
         }

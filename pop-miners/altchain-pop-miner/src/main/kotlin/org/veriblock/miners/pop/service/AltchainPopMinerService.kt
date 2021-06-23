@@ -186,19 +186,19 @@ class AltchainPopMinerService(
 
     fun getBalance(): Balance = network.latestBalance
 
-    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, blockHeight: Int?): CheckResult  {
+    fun checkReadyConditions(): CheckResult  {
         // Verify if the miner is shutting down
         if (isShuttingDown) {
             return CheckResult.Failure(MineException("Unable to mine, the miner is currently shutting down"))
         }
         // Specific checks for the NodeCore
         if (!network.isAccessible()) {
-            return CheckResult.Failure(MineException("Unable to connect to peers"))
+            return CheckResult.Failure(MineException("Unable to connect to VBK peers"))
         }
         // Verify the balance
         if (!network.isSufficientFunded()) {
             return CheckResult.Failure(MineException("""
-                PoP wallet does not contain sufficient funds, 
+                VBK PoP wallet does not contain sufficient funds, 
                 Current balance: ${network.latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
                 Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - network.latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
                 Send ${context.vbkTokenName} coins to: ${spvContext.addressManager.defaultAddress.hash}
@@ -206,7 +206,16 @@ class AltchainPopMinerService(
         }
         // Verify the synchronized status
         if (!network.isSynchronized()) {
-            return CheckResult.Failure(MineException("SPV is not synchronized: ${network.latestSpvStateInfo.getSynchronizedMessage()}"))
+            return CheckResult.Failure(MineException("VBK SPV is not synchronized: ${network.latestSpvStateInfo.getSynchronizedMessage()}"))
+        }
+        return CheckResult.Success()
+    }
+
+    private fun checkReadyConditions(chain: SecurityInheritingChain, monitor: SecurityInheritingMonitor, blockHeight: Int?): CheckResult  {
+        // Verify if the miner is shutting down
+        val globalReadyCheckResult = checkReadyConditions()
+        if (globalReadyCheckResult !is CheckResult.Success) {
+            return globalReadyCheckResult
         }
         // Specific checks for the alt chain
         val altchainConditions = checkAltChainReadyConditions(chain.key, chain, monitor)
