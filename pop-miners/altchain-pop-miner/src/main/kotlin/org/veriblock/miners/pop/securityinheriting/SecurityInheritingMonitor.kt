@@ -312,7 +312,7 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VTBs for ${chain.name}")
         while (true) {
             try {
-                submitVtbs()
+                handleContextGap()
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error handling context gap for ${chain.name}! Will try again later..." }
                 delay(1200_000L)
