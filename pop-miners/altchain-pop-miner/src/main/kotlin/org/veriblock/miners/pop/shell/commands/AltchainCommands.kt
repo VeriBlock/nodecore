@@ -74,4 +74,25 @@ fun CommandFactory.altchainCommands(
         monitor.submitVtbs()
         success()
     }
+    command(
+        name = "Handle context gap",
+        form = "handlecontextgap",
+        description = "Checks if there's any context gap in the given altchain and submits VTBs to it if so",
+        parameters = listOf(
+            CommandParameter("chain", CommandParameterMappers.STRING)
+        )
+    ) {
+        val chainId: String = getParameter("chain")
+        val monitor = securityInheritingService.getMonitor(chainId) ?: run {
+            printInfo("Altchain $chainId not found")
+            return@command failure()
+        }
+        if (!monitor.isReady()) {
+            printInfo("Altchain $chainId is not ready")
+            return@command failure()
+        }
+
+        monitor.handleContextGap()
+        success()
+    }
 }

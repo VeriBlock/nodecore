@@ -11,7 +11,9 @@ package org.veriblock.miners.pop.net
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.p2p.NoPeersException
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
@@ -118,6 +120,40 @@ class SpvGateway(
             }
             error(
                 "Unable to get VeriBlock Publications linking keystone $keystoneHash to VBK block $contextHash and BTC block $btcContextHash$errors"
+            )
+        }
+    }
+
+    suspend fun getVtbsForBtcBlocks(blockHashes: List<String>): List<VeriBlockPublication> {
+        logger.debug { "Requesting veriblock publications for ${blockHashes.size} BTC blocks..." }
+        val request = RpcGetVtbsForBtcBlocksRequest.newBuilder()
+            .addAllBtcBlockHashes(blockHashes.map { it.asHexByteString() })
+            .build()
+
+        val reply = try {
+            spvService.getVtbsForBtcBlocks(request)
+        } catch (e: NoPeersException) {
+            logger.debug(e) { "Unable to retrieve VeriBlock publications for BTC blocks" }
+            return emptyList()
+        }
+
+        if (reply.success) {
+            return reply.publicationsList.map {
+                it.deserialize(params.transactionPrefix)
+            }
+        } else {
+            val errors = if (reply.resultsList.isNotEmpty()) {
+                reply.resultsList.joinToString(
+                    separator = "\n",
+                    prefix = " External Full Node errors:\n"
+                ) {
+                    "${it.message} | ${it.details}"
+                }
+            } else {
+                ""
+            }
+            error(
+                "Unable to get VeriBlock Publications for BTC blocks $blockHashes$errors"
             )
         }
     }

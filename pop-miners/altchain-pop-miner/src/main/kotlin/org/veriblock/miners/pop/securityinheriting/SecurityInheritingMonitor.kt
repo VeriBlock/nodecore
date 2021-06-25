@@ -148,6 +148,11 @@ class SecurityInheritingMonitor(
             }.invokeOnFailure {
                 logger.error(it) { "${chain.name} VTB submission task has failed" }
             }
+            launch {
+                autoHandleContextGap()
+            }.invokeOnFailure {
+                logger.error(it) { "${chain.name} VTB context gap handling task has failed" }
+            }
         }
     }
 
@@ -303,6 +308,21 @@ class SecurityInheritingMonitor(
         }
     }
 
+    private suspend fun autoHandleContextGap() = coroutineScope {
+        logger.info("Starting continuous submission of VTBs for ${chain.name}")
+        while (true) {
+            try {
+                submitVtbs()
+            } catch (e: Exception) {
+                logger.debugWarn(e) { "Error handling context gap for ${chain.name}! Will try again later..." }
+                delay(1200_000L)
+            } catch (t: Throwable) {
+                logger.error(t) { "Error handling context gap for ${chain.name}! Will try again later..." }
+                delay(1200_000L)
+            }
+        }
+    }
+
     suspend fun submitContextBlock(newBlock: VeriBlockBlock): Boolean {
         if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
             logger.debug { "New block $newBlock is not on the main chain, skipping..." }
@@ -379,6 +399,42 @@ class SecurityInheritingMonitor(
         verifyPublications(instruction, vtbs)
 
         logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
+
+        // Submit them to the blockchain
+        vtbs.forEach {
+            chain.submitPopVtb(it)
+        }
+        val successfulSubmissions = vtbs.asFlow()
+            .map { vtb ->
+                val result = chain.submitPopVtb(vtb)
+                if (!result.accepted) {
+                    logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                }
+                result
+            }
+            .count { it.accepted }
+        if (successfulSubmissions > 0) {
+            logger.debug { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+        }
+    }
+
+    suspend fun handleContextGap() {
+        val missingBtcBlockHashes = try {
+            chain.getMissingBtcBlockHashes()
+        } catch (e: Exception) {
+            logger.debugWarn(e) { "Unable to retrieve ${chain.name}'s missing BTC block hashes" }
+            return
+        }
+
+        if (missingBtcBlockHashes.isEmpty()) {
+            return
+        }
+
+        logger.info { "The ${chain.name} has a context gap of ${missingBtcBlockHashes.size} BTC blocks! Retrieving corresponding publication data..." }
+        // Fetch and wait for veriblock publications (VTBs)
+        val vtbs = miner.gateway.getVtbsForBtcBlocks(missingBtcBlockHashes)
+
+        logger.info { "${vtbs.size} VTBs found! Submitting to ${chain.name}'s daemon..." }
 
         // Submit them to the blockchain
         vtbs.forEach {

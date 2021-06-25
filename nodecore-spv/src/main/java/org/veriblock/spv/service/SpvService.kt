@@ -52,6 +52,8 @@ import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEnd
 import java.io.File
 import java.io.IOException
 import java.util.*
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import kotlin.math.absoluteValue
 
 private val logger = createLogger {}
@@ -381,6 +383,20 @@ class SpvService(
             }
         }
         return reply.veriblockPublicationsReply
+    }
+
+    suspend fun getVtbsForBtcBlocks(getVtbsForBtcRequest: RpcGetVtbsForBtcBlocksRequest): RpcGetVtbsForBtcBlocksReply {
+        val request = buildMessage {
+            vtbForBtcRequest = getVtbsForBtcRequest
+        }
+        val reply = peerTable.requestMessage(request, timeoutInMillis = 300_000L) {
+            if (it.vtbForBtcReply.success) {
+                it.vtbForBtcReply.publicationsCount
+            } else {
+                -1
+            }
+        }
+        return reply.vtbForBtcReply
     }
 
     private fun getAddressBalance(address: AddressLight, ledgerContext: LedgerContext): AddressBalance {
