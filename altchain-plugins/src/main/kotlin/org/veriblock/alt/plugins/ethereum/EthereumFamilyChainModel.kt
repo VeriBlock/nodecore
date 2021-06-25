@@ -58,7 +58,7 @@ internal class Vbk(
 )
 
 internal data class EthTransaction(
-    val blockHash: String,
+    val blockHash: String?,
     val blockNumber: String?,
     val from: String,
     val gas: String,
@@ -66,8 +66,8 @@ internal data class EthTransaction(
     val hash: String,
     val input: String,
     val nonce: String,
-    val to: String,
-    val transactionIndex: String
+    val to: String?,
+    val transactionIndex: String?
 )
 
 internal data class EthTransactionVout(
