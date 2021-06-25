@@ -338,7 +338,7 @@ class EthereumFamilyChain(
 
     override suspend fun getMissingBtcBlockHashes(): List<String> {
         logger.debug { "Retrieving the missing BTC block hashes" }
-        return rpcRequest("gcblockhashes")
+        return rpcRequest("pop_getMissingBtcBlockHashes")
     }
 
     override fun validatePayoutAddress() {
