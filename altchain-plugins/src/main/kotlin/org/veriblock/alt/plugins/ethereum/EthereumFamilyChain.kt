@@ -37,7 +37,6 @@ import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.PopPayoutParams
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
-import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.alt.model.SubmitPopResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
@@ -47,7 +46,6 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 import java.lang.RuntimeException
 import java.nio.ByteBuffer
 import kotlin.math.abs
-import kotlin.math.roundToLong
 
 private val logger = createLogger {}
 
@@ -163,18 +161,17 @@ class EthereumFamilyChain(
     override suspend fun getTransaction(txId: String, blockHash: String?): SecurityInheritingTransaction? {
         val ethTxId = txId.toEthHash()
         logger.debug { "Retrieving transaction $txId..." }
-        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getRawTransactionByHash", listOf(ethTxId), "2.0")
+        val btcTransaction: EthTransaction? = nullableRpcRequest("eth_getTransactionByHash", listOf(ethTxId), "2.0")
+        val confirmations = btcTransaction?.blockNumber?.let { blockNumber ->
+            getBestBlockHeight() - blockNumber.asEthHexInt()
+        } ?: 0
+
         return btcTransaction?.let { ethTransaction ->
             SecurityInheritingTransaction(
-                ethTransaction.txid,
-                ethTransaction.confirmations,
-                ethTransaction.vout.map {
-                    SecurityInheritingTransactionVout(
-                        (it.value * 100000000).roundToLong(),
-                        it.scriptPubKey.hex
-                    )
-                },
-                ethTransaction.blockhash
+                txId,
+                confirmations,
+                emptyList(), // TODO
+                ethTransaction.blockHash
             )
         }
     }

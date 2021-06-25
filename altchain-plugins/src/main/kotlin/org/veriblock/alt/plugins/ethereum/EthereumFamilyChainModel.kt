@@ -58,10 +58,16 @@ internal class Vbk(
 )
 
 internal data class EthTransaction(
-    val txid: String,
-    val confirmations: Int,
-    val vout: List<EthTransactionVout>,
-    val blockhash: String?
+    val blockHash: String,
+    val blockNumber: String?,
+    val from: String,
+    val gas: String,
+    val gasPrice: String,
+    val hash: String,
+    val input: String,
+    val nonce: String,
+    val to: String,
+    val transactionIndex: String
 )
 
 internal data class EthTransactionVout(
