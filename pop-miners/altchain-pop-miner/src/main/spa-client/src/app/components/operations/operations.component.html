@@ -40,6 +40,17 @@
 
 </div>
 
+<ng-container *ngIf="!isLoadingConfiguration && !selectedAltChain?.readyStatus?.isReady">
+  <mat-card class="alert-info" style="margin: 1em;">
+    <mat-card-content style="display: flex;">
+      <mat-icon size="lg" style="padding-right: 5px;">error_outline</mat-icon>
+      <span>
+        {{ selectedAltChain?.readyStatus?.reason }}
+      </span>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+
 <h1 fxLayout="row" fxLayoutAlign="space-between baseline" fxLayoutGap="5px" [formGroup]="form">
   <b class="foreground-icon-color">Operations</b>
 

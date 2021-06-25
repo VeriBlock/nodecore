@@ -21,10 +21,16 @@
     background-color: mat-color($warn);
   }
 
+  .alert-background {
+    color: mat-contrast($primary, A100);
+    background-color: mat-color($primary, A100);
+  }
+
   .alert,
   .alert-success,
   .alert-info,
-  .alert-warning {
+  .alert-warning,
+  .alert-background {
     display: flex;
     justify-content: center;
     word-break: break-word;
