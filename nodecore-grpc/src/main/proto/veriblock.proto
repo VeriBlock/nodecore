@@ -768,6 +768,8 @@ message RpcEvent {
         RpcGetDebugVTBsReply debug_vtb_reply = 33;
         RpcGetStateInfoRequest state_info_request = 35;
         RpcGetStateInfoReply state_info_reply = 36;
+        RpcGetVtbsForBtcBlocksRequest vtb_for_btc_request = 37;
+        RpcGetVtbsForBtcBlocksReply vtb_for_btc_reply = 38;
     }
     string id = 11;
     bool acknowledge = 12;
@@ -1560,6 +1562,16 @@ message RpcGetDebugVTBsReply {
     repeated RpcVeriBlockPublication publications = 3;
 }
 
+message RpcGetVtbsForBtcBlocksRequest {
+    repeated bytes btc_block_hashes = 1 [(hex_encoded)=true];
+}
+
+message RpcGetVtbsForBtcBlocksReply {
+    bool success = 1;
+    repeated RpcResult results = 2;
+    repeated RpcVeriBlockPublication publications = 3;
+}
+
 message RpcGetContainingVTBsRequest {
     bytes vbk_block_hash = 1 [(hex_encoded)=true];
 }
@@ -1764,6 +1776,8 @@ service Admin {
     rpc GetVeriBlockPublications(RpcGetVeriBlockPublicationsRequest) returns (RpcGetVeriBlockPublicationsReply) {}
 
     rpc GetDebugVTBs(RpcGetDebugVTBsRequest) returns (RpcGetDebugVTBsReply) {}
+
+    rpc RpcGetVtbsForBtcBlocks(RpcGetVtbsForBtcBlocksRequest) returns (RpcGetVtbsForBtcBlocksReply) {}
 
     rpc AbandonTransaction(RpcAbandonTransactionRequest) returns (RpcAbandonTransactionReply) {}
 

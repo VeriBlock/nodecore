@@ -31,6 +31,8 @@ import nodecore.api.grpc.RpcGetTransactionReply
 import nodecore.api.grpc.RpcGetTransactionRequest
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsReply
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import nodecore.api.grpc.RpcHeartbeat
 import nodecore.api.grpc.RpcKeystoneQuery
 import nodecore.api.grpc.RpcLedgerProofReply
@@ -85,6 +87,8 @@ object P2pEventBus {
     val getDebugVtbsReply = AsyncEvent<P2pEvent<RpcGetDebugVTBsReply>>("Get debug VTBs reply", asyncEventDispatcher)
     val getStateInfoRequest = AsyncEvent<P2pEvent<RpcGetStateInfoRequest>>("Get state info request", asyncEventDispatcher)
     val getStateInfoReply = AsyncEvent<P2pEvent<RpcGetStateInfoReply>>("Get state info reply", asyncEventDispatcher)
+    val getVtbsForBtcBlocksRequest = AsyncEvent<P2pEvent<RpcGetVtbsForBtcBlocksRequest>>("Get VTBs for BTC blocks request", asyncEventDispatcher)
+    val getVtbsForBtcBlocksReply = AsyncEvent<P2pEvent<RpcGetVtbsForBtcBlocksReply>>("Get VTBs for BTC blocks reply", asyncEventDispatcher)
 
     val externalPeerAdded = Event<NetworkAddress>("External peer added")
     val externalPeerRemoved = Event<NetworkAddress>("External peer removed")
@@ -172,6 +176,10 @@ object P2pEventBus {
                 getStateInfoRequest.trigger(value.toP2pEvent(remote, value.stateInfoRequest))
             RpcEvent.ResultsCase.STATE_INFO_REPLY ->
                 getStateInfoReply.trigger(value.toP2pEvent(remote, value.stateInfoReply))
+            RpcEvent.ResultsCase.VTB_FOR_BTC_REQUEST ->
+                getVtbsForBtcBlocksRequest.trigger(value.toP2pEvent(remote, value.vtbForBtcRequest))
+            RpcEvent.ResultsCase.VTB_FOR_BTC_REPLY ->
+                getVtbsForBtcBlocksReply.trigger(value.toP2pEvent(remote, value.vtbForBtcReply))
         }
     }
 }
