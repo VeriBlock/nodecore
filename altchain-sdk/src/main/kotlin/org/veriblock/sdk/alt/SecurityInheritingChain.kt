@@ -151,4 +151,6 @@ interface SecurityInheritingChain {
      * @return the block chain information
      */
     suspend fun getBlockChainInfo(): StateInfo
+
+    suspend fun getMissingBtcBlockHashes(): List<String>
 }

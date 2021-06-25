@@ -384,6 +384,11 @@ class BitcoinFamilyChain(
         }
     }
 
+    override suspend fun getMissingBtcBlockHashes(): List<String> {
+        logger.debug { "Retrieving the missing BTC block hashes" }
+        return rpcRequest("getmissingbtcblockhashes")
+    }
+
     override fun validatePayoutAddress() {
         checkNotNull(config.payoutAddress) {
             "$name's payoutAddress ($key.payoutAddress) must be configured!"

@@ -293,6 +293,10 @@ class TestChain(
         return transaction
     }
 
+    override suspend fun getMissingBtcBlockHashes(): List<String> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, 50, 0, true, false, "testnet")
 }
 

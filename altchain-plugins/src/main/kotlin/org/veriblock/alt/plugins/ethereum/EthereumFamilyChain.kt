@@ -336,6 +336,11 @@ class EthereumFamilyChain(
         TODO("Not yet implemented (getBtcBlock)") // pop_getBtcBlockByHash
     }
 
+    override suspend fun getMissingBtcBlockHashes(): List<String> {
+        logger.debug { "Retrieving the missing BTC block hashes" }
+        return rpcRequest("gcblockhashes")
+    }
+
     override fun validatePayoutAddress() {
         checkNotNull(config.payoutAddress) {
             "$name's payoutAddress ($key.payoutAddress) must be configured!"

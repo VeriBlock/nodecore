@@ -178,6 +178,10 @@ class NxtFamilyChain(
 
     override suspend fun getBlockChainInfo(): StateInfo = TODO()
 
+    override suspend fun getMissingBtcBlockHashes(): List<String> {
+        TODO("Not yet implemented")
+    }
+
     override fun validatePayoutAddress() {
         TODO("Not yet implemented")
     }
