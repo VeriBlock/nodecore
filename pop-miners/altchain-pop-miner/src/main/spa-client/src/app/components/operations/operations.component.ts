@@ -29,6 +29,7 @@ import {
   StateDetail,
   NetworkInfoResponse,
   ExplorerBaseUrlsResponse,
+  MinerStatus,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
 
@@ -43,8 +44,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
   });
 
   public selectedAltChain: ConfiguredAltchain = null;
+  public minerStatus: MinerStatus = null;
   public operationChain: string = null;
   public networkExplorerBaseUrl: ExplorerBaseUrlsResponse;
+
+  public mineButtonReady: boolean = false;
 
   public filters: string[] = ['All', 'Active', 'Completed', 'Failed'];
   private globalOperationStages: string[] = [
@@ -77,6 +81,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public APIOperationWorkflows = {};
 
   private currentSelectionSubscription: any;
+  private currentMinerStatusSubscription: any;
 
   constructor(
     private dataShareService: DataShareService,
@@ -110,6 +115,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
               this.initValues();
               this.updateQueryParams();
             }
+          }
+        }
+      );
+
+    this.currentMinerStatusSubscription =
+      this.dataShareService.currentMinerStatus.subscribe(
+        (data: MinerStatus) => {
+          if (JSON.stringify(data) !== JSON.stringify(this.minerStatus)) {
+            this.minerStatus = data;
           }
         }
       );
@@ -188,6 +202,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.currentSelectionSubscription.unsubscribe();
+    this.currentMinerStatusSubscription.unsubscribe();
   }
 
   public initValues() {
@@ -691,5 +706,14 @@ export class OperationsComponent implements OnInit, OnDestroy {
     return key?.length >= 4
       ? `${key.charAt(0)}${key.slice(1).toUpperCase()}`
       : key.toUpperCase();
+  }
+
+  public disableMineOperations(): boolean {
+    this.mineButtonReady =
+      this.isLoadingConfiguration ||
+      !this.selectedAltChain?.readyStatus?.isReady ||
+      !this.minerStatus?.isReady;
+
+    return this.mineButtonReady;
   }
 }

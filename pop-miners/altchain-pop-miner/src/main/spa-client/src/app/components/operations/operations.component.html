@@ -20,25 +20,36 @@
 
 <div fxLayout="row" fxLayoutAlign="center center" style="width: 100%;">
   <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-primary flag-mine"
-    [matTooltip]="!selectedAltChain?.readyStatus?.isReady ? selectedAltChain?.readyStatus?.reason : ''">
+    [matTooltip]="disableMineOperations() ? 'Miner is not ready' : ''">
     <button mat-button (click)="startMineBlock()" matTooltip="Start new mining operation"
-      [disabled]="isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady"
+      [disabled]="mineButtonReady"
       style="padding: 0; font-size: 20px; text-align: center;"
-      [ngStyle]="{'cursor': isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady ? 'not-allowed' : ''}">
+      [ngStyle]="{'cursor': mineButtonReady ? 'not-allowed' : ''}">
       <div style="min-width: 250px;" class="flag flag-primary flag-mine">
         Mine
       </div>
     </button>
     <div fxLayout="row" fxLayoutAlign="center center" style="border-left: 1px white solid;">
       <button mat-icon-button type="button" matTooltip="Start custom mining operation" (click)="openMineDialog()"
-        [disabled]="isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady"
-        [ngStyle]="{'cursor': isLoadingConfiguration || !selectedAltChain?.readyStatus?.isReady ? 'not-allowed' : ''}">
+        [disabled]="mineButtonReady"
+        [ngStyle]="{'cursor': mineButtonReady ? 'not-allowed' : ''}">
         <mat-icon class="custom-mine-button">more_vert</mat-icon>
       </button>
     </div>
   </div>
 
 </div>
+
+<ng-container *ngIf="!minerStatus?.isReady">
+  <mat-card class="alert-info" style="margin: 1em;">
+    <mat-card-content style="display: flex;">
+      <mat-icon size="lg" style="padding-right: 5px;">error_outline</mat-icon>
+      <span>
+        {{ minerStatus?.reason }}
+      </span>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
 
 <ng-container *ngIf="!isLoadingConfiguration && !selectedAltChain?.readyStatus?.isReady">
   <mat-card class="alert-info" style="margin: 1em;">

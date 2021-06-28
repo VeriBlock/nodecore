@@ -22,6 +22,7 @@ import { AppFeeSettingDialogComponent } from './app-fee-setting-dialog/app-fee-s
 import {
   ConfiguredAltchain,
   ConfiguredAltchainList,
+  MinerStatus,
   NetworkInfoResponse,
   VbkFeeConfig,
 } from '@core/model';
@@ -38,6 +39,7 @@ export class AppComponent implements OnInit {
   public vbkAddress: string;
   public vbkBalance: string;
   public isLoadingSettings = false;
+  public minerStatus: MinerStatus = null;
 
   public selectedAltChain = null;
 
@@ -109,6 +111,14 @@ export class AppComponent implements OnInit {
 
         this.vbkAddress = results[1].vbkAddress;
         this.vbkBalance = (results[1].vbkBalance / 100_000_000).toString();
+
+        if (
+          JSON.stringify(this.minerStatus) !==
+          JSON.stringify(results[1]?.status)
+        ) {
+          this.minerStatus = results[1].status;
+          this.dataShareService.changeMinerStatus(this.minerStatus);
+        }
 
         if (this.configuredAltchains?.length > 0 && !this.selectedAltChain) {
           this.changeAltChain(this.configuredAltchains[0]);
