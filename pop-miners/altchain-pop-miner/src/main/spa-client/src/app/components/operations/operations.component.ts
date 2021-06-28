@@ -48,6 +48,8 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public operationChain: string = null;
   public networkExplorerBaseUrl: ExplorerBaseUrlsResponse;
 
+  public mineButtonReady: boolean = false;
+
   public filters: string[] = ['All', 'Active', 'Completed', 'Failed'];
   private globalOperationStages: string[] = [
     OperationState.INITIAL,
@@ -707,19 +709,11 @@ export class OperationsComponent implements OnInit, OnDestroy {
   }
 
   public disableMineOperations(): boolean {
-    return (
+    this.mineButtonReady =
       this.isLoadingConfiguration ||
       !this.selectedAltChain?.readyStatus?.isReady ||
-      !this.minerStatus?.isReady
-    );
-  }
+      !this.minerStatus?.isReady;
 
-  public disabledMineButtonTooltip(): string {
-    return (
-      (!this.minerStatus?.isReady ? this.minerStatus?.reason : '') ||
-      (!this.selectedAltChain?.readyStatus?.isReady
-        ? this.selectedAltChain?.readyStatus?.reason
-        : '')
-    );
+    return this.mineButtonReady;
   }
 }

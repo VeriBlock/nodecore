@@ -20,19 +20,19 @@
 
 <div fxLayout="row" fxLayoutAlign="center center" style="width: 100%;">
   <div fxLayout="row" fxLayoutAlign="end center" style="min-width: 250px;" class="flag flag-primary flag-mine"
-    [matTooltip]="disabledMineButtonTooltip()">
+    [matTooltip]="disableMineOperations() ? 'Miner is not ready' : ''">
     <button mat-button (click)="startMineBlock()" matTooltip="Start new mining operation"
-      [disabled]="disableMineOperations()"
+      [disabled]="mineButtonReady"
       style="padding: 0; font-size: 20px; text-align: center;"
-      [ngStyle]="{'cursor': disableMineOperations() ? 'not-allowed' : ''}">
+      [ngStyle]="{'cursor': mineButtonReady ? 'not-allowed' : ''}">
       <div style="min-width: 250px;" class="flag flag-primary flag-mine">
         Mine
       </div>
     </button>
     <div fxLayout="row" fxLayoutAlign="center center" style="border-left: 1px white solid;">
       <button mat-icon-button type="button" matTooltip="Start custom mining operation" (click)="openMineDialog()"
-        [disabled]="disableMineOperations()"
-        [ngStyle]="{'cursor': disableMineOperations() ? 'not-allowed' : ''}">
+        [disabled]="mineButtonReady"
+        [ngStyle]="{'cursor': mineButtonReady ? 'not-allowed' : ''}">
         <mat-icon class="custom-mine-button">more_vert</mat-icon>
       </button>
     </div>
