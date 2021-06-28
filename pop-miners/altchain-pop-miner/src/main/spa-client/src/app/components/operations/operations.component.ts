@@ -29,6 +29,7 @@ import {
   StateDetail,
   NetworkInfoResponse,
   ExplorerBaseUrlsResponse,
+  MinerStatus,
 } from '@core/model';
 import { OperationState, OperationStatus } from '@core/enums';
 
@@ -43,6 +44,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   });
 
   public selectedAltChain: ConfiguredAltchain = null;
+  public minerStatus: MinerStatus = null;
   public operationChain: string = null;
   public networkExplorerBaseUrl: ExplorerBaseUrlsResponse;
 
@@ -77,6 +79,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
   public APIOperationWorkflows = {};
 
   private currentSelectionSubscription: any;
+  private currentMinerStatusSubscription: any;
 
   constructor(
     private dataShareService: DataShareService,
@@ -110,6 +113,15 @@ export class OperationsComponent implements OnInit, OnDestroy {
               this.initValues();
               this.updateQueryParams();
             }
+          }
+        }
+      );
+
+    this.currentMinerStatusSubscription =
+      this.dataShareService.currentMinerStatus.subscribe(
+        (data: MinerStatus) => {
+          if (JSON.stringify(data) !== JSON.stringify(this.minerStatus)) {
+            this.minerStatus = data;
           }
         }
       );
@@ -188,6 +200,7 @@ export class OperationsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.currentSelectionSubscription.unsubscribe();
+    this.currentMinerStatusSubscription.unsubscribe();
   }
 
   public initValues() {
@@ -691,5 +704,22 @@ export class OperationsComponent implements OnInit, OnDestroy {
     return key?.length >= 4
       ? `${key.charAt(0)}${key.slice(1).toUpperCase()}`
       : key.toUpperCase();
+  }
+
+  public disableMineOperations(): boolean {
+    return (
+      this.isLoadingConfiguration ||
+      !this.selectedAltChain?.readyStatus?.isReady ||
+      !this.minerStatus?.isReady
+    );
+  }
+
+  public disabledMineButtonTooltip(): string {
+    return (
+      (!this.minerStatus?.isReady ? this.minerStatus?.reason : '') ||
+      (!this.selectedAltChain?.readyStatus?.isReady
+        ? this.selectedAltChain?.readyStatus?.reason
+        : '')
+    );
   }
 }
