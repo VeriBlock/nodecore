@@ -315,11 +315,10 @@ class SecurityInheritingMonitor(
                 handleContextGap()
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error handling context gap for ${chain.name}! Will try again later..." }
-                delay(1200_000L)
             } catch (t: Throwable) {
                 logger.error(t) { "Error handling context gap for ${chain.name}! Will try again later..." }
-                delay(1200_000L)
             }
+            delay(1200_000L)
         }
     }
 
@@ -430,7 +429,7 @@ class SecurityInheritingMonitor(
             return
         }
 
-        logger.info { "The ${chain.name} has a context gap of ${missingBtcBlockHashes.size} BTC blocks! Retrieving corresponding publication data..." }
+        logger.info { "The chain ${chain.name} has a context gap of ${missingBtcBlockHashes.size} BTC blocks! Retrieving corresponding publication data..." }
         // Fetch and wait for veriblock publications (VTBs)
         val vtbs = miner.gateway.getVtbsForBtcBlocks(missingBtcBlockHashes)
 

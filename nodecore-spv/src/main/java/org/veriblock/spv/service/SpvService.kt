@@ -389,7 +389,7 @@ class SpvService(
         val request = buildMessage {
             vtbForBtcRequest = getVtbsForBtcRequest
         }
-        val reply = peerTable.requestMessage(request, timeoutInMillis = 300_000L) {
+        val reply = peerTable.requestMessage(request, timeoutInMillis = 2_000_000L) {
             if (it.vtbForBtcReply.success) {
                 it.vtbForBtcReply.publicationsCount
             } else {
