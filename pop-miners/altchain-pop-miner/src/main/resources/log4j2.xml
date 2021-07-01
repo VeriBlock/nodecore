@@ -49,8 +49,6 @@
 
 	<loggers>
 
-		<logger name="org.veriblock" level="${logLevel}" />
-
 		<logger name="shell-printing" level="INFO" additivity="false">
 			<appender-ref ref="fileAppenderRouter" />
 		</logger>
@@ -59,7 +57,7 @@
 		</logger>
 		<logger name="Exposed" level="ERROR" />
 
-		<root level="ERROR">
+		<root level="${logLevel}">
 			<appender-ref ref="consoleAppender" />
 			<appender-ref ref="fileAppenderRouter" />
 			<appender-ref ref="errorFileAppender" />
