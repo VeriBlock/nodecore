@@ -250,14 +250,14 @@ class PeerTable(
         }
 
         if (isNodeSelf(candidate.id, candidate.address) || isAddressPrivate(candidate.address)) {
-            return candidate
+            return null
         }
 
         if (peers.containsKey(candidate.addressKey)) {
-            return candidate
+            return null
         }
 
-        return null
+        return candidate
     }
 
     private fun addPeerCandidates(candidates: List<NodeMetadata>) {
