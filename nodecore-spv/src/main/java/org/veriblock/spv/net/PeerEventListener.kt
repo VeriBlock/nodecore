@@ -29,7 +29,6 @@ import nodecore.api.grpc.RpcNotFound
 import nodecore.api.grpc.RpcTransactionRequest
 import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.p2p.P2pConfiguration
 import nodecore.p2p.P2pConstants
 import nodecore.p2p.P2pEventBus
 import nodecore.p2p.Peer
@@ -83,7 +82,6 @@ class PeerEventListener(
         P2pEventBus.announce.register(this, ::onAnnounce)
         P2pEventBus.heartbeat.register(this, ::onHeartbeat)
         P2pEventBus.networkInfoRequest.register(this, ::onNetworkInfoRequest)
-        P2pEventBus.networkInfoReply.register(this, ::onNetworkInfoReply)
         P2pEventBus.advertiseBlocks.register(this, ::onAdvertiseBlocks)
         P2pEventBus.advertiseTransaction.register(this, ::onAdvertiseTransactions)
         P2pEventBus.transactionRequest.register(this, ::onTransactionRequest)
@@ -222,15 +220,6 @@ class PeerEventListener(
         } catch (e: Exception) {
             logger.error(e) { "Unable to reply to network info request" }
         }
-    }
-    
-    private fun onNetworkInfoReply(event: P2pEvent<RpcNetworkInfoReply>) {
-        logger.debug { "Network info reply received from ${event.producer.address}" }
-        event.acknowledge()
-
-        peerTable.processRemotePeerTable(
-            event.content.availableNodesList.map { it.toModel() }
-        )
     }
     
     suspend fun onAdvertiseBlocks(event: P2pEvent<RpcAdvertiseBlocks>) {

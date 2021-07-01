@@ -35,6 +35,10 @@ import org.veriblock.core.utilities.createLogger
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.toList
 
 private val logger = createLogger {}
 
@@ -110,7 +114,8 @@ class PeerTable(
         }
         coroutineScope.launch {
             delay(35_000L)
-            requestPeerTables()
+            val candidates = requestPeerTables()
+            addPeerCandidates(candidates)
         }
         coroutineScope.launchWithFixedDelay(60_000L, 60_000L) {
             upkeep()
@@ -140,7 +145,7 @@ class PeerTable(
         }
     }
 
-    private suspend fun attemptOutboundPeerConnect(address: String, port: Int): Peer? {
+    suspend fun attemptOutboundPeerConnect(address: String, port: Int): Peer? {
         val peer = createOutboundPeer(address, port)
             // TODO: Retry connections?
             ?: return null
@@ -164,18 +169,19 @@ class PeerTable(
         return null
     }
 
-    private fun requestPeerTables() {
+    private suspend fun requestPeerTables(): List<NodeMetadata> {
         val event = buildMessage {
             networkInfoRequest = RpcNetworkInfoRequest.newBuilder().build()
         }
 
-        getConnectedPeers().forEach {
-            try {
-                it.send(event)
-            } catch (e: Exception) {
-                logger.error(e) { "Unable to request network info" }
+        return requestAllMessages(event)
+            .flatMapConcat { reply ->
+                reply.networkInfoReply.availableNodesList
+                    .mapNotNull { it.toModel().asAcceptableCandidate() }
+                    .asFlow()
             }
-        }
+            .distinctUntilChangedBy { it.addressKey }
+            .toList()
     }
 
     fun registerIncomingConnection(socket: Socket) {
@@ -224,12 +230,6 @@ class PeerTable(
         })
     }
 
-    fun processRemotePeerTable(peers: List<NodeMetadata>) {
-        for (node in peers) {
-            addPeerCandidate(node)
-        }
-    }
-
     fun getConnectedPeers(): List<Peer> = peers.values.filter {
         it.status == Peer.Status.Connected
     }
@@ -238,24 +238,33 @@ class PeerTable(
         it.status != Peer.Status.Connected
     }
 
-    private fun addPeerCandidate(node: NodeMetadata) {
+    /**
+     * Returns an acceptable candidate or null if it's not acceptable
+     */
+    private fun NodeMetadata.asAcceptableCandidate(): NodeMetadata? {
         // TODO: Remove once this is no longer needed
-        val candidate = if (node.port !in 0..50000) {
-            node.copy(port = networkParameters.p2pPort)
+        val candidate = if (port !in 0..50000) {
+            copy(port = networkParameters.p2pPort)
         } else {
-            node
+            this
         }
 
         if (isNodeSelf(candidate.id, candidate.address) || isAddressPrivate(candidate.address)) {
-            return
+            return candidate
         }
 
         if (peers.containsKey(candidate.addressKey)) {
-            return
+            return candidate
         }
 
-        peerCandidates[candidate.addressKey] = candidate
-        logger.debug { "Added ${candidate.addressKey} as a peer candidate" }
+        return null
+    }
+
+    private fun addPeerCandidates(candidates: List<NodeMetadata>) {
+        for (candidate in candidates) {
+            peerCandidates[candidate.addressKey] = candidate
+            logger.debug { "Added ${candidate.addressKey} as a peer candidate" }
+        }
     }
 
     fun getPeerCandidates(): List<NodeMetadata> {
@@ -354,18 +363,22 @@ class PeerTable(
             logger.debug("No peer candidates...")
             if (peerCount > 0) {
                 logger.info("Requesting peer tables to $peerCount peers.")
-                requestPeerTables()
-                return
-            } else {
-                if (bootstrapEnabled) {
-                    val morePeers = bootstrapper.getNext(bootstrapPeerLimit)
-                    establishConnectionWithConfiguredPeers(morePeers)
+                val candidates = requestPeerTables()
+                if (candidates.isNotEmpty()) {
+                    addPeerCandidates(candidates)
                     return
-                } else if (externalPeers.isNotEmpty()) {
-                    establishConnectionWithConfiguredPeers(externalPeers)
-                } else {
-                    logger.info("bootstrap not enabled and no peers!")
                 }
+            }
+
+            if (bootstrapEnabled) {
+                val morePeers = bootstrapper.getNext(bootstrapPeerLimit)
+                establishConnectionWithConfiguredPeers(morePeers)
+                return
+            } else if (externalPeers.isNotEmpty()) {
+                establishConnectionWithConfiguredPeers(externalPeers)
+            } else {
+                logger.info("bootstrap not enabled and no peers!")
+
             }
         }
 
