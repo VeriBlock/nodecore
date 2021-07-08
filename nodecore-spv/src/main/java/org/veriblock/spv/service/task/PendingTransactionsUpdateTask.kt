@@ -36,8 +36,8 @@ fun SpvContext.startPendingTransactionsUpdateTask() {
 
 suspend fun SpvContext.requestPendingTransactions() {
     val pendingTransactionIds = pendingTransactionContainer.getPendingTransactionIds()
-    try {
-        for (txId in pendingTransactionIds) {
+    for (txId in pendingTransactionIds) {
+        try {
             val request = buildMessage {
                 transactionRequest = RpcGetTransactionRequest.newBuilder()
                     .setId(txId.bytes.toByteString())
@@ -52,9 +52,9 @@ suspend fun SpvContext.requestPendingTransactions() {
                     peerTable.advertise(transaction)
                 }
             }
+        } catch (e: Exception) {
+            logger.debugWarn(e) { "Unable to request pending transaction $txId" }
         }
-    } catch (e: Exception) {
-        logger.debugWarn(e) { "Unable to request pending transactions" }
     }
 }
 
