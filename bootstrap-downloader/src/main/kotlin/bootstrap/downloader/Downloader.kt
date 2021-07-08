@@ -101,10 +101,12 @@ class Downloader(
 
         ProgressBarBuilder().apply {
             setTaskName("Downloading block files")
-            setInitialMax(filesToDownload.size.toLong())
+            setInitialMax(filesToDownload.sumOf { it.size })
+            setUnit("MB", 1024 * 1024)
             setStyle(ProgressBarStyle.ASCII)
             setConsumer(DelegatingProgressBarConsumer(logger::info, 100))
         }.build().use { progressBar ->
+            var cumulativeSize = 0L
             while (filesToDownload.isNotEmpty()) {
                 val file = filesToDownload.removeAt(0)
                 val localFile = Paths.get(dataDirectory, network, file.folder, file.name).toFile()
@@ -213,13 +215,9 @@ fun File.isMissingOrCorrupted(size: Long, checksum: String): Boolean {
         logger.debug { "The file ${this.name} doesn't exist" }
         return true
     }
-    var fileLength: Long
-    var fileChecksum: String
-    val isCorrupted = inputStream().use { inputStream ->
-        fileLength = length()
-        fileChecksum = DigestUtils.md5Hex(inputStream)
-        fileLength != size || fileChecksum != checksum
-    }
+    val fileLength: Long = length()
+    val fileChecksum: String = inputStream().use { DigestUtils.md5Hex(it) }
+    val isCorrupted = fileLength != size || !fileChecksum.equals(checksum, ignoreCase = true)
     val isMissingOrCorrupted = !fileExist || isCorrupted
     if (isMissingOrCorrupted) {
         logger.debug { "File: ${this.name}, exists: $fileExist, fileLength: $fileLength (expected length: $size), fileChecksum: $fileChecksum (expected checksum: $checksum): isCorrupted: $isCorrupted, isMissingOrCorrupted: $isMissingOrCorrupted" }
