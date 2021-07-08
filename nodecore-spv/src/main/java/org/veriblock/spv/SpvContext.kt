@@ -119,7 +119,7 @@ class SpvContext(
                 networkParameters = config.networkParameters,
                 // For now we'll be using either direct discovery or DNS discovery, not a mix.
                 // This will change whenever other use cases appear.
-                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty(),
+                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty(),
                 bootstrappingDnsSeeds = bootstrappingDnsSeeds,
                 externalPeerEndpoints = externalPeerEndpoints,
                 isSpv = true,

@@ -131,13 +131,15 @@ class PeerTable(
         }
     }
 
-    private suspend fun establishConnectionWithConfiguredPeers(peers: List<NetworkAddress>) {
+    private suspend fun establishConnectionWithConfiguredPeers(peers: List<NetworkAddress>, bootstrap: Boolean = false) {
         // Filter out ones that have already been added
         val filtered = peers.filter {
             !this.peers.containsKey(it.addressKey)
         }
 
-        logger.info { "Establishing connection with ${filtered.size} / ${peers.size} configured peers." }
+        if (bootstrap) {
+            logger.info { "Establishing connection with ${filtered.size} / ${peers.size} bootstrap peers." }
+        }
 
         // Attempt to connect with the peer and add if successful
         for (address in filtered) {
@@ -369,17 +371,16 @@ class PeerTable(
                     return
                 }
             }
-
+            if (externalPeers.isNotEmpty()) {
+                establishConnectionWithConfiguredPeers(externalPeers)
+            }
             if (bootstrapEnabled) {
                 val morePeers = bootstrapper.getNext(bootstrapPeerLimit)
-                establishConnectionWithConfiguredPeers(morePeers)
+                establishConnectionWithConfiguredPeers(morePeers, true)
                 return
-            } else if (externalPeers.isNotEmpty()) {
-                establishConnectionWithConfiguredPeers(externalPeers)
-            } else {
-                logger.info("bootstrap not enabled and no peers!")
-
             }
+
+            logger.info("bootstrap not enabled and no peers!")
         }
 
         logger.debug { "Found ${peerCandidates.size} peer candidates" }
