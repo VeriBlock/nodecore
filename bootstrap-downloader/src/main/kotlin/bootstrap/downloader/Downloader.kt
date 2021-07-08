@@ -9,13 +9,15 @@ package bootstrap.downloader
 
 import com.google.gson.Gson
 import io.ktor.client.HttpClient
+import io.ktor.client.call.receive
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.json.Json
 import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
-import io.ktor.utils.io.jvm.javaio.copyTo
+import io.ktor.client.statement.HttpStatement
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.core.isEmpty
+import io.ktor.utils.io.core.readBytes
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import me.tongfei.progressbar.DelegatingProgressBarConsumer
 import me.tongfei.progressbar.ProgressBarBuilder
 import me.tongfei.progressbar.ProgressBarStyle
@@ -122,13 +124,28 @@ class Downloader(
                         }
                     }
 
+                    // Temp file
+                    val uuid = UUID.randomUUID()
+                    val tempFile = Paths.get(dataDirectory, network, file.folder, "${file.name}-$uuid.dat").toFile()
+
                     // Download the file
                     if (!isLocalUrl) {
-                        httpClient.get<HttpResponse>(
+                        httpClient.get<HttpStatement>(
                             "$url/$network/${file.folder}/${file.name}"
-                        ).content.copyTo(
-                            Paths.get(dataDirectory, network, file.folder, file.name).toFile().outputStream()
-                        )
+                        ).execute { httpResponse ->
+                            val channel: ByteReadChannel = httpResponse.receive()
+                            var fileCumulativeSize = 0
+                            while (!channel.isClosedForRead) {
+                                val packet = channel.readRemaining(DEFAULT_BUFFER_SIZE.toLong(), 0)
+                                while (!packet.isEmpty) {
+                                    val bytes = packet.readBytes()
+                                    tempFile.appendBytes(bytes)
+
+                                    fileCumulativeSize += bytes.size
+                                    progressBar.stepTo(cumulativeSize + fileCumulativeSize)
+                                }
+                            }
+                        }
                     } else {
                         File("$url/$network/${file.folder}/${file.name}").inputStream().use { inputStream ->
                             Files.copy(
@@ -140,12 +157,16 @@ class Downloader(
                     }
 
                     // Verify the integrity for the recently downloaded file
-                    if (localFile.isMissingOrCorrupted(file.size, file.checksum)) {
+                    if (tempFile.isMissingOrCorrupted(file.size, file.checksum)) {
                         logger.info { "The recently downloaded file ${file.folder}/${file.name} seems to be corrupted, the file has been re added to the download queue" }
                         filesToDownload.add(file)
                     } else {
+                        localFile.delete()
+                        tempFile.renameTo(localFile)
+
                         // Increase the progress bar
-                        progressBar.stepBy(1L)
+                        cumulativeSize += file.size
+                        progressBar.stepTo(cumulativeSize)
                         failedAttempts = 0
                     }
                 } catch (e: IOException) {
