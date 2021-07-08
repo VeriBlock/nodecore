@@ -159,6 +159,7 @@ class Downloader(
                     // Verify the integrity for the recently downloaded file
                     if (tempFile.isMissingOrCorrupted(file.size, file.checksum)) {
                         logger.info { "The recently downloaded file ${file.folder}/${file.name} seems to be corrupted, the file has been re added to the download queue" }
+                        tempFile.delete()
                         filesToDownload.add(file)
                     } else {
                         localFile.delete()
