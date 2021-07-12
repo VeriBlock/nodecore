@@ -23,8 +23,8 @@ data class NodeMetadata(
         get() = "$address:$port"
 
     // FIXME: Convert to extension function when it's no longer called from java code
-    fun toRpcNodeInfo(): RpcNodeInfo = RpcNodeInfo.newBuilder().also {
-        it.address = address
+    fun toRpcNodeInfo(addr: String? = null): RpcNodeInfo = RpcNodeInfo.newBuilder().also {
+        it.address = addr ?: address
         it.port = port
         it.application = application
         it.protocolVersion = protocolVersion

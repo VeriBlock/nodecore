@@ -205,7 +205,7 @@ class PeerEventListener(
         val replyBuilder = RpcNetworkInfoReply.newBuilder()
         for (peer in availablePeers) {
             if (peer.state.hasAnnounced()) {
-                replyBuilder.addAvailableNodes(peer.metadata.toRpcNodeInfo())
+                replyBuilder.addAvailableNodes(peer.metadata.toRpcNodeInfo(peer.address))
             } else {
                 logger.info { "Not sending along peer ${peer.address}:${peer.port} because they have not yet sent their capabilities." }
             }
