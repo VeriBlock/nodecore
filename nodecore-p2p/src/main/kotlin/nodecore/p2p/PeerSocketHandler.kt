@@ -11,6 +11,8 @@ import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.isClosed
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
+import io.ktor.utils.io.cancel
+import io.ktor.utils.io.close
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -65,6 +67,8 @@ class PeerSocketHandler(
             inputJob.cancel()
             outputJob.cancel()
             coroutineScope.cancel()
+            readChannel.cancel()
+            writeChannel.close()
             writeEventChannel.close()
             if (!socket.isClosed) {
                 try {

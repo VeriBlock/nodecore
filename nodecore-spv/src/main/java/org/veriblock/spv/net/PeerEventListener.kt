@@ -7,6 +7,7 @@
 package org.veriblock.spv.net
 
 import com.google.protobuf.ByteString
+import java.util.concurrent.locks.ReentrantLock
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -57,6 +58,7 @@ import org.veriblock.spv.service.NetworkBlock
 import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
+import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
 
@@ -99,41 +101,47 @@ class PeerEventListener(
         val standardTransaction = MessageSerializer.deserializeNormalTransaction(event.content)
         SpvEventBus.pendingTransactionDownloadedEvent.trigger(standardTransaction)
     }
-    
+
+    private val announceLock = ReentrantLock()
+
     fun onAnnounce(event: P2pEvent<RpcAnnounce>) {
         logger.debug { "Announce received from ${event.producer.address}" }
         event.acknowledge()
 
         val peer = event.producer
-        if (peer.state.hasAnnounced()) {
-            return
+        announceLock.withLock {
+            if (peer.state.hasAnnounced()) {
+                return
+            }
+
+            try {
+                val nodeInfo = event.content.nodeInfo
+                if (nodeInfo.protocolVersion != networkParameters.protocolVersion) {
+                    logger.warn { "Peer ${peer.address} is on protocol version ${nodeInfo.protocolVersion} and will be disconnected" }
+                    peer.disconnect()
+                    return
+                }
+                val capabilities = PeerCapabilities.parse(nodeInfo.capabilities)
+                if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
+                    logger.warn { "Peer ${peer.address} has no SPV support. Disconnecting..." }
+                    peer.disconnect()
+                    return
+                }
+
+                peer.metadata = nodeInfo.toModel()
+                peer.reconnectPort = nodeInfo.port
+
+                peerTable.updatePeer(peer)
+
+                if (event.content.reply) {
+                    peerTable.announce(peer)
+                }
+
+                P2pEventBus.peerConnected.trigger(peer)
+            } finally {
+                peer.state.setAnnounced(true)
+            }
         }
-
-        peer.state.setAnnounced(true)
-
-        val nodeInfo = event.content.nodeInfo
-        if (nodeInfo.protocolVersion != networkParameters.protocolVersion) {
-            logger.warn { "Peer ${peer.address} is on protocol version ${nodeInfo.protocolVersion} and will be disconnected" }
-            peer.disconnect()
-            return
-        }
-        val capabilities = PeerCapabilities.parse(nodeInfo.capabilities)
-        if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
-            logger.warn { "Peer ${peer.address} has no SPV support. Disconnecting..." }
-            peer.disconnect()
-            return
-        }
-
-        peer.metadata = nodeInfo.toModel()
-        peer.reconnectPort = nodeInfo.port
-
-        peerTable.updatePeer(peer)
-
-        if (event.content.reply) {
-            peerTable.announce(peer)
-        }
-
-        P2pEventBus.peerConnected.trigger(peer)
     }
     
     fun onHeartbeat(event: P2pEvent<RpcHeartbeat>) {
