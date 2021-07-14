@@ -23,7 +23,11 @@ data class NodeMetadata(
         get() = "$address:$port"
 
     // FIXME: Convert to extension function when it's no longer called from java code
-    fun toRpcNodeInfo(addr: String? = null): RpcNodeInfo = RpcNodeInfo.newBuilder().also {
+    @JvmOverloads
+    fun toRpcNodeInfo(
+        addr: String? = null,
+        c: PeerCapabilities? = null
+    ): RpcNodeInfo = RpcNodeInfo.newBuilder().also {
         it.address = addr ?: address
         it.port = port
         it.application = application
@@ -31,7 +35,7 @@ data class NodeMetadata(
         it.platform = platform
         it.startTimestamp = startTimestamp
         it.share = canShareAddress
-        it.capabilities = capabilities.toBitVector()
+        it.capabilities = (c ?: capabilities).toBitVector()
         it.id = id
     }.build()
 }

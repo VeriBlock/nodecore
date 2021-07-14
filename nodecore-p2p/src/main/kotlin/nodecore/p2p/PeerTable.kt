@@ -71,6 +71,7 @@ class PeerTable(
         id = UUID.randomUUID().toString()
     )
 
+    private val capabilitiesMapper: PeerCapabilities.(Peer) -> PeerCapabilities = configuration.capabilitiesMapper
     private val neededCapabilities: PeerCapabilities = configuration.neededCapabilities
 
     private var externalPeers: MutableList<NetworkAddress> = if (configuration.externalPeerEndpoints.isEmpty() && bootstrapEnabled) {
@@ -225,7 +226,8 @@ class PeerTable(
         target.send(buildMessage {
             announce = RpcAnnounce.newBuilder().apply {
                 reply = requestReply
-                nodeInfo = self.toRpcNodeInfo()
+                val capabilitiesToSend = self.capabilities.capabilitiesMapper(target)
+                nodeInfo = self.toRpcNodeInfo(c = capabilitiesToSend)
             }.build()
         })
     }
