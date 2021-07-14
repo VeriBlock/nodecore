@@ -49,6 +49,7 @@ import org.veriblock.spv.model.DownloadStatusResponse
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
+import nodecore.p2p.PeerCapabilities
 
 private val logger = createLogger {}
 
@@ -401,7 +402,8 @@ class AltchainPopMinerService(
                 networkParameters,
                 dataDir = context.dataDir,
                 connectDirectlyTo = config.connectDirectlyTo,
-                trustPeerHashes = true
+                trustPeerHashes = true,
+                extraNeededCapabilities = setOf(PeerCapabilities.Capability.VtbRequests)
             )
         )
         spvContext.start()

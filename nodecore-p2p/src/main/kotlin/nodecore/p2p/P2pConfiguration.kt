@@ -19,6 +19,7 @@ class P2pConfiguration(
     val peerSharePlatform: Boolean = false,
     val peerPublishAddress: String = "",
     val peerShareMyAddress: Boolean = false,
-    val isSpv: Boolean = false,
+    val capabilities: PeerCapabilities = PeerCapabilities.defaultCapabilities(),
+    val neededCapabilities: PeerCapabilities = PeerCapabilities.defaultCapabilities(),
     val fullProgramNameVersion: String = P2pConstants.FULL_PROGRAM_NAME_VERSION
 )

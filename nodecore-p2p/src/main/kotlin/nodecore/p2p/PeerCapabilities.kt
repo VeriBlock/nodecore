@@ -7,45 +7,51 @@
 package nodecore.p2p
 
 import java.util.EnumSet
-import nodecore.p2p.PeerCapabilities
 import org.apache.commons.lang3.EnumUtils
 
 class PeerCapabilities(
-    private val capabilities: Set<Capabilities>
+    private val capabilities: Set<Capability>
 ) {
-    enum class Capabilities {
+    enum class Capability {
         Transaction, Block, Query, Sync, NetworkInfo, BatchSync, Advertise, AdvertiseTx, SpvRequests, VtbRequests
     }
     
-    private constructor(bitVector: Long) : this(EnumUtils.processBitVector(Capabilities::class.java, bitVector))
+    private constructor(bitVector: Long) : this(EnumUtils.processBitVector(Capability::class.java, bitVector))
     
     fun toBitVector(): Long {
-        return EnumUtils.generateBitVector(Capabilities::class.java, capabilities)
+        return EnumUtils.generateBitVector(Capability::class.java, capabilities)
     }
-    
-    fun hasCapability(capability: Capabilities): Boolean {
+
+    fun hasCapability(capability: Capability): Boolean {
         return capabilities.contains(capability)
     }
 
-    fun except(capabilities: Set<Capabilities>): PeerCapabilities =
+    fun hasCapabilities(capabilities: PeerCapabilities): Boolean {
+        return this.capabilities.containsAll(capabilities.capabilities)
+    }
+
+    infix fun and(capabilities: Set<Capability>): PeerCapabilities =
+        PeerCapabilities(this.capabilities + capabilities)
+
+    infix fun except(capabilities: Set<Capability>): PeerCapabilities =
         PeerCapabilities(this.capabilities - capabilities)
     
     companion object {
         private val INITIAL_CAPABILITIES = EnumSet.of(
-            Capabilities.Transaction,
-            Capabilities.Block,
-            Capabilities.Query,
-            Capabilities.Sync,
-            Capabilities.NetworkInfo,
-            Capabilities.BatchSync
+            Capability.Transaction,
+            Capability.Block,
+            Capability.Query,
+            Capability.Sync,
+            Capability.NetworkInfo,
+            Capability.BatchSync
         )
         private val SPV_CAPABILITIES = EnumSet.of(
-            Capabilities.Transaction,
-            Capabilities.Query,
-            Capabilities.NetworkInfo,
+            Capability.Transaction,
+            Capability.Query,
+            Capability.NetworkInfo,
         )
 
-        private val ALL = EnumSet.allOf(Capabilities::class.java)
+        private val ALL = EnumSet.allOf(Capability::class.java)
 
         @JvmStatic
         fun allCapabilities(): PeerCapabilities {

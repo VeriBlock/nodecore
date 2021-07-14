@@ -67,13 +67,11 @@ class PeerTable(
         platform = if (configuration.peerSharePlatform) P2pConstants.PLATFORM else "",
         startTimestamp = Utility.getCurrentTimeSeconds(),
         canShareAddress = configuration.peerShareMyAddress,
-        capabilities = if (configuration.isSpv) {
-            PeerCapabilities.spvCapabilities()
-        } else {
-            PeerCapabilities.allCapabilities()
-        },
+        capabilities = configuration.capabilities,
         id = UUID.randomUUID().toString()
     )
+
+    private val neededCapabilities: PeerCapabilities = configuration.neededCapabilities
 
     private var externalPeers: MutableList<NetworkAddress> = if (configuration.externalPeerEndpoints.isEmpty() && bootstrapEnabled) {
         logger.debug("Discovered 0 external peers configured, searching for bootstrap nodes")
@@ -315,7 +313,7 @@ class PeerTable(
         peer?.disconnect()
 
         peerCandidates.remove(addressKey)
-        logger.info { "Removed $addressKey from peer list" }
+        logger.debug { "Removed $addressKey from peer list" }
 
         if (getConnectedPeers().isEmpty()) {
             onDisconnected?.run()
@@ -354,8 +352,8 @@ class PeerTable(
 
     suspend fun ensureMinimumConnectedPeers() {
         val available = getConnectedPeers()
-        // Take into account only the peers that can supply blocks (full nodes)
-        val peerCount = available.count { it.capabilities.hasCapability(PeerCapabilities.Capabilities.Block) }
+        // Take into account only the peers that have our needed capabilities
+        val peerCount = available.count { it.capabilities.hasCapabilities(neededCapabilities) }
         if (peerCount >= minimumPeerCount) {
             logger.debug("Minimum peer threshold met!")
             return
@@ -437,7 +435,7 @@ class PeerTable(
     suspend fun requestMessage(
         event: RpcEvent,
         timeoutInMillis: Long = 5000L,
-        neededCapability: PeerCapabilities.Capabilities? = null,
+        neededCapability: PeerCapabilities.Capability? = null,
         quantifier: ((RpcEvent) -> Int)
     ): RpcEvent = coroutineScope {
         // Perform the request for all the peers asynchronously

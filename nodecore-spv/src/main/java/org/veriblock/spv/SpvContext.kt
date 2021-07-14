@@ -40,6 +40,7 @@ import java.io.File
 import java.net.URI
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
+import nodecore.p2p.PeerCapabilities
 
 const val FILE_EXTENSION = ".vbkwallet"
 
@@ -122,7 +123,8 @@ class SpvContext(
                 peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty(),
                 bootstrappingDnsSeeds = bootstrappingDnsSeeds,
                 externalPeerEndpoints = externalPeerEndpoints,
-                isSpv = true,
+                capabilities = PeerCapabilities.spvCapabilities(),
+                neededCapabilities = PeerCapabilities.defaultCapabilities() and config.extraNeededCapabilities,
                 fullProgramNameVersion = SpvConstants.FULL_PROGRAM_NAME_VERSION
             )
             if (p2pConfiguration.peerBootstrapEnabled) {
@@ -213,5 +215,6 @@ class SpvConfig(
     val networkParameters: NetworkParameters = defaultMainNetParameters,
     val dataDir: String = ".",
     val connectDirectlyTo: List<String> = emptyList(),
-    val trustPeerHashes: Boolean = false
+    val trustPeerHashes: Boolean = false,
+    val extraNeededCapabilities: Set<PeerCapabilities.Capability> = emptySet()
 )

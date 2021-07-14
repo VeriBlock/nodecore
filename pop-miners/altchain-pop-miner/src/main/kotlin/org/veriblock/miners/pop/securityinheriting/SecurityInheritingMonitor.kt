@@ -413,7 +413,9 @@ class SecurityInheritingMonitor(
             }
             .count { it.accepted }
         if (successfulSubmissions > 0) {
-            logger.debug { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+            logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+        } else {
+            logger.info { "Failed to submit VTBs to ${chain.name}" }
         }
     }
 
@@ -449,7 +451,9 @@ class SecurityInheritingMonitor(
             }
             .count { it.accepted }
         if (successfulSubmissions > 0) {
-            logger.debug { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+            logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
+        } else {
+            logger.info { "Failed to submit VTBs to ${chain.name}" }
         }
     }
 

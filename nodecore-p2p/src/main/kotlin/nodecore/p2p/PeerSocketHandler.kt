@@ -66,7 +66,6 @@ class PeerSocketHandler(
             running.set(false)
             inputJob.cancel()
             outputJob.cancel()
-            coroutineScope.cancel()
             readChannel.cancel()
             writeChannel.close()
             writeEventChannel.close()
@@ -197,10 +196,10 @@ class PeerSocketHandler(
 
             if (ownsConnection) {
                 try {
-                    logger.info { "Attempting to self-heal peer connection to ${socket.remoteAddress.addressKey}" }
+                    logger.info { "Attempting to self-heal peer connection to ${peer.addressKey}" }
                     recoverSuccess = peer.reconnect()
                     if (recoverSuccess) {
-                        logger.info { "Connection successfully recovered to ${socket.remoteAddress.addressKey}!" }
+                        logger.info { "Connection successfully recovered to ${peer.addressKey}!" }
                     }
                 } catch (e: Exception) {
                     logger.warn(e) { "Error while attempting to self-heal P2P connection!" }
@@ -211,6 +210,8 @@ class PeerSocketHandler(
                 peer.status = Peer.Status.Errored
                 P2pEventBus.peerDisconnected.trigger(peer)
             }
+
+            coroutineScope.cancel()
         }
     }
 
@@ -218,10 +219,10 @@ class PeerSocketHandler(
 
     private fun logBlocks(event: RpcEvent) {
         if (event.resultsCase == RpcEvent.ResultsCase.BLOCK) {
-            logger.info { "Writing block num ${event.block.number}" }
+            logger.debug { "Writing block num ${event.block.number}" }
             val sentTimes = sentBlocks[event.block.number]
             if (sentTimes != null) {
-                logger.info { "Note: already sent this block $sentTimes times." }
+                logger.debug { "Note: already sent this block $sentTimes times." }
                 sentBlocks[event.block.number] = sentTimes + 1
             } else {
                 sentBlocks[event.block.number] = 1

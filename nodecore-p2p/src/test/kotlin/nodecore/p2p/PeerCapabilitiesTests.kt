@@ -14,27 +14,27 @@ class PeerCapabilitiesTests {
     @Test
     fun hasCapabilityWithDefaults() {
         val peerCapabilities = PeerCapabilities.defaultCapabilities()
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun hasCapabilityWithAll() {
         val peerCapabilities = PeerCapabilities.allCapabilities()
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe true
     }
 
     @Test
@@ -54,104 +54,104 @@ class PeerCapabilitiesTests {
     @Test
     fun parseTransaction() {
         val peerCapabilities = PeerCapabilities.parse(1L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseBlock() {
         val peerCapabilities = PeerCapabilities.parse(2L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseQuery() {
         val peerCapabilities = PeerCapabilities.parse(4L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseSync() {
         val peerCapabilities = PeerCapabilities.parse(8L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseNetworkInfo() {
         val peerCapabilities = PeerCapabilities.parse(16L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseBatchSync() {
         val peerCapabilities = PeerCapabilities.parse(32L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseAdvertise() {
         val peerCapabilities = PeerCapabilities.parse(64L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe true
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe false
     }
 
     @Test
     fun parseAdvertiseTx() {
         val peerCapabilities = PeerCapabilities.parse(128L)
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Transaction) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Block) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Query) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Sync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.NetworkInfo) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.BatchSync) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.Advertise) shouldBe false
-        peerCapabilities.hasCapability(PeerCapabilities.Capabilities.AdvertiseTx) shouldBe true
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Transaction) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Block) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Query) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Sync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.NetworkInfo) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.BatchSync) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.Advertise) shouldBe false
+        peerCapabilities.hasCapability(PeerCapabilities.Capability.AdvertiseTx) shouldBe true
     }
 }

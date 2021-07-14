@@ -114,33 +114,31 @@ class PeerEventListener(
                 return
             }
 
-            try {
-                val nodeInfo = event.content.nodeInfo
-                if (nodeInfo.protocolVersion != networkParameters.protocolVersion) {
-                    logger.warn { "Peer ${peer.address} is on protocol version ${nodeInfo.protocolVersion} and will be disconnected" }
-                    peer.disconnect()
-                    return
-                }
-                val capabilities = PeerCapabilities.parse(nodeInfo.capabilities)
-                if (!capabilities.hasCapability(PeerCapabilities.Capabilities.SpvRequests)) {
-                    logger.warn { "Peer ${peer.address} has no SPV support. Disconnecting..." }
-                    peer.disconnect()
-                    return
-                }
-
-                peer.metadata = nodeInfo.toModel()
-                peer.reconnectPort = nodeInfo.port
-
-                peerTable.updatePeer(peer)
-
-                if (event.content.reply) {
-                    peerTable.announce(peer)
-                }
-
-                P2pEventBus.peerConnected.trigger(peer)
-            } finally {
-                peer.state.setAnnounced(true)
+            val nodeInfo = event.content.nodeInfo
+            if (nodeInfo.protocolVersion != networkParameters.protocolVersion) {
+                logger.warn { "Peer ${peer.address} is on protocol version ${nodeInfo.protocolVersion} and will be disconnected" }
+                peer.disconnect()
+                return
             }
+            val capabilities = PeerCapabilities.parse(nodeInfo.capabilities)
+            if (!capabilities.hasCapability(PeerCapabilities.Capability.SpvRequests)) {
+                logger.warn { "Peer ${peer.address} has no SPV support. Disconnecting..." }
+                peer.disconnect()
+                return
+            }
+
+            peer.metadata = nodeInfo.toModel()
+            peer.reconnectPort = nodeInfo.port
+
+            peerTable.updatePeer(peer)
+
+            peer.state.setAnnounced(true)
+
+            if (event.content.reply) {
+                peerTable.announce(peer)
+            }
+
+            P2pEventBus.peerConnected.trigger(peer)
         }
     }
     

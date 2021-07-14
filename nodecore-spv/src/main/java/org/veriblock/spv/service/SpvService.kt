@@ -54,6 +54,7 @@ import java.io.IOException
 import java.util.*
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
+import nodecore.p2p.PeerCapabilities
 import kotlin.math.absoluteValue
 
 private val logger = createLogger {}
@@ -375,7 +376,11 @@ class SpvService(
         val request = buildMessage {
             veriblockPublicationsRequest = getVeriBlockPublicationsRequest
         }
-        val reply = peerTable.requestMessage(request, timeoutInMillis = 300_000L) {
+        val reply = peerTable.requestMessage(
+            request,
+            timeoutInMillis = 300_000L,
+            neededCapability = PeerCapabilities.Capability.VtbRequests
+        ) {
             if (it.veriblockPublicationsReply.success) {
                 it.veriblockPublicationsReply.publicationsCount
             } else {
@@ -389,7 +394,11 @@ class SpvService(
         val request = buildMessage {
             vtbForBtcRequest = getVtbsForBtcRequest
         }
-        val reply = peerTable.requestMessage(request, timeoutInMillis = 2_000_000L) {
+        val reply = peerTable.requestMessage(
+            request,
+            timeoutInMillis = 2_000_000L,
+            neededCapability = PeerCapabilities.Capability.VtbRequests
+        ) {
             if (it.vtbForBtcReply.success) {
                 it.vtbForBtcReply.publicationsCount
             } else {
