@@ -48,6 +48,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import nodecore.p2p.PeerCapabilities
+import kotlin.system.exitProcess
 
 private val logger = createLogger {}
 
@@ -390,6 +391,10 @@ class AltchainPopMinerService(
 
     private fun initSpvContext(networkParameters: NetworkParameters): SpvContext {
         logger.info { "Initializing SPV..." }
+        if (config.connectDirectlyTo.isEmpty()) {
+            logger.warn { "Unable to start APM! The miner.connectDirectlyTo configuration must contain at least one host name." }
+            exitProcess(1)
+        }
         val spvContext = SpvContext(
             SpvConfig(
                 networkParameters,
