@@ -18,7 +18,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
@@ -52,7 +51,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.invokeOnFailure
 import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -325,54 +323,6 @@ class SecurityInheritingMonitor(
     }
 
     suspend fun submitContextBlock(newBlock: VeriBlockBlock): Boolean {
-        // OLD STUFF
-        try {
-            val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
-            val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
-            if (bestKnownBlock == null) {
-                val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(bestKnownBlockHash)
-                    ?: continue
-
-                val gap = newBlock.height - networkBestKnownBlock.height
-                logger.warn {
-                    "Unable to find ${chain.name}'s best known VeriBlock block $bestKnownBlockHash in the local blockchain store." +
-                        " There's a context gap of $gap blocks. Skipping VBK block context submission..."
-                }
-                subscription.cancel()
-                continue
-            }
-
-            val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
-                ?: continue
-
-            if (bestKnownBlock.height == bestBlock.height) {
-                continue
-            }
-
-            val contextBlocks = generateSequence(bestBlock) {
-                nodeCoreLiteKit.blockChain.get(it.previousBlock)
-            }.takeWhile {
-                it.hash != bestKnownBlockHash
-            }.sortedBy {
-                it.height
-            }.toList()
-
-            val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
-            val contextBlocksToSubmit = contextBlocks.filter {
-                it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
-            }
-
-            if (contextBlocksToSubmit.isEmpty()) {
-                continue
-            }
-
-            chain.submitContext(contextBlocksToSubmit)
-            logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
-        } catch (e: Exception) {
-            logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
-        }
-
-        /// NEW STUFF
         if (!nodeCoreLiteKit.network.isOnActiveChain(newBlock.hash)) {
             logger.debug { "New block $newBlock is not on the main chain, skipping..." }
             return true
@@ -392,7 +342,7 @@ class SecurityInheritingMonitor(
         }
 
         val contextBlocks = generateSequence(newBlock) {
-            nodeCoreLiteKit.network.getBlock(it.previousBlock)
+            nodeCoreLiteKit.blockChain.get(it.previousBlock)
         }.takeWhile {
             it.hash != bestKnownBlock.hash
         }.sortedBy {

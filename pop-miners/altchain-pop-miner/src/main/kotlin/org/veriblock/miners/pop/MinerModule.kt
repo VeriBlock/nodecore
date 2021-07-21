@@ -35,7 +35,7 @@ import javax.sql.DataSource
 
 val minerModule = module {
     single { ApmOperationExplainer(get()) }
-    single { SecurityInheritingService(get(), get(), get()) }
+    single { SecurityInheritingService(get(), get(), get(), get()) }
     single {
         CommandFactory().apply {
             configure(get(), get(), get(), get(), get(), get(), get(), get(), get())
