@@ -6,10 +6,10 @@ import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.AsyncEvent
 import org.veriblock.core.utilities.EmptyEvent
 import org.veriblock.core.utilities.Event
-import org.veriblock.lite.core.BlockChainReorganizedEventData
-import org.veriblock.lite.core.FullBlock
 import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.BlockChainReorganizedEventData
+import org.veriblock.sdk.models.FullBlock
 
 object EventBus {
 
@@ -39,9 +39,9 @@ object EventBus {
     val balanceChangeEvent = Event<Balance>("Balance changed")
 
     // Block Events
-    val newBestBlockEvent = AsyncEvent<FullBlock>("New Best Block", org.veriblock.lite.util.Threading.LISTENER_THREAD)
+    val newBestBlockEvent = AsyncEvent<FullBlock>("New Best Block", Threading.LISTENER_THREAD)
     val newBestBlockChannel = BroadcastChannel<FullBlock>(Channel.CONFLATED)
-    val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", org.veriblock.lite.util.Threading.LISTENER_THREAD)
+    val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", Threading.LISTENER_THREAD)
 
     // Operation Events
     val operationStateChangedEvent = AsyncEvent<ApmOperation>("Operation State Changed", Threading.MINER_THREAD)

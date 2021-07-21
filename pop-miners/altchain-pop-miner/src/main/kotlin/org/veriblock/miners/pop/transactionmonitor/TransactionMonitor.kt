@@ -24,6 +24,8 @@ import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.core.utilities.debugError
+import org.veriblock.miners.pop.core.MerkleTree
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import kotlin.concurrent.withLock
 

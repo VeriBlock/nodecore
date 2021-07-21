@@ -36,14 +36,11 @@ import org.veriblock.miners.pop.core.MiningOperationStatus
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.SecurityInheritingChain
-import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
-import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
-import org.veriblock.core.crypto.Sha256Hash
-import org.veriblock.lite.NodeCoreLiteKit
+import org.veriblock.miners.pop.NodeCoreLiteKit
 
 private val logger = createLogger {}
 

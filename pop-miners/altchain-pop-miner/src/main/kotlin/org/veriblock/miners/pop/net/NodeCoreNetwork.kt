@@ -14,17 +14,11 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.lite.core.BlockChain
-import org.veriblock.lite.core.Context
-import org.veriblock.lite.core.FullBlock
-import org.veriblock.lite.transactionmonitor.TransactionMonitor
-import org.veriblock.lite.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.miners.pop.service.MinerConfig
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
 import org.veriblock.sdk.models.VeriBlockBlock
@@ -33,12 +27,20 @@ import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.getSynchronizedMessage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import org.veriblock.core.Context
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.BlockChain
+import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
+import org.veriblock.miners.pop.util.Threading
+import org.veriblock.sdk.models.FullBlock
 
 private val logger = createLogger {}
 
 class NodeCoreNetwork(
     private val config: MinerConfig,
-    private val context: Context,
+    private val context: ApmContext,
     private val gateway: NodeCoreGateway,
     private val blockChain: BlockChain,
     private val transactionMonitor: TransactionMonitor,
@@ -91,7 +93,7 @@ class NodeCoreNetwork(
         return transaction
     }
 
-    fun getBlock(hash: VBlakeHash): FullBlock? {
+    fun getBlock(hash: VbkHash): FullBlock? {
         return gateway.getBlock(hash.toString())
     }
 

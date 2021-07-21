@@ -21,7 +21,6 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.spv.service.TransactionService
 import java.time.LocalDateTime
 import java.util.UUID
 

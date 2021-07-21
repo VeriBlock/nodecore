@@ -18,6 +18,9 @@ import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
 import java.io.IOException
 import org.veriblock.core.Context
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.BlockChain
+import org.veriblock.miners.pop.net.NodeCoreNetwork
 import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
 
 val logger = createLogger {}
@@ -26,7 +29,7 @@ private const val WALLET_FILE_EXTENSION = ".wallet"
 
 class NodeCoreLiteKit(
     private val config: MinerConfig,
-    private val context: Context
+    private val context: ApmContext
 ) {
     lateinit var blockStore: VeriBlockBlockStore
     lateinit var blockChain: BlockChain
