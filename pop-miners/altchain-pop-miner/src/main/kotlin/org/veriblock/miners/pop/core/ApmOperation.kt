@@ -23,6 +23,7 @@ import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.time.LocalDateTime
 import java.util.UUID
+import org.veriblock.core.utilities.Utility
 
 class ApmOperation(
     id: String? = null,
@@ -210,10 +211,34 @@ class ApmSpTransaction(
         val publicationDataSize = transaction.publicationData?.let { publicationData ->
             SerializeDeserializeService.serialize(publicationData)
         }?.size ?: 0
-        val transactionSize = TransactionService.predictAltChainEndorsementTransactionSize(
+        val transactionSize = predictAltChainEndorsementTransactionSize(
             dataLength = publicationDataSize,
             sigIndex = transaction.signatureIndex
         )
         return fee / transactionSize
     }
+}
+
+private fun predictAltChainEndorsementTransactionSize(dataLength: Int, sigIndex: Long): Int {
+    var totalSize = 0
+
+    // Using an estimated total fee of 1 VBK
+    val inputAmount = 100000000L
+    totalSize += 1 // Transaction Version
+    totalSize += 1 // Type of Input Address
+    totalSize += 1 // Standard Input Address Length Byte
+    totalSize += 22 // Standard Input Address Length
+    val inputAmountBytes = Utility.trimmedByteArrayFromLong(inputAmount)
+    val inputAmountLength = inputAmountBytes.size.toLong()
+    totalSize += 1 // Input Amount Length Byte
+    totalSize += inputAmountLength.toInt() // Input Amount Length
+    totalSize += 1 // Number of Outputs, will be 0
+    val sigIndexBytes = Utility.trimmedByteArrayFromLong(sigIndex)
+    totalSize += 1 // Sig Index Length Bytes
+    totalSize += sigIndexBytes.size // Sig Index Bytes
+    val dataSizeBytes = Utility.trimmedByteArrayFromInteger(dataLength)
+    totalSize += 1 // Data Length Bytes Length
+    totalSize += dataSizeBytes.size // Data Length Bytes (value will be 0)
+    totalSize += dataLength
+    return totalSize
 }

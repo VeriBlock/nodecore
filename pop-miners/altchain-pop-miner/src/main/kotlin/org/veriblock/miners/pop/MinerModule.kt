@@ -38,15 +38,15 @@ val minerModule = module {
     single { SecurityInheritingService(get(), get(), get()) }
     single {
         CommandFactory().apply {
-            configure(get(), get(), get(), get(), get(), get(), get(), get())
+            configure(get(), get(), get(), get(), get(), get(), get(), get(), get())
         }
     }
     single { Shell(get()) }
-    single { ApmTaskService(get()) }
+    single { ApmTaskService(get(), get()) }
     single { OperationSerializer(get(), get()) }
     single { OperationService(get(), get()) }
     single { PluginService(get()) }
-    single { DiagnosticService(get(), get(), get(), get(), get()) }
+    single { DiagnosticService(get(), get(), get(), get(), get(), get()) }
 
     // Storage
     single<DataSource> {

@@ -8,22 +8,22 @@
 
 package org.veriblock.miners.pop
 
-import org.veriblock.core.params.NetworkParameters
-import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.wallet.AddressManager
-import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.miners.pop.storage.VeriBlockBlockStore
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.BlockStoreException
 import java.io.File
 import java.io.IOException
-import org.veriblock.core.Context
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.core.BlockChain
+import org.veriblock.miners.pop.net.NodeCoreGateway
 import org.veriblock.miners.pop.net.NodeCoreNetwork
+import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
+import org.veriblock.miners.pop.transactionmonitor.loadTransactionMonitor
 
-val logger = createLogger {}
+private val logger = createLogger {}
 
 private const val WALLET_FILE_EXTENSION = ".wallet"
 
@@ -120,33 +120,5 @@ class NodeCoreLiteKit(
         addressManager
     } catch (e: Exception) {
         throw IOException("Unable to load the address manager", e)
-    }
-
-    private fun initSpvContext(networkParameters: NetworkParameters, addresses: Collection<AddressPubKey>): SpvContext {
-        val spvContext = SpvContext()
-        spvContext.init(
-            networkParameters,
-            LocalhostDiscovery(networkParameters)
-        )
-        spvContext.peerTable.start()
-
-        for (address in addresses) {
-            spvContext.addressManager.monitor(address)
-        }
-
-        logger.info { "Initialize SPV: " }
-        while (true) {
-            val status: DownloadStatusResponse = spvContext.peerTable.getDownloadStatus()
-            if (status.downloadStatus.isDiscovering()) {
-                logger.info { "Waiting for peers response." }
-            } else if (status.downloadStatus.isDownloading()) {
-                logger.info { "Blockchain is downloading. " + status.currentHeight + " / " + status.bestHeight }
-            } else {
-                logger.info { "Blockchain is ready. Current height " + status.currentHeight }
-                break
-            }
-            Thread.sleep(5000L)
-        }
-        return spvContext
     }
 }

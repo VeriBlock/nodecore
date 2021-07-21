@@ -4,6 +4,7 @@ import io.grpc.StatusRuntimeException
 import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
@@ -15,19 +16,20 @@ class DiagnosticService(
     private val minerConfig: MinerConfig,
     private val minerService: AltchainPopMinerService,
     private val pluginService: PluginService,
+    private val nodeCoreLiteKit: NodeCoreLiteKit,
     private val securityInheritingService: SecurityInheritingService
 ) {
     fun collectDiagnosticInformation(): DiagnosticInformation {
         val information = ArrayList<String>()
 
         // Check the NodeCore status
-        if (minerService.network.isAccessible()) {
+        if (nodeCoreLiteKit.network.isAccessible()) {
             information.add("SUCCESS - SPV connection: Connected")
             // Synchronization
-            if (minerService.network.isSynchronized()) {
-                information.add("SUCCESS - SPV synchronization status: Synchronized ${minerService.network.latestSpvStateInfo.getSynchronizedMessage()}")
+            if (nodeCoreLiteKit.network.isSynchronized()) {
+                information.add("SUCCESS - SPV synchronization status: Synchronized ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
             } else {
-                information.add("FAIL - SPV synchronization status: Not synchronized. ${minerService.network.latestSpvStateInfo.getSynchronizedMessage()}")
+                information.add("FAIL - SPV synchronization status: Not synchronized. ${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()}")
             }
         } else {
             information.add("FAIL - SPV connection: Not connected")
@@ -96,7 +98,7 @@ class DiagnosticService(
         // Check the balance
         try {
             val currentBalance = minerService.getBalance().confirmedBalance
-            if (minerService.network.isAccessible()) {
+            if (nodeCoreLiteKit.network.isAccessible()) {
                 if (currentBalance.atomicUnits > minerConfig.feePerByte) {
                     information.add("SUCCESS - The ${context.vbkTokenName} PoP wallet contains sufficient funds, current balance: ${currentBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName}")
                 } else {

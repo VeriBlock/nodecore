@@ -9,7 +9,6 @@
 package org.veriblock.miners.pop.service
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -24,12 +23,7 @@ import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.plugin.PluginService
-import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.debugError
-import org.veriblock.core.utilities.debugWarn
-import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
-import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
-import org.veriblock.miners.pop.transactionmonitor.loadTransactionMonitor
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.core.MiningOperationStatus

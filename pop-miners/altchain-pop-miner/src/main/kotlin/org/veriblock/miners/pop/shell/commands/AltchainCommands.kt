@@ -8,10 +8,9 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import com.google.gson.GsonBuilder
 import org.veriblock.core.crypto.asVbkHash
+import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -21,7 +20,7 @@ import org.veriblock.shell.core.success
 
 fun CommandFactory.altchainCommands(
     securityInheritingService: SecurityInheritingService,
-    minerService: AltchainPopMinerService
+    nodeCoreLiteKit: NodeCoreLiteKit
 ) {
     command(
         name = "Submit Context",
@@ -43,14 +42,14 @@ fun CommandFactory.altchainCommands(
         }
         val blockHash: String? = getOptionalParameter("blockHash")
         val block = if (blockHash != null) {
-            minerService.gateway.getBlock(blockHash.asVbkHash()) ?: run {
+            nodeCoreLiteKit.blockChain.get(blockHash.asVbkHash()) ?: run {
                 printInfo("Unable to find VBK block $blockHash")
                 return@command failure()
             }
         } else {
-            minerService.gateway.getLastBlock()
+            nodeCoreLiteKit.blockChain.getChainHead()
         }
-        monitor.submitContextBlock(block)
+        monitor.submitContextBlock(block!!)
         success()
     }
     command(

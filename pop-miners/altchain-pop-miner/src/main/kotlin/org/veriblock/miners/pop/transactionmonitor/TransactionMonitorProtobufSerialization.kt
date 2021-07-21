@@ -30,9 +30,9 @@ fun OutputStream.writeTransactionMonitor(transactionMonitor: TransactionMonitor)
     write(data)
 }
 
-fun InputStream.readTransactionMonitor(context: ApmContext, gateway: SpvGateway): TransactionMonitor {
+fun InputStream.readTransactionMonitor(context: ApmContext): TransactionMonitor {
     val data = ProtoBuf.decodeFromByteArray(TxmonProto.TransactionMonitor.serializer(), readBytes())
-    return data.toModel(context, gateway)
+    return data.toModel(context)
 }
 
 private fun TransactionMonitor.toProto() = TxmonProto.TransactionMonitor(
@@ -69,13 +69,12 @@ private fun TransactionMeta.toProto() = TxmonProto.TransactionMeta(
     depth = depth
 )
 
-private fun TxmonProto.TransactionMonitor.toModel(context: ApmContext, gateway: SpvGateway): TransactionMonitor {
+private fun TxmonProto.TransactionMonitor.toModel(context: ApmContext): TransactionMonitor {
     check(context.networkParameters.name == network) {
         "Network ${context.networkParameters.name} attempting to read ${context.vbkTokenName} wallet for $network"
     }
     return TransactionMonitor(
         context,
-        gateway,
         Address(address),
         transactions.map {
             it.toModel(context)

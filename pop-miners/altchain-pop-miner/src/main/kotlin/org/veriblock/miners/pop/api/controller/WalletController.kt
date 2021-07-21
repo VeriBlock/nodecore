@@ -11,20 +11,18 @@ import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.post
-import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
+import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.miners.pop.api.dto.WithdrawRequest
 import org.veriblock.miners.pop.api.dto.WithdrawResponse
 import org.veriblock.miners.pop.service.AltchainPopMinerService
-import org.veriblock.sdk.models.asCoin
-import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.asStandardAddress
 
 class WalletController(
     private val miner: AltchainPopMinerService,
+    private val nodeCoreLiteKit: NodeCoreLiteKit
 ) : ApiController {
 
     @Path("withdraw")
@@ -40,14 +38,7 @@ class WalletController(
             } else {
                 throw BadRequestException("${request.destinationAddress} is not a valid standard address")
             }
-            val result = miner.spvContext.spvService.sendCoins(
-                null,
-                listOf(Output(destinationAddress.asStandardAddress(), atomicAmount.asCoin()))
-            )
-            val ids = result.map {
-                it.toString()
-            }
-            respond(WithdrawResponse(ids))
+            throw BadRequestException("withdraw is not implemented yet")
         }
     }
 }

@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import org.veriblock.lite.util.Threading
 
 object Threading {
     val LISTENER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
@@ -28,7 +27,8 @@ object Threading {
             .setNameFormat("nc-poll")
             .build()
     )
-    val SI_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+    val SI_MONITOR_POOL: ExecutorService = Executors.newFixedThreadPool(
+        16,
         ThreadFactoryBuilder()
             .setNameFormat("si-poll")
             .build()

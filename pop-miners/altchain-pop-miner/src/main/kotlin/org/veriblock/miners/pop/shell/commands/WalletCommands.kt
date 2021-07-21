@@ -12,14 +12,12 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.util.formatCoinAmount
-import org.veriblock.sdk.models.asCoin
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
+import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
-import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.asStandardAddress
 
 fun CommandFactory.walletCommands(
     context: ApmContext,
@@ -60,9 +58,7 @@ fun CommandFactory.walletCommands(
     ) {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
         val destinationAddress: String = getParameter("destinationAddress")
-        val result = miner.spvContext.spvService.sendCoins(null, listOf(Output(destinationAddress.asStandardAddress(), atomicAmount.asCoin())))
-
-        printInfo("Transaction id: ${result.map { it.toString() }}")
-        success()
+        printInfo("withdrawvbktoaddress is not implemented yet")
+        failure()
     }
 }

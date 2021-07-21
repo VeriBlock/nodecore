@@ -14,6 +14,7 @@ import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.service.DiagnosticService
 import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.shell.commands.altchainCommands
 import org.veriblock.miners.pop.shell.commands.configCommands
@@ -32,12 +33,13 @@ fun CommandFactory.configure(
     pluginService: PluginService,
     securityInheritingService: SecurityInheritingService,
     diagnosticService: DiagnosticService,
-    apmOperationExplainer: ApmOperationExplainer
+    apmOperationExplainer: ApmOperationExplainer,
+    nodeCoreLiteKit: NodeCoreLiteKit
 ) {
     standardCommands()
     diagnosticCommands(diagnosticService)
     configCommands(configuration, minerConfig, pluginService)
     miningCommands(minerService, pluginService, apmOperationExplainer)
     walletCommands(context, minerService)
-    altchainCommands(securityInheritingService, minerService)
+    altchainCommands(securityInheritingService, nodeCoreLiteKit)
 }

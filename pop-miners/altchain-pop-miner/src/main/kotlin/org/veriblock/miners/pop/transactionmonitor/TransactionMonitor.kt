@@ -12,7 +12,6 @@ import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.core.TransactionMeta
-import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockTransaction
 import java.io.File
@@ -32,11 +31,9 @@ import kotlin.concurrent.withLock
 private val logger = createLogger {}
 
 const val TM_FILE_EXTENSION = ".txmon"
-const val MIN_TX_CONFIRMATIONS: Int = 1
 
 class TransactionMonitor(
     val context: ApmContext,
-    val gateway: SpvGateway,
     val address: Address,
     transactionsToLoad: List<WalletTransaction> = emptyList()
 ) {
@@ -203,9 +200,9 @@ class TransactionMonitor(
     }
 }
 
-fun File.loadTransactionMonitor(context: ApmContext, gateway: SpvGateway): TransactionMonitor = try {
+fun File.loadTransactionMonitor(context: ApmContext): TransactionMonitor = try {
     FileInputStream(this).use { stream ->
-        stream.readTransactionMonitor(context, gateway)
+        stream.readTransactionMonitor(context)
     }
 } catch (e: IOException) {
     throw IllegalStateException("Unable to read VBK wallet from disk")
