@@ -8,6 +8,7 @@
 
 package org.veriblock.miners.pop.core
 
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 
 class BlockChainReorganizedEventData(

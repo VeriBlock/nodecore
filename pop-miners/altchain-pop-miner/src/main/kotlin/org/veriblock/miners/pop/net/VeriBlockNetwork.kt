@@ -10,8 +10,6 @@ package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.time.withTimeout
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -30,7 +28,6 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.getSynchronizedMessage
-import org.veriblock.spv.util.SpvEventBus
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean

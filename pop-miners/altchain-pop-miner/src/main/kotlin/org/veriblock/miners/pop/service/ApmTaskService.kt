@@ -11,7 +11,6 @@ package org.veriblock.miners.pop.service
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import org.koin.core.KoinComponent
-import org.koin.core.inject
 import org.veriblock.core.altchain.AltchainPoPEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
@@ -30,6 +29,7 @@ import org.veriblock.sdk.models.BlockStoreException
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.miners.pop.core.debugWarn
 import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
@@ -40,10 +40,9 @@ import org.veriblock.sdk.services.SerializeDeserializeService
 private val logger = createLogger {}
 
 class ApmTaskService(
-    private val minerConfig: MinerConfig
+    private val minerConfig: MinerConfig,
+    private val nodeCoreLiteKit: NodeCoreLiteKit
 ) : TaskService<ApmOperation>(), KoinComponent {
-
-    private val miner: AltchainPopMinerService by inject()
 
     @ExperimentalCoroutinesApi
     override suspend fun runTasksInternal(operation: ApmOperation) {
@@ -53,7 +52,7 @@ class ApmTaskService(
             timeout = 90.sec
         ) {
             verifyAltchainStatus(operation.chain.name, operation.chainMonitor)
-            verifySpvStatus()
+            verifyNodeCoreStatus()
             logger.info(operation, "Getting the mining instruction...")
             val publicationData = try {
                 operation.chain.getMiningInstructionByHeight(operation.endorsedBlockHeight)
@@ -63,7 +62,7 @@ class ApmTaskService(
             operation.setMiningInstruction(publicationData)
             logger.info(operation, "Successfully retrieved the mining instruction!")
             val vbkContextBlockHash = publicationData.context[0]
-            miner.network.getBlock(vbkContextBlockHash.asVbkHash())
+            nodeCoreLiteKit.network.getBlock(vbkContextBlockHash.asVbkHash())
                 ?: failOperation("Unable to find the mining instruction's VBK context block ${vbkContextBlockHash.toHex()}")
         }
 
@@ -72,7 +71,7 @@ class ApmTaskService(
             targetState = ApmOperationState.ENDORSEMENT_TRANSACTION,
             timeout = 90.sec
         ) {
-            verifySpvStatus()
+            verifyNodeCoreStatus()
             val miningInstruction = operation.miningInstruction
                 ?: failTask("CreateEndorsementTransactionTask called without mining instruction!")
             // Something to fill in all the gaps
@@ -109,7 +108,7 @@ class ApmTaskService(
                 if (secondKeystone.height != (endorsedBlock.height - keystoneSkip - operation.chain.config.keystonePeriod).coerceAtLeast(0)) {
                     failOperation("The endorsed second previous keystone height (${secondKeystone.height}) doesn't match with the endorsed block height (${(endorsedBlock.height - keystoneSkip - operation.chain.config.keystonePeriod).coerceAtLeast(0)})")
                 }
-                miner.network.submitEndorsement(
+                nodeCoreLiteKit.network.submitEndorsement(
                     endorsementData,
                     minerConfig.feePerByte,
                     minerConfig.maxFee
@@ -125,7 +124,7 @@ class ApmTaskService(
                 failOperation("Endorsement VBK transaction signature is not valid")
             }
 
-            val walletTransaction = miner.transactionMonitor.getTransaction(transaction.id)
+            val walletTransaction = nodeCoreLiteKit.transactionMonitor.getTransaction(transaction.id)
             operation.setTransaction(ApmSpTransaction(walletTransaction))
             logger.info(operation, "Successfully sent the VBK transaction ${walletTransaction.id}")
             logger.debug(
@@ -139,7 +138,7 @@ class ApmTaskService(
             targetState = ApmOperationState.ENDORSEMENT_TX_CONFIRMED,
             timeout = 1.hr
         ) {
-            verifySpvStatus()
+            verifyNodeCoreStatus()
             val endorsementTransaction = operation.endorsementTransaction
                 ?: failTask("ConfirmTransactionTask called without wallet transaction!")
 
@@ -165,7 +164,7 @@ class ApmTaskService(
                 ?: failTask("Unable to retrieve block of proof from transaction")
 
             try {
-                val block = miner.gateway.getBlock(blockHash)
+                val block = nodeCoreLiteKit.blockChain.get(blockHash)
                     ?: failTask("Unable to retrieve VBK block $blockHash")
                 operation.setBlockOfProof(block)
             } catch (e: BlockStoreException) {
@@ -352,12 +351,12 @@ class ApmTaskService(
         }
     }
 
-    private fun verifySpvStatus() {
-        if (!miner.network.isReady()) {
+    private fun verifyNodeCoreStatus() {
+        if (!nodeCoreLiteKit.network.isReady()) {
             throw TaskException(
-                "SPV is not ready: Connection ${miner.network.isAccessible()}," +
-                    " Synchronized: ${miner.network.isSynchronized()}" +
-                    " (${miner.network.latestSpvStateInfo.getSynchronizedMessage()})"
+                "SPV is not ready: Connection ${nodeCoreLiteKit.network.isAccessible()}," +
+                    " Synchronized: ${nodeCoreLiteKit.network.isSynchronized()}" +
+                    " (${nodeCoreLiteKit.network.latestNodeCoreStateInfo.getSynchronizedMessage()})"
             )
         }
     }

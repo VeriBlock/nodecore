@@ -17,11 +17,12 @@ import org.veriblock.miners.pop.storage.VeriBlockBlockStore
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.blockchain.VeriBlockDifficultyCalculator
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.VerificationException
 import org.veriblock.sdk.services.ValidationService
 import java.math.BigInteger
+import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.sdk.models.FullBlock
 
 private const val MINIMUM_TIMESTAMP_BLOCK_COUNT = 20
 private const val DIFFICULTY_ADJUST_BLOCK_COUNT = VeriBlockDifficultyCalculator.RETARGET_PERIOD
@@ -34,7 +35,7 @@ class BlockChain(
 ) {
     fun getChainHead(): VeriBlockBlock? = veriBlockStore.getChainHead()?.block
 
-    fun get(hash: VBlakeHash): VeriBlockBlock? = veriBlockStore.get(hash)?.block
+    fun get(hash: AnyVbkHash): VeriBlockBlock? = veriBlockStore.get(hash)?.block
 
     fun add(block: VeriBlockBlock) {
         // Lightweight verification of the header
