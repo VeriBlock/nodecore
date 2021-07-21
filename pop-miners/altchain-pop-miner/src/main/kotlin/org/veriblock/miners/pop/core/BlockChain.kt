@@ -33,6 +33,8 @@ class BlockChain(
     private val params: NetworkParameters,
     private val veriBlockStore: VeriBlockBlockStore
 ) {
+    fun isOnActiveChain(hash: AnyVbkHash) = get(hash) != null
+
     fun getChainHead(): VeriBlockBlock? = veriBlockStore.getChainHead()?.block
 
     fun get(hash: AnyVbkHash): VeriBlockBlock? = veriBlockStore.get(hash)?.block

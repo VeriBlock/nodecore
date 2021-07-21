@@ -48,12 +48,13 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.VeriBlockPublication
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.util.checkSuccess
-import org.veriblock.spv.util.SpvEventBus
-import org.veriblock.spv.util.invokeOnFailure
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import org.veriblock.core.crypto.asAnyVbkHash
+import org.veriblock.core.invokeOnFailure
+import org.veriblock.miners.pop.NodeCoreLiteKit
 import org.veriblock.sdk.models.VeriBlockBlock
 import kotlin.concurrent.withLock
 
@@ -63,7 +64,8 @@ class SecurityInheritingMonitor(
     val context: ApmContext,
     configuration: Configuration,
     private val chainId: String,
-    private val chain: SecurityInheritingChain
+    private val chain: SecurityInheritingChain,
+    private val nodeCoreLiteKit: NodeCoreLiteKit
 ) {
     private val pollingPeriodSeconds = configuration.getLong(
         "securityInheriting.$chainId.pollingPeriodSeconds"
@@ -115,7 +117,7 @@ class SecurityInheritingMonitor(
         val coroutineScope = CoroutineScope(Threading.SI_MONITOR_POOL.asCoroutineDispatcher())
         coroutineScope.launch {
             // Wait for nodeCore to be ready
-            while (!miner.network.isReady()) {
+            while (!nodeCoreLiteKit.network.isReady()) {
                 delay(5_000L)
             }
 
@@ -284,9 +286,9 @@ class SecurityInheritingMonitor(
 
     private suspend fun autoSubmitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK context for ${chain.name}")
-        SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
+        EventBus.newBestBlockChannel.asFlow().collect { newBlock ->
             try {
-                if (submitContextBlock(newBlock)) return@collect
+                submitContextBlock(newBlock)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
@@ -323,19 +325,66 @@ class SecurityInheritingMonitor(
     }
 
     suspend fun submitContextBlock(newBlock: VeriBlockBlock): Boolean {
-        if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
+        // OLD STUFF
+        try {
+            val bestKnownBlockHash = chain.getBestKnownVbkBlockHash().asVbkHash()
+            val bestKnownBlock = nodeCoreLiteKit.blockChain.get(bestKnownBlockHash)
+            if (bestKnownBlock == null) {
+                val networkBestKnownBlock = nodeCoreLiteKit.network.getBlock(bestKnownBlockHash)
+                    ?: continue
+
+                val gap = newBlock.height - networkBestKnownBlock.height
+                logger.warn {
+                    "Unable to find ${chain.name}'s best known VeriBlock block $bestKnownBlockHash in the local blockchain store." +
+                        " There's a context gap of $gap blocks. Skipping VBK block context submission..."
+                }
+                subscription.cancel()
+                continue
+            }
+
+            val bestBlock = nodeCoreLiteKit.blockChain.getChainHead()
+                ?: continue
+
+            if (bestKnownBlock.height == bestBlock.height) {
+                continue
+            }
+
+            val contextBlocks = generateSequence(bestBlock) {
+                nodeCoreLiteKit.blockChain.get(it.previousBlock)
+            }.takeWhile {
+                it.hash != bestKnownBlockHash
+            }.sortedBy {
+                it.height
+            }.toList()
+
+            val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+            val contextBlocksToSubmit = contextBlocks.filter {
+                it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext
+            }
+
+            if (contextBlocksToSubmit.isEmpty()) {
+                continue
+            }
+
+            chain.submitContext(contextBlocksToSubmit)
+            logger.info { "Submitted ${contextBlocksToSubmit.size} VBK context block(s) to ${chain.name}." }
+        } catch (e: Exception) {
+            logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
+        }
+
+        /// NEW STUFF
+        if (!nodeCoreLiteKit.network.isOnActiveChain(newBlock.hash)) {
             logger.debug { "New block $newBlock is not on the main chain, skipping..." }
             return true
         }
         logger.debug { "New block $newBlock is on the main chain" }
 
-        var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
+        val bestKnownBlock = nodeCoreLiteKit.network.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
         // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
             ?: return true
-        while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
-            logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
-            bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
-                ?: return true // Dead end
+        if (!nodeCoreLiteKit.network.isOnActiveChain(bestKnownBlock.hash)) {
+            logger.debug { "Best known block $bestKnownBlock is not in the main chain!" }
+            return true // Dead end
         }
 
         if (bestKnownBlock.height == newBlock.height) {
@@ -343,7 +392,7 @@ class SecurityInheritingMonitor(
         }
 
         val contextBlocks = generateSequence(newBlock) {
-            miner.gateway.getBlock(it.previousBlock)
+            nodeCoreLiteKit.network.getBlock(it.previousBlock)
         }.takeWhile {
             it.hash != bestKnownBlock.hash
         }.sortedBy {
@@ -370,7 +419,7 @@ class SecurityInheritingMonitor(
     suspend fun submitVtbs() {
         val instruction = chain.getMiningInstructionByHeight()
         val vbkContextBlockHash = instruction.context.first().asVbkHash()
-        val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash)
+        val vbkContextBlock = nodeCoreLiteKit.network.getBlock(vbkContextBlockHash)
         while (vbkContextBlock == null) {
             // The altchain has knowledge of a block we don't even know. Let's try again after a while
             logger.info { "${chain.name}'s last known block $vbkContextBlockHash is not known by APM. Trying to submit VTBs later..." }
@@ -433,7 +482,7 @@ class SecurityInheritingMonitor(
 
         logger.info { "The chain ${chain.name} has a context gap of ${missingBtcBlockHashes.size} BTC blocks! Retrieving corresponding publication data..." }
         // Fetch and wait for veriblock publications (VTBs)
-        val vtbs = miner.gateway.getVtbsForBtcBlocks(missingBtcBlockHashes)
+        val vtbs = nodeCoreLiteKit.network.getVtbsForBtcBlocks(missingBtcBlockHashes)
 
         logger.info { "${vtbs.size} VTBs found! Submitting to ${chain.name}'s daemon..." }
 

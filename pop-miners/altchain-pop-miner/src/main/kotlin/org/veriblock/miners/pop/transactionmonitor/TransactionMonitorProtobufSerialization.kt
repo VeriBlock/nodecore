@@ -18,7 +18,6 @@ import org.veriblock.sdk.models.Output
 import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.extensions.toHex
-import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService

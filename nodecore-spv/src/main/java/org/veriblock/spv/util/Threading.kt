@@ -101,21 +101,3 @@ object Threading {
         }
     }
 }
-
-inline fun CoroutineScope.launchWithFixedDelay(
-    initialDelayMillis: Long = 0,
-    periodMillis: Long = 1000L,
-    crossinline block: suspend CoroutineScope.() -> Unit
-) = launch {
-    delay(initialDelayMillis)
-    while (isActive) {
-        block()
-        delay(periodMillis)
-    }
-}
-
-inline fun Job.invokeOnFailure(crossinline block: (Throwable) -> Unit) = invokeOnCompletion { throwable ->
-    if (throwable != null && throwable !is CancellationException) {
-        block(throwable)
-    }
-}

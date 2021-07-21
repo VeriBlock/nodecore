@@ -10,6 +10,7 @@ package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import java.time.Duration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
@@ -27,7 +28,9 @@ import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.getSynchronizedMessage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.time.withTimeout
 import org.veriblock.core.Context
+import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.core.ApmContext
@@ -57,6 +60,9 @@ class NodeCoreNetwork(
 
     var latestBalance: Balance = Balance()
     var latestNodeCoreStateInfo: StateInfo = StateInfo()
+
+    fun isOnActiveChain(hash: AnyVbkHash): Boolean =
+        blockChain.isOnActiveChain(hash)
 
     fun isSufficientFunded(): Boolean =
         sufficientFunds.get()
@@ -263,21 +269,17 @@ class NodeCoreNetwork(
         firstPoll = false
     }
 
-    // FIXME This implementation not good enough. Use channels.
     suspend fun getVeriBlockPublications(
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
-    ): List<VeriBlockPublication> {
+    ): List<VeriBlockPublication> = withTimeout(Duration.ofMinutes(40)) {
         val newBlockChannel = EventBus.newBestBlockChannel.openSubscription()
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
                 |   - BTC Context Hash: $btcContextHash""".trimMargin()
-        logger.debug {
-            "Successfully subscribed to VTB retrieval event!\n$extraLogData"
-        }
-        logger.debug("Waiting for VTBs...")
+        logger.debug("Waiting for VTBs...\n$extraLogData")
         try {
             // Loop through each new block until we get a not-empty publication list
             for (newBlock in newBlockChannel) {
@@ -287,7 +289,7 @@ class NodeCoreNetwork(
                 )
                 // If the list is not empty, return it
                 if (veriBlockPublications.isNotEmpty()) {
-                    return veriBlockPublications
+                    return@withTimeout veriBlockPublications
                 }
             }
         } catch (e: Exception) {
