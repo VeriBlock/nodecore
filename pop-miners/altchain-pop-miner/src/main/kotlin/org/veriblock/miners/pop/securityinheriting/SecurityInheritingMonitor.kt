@@ -419,7 +419,7 @@ class SecurityInheritingMonitor(
     }
 
     suspend fun handleContextGap() {
-        val missingBtcBlockHashes = try {
+       /* val missingBtcBlockHashes = try {
             chain.getMissingBtcBlockHashes()
         } catch (e: Exception) {
             logger.debugWarn(e) { "Unable to retrieve ${chain.name}'s missing BTC block hashes" }
@@ -454,6 +454,7 @@ class SecurityInheritingMonitor(
         } else {
             logger.info { "Failed to submit VTBs to ${chain.name}" }
         }
+        */
     }
 
     private fun handleNewBlock(block: SecurityInheritingBlock) {
