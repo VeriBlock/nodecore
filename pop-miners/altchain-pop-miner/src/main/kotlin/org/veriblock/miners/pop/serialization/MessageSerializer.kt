@@ -86,22 +86,6 @@ fun RpcSignedTransaction.deserializePoPTransaction(transactionPrefix: Byte?): Ve
     )
 }
 
-fun StandardTransaction.deserializeStandardTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
-    return VeriBlockTransaction(
-        1, // STANDARD
-        Address(inputAddress!!.get()),
-        inputAmount!!,
-        getOutputs().map { o ->
-            Output.of(o.address.get(), o.amount.atomicUnits)
-        },
-        getSignatureIndex(),
-        SerializeDeserializeService.parsePublicationData(data!!),
-        signature!!,
-        publicKey!!,
-        transactionPrefix
-    )
-}
-
 fun RpcSignedTransaction.deserializeStandardTransaction(transactionPrefix: Byte?): VeriBlockTransaction {
     val txMessage = transaction
     return VeriBlockTransaction(

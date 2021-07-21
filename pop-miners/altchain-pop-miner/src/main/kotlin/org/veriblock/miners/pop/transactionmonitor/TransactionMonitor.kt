@@ -9,26 +9,26 @@
 package org.veriblock.miners.pop.transactionmonitor
 
 import org.veriblock.core.crypto.VbkTxId
-import org.veriblock.core.crypto.asAnyVbkHash
 import org.veriblock.core.utilities.createLogger
-import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.core.TransactionMeta
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.sdk.models.Address
-import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
-import org.veriblock.spv.util.SpvEventBus
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Collections
+import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
+import org.veriblock.core.utilities.debugError
+import org.veriblock.sdk.models.VeriBlockBlock
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
+
 const val TM_FILE_EXTENSION = ".txmon"
 const val MIN_TX_CONFIRMATIONS: Int = 1
 
@@ -49,35 +49,6 @@ class TransactionMonitor(
 
     fun getTransactions(): Collection<WalletTransaction> =
         Collections.unmodifiableCollection(transactions.values)
-
-    fun start() {
-        SpvEventBus.newBestBlockEvent.register(this) {
-            checkPendingTransactions()
-        }
-    }
-
-    private fun checkPendingTransactions() {
-        val pendingTxs = transactions.values.asSequence()
-            .filter { it.transactionMeta.state == TransactionMeta.MetaState.PENDING }
-            .map { it.id }
-            .toList()
-
-        val txsInfo = gateway.getTransactions(pendingTxs)
-
-        txsInfo.asSequence()
-            .filter { it.confirmations >= MIN_TX_CONFIRMATIONS }
-            .forEach {
-                val tx = transactions[it.transaction.txId]
-                    ?: error("Unable to retrieve pending transactions")
-                tx.transactionMeta.depth = it.confirmations
-                tx.transactionMeta.appearsAtChainHeight = it.blockNumber
-                tx.transactionMeta.appearsInBestChainBlock = it.blockHash.asAnyVbkHash()
-                tx.merklePath = VeriBlockMerklePath(it.merklePath)
-                tx.transactionMeta.setState(TransactionMeta.MetaState.CONFIRMED)
-            }
-
-        save()
-    }
 
     private fun save() {
         val diskWallet = File(context.directory, context.filePrefix + TM_FILE_EXTENSION)
@@ -106,6 +77,92 @@ class TransactionMonitor(
     fun getTransaction(transactionId: VbkTxId): WalletTransaction {
         return transactions[transactionId]
             ?: error("Unable to find VBK transaction $transactionId in the monitored address ($address)")
+    }
+
+    private fun handleReorganizedBlocks(blocks: List<VeriBlockBlock>) = lock.withLock {
+        removeConfirmations(blocks.size)
+    }
+
+    private fun handleNewBlock(block: FullBlock) = lock.withLock {
+        logger.debug { "New VBK block received at height ${block.height}: ${block.hash}" }
+        val blockTransactions = filterTransactionsFrom(block)
+
+        logger.debug { "Found ${blockTransactions.size} relevant transactions in the VBK block" }
+        for (tx in transactions.values) {
+            val meta = tx.transactionMeta
+            if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
+                meta.incrementDepth()
+            } else if (blockTransactions.containsKey(tx.id)) {
+                meta.setState(TransactionMeta.MetaState.CONFIRMED)
+                meta.depth = 1
+                meta.addBlockAppearance(block.hash)
+                meta.appearsInBestChainBlock = block.hash
+                meta.appearsAtChainHeight = block.height
+                tx.merklePath = blockTransactions.getValue(tx.id).merklePath
+            }
+        }
+
+        var balanceChanged = false
+        for (tx in blockTransactions.values) {
+            if (tx.sourceAddress == address) {
+                logger.info { "Detected outgoing VBK transaction: ${tx.id}" }
+                balanceChanged = true
+            }
+            if (tx.outputs.any { it.address == address }) {
+                logger.info { "Detected incoming VBK transaction: ${tx.id}" }
+                balanceChanged = true
+            }
+        }
+        balanceChanged
+    }
+
+    private fun removeConfirmations(amount: Int) = lock.withLock {
+        for (tx in transactions.values) {
+            val meta = tx.transactionMeta
+            if (meta.state === TransactionMeta.MetaState.CONFIRMED) {
+                if (amount < meta.depth) {
+                    meta.depth = meta.depth - amount
+                } else {
+                    meta.setState(TransactionMeta.MetaState.PENDING)
+                    tx.merklePath = null
+                }
+            }
+        }
+    }
+
+    private fun filterTransactionsFrom(block: FullBlock): Map<VbkTxId, WalletTransaction> {
+        val relevantTransactions = HashMap<VbkTxId, WalletTransaction>()
+
+        val merkleTree: MerkleTree by lazy {
+            MerkleTree.of(block)
+        }
+
+        block.normalTransactions.forEachIndexed { i, transaction ->
+            if (transaction.isRelevant()) {
+                val walletTransaction = WalletTransaction.wrap(transaction)
+                walletTransaction.merklePath = merkleTree.getMerklePath(transaction.id, i, true)
+
+                relevantTransactions[transaction.id] = walletTransaction
+            }
+        }
+        return relevantTransactions
+    }
+
+    fun onBlockChainReorganized(oldBlocks: List<VeriBlockBlock>, newBlocks: List<FullBlock>) {
+        handleReorganizedBlocks(oldBlocks)
+        for (block in newBlocks) {
+            handleNewBlock(block)
+        }
+
+        save()
+    }
+
+    fun onNewBestBlock(newBlock: FullBlock): Boolean {
+        val balanceChanged = handleNewBlock(newBlock)
+
+        save()
+
+        return balanceChanged
     }
 
     override fun equals(other: Any?): Boolean {

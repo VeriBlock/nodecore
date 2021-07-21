@@ -25,7 +25,7 @@ object OperationProto {
         @ProtoNumber(9) val blockOfProof: ByteArray,
         @ProtoNumber(10) val merklePath: String,
         @ProtoNumber(13) val atvId: String,
-        // number 14 is missing (previously: AtvBlockHash)
+        @ProtoNumber(14) val atvBlockHash: String,
         @ProtoNumber(15) val payoutBlockHash: String,
         @ProtoNumber(16) val payoutAmount: Long,
         @ProtoNumber(17) val failureReason: String

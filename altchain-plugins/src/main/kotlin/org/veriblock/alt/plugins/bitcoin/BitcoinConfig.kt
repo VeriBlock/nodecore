@@ -31,7 +31,7 @@ class BitcoinConfig(
         configuration.keystonePeriod ?: 5,
         configuration.neededConfirmations ?: 10,
         configuration.spFinalityDelay ?: 100,
-        configuration.payoutDelay ?: 500,
+        configuration.payoutDelay ?: 50,
         configuration.blockRoundIndices ?: listOf(4, 2, 3, 1, 2),
         configuration.autoMineRounds.toMutableSet(),
         configuration.payoutDetectionType,

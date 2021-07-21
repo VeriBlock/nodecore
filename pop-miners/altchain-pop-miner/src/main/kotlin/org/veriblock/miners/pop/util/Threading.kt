@@ -15,15 +15,20 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import org.veriblock.lite.util.Threading
 
 object Threading {
-    val SPV_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+    val LISTENER_THREAD: ExecutorService = Executors.newSingleThreadExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("event-listener")
+            .build()
+    )
+    val NODECORE_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("nc-poll")
             .build()
     )
-    val SI_MONITOR_POOL: ExecutorService = Executors.newFixedThreadPool(
-        16,
+    val SI_POLL_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
         ThreadFactoryBuilder()
             .setNameFormat("si-poll")
             .build()
@@ -49,9 +54,10 @@ object Threading {
     @Throws(ExecutionException::class, InterruptedException::class)
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
-            CompletableFuture.runAsync { shutdown(SPV_POLL_THREAD) },
-            CompletableFuture.runAsync { shutdown(MINER_THREAD) },
-            CompletableFuture.runAsync { shutdown(TASK_POOL) }
+            CompletableFuture.runAsync { shutdown(Threading.LISTENER_THREAD) },
+            CompletableFuture.runAsync { shutdown(Threading.NODECORE_POLL_THREAD) },
+            CompletableFuture.runAsync { shutdown(Threading.MINER_THREAD) },
+            CompletableFuture.runAsync { shutdown(Threading.TASK_POOL) }
         )
         shutdownTasks.get(20, TimeUnit.SECONDS)
     }
