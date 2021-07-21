@@ -9,6 +9,8 @@ import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.p2p.buildMessage
 import org.veriblock.core.crypto.asVbkTxId
+import org.veriblock.core.invokeOnFailure
+import org.veriblock.core.launchWithFixedDelay
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
@@ -19,8 +21,6 @@ import org.veriblock.spv.service.TransactionInfo
 import org.veriblock.spv.service.TransactionType
 import org.veriblock.spv.service.advertise
 import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
-import org.veriblock.spv.util.invokeOnFailure
-import org.veriblock.spv.util.launchWithFixedDelay
 import kotlin.system.exitProcess
 
 private val logger = createLogger {}
