@@ -382,13 +382,13 @@ class SecurityInheritingMonitor(
         }
 
         // Wait for the next keystone to be mined
-        val keystone = SpvEventBus.newBlockFlow.filter {
+        val keystone = EventBus.newBestBlockChannel.asFlow().filter {
             it.height % 20 == 0 && it.height > vbkContextBlock.height
         }.first()
 
         logger.info { "Got keystone for ${chain.name}'s VTBs: ${keystone.hash} @ ${keystone.height}. Retrieving publication data..." }
         // Fetch and wait for veriblock publications (VTBs)
-        val vtbs = miner.network.getVeriBlockPublications(
+        val vtbs = nodeCoreLiteKit.network.getVeriBlockPublications(
             keystone.hash.toString(),
             instruction.context.first().toHex(),
             instruction.btcContext.first().toHex()
