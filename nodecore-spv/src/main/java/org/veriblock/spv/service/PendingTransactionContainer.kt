@@ -6,6 +6,9 @@ import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.Address
 import org.veriblock.spv.model.Transaction
 import java.util.concurrent.ConcurrentHashMap
+import org.veriblock.core.utilities.createLogger
+
+private val logger = createLogger {}
 
 class PendingTransactionContainer {
     // TODO(warchant): use Address as a key, instead of String
@@ -13,6 +16,8 @@ class PendingTransactionContainer {
     private val confirmedTransactionReplies: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
     private val pendingTransactions: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
     private val transactionsToMonitor: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
+
+    private val mutex = Mutex()
 
     fun getPendingTransactionIds(): Set<Sha256Hash> {
         val pendingTransactions = pendingTransactions.entries.asSequence()
@@ -39,17 +44,26 @@ class PendingTransactionContainer {
             if (transactionInfo.confirmations > 0) {
                 pendingTransactions.remove(transaction.txId)
                 transactionsToMonitor.remove(transaction.txId)
+                pendingTransactionsByAddress[transaction.sourceAddress]?.removeIf { it.txId == transaction.txId }
             }
         }
     }
-
-    private val mutex = Mutex()
 
     suspend fun addTransaction(transaction: Transaction) = mutex.withLock {
         val inputAddress = transaction.inputAddress.toString()
 
         // Add as pending transaction
         val transactions = pendingTransactionsByAddress.getOrPut(inputAddress) { mutableListOf() }
+        if (transactions.size > 150) {
+            logger.warn { "The SPV Mempool has reached a too high amount of transactions for the address $inputAddress!" }
+            logger.info { "All the transactions for that address will be pruned in order to prevent further transactions from being rejected." }
+            for (tx in transactions) {
+                pendingTransactions.remove(tx.txId)
+                transactionsToMonitor.remove(tx.txId)
+            }
+            transactions.clear()
+            return
+        }
         transactions.add(transaction)
         pendingTransactions[transaction.txId] = transaction
     }
