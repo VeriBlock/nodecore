@@ -19,7 +19,7 @@ object SpvState {
 
     var localBlockchainHeight = 0
         set(value) {
-            if (value > localBlockchainHeight) {
+            if (value > field) {
                 logger.debug("Setting local blockchain height to {}", value)
                 field = value
             }

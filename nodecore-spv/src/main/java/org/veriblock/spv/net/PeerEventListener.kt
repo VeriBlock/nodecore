@@ -51,6 +51,7 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.SpvState
+import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.service.Blockchain
@@ -91,7 +92,6 @@ class PeerEventListener(
 
         P2pEventBus.peerConnected.register(this, ::onPeerConnected)
         P2pEventBus.peerDisconnected.register(this, ::onPeerDisconnected)
-
     }
     
     private fun onAddTransaction(event: P2pEvent<RpcTransactionUnion>) {
@@ -99,7 +99,10 @@ class PeerEventListener(
 
         // TODO: Different Transaction types
         val standardTransaction = MessageSerializer.deserializeNormalTransaction(event.content)
-        SpvEventBus.pendingTransactionDownloadedEvent.trigger(standardTransaction)
+        // TODO: Some peers are still sending transactions not relevant to our bloom filter; figure out why
+        if (bloomFilter.isRelevant(standardTransaction)) {
+            SpvEventBus.pendingTransactionDownloadedEvent.trigger(standardTransaction)
+        }
     }
 
     private val announceLock = ReentrantLock()
@@ -297,9 +300,10 @@ class PeerEventListener(
         }
         
         // Ignore advertised transactions if the blockchain is not current
-        if (SpvState.localBlockchainHeight < SpvState.getNetworkHeight() - P2pConstants.KEYSTONE_BLOCK_INTERVAL) {
-            return
-        }
+        // Commented out because SpvState.localBlockchainHeight never set (always 0)
+        //if (SpvState.localBlockchainHeight < SpvState.getNetworkHeight() - P2pConstants.KEYSTONE_BLOCK_INTERVAL) {
+        //    return
+        //}
 
         val txRequestBuilder = RpcTransactionRequest.newBuilder()
         val transactions = event.content.transactionsList
@@ -388,6 +392,7 @@ class PeerEventListener(
     }
 
     fun Peer.setFilter(filter: BloomFilter) {
+        this.filter = filter
         sendMessage {
             setCreateFilter(
                 RpcCreateFilter.newBuilder()
@@ -429,4 +434,22 @@ class PeerEventListener(
             }
         }
     }
+}
+
+private fun BloomFilter.isRelevant(tx: Transaction): Boolean {
+    if (isEmpty) {
+        return true
+    }
+    if (contains(tx.txId.toString())) {
+        return true
+    }
+    if (contains(tx.inputAddress?.get())) {
+        return true
+    }
+    for (output in tx.getOutputs()) {
+        if (contains(output.address.get())) {
+            return true
+        }
+    }
+    return false
 }

@@ -199,7 +199,7 @@ class PeerSocketHandler(
                     logger.info { "Attempting to self-heal peer connection to ${peer.addressKey}" }
                     recoverSuccess = peer.reconnect()
                     if (recoverSuccess) {
-                        logger.info { "Connection successfully recovered to ${peer.addressKey}!" }
+                        logger.info { "Connection to ${peer.addressKey} successfully recovered!" }
                     }
                 } catch (e: Exception) {
                     logger.warn(e) { "Error while attempting to self-heal P2P connection!" }

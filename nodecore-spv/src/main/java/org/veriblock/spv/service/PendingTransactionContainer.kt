@@ -49,15 +49,9 @@ class PendingTransactionContainer {
         val inputAddress = transaction.inputAddress.toString()
 
         // Add as pending transaction
-        val transactions = pendingTransactionsByAddress[inputAddress]
-        if (!transactions.isNullOrEmpty()) {
-            transactions.add(transaction)
-            pendingTransactions[transaction.txId] = transaction
-        } else {
-            val newList = mutableListOf(transaction)
-            pendingTransactions[transaction.txId] = transaction
-            pendingTransactionsByAddress[transaction.inputAddress.toString()] = newList
-        }
+        val transactions = pendingTransactionsByAddress.getOrPut(inputAddress) { mutableListOf() }
+        transactions.add(transaction)
+        pendingTransactions[transaction.txId] = transaction
     }
 
     fun getTransaction(txId: Sha256Hash): Transaction? {

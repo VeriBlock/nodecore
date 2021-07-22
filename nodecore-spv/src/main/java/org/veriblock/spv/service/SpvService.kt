@@ -55,7 +55,6 @@ import java.util.*
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import nodecore.p2p.PeerCapabilities
-import kotlin.math.absoluteValue
 
 private val logger = createLogger {}
 
@@ -413,12 +412,21 @@ class SpvService(
     private fun getSignatureIndex(address: Address): Long {
         val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
         val signatureIndex = spvContext.getSignatureIndex(address)
+        logger.debug { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex" }
         if (pendingSignatureIndex == null) {
             return signatureIndex ?: throw IllegalStateException(
                 "Requested signature index for address which is not present in AddressState"
             )
         }
-        return pendingSignatureIndex.coerceAtLeast(signatureIndex ?: -1)
+        val coercedIndex = pendingSignatureIndex
+            .coerceAtLeast(signatureIndex ?: -1)
+
+        // If there are 100 transactions in the mempool we might have hit the sigIndex issue; fall back to ledger's value
+        if (signatureIndex != null && coercedIndex > signatureIndex + 100) {
+            return signatureIndex
+        }
+
+        return coercedIndex
     }
 
     fun getDownloadStatus(): DownloadStatusResponse {
