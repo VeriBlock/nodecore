@@ -439,8 +439,8 @@ message RpcBlockSummary {
     int32 size = 14;
     bytes ledger_hash = 15 [(hex_encoded)=true];
     bytes miner_comment = 16 [(ascii_encoded)=true];
-	int32 version = 17;
-	bytes merkle_root = 18 [(hex_encoded)=true];
+    int32 version = 17;
+    bytes merkle_root = 18 [(hex_encoded)=true];
 }
 
 message RpcLightBlockSummary {
@@ -459,8 +459,8 @@ message RpcLightBlockSummary {
     bytes ledger_hash = 13 [(hex_encoded)=true];
     bytes miner_comment = 14 [(ascii_encoded)=true];
     bytes normal_transaction_merkle_root = 15 [(hex_encoded)=true];
-	int32 version = 16;
-	bytes merkle_root = 17 [(hex_encoded)=true];
+    int32 version = 16;
+    bytes merkle_root = 17 [(hex_encoded)=true];
 }
 
 message RpcBlock {
@@ -480,8 +480,8 @@ message RpcBlock {
     repeated bytes bitcoin_block_headers = 14 [(hex_encoded)=true];
     RpcBlockContentMetapackage block_content_metapackage = 15;
     int32 size = 16;
-	int32 version = 17;
-	bytes merkle_root = 18 [(hex_encoded)=true];
+    int32 version = 17;
+    bytes merkle_root = 18 [(hex_encoded)=true];
 }
 
 message RpcBlockHeader {
@@ -521,8 +521,8 @@ message RpcLightVBKBlock {
     repeated bytes bitcoin_block_headers = 13 [(hex_encoded)=true];
     RpcBlockContentMetapackage block_content_metapackage = 14;
     bytes normal_transaction_merkle_root = 15 [(hex_encoded)=true];
-	int32 version = 16;
-	bytes merkle_root = 17 [(hex_encoded)=true];
+    int32 version = 16;
+    bytes merkle_root = 17 [(hex_encoded)=true];
 }
 
 message RpcBlockFilter {
@@ -894,18 +894,24 @@ message RpcSendCoinsReply {
     repeated bytes tx_ids = 3 [(hex_encoded)=true];
 }
 
+message RpcCreateTransactionRequest {
+    bytes source_address = 1 [(address_encoded)=true];
+    repeated RpcOutput amounts = 2;
+    bool take_fee_from_outputs = 3;
+}
+
+message RpcCreateTransactionReply {
+    bool success = 1;
+    repeated RpcResult results = 2;
+    RpcTransaction transaction = 3;
+    int64 signature_index = 4;
+}
+
 message RpcCreateAltChainEndorsementRequest {
     bytes publication_data = 1 [(hex_encoded)=true];
     bytes source_address = 2 [(address_encoded)=true];
     int64 fee_per_byte = 3;
     int64 max_fee = 4;
-}
-
-message RpcCreateAltChainEndorsementReply {
-    bool success = 1;
-    repeated RpcResult results = 2;
-    RpcTransaction transaction = 3;
-    int64 signature_index = 4;
 }
 
 message RpcGetAltChainPoPEndorsementsRequest {
@@ -981,7 +987,7 @@ message RpcGetBlockTimesReply {
 }
 
 message RpcStartSoloPoolRequest {
-	bytes address = 1 [(address_encoded)=true];
+    bytes address = 1 [(address_encoded)=true];
 }
 
 message RpcStartSoloPoolReply {
@@ -1404,7 +1410,7 @@ message RpcBlockchainStateInfo {
         STALE = 4;
         LOADED = 5;
     }
- State state = 1;
+    State state = 1;
 }
 
 message RpcOperatingStateInfo {
@@ -1655,7 +1661,9 @@ service Admin {
 
     rpc SendCoins(RpcSendCoinsRequest) returns (RpcSendCoinsReply) {}
 
-    rpc CreateAltChainEndorsement(RpcCreateAltChainEndorsementRequest) returns (RpcCreateAltChainEndorsementReply) {}
+    rpc CreateTransaction(RpcCreateTransactionRequest) returns (RpcCreateTransactionReply) {}
+
+    rpc CreateAltChainEndorsement(RpcCreateAltChainEndorsementRequest) returns (RpcCreateTransactionReply) {}
 
     rpc GetAltChainPoPEndorsements(RpcGetAltChainPoPEndorsementsRequest) returns (RpcGetAltChainPoPEndorsementsReply) {}
 
