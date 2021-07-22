@@ -30,6 +30,7 @@ import nodecore.api.grpc.AdminGrpc
 import nodecore.api.grpc.AdminRpcConfiguration
 import nodecore.api.grpc.RpcBlockFilter
 import nodecore.api.grpc.RpcCreateAltChainEndorsementRequest
+import nodecore.api.grpc.RpcCreateTransactionRequest
 import nodecore.api.grpc.RpcGetBalanceRequest
 import nodecore.api.grpc.RpcGetBlocksRequest
 import nodecore.api.grpc.RpcGetDebugVTBsRequest
@@ -37,7 +38,9 @@ import nodecore.api.grpc.RpcGetLastBlockRequest
 import nodecore.api.grpc.RpcGetStateInfoRequest
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import nodecore.api.grpc.RpcListBlocksSinceRequest
+import nodecore.api.grpc.RpcOutput
 import nodecore.api.grpc.RpcPingRequest
+import nodecore.api.grpc.RpcSendCoinsRequest
 import nodecore.api.grpc.RpcSignedTransaction
 import nodecore.api.grpc.RpcSubmitTransactionsRequest
 import nodecore.api.grpc.RpcTransaction
@@ -272,12 +275,48 @@ class NodeCoreGateway(
         return BlockChainDelta(removed, added)
     }
 
-    fun sendCoins() {
-        TODO()
-        // RpcSendCoinsRequest
-        //blockingStub
-        //    .withDeadlineAfter(120, TimeUnit.SECONDS)
-        //    .sendCoins(request)
+    fun sendCoins(addressManager: AddressManager, destinationAddress: String, atomicAmount: Long): VeriBlockTransaction {
+        val sourceAddressByteString = ByteStringAddressUtility.createProperByteStringAutomatically(
+            addressManager.defaultAddress.hash
+        )
+        val destinationAddressByteString = ByteStringAddressUtility.createProperByteStringAutomatically(
+            destinationAddress
+        )
+        val output = RpcOutput.newBuilder().setAddress(destinationAddressByteString).setAmount(atomicAmount)
+        val createRequest = RpcCreateTransactionRequest
+            .newBuilder()
+            .setSourceAddress(sourceAddressByteString)
+            .setAmounts(0, output)
+            .build()
+        val createReply = blockingStub
+            .withDeadlineAfter(30, TimeUnit.SECONDS)
+            .createTransaction(createRequest)
+
+        if (!createReply.success) {
+            for (error in createReply.resultsList) {
+                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
+            }
+            error("Unable to create transaction")
+        }
+        val signedTransaction = generateSignedRegularTransaction(addressManager, createReply.transaction, createReply.signatureIndex)
+        val submitRequest = RpcSubmitTransactionsRequest
+            .newBuilder()
+            .addTransactions(
+                RpcTransactionUnion.newBuilder().setSigned(signedTransaction)
+            )
+            .build()
+
+        val submitReply = blockingStub
+            .withDeadlineAfter(30, TimeUnit.SECONDS)
+            .submitTransactions(submitRequest)
+
+        if (!submitReply.success) {
+            for (error in submitReply.resultsList) {
+                logger.error { "NodeCore error: ${error.message} | ${error.details}" }
+            }
+            error("Unable to submit transaction")
+        }
+        return signedTransaction.deserializeStandardTransaction(params.transactionPrefix)
     }
 
     private val lock = ReentrantLock()

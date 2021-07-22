@@ -894,18 +894,24 @@ message RpcSendCoinsReply {
     repeated bytes tx_ids = 3 [(hex_encoded)=true];
 }
 
+message RpcCreateTransactionRequest {
+    bytes source_address = 1 [(address_encoded)=true];
+    repeated RpcOutput amounts = 2;
+    bool take_fee_from_outputs = 3;
+}
+
+message RpcCreateTransactionReply {
+    bool success = 1;
+    repeated RpcResult results = 2;
+    RpcTransaction transaction = 3;
+    int64 signature_index = 4;
+}
+
 message RpcCreateAltChainEndorsementRequest {
     bytes publication_data = 1 [(hex_encoded)=true];
     bytes source_address = 2 [(address_encoded)=true];
     int64 fee_per_byte = 3;
     int64 max_fee = 4;
-}
-
-message RpcCreateAltChainEndorsementReply {
-    bool success = 1;
-    repeated RpcResult results = 2;
-    RpcTransaction transaction = 3;
-    int64 signature_index = 4;
 }
 
 message RpcGetAltChainPoPEndorsementsRequest {
@@ -1655,7 +1661,9 @@ service Admin {
 
     rpc SendCoins(RpcSendCoinsRequest) returns (RpcSendCoinsReply) {}
 
-    rpc CreateAltChainEndorsement(RpcCreateAltChainEndorsementRequest) returns (RpcCreateAltChainEndorsementReply) {}
+    rpc CreateTransaction(RpcCreateTransactionRequest) returns (RpcCreateTransactionReply) {}
+
+    rpc CreateAltChainEndorsement(RpcCreateAltChainEndorsementRequest) returns (RpcCreateTransactionReply) {}
 
     rpc GetAltChainPoPEndorsements(RpcGetAltChainPoPEndorsementsRequest) returns (RpcGetAltChainPoPEndorsementsReply) {}
 

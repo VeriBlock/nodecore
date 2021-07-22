@@ -18,7 +18,6 @@ import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.BlockStoreException
-import org.veriblock.core.crypto.VBlakeHash
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.miners.pop.util.isOnSameNetwork
@@ -29,7 +28,6 @@ import org.veriblock.sdk.models.getSynchronizedMessage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.time.withTimeout
-import org.veriblock.core.Context
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.miners.pop.MinerConfig
@@ -267,6 +265,9 @@ class NodeCoreNetwork(
             logger.debugError(e) { "Error when polling NodeCore" }
         }
         firstPoll = false
+    }
+
+    suspend fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> = withTimeout(Duration.ofMinutes(40)) {
     }
 
     suspend fun getVeriBlockPublications(

@@ -34,6 +34,7 @@ import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
+import org.veriblock.core.CommunicationException
 import org.veriblock.miners.pop.NodeCoreLiteKit
 
 private val logger = createLogger {}
@@ -167,6 +168,12 @@ class AltchainPopMinerService(
     fun getAddress(): String = nodeCoreLiteKit.getAddress()
 
     fun getBalance(): Balance = nodeCoreLiteKit.network.latestBalance
+
+    suspend fun sendCoins(destinationAddress: String, atomicAmount: Long): List<String> = if (nodeCoreLiteKit.network.isAccessible()) {
+        nodeCoreLiteKit.network.sendCoins(destinationAddress, atomicAmount)
+    } else {
+        throw CommunicationException("NodeCore is not accessible at this time")
+    }
 
     fun checkReadyConditions(): CheckResult  {
         // Verify if the miner is shutting down

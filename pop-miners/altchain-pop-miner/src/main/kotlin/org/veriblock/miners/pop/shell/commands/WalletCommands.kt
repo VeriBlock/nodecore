@@ -16,7 +16,6 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
-import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 
 fun CommandFactory.walletCommands(
@@ -58,7 +57,9 @@ fun CommandFactory.walletCommands(
     ) {
         val atomicAmount = Utility.convertDecimalCoinToAtomicLong(getParameter("amount"))
         val destinationAddress: String = getParameter("destinationAddress")
-        printInfo("withdrawvbktoaddress is not implemented yet")
-        failure()
+        val result = miner.sendCoins(destinationAddress, atomicAmount)
+        printInfo(result.joinToString())
+        success()
+
     }
 }
