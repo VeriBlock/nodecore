@@ -9,36 +9,36 @@ import java.util.concurrent.ConcurrentHashMap
 
 class PendingTransactionContainer {
     // TODO(warchant): use Address as a key, instead of String
-    private val pendingAddressTransaction: MutableMap<String, MutableList<Transaction>> = ConcurrentHashMap()
-    private val confirmedTxIdTransactionReply: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
-    private val pendingTxIdTransaction: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
-    private val transactionsForMonitoring: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
+    private val pendingTransactionsByAddress: MutableMap<String, MutableList<Transaction>> = ConcurrentHashMap()
+    private val confirmedTransactionReplies: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
+    private val pendingTransactions: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
+    private val transactionsToMonitor: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
 
     fun getPendingTransactionIds(): Set<Sha256Hash> {
-        val pendingTransactions = pendingTxIdTransaction.entries.asSequence()
+        val pendingTransactions = pendingTransactions.entries.asSequence()
             .sortedBy { it.value.getSignatureIndex() }
             .map { it.key }
             .toSet()
-        return pendingTransactions + transactionsForMonitoring
+        return pendingTransactions + transactionsToMonitor
     }
 
     fun getTransactionInfo(txId: Sha256Hash): TransactionInfo? {
-        confirmedTxIdTransactionReply[txId]?.let {
+        confirmedTransactionReplies[txId]?.let {
             return it
         }
-        if (!pendingTxIdTransaction.containsKey(txId)) {
-            transactionsForMonitoring.add(txId)
+        if (!pendingTransactions.containsKey(txId)) {
+            transactionsToMonitor.add(txId)
         }
         return null
     }
 
     fun updateTransactionInfo(transactionInfo: TransactionInfo) {
         val transaction = transactionInfo.transaction
-        if (pendingTxIdTransaction.containsKey(transaction.txId) || transactionsForMonitoring.contains(transaction.txId)) {
-            confirmedTxIdTransactionReply[transaction.txId] = transactionInfo
+        if (pendingTransactions.containsKey(transaction.txId) || transactionsToMonitor.contains(transaction.txId)) {
+            confirmedTransactionReplies[transaction.txId] = transactionInfo
             if (transactionInfo.confirmations > 0) {
-                pendingTxIdTransaction.remove(transaction.txId)
-                transactionsForMonitoring.remove(transaction.txId)
+                pendingTransactions.remove(transaction.txId)
+                transactionsToMonitor.remove(transaction.txId)
             }
         }
     }
@@ -49,26 +49,25 @@ class PendingTransactionContainer {
         val inputAddress = transaction.inputAddress.toString()
 
         // Add as pending transaction
-        val transactions = pendingAddressTransaction[inputAddress]
+        val transactions = pendingTransactionsByAddress[inputAddress]
         if (!transactions.isNullOrEmpty()) {
             transactions.add(transaction)
-            pendingTxIdTransaction[transaction.txId] = transaction
+            pendingTransactions[transaction.txId] = transaction
         } else {
             val newList = mutableListOf(transaction)
-            pendingTxIdTransaction[transaction.txId] = transaction
-            pendingAddressTransaction[transaction.inputAddress.toString()] = newList
+            pendingTransactions[transaction.txId] = transaction
+            pendingTransactionsByAddress[transaction.inputAddress.toString()] = newList
         }
     }
 
     fun getTransaction(txId: Sha256Hash): Transaction? {
-        return pendingTxIdTransaction[txId]
+        return pendingTransactions[txId]
     }
 
     fun getPendingSignatureIndexForAddress(address: Address): Long? {
-        val transactions = pendingAddressTransaction[address.address]
+        val transactions = pendingTransactionsByAddress[address.address]
             ?: return null
         return transactions
-            .map { it.getSignatureIndex() }
-            .maxOrNull()
+            .maxOfOrNull { it.getSignatureIndex() }
     }
 }

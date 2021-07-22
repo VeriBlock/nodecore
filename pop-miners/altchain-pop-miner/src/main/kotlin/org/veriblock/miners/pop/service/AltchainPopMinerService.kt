@@ -140,7 +140,7 @@ class AltchainPopMinerService(
         try {
             logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
 
-            logger.info { "Send funds to the ${context.vbkTokenName} wallet ${spvContext.addressManager.defaultAddress.hash}" }
+            logger.info { "Send funds to the ${context.vbkTokenName} address ${spvContext.addressManager.defaultAddress.hash}" }
             logger.info { "Connecting to peers..." }
 
             // Restore & submit operations (including re-attach listeners) before the network starts
@@ -340,7 +340,7 @@ class AltchainPopMinerService(
                     }
                     operationsToSubmit.removeAll(operationsToRemove)
                 }
-                delay(5 * 1000)
+                delay(5 * 1000L)
             }
         } catch (e: Exception) {
             logger.debugError(e) { "Unable to resume suspended operations" }

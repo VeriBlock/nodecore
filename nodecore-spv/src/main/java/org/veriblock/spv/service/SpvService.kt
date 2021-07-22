@@ -325,16 +325,7 @@ class SpvService(
 
     fun createAltChainEndorsement(publicationData: ByteArray, sourceAddress: Address, feePerByte: Long, maxFee: Long): AltChainEndorsement {
         try {
-            val ledgerSignatureIndex = spvContext.getAllAddressesState().values.find {
-                it.address == sourceAddress
-            }?.ledgerValue?.signatureIndex
-
-            val localSignatureIndex = getSignatureIndex(sourceAddress)
-            val signatureIndex = if (ledgerSignatureIndex != null && (ledgerSignatureIndex - localSignatureIndex).absoluteValue > 10) {
-                ledgerSignatureIndex
-            } else {
-                localSignatureIndex
-            } + 1
+            val signatureIndex = getSignatureIndex(sourceAddress) + 1
             val fee = feePerByte * predictAltChainEndorsementTransactionSize(publicationData.size, signatureIndex)
             if (fee > maxFee) {
                 throw EndorsementCreationException("Calculated fee $fee was above the maximum configured amount $maxFee")
@@ -419,12 +410,16 @@ class SpvService(
         )
     }
 
-    private fun getSignatureIndex(address: Address): Long =
-        pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
-            ?: spvContext.getSignatureIndex(address)
-            ?: throw IllegalStateException(
+    private fun getSignatureIndex(address: Address): Long {
+        val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
+        val signatureIndex = spvContext.getSignatureIndex(address)
+        if (pendingSignatureIndex == null) {
+            return signatureIndex ?: throw IllegalStateException(
                 "Requested signature index for address which is not present in AddressState"
             )
+        }
+        return pendingSignatureIndex.coerceAtLeast(signatureIndex ?: -1)
+    }
 
     fun getDownloadStatus(): DownloadStatusResponse {
         val currentHeight = blockchain.activeChain.tip.height
