@@ -67,6 +67,37 @@ fun CommandFactory.walletCommands(
     }
 
     command(
+        name = "Dump Private Key",
+        form = "dumpprivatekey|dumpprivkey",
+        description = "Gets private key for an address",
+        parameters = listOf(
+            CommandParameter(name = "address", mapper = CommandParameterMappers.STANDARD_ADDRESS, required = true)
+        ),
+        suggestedCommands = { listOf("backupwallet", "importwallet", "importprivatekey") }
+    ) {
+        val address: String = getParameter("address")
+        val privateKey = miner.dumpPrivateKey(address)
+        printInfo("Anyone with access to this private key can steal any funds held in $address! Make sure that this private key is stored SECURELY!")
+        printInfo("Private key: $privateKey")
+        success()
+    }
+
+    command(
+        name = "Import Private Key",
+        form = "importprivatekey|importprivkey",
+        description = "Imports the provided private key into NodeCore",
+        parameters = listOf(
+            CommandParameter(name = "privateKey", mapper = CommandParameterMappers.HEX_STRING, required = true)
+        ),
+        suggestedCommands = { listOf("dumpprivatekey", "backupwallet", "importwallet") }
+    ) {
+        val privateKeyHex: String = getParameter("privateKey")
+        val address = miner.importPrivateKey(privateKeyHex)
+        printInfo("Imported address: $address")
+        success()
+    }
+
+    command(
         name = "Import Wallet",
         form = "importwallet",
         description = "Imports a wallet file",
