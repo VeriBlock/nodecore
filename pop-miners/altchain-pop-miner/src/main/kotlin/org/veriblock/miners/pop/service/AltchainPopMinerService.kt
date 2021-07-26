@@ -191,6 +191,8 @@ class AltchainPopMinerService(
 
     fun getAddress(): String = spvContext.addressManager.defaultAddress.hash
 
+    fun setDefaultAddress(address: String) = spvContext.addressManager.setDefaultAddress(address)
+
     fun getBalance(): Balance = network.latestBalance
 
     fun checkReadyConditions(): CheckResult  {

@@ -98,6 +98,20 @@ fun CommandFactory.walletCommands(
     }
 
     command(
+        name = "Set Default Address",
+        form = "setdefaultaddress",
+        description = "Sets the default APM address",
+        parameters = listOf(
+            CommandParameter(name = "address", mapper = CommandParameterMappers.STANDARD_ADDRESS, required = true)
+        ),
+        suggestedCommands = { listOf("getbalance") }
+    ) {
+        val address: String = getParameter("address")
+        miner.setDefaultAddress(address)
+        success()
+    }
+
+    command(
         name = "Import Wallet",
         form = "importwallet",
         description = "Imports a wallet file",
