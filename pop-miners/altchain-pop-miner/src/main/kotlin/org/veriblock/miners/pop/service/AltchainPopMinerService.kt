@@ -8,46 +8,54 @@
 
 package org.veriblock.miners.pop.service
 
+import com.google.protobuf.ByteString
+import java.io.File
+import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import nodecore.api.grpc.utilities.extensions.asHexByteString
+import nodecore.api.grpc.utilities.extensions.toHex
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import nodecore.p2p.PeerCapabilities
+import org.veriblock.core.ImportException
 import org.veriblock.core.MineException
-import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.WalletException
 import org.veriblock.core.contracts.Balance
-import org.veriblock.miners.pop.core.ApmContext
-import org.veriblock.miners.pop.util.Threading
-import org.veriblock.miners.pop.core.ApmOperation
-import org.veriblock.miners.pop.core.warn
-import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
-import org.veriblock.miners.pop.util.formatCoinAmount
-import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.utilities.Utility
+import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugWarn
+import org.veriblock.miners.pop.EventBus
+import org.veriblock.miners.pop.MinerConfig
+import org.veriblock.miners.pop.core.ApmContext
+import org.veriblock.miners.pop.core.ApmOperation
+import org.veriblock.miners.pop.core.MiningOperationStatus
+import org.veriblock.miners.pop.core.warn
 import org.veriblock.miners.pop.net.SpvGateway
 import org.veriblock.miners.pop.net.VeriBlockNetwork
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
+import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
 import org.veriblock.miners.pop.transactionmonitor.TM_FILE_EXTENSION
 import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
 import org.veriblock.miners.pop.transactionmonitor.loadTransactionMonitor
-import org.veriblock.miners.pop.EventBus
-import org.veriblock.miners.pop.MinerConfig
-import org.veriblock.miners.pop.core.MiningOperationStatus
-import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.miners.pop.util.CheckResult
+import org.veriblock.miners.pop.util.Threading
+import org.veriblock.miners.pop.util.formatCoinAmount
 import org.veriblock.sdk.alt.SecurityInheritingChain
+import org.veriblock.sdk.alt.plugin.PluginService
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.StateInfo
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.DownloadStatusResponse
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.ConcurrentHashMap
-import nodecore.p2p.PeerCapabilities
 
 private val logger = createLogger {}
 
@@ -420,4 +428,28 @@ class AltchainPopMinerService(
 
     fun getStateInfo(chainId: String): StateInfo? =
         securityInheritingService.getMonitor(chainId)?.latestBlockChainInfo
+
+    fun dumpPrivateKey(address: String): String {
+        val publicKey = network.getPublicKeyForAddress(address)
+            ?: throw WalletException("The provided address is not an address in this wallet!")
+        val privateKey = network.getPrivateKeyForAddress(address)
+        val privateKeyBytes = privateKey.encoded
+        val publicKeyBytes = publicKey.encoded
+        val fullBytes = ByteArray(privateKeyBytes.size + publicKeyBytes.size + 1)
+        fullBytes[0] = privateKeyBytes.size.toByte()
+        System.arraycopy(privateKeyBytes, 0, fullBytes, 1, privateKeyBytes.size)
+        System.arraycopy(publicKeyBytes, 0, fullBytes, 1 + privateKeyBytes.size, publicKeyBytes.size)
+        return ByteString.copyFrom(fullBytes).toHex()
+    }
+
+    fun importPrivateKey(privateKeyHex: String): String {
+        val fullBytes: ByteArray = privateKeyHex.asHexByteString().toByteArray()
+        val privateKeyBytes = ByteArray(fullBytes[0].toInt())
+        val publicKeyBytes = ByteArray(fullBytes.size - fullBytes[0] - 1)
+        System.arraycopy(fullBytes, 1, privateKeyBytes, 0, privateKeyBytes.size)
+        System.arraycopy(fullBytes, privateKeyBytes.size + 1, publicKeyBytes, 0, publicKeyBytes.size)
+        val importedAddress = network.importKeyPair(publicKeyBytes, privateKeyBytes)
+            ?: throw ImportException("The provided private key was invalid or corrupted! ${Utility.bytesToHex(fullBytes)} is  not a valid private key!")
+        return ByteStringAddressUtility.createProperByteStringAutomatically(importedAddress.hash).toProperAddressType()
+    }
 }

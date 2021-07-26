@@ -10,6 +10,8 @@ package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import java.security.PrivateKey
+import java.security.PublicKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.time.withTimeout
@@ -34,6 +36,7 @@ import org.veriblock.spv.util.SpvEventBus
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import org.veriblock.core.wallet.AddressPubKey
 
 private val logger = createLogger {}
 
@@ -78,6 +81,15 @@ class VeriBlockNetwork(
     fun shutdown() {
         gateway.shutdown()
     }
+
+    fun getPrivateKeyForAddress(address: String): PrivateKey =
+        addressManager.getPrivateKeyForAddress(address)
+
+    fun getPublicKeyForAddress(address: String): PublicKey? =
+        addressManager.getPublicKeyForAddress(address)
+
+    fun importKeyPair(publicKeyBytes: ByteArray, privateKeyBytes: ByteArray): AddressPubKey? =
+        addressManager.importKeyPair(publicKeyBytes, privateKeyBytes)
 
     suspend fun submitEndorsement(publicationData: ByteArray, feePerByte: Long, maxFee: Long): VeriBlockTransaction {
         val transaction = gateway.submitEndorsementTransaction(

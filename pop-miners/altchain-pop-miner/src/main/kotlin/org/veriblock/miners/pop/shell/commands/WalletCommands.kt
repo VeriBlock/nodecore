@@ -65,4 +65,66 @@ fun CommandFactory.walletCommands(
         printInfo("Transaction id: ${result.map { it.toString() }}")
         success()
     }
+
+    command(
+        name = "Dump Private Key",
+        form = "dumpprivatekey|dumpprivkey",
+        description = "Gets private key for an address",
+        parameters = listOf(
+            CommandParameter(name = "address", mapper = CommandParameterMappers.STANDARD_ADDRESS, required = true)
+        ),
+        suggestedCommands = { listOf("backupwallet", "importwallet", "importprivatekey") }
+    ) {
+        val address: String = getParameter("address")
+        val privateKey = miner.dumpPrivateKey(address)
+        printInfo("Anyone with access to this private key can steal any funds held in $address! Make sure that this private key is stored SECURELY!")
+        printInfo("Private key: $privateKey")
+        success()
+    }
+
+    command(
+        name = "Import Private Key",
+        form = "importprivatekey|importprivkey",
+        description = "Imports the provided private key into NodeCore",
+        parameters = listOf(
+            CommandParameter(name = "privateKey", mapper = CommandParameterMappers.HEX_STRING, required = true)
+        ),
+        suggestedCommands = { listOf("dumpprivatekey", "backupwallet", "importwallet") }
+    ) {
+        val privateKeyHex: String = getParameter("privateKey")
+        val address = miner.importPrivateKey(privateKeyHex)
+        printInfo("Imported address: $address")
+        success()
+    }
+
+    command(
+        name = "Import Wallet",
+        form = "importwallet",
+        description = "Imports a wallet file",
+        parameters = listOf(
+            CommandParameter(name = "sourceLocation", mapper = CommandParameterMappers.STRING, required = true)
+        ),
+        suggestedCommands = { listOf("backupwallet") }
+    ) {
+        val sourceLocation: String = getParameter("sourceLocation")
+        val passphrase = shell.passwordPrompt("Enter passphrase of importing wallet (Press ENTER if not password-protected): ")
+        miner.spvContext.spvService.importWallet(sourceLocation, passphrase)
+        success()
+    }
+
+    command(
+        name = "Backup Wallet",
+        form = "backupwallet",
+        description = "Creates a backup from the loaded wallet",
+        parameters = listOf(
+            CommandParameter(name = "targetLocation", mapper = CommandParameterMappers.STRING, required = true)
+        ),
+        suggestedCommands = { listOf("importwallet") }
+    ) {
+        val targetLocation: String = getParameter("targetLocation")
+        miner.spvContext.spvService.backupWallet(targetLocation)
+        printInfo("Note: The backed-up wallet file is saved on the computer where APM is running.")
+        printInfo("Note: If the wallet is encrypted, the backup will require the password in use at the time the backup was created.")
+        success()
+    }
 }
