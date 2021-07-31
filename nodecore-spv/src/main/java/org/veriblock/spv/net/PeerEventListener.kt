@@ -295,7 +295,11 @@ class PeerEventListener(
         event.acknowledge()
 
         if (event.content.transactionsCount > P2pConstants.PEER_MAX_ADVERTISEMENTS) {
-            P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(event.producer, PeerMisbehaviorEvent.Reason.ADVERTISEMENT_SIZE))
+            P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                peer = event.producer,
+                reason = PeerMisbehaviorEvent.Reason.ADVERTISEMENT_SIZE,
+                message = "The peer exceeded the maximum allowed transactions in a single advertisement (${event.content.transactionsCount}, the maximum is ${P2pConstants.PEER_MAX_ADVERTISEMENTS})"
+            ))
             return
         }
         

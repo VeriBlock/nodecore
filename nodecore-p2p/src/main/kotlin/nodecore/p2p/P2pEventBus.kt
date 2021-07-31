@@ -99,87 +99,91 @@ object P2pEventBus {
 
     val peerMisbehavior = Event<PeerMisbehaviorEvent>("Peer misbehavior")
     
-    fun newEvent(value: RpcEvent, remote: Peer) {
-        logger.debug { "Read event ${value.id} from peer ${remote.address} of type: ${value.resultsCase.name}" }
+    fun newEvent(event: RpcEvent, remote: Peer) {
+        logger.debug { "Read event ${event.id} from peer ${remote.address} of type: ${event.resultsCase.name}" }
 
-        if (remote.state.hasAnnounced()) {
-            if (remote.protocolVersion != Context.get().networkParameters.protocolVersion) {
-                logger.warn { "Peer ${remote.address} is on protocol version ${remote.protocolVersion} and will be disconnected" }
-                remote.disconnect()
-                return
-            }
-        } else {
-            if (value.resultsCase != RpcEvent.ResultsCase.ANNOUNCE) {
-                peerMisbehavior.trigger(PeerMisbehaviorEvent(remote, PeerMisbehaviorEvent.Reason.UNANNOUNCED))
-                return
-            }
+        if (!remote.state.hasAnnounced() && event.resultsCase != RpcEvent.ResultsCase.ANNOUNCE) {
+            peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                peer = remote,
+                reason = PeerMisbehaviorEvent.Reason.UNANNOUNCED,
+                message = "The peer sent an event of type ${event.resultsCase} before the ANNOUNCE"
+            ))
+            return
         }
 
-        when (value.resultsCase) {
+        if (remote.protocolVersion != Context.get().networkParameters.protocolVersion) {
+            logger.warn { "Peer ${remote.address} is on protocol version ${remote.protocolVersion} and will be disconnected" }
+            remote.disconnect()
+            return
+        }
+
+        when (event.resultsCase) {
             RpcEvent.ResultsCase.BLOCK ->
-                addBlock.trigger(value.toP2pEvent(remote, value.block))
+                addBlock.trigger(event.toP2pEvent(remote, event.block))
             RpcEvent.ResultsCase.TRANSACTION ->
-                addTransaction.trigger(value.toP2pEvent(remote, value.transaction))
+                addTransaction.trigger(event.toP2pEvent(remote, event.transaction))
             RpcEvent.ResultsCase.ANNOUNCE ->
-                announce.trigger(value.toP2pEvent(remote, value.announce))
+                announce.trigger(event.toP2pEvent(remote, event.announce))
             RpcEvent.ResultsCase.HEARTBEAT ->
-                heartbeat.trigger(value.toP2pEvent(remote, value.heartbeat))
+                heartbeat.trigger(event.toP2pEvent(remote, event.heartbeat))
             RpcEvent.ResultsCase.BLOCK_QUERY ->
-                blockQuery.trigger(value.toP2pEvent(remote, value.blockQuery))
+                blockQuery.trigger(event.toP2pEvent(remote, event.blockQuery))
             RpcEvent.ResultsCase.ACKNOWLEDGEMENT ->
-                acknowledge.trigger(value.toP2pEvent(remote, value.acknowledgement))
+                acknowledge.trigger(event.toP2pEvent(remote, event.acknowledgement))
             RpcEvent.ResultsCase.BLOCK_QUERY_REPLY ->
-                blockQueryReply.trigger(value.toP2pEvent(remote, value.blockQueryReply))
+                blockQueryReply.trigger(event.toP2pEvent(remote, event.blockQueryReply))
             RpcEvent.ResultsCase.NETWORK_INFO_REPLY ->
-                networkInfoReply.trigger(value.toP2pEvent(remote, value.networkInfoReply))
+                networkInfoReply.trigger(event.toP2pEvent(remote, event.networkInfoReply))
             RpcEvent.ResultsCase.NETWORK_INFO_REQUEST ->
-                networkInfoRequest.trigger(value.toP2pEvent(remote, value.networkInfoRequest))
+                networkInfoRequest.trigger(event.toP2pEvent(remote, event.networkInfoRequest))
             RpcEvent.ResultsCase.ADVERTISE_BLOCKS ->
-                advertiseBlocks.trigger(value.toP2pEvent(remote, value.advertiseBlocks))
+                advertiseBlocks.trigger(event.toP2pEvent(remote, event.advertiseBlocks))
             RpcEvent.ResultsCase.BLOCK_REQUEST ->
-                blockRequest.trigger(value.toP2pEvent(remote, value.blockRequest))
+                blockRequest.trigger(event.toP2pEvent(remote, event.blockRequest))
             RpcEvent.ResultsCase.KEYSTONE_QUERY ->
-                keystoneQuery.trigger(value.toP2pEvent(remote, value.keystoneQuery))
+                keystoneQuery.trigger(event.toP2pEvent(remote, event.keystoneQuery))
             RpcEvent.ResultsCase.ADVERTISE_TX ->
-                advertiseTransaction.trigger(value.toP2pEvent(remote, value.advertiseTx))
+                advertiseTransaction.trigger(event.toP2pEvent(remote, event.advertiseTx))
             RpcEvent.ResultsCase.TX_REQUEST ->
-                transactionRequest.trigger(value.toP2pEvent(remote, value.txRequest))
+                transactionRequest.trigger(event.toP2pEvent(remote, event.txRequest))
             RpcEvent.ResultsCase.NOT_FOUND ->
-                notFound.trigger(value.toP2pEvent(remote, value.notFound))
+                notFound.trigger(event.toP2pEvent(remote, event.notFound))
             RpcEvent.ResultsCase.CREATE_FILTER ->
-                createFilter.trigger(value.toP2pEvent(remote, value.createFilter))
+                createFilter.trigger(event.toP2pEvent(remote, event.createFilter))
             RpcEvent.ResultsCase.ADD_FILTER ->
-                addFilter.trigger(value.toP2pEvent(remote, value.addFilter))
+                addFilter.trigger(event.toP2pEvent(remote, event.addFilter))
             RpcEvent.ResultsCase.CLEAR_FILTER ->
-                clearFilter.trigger(value.toP2pEvent(remote, value.clearFilter))
+                clearFilter.trigger(event.toP2pEvent(remote, event.clearFilter))
             RpcEvent.ResultsCase.FILTERED_BLOCK_REQUEST ->
-                filteredBlockRequest.trigger(value.toP2pEvent(remote, value.filteredBlockRequest))
+                filteredBlockRequest.trigger(event.toP2pEvent(remote, event.filteredBlockRequest))
             RpcEvent.ResultsCase.LEDGER_PROOF_REQUEST ->
-                ledgerProofRequest.trigger(value.toP2pEvent(remote, value.ledgerProofRequest))
+                ledgerProofRequest.trigger(event.toP2pEvent(remote, event.ledgerProofRequest))
             RpcEvent.ResultsCase.LEDGER_PROOF_REPLY ->
-                ledgerProofReply.trigger(value.toP2pEvent(remote, value.ledgerProofReply))
+                ledgerProofReply.trigger(event.toP2pEvent(remote, event.ledgerProofReply))
             RpcEvent.ResultsCase.BLOCK_HEADERS_REQUEST ->
-                blockHeadersRequest.trigger(value.toP2pEvent(remote, value.blockHeadersRequest))
+                blockHeadersRequest.trigger(event.toP2pEvent(remote, event.blockHeadersRequest))
             RpcEvent.ResultsCase.TRANSACTION_REQUEST ->
-                getTransactionRequest.trigger(value.toP2pEvent(remote, value.transactionRequest))
+                getTransactionRequest.trigger(event.toP2pEvent(remote, event.transactionRequest))
             RpcEvent.ResultsCase.TRANSACTION_REPLY ->
-                getTransactionReply.trigger(value.toP2pEvent(remote, value.transactionReply))
+                getTransactionReply.trigger(event.toP2pEvent(remote, event.transactionReply))
             RpcEvent.ResultsCase.VERIBLOCK_PUBLICATIONS_REQUEST ->
-                getVeriBlockPublicationsRequest.trigger(value.toP2pEvent(remote, value.veriblockPublicationsRequest))
+                getVeriBlockPublicationsRequest.trigger(event.toP2pEvent(remote, event.veriblockPublicationsRequest))
             RpcEvent.ResultsCase.VERIBLOCK_PUBLICATIONS_REPLY ->
-                getVeriBlockPublicationsReply.trigger(value.toP2pEvent(remote, value.veriblockPublicationsReply))
+                getVeriBlockPublicationsReply.trigger(event.toP2pEvent(remote, event.veriblockPublicationsReply))
             RpcEvent.ResultsCase.DEBUG_VTB_REQUEST ->
-                getDebugVtbsRequest.trigger(value.toP2pEvent(remote, value.debugVtbRequest))
+                getDebugVtbsRequest.trigger(event.toP2pEvent(remote, event.debugVtbRequest))
             RpcEvent.ResultsCase.DEBUG_VTB_REPLY ->
-                getDebugVtbsReply.trigger(value.toP2pEvent(remote, value.debugVtbReply))
+                getDebugVtbsReply.trigger(event.toP2pEvent(remote, event.debugVtbReply))
             RpcEvent.ResultsCase.STATE_INFO_REQUEST ->
-                getStateInfoRequest.trigger(value.toP2pEvent(remote, value.stateInfoRequest))
+                getStateInfoRequest.trigger(event.toP2pEvent(remote, event.stateInfoRequest))
             RpcEvent.ResultsCase.STATE_INFO_REPLY ->
-                getStateInfoReply.trigger(value.toP2pEvent(remote, value.stateInfoReply))
+                getStateInfoReply.trigger(event.toP2pEvent(remote, event.stateInfoReply))
             RpcEvent.ResultsCase.VTB_FOR_BTC_REQUEST ->
-                getVtbsForBtcBlocksRequest.trigger(value.toP2pEvent(remote, value.vtbForBtcRequest))
+                getVtbsForBtcBlocksRequest.trigger(event.toP2pEvent(remote, event.vtbForBtcRequest))
             RpcEvent.ResultsCase.VTB_FOR_BTC_REPLY ->
-                getVtbsForBtcBlocksReply.trigger(value.toP2pEvent(remote, value.vtbForBtcReply))
+                getVtbsForBtcBlocksReply.trigger(event.toP2pEvent(remote, event.vtbForBtcReply))
+            else ->
+                logger.warn { "Unhandled event type: ${event.resultsCase}" }
         }
     }
 }

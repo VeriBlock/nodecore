@@ -40,7 +40,11 @@ class TrafficManager {
         val toBeSent: MutableList<BlockRequest> = ArrayList()
         for (request in blockRequests) {
             if (request.peer.isNotInGoodStanding()) {
-                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(request.peer, PeerMisbehaviorEvent.Reason.UNFULFILLED_REQUEST_LIMIT))
+                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                    peer = request.peer,
+                    reason = PeerMisbehaviorEvent.Reason.UNFULFILLED_REQUEST_LIMIT,
+                    message = "The peer sent too many block requests that couldn't be fulfilled"
+                ))
                 continue
             }
 
@@ -93,7 +97,11 @@ class TrafficManager {
         val peerEvents = HashMap<Peer, RpcTransactionRequest.Builder>()
         for (request in txRequests) {
             if (request.peer.isNotInGoodStanding()) {
-                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(request.peer, PeerMisbehaviorEvent.Reason.UNFULFILLED_REQUEST_LIMIT))
+                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                    peer = request.peer,
+                    reason = PeerMisbehaviorEvent.Reason.UNFULFILLED_REQUEST_LIMIT,
+                    message = "The peer sent too many transaction requests that couldn't be fulfilled"
+                ))
                 continue
             }
 
@@ -204,7 +212,11 @@ class TrafficManager {
                 val nextRequest = queue?.poll()
                 if (nextRequest != null) {
                     if (nextRequest.peer.isNotInGoodStanding()) {
-                        P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(nextRequest.peer, PeerMisbehaviorEvent.Reason.UNFULFILLED_REQUEST_LIMIT))
+                        P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                            peer = nextRequest.peer,
+                            reason = PeerMisbehaviorEvent.Reason.UNFULFILLED_REQUEST_LIMIT,
+                            message = "The peer sent too many block requests that couldn't be fulfilled"
+                        ))
 
                         if (queue.isEmpty()) {
                             blockRequestQueue.remove(key)

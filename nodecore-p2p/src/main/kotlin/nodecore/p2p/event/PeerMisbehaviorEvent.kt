@@ -10,7 +10,8 @@ import nodecore.p2p.Peer
 
 data class PeerMisbehaviorEvent(
     val peer: Peer,
-    val reason: Reason
+    val reason: Reason,
+    val message: String
 ) {
     enum class Reason {
         MALFORMED_EVENT,

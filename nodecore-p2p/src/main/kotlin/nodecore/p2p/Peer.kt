@@ -142,8 +142,11 @@ class Peer(
             event = RpcEvent.parseFrom(rawMessage)
             logger.debug { "Received event of type ${event.resultsCase.name}" }
         } catch (e: InvalidProtocolBufferException) {
-            logger.debug { "Malformed event: ${Utility.bytesToHex(rawMessage)}" }
-            P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(this, PeerMisbehaviorEvent.Reason.MALFORMED_EVENT))
+            P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                peer = this,
+                reason = PeerMisbehaviorEvent.Reason.MALFORMED_EVENT,
+                message = "Malformed event: ${Utility.bytesToHex(rawMessage)}"
+            ))
             return
         }
 

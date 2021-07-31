@@ -140,7 +140,11 @@ class PeerSocketHandler(
                     logger.info {
                         "Received a message size greater than the limit of ${P2pConstants.PEER_MESSAGE_SIZE_LIMIT} bytes, message will be ignored"
                     }
-                    P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(peer, PeerMisbehaviorEvent.Reason.MESSAGE_SIZE))
+                    P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                        peer = peer,
+                        reason = PeerMisbehaviorEvent.Reason.MESSAGE_SIZE,
+                        message = "The peer sent a too long message ($nextMessageSize, the maximum is ${P2pConstants.PEER_MESSAGE_SIZE_LIMIT})"
+                    ))
                     return
                 } else {
                     val raw = ByteArray(nextMessageSize)

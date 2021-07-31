@@ -28,8 +28,8 @@ class PeerWarden(
             reducePenalties()
         }
 
-        P2pEventBus.peerMisbehavior.register(this) { (peer, reason) ->
-            handleMisbehavior(peer, reason)
+        P2pEventBus.peerMisbehavior.register(this) { (peer, reason, message) ->
+            handleMisbehavior(peer, reason, message)
         }
     }
 
@@ -38,8 +38,8 @@ class PeerWarden(
         Threading.PEER_WARDEN_THREAD.safeShutdown()
     }
     
-    private fun handleMisbehavior(peer: Peer, reason: PeerMisbehaviorEvent.Reason) {
-        logger.info { "Peer ${peer.address} misbehaved: ${reason.name}" }
+    private fun handleMisbehavior(peer: Peer, reason: PeerMisbehaviorEvent.Reason, message: String) {
+        logger.info { "Peer ${peer.address} misbehaved: ${reason.name} - $message" }
         val penalty = when (reason) {
             PeerMisbehaviorEvent.Reason.MALFORMED_EVENT ->           20
             PeerMisbehaviorEvent.Reason.UNANNOUNCED ->                5
