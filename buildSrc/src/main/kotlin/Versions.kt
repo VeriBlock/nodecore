@@ -1,8 +1,13 @@
 
-const val kotlinVersion = "1.4.32"
-const val coroutinesVersion = "1.4.3"
-const val ktorVersion = "1.4.0"
-const val kotlinxSerializationVersion = "1.0.1"
+const val kotlinVersion = "1.5.20"
+const val coroutinesVersion = "1.5.0"
+const val ktorVersion = "1.6.2"
+const val kotlinxSerializationVersion = "1.2.2"
+
+//const val kotlinVersion = "1.4.32"
+//const val coroutinesVersion = "1.4.3"
+//const val ktorVersion = "1.4.0"
+//const val kotlinxSerializationVersion = "1.0.1"
 const val koinVersion = "2.0.1"
 const val exposedVersion = "0.26.1"
 const val sqliteVersion = "3.28.0"
