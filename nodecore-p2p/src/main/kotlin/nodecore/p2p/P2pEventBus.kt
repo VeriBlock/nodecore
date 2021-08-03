@@ -102,18 +102,18 @@ object P2pEventBus {
     fun newEvent(event: RpcEvent, remote: Peer) {
         logger.debug { "Read event ${event.id} from peer ${remote.address} of type: ${event.resultsCase.name}" }
 
-        if (!remote.state.hasAnnounced() && event.resultsCase != RpcEvent.ResultsCase.ANNOUNCE) {
+        if (remote.state.hasAnnounced()) {
+            if (remote.protocolVersion != Context.get().networkParameters.protocolVersion) {
+                logger.warn { "Peer ${remote.address} is on protocol version ${remote.protocolVersion} and will be disconnected" }
+                remote.disconnect()
+                return
+            }
+        } else if (event.resultsCase != RpcEvent.ResultsCase.ANNOUNCE) {
             peerMisbehavior.trigger(PeerMisbehaviorEvent(
                 peer = remote,
                 reason = PeerMisbehaviorEvent.Reason.UNANNOUNCED,
                 message = "The peer sent an event of type ${event.resultsCase} before the ANNOUNCE"
             ))
-            return
-        }
-
-        if (remote.protocolVersion != Context.get().networkParameters.protocolVersion) {
-            logger.warn { "Peer ${remote.address} is on protocol version ${remote.protocolVersion} and will be disconnected" }
-            remote.disconnect()
             return
         }
 
