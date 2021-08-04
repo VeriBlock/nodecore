@@ -255,9 +255,11 @@ open class Shell(
         printLines(formatted)
     }
 
-    fun printInfo(message: String) {
+    fun printInfo(message: String, printToLogger: Boolean = true) {
         printStyled(message, AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
-        printLogger.info(message)
+        if (printToLogger) {
+            printLogger.info(message)
+        }
     }
 
     fun printWarning(message: String) {

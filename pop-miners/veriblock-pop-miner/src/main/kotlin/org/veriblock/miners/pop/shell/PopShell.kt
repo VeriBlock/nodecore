@@ -64,7 +64,7 @@ class PopShell(
                     printInfo(String.format("\t%s", walletSeed[0]))
                     printInfo("SEED WORDS:")
                     walletSeed.subList(1, walletSeed.size).forEach {
-                        printInfo("\t$it")
+                        printInfo("\t$it", false)
                     }
                     printInfo(
                         "\rThis information will not be displayed again. Please make sure you have recorded them securely."
