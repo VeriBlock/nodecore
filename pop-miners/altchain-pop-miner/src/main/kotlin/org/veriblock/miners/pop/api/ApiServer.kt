@@ -58,7 +58,7 @@ class ApiServer(
     private val controllers: List<ApiController>
 ) {
     private val host: String = configuration.getString("miner.api.host") ?: "127.0.0.1"
-    private val port: Int = configuration.getInt("miner.api.port") ?: 8080
+    private val port: Int = configuration.getInt("miner.api.port") ?: 8081
     private val authUsername: String? = configuration.getString("miner.api.auth.username")
     private val authPassword: String? = configuration.getString("miner.api.auth.password")
 
