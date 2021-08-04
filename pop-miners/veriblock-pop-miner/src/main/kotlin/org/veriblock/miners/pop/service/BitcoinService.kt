@@ -44,6 +44,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import org.veriblock.core.createSingleThreadExecutor
 import kotlin.math.roundToLong
 
 val SEGWIT_TX_FEE_RATE = 0.713043478
@@ -56,6 +57,9 @@ private val logger = createLogger {}
 class BitcoinService(
     config: VpmConfig
 ) : BlocksDownloadedEventListener {
+
+    private val executor = createSingleThreadExecutor("bitcoin-service-thread")
+    private val coroutineScope = CoroutineScope(executor.asCoroutineDispatcher())
 
     private val configuration = config.bitcoin
     val context = configuration.context
@@ -201,7 +205,7 @@ class BitcoinService(
                     }
                 }
 
-                GlobalScope.launchWithFixedDelay(10_000, 10_000) {
+                coroutineScope.launchWithFixedDelay(10_000, 10_000) {
                     verifyBalance(true)
                 }
 

@@ -58,3 +58,14 @@ class MinerInfoResponse(
     val bitcoinBalance: Long?,
     val walletSeed: List<String>?
 )
+
+@Response("The configured network")
+data class NetworkInfoResponse(
+    val name: String
+)
+
+@Response("The build version")
+data class VersionResponse(
+    val name: String
+)
+

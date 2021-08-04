@@ -15,6 +15,7 @@ import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
 import com.papsign.ktor.openapigen.route.path.auth.put
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
 import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.AutoMineConfig
@@ -28,23 +29,20 @@ class ConfigurationController(
     private val bitcoinService: BitcoinService
 ) : ApiController {
 
-    @Path("config")
-    class ConfigPath
-
-    @Path("config/automine")
+    @Path("automine")
     class AutominePath
 
-    @Path("config/btc-fee")
+    @Path("btc-fee")
     class BtcFeePath
 
-    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() {
-        get<ConfigPath, Map<String, String>, UserIdPrincipal>(
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() = route("config") {
+        get<Unit, Map<String, String>, UserIdPrincipal>(
             info("Get all configuration values")
         ) {
             val configValues = configuration.list()
             respond(configValues)
         }
-        put<ConfigPath, Unit, SetConfigRequest, UserIdPrincipal>(
+        put<Unit, Unit, SetConfigRequest, UserIdPrincipal>(
             info("Sets a new value for a config property (needs restart)")
         ) { _, request ->
             if (request.key == null) {

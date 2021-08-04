@@ -22,6 +22,11 @@ object Threading {
             .setNameFormat("nc-poll")
             .build()
     )
+    val SPV_PEER_THREAD: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+        ThreadFactoryBuilder()
+            .setNameFormat("spv-peer")
+            .build()
+    )
     val SI_MONITOR_POOL: ExecutorService = Executors.newFixedThreadPool(
         16,
         ThreadFactoryBuilder()
@@ -50,6 +55,7 @@ object Threading {
     fun shutdown() {
         val shutdownTasks = CompletableFuture.allOf(
             CompletableFuture.runAsync { shutdown(SPV_POLL_THREAD) },
+            CompletableFuture.runAsync { shutdown(SPV_PEER_THREAD) },
             CompletableFuture.runAsync { shutdown(MINER_THREAD) },
             CompletableFuture.runAsync { shutdown(TASK_POOL) }
         )
@@ -58,7 +64,6 @@ object Threading {
 
     private fun shutdown(executorService: ExecutorService) {
         executorService.shutdown()
-
         try {
             if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
                 executorService.shutdownNow()
@@ -67,6 +72,5 @@ object Threading {
             executorService.shutdownNow()
             Thread.currentThread().interrupt()
         }
-
     }
 }

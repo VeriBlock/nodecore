@@ -135,6 +135,11 @@ data class NetworkInfoResponse(
     val explorerBaseUrls: ExplorerBaseUrlsResponse
 )
 
+@Response("The build version")
+data class VersionResponse(
+    val name: String
+)
+
 fun StateInfo?.toAltChainSyncStatusResponse(): AltChainSyncStatusResponse = AltChainSyncStatusResponse(
     this?.networkHeight ?: 0,
     this?.localBlockchainHeight ?: 0

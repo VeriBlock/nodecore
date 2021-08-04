@@ -8,7 +8,6 @@
 
 package org.veriblock.miners.pop.core
 
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
@@ -22,6 +21,9 @@ import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.model.PopMiningInstruction
 import org.veriblock.miners.pop.service.Metrics
 import java.time.LocalDateTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import org.veriblock.core.createSingleThreadExecutor
 
 class VpmOperation(
     id: String = generateOperationId(),
@@ -32,6 +34,9 @@ class VpmOperation(
 ) : MiningOperation(
     id, endorsedBlockHeight, createdAt, logs, reconstituting
 ) {
+    private val executor = createSingleThreadExecutor("vpm-operation-thread")
+    private val coroutineScope = CoroutineScope(executor.asCoroutineDispatcher())
+
     var miningInstruction: PopMiningInstruction? = null
         private set
     var endorsementTransaction: Transaction? = null
@@ -83,7 +88,7 @@ class VpmOperation(
         setState(VpmOperationState.ENDORSEMENT_TRANSACTION)
 
         transaction.confidence.addEventListener(transactionListener)
-        GlobalScope.launch {
+        coroutineScope.launch {
             transactionConfidence
                 .drop(1) // Skip current state (PENDING)
                 .collect {

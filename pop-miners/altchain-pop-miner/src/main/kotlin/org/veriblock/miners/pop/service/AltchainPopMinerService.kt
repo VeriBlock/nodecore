@@ -13,7 +13,6 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -76,6 +75,7 @@ class AltchainPopMinerService(
     private var isShuttingDown: Boolean = false
 
     private val coroutineScope = CoroutineScope(Threading.TASK_POOL.asCoroutineDispatcher())
+    private val peerCoroutineScope = CoroutineScope(Threading.SPV_PEER_THREAD.asCoroutineDispatcher())
 
     fun initialize() {
         if (!context.directory.exists() && !context.directory.mkdirs()) {
@@ -410,7 +410,7 @@ class AltchainPopMinerService(
             )
         )
         spvContext.start()
-        GlobalScope.launch {
+        peerCoroutineScope.launch {
             while (true) {
                 val status: DownloadStatusResponse = spvContext.spvService.getDownloadStatus()
                 if (status.downloadStatus.isDiscovering()) {

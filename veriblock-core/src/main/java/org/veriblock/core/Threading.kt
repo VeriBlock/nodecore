@@ -1,5 +1,8 @@
 package org.veriblock.core
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -16,3 +19,13 @@ inline fun CoroutineScope.launchWithFixedDelay(
         delay(periodMillis)
     }
 }
+
+fun createSingleThreadExecutor(name: String): ExecutorService = Executors.newSingleThreadExecutor(
+    ThreadFactoryBuilder().setNameFormat(name).build()
+)
+
+fun createMultiThreadExecutor(name: String, count: Int): ExecutorService = Executors.newFixedThreadPool(
+    count,
+    ThreadFactoryBuilder().setNameFormat(name).build()
+)
+

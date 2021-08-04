@@ -11,6 +11,7 @@ import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.post
+import com.papsign.ktor.openapigen.route.route
 import io.ktor.auth.UserIdPrincipal
 import org.veriblock.miners.pop.api.model.WithdrawRequest
 import org.veriblock.miners.pop.model.result.Result
@@ -20,10 +21,10 @@ class WalletController(
     private val minerService: MinerService
 ) : ApiController {
 
-    @Path("wallet/btc/withdraw")
+    @Path("btc/withdraw")
     class WithdrawBtcPath
 
-    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() {
+    override fun OpenAPIAuthenticatedRoute<UserIdPrincipal>.registerApi() = route("wallet") {
         post<WithdrawBtcPath, Result, WithdrawRequest, UserIdPrincipal>(
             info("Withdraws BTC from the PoP Miner")
         ) { _, request ->
