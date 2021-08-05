@@ -9,6 +9,7 @@ package org.veriblock.miners.pop.api.dto
 
 import com.papsign.ktor.openapigen.annotations.Request
 import com.papsign.ktor.openapigen.annotations.Response
+import java.time.format.DateTimeFormatter
 import org.veriblock.miners.pop.core.ApmOperation
 import org.veriblock.sdk.models.StateInfo
 
@@ -49,15 +50,17 @@ data class OperationSummaryResponse(
     val chain: String,
     val endorsedBlockHeight: Int?,
     val state: String,
-    val task: String
+    val task: String,
+    val createdAt: String
 )
 
 fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
-    id,
-    chain.key,
-    endorsedBlockHeight,
-    state.toString(),
-    getStateDescription()
+    operationId = id,
+    chain = chain.key,
+    endorsedBlockHeight = endorsedBlockHeight,
+    state = state.toString(),
+    task = getStateDescription(),
+    createdAt = DateTimeFormatter.ISO_INSTANT.format(createdAt)
 )
 
 @Response("Detailed mining operation information")
@@ -67,16 +70,18 @@ data class OperationDetailResponse(
     val endorsedBlockHeight: Int?,
     val state: String,
     val task: String,
-    val stateDetail: Map<String, String>
+    val stateDetail: Map<String, String>,
+    val createdAt: String
 )
 
 fun ApmOperation.toDetailedResponse() = OperationDetailResponse(
-    id,
-    chain.key,
-    endorsedBlockHeight,
-    state.name,
-    state.taskName,
-    getDetailedInfo()
+    operationId = id,
+    chain = chain.key,
+    endorsedBlockHeight = endorsedBlockHeight,
+    state = state.name,
+    task = state.taskName,
+    stateDetail = getDetailedInfo(),
+    createdAt = DateTimeFormatter.ISO_INSTANT.format(createdAt)
 )
 
 @Response("Mining operation workflow")
@@ -141,6 +146,6 @@ data class VersionResponse(
 )
 
 fun StateInfo?.toAltChainSyncStatusResponse(): AltChainSyncStatusResponse = AltChainSyncStatusResponse(
-    this?.networkHeight ?: 0,
-    this?.localBlockchainHeight ?: 0
+    networkHeight = this?.networkHeight ?: 0,
+    localBlockchainHeight = this?.localBlockchainHeight ?: 0
 )

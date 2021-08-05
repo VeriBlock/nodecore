@@ -6,9 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.model
 
+import java.time.LocalDateTime
+
 class OperationSummary(
     val operationId: String,
     val endorsedBlockNumber: Int,
     val status: String,
-    val action: String
+    val action: String,
+    val createdAt: LocalDateTime
 ) 

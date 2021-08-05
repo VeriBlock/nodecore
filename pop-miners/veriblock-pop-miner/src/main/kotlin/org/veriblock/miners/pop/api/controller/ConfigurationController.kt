@@ -8,8 +8,6 @@
 package org.veriblock.miners.pop.api.controller
 
 import com.papsign.ktor.openapigen.annotations.Path
-import com.papsign.ktor.openapigen.annotations.Request
-import com.papsign.ktor.openapigen.annotations.Response
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.auth.OpenAPIAuthenticatedRoute
 import com.papsign.ktor.openapigen.route.path.auth.get
@@ -19,6 +17,10 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.auth.UserIdPrincipal
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.AutoMineConfig
+import org.veriblock.miners.pop.api.model.AutoMineConfigRequest
+import org.veriblock.miners.pop.api.model.AutoMineConfigResponse
+import org.veriblock.miners.pop.api.model.BtcFeeConfigRequest
+import org.veriblock.miners.pop.api.model.BtcFeeConfigResponse
 import org.veriblock.miners.pop.api.model.SetConfigRequest
 import org.veriblock.miners.pop.automine.AutoMineEngine
 import org.veriblock.miners.pop.service.BitcoinService
@@ -59,10 +61,10 @@ class ConfigurationController(
             configuration.saveOverriddenProperties()
             respond(Unit)
         }
-        get<AutominePath, AutoMineConfigDto, UserIdPrincipal>(
+        get<AutominePath, AutoMineConfigResponse, UserIdPrincipal>(
             info("Get the automine config")
         ) {
-            val configValues = AutoMineConfigDto(
+            val configValues = AutoMineConfigResponse(
                 autoMineEngine.config.round1,
                 autoMineEngine.config.round2,
                 autoMineEngine.config.round3,
@@ -70,7 +72,7 @@ class ConfigurationController(
             )
             respond(configValues)
         }
-        put<AutominePath, Unit, AutoMineConfigDto, UserIdPrincipal>(
+        put<AutominePath, Unit, AutoMineConfigRequest, UserIdPrincipal>(
             info("Set the automine config")
         ) { _, request ->
             autoMineEngine.config = AutoMineConfig(
@@ -81,16 +83,16 @@ class ConfigurationController(
             )
             respond(Unit)
         }
-        get<BtcFeePath, BtcFeeConfigDto, UserIdPrincipal>(
+        get<BtcFeePath, BtcFeeConfigResponse, UserIdPrincipal>(
             info("Get the btcfee config")
         ) {
-            val configValues = BtcFeeConfigDto(
+            val configValues = BtcFeeConfigResponse(
                 bitcoinService.maxFee,
                 bitcoinService.feePerKb
             )
             respond(configValues)
         }
-        put<BtcFeePath, Unit, BtcFeeConfigDto, UserIdPrincipal>(
+        put<BtcFeePath, Unit, BtcFeeConfigRequest, UserIdPrincipal>(
             info("Set the btcfee config")
         ) { _, request ->
             if (request.maxFee != null) {
@@ -103,19 +105,3 @@ class ConfigurationController(
         }
     }
 }
-
-@Request("Auto mine configuration request")
-@Response("Auto mine configuration")
-data class AutoMineConfigDto(
-    val round1: Boolean?,
-    val round2: Boolean?,
-    val round3: Boolean?,
-    val round4: Boolean?
-)
-
-@Request("Btc fee configuration request")
-@Response("Btc fee configuration")
-class BtcFeeConfigDto(
-    val maxFee: Long?,
-    val feePerKB: Long?
-)

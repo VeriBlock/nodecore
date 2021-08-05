@@ -25,3 +25,18 @@ class SetConfigRequest(
     val key: String?,
     val value: String?
 )
+
+
+@Request("Auto mine configuration request")
+data class AutoMineConfigRequest(
+    val round1: Boolean?,
+    val round2: Boolean?,
+    val round3: Boolean?,
+    val round4: Boolean?
+)
+
+@Request("Btc fee configuration request")
+class BtcFeeConfigRequest(
+    val maxFee: Long?,
+    val feePerKB: Long?
+)

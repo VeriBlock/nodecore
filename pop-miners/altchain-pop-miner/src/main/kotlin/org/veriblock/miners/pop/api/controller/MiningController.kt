@@ -97,16 +97,8 @@ class MiningController(
         post<MineActionPath, OperationSummaryResponse, MineRequest, UserIdPrincipal>(
             info("Start mining operation")
         ) { _, mineRequest ->
-            val operationId = miner.mine(mineRequest.chainSymbol, mineRequest.height)
-            respond(
-                OperationSummaryResponse(
-                    operationId,
-                    mineRequest.chainSymbol,
-                    mineRequest.height,
-                    "Starting...",
-                    ""
-                )
-            )
+            val operation = miner.mine(mineRequest.chainSymbol, mineRequest.height)
+            respond(operation.toSummaryResponse())
         }
         get<MinerOperationsPath, OperationSummaryListResponse, UserIdPrincipal>(
             info("Get operations list")

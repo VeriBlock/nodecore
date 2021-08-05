@@ -190,7 +190,7 @@ class MinerService(
             if (miningInstruction != null) {
                 blockNumber = BlockUtility.extractBlockHeightFromBlockHeader(miningInstruction.endorsedBlockHeader)
             }
-            OperationSummary(operation.id, blockNumber, operation.state.name, operation.getStateDescription())
+            OperationSummary(operation.id, blockNumber, operation.state.name, operation.getStateDescription(), operation.createdAt)
         }.sortedBy {
             it.endorsedBlockNumber
         }.toList()

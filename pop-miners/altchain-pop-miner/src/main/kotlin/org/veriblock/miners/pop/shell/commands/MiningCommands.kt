@@ -54,9 +54,9 @@ fun CommandFactory.miningCommands(
             chain = plugins.first()
         }
 
-        val operationId = minerService.mine(chain, block)
+        val operation = minerService.mine(chain, block)
         success {
-            addMessage("v200", "Mining operation started", "Operation id: $operationId")
+            addMessage("v200", "Mining operation started", "Operation id: ${operation.id}")
         }
     }
 

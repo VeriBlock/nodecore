@@ -14,7 +14,8 @@ class OperationDetailResponse(
     val operationId: String,
     val status: String,
     val currentAction: String,
-    val detail: Map<String, String>
+    val detail: Map<String, String>,
+    val createdAt: String
 )
 
 @Response("List of operations")
@@ -27,7 +28,8 @@ class OperationSummaryResponse(
     val operationId: String,
     val endorsedBlockNumber: Int,
     val state: String,
-    val action: String
+    val action: String,
+    val createdAt: String
 )
 
 @Response("List of result messages")
@@ -69,3 +71,16 @@ data class VersionResponse(
     val name: String
 )
 
+@Response("Auto mine configuration")
+data class AutoMineConfigResponse(
+    val round1: Boolean?,
+    val round2: Boolean?,
+    val round3: Boolean?,
+    val round4: Boolean?
+)
+
+@Response("Btc fee configuration")
+class BtcFeeConfigResponse(
+    val maxFee: Long?,
+    val feePerKB: Long?
+)

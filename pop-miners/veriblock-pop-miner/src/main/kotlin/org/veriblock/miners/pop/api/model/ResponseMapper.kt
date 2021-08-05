@@ -7,6 +7,7 @@
 
 package org.veriblock.miners.pop.api.model
 
+import java.time.format.DateTimeFormatter
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.model.OperationSummary
 import org.veriblock.miners.pop.model.result.MineResult
@@ -17,14 +18,16 @@ fun VpmOperation.toResponse() = OperationDetailResponse(
     operationId = id,
     status = state.name,
     currentAction = state.taskName,
-    detail = getDetailedInfo()
+    detail = getDetailedInfo(),
+    createdAt = DateTimeFormatter.ISO_INSTANT.format(createdAt)
 )
 
 fun OperationSummary.toResponse() = OperationSummaryResponse(
     operationId = operationId,
     endorsedBlockNumber = endorsedBlockNumber,
     state = status,
-    action = action
+    action = action,
+    createdAt =  DateTimeFormatter.ISO_INSTANT.format(createdAt)
 )
 
 fun Result.toResponse() = ResultResponse(

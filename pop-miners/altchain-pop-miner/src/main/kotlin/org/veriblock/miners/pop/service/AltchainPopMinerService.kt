@@ -267,7 +267,7 @@ class AltchainPopMinerService(
         return CheckResult.Success()
     }
 
-    fun mine(chainId: String, block: Int?): String {
+    fun mine(chainId: String, block: Int?): ApmOperation {
         val chain = pluginService[chainId]
             ?: throw MineException("Unable to find altchain plugin '$chainId'")
         val chainMonitor = securityInheritingService.getMonitor(chainId)
@@ -291,7 +291,7 @@ class AltchainPopMinerService(
 
         logger.info { "Created operation [${operation.id}] on chain ${operation.chain.name} ${(block?.let { "at block @$block" } ?: "")}" }
 
-        return operation.id
+        return operation
     }
 
     fun cancelOperation(id: String) {
