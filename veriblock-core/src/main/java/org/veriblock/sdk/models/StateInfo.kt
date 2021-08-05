@@ -6,7 +6,8 @@ data class StateInfo(
     val blockDifference: Int = 0,
     val isSynchronized: Boolean = false,
     val initialBlockDownload: Boolean = false,
-    val networkVersion: String = ""
+    val networkVersion: String = "",
+    val programVersion: String = ""
 )
 
 fun StateInfo.getSynchronizedMessage(): String = if (networkHeight == 0) {

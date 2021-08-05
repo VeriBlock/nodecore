@@ -98,11 +98,12 @@ class NodeCoreGateway(
 
             val blockDifference = abs(request.networkHeight - request.localBlockchainHeight)
             StateInfo(
-                request.networkHeight,
-                request.localBlockchainHeight,
-                blockDifference,
-                request.networkHeight > 0 && blockDifference < 4,
-                networkVersion = request.networkVersion
+                networkHeight = request.networkHeight,
+                localBlockchainHeight = request.localBlockchainHeight,
+                blockDifference = blockDifference,
+                isSynchronized = request.networkHeight > 0 && blockDifference < 4,
+                networkVersion = request.networkVersion,
+                programVersion = request.programVersion
             )
         } catch (e: StatusRuntimeException) {
             logger.warn("Unable to perform the GetStateInfoRequest request to NodeCore (is it reachable?)")
