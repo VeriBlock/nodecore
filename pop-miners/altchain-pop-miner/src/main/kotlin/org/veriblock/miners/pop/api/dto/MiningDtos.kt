@@ -60,7 +60,7 @@ fun ApmOperation.toSummaryResponse() = OperationSummaryResponse(
     endorsedBlockHeight = endorsedBlockHeight,
     state = state.toString(),
     task = getStateDescription(),
-    createdAt = DateTimeFormatter.ISO_INSTANT.format(createdAt)
+    createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME)
 )
 
 @Response("Detailed mining operation information")
@@ -81,7 +81,7 @@ fun ApmOperation.toDetailedResponse() = OperationDetailResponse(
     state = state.name,
     task = state.taskName,
     stateDetail = getDetailedInfo(),
-    createdAt = DateTimeFormatter.ISO_INSTANT.format(createdAt)
+    createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME)
 )
 
 @Response("Mining operation workflow")

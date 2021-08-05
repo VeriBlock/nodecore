@@ -19,7 +19,7 @@ fun VpmOperation.toResponse() = OperationDetailResponse(
     status = state.name,
     currentAction = state.taskName,
     detail = getDetailedInfo(),
-    createdAt = DateTimeFormatter.ISO_INSTANT.format(createdAt)
+    createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME)
 )
 
 fun OperationSummary.toResponse() = OperationSummaryResponse(
@@ -27,7 +27,7 @@ fun OperationSummary.toResponse() = OperationSummaryResponse(
     endorsedBlockNumber = endorsedBlockNumber,
     state = status,
     action = action,
-    createdAt =  DateTimeFormatter.ISO_INSTANT.format(createdAt)
+    createdAt =  createdAt.format(DateTimeFormatter.ISO_DATE_TIME)
 )
 
 fun Result.toResponse() = ResultResponse(
