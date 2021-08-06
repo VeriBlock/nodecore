@@ -14,6 +14,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.auth.Auth
 import io.ktor.client.features.auth.providers.basic
+import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.Json
 import io.ktor.http.ContentType
 import org.veriblock.sdk.alt.plugin.HttpAuthConfig
@@ -35,6 +36,7 @@ fun createHttpClient(
     connectionTimeout: Int = 10_000
 ) = HttpClient(Apache) {
     Json {
+        serializer = GsonSerializer()
         if (contentTypes != null) {
             acceptContentTypes = contentTypes
         }
