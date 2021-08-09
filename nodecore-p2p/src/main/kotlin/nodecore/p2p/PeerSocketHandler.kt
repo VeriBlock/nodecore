@@ -35,8 +35,7 @@ private val logger = createLogger {}
 
 class PeerSocketHandler(
     private val peer: Peer,
-    private val socket: Socket,
-    private var ownsConnection: Boolean
+    private val socket: Socket
 ) {
     private val running = AtomicBoolean(true)
 
@@ -188,7 +187,7 @@ class PeerSocketHandler(
         }
 
         coroutineScope.launch {
-            if (ownsConnection) {
+            if (peer.ownsConnection) {
                 delay(5000L)
             }
 
@@ -198,7 +197,7 @@ class PeerSocketHandler(
 
             var recoverSuccess = false
 
-            if (ownsConnection) {
+            if (peer.ownsConnection && peer.reconnectionAttempts < 3) {
                 try {
                     logger.info { "Attempting to self-heal peer connection to ${peer.addressKey}" }
                     recoverSuccess = peer.reconnect()

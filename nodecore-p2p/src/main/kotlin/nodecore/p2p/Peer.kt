@@ -28,7 +28,7 @@ private val logger = createLogger {}
 class Peer(
     private val selectorManager: SelectorManager,
     socket: Socket,
-    ownsConnection: Boolean
+    val ownsConnection: Boolean
 ) {
     enum class Status {
         Connected,
@@ -57,12 +57,15 @@ class Peer(
 
     var filter: BloomFilter? = null
 
-    private var socketHandler = PeerSocketHandler(this, socket, ownsConnection)
+    private var socketHandler = PeerSocketHandler(this, socket)
 
     /**
      * Expected responses from message requests see [requestMessage]
      */
     private val expectedResponses: MutableMap<String, Channel<RpcEvent>> = ConcurrentHashMap()
+
+    var reconnectionAttempts = 0
+        private set
 
     fun disconnect() {
         if (status == Status.Closed || status == Status.Errored) {
@@ -76,6 +79,8 @@ class Peer(
 
     suspend fun reconnect(): Boolean {
         return try {
+            reconnectionAttempts++
+
             val socketAddress = NetworkAddress(address, port)
             
             // Stop the current connection
@@ -91,7 +96,7 @@ class Peer(
             port = socket.remoteAddress.port
             state = PeerState()
             status = Status.Connected
-            socketHandler = PeerSocketHandler(this, socket, true)
+            socketHandler = PeerSocketHandler(this, socket)
             true
         } catch (e: Exception) {
             logger.debug(e) { "Unable to open connection to $address:$port!" }
