@@ -54,6 +54,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.models.VeriBlockBlock
 import kotlin.concurrent.withLock
 
@@ -248,8 +249,9 @@ class SecurityInheritingMonitor(
                 if (bestBlockHeight != this@SecurityInheritingMonitor.bestBlockHeight.value) {
                     logger.debug { "New chain head detected @${bestBlockHeight}" }
                     if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
+                        val isMinerReady = miner.checkReadyConditions()
                         ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
-                            if (chain.shouldAutoMine(blockHeight)) {
+                            if (chain.shouldAutoMine(blockHeight) && isMinerReady is CheckResult.Success) {
                                 logger.debug { "Auto mining block @$blockHeight" }
                                 try {
                                     miner.mine(chainId, blockHeight)
