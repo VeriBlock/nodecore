@@ -22,6 +22,7 @@ import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
 import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
 import kotlin.system.exitProcess
+import nodecore.api.grpc.utilities.extensions.toProperAddressType
 
 private val logger = createLogger {}
 
@@ -73,7 +74,7 @@ private fun RpcTransactionInfo.toModel() = TransactionInfo(
 
 private fun RpcTransaction.toModel() = TransactionData(
     type = TransactionType.valueOf(type.name),
-    sourceAddress = sourceAddress.toHex(),
+    sourceAddress = sourceAddress.toProperAddressType(),
     sourceAmount = sourceAmount,
     outputs = outputsList.map { it.toModel() },
     transactionFee = transactionFee,
