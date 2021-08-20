@@ -10,6 +10,8 @@ package org.veriblock.miners.pop.service
 
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.veriblock.core.crypto.VbkTxId
+import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.debugError
 import org.veriblock.miners.pop.proto.OperationProto
 import org.veriblock.miners.pop.transactionmonitor.WalletTransaction
 import org.veriblock.miners.pop.core.ApmOperation
@@ -19,6 +21,8 @@ import org.veriblock.miners.pop.core.toJson
 import org.veriblock.miners.pop.storage.ApmOperationRepository
 import org.veriblock.miners.pop.storage.ApmOperationStateRecord
 
+private val logger = createLogger {}
+
 class OperationService(
     private val repository: ApmOperationRepository,
     private val operationSerializer: OperationSerializer
@@ -26,23 +30,20 @@ class OperationService(
     fun getOperation(id: String, txFactory: (VbkTxId) -> WalletTransaction): ApmOperation? {
         val operation = repository.getOperation(id)
             ?: return null
-        val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), operation.state)
-        return operationSerializer.deserialize(protoData, operation.createdAt, operation.logs.parseOperationLogs(), txFactory)
+        return operation.deserializeOperation(txFactory)
     }
 
     fun getActiveOperations(txFactory: (VbkTxId) -> WalletTransaction): List<ApmOperation> {
         val activeOperations = repository.getActiveOperations()
-        return activeOperations.map {
-            val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)
-            operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)
+        return activeOperations.mapNotNull {
+            it.deserializeOperation(txFactory)
         }
     }
 
     fun getOperations(altchainKey: String?, state: MiningOperationStatus, limit: Int, offset: Int, txFactory: (VbkTxId) -> WalletTransaction): List<ApmOperation> {
         val operations = repository.getOperations(altchainKey, state, limit, offset)
-        return operations.map {
-            val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), it.state)
-            operationSerializer.deserialize(protoData, it.createdAt, it.logs.parseOperationLogs(), txFactory)
+        return operations.mapNotNull {
+            it.deserializeOperation(txFactory)
         }
     }
 
@@ -62,5 +63,15 @@ class OperationService(
                 operation.getLogs().toJson()
             )
         )
+    }
+
+    private fun ApmOperationStateRecord.deserializeOperation(txFactory: (VbkTxId) -> WalletTransaction): ApmOperation? {
+        val protoData = ProtoBuf.decodeFromByteArray(OperationProto.Operation.serializer(), state)
+        return try {
+            operationSerializer.deserialize(protoData, createdAt, logs.parseOperationLogs(), txFactory)
+        } catch (exception: Exception) {
+            logger.debugError(exception) { "Unable to deserialize the operation" }
+            null
+        }
     }
 }
