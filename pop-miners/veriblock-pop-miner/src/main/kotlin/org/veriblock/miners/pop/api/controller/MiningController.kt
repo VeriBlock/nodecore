@@ -17,6 +17,7 @@ import com.papsign.ktor.openapigen.route.path.auth.post
 import com.papsign.ktor.openapigen.route.response.respond
 import io.ktor.auth.UserIdPrincipal
 import org.apache.logging.log4j.Level
+import org.veriblock.core.MineException
 import org.veriblock.miners.pop.api.model.MineRequest
 import org.veriblock.miners.pop.api.model.MineResultResponse
 import org.veriblock.miners.pop.api.model.MinerInfoResponse
@@ -58,8 +59,11 @@ class MiningController(
         post<MineActionPath, MineResultResponse, MineRequest, UserIdPrincipal>(
             info("Start mining operation")
         ) { _, request ->
-            val result = minerService.mine(request.block)
-
+            val result = try {
+                minerService.mine(request.block)
+            } catch(exception: MineException) {
+                throw BadRequestException("Failed to start operation: ${exception.message}")
+            }
             val responseModel = result.toResponse()
             respond(responseModel)
         }
