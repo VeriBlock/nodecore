@@ -80,7 +80,7 @@ fun CommandFactory.miningCommands(
             val heightString = it.endorsedBlockHeight?.let { endorsedBlockHeight ->
                 " ($endorsedBlockHeight -> ${endorsedBlockHeight + it.chain.getPayoutDelay()})"
             } ?: ""
-            "${it.id}: ${it.chain.name}$heightString | ${it.state} | ${it.getStateDescription()}"
+            "${it.id} | ${it.chain.name}$heightString | ${it.state} | ${it.getStateDescription()}"
         }
 
         for (operation in operations) {

@@ -43,7 +43,7 @@ fun CommandFactory.miningCommands(
         description = "Lists the current running operations"
     ) {
         val operations = minerService.listOperations().map {
-            "${it.operationId} (${it.endorsedBlockNumber}): ${it.action}"
+            "${it.operationId} | (${it.endorsedBlockNumber}) | ${it.action}"
         }
 
         if (operations.isNotEmpty()) {
