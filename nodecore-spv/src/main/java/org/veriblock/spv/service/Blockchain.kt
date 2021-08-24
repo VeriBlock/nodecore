@@ -395,12 +395,12 @@ class Blockchain(
                 }
 
                 val block = netBlock.block
-                if (block.height > currentTipHeight + 1) {
+                val accepted = acceptBlock(block)
+                if (!accepted && block.height > currentTipHeight) {
                     // It won't connect, re-add to queue and continue
                     networkBlockQueue.offer(netBlock)
                     continue
                 }
-                val accepted = acceptBlock(block)
                 // TODO If not accepted, trigger misbehavior to source?
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error processing blocks!" }
