@@ -65,11 +65,11 @@ class TestChain(
 
     private suspend fun getLastBitcoinBlockHash() = httpClient.post<RpcResponse>(config.host) {
         body = JsonRpcRequestBody("getlastbitcoinblock", Any()).toJson()
-    }.handle<BtcBlockData>().hash
+    }.handle<BtcBlockData>("getlastbitcoinblock").hash
 
     private suspend fun getLastVeriBlockBlockHash() = httpClient.post<RpcResponse>(config.host) {
         body = JsonRpcRequestBody("getlastblock", Any()).toJson()
-    }.handle<BlockHeaderContainer>().header.hash
+    }.handle<BlockHeaderContainer>("getlastblock").header.hash
 
     override fun shouldAutoMine(): Boolean {
         return config.autoMinePeriod != null

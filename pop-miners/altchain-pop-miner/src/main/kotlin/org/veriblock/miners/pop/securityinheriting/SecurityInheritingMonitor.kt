@@ -288,7 +288,7 @@ class SecurityInheritingMonitor(
         logger.info("Starting continuous submission of VBK context for ${chain.name}")
         SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
             try {
-                if (submitContextBlock(newBlock)) return@collect
+                submitContextBlock(newBlock)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
             }
@@ -324,24 +324,24 @@ class SecurityInheritingMonitor(
         }
     }
 
-    suspend fun submitContextBlock(newBlock: VeriBlockBlock): Boolean {
+    suspend fun submitContextBlock(newBlock: VeriBlockBlock) {
         if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
             logger.debug { "New block $newBlock is not on the main chain, skipping..." }
-            return true
+            return
         }
         logger.debug { "New block $newBlock is on the main chain" }
 
         var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
         // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-            ?: return true
+            ?: return
         while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
             logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
             bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
-                ?: return true // Dead end
+                ?: return // Dead end
         }
 
         if (bestKnownBlock.height == newBlock.height) {
-            return true
+            return
         }
 
         val contextBlocks = generateSequence(newBlock) {
@@ -351,6 +351,11 @@ class SecurityInheritingMonitor(
         }.sortedBy {
             it.height
         }.toList()
+
+        if (contextBlocks.first().height == 0) {
+            logger.warn { "Unable to find block $bestKnownBlock in the VBK active chain!" }
+            return
+        }
 
         val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
         val successfulSubmissions = contextBlocks.asFlow()
@@ -366,7 +371,7 @@ class SecurityInheritingMonitor(
         if (successfulSubmissions > 0) {
             logger.debug { "Successfully submitted $successfulSubmissions VBK context block(s) to ${chain.name}." }
         }
-        return false
+        return
     }
 
     suspend fun submitVtbs() {

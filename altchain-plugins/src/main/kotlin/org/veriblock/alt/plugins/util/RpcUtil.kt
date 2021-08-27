@@ -11,7 +11,6 @@ package org.veriblock.alt.plugins.util
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
-import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import org.veriblock.alt.plugins.HttpException
 import org.veriblock.alt.plugins.fromJson
@@ -39,11 +38,13 @@ class RpcException(
     override val message: String
 ) : RuntimeException()
 
-class NullResultException : RuntimeException()
+class NullResultException(
+    override val message: String
+) : RuntimeException()
 
 private val gson = Gson()
 
-inline fun <reified T> RpcResponse.handle(): T = try {
+inline fun <reified T> RpcResponse.handle(requestDescriptor: String): T = try {
     val type: Type = object : TypeToken<T>() {}.type
     when {
         error != null ->
@@ -53,7 +54,7 @@ inline fun <reified T> RpcResponse.handle(): T = try {
             && result.toString() != "false" ->
             result.fromJson<T>(type)
         else ->
-            throw NullResultException()
+            throw NullResultException("Null response was returned for request: $requestDescriptor")
     }
 } catch (e: RpcException) {
     throw e

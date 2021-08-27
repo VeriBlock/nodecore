@@ -29,7 +29,7 @@ suspend inline fun <reified T> HttpSecurityInheritingChain.rpcRequest(
         body = TextContent(jsonBody, contentType = ContentType.Application.Json)
     }
     requestsLogger?.info { "<- ${response.toJson().take(10_000)}" }
-    return response.handle()
+    return response.handle(jsonBody)
 }
 
 suspend inline fun <reified T> HttpSecurityInheritingChain.nullableRpcRequest(method: String, params: Any? = emptyList<Any>(), version: String = "1.0"): T? = try {
