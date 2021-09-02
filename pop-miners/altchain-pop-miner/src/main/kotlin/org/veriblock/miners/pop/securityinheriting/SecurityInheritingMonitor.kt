@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.veriblock.core.MineException
 import org.veriblock.core.crypto.asVbkHash
+import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
@@ -56,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.models.VeriBlockBlock
+import java.util.*
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -291,6 +293,7 @@ class SecurityInheritingMonitor(
                 submitContextBlock(newBlock)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
+                e.printStackTrace()
             }
         }
     }
@@ -324,6 +327,17 @@ class SecurityInheritingMonitor(
         }
     }
 
+    private suspend fun getLastCommonVbkBlock(): VeriBlockBlock? {
+        val bestHash = chain.getBestKnownVbkBlockHash()
+        var cursor: VeriBlockBlock = chain.getVbkBlock(bestHash) ?: return null;
+        while(! miner.gateway.isOnActiveChain(cursor.hash)) {
+            logger.info { "${chain.name} block ${cursor.hash} is not on active chain... Getting previous block." }
+            cursor = chain.getVbkBlock(cursor.previousBlock.toString()) ?: return null
+        }
+
+        return cursor
+    }
+
     suspend fun submitContextBlock(newBlock: VeriBlockBlock) {
         if (!miner.gateway.isOnActiveChain(newBlock.hash)) {
             logger.debug { "New block $newBlock is not on the main chain, skipping..." }
@@ -331,35 +345,31 @@ class SecurityInheritingMonitor(
         }
         logger.debug { "New block $newBlock is on the main chain" }
 
-        var bestKnownBlock = miner.gateway.getBlock(chain.getBestKnownVbkBlockHash().asVbkHash())
-        // The altchain has knowledge of a block we don't even know, there's no need to send it further context.
-            ?: return
-        while (!miner.gateway.isOnActiveChain(bestKnownBlock.hash)) {
-            logger.debug { "Best known block $bestKnownBlock is not in the main chain, checking the previous block..." }
-            bestKnownBlock = miner.gateway.getBlock(bestKnownBlock.previousBlock)
-                ?: return // Dead end
+        val bestKnownBlock = getLastCommonVbkBlock()
+        if(bestKnownBlock == null) {
+            logger.error { "${chain.name} can not find last common VBK block. Misconfiguration?" }
+            return
         }
+        logger.debug {"${chain.name} last common VBK block: $bestKnownBlock"}
 
-        if (bestKnownBlock.height == newBlock.height) {
+        if (bestKnownBlock.hash == newBlock.hash) {
+            // return early if altchain already knows newBlock
             return
         }
 
         val contextBlocks = generateSequence(newBlock) {
             miner.gateway.getBlock(it.previousBlock)
         }.takeWhile {
-            it.hash != bestKnownBlock.hash
+            it.height >= bestKnownBlock.height
         }.sortedBy {
             it.height
         }.toList()
 
-        if (contextBlocks.first().height == 0) {
-            logger.warn { "Unable to find block $bestKnownBlock in the VBK active chain!" }
-            return
-        }
+        logger.debug {"Context blocks: ${contextBlocks.size}. First: ${contextBlocks.first()}. Last: ${contextBlocks.last()}"}
 
-        val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.toLowerCase() }
+        val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.lowercase() }
         val successfulSubmissions = contextBlocks.asFlow()
-            .filter { it.hash.trimToPreviousBlockSize().toString().toLowerCase() !in mempoolContext }
+            .filter { it.hash.trimToPreviousBlockSize().toString().lowercase() !in mempoolContext }
             .map { contextBlock ->
                 val result = chain.submitPopVbk(contextBlock)
                 if (!result.accepted) {

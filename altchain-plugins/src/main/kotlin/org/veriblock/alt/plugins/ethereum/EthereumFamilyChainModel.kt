@@ -8,11 +8,32 @@
 
 package org.veriblock.alt.plugins.ethereum
 
+import org.veriblock.core.crypto.asTruncatedMerkleRoot
+import org.veriblock.core.crypto.asVbkPreviousBlockHash
+import org.veriblock.core.crypto.asVbkPreviousKeystoneHash
+import org.veriblock.sdk.models.VeriBlockBlock
+
 internal data class EthPublicationData(
     val block_header: String,
     val authenticated_context: String,
     val last_known_veriblock_block: String,
     val last_known_bitcoin_block: String,
+)
+
+internal data class EthStoredIds(
+    val vtbids: List<String>
+)
+
+internal data class EthGetVbkBlockResponse(
+    val altrefs: Int,
+    val blockOfProofEndorsements: List<String>,
+    val chainWork: String,
+    val containingEndorsements: List<String>,
+    val endorsedBy: List<String>,
+    val header: EthVbkBlock,
+    val height: Int,
+    val status: Int,
+    val stored: EthStoredIds
 )
 
 internal data class EthBlock(
@@ -109,8 +130,31 @@ internal data class EthVbkTransaction(
 
 internal data class EthVbkBlock(
     val hash: String,
-    val height: Int
-)
+    val height: Int,
+    val previousBlock: String,
+    val previousKeystone: String,
+    val secondPreviousKeystone: String,
+    val timestamp: Int,
+    val version: Short,
+    val difficulty: Int,
+    val id: String,
+    val merkleRoot: String,
+    val nonce: Long
+) {
+    fun toVbkBlock(): VeriBlockBlock {
+        return VeriBlockBlock(
+            height=height,
+            version=version,
+            previousBlock = previousBlock.asVbkPreviousBlockHash(),
+            previousKeystone = previousKeystone.asVbkPreviousKeystoneHash(),
+            secondPreviousKeystone = secondPreviousKeystone.asVbkPreviousKeystoneHash(),
+            merkleRoot = merkleRoot.asTruncatedMerkleRoot(),
+            timestamp = timestamp,
+            difficulty = difficulty,
+            nonce = nonce
+        )
+    }
+}
 
 internal data class EthVtb(
     val in_active_chain: Boolean,

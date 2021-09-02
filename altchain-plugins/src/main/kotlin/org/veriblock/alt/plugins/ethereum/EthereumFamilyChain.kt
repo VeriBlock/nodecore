@@ -321,7 +321,12 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
-        TODO("Not yet implemented (getVbkBlock)") // pop_getVbkBlockByHash
+        val response = rpcRequest<EthGetVbkBlockResponse>(
+            method="pop_getVbkBlockByHash",
+            params = listOf(hash),
+            version = "2.0")
+
+        return response.header.toVbkBlock()
     }
 
     override suspend fun getBestKnownBtcBlockHash(): String {

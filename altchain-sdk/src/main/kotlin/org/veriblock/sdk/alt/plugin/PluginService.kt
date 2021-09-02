@@ -113,6 +113,6 @@ private fun getAltchainPluginImplementations(): Set<Class<out SecurityInheriting
     val reflections = Reflections(configBuilder)
     reflections.getSubTypesOf(SecurityInheritingChain::class.java)
 } catch (e: ReflectionsException) {
-    logger.warn { "No plugin implementations were found in the classpath!" }
+    logger.debugWarn(e) { "No plugin implementations were found in the classpath!" }
     emptySet()
 }
