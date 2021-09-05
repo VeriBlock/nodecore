@@ -34,30 +34,6 @@ fun CommandFactory.startApplicationCommands() {
     }
 
     cliCommand(
-        name = "Start CPU Miner",
-        form = "startcpuminer|launchcpuminer",
-        description = "Attempts to start the CPU PoW Miner in a new window",
-        suggestedCommands = { listOf("startpool", "startsolopool") }
-    ) {
-        if (GraphicsEnvironment.isHeadless()) {
-            failure(
-                "V004",
-                "startcpuminer command unavailable!",
-                "The startcpuminer command is not available in headless mode!"
-            )
-        } else {
-            try {
-                val successFile = ExternalProgramUtilities.startupExternalProcess("../../", "nodecore-pow-0", "nodecore-pow", "NodeCore CPU PoW Miner")
-                outputObject(ResultMessage("V200", "Started", "Successfully started the NodeCore PoW CPU Miner from location $successFile", false))
-
-                success()
-            } catch (e: ExtendedIllegalStateException) {
-                failure("V004", e.message, e.extraMessage)
-            }
-        }
-    }
-
-    cliCommand(
         name = "Start PoP Miner",
         form = "startpopminer|launchpopminer|startpowminer|launchpowminer",
         description = "Attempts to start the PoP Miner in a new window"

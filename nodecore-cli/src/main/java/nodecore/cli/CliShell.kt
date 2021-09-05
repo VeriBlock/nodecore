@@ -387,10 +387,6 @@ class CliShell(
             false
         )
         printStyled(
-            "startcpuminer",
-            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE)
-        )
-        printStyled(
             """    Note: for the PoW miner to work, you must have already started 
                 |    NodeCore, connected to it in this CLI (""".trimMargin(),
             AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
