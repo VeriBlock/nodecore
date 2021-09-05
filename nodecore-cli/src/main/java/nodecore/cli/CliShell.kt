@@ -381,47 +381,6 @@ class CliShell(
             ")!",
             AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW)
         )
-        printStyled(
-            "  To start the Proof-of-Work (PoW) CPU miner, type: ",
-            AttributedStyle.BOLD.foreground(AttributedStyle.CYAN),
-            false
-        )
-        printStyled(
-            """    Note: for the PoW miner to work, you must have already started 
-                |    NodeCore, connected to it in this CLI (""".trimMargin(),
-            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
-            false
-        )
-        printStyled(
-            "connect 127.0.0.1:10500",
-            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
-            false
-        )
-        printStyled(
-            "),\n    and have run either \"",
-            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
-            false
-        )
-        printStyled(
-            "startpool",
-            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
-            false
-        )
-        printStyled(
-            "\" or \"",
-            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
-            false
-        )
-        printStyled(
-            "startsolopool",
-            AttributedStyle.BOLD.foreground(AttributedStyle.WHITE),
-            false
-        )
-        printStyled(
-            "\"!\n",
-            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
-            true
-        )
         introFooter()
     }
 
