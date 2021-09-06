@@ -5,7 +5,6 @@ import nodecore.cli.prepareResult
 import org.jutils.jprocesses.JProcesses
 import org.koin.ext.isInt
 import org.veriblock.core.utilities.DiagnosticInfo
-import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
@@ -14,6 +13,7 @@ import java.io.File
 import java.io.IOException
 import java.net.ServerSocket
 import java.nio.file.Paths
+import org.veriblock.core.utilities.getDiagnosticInfo
 
 fun CommandFactory.debugCommands() {
     cliCommand(
@@ -52,8 +52,6 @@ fun CommandFactory.debugCommands() {
         }
         printInfo("Detected NodeCore data folder: $providedNetworkDataFolder")
 
-        // Get the default diagnostic information
-        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
         // Get the system environment variables related with NodeCore
         val nodecoreEnvironmentVariables = try {
             System.getenv().filter {
@@ -101,7 +99,7 @@ fun CommandFactory.debugCommands() {
         }
         // Generate the final object with all the collected information
         val debugInformation = DebugInformation(
-            diagnosticInfo,
+            getDiagnosticInfo(),
             nodeCoreDataFileTree,
             nodecoreEnvironmentVariables,
             processInformation,

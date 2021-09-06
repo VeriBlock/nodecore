@@ -26,7 +26,6 @@ import org.jline.utils.AttributedStyle
 import org.jline.utils.InfoCmp
 import org.slf4j.LoggerFactory
 import org.veriblock.core.VeriBlockException
-import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.shell.core.ActivityLevel
 import org.veriblock.shell.core.Result
 import org.veriblock.shell.core.ResultMessage
@@ -34,6 +33,7 @@ import org.veriblock.shell.core.failure
 import java.text.SimpleDateFormat
 import java.util.ArrayList
 import java.util.Date
+import org.veriblock.core.utilities.getDiagnosticInfo
 
 private val logger = LoggerFactory.getLogger(Shell::class.java)
 private val printLogger = LoggerFactory.getLogger("shell-printing")
@@ -113,8 +113,7 @@ open class Shell(
     }
 
     open fun initialize() {
-        val objDiagnostics = DiagnosticUtility.getDiagnosticInfo()
-        val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
+        val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(getDiagnosticInfo())
         logger.debug(strDiagnostics)
     }
 
