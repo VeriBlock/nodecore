@@ -67,7 +67,7 @@ fun checkJvmVersion(
     }
     if (wrongVersion) {
         jvmEnvironmentError.appendLine("In order to continue, please download 64-bit Java 14!")
-        jvmEnvironmentError.appendLine("Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations for more details.")
+        jvmEnvironmentError.appendLine("Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations#Software for more details.")
     }
     return SimpleResult(!wrongVersion, jvmEnvironmentError.toString())
 }
