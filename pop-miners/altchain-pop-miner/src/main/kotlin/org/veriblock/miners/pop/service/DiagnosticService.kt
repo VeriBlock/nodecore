@@ -1,7 +1,7 @@
 package org.veriblock.miners.pop.service
 
 import io.grpc.StatusRuntimeException
-import org.veriblock.core.utilities.DiagnosticUtility
+import org.veriblock.core.utilities.getDiagnosticInfo
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.MinerConfig
 import org.veriblock.miners.pop.securityinheriting.SecurityInheritingService
@@ -110,7 +110,6 @@ class DiagnosticService(
         }
 
         // Add the diagnostic information
-        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
-        return DiagnosticInformation(information, diagnosticInfo)
+        return DiagnosticInformation(information, getDiagnosticInfo())
     }
 }

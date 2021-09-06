@@ -4,75 +4,89 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+package org.veriblock.core.utilities
 
-package org.veriblock.core.utilities;
+import java.lang.StringBuilder
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
+import org.veriblock.core.types.SimpleResult
 
-import org.veriblock.core.types.SimpleResult;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-public class DiagnosticUtility
-{
-    public static DiagnosticInfo getDiagnosticInfo()
-    {
-        DiagnosticInfo d = new DiagnosticInfo();
-
-        try {
-            //Runtime.getRuntime().availableProcessors();
-
-            d.user_language = System.getProperty("user.language");
-            d.java_runtime_name = System.getProperty("java.runtime.name");
-            d.sun_boot_library_path = System.getProperty("sun.boot.library.path");
-            d.java_runtime_version = System.getProperty("java.runtime.version");
-            d.working_directory =  System.getProperty("user.dir");
-
-            d.java_specification_version = System.getProperty("java.specification.version");
-            d.os_name = System.getProperty("os.name");
-            d.os_arch = System.getProperty("os.arch");
-            d.os_version = System.getProperty("os.version");
-            d.memory_total_gb = String.format("%.2f", (double) Runtime.getRuntime().totalMemory() / (1024 * 1024 * 1024)) + " GB";
-            d.memory_max_gb = String.format("%.2f", (double) Runtime.getRuntime().maxMemory() / (1024 * 1024 * 1024)) + " GB";
-
-            d.processor_count = Integer.toString(Runtime.getRuntime().availableProcessors());
-            d.processor_type =  System.getenv().get("PROCESSOR_IDENTIFIER");
-
-            //capture global UTC. Logs should also be UTC, but this is one-single place, and allows easy verification. Checks-and-balances.
-            SimpleDateFormat dateFormatLocal = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss.SSSXX");
-            Date d1 = new Date();
-            d.datetime_now_utc = dateFormatLocal.format(d1);
-        }
-        catch  (Exception ex) {
-            //don't crash on diagnostics info
-        }
-        return d;
+fun getDiagnosticInfo(): DiagnosticInfo {
+    return try {
+        DiagnosticInfo(
+            user_language = getSystemPropertyOrUndefined("user.language"),
+            java_runtime_name = getSystemPropertyOrUndefined("java.runtime.name"),
+            sun_boot_library_path = getSystemPropertyOrUndefined("sun.boot.library.path"),
+            java_runtime_version = getSystemPropertyOrUndefined("java.runtime.version"),
+            working_directory = getSystemPropertyOrUndefined("user.dir"),
+            java_specification_version = getSystemPropertyOrUndefined("java.specification.version"),
+            os_name = getSystemPropertyOrUndefined("os.name"),
+            os_arch = getSystemPropertyOrUndefined("os.arch"),
+            os_version = getSystemPropertyOrUndefined("os.version"),
+            memory_total_gb = String.format("%.2f", Runtime.getRuntime().totalMemory().toDouble() / (1024 * 1024 * 1024)) + " GB",
+            memory_max_gb = String.format("%.2f", Runtime.getRuntime().maxMemory().toDouble() / (1024 * 1024 * 1024)) + " GB",
+            processor_count = Runtime.getRuntime().availableProcessors().toString(),
+            processor_type = System.getenv()["PROCESSOR_IDENTIFIER"] ?: "Undefined",
+            datetime_now_utc = SimpleDateFormat("YYYY-MM-dd HH:mm:ss.SSSXX").format(Date())
+        )
+    } catch(exception: Exception) {
+        //don't crash on diagnostics info
+        DiagnosticInfo()
     }
-
-    public static SimpleResult checkIfCorrectVersion() {
-
-        String JVMEnvironmentError = "";
-        boolean wrongVersion = false;
-        if (!System.getProperty("java.runtime.name").toLowerCase().equals("java(tm) se runtime environment")) {
-            JVMEnvironmentError += "ERROR: The NodeCore Suite does not support non-Oracle versions of NodeCore like OpenJDK!\n";
-            wrongVersion = true;
-        }
-
-        if (!System.getProperty("java.specification.version").toLowerCase().equals("1.8")) {
-            JVMEnvironmentError += "ERROR: The NodeCore Suite only supports Java 8 at this time; Java 9, 10, and 11 are not supported!\n";
-            wrongVersion = true;
-        }
-
-        if (wrongVersion) {
-            JVMEnvironmentError += "In order to continue, please download Oracle Java 8u181!\n" +
-                    "For Ubuntu/Debian, follow an installation guide like: \n" +
-                    "\thttp://tipsonubuntu.com/2016/07/31/install-oracle-java-8-9-ubuntu-16-04-linux-mint-18/\n" +
-                    "On Windows, download the 64-bit installer from: \n" +
-                    "\thttp://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html\n" +
-                    "Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations for more details.";
-        }
-
-        return new SimpleResult(!wrongVersion, JVMEnvironmentError);
-    }
-
 }
 
+fun checkJvmVersion(
+    checkJavaVersion: Boolean = true,
+    checkJavaArchitecture: Boolean = true
+): SimpleResult {
+    val rawVersionString = System.getProperty("java.specification.version").lowercase(Locale.getDefault())
+    val versionString = if (rawVersionString.contains(".")) {
+        rawVersionString.substring(rawVersionString.indexOf(".") + 1)
+    } else {
+        rawVersionString
+    }
+
+    var wrongVersion = false
+    val jvmEnvironmentError = StringBuilder()
+
+    if (checkJavaVersion) {
+        val version = versionString.toInt()
+        if (version < 8 || version > 14) {
+            jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports Java 8, 9, 10, 11, 12, 13 and 14; $version version is not supported!")
+            jvmEnvironmentError.appendLine("It is recommended to use Java 14, which can be installed from here: https://wiki.veriblock.org/index.php/NodeCore_QuickStart")
+            wrongVersion = true
+        }
+    }
+    if (checkJavaArchitecture) {
+        val arch = System.getProperty("os.arch")
+        if (arch != "amd64" && arch != "x86_64") {
+            jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports 64-bit JVM!")
+            wrongVersion = true
+        }
+    }
+    if (wrongVersion) {
+        jvmEnvironmentError.appendLine("In order to continue, please download 64-bit Java 13 or higher!")
+        jvmEnvironmentError.appendLine("Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations for more details.")
+    }
+    return SimpleResult(!wrongVersion, jvmEnvironmentError.toString())
+}
+
+fun getSystemPropertyOrUndefined(property: String): String = System.getProperty(property, "Undefined")
+
+data class DiagnosticInfo(
+    val user_language: String = "Undefined",
+    val java_runtime_name: String = "Undefined",
+    val sun_boot_library_path: String = "Undefined",
+    val java_runtime_version: String = "Undefined",
+    val java_specification_version: String = "Undefined",
+    val os_name: String = "Undefined",
+    val os_arch: String = "Undefined",
+    val os_version: String = "Undefined",
+    val memory_total_gb: String = "Undefined",
+    val memory_max_gb: String = "Undefined",
+    val processor_count: String = "Undefined",
+    val processor_type: String = "Undefined",
+    val working_directory: String = "Undefined",
+    val datetime_now_utc: String = "Undefined"
+)

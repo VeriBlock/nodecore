@@ -11,7 +11,6 @@ import com.google.gson.GsonBuilder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.model.result.Result
 import org.veriblock.miners.pop.model.result.ResultMessage
@@ -19,6 +18,7 @@ import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import java.security.Security
+import org.veriblock.core.utilities.getDiagnosticInfo
 import kotlin.system.exitProcess
 
 class PopShell(
@@ -33,8 +33,7 @@ class PopShell(
 
     override fun initialize() {
         Security.addProvider(BouncyCastleProvider())
-        val diagnosticInfo = DiagnosticUtility.getDiagnosticInfo()
-        logger.debug(GsonBuilder().setPrettyPrinting().create().toJson(diagnosticInfo))
+        logger.debug(GsonBuilder().setPrettyPrinting().create().toJson(getDiagnosticInfo()))
         printWarning(
             "WARNING: This miner maintains a lightweight BTC wallet for the purpose of creating PoP transactions only. " +
                 "Please deposit minimal amounts of BTC sufficient for mining.\n\n"

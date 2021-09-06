@@ -12,8 +12,8 @@ package nodecore.cli
 import com.google.gson.GsonBuilder
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
-import org.veriblock.core.utilities.DiagnosticUtility
 import org.veriblock.core.utilities.createLogger
+import org.veriblock.core.utilities.getDiagnosticInfo
 import kotlin.system.exitProcess
 
 private val logger = createLogger {}
@@ -25,8 +25,7 @@ private fun run(args: Array<String>): Int {
         modules(listOf(defaultModule))
     }.koin
 
-    val objDiagnostics = DiagnosticUtility.getDiagnosticInfo()
-    val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(objDiagnostics)
+    val strDiagnostics = GsonBuilder().setPrettyPrinting().create().toJson(getDiagnosticInfo())
     logger.info(strDiagnostics)
 
     val options: ProgramOptions = koin.get()
