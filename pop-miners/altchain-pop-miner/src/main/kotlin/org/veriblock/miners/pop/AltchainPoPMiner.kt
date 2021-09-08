@@ -52,7 +52,7 @@ private fun run(autoRestart: Boolean): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Altchain_PoP_Miner")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
-    val jvmVersionResult = checkJvmVersion(checkJavaArchitecture = false)
+    val jvmVersionResult = checkJvmVersion()
     if (!jvmVersionResult.wasSuccessful()) {
         logger.error("JVM version is not correct!")
         logger.error(jvmVersionResult.error)

@@ -22,7 +22,7 @@ private val logger = createLogger {}
 private fun run(args: Array<String>): Int {
     print(SharedConstants.LICENSE)
 
-    val jvmVersionResult = checkJvmVersion(checkJavaArchitecture = false)
+    val jvmVersionResult = checkJvmVersion()
     if (!jvmVersionResult.wasSuccessful()) {
         logger.error("JVM version is not correct!")
         logger.error(jvmVersionResult.error)

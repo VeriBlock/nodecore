@@ -65,7 +65,7 @@ private fun run(): Int {
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/HowTo_run_SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
 
-    val jvmVersionResult = checkJvmVersion(checkJavaArchitecture = false)
+    val jvmVersionResult = checkJvmVersion()
     if (!jvmVersionResult.wasSuccessful()) {
         logger.error("JVM version is not correct!")
         logger.error(jvmVersionResult.error)
