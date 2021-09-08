@@ -12,6 +12,7 @@ package nodecore.cli
 import com.google.gson.GsonBuilder
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
+import org.veriblock.core.utilities.checkJvmVersion
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.getDiagnosticInfo
 import kotlin.system.exitProcess
@@ -20,6 +21,13 @@ private val logger = createLogger {}
 
 private fun run(args: Array<String>): Int {
     print(SharedConstants.LICENSE)
+
+    val jvmVersionResult = checkJvmVersion(checkJavaArchitecture = false)
+    if (!jvmVersionResult.wasSuccessful()) {
+        logger.error("JVM version is not correct!")
+        logger.error(jvmVersionResult.error)
+        return -1
+    }
 
     val koin = startKoin {
         modules(listOf(defaultModule))

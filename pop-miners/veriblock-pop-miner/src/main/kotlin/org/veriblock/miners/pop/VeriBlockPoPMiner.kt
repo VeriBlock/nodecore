@@ -26,6 +26,7 @@ import org.veriblock.miners.pop.shell.PopShell
 import java.security.Security
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
+import org.veriblock.core.utilities.checkJvmVersion
 import kotlin.system.exitProcess
 
 private val logger = KotlinLogging.logger {}
@@ -48,6 +49,13 @@ fun run(args: Array<String>): Int {
     println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/HowTo_run_PoP_Miner_0.4.9")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
+
+    val jvmVersionResult = checkJvmVersion(checkJavaArchitecture = false)
+    if (!jvmVersionResult.wasSuccessful()) {
+        logger.error("JVM version is not correct!")
+        logger.error(jvmVersionResult.error)
+        return -1
+    }
 
     Runtime.getRuntime().addShutdownHook(Thread(Runnable { shutdownSignal.countDown() }))
     val startupInjector = startKoin {

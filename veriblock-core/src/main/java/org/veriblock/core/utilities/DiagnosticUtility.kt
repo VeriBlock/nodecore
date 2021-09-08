@@ -53,7 +53,7 @@ fun checkJvmVersion(
     if (checkJavaVersion) {
         val version = versionString.toInt()
         if (version < 8 || version > 14) {
-            jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports Java 8, 9, 10, 11, 12, 13 and 14; $version version is not supported!")
+            jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports Java 8, 9, 10, 11, 12, 13 and 14; The Java version $version is not supported!")
             jvmEnvironmentError.appendLine("It is recommended to use Java 14, which can be installed from here: https://wiki.veriblock.org/index.php/NodeCore_QuickStart")
             wrongVersion = true
         }

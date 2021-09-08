@@ -32,6 +32,7 @@ import org.veriblock.spv.model.DownloadStatus
 import org.veriblock.spv.util.SpvEventBus
 import java.security.Security
 import java.util.concurrent.CountDownLatch
+import org.veriblock.core.utilities.checkJvmVersion
 import kotlin.system.exitProcess
 
 private val logger = createLogger {}
@@ -63,6 +64,13 @@ private fun run(): Int {
     println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/HowTo_run_SPV")}\n")
     println("${SharedConstants.TYPE_HELP}\n")
+
+    val jvmVersionResult = checkJvmVersion(checkJavaArchitecture = false)
+    if (!jvmVersionResult.wasSuccessful()) {
+        logger.error("JVM version is not correct!")
+        logger.error(jvmVersionResult.error)
+        return -1
+    }
 
     val commandFactory = CommandFactory()
     // Create shell before any logging
