@@ -266,6 +266,11 @@ open class Shell(
         printLogger.warn(message)
     }
 
+    fun printError(message: String) {
+        printStyled(message, AttributedStyle.BOLD.foreground(AttributedStyle.RED))
+        printLogger.warn(message)
+    }
+
     fun printNormal(message: String) {
         printStyled(message, AttributedStyle.BOLD.foreground(AttributedStyle.WHITE))
         printLogger.warn(message)

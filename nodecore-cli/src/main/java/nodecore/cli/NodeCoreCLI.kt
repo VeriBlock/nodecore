@@ -22,13 +22,6 @@ private val logger = createLogger {}
 private fun run(args: Array<String>): Int {
     print(SharedConstants.LICENSE)
 
-    val jvmVersionResult = checkJvmVersion()
-    if (!jvmVersionResult.wasSuccessful()) {
-        logger.error("JVM version is not correct!")
-        logger.error(jvmVersionResult.error)
-        return -1
-    }
-
     val koin = startKoin {
         modules(listOf(defaultModule))
     }.koin
@@ -44,6 +37,13 @@ private fun run(args: Array<String>): Int {
 
     val shell: CliShell = koin.get()
     shell.initialize(options)
+
+    val jvmVersionResult = checkJvmVersion()
+    if (!jvmVersionResult.wasSuccessful()) {
+        shell.printError("JVM version is not correct!")
+        shell.printError(jvmVersionResult.error)
+        return -1
+    }
 
     return try {
         shell.run()
