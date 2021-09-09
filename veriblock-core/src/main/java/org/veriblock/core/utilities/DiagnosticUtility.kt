@@ -36,41 +36,25 @@ fun getDiagnosticInfo(): DiagnosticInfo {
     }
 }
 
-fun checkJvmVersion(
-    checkJavaVersion: Boolean = true,
-    checkJavaArchitecture: Boolean = true
-): SimpleResult {
+fun checkJvmVersion(): SimpleResult {
     val rawVersionString = System.getProperty("java.specification.version").lowercase(Locale.getDefault())
     val versionString = if (rawVersionString.contains(".")) {
         rawVersionString.substring(rawVersionString.indexOf(".") + 1)
     } else {
         rawVersionString
     }
-
-    var wrongVersion = false
     val jvmEnvironmentError = StringBuilder()
-
-    if (checkJavaVersion) {
-        val version = versionString.toInt()
-        if (version < 8 || version > 14) {
-            jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports Java 8, 9, 10, 11, 12, 13 and 14")
-            jvmEnvironmentError.appendLine("Current installed version $version is not supported!")
-            jvmEnvironmentError.appendLine("It is recommended to use Java 14")
-            jvmEnvironmentError.appendLine("In order to continue, please download 64-bit Java 14!")
-            jvmEnvironmentError.appendLine("Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations#Software for more details.")
-            wrongVersion = true
-        }
-    }
-    if (checkJavaArchitecture) {
-        val arch = System.getProperty("os.arch")
-        if (arch != "amd64" && arch != "x86_64") {
-            jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports 64-bit JVM!")
-            wrongVersion = true
-        }
-    }
-    if (wrongVersion) {
+    val arch = System.getProperty("os.arch")
+    val version = versionString.toInt()
+    val wrongVersion = if (version < 8 || version > 14 || (arch != "amd64" && arch != "x86_64")) {
+        jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports Java 8, 9, 10, 11, 12, 13 and 14 (64-bit)")
+        jvmEnvironmentError.appendLine("Current installed version $version ($arch) is not supported!")
+        jvmEnvironmentError.appendLine("It is recommended to use Java 14")
         jvmEnvironmentError.appendLine("In order to continue, please download 64-bit Java 14!")
         jvmEnvironmentError.appendLine("Please see https://wiki.veriblock.org/index.php?title=NodeCore_Operations#Software for more details.")
+        true
+    } else {
+        false
     }
     return SimpleResult(!wrongVersion, jvmEnvironmentError.toString())
 }

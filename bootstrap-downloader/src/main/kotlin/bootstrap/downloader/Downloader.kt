@@ -34,6 +34,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
+import org.veriblock.core.utilities.checkJvmVersion
 
 private val logger = createLogger {}
 
@@ -266,6 +267,13 @@ suspend fun main(args: Array<String>) {
     println("\t\t${SharedConstants.VERIBLOCK_WEBSITE}")
     println("\t\t${SharedConstants.VERIBLOCK_EXPLORER}\n")
     println("${SharedConstants.VERIBLOCK_PRODUCT_WIKI_URL.replace("$1", "https://wiki.veriblock.org/index.php/Bootstrap_Downloader")}\n")
+
+    val jvmVersionResult = checkJvmVersion()
+    if (!jvmVersionResult.wasSuccessful()) {
+        logger.error("JVM version is not correct!")
+        logger.error(jvmVersionResult.error)
+        return
+    }
 
     val options = listOf(
         bootOption(
