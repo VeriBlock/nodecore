@@ -243,7 +243,8 @@ data class DownloaderConfig(
     val url: String = "https://mirror.veriblock.org/bootstrap",
     val dataDir: String = getDefaultNodecoreDataDir(),
     val localUrl: Boolean = false,
-    val displayHelp: Boolean = false
+    val displayHelp: Boolean = false,
+    val autoClose: Boolean = false
 )
 
 fun getDefaultNodecoreDataDir(): String {
@@ -305,6 +306,13 @@ suspend fun main(args: Array<String>) {
             configMapping = "downloader.localUrl"
         ),
         bootOption(
+            opt = "ac",
+            longOpt = "autoClose",
+            desc = "Auto close at finish",
+            argName = "autoClose",
+            configMapping = "downloader.autoClose"
+        ),
+        bootOption(
             opt = "h",
             desc = "Display all the program arguments",
             configMapping = "downloader.displayHelp"
@@ -347,6 +355,8 @@ suspend fun main(args: Array<String>) {
         config.localUrl
     ).downloadBlocks()
 
-    logger.info { "Finished! Press any key to exit..." }
-    Scanner(System.`in`).nextLine()
+    if (!config.autoClose) {
+        logger.info { "Finished! Press any key to exit..." }
+        Scanner(System.`in`).nextLine()
+    }
 }
