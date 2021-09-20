@@ -10,6 +10,7 @@
 
 package org.veriblock.miners.pop
 
+import java.net.BindException
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -29,7 +30,9 @@ import org.veriblock.shell.Shell
 import java.security.Security
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
+import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.checkJvmVersion
+import org.veriblock.core.utilities.extensions.checkPortViability
 import kotlin.system.exitProcess
 
 private val logger = createLogger {}
@@ -87,6 +90,15 @@ private fun run(autoRestart: Boolean): Int {
         )
     }.koin
 
+    val configuration: Configuration = koin.get()
+    val apiPort = configuration.getInt("miner.api.port") ?: 8081
+    val apiHost = configuration.getString("miner.api.host") ?: "127.0.0.1"
+
+    if (!apiPort.checkPortViability(apiHost)) {
+        logger.error { "The port $apiPort is not available at the host $apiHost, please set a different miner API port!" }
+        return -1
+    }
+
     minerService = koin.get()
     val pluginService: PluginService = koin.get()
     val securityInheritingService: SecurityInheritingService = koin.get()
@@ -108,9 +120,12 @@ private fun run(autoRestart: Boolean): Int {
         securityInheritingService.start(minerService)
         apiServer.start()
         shell.run()
-    } catch (e: Exception) {
+    } catch (exception: BindException) {
         errored = true
-        logger.debugError(e) { "Fatal error" }
+        logger.debugError(exception) { "The port $apiPort is not available at the host $apiHost, please set a different miner API port!" }
+    } catch (exception: Exception) {
+        errored = true
+        logger.debugError(exception) { "Fatal error" }
     } finally {
         shutdownSignal.countDown()
     }
