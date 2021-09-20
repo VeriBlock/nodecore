@@ -9,6 +9,7 @@
 
 package org.veriblock.miners.pop
 
+import java.net.BindException
 import mu.KotlinLogging
 import org.bitcoinj.core.Context
 import org.bitcoinj.utils.Threading
@@ -27,6 +28,8 @@ import java.security.Security
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import org.veriblock.core.utilities.checkJvmVersion
+import org.veriblock.core.utilities.debugError
+import org.veriblock.core.utilities.extensions.checkPortViability
 import kotlin.system.exitProcess
 
 private val logger = KotlinLogging.logger {}
@@ -67,7 +70,12 @@ fun run(args: Array<String>): Int {
             )
         )
     }.koin
+
     val config: VpmConfig = startupInjector.get()
+    if (!config.api.port.checkPortViability(config.api.host)) {
+        logger.error { "The port ${config.api.port} is not available at the host ${config.api.host}, please set a different miner API port!" }
+        return -1
+    }
 
     if (config.bitcoin.network.toString() == "MainNet") {
         org.veriblock.core.Context.create(defaultMainNetParameters);
@@ -101,9 +109,12 @@ fun run(args: Array<String>): Int {
         autoMineEngine.run()
         apiServer.start()
         shell.run()
-    } catch (e: Exception) {
+    } catch (exception: BindException) {
         errored = true
-        shell.renderFromThrowable(e)
+        logger.debugError(exception) { "The port ${config.api.port} is not available at the host ${config.api.host}, please set a different miner API port!" }
+    } catch (exception: Exception) {
+        errored = true
+        shell.renderFromThrowable(exception)
     } finally {
         shutdownSignal.countDown()
     }

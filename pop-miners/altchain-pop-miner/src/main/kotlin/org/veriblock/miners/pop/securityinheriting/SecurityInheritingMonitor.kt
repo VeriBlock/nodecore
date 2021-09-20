@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.veriblock.core.MineException
 import org.veriblock.core.crypto.asVbkHash
-import org.veriblock.core.crypto.asVbkPreviousBlockHash
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
@@ -253,12 +252,16 @@ class SecurityInheritingMonitor(
                     if (this@SecurityInheritingMonitor.bestBlockHeight.value != -1) {
                         val isMinerReady = miner.checkReadyConditions()
                         ((this@SecurityInheritingMonitor.bestBlockHeight.value + 1)..bestBlockHeight).forEach { blockHeight ->
-                            if (chain.shouldAutoMine(blockHeight) && isMinerReady is CheckResult.Success) {
-                                logger.debug { "Auto mining block @$blockHeight" }
-                                try {
-                                    miner.mine(chainId, blockHeight)
-                                } catch (e: MineException) {
-                                    logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
+                            if (chain.shouldAutoMine(blockHeight)) {
+                                if (isMinerReady is CheckResult.Success) {
+                                    logger.debug { "Auto mining block @$blockHeight" }
+                                    try {
+                                        miner.mine(chainId, blockHeight)
+                                    } catch (e: MineException) {
+                                        logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
+                                    }
+                                } else {
+                                   logger.info { "Unable to auto mine the block @$blockHeight: ${(isMinerReady as CheckResult.Failure).error}" }
                                 }
                             }
                         }

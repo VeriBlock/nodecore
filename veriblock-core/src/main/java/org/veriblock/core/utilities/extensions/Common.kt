@@ -1,11 +1,12 @@
 package org.veriblock.core.utilities.extensions
 
+import com.google.common.net.InetAddresses
+import java.io.IOException
+import java.net.ServerSocket
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReadWriteLock
 
 fun Int.isValidPort(): Boolean {
     return this in 1..65535
@@ -114,4 +115,12 @@ fun String.asDecimalCoinToAtomicLong(): Long {
         result += "0"
     }
     return result.toLong()
+}
+
+fun Int.checkPortViability(host: String): Boolean = try {
+    val serverSocket = ServerSocket(this, 1, InetAddresses.forString(host))
+    serverSocket.close()
+    true
+} catch (exception: IOException) {
+    false
 }
