@@ -118,7 +118,7 @@ private fun run(autoRestart: Boolean): Int {
         minerService.initialize()
         minerService.start()
         securityInheritingService.start(minerService)
-        apiServer.start()
+        apiServer.start(apiHost, apiPort)
         shell.run()
     } catch (exception: BindException) {
         errored = true
