@@ -35,6 +35,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
 import org.veriblock.core.utilities.checkJvmVersion
+import kotlin.math.roundToInt
 
 private val logger = createLogger {}
 
@@ -195,7 +196,19 @@ class Downloader(
                 val blockList = downloadBlockList()
                 logger.info { "Detected ${blockList.files.size} block files, last updated at ${blockList.updateDate}..." }
                 val filesToDownload = checkFilesToDownload(blockList)
-                downloadFiles(filesToDownload)
+
+                // Check if there is enough disk space to allocate all the block files
+                logger.info { "Checking the free disk space..." }
+                val bytesToDownload = (filesToDownload.sumOf { it.size } * 1.10).toLong()
+                val dataDirectoryUsableSpace = Paths.get(dataDirectory).toFile().usableSpace
+                if (bytesToDownload > dataDirectoryUsableSpace) {
+                    val requiredGbs = "${(bytesToDownload.toDouble().toGb() * 100).roundToInt() / 100.0} Gb"
+                    logger.error { "The specified data directory '$dataDirectory' doesn't have enough free disk space, a minimum of $requiredGbs are required to allocate all the blocks, please free up at least $requiredGbs of disk space!" }
+                } else {
+                    logger.info { "There is enough disk space, downloading the block files..." }
+                    downloadFiles(filesToDownload)
+                }
+
                 finished = true
             } catch (e: Exception) {
                 // Mostly the remote server is inaccessible
@@ -261,6 +274,8 @@ fun getDefaultNodecoreDataDir(): String {
     logger.info { "Found the NodeCore package: ${nodeCoreFolder.absolutePath}" }
     return Paths.get(nodeCoreFolder.toPath().toString(), "bin").toString()
 }
+
+private fun Double.toGb(): Double = this / 1024/ 1024 / 1024
 
 suspend fun main(args: Array<String>) {
     print(SharedConstants.LICENSE)
