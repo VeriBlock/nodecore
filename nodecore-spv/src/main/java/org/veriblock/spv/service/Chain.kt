@@ -52,7 +52,7 @@ class Chain(
             chain.add(block)
         }
 
-        var cursor: BlockIndex? = block
+        var cursor: BlockIndex? = block.prev
         while (cursor != null && !contains(cursor)) {
             chain[cursor.height] = cursor
             cursor = cursor.prev
