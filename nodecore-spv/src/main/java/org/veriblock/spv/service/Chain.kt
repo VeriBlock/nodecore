@@ -48,11 +48,10 @@ class Chain(
 
         // FIXME: workaround for ArrayList to allow usage of operator[] in next while loop
         while (chain.size <= block.height) {
-            // this `block` will be overwritten in the next loop anyway
             chain.add(block)
         }
 
-        var cursor: BlockIndex? = block
+        var cursor: BlockIndex? = block.prev
         while (cursor != null && !contains(cursor)) {
             chain[cursor.height] = cursor
             cursor = cursor.prev
