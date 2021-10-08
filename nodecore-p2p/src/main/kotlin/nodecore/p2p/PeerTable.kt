@@ -74,8 +74,9 @@ class PeerTable(
     private val capabilitiesMapper: PeerCapabilities.(Peer) -> PeerCapabilities = configuration.capabilitiesMapper
     private val neededCapabilities: PeerCapabilities = configuration.neededCapabilities
 
-    private var externalPeers: MutableList<NetworkAddress> = if (configuration.externalPeerEndpoints.isEmpty() && bootstrapEnabled) {
-        logger.debug("Discovered 0 external peers configured, searching for bootstrap nodes")
+    private val useAdditionalPeers: Boolean = configuration.useAdditionalPeers
+    private var externalPeers: MutableList<NetworkAddress> = if (configuration.externalPeerEndpoints.isEmpty() && useAdditionalPeers && bootstrapEnabled) {
+        logger.debug("Discovered 0 external peers configured, additional peers allowed, searching for bootstrap nodes")
         bootstrapper.getNext(bootstrapPeerLimit)
     } else {
         configuration.externalPeerEndpoints
@@ -111,10 +112,12 @@ class PeerTable(
             delay(20_000L)
             establishConnectionWithConfiguredPeers(externalPeers)
         }
-        coroutineScope.launch {
-            delay(35_000L)
-            val candidates = requestPeerTables()
-            addPeerCandidates(candidates)
+        if (useAdditionalPeers) {
+            coroutineScope.launch {
+                delay(35_000L)
+                val candidates = requestPeerTables()
+                addPeerCandidates(candidates)
+            }
         }
         coroutineScope.launchWithFixedDelay(60_000L, 60_000L) {
             upkeep()
@@ -136,7 +139,15 @@ class PeerTable(
             !this.peers.containsKey(it.addressKey)
         }
 
-        if (bootstrap) {
+        if (filtered.isEmpty()) {
+            logger.info { "Connected with ${peers.size} configured peers." }
+            return
+        }
+
+        if (!useAdditionalPeers) {
+            logger.info { "Establishing connection with ${filtered.size} / ${peers.size} configured peers." }
+        }
+        else if (bootstrap) {
             logger.info { "Establishing connection with ${filtered.size} / ${peers.size} bootstrap peers." }
         }
 
@@ -358,6 +369,11 @@ class PeerTable(
         val peerCount = available.count { it.capabilities.hasCapabilities(neededCapabilities) }
         if (peerCount >= minimumPeerCount) {
             logger.debug("Minimum peer threshold met!")
+            return
+        }
+
+        if (!useAdditionalPeers) {
+            establishConnectionWithConfiguredPeers(externalPeers)
             return
         }
 
