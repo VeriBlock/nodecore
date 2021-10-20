@@ -158,7 +158,7 @@ class Peer(
         state.lastMessageReceivedAt = Utility.getCurrentTimeSeconds()
 
         // Handle as an expected response if possible
-        expectedResponses[event.requestId]?.offer(event)
+        expectedResponses[event.requestId]?.trySend(event)
 
         // Broadcast to event bus
         P2pEventBus.newEvent(event, this)

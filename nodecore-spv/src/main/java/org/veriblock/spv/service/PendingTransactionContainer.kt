@@ -2,10 +2,10 @@ package org.veriblock.spv.service
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.sdk.models.Address
 import org.veriblock.spv.model.Transaction
 import java.util.concurrent.ConcurrentHashMap
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.utilities.createLogger
 
 private val logger = createLogger {}
@@ -13,13 +13,13 @@ private val logger = createLogger {}
 class PendingTransactionContainer {
     // TODO(warchant): use Address as a key, instead of String
     private val pendingTransactionsByAddress: MutableMap<String, MutableList<Transaction>> = ConcurrentHashMap()
-    private val confirmedTransactionReplies: MutableMap<Sha256Hash, TransactionInfo> = ConcurrentHashMap()
-    private val pendingTransactions: MutableMap<Sha256Hash, Transaction> = ConcurrentHashMap()
-    private val transactionsToMonitor: MutableSet<Sha256Hash> = ConcurrentHashMap.newKeySet()
+    private val confirmedTransactionReplies: MutableMap<VbkTxId, TransactionInfo> = ConcurrentHashMap()
+    private val pendingTransactions: MutableMap<VbkTxId, Transaction> = ConcurrentHashMap()
+    private val transactionsToMonitor: MutableSet<VbkTxId> = ConcurrentHashMap.newKeySet()
 
     private val mutex = Mutex()
 
-    fun getPendingTransactionIds(): Set<Sha256Hash> {
+    fun getPendingTransactionIds(): Set<VbkTxId> {
         val pendingTransactions = pendingTransactions.entries.asSequence()
             .sortedBy { it.value.getSignatureIndex() }
             .map { it.key }
@@ -27,7 +27,7 @@ class PendingTransactionContainer {
         return pendingTransactions + transactionsToMonitor
     }
 
-    fun getTransactionInfo(txId: Sha256Hash): TransactionInfo? {
+    fun getTransactionInfo(txId: VbkTxId): TransactionInfo? {
         confirmedTransactionReplies[txId]?.let {
             return it
         }
@@ -54,21 +54,11 @@ class PendingTransactionContainer {
 
         // Add as pending transaction
         val transactions = pendingTransactionsByAddress.getOrPut(inputAddress) { mutableListOf() }
-        if (transactions.size > 150) {
-            logger.warn { "The SPV Mempool has reached a too high amount of transactions for the address $inputAddress!" }
-            logger.info { "All the transactions for that address will be pruned in order to prevent further transactions from being rejected." }
-            for (tx in transactions) {
-                pendingTransactions.remove(tx.txId)
-                transactionsToMonitor.remove(tx.txId)
-            }
-            transactions.clear()
-            return
-        }
         transactions.add(transaction)
         pendingTransactions[transaction.txId] = transaction
     }
 
-    fun getTransaction(txId: Sha256Hash): Transaction? {
+    fun getTransaction(txId: VbkTxId): Transaction? {
         return pendingTransactions[txId]
     }
 

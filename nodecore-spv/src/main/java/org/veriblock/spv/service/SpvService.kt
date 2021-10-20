@@ -55,6 +55,7 @@ import java.util.*
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import nodecore.p2p.PeerCapabilities
+import org.veriblock.core.crypto.VbkTxId
 
 private val logger = createLogger {}
 
@@ -97,7 +98,7 @@ class SpvService(
     fun getAddressState(addr: Address): LedgerContext = spvContext.getAddressState(addr)
 
     // if sourceAddress is null, use all available addresses
-    suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<Sha256Hash> {
+    suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<VbkTxId> {
         val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
         val totalOutputAmount = outputs.sumOf {
             it.amount.atomicUnits
@@ -358,7 +359,7 @@ class SpvService(
 
     fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
-    fun getTransactions(ids: List<Sha256Hash>) = ids.mapNotNull {
+    fun getTransactions(ids: List<VbkTxId>) = ids.mapNotNull {
         pendingTransactionContainer.getTransactionInfo(it)
     }
 
@@ -420,11 +421,6 @@ class SpvService(
         }
         val coercedIndex = pendingSignatureIndex
             .coerceAtLeast(signatureIndex ?: -1)
-
-        // If there are 100 transactions in the mempool we might have hit the sigIndex issue; fall back to ledger's value
-        if (signatureIndex != null && coercedIndex > signatureIndex + 100) {
-            return signatureIndex
-        }
 
         return coercedIndex
     }

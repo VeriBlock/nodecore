@@ -332,10 +332,12 @@ class SecurityInheritingMonitor(
 
     private suspend fun getLastCommonVbkBlock(): VeriBlockBlock? {
         val bestHash = chain.getBestKnownVbkBlockHash()
-        var cursor: VeriBlockBlock = chain.getVbkBlock(bestHash) ?: return null;
-        while(! miner.gateway.isOnActiveChain(cursor.hash)) {
-            logger.info { "${chain.name} block ${cursor.hash} is not on active chain... Getting previous block." }
-            cursor = chain.getVbkBlock(cursor.previousBlock.toString()) ?: return null
+        var cursor = chain.getVbkBlock(bestHash)
+            ?: return null
+        while (!miner.gateway.isOnActiveChain(cursor.hash)) {
+            logger.info { "${chain.name} block ${cursor.hash} is not on the active chain... Getting previous block." }
+            cursor = chain.getVbkBlock(cursor.previousBlock.toString())
+                ?: return null
         }
 
         return cursor
