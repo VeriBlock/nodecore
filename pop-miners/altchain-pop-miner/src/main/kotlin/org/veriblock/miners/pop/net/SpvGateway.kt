@@ -33,6 +33,8 @@ import org.veriblock.spv.service.NetworkState
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.TransactionInfo
 import kotlin.math.abs
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.VbkTxId
 
 private val logger = createLogger {}
 
@@ -83,7 +85,7 @@ class SpvGateway(
         )
     }
 
-    fun getTransactions(ids: List<Sha256Hash>): List<TransactionInfo> {
+    fun getTransactions(ids: List<VbkTxId>): List<TransactionInfo> {
         return spvService.getTransactions(ids)
     }
 
