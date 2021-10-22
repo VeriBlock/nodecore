@@ -56,7 +56,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.models.VeriBlockBlock
-import java.util.*
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -291,7 +290,7 @@ class SecurityInheritingMonitor(
 
     private suspend fun autoSubmitContext() = coroutineScope {
         logger.info("Starting continuous submission of VBK context for ${chain.name}")
-        SpvEventBus.newBlockFlow.asSharedFlow().collect { newBlock ->
+        SpvEventBus.newBestBlockFlow.asSharedFlow().collect { newBlock ->
             try {
                 submitContextBlock(newBlock)
             } catch (e: Exception) {
@@ -405,7 +404,7 @@ class SecurityInheritingMonitor(
         }
 
         // Wait for the next keystone to be mined
-        val keystone = SpvEventBus.newBlockFlow.filter {
+        val keystone = SpvEventBus.newBestBlockFlow.filter {
             it.height % 20 == 0 && it.height > vbkContextBlock.height
         }.first()
 

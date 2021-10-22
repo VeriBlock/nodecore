@@ -84,8 +84,8 @@ class AdminApiServiceTest {
         spvContext.setAddressState(ledgerContext)
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createTransactionsByOutputList(any(), any()) } returns transactions
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) }
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1
+        every { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) }
+        every { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) } returns 1
 
         val reply = runBlocking {
             spvService.sendCoins(
@@ -100,7 +100,7 @@ class AdminApiServiceTest {
         }
 
         verify(exactly = 1) { transactionService.createTransactionsByOutputList(any(), any()) }
-        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any()) }
+        verify(exactly = 1) { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) }
         verify(exactly = 1) { availablePeer.send(any()) }
 
         reply.firstOrNull() shouldNotBe null
@@ -117,7 +117,7 @@ class AdminApiServiceTest {
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) } returns 1L
         spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
@@ -143,7 +143,7 @@ class AdminApiServiceTest {
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) } returns 1L
         spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
@@ -169,7 +169,7 @@ class AdminApiServiceTest {
         )
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) } returns 1L
         spvContext.setAddressState(ledgerContext)
         runBlocking {
             spvService.sendCoins(
@@ -190,7 +190,7 @@ class AdminApiServiceTest {
         val transaction: Transaction = StandardTransaction(EMPTY_VBK_TX)
         every { transactionService.predictStandardTransactionToAllStandardOutputSize(any(), any(), any(), any()) } returns 500
         every { transactionService.createStandardTransaction(any(), any(), any(), any()) } returns transaction
-        every { transactionContainer.getPendingSignatureIndexForAddress(any()) } returns 1L
+        every { transactionContainer.getPendingSignatureIndexForAddress(any(), any()) } returns 1L
         runBlocking {
             spvService.sendCoins(
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),

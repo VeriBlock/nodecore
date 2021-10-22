@@ -21,11 +21,15 @@ object SpvEventBus {
 
     // Block Events
     val newBestBlockEvent = AsyncEvent<VeriBlockBlock>("New Best Block", Threading.LISTENER_THREAD)
-    val newBlockFlow = MutableSharedFlow<VeriBlockBlock>(
+    val newBestBlockFlow = MutableSharedFlow<VeriBlockBlock>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    //val blockChainReorganizedEvent = AsyncEvent<BlockChainReorganizedEventData>("Blockchain Reorganized", Threading.LISTENER_THREAD)
+    val removedBestBlockEvent = AsyncEvent<VeriBlockBlock>("Removed Best Block", Threading.LISTENER_THREAD)
+    val removedBestBlockFlow = MutableSharedFlow<VeriBlockBlock>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 }
 
 data class AddressStateChangeEvent(

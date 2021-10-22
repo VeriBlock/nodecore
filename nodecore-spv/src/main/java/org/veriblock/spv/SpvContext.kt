@@ -105,7 +105,7 @@ class SpvContext(
             blockStore = BlockStore(networkParameters, directory)
             transactionPool = TransactionPool()
             blockchain = Blockchain(blockStore)
-            pendingTransactionContainer = PendingTransactionContainer()
+            pendingTransactionContainer = PendingTransactionContainer(this)
             addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)

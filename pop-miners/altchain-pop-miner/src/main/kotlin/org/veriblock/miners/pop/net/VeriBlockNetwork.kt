@@ -232,7 +232,7 @@ class VeriBlockNetwork(
         logger.debug("Waiting for VTBs...\n$extraLogData")
         try {
             // Loop through each new block until we get a not-empty publication list
-            SpvEventBus.newBlockFlow.map {
+            SpvEventBus.newBestBlockFlow.map {
                 // Retrieve VTBs from NodeCore
                 gateway.getVeriBlockPublications(
                     keystoneHash, contextHash, btcContextHash

@@ -29,6 +29,7 @@ import org.veriblock.spv.util.Threading
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.CancellationException
 
 private val logger = createLogger {}
 
@@ -200,13 +201,31 @@ class Blockchain(
 
         // do fork resolution
         if (stored.work > activeChain.tipWork) {
+            val oldTip = activeChain.tip
             // new block wins
             activeChain.setTip(index, stored.work)
-            SpvEventBus.newBestBlockEvent.trigger(block)
-        }
 
-        // add new block to a queue
-        SpvEventBus.newBlockFlow.tryEmit(block)
+            // Trigger events
+            var commonPreviousBlock = oldTip
+            while (!activeChain.contains(commonPreviousBlock)) {
+                commonPreviousBlock = commonPreviousBlock.prev
+                    ?: error("Trying to find a common previous block beyond Genesis!")
+                val removedBlock = blockStore.readBlock(commonPreviousBlock.position)
+                if (removedBlock != null) {
+                    SpvEventBus.removedBestBlockEvent.trigger(removedBlock.header)
+                    SpvEventBus.removedBestBlockFlow.tryEmit(removedBlock.header)
+                }
+            }
+            for (height in commonPreviousBlock.height + 1 until index.height) {
+                val addedBlock = blockStore.readBlock(commonPreviousBlock.position)
+                if (addedBlock != null) {
+                    SpvEventBus.newBestBlockEvent.trigger(addedBlock.header)
+                    SpvEventBus.newBestBlockFlow.tryEmit(addedBlock.header)
+                }
+            }
+            SpvEventBus.newBestBlockEvent.trigger(block)
+            SpvEventBus.newBestBlockFlow.tryEmit(block)
+        }
 
         return true
     }
@@ -388,7 +407,7 @@ class Blockchain(
                 val currentTipHeight = getChainHeadIndex().height
                 val netBlock = try {
                     networkBlockQueue.receive()
-                } catch (e: InterruptedException) {
+                } catch (e: CancellationException) {
                     break
                 } catch (e: NoSuchElementException) {
                     break
@@ -398,7 +417,7 @@ class Blockchain(
                 val accepted = acceptBlock(block)
                 if (!accepted && block.height > currentTipHeight) {
                     // It won't connect, re-add to queue and continue
-                    networkBlockQueue.offer(netBlock)
+                    networkBlockQueue.trySend(netBlock)
                     continue
                 }
                 // TODO If not accepted, trigger misbehavior to source?

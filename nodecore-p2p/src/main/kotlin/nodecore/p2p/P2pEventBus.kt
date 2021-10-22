@@ -156,6 +156,8 @@ object P2pEventBus {
                 clearFilter.trigger(event.toP2pEvent(remote, event.clearFilter))
             RpcEvent.ResultsCase.FILTERED_BLOCK_REQUEST ->
                 filteredBlockRequest.trigger(event.toP2pEvent(remote, event.filteredBlockRequest))
+            RpcEvent.ResultsCase.FILTERED_BLOCK ->
+                filteredBlockReply.trigger(event.toP2pEvent(remote, event.filteredBlock))
             RpcEvent.ResultsCase.LEDGER_PROOF_REQUEST ->
                 ledgerProofRequest.trigger(event.toP2pEvent(remote, event.ledgerProofRequest))
             RpcEvent.ResultsCase.LEDGER_PROOF_REPLY ->

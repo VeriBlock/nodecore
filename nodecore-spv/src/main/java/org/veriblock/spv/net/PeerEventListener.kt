@@ -199,7 +199,7 @@ class PeerEventListener(
                     .setHeader(ByteString.copyFrom(SerializeDeserializeService.serializeHeaders(block)))
             )
         }
-        logger.debug {"Sending keystone query, last block @ ${keystones[0].height}" }
+        logger.debug { "Sending keystone query, last block @ ${keystones[0].height}" }
         sendMessage {
             keystoneQuery = queryBuilder.build()
         }

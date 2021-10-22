@@ -411,8 +411,8 @@ class SpvService(
     }
 
     private fun getSignatureIndex(address: Address): Long {
-        val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address)
         val signatureIndex = spvContext.getSignatureIndex(address)
+        val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address, signatureIndex)
         logger.debug { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex" }
         if (pendingSignatureIndex == null) {
             return signatureIndex ?: throw IllegalStateException(
