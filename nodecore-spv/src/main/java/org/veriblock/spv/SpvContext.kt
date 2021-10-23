@@ -69,19 +69,10 @@ class SpvContext(
 
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
 
-    val useAdditionalPeers = config.useAdditionalPeers
     val trustPeerHashes = config.trustPeerHashes
     val startTime: Instant = Instant.now()
 
     init {
-        if (!useAdditionalPeers) {
-            logger.warn {
-                "Additional peer use is disabled." +
-                    " With this feature SPV connects only to the endpoints specified in the configuration file." +
-                    " In order to control the connections, locate 'connectDirectlyTo' in the configuration file and modify the list."
-            }
-        }
-
         if (trustPeerHashes) {
             logger.warn {
                 "Fast sync mode is enabled." +
@@ -129,10 +120,10 @@ class SpvContext(
                 networkParameters = config.networkParameters,
                 // For now we'll be using either direct discovery or DNS discovery, not a mix.
                 // This will change whenever other use cases appear.
-                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty(),
+                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty() && config.connectOnlyToDirect,
                 bootstrappingDnsSeeds = bootstrappingDnsSeeds,
                 externalPeerEndpoints = externalPeerEndpoints,
-                useAdditionalPeers = useAdditionalPeers,
+                connectOnlyToExternal = config.connectOnlyToDirect,
                 capabilities = PeerCapabilities.spvCapabilities(),
                 neededCapabilities = PeerCapabilities.defaultCapabilities() and config.extraNeededCapabilities,
                 fullProgramNameVersion = SpvConstants.FULL_PROGRAM_NAME_VERSION
@@ -225,7 +216,7 @@ class SpvConfig(
     val networkParameters: NetworkParameters = defaultMainNetParameters,
     val dataDir: String = ".",
     val connectDirectlyTo: List<String> = emptyList(),
-    val useAdditionalPeers: Boolean = true,
+    val connectOnlyToDirect: Boolean = true,
     val trustPeerHashes: Boolean = false,
     val extraNeededCapabilities: Set<PeerCapabilities.Capability> = emptySet()
 )

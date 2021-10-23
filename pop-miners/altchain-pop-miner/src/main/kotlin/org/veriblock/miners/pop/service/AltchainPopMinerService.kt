@@ -405,7 +405,9 @@ class AltchainPopMinerService(
                 networkParameters,
                 dataDir = context.dataDir,
                 connectDirectlyTo = config.connectDirectlyTo,
-                useAdditionalPeers = false
+                connectOnlyToDirect = config.connectOnlyToDirect,
+                trustPeerHashes = true,
+                extraNeededCapabilities = setOf(PeerCapabilities.Capability.VtbRequests),
             )
         )
         spvContext.start()

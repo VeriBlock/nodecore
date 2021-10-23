@@ -47,7 +47,6 @@ private val spvConfig: SpvConfig = SpvConfig(
     connectDirectlyTo = config.getOrNull("connectDirectlyTo") {
         getStringList(it)
     }?: emptyList(),
-    useAdditionalPeers = config.getBoolean("useAdditionalPeers") ?: true,
     trustPeerHashes = config.getBoolean("trustPeerHashes") ?: false
 )
 

@@ -29,6 +29,7 @@ class MinerConfig(
     var feePerByte: Long = 1_000,
     var maxFee: Long = 10_000_000,
     val connectDirectlyTo: List<String> = emptyList(),
+    val connectOnlyToDirect: Boolean = true,
     val mock: Boolean = false,
     val progPowGenesis: Boolean = false
 )

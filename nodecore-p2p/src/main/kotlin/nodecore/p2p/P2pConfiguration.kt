@@ -16,7 +16,7 @@ class P2pConfiguration(
     val bootstrapPeers: List<String> = emptyList(),
     val bootstrappingDnsSeeds: List<String> = emptyList(),
     val externalPeerEndpoints: List<NetworkAddress> = emptyList(),
-    val useAdditionalPeers: Boolean = true,
+    val connectOnlyToExternal: Boolean = false,
     val peerSharePlatform: Boolean = false,
     val peerPublishAddress: String = "",
     val peerShareMyAddress: Boolean = false,
