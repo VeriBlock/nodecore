@@ -31,6 +31,8 @@ class PendingTransactionContainer(
 
     private val lock = ReentrantLock()
 
+    private var lastConfirmedSignatureIndex = -1L
+
     init {
         SpvEventBus.removedBestBlockEvent.register(this, ::handleRemovedBestBlock)
     }
@@ -60,6 +62,9 @@ class PendingTransactionContainer(
             val pendingTx = pendingTransactions[transaction.txId]
             if (pendingTx != null) {
                 confirmedTransactions[transaction.txId] = pendingTx
+                if (pendingTx.getSignatureIndex() > lastConfirmedSignatureIndex) {
+                    lastConfirmedSignatureIndex = pendingTx.getSignatureIndex()
+                }
             }
             if (transactionInfo.confirmations > 0) {
                 pendingTransactions.remove(transaction.txId)
@@ -99,7 +104,7 @@ class PendingTransactionContainer(
     fun getPendingSignatureIndexForAddress(address: Address, ledgerSignatureIndex: Long?): Long? = lock.withLock {
         val transactions = pendingTransactionsByAddress[address.address]
         if (transactions.isNullOrEmpty()) {
-            return ledgerSignatureIndex
+            return ledgerSignatureIndex?.coerceAtLeast(lastConfirmedSignatureIndex)
         }
         // FIXME The code inside this check is a hack. The proper way to do that is by fully supporting a filtered blockchain in SPV.
         if (ledgerSignatureIndex != null) {
