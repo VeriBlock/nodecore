@@ -46,7 +46,7 @@ fun checkJvmVersion(): SimpleResult {
     val jvmEnvironmentError = StringBuilder()
     val arch = System.getProperty("os.arch")
     val version = versionString.toInt()
-    val wrongVersion = if (version < 8 || version > 14 || (arch != "amd64" && arch != "x86_64")) {
+    val wrongVersion = if (version < 8 || version > 14 || (arch != "amd64" && arch != "x86_64" && arch != "aarch64")) {
         jvmEnvironmentError.appendLine("ERROR: The NodeCore Suite only supports Java 8, 9, 10, 11, 12, 13 and 14 (64-bit)")
         jvmEnvironmentError.appendLine("Current installed version $version ($arch) is not supported!")
         jvmEnvironmentError.appendLine("It is recommended to use Java 14")
