@@ -1160,6 +1160,11 @@ message RpcGetDiagnosticInfoReply {
     repeated string nodecore_properties_values = 18;
     string nodecore_start_commandline = 19;
     repeated string environment_variables = 20;
+
+    string process_cpu_load = 21;
+    string system_cpu_load = 22;
+    string disk_free_space = 23;
+    string disk_total_space = 24;
 }
 
 message RpcGetPendingTransactionsRequest {
