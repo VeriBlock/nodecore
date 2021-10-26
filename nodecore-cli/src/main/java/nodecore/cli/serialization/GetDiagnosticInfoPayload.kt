@@ -53,6 +53,18 @@ class GetDiagnosticInfoPayload(
     @SerializedName("processor_type")
     val processorType = reply.processorType
 
+    @SerializedName("process_cpu_load")
+    val processCpuLoad = reply.processCpuLoad
+
+    @SerializedName("system_cpu_load")
+    val systemCpuLoad = reply.systemCpuLoad
+
+    @SerializedName("disk_free_space")
+    val diskFreeSpace = reply.diskFreeSpace
+
+    @SerializedName("disk_total_space")
+    val diskTotalSpace = reply.diskTotalSpace
+
     @SerializedName("datetime_now_utc")
     val datetimeNowUtc = reply.datetimeNowUtc
 
