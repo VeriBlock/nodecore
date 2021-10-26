@@ -397,7 +397,9 @@ public class AddressManager {
                     AddressKeyGenerator.getPrivateKey(privateKey));
 
             StoredAddress storedAddress = createFromKeyPair(keyPair, key);
-            if (storedAddress == null) return null;
+            if (storedAddress == null) {
+                return null;
+            }
 
             return add(keyPair, storedAddress);
         } catch (InvalidKeySpecException e) {

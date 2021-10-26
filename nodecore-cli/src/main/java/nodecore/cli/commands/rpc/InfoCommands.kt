@@ -24,11 +24,14 @@ fun CommandFactory.infoCommands() {
         form = "getdiagnosticinfo",
         description = "Returns diagnostic info about the NodeCore instance"
     ) {
-        val request = RpcGetDiagnosticInfoRequest.newBuilder().build()
+        val request = RpcGetDiagnosticInfoRequest.getDefaultInstance()
         val result = cliShell.adminService.getDiagnosticInfo(request)
 
+        val stateRequest = RpcGetStateInfoRequest.getDefaultInstance()
+        val stateResult = cliShell.adminService.getStateInfo(stateRequest)
+
         prepareResult(result.success, result.resultsList) {
-            GetDiagnosticInfoPayload(result)
+            GetDiagnosticInfoPayload(result, stateResult)
         }
     }
 
@@ -38,7 +41,7 @@ fun CommandFactory.infoCommands() {
         description = "Returns information about the node and the current blockchain",
         suggestedCommands = { listOf("getbalance", "gettransaction", "getblockfromindex", "getblockfromhash", "getstateinfo") }
     ) {
-        val request = RpcGetInfoRequest.newBuilder().build()
+        val request = RpcGetInfoRequest.getDefaultInstance()
         val result = cliShell.adminService.getInfo(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -52,7 +55,7 @@ fun CommandFactory.infoCommands() {
         description = "Returns a list of connected peers",
         suggestedCommands = { listOf("addnode", "removenode") }
     ) {
-        val request = RpcGetPeerInfoRequest.newBuilder().build()
+        val request = RpcGetPeerInfoRequest.getDefaultInstance()
         val result = cliShell.adminService.getPeerInfo(request)
 
         prepareResult(result.success, result.resultsList) {
@@ -66,7 +69,7 @@ fun CommandFactory.infoCommands() {
         description = "Returns blockchain, operating, and network state information",
         suggestedCommands = { listOf("getinfo") }
     ) {
-        val request = RpcGetStateInfoRequest.newBuilder().build()
+        val request = RpcGetStateInfoRequest.getDefaultInstance()
         val result = cliShell.adminService.getStateInfo(request)
 
         prepareResult(result.success, result.resultsList) {

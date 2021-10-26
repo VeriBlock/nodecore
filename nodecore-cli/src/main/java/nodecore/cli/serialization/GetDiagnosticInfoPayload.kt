@@ -8,9 +8,11 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcGetDiagnosticInfoReply
+import nodecore.api.grpc.RpcGetStateInfoReply
 
 class GetDiagnosticInfoPayload(
-    reply: RpcGetDiagnosticInfoReply
+    reply: RpcGetDiagnosticInfoReply,
+    stateReply: RpcGetStateInfoReply
 ) {
     @SerializedName("nodecore_working_directory")
     val workingDirectory = reply.workingDirectory
@@ -69,4 +71,7 @@ class GetDiagnosticInfoPayload(
     val environmentVariables = Array(reply.environmentVariablesCount) { index ->
         reply.getEnvironmentVariables(index)
     }
+
+    @SerializedName("state_info")
+    val stateInfo = GetStateInfoPayload(stateReply)
 }

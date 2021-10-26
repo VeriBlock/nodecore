@@ -6,14 +6,37 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.core.utilities
 
-import java.lang.StringBuilder
+import com.sun.management.OperatingSystemMXBean
+import java.lang.management.ManagementFactory
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Date
+import java.util.Locale
 import org.veriblock.core.types.SimpleResult
 
 fun getDiagnosticInfo(): DiagnosticInfo {
     return try {
+        val osBean: OperatingSystemMXBean? = try {
+            ManagementFactory.getPlatformMXBean(OperatingSystemMXBean::class.java)
+        } catch (e: Exception) {
+            null
+        }
+        // Compute sizes, making sure the call doesn't fail
+        val (freeSpace, totalSpace) = try {
+            FileSystems.getDefault().rootDirectories.fold(0L to 0L) { sizes, path ->
+                try {
+                    val fs = Files.getFileStore(path)
+                    (sizes.first + fs.usableSpace) to (sizes.second + fs.totalSpace)
+                } catch (e: Exception) {
+                    sizes
+                }
+            }
+        } catch (e: Exception) {
+            null to null
+        }
+        val gigabyte = 1024 * 1024 * 1024L
         DiagnosticInfo(
             user_language = getSystemPropertyOrUndefined("user.language"),
             java_runtime_name = getSystemPropertyOrUndefined("java.runtime.name"),
@@ -28,6 +51,10 @@ fun getDiagnosticInfo(): DiagnosticInfo {
             memory_max_gb = String.format("%.2f", Runtime.getRuntime().maxMemory().toDouble() / (1024 * 1024 * 1024)) + " GB",
             processor_count = Runtime.getRuntime().availableProcessors().toString(),
             processor_type = System.getenv()["PROCESSOR_IDENTIFIER"] ?: "Undefined",
+            process_cpu_load = osBean?.let { "${it.processCpuLoad * 100}%" } ?: "Undefined",
+            system_cpu_load = osBean?.let { "${it.systemCpuLoad * 100}%" } ?: "Undefined",
+            disk_free_space = freeSpace?.let { String.format("%.03fGB", it.toDouble() / gigabyte) } ?: "Undefined",
+            disk_total_space = totalSpace?.let { String.format("%.03fGB", it.toDouble() / gigabyte) } ?: "Undefined",
             datetime_now_utc = SimpleDateFormat("YYYY-MM-dd HH:mm:ss.SSSXX").format(Date())
         )
     } catch(exception: Exception) {
@@ -74,6 +101,10 @@ data class DiagnosticInfo(
     val memory_max_gb: String = "Undefined",
     val processor_count: String = "Undefined",
     val processor_type: String = "Undefined",
+    val process_cpu_load: String = "Undefined",
+    val system_cpu_load: String = "Undefined",
+    val disk_free_space: String = "Undefined",
+    val disk_total_space: String = "Undefined",
     val working_directory: String = "Undefined",
     val datetime_now_utc: String = "Undefined"
 )

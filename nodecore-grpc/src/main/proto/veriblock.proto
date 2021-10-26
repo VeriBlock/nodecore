@@ -1457,6 +1457,7 @@ message RpcGetStateInfoReply {
     int32 normal_mempool_size = 16;
     int32 pop_mempool_size = 17;
     int32 high_sig_index_mempool_size = 18;
+    int32 wallet_address_count = 19;
 }
 
 message RpcStopNodeCoreRequest {}
