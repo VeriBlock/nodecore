@@ -158,7 +158,10 @@ class Peer(
         state.lastMessageReceivedAt = Utility.getCurrentTimeSeconds()
 
         // Handle as an expected response if possible
-        expectedResponses[event.requestId]?.trySend(event)
+        val requestId: String? = event.requestId
+        if (requestId != null) {
+            expectedResponses[event.requestId]?.trySend(event)
+        }
 
         // Broadcast to event bus
         P2pEventBus.newEvent(event, this)
