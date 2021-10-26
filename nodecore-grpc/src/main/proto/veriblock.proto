@@ -1454,6 +1454,9 @@ message RpcGetStateInfoReply {
     int64 nodecore_starttime = 13;
     int32 wallet_cache_sync_height = 14;
     WalletState wallet_state = 15;
+    int32 normal_mempool_size = 16;
+    int32 pop_mempool_size = 17;
+    int32 high_sig_index_mempool_size = 18;
 }
 
 message RpcStopNodeCoreRequest {}

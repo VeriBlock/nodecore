@@ -50,4 +50,13 @@ class GetStateInfoPayload(
 
     @SerializedName("wallet_state")
     val walletState = reply.walletState.name
+
+    @SerializedName("normal_mempool_size")
+    val normalMempoolSize = reply.normalMempoolSize
+
+    @SerializedName("pop_mempool_size")
+    val popMempoolSize = reply.popMempoolSize
+
+    @SerializedName("high_sig_index_mempool_size")
+    val highSigIndexMempoolSize = reply.highSigIndexMempoolSize
 }
