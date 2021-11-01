@@ -271,7 +271,7 @@ class NodeCoreGateway(
         val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(15, TimeUnit.SECONDS)
-                .getPopRewardEstimates(request)
+                .getPoPRewardEstimates(request)
         }
         if (reply.success) {
             return reply.rewardEstimatesList
