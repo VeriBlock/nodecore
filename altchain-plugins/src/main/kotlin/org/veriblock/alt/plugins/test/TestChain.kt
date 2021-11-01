@@ -14,7 +14,7 @@ import org.veriblock.alt.plugins.util.JsonRpcRequestBody
 import org.veriblock.alt.plugins.util.RpcResponse
 import org.veriblock.alt.plugins.util.handle
 import org.veriblock.alt.plugins.util.toJson
-import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.altchain.AltchainPopEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.contracts.asEgBlockHash
 import org.veriblock.core.utilities.Utility
@@ -212,7 +212,7 @@ class TestChain(
         return String(addressData)
     }
 
-    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPopEndorsement>): List<BlockEvidence> {
         return altchainPopEndorsements.map { altchainPopEndorsement ->
             val context = altchainPopEndorsement.getContextInfo()
             val hash = context.copyOfRange(0, 4)

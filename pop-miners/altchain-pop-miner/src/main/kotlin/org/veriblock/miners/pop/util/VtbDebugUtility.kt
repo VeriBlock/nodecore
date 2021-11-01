@@ -18,23 +18,23 @@ import org.veriblock.sdk.models.VeriBlockPublication
  * and do not ensure the validity of the data they return (pass in bad data, get bad data back rather than an
  * exception).
  */
-object VTBDebugUtility {
-    fun vtbConnectsToBtcContext(contextBTCHeaderHashes: List<ByteArray>, vtb: VeriBlockPublication): Boolean {
+object VtbDebugUtility {
+    fun vtbConnectsToBtcContext(contextBtcHeaderHashes: List<ByteArray>, vtb: VeriBlockPublication): Boolean {
         val vbkPopTx = vtb.transaction
 
-        val btcBlocksInPoPTx = extractOrderedBtcBlocksFromPopTransaction(vbkPopTx)
+        val btcBlocksInPopTx = extractOrderedBtcBlocksFromPopTransaction(vbkPopTx)
 
         // For all BTC blocks in the PoP transaction, check if any of them claim any of the context BTC headers
         // as their previous block or as themselves.
-        return contextBTCHeaderHashes.any { contextBtcHeaderHash ->
-            btcBlocksInPoPTx.any { btcBlockInPopTx ->
+        return contextBtcHeaderHashes.any { contextBtcHeaderHash ->
+            btcBlocksInPopTx.any { btcBlockInPopTx ->
                 Utility.byteArraysAreEqual(contextBtcHeaderHash, btcBlockInPopTx.hash.bytes) ||
                     Utility.byteArraysAreEqual(contextBtcHeaderHash, btcBlockInPopTx.previousBlock.bytes)
             }
         }
     }
 
-    fun doVtbsConnect(oldVtb: VeriBlockPublication, newVtb: VeriBlockPublication, previousVTBs: List<VeriBlockPublication>): Boolean {
+    fun doVtbsConnect(oldVtb: VeriBlockPublication, newVtb: VeriBlockPublication, previousVtbs: List<VeriBlockPublication>): Boolean {
         val oldVtbBtcBlocks = extractOrderedBtcBlocksFromPopTransaction(oldVtb.transaction)
         val newVtbBtcBlocks = extractOrderedBtcBlocksFromPopTransaction(newVtb.transaction)
         val directConnection : Boolean
@@ -48,7 +48,7 @@ object VTBDebugUtility {
             }
         }
         return if (!directConnection) {
-            val oldList = previousVTBs.flatMap {
+            val oldList = previousVtbs.flatMap {
                 extractOrderedBtcBlocksFromPopTransaction(it.transaction)
             }
             oldList.any { oldVtbBtcBlock ->

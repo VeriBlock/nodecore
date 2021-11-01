@@ -26,7 +26,7 @@ import java.io.ByteArrayInputStream
  * information to perform preliminary validation (such as hashing the block header and seeing if it is the appropriate
  * difficulty).
  */
-class AltchainPoPEndorsement(
+class AltchainPopEndorsement(
     private val rawData: ByteArray
 ) {
     val identifier: Long
@@ -137,7 +137,7 @@ class AltchainPoPEndorsement(
         @JvmStatic
         fun isValidEndorsement(rawData: ByteArray): Boolean {
             return try {
-                AltchainPoPEndorsement(rawData)
+                AltchainPopEndorsement(rawData)
                 true
             } catch (e: Exception) {
                 false
@@ -148,7 +148,7 @@ class AltchainPoPEndorsement(
 
 inline fun ByteArray.checkForValidEndorsement(errorHandler: (Exception) -> Unit) {
     try {
-        AltchainPoPEndorsement(this)
+        AltchainPopEndorsement(this)
     } catch (e: Exception) {
         errorHandler(e)
     }

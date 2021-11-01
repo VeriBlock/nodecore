@@ -49,8 +49,8 @@ private fun RpcTransactionUnion.deserializeNormalTransaction(transactionPrefix: 
     }
 }
 
-fun RpcTransactionUnion.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction =
-    signed.deserializePoPTransaction(transactionPrefix)
+fun RpcTransactionUnion.deserializePopTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction =
+    signed.deserializePopTransaction(transactionPrefix)
 
 fun RpcBlock.deserialize(transactionPrefix: Byte?): FullBlock {
     return FullBlock(
@@ -64,12 +64,12 @@ fun RpcBlock.deserialize(transactionPrefix: Byte?): FullBlock {
         encodedDifficulty,
         winningNonce,
         regularTransactionsList.map { tx -> tx.deserializeNormalTransaction(transactionPrefix) },
-        popTransactionsList.map { tx -> tx.deserializePoPTransaction(transactionPrefix) },
+        popTransactionsList.map { tx -> tx.deserializePopTransaction(transactionPrefix) },
         BlockMetaPackage(blockContentMetapackage.hash.toByteArray().asBtcHash())
     )
 }
 
-fun RpcSignedTransaction.deserializePoPTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction {
+fun RpcSignedTransaction.deserializePopTransaction(transactionPrefix: Byte?): VeriBlockPopTransaction {
     val txMessage = transaction
     return VeriBlockPopTransaction(
         Address(ByteStringAddressUtility.parseProperAddressTypeAutomatically(txMessage.sourceAddress)),
@@ -147,7 +147,7 @@ fun RpcVeriBlockPublication.deserialize(transactionPrefix: Byte?): VeriBlockPubl
             }
 
     return VeriBlockPublication(
-        popTransaction.deserializePoPTransaction(transactionPrefix),
+        popTransaction.deserializePopTransaction(transactionPrefix),
         VeriBlockMerklePath(compactMerklePath),
         SerializeDeserializeService.parseVeriBlockBlock(containingBlock.toByteArray()),
         context

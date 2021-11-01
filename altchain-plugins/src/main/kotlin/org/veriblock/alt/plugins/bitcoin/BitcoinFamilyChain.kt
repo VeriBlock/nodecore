@@ -16,7 +16,7 @@ import org.veriblock.alt.plugins.rpcRequest
 import org.veriblock.alt.plugins.util.RpcException
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.segwitToBech32
-import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.altchain.AltchainPopEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.contracts.asEgBlockHash
 import org.veriblock.core.crypto.*
@@ -294,7 +294,7 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPopEndorsement>): List<BlockEvidence> {
         val hexPopEndorsements = altchainPopEndorsements.map { altchainPopEndorsement ->
             altchainPopEndorsement.getRawData().toHex()
         }

@@ -16,9 +16,9 @@ import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult
 import nodecore.cli.rpcCommand
-import nodecore.cli.serialization.PoPEndorsementsInfo
+import nodecore.cli.serialization.PopEndorsementsInfo
 import nodecore.cli.serialization.PopPayload
-import nodecore.cli.serialization.TroubleshootPoPTransactionsPayload
+import nodecore.cli.serialization.TroubleshootPopTransactionsPayload
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.CommandParameter
@@ -51,10 +51,10 @@ fun CommandFactory.popCommands() {
         request.onlyFailures = getParameter("onlyFailures")
         request.searchLength = getOptionalParameter("searchLength") ?: 2000
 
-        val result = cliShell.adminService.troubleshootPoPTransactions(request.build())
+        val result = cliShell.adminService.troubleshootPopTransactions(request.build())
 
         prepareResult(result.success, result.resultsList) {
-            TroubleshootPoPTransactionsPayload(result)
+            TroubleshootPopTransactionsPayload(result)
         }
     }
 
@@ -105,10 +105,10 @@ fun CommandFactory.popCommands() {
             request.searchLength = searchLength
         }
 
-        val result = cliShell.adminService.getPoPEndorsementsInfo(request.build())
+        val result = cliShell.adminService.getPopEndorsementsInfo(request.build())
 
         prepareResult(result.success, result.resultsList) {
-            result.popEndorsementsList.map { PoPEndorsementsInfo(it) }
+            result.popEndorsementsList.map { PopEndorsementsInfo(it) }
         }
     }
 
@@ -171,7 +171,7 @@ fun CommandFactory.popCommands() {
         logger.info("We received a total of ${result.popEndorsementsCount} pop endorsements!")
 
         prepareResult(result.success, result.resultsList) {
-            result.popEndorsementsList.map { PoPEndorsementsInfo(it)  }
+            result.popEndorsementsList.map { PopEndorsementsInfo(it)  }
         }
     }
 
@@ -199,7 +199,7 @@ fun CommandFactory.popCommands() {
         logger.info("We received a total of ${result.popEndorsementsCount} pop endorsements!")
 
         prepareResult(result.success, result.resultsList) {
-            result.popEndorsementsList.map { PoPEndorsementsInfo(it) }
+            result.popEndorsementsList.map { PopEndorsementsInfo(it) }
         }
     }
 }

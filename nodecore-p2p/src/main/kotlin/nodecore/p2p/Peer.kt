@@ -160,7 +160,7 @@ class Peer(
         // Handle as an expected response if possible
         val requestId: String? = event.requestId
         if (requestId != null) {
-            expectedResponses[event.requestId]?.trySend(event)
+            expectedResponses[requestId]?.trySend(event)
         }
 
         // Broadcast to event bus

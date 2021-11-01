@@ -160,7 +160,7 @@ class AdminServiceClient(
 
     override fun getBlocks(request: RpcGetBlocksRequest): RpcGetBlocksReply = blockingStub.getBlocks(request)
 
-    override fun getPoPEndorsementsInfo(request: RpcGetPoPEndorsementsInfoRequest): RpcGetPoPEndorsementsInfoReply = blockingStub.getPoPEndorsementsInfo(request)
+    override fun getPopEndorsementsInfo(request: RpcGetPoPEndorsementsInfoRequest): RpcGetPoPEndorsementsInfoReply = blockingStub.getPoPEndorsementsInfo(request)
 
     override fun getProtectedChildren(request: RpcGetProtectedChildrenRequest): RpcGetProtectedChildrenReply = blockingStub.getProtectedChildren(request)
 
@@ -232,7 +232,7 @@ class AdminServiceClient(
 
     override fun getDiagnosticInfo(request: RpcGetDiagnosticInfoRequest): RpcGetDiagnosticInfoReply = blockingStub.getDiagnosticInfo(request)
 
-    override fun troubleshootPoPTransactions(request: RpcTroubleshootPoPTransactionsRequest): RpcTroubleshootPoPTransactionsReply = blockingStub.troubleshootPoPTransactions(request)
+    override fun troubleshootPopTransactions(request: RpcTroubleshootPoPTransactionsRequest): RpcTroubleshootPoPTransactionsReply = blockingStub.troubleshootPoPTransactions(request)
 
     override fun stopNodeCore(request: RpcStopNodeCoreRequest): RpcProtocolReply = blockingStub.stopNodeCore(request)
 

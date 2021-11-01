@@ -9,7 +9,7 @@ package org.veriblock.miners.pop.schedule
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 
-class ScheduledPoPJob(
+class ScheduledPopJob(
     private val runnable: Runnable
 ) : Job {
     override fun execute(context: JobExecutionContext) {

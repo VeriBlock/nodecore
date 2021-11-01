@@ -26,7 +26,7 @@ import org.veriblock.miners.pop.NewVeriBlockFoundEventDto
 import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.common.CheckResult
 import org.veriblock.miners.pop.common.amountToCoin
-import org.veriblock.miners.pop.common.formatBTCFriendlyString
+import org.veriblock.miners.pop.common.formatBtcFriendlyString
 import org.veriblock.miners.pop.common.generateOperationId
 import org.veriblock.miners.pop.core.VpmOperation
 import org.veriblock.miners.pop.core.VpmOperationState
@@ -68,24 +68,24 @@ class MinerService(
 
     override fun run() {
         // Operation Events
-        EventBus.popMiningOperationCompletedEvent.register(this, ::onPoPMiningOperationCompleted)
+        EventBus.popMiningOperationCompletedEvent.register(this, ::onPopMiningOperationCompleted)
         // Balance Events
         EventBus.sufficientFundsEvent.register(this) { balance ->
-            logger.info { "Available Bitcoin balance: ${balance.formatBTCFriendlyString()}" }
+            logger.info { "Available Bitcoin balance: ${balance.formatBtcFriendlyString()}" }
             logger.info { "Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}" }
             verifyMinerIsReady()
         }
         EventBus.insufficientFundsEvent.register(this) { balance ->
             val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
             logger.info("""PoP wallet does not contain sufficient funds
-                        Current balance: ${balance.formatBTCFriendlyString()}
-                        Minimum required: ${maximumTransactionFee.formatBTCFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBTCFriendlyString()} more",
+                        Current balance: ${balance.formatBtcFriendlyString()}
+                        Minimum required: ${maximumTransactionFee.formatBtcFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBtcFriendlyString()} more",
                         Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}
             """.trimIndent())
             verifyMinerIsReady()
         }
         EventBus.balanceChangedEvent.register(this) { balance ->
-            logger.info { "Current balance: ${balance.formatBTCFriendlyString()}" }
+            logger.info { "Current balance: ${balance.formatBtcFriendlyString()}" }
         }
         // Block Events
         EventBus.newVeriBlockFoundEvent.register(this, ::onNewVeriBlockFound)
@@ -231,8 +231,8 @@ class MinerService(
             val balance = bitcoinService.getBalance()
             return CheckResult.Failure(
                 MineException("""PoP wallet does not contain sufficient funds
-                        Current balance: ${balance.formatBTCFriendlyString()}
-                        Minimum required: ${maximumTransactionFee.formatBTCFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBTCFriendlyString()} more",
+                        Current balance: ${balance.formatBtcFriendlyString()}
+                        Minimum required: ${maximumTransactionFee.formatBtcFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBtcFriendlyString()} more",
                         Send Bitcoin to: ${bitcoinService.currentReceiveAddress()}
                         """.trimIndent()
                 )
@@ -475,7 +475,7 @@ class MinerService(
         isShuttingDown = b
     }
 
-    private fun onPoPMiningOperationCompleted(operationId: String) {
+    private fun onPopMiningOperationCompleted(operationId: String) {
         try {
             operations.remove(operationId)
         } catch (e: Exception) {
@@ -485,7 +485,7 @@ class MinerService(
 
     private fun onCoinsReceived(event: CoinsReceivedEventDto) {
         try {
-            logger.info { "Received pending tx '${event.tx.txId}', pending balance: '${event.newBalance.formatBTCFriendlyString()}'" }
+            logger.info { "Received pending tx '${event.tx.txId}', pending balance: '${event.newBalance.formatBtcFriendlyString()}'" }
         } catch (e: Exception) {
             logger.error(e.message, e)
         }

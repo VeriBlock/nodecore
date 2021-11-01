@@ -21,7 +21,7 @@ import org.veriblock.core.tuweni.progpow.ProgPoWCache
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.automine.AutoMineEngine
-import org.veriblock.miners.pop.schedule.PoPMiningScheduler
+import org.veriblock.miners.pop.schedule.PopMiningScheduler
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.PopShell
 import java.security.Security
@@ -95,7 +95,7 @@ fun run(args: Array<String>): Int {
         }
     }
     popMinerService = startupInjector.get()
-    val scheduler: PoPMiningScheduler = startupInjector.get()
+    val scheduler: PopMiningScheduler = startupInjector.get()
     val autoMineEngine: AutoMineEngine = startupInjector.get()
     val apiServer: ApiServer = startupInjector.get()
     shell = startupInjector.get()

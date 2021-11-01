@@ -97,7 +97,7 @@ public class BitcoinUtilities {
         return result;
     }
 
-    public static byte[] extractPoPData(byte[] bitcoinTransaction, int reportedHeight) {
+    public static byte[] extractPopData(byte[] bitcoinTransaction, int reportedHeight) {
         for (int i = 0; i <= bitcoinTransaction.length - 80; i++) {
             try {
                 byte[] potentialPoPPublication = new byte[80];

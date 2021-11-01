@@ -76,7 +76,7 @@ class VeriBlockPopMinerMock(
      * @param hash BTC block hash with proofs
      * @param index array index of BTC TX inside blof of proof
      * @param key Secp256k1 keypair to sign VBK POP TX
-     * @param lastKnownBTCBlock used for building context between this block and block of proof
+     * @param lastKnownBtclock used for building context between this block and block of proof
      */
     fun createVbkPopTx(
         // blockOfProof BTC block hash
@@ -85,7 +85,7 @@ class VeriBlockPopMinerMock(
         index: Int,
         // keypair to sign VbkPopTx
         key: KeyPair,
-        lastKnownBTCBlock: BitcoinBlock
+        lastKnownBtclock: BitcoinBlock
     ): VeriBlockPopTransaction? {
         val blockData = bitcoinBlockchain.getBody(hash)
             ?: return null
@@ -95,7 +95,7 @@ class VeriBlockPopMinerMock(
 
         val blockOfProof = bitcoinBlockchain.getBlockIndex(hash)?.header
             ?: return null
-        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBTCBlock.hash, blockOfProof.hash)
+        val blockOfProofContext = bitcoinBlockchain.getContext(lastKnownBtclock.hash, blockOfProof.hash)
         return signTransaction(
             VeriBlockPopTransaction(
                 address,

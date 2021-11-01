@@ -2,7 +2,7 @@ package org.veriblock.miners.pop.service
 
 import org.veriblock.core.utilities.getDiagnosticInfo
 import org.veriblock.miners.pop.VpmConfig
-import org.veriblock.miners.pop.common.formatBTCFriendlyString
+import org.veriblock.miners.pop.common.formatBtcFriendlyString
 import org.veriblock.sdk.models.DiagnosticInformation
 import org.veriblock.sdk.models.getSynchronizedMessage
 
@@ -50,10 +50,10 @@ class DiagnosticService(
         // Check the balance
         val balance = bitcoinService.getBalance()
         if (bitcoinService.isSufficientlyFunded()) {
-            information.add("SUCCESS - The BTC PoP wallet contains sufficient funds, current balance: ${balance.formatBTCFriendlyString()}")
+            information.add("SUCCESS - The BTC PoP wallet contains sufficient funds, current balance: ${balance.formatBtcFriendlyString()}")
         } else {
             val maximumTransactionFee = bitcoinService.getMaximumTransactionFee()
-            information.add("FAIL - The BTC PoP wallet does not contain sufficient funds: current balance: ${balance.formatBTCFriendlyString()}, minimum required: ${maximumTransactionFee.formatBTCFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBTCFriendlyString()} more.")
+            information.add("FAIL - The BTC PoP wallet does not contain sufficient funds: current balance: ${balance.formatBtcFriendlyString()}, minimum required: ${maximumTransactionFee.formatBtcFriendlyString()}, need ${maximumTransactionFee.subtract(balance).formatBtcFriendlyString()} more.")
         }
 
         // Add the diagnostic information

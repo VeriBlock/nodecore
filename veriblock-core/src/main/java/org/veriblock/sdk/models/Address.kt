@@ -98,7 +98,7 @@ class Address(address: String) {
             }
         }
 
-        fun fromPoPBytes(buf: ByteBuffer): Address {
+        fun fromPopBytes(buf: ByteBuffer): Address {
             val bytes = ByteArray(16)
             buf[bytes]
             return Address(STARTING_CHAR.toString() + Base58.encode(bytes))

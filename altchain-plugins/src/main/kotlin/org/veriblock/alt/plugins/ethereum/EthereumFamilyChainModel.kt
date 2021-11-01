@@ -184,7 +184,7 @@ internal data class AddressValidationResponse(
     val witness_program: String?
 )
 
-internal class EthPoPParams(
+internal class EthPopParams(
     val popActivationHeight: Long,
     val networkId: Long,
     val popPayoutDelay: Int,

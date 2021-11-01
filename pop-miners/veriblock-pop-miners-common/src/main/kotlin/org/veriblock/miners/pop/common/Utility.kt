@@ -46,7 +46,7 @@ private val BTC_FORMAT = MonetaryFormat.BTC
  * Returns the value as a 0.12 type string. More digits after the decimal place will be used
  * if necessary, but two will always be present.
  */
-fun Coin.formatBTCFriendlyString(): String {
+fun Coin.formatBtcFriendlyString(): String {
     return BTC_FORMAT.format(this).toString()
 }
 

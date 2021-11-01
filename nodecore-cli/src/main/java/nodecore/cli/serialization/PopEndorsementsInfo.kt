@@ -12,7 +12,7 @@ import nodecore.api.grpc.utilities.extensions.toHex
 import nodecore.api.grpc.utilities.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
-class PoPEndorsementsInfo(
+class PopEndorsementsInfo(
     popEndorsementInfo: RpcPoPEndorsementInfo
 ) {
     @SerializedName("miner_address")

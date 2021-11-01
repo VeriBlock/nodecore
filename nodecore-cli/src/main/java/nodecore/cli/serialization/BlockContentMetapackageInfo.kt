@@ -17,7 +17,7 @@ class BlockContentMetapackageInfo(
     val coinbaseTransaction = CoinbaseTransactionInfo(metapackage.coinbaseTransaction)
 
     @SerializedName("pop_datastore")
-    val popDatastore = PoPDatastoreInfo(metapackage.popDatastore)
+    val popDatastore = PopDatastoreInfo(metapackage.popDatastore)
 
     @SerializedName("block_fee_table")
     val blockFeeTable = BlockFeeTableInfo(metapackage.blockFeeTable)

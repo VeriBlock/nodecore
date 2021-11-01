@@ -31,7 +31,7 @@ import org.veriblock.miners.pop.Constants
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.VpmConfig
 import org.veriblock.miners.pop.common.BitcoinNetwork
-import org.veriblock.miners.pop.common.formatBTCFriendlyString
+import org.veriblock.miners.pop.common.formatBtcFriendlyString
 import org.veriblock.miners.pop.model.ApplicationExceptions.CorruptSPVChain
 import org.veriblock.miners.pop.model.ApplicationExceptions.DuplicateTransactionException
 import org.veriblock.miners.pop.model.ApplicationExceptions.ExceededMaxTransactionFee
@@ -167,11 +167,11 @@ class BitcoinService(
                         logger.info {
                             val delta = newBalance.minus(prevBalance)
                             val action = if (delta.isNegative) {
-                                "Spent ${delta.negate().formatBTCFriendlyString()}"
+                                "Spent ${delta.negate().formatBtcFriendlyString()}"
                             } else {
-                                "Received ${delta.formatBTCFriendlyString()}"
+                                "Received ${delta.formatBtcFriendlyString()}"
                             }
-                            "New pending BTC transaction: $action. New pending balance: ${newBalance.formatBTCFriendlyString()}"
+                            "New pending BTC transaction: $action. New pending balance: ${newBalance.formatBtcFriendlyString()}"
                         }
                     }
 
@@ -345,11 +345,11 @@ class BitcoinService(
         initialize()
     }
 
-    fun generatePoPScript(opReturnData: ByteArray): Script {
+    fun generatePopScript(opReturnData: ByteArray): Script {
         return ScriptBuilder().op(ScriptOpCodes.OP_RETURN).data(opReturnData).build()
     }
 
-    suspend fun createPoPTransaction(opReturnScript: Script): Transaction? {
+    suspend fun createPopTransaction(opReturnScript: Script): Transaction? {
         return sendTxRequest {
             val tx = Transaction(kit.params()).apply {
                 addOutput(Coin.ZERO, opReturnScript)

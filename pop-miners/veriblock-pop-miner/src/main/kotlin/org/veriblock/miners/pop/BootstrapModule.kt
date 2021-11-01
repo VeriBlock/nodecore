@@ -10,7 +10,7 @@ import org.koin.dsl.module
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.miners.pop.automine.AutoMineEngine
 import org.veriblock.miners.pop.model.BlockStore
-import org.veriblock.miners.pop.schedule.PoPMiningScheduler
+import org.veriblock.miners.pop.schedule.PopMiningScheduler
 import org.veriblock.miners.pop.service.BitcoinService
 import org.veriblock.miners.pop.service.ChannelBuilder
 import org.veriblock.miners.pop.service.DiagnosticService
@@ -47,7 +47,7 @@ val bootstrapModule = module {
     single { NodeCoreService(get(), get(), get(), get()) }
     single { NodeCoreGateway(get()) }
     single { BitcoinService(get()) }
-    single { PoPMiningScheduler(get(), get()) }
+    single { PopMiningScheduler(get(), get()) }
     single { DiagnosticService(get(), get(), get()) }
 
     single {

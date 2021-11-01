@@ -6,12 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.RpcPoPDatastore
+import nodecore.api.grpc.RpcTroubleshootPoPTransactionsReply
 
-class PoPDatastoreInfo(
-    poPDatastore: RpcPoPDatastore
+class TroubleshootPopTransactionsPayload(
+    reply: RpcTroubleshootPoPTransactionsReply
 ) {
-    init {
-        //TODO: Implement
+    val PopProblemReports = Array(reply.popProblemReportsCount) { index ->
+        PopTransactionProblemReport(reply.getPopProblemReports(index))
     }
 }

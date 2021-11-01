@@ -166,7 +166,7 @@ class SpvGateway(
      */
     fun getSpvStateInfo(): StateInfo {
         val stateInfo = spvService.getStateInfo()
-        val blockDifference = abs(stateInfo.networkHeight - stateInfo.localBlockchainHeight)
+        val blockDifference = stateInfo.networkHeight - stateInfo.localBlockchainHeight
         return StateInfo(
             stateInfo.networkHeight,
             stateInfo.localBlockchainHeight,

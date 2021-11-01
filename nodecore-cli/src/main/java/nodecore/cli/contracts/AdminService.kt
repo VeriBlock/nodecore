@@ -152,7 +152,7 @@ interface AdminService {
     fun getProtectedChildren(request: RpcGetProtectedChildrenRequest): RpcGetProtectedChildrenReply
     fun getProtectingParents(request: RpcGetProtectingParentsRequest): RpcGetProtectingParentsReply
     fun restartPoolWebServer(request: RpcRestartPoolWebServerRequest): RpcRestartPoolWebServerReply
-    fun getPoPEndorsementsInfo(request: RpcGetPoPEndorsementsInfoRequest): RpcGetPoPEndorsementsInfoReply
+    fun getPopEndorsementsInfo(request: RpcGetPoPEndorsementsInfoRequest): RpcGetPoPEndorsementsInfoReply
     fun getPendingTransactions(request: RpcGetPendingTransactionsRequest): RpcGetPendingTransactionsReply
     fun getStateInfo(request: RpcGetStateInfoRequest): RpcGetStateInfoReply
     fun getDiagnosticInfo(request: RpcGetDiagnosticInfoRequest): RpcGetDiagnosticInfoReply
@@ -160,7 +160,7 @@ interface AdminService {
     fun refreshWalletCache(request: RpcRefreshWalletCacheRequest): RpcProtocolReply
     fun getWalletTransactions(request: RpcGetWalletTransactionsRequest): RpcGetWalletTransactionsReply
     fun connect(): RpcPingReply
-    fun troubleshootPoPTransactions(request: RpcTroubleshootPoPTransactionsRequest): RpcTroubleshootPoPTransactionsReply
+    fun troubleshootPopTransactions(request: RpcTroubleshootPoPTransactionsRequest): RpcTroubleshootPoPTransactionsReply
     fun clearBanned(request: RpcClearBannedRequest): RpcProtocolReply
     fun listBanned(request: RpcListBannedRequest): RpcListBannedReply
     fun clearBannedMiners(request: RpcClearBannedMinersRequest): RpcProtocolReply

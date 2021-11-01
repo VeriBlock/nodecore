@@ -27,7 +27,7 @@ import java.text.SimpleDateFormat
 
 private val logger = createLogger {}
 
-class PoPMiningScheduler(
+class PopMiningScheduler(
     private val config: VpmConfig,
     private val popMinerService: MinerService
 ) {
@@ -51,7 +51,7 @@ class PoPMiningScheduler(
         try {
             scheduler = factory.scheduler
             val executeSchedule = Runnable { executeSchedule() }
-            scheduler.setJobFactory(JobFactory { _, _ -> ScheduledPoPJob(executeSchedule) })
+            scheduler.setJobFactory(JobFactory { _, _ -> ScheduledPopJob(executeSchedule) })
         } catch (e: SchedulerException) {
             logger.error(e.message, e)
             runnable = false
@@ -74,7 +74,7 @@ class PoPMiningScheduler(
         if (runnable && scheduler != null) {
             try {
                 scheduler.start()
-                val job = JobBuilder.newJob(ScheduledPoPJob::class.java).withIdentity("scheduledPoP").build()
+                val job = JobBuilder.newJob(ScheduledPopJob::class.java).withIdentity("scheduledPoP").build()
                 val trigger: Trigger = TriggerBuilder.newTrigger().withIdentity("propertiesSchedule").withSchedule(
                     scheduleBuilder
                 ).build()

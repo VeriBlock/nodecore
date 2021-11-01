@@ -8,8 +8,7 @@
 
 package org.veriblock.miners.pop.shell.commands
 
-import kotlinx.coroutines.runBlocking
-import org.veriblock.miners.pop.common.formatBTCFriendlyString
+import org.veriblock.miners.pop.common.formatBtcFriendlyString
 import org.veriblock.miners.pop.service.MinerService
 import org.veriblock.miners.pop.shell.toShellResult
 import org.veriblock.shell.CommandFactory
@@ -29,10 +28,10 @@ fun CommandFactory.bitcoinWalletCommands(
         description = "Displays the current balance for the Bitcoin wallet"
     ) {
         val bitcoinBalance = minerService.getBitcoinBalance()
-        val formattedBalance = bitcoinBalance.formatBTCFriendlyString()
+        val formattedBalance = bitcoinBalance.formatBtcFriendlyString()
         printInfo("Bitcoin Balance: $formattedBalance")
         val bitcoinPendingBalance = minerService.getBitcoinPendingBalance()
-        val formattedPendingBalance = bitcoinPendingBalance.formatBTCFriendlyString()
+        val formattedPendingBalance = bitcoinPendingBalance.formatBtcFriendlyString()
         printInfo("Bitcoin Pending Balance: $formattedPendingBalance")
         success {
             addMessage("V200", "Success", formattedBalance)

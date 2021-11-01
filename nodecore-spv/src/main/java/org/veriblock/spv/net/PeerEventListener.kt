@@ -60,6 +60,7 @@ import org.veriblock.spv.service.PendingTransactionContainer
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 import kotlin.concurrent.withLock
+import org.veriblock.core.params.allDefaultNetworkParameters
 
 private val logger = createLogger {}
 
@@ -119,7 +120,14 @@ class PeerEventListener(
 
             val nodeInfo = event.content.nodeInfo
             if (nodeInfo.protocolVersion != networkParameters.protocolVersion) {
-                logger.warn { "Peer ${peer.address} is on protocol version ${nodeInfo.protocolVersion} and will be disconnected" }
+                logger.warn {
+                    val possibleNetworks = allDefaultNetworkParameters.asSequence()
+                        .filter { it.protocolVersion == nodeInfo.protocolVersion }
+                        .map { it.name }
+                        .ifEmpty { sequenceOf("custom") }
+                        .joinToString(separator = "/")
+                    "Peer ${peer.address} is on protocol version ${nodeInfo.protocolVersion} ($possibleNetworks?) and will be disconnected"
+                }
                 peer.disconnect()
                 return
             }

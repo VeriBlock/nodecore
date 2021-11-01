@@ -80,7 +80,7 @@ class BitcoinUtilityTests {
         // Fourth chunk
         transactionBytes += "39DFC8" // last 3 bytes of header
         transactionBytes += "57801424B0F5DE63992A016F5F38FEB4" // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -92,7 +92,7 @@ class BitcoinUtilityTests {
         for (i in 0..38) {
             transactionBytes += Utility.bytesToHex(byteArrayOf((i * 11 /* Arbitrary byte */).toByte()))
         }
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -178,7 +178,7 @@ class BitcoinUtilityTests {
         // Fourth chunk
         transactionBytes += "39DFC8" // last 3 bytes of header
         transactionBytes += "57801424B0F5DE63992A016F5F38FEB4" // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -190,7 +190,7 @@ class BitcoinUtilityTests {
         for (i in 0..38) {
             transactionBytes += Utility.bytesToHex(byteArrayOf((i * 11 /* Arbitrary byte */).toByte()))
         }
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -256,7 +256,7 @@ class BitcoinUtilityTests {
         // Fourth chunk
         transactionBytes.append("39DFC8") // last 3 bytes of header
         transactionBytes.append("57801424B0F5DE63992A016F5F38FEB4") // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes.toString()), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes.toString()), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -268,7 +268,7 @@ class BitcoinUtilityTests {
         for (i in 0..38) {
             transactionBytes.append(Utility.bytesToHex(byteArrayOf((i * 12 /* Arbitrary byte */).toByte())))
         }
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes.toString()), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes.toString()), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -325,7 +325,7 @@ class BitcoinUtilityTests {
         // Third chunk
         transactionBytes += "1039DFC8" // last 4 bytes of header
         transactionBytes += "57801424B0F5DE63992A016F5F38FEB4" // PoP miner identification (V6P56zKcXNexRSeWcrtX8vpoJEZJRy)
-        val embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        val embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -357,7 +357,7 @@ class BitcoinUtilityTests {
 
         // First chunk; 64 bytes of a header + 16 bytes PoP miner identification
         transactionBytes += "00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4"
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -369,7 +369,7 @@ class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7"
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -397,7 +397,7 @@ class BitcoinUtilityTests {
         var transactionBytes: String? =
             "00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4"
         transactionBytes += descriptorBytes
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
         Utility.byteArraysAreEqual(
             embeddedData,
             Utility.hexToBytes(
@@ -410,7 +410,7 @@ class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7"
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         Utility.byteArraysAreEqual(
             embeddedData,
@@ -442,7 +442,7 @@ class BitcoinUtilityTests {
         // First chunk; 64 bytes of a header + 16 bytes PoP miner identification
         transactionBytes += "00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4"
         transactionBytes += descriptorBytes
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         Utility.byteArraysAreEqual(
             embeddedData,
@@ -456,7 +456,7 @@ class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7"
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         Utility.byteArraysAreEqual(
             embeddedData,
@@ -490,7 +490,7 @@ class BitcoinUtilityTests {
 
         // First chunk; 64 bytes of a header + 16 bytes PoP miner identification
         transactionBytes += "00000767000193093228BD2B4906F6B84BE5E61809C0522626145DDFB988022A0684E2110D384FE2BFD38549CB19C41893C258BA5B9CAB24060BA2D41039DFC857801424B0F5DE63992A016F5F38FEB4"
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         // Still picks up valid PoP publication regardless of malformatted magic data, as PoP publication is continuous
 
@@ -506,7 +506,7 @@ class BitcoinUtilityTests {
         transactionBytes += "00FFAC03B1C7"
 
         // And test with the end padded
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         Utility.byteArraysAreEqual(
             embeddedData,
@@ -575,7 +575,7 @@ class BitcoinUtilityTests {
 
         // Valid contiguous PoP publication data (this is what should be picked up)
         transactionBytes += "0000042D00011E1E07C7674E0426D1A17E36C0D18EEE597DD7DC18572DD0FE6A925EF8CE4DC8F11BDB07EC256C08D4F9E01E764D5B9C47CD060C88B3FDF4D3DF57801424B0F5DE63992A016F5F38FEB4"
-        var embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        var embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         Utility.byteArraysAreEqual(
             embeddedData,
@@ -597,7 +597,7 @@ class BitcoinUtilityTests {
         for (i in 0..38) {
             transactionBytes += Utility.bytesToHex(byteArrayOf((i * 11 /* Arbitrary byte */).toByte()))
         }
-        embeddedData = BitcoinUtilities.extractPoPData(Utility.hexToBytes(transactionBytes), 1)
+        embeddedData = BitcoinUtilities.extractPopData(Utility.hexToBytes(transactionBytes), 1)
 
         Utility.byteArraysAreEqual(
             embeddedData,

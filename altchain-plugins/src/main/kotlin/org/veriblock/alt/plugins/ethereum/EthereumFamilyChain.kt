@@ -20,7 +20,7 @@ import org.veriblock.alt.plugins.util.asEthHex
 import org.veriblock.alt.plugins.util.asEthHexInt
 import org.veriblock.alt.plugins.util.createLoggerFor
 import org.veriblock.alt.plugins.util.asEthHash
-import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.altchain.AltchainPopEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.core.tuweni.crypto.Hash
 import org.veriblock.core.utilities.SerializerUtility
@@ -253,7 +253,7 @@ class EthereumFamilyChain(
         return addressData.toHex().toEthHash()
     }
 
-    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPoPEndorsement>): List<BlockEvidence> {
+    override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPopEndorsement>): List<BlockEvidence> {
         return altchainPopEndorsements.map { altchainPopEndorsement ->
             val hash = Hash.keccak256(altchainPopEndorsement.getHeader())
             val previousHash = altchainPopEndorsement.getHeader().copyOfRange(4, 36)
@@ -311,7 +311,7 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getPopParams(): PopParamsResponse {
-        val ethPopParams = rpcRequest<EthPoPParams>("pop_getPopParams", emptyList<String>(), "2.0")
+        val ethPopParams = rpcRequest<EthPopParams>("pop_getPopParams", emptyList<String>(), "2.0")
         return PopParamsResponse(
             ethPopParams.popActivationHeight.toInt(),
             ethPopParams.networkId,

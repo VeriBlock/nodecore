@@ -2,7 +2,6 @@ package org.veriblock.miners.pop.tasks
 
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import org.bitcoinj.core.TransactionConfidence
@@ -35,7 +34,6 @@ import org.veriblock.miners.pop.service.sec
 import org.veriblock.sdk.models.getSynchronizedMessage
 import java.text.DecimalFormat
 import java.util.ArrayList
-import kotlin.math.roundToInt
 
 private val logger = createLogger {}
 
@@ -73,9 +71,9 @@ class VpmTaskService(
                     "Trying to create endorsement transaction without the mining instruction!"
                 )
 
-            val opReturnScript = bitcoinService.generatePoPScript(miningInstruction.publicationData)
+            val opReturnScript = bitcoinService.generatePopScript(miningInstruction.publicationData)
             try {
-                val transaction = bitcoinService.createPoPTransaction(opReturnScript)
+                val transaction = bitcoinService.createPopTransaction(opReturnScript)
                 if (transaction != null) {
                     val txSize = transaction.unsafeBitcoinSerialize().size
                     val feeSats = transaction.fee.value

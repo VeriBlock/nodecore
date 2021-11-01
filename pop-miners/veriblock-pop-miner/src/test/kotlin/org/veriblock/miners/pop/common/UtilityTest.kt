@@ -41,30 +41,30 @@ class UtilityTest {
     }
 
     @Test
-    fun formatBTCFriendlyString_whenAllDecimalsSignificant() {
+    fun formatBtcFriendlyString_whenAllDecimalsSignificant() {
         val coin = Coin.valueOf(12345678)
-        val formatted = coin.formatBTCFriendlyString()
+        val formatted = coin.formatBtcFriendlyString()
         formatted shouldBe "0.12345678 BTC"
     }
 
     @Test
-    fun formatBTCFriendlyString_whenTrailingZeros() {
+    fun formatBtcFriendlyString_whenTrailingZeros() {
         val coin = Coin.valueOf(5000)
-        val formatted = coin.formatBTCFriendlyString()
+        val formatted = coin.formatBtcFriendlyString()
         formatted shouldBe "0.00005000 BTC"
     }
 
     @Test
-    fun formatBTCFriendlyString_whenOneBitcoin() {
+    fun formatBtcFriendlyString_whenOneBitcoin() {
         val coin = Coin.valueOf(100000000)
-        val formatted = coin.formatBTCFriendlyString()
+        val formatted = coin.formatBtcFriendlyString()
         formatted shouldBe "1.00000000 BTC"
     }
 
     @Test
-    fun formatBTCFriendlyString_whenMixed() {
+    fun formatBtcFriendlyString_whenMixed() {
         val coin = Coin.valueOf(1500700300)
-        val formatted = coin.formatBTCFriendlyString()
+        val formatted = coin.formatBtcFriendlyString()
         formatted shouldBe "15.00700300 BTC"
     }
 }

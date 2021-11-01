@@ -38,7 +38,7 @@ import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
 import org.veriblock.miners.pop.service.AltchainPopMinerService
-import org.veriblock.miners.pop.util.VTBDebugUtility
+import org.veriblock.miners.pop.util.VtbDebugUtility
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
@@ -611,27 +611,27 @@ private fun verifyPublications(
         // Check that the first VTB connects somewhere in the BTC context
         val firstPublication = publications[0]
 
-        val serializedAltchainBTCContext = btcContext.joinToString("\n") { Utility.bytesToHex(it) }
+        val serializedAltchainBtcContext = btcContext.joinToString("\n") { Utility.bytesToHex(it) }
 
-        val serializedBTCHashesInPoPTransaction = VTBDebugUtility.serializeBitcoinBlockHashList(
-            VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(
+        val serializedBTCHashesInPopTransaction = VtbDebugUtility.serializeBitcoinBlockHashList(
+            VtbDebugUtility.extractOrderedBtcBlocksFromPopTransaction(
                 firstPublication.transaction
             )
         )
 
-        if (!VTBDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
+        if (!VtbDebugUtility.vtbConnectsToBtcContext(btcContext, firstPublication)) {
             logger.info {
                 """Error: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} does not connect to the altchain context!
                                Altchain Bitcoin Context:
-                               $serializedAltchainBTCContext
-                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
+                               $serializedAltchainBtcContext
+                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPopTransaction""".trimIndent()
             }
         } else {
             logger.debug {
                 """Success: the first VeriBlock Publication with PoP TxID ${firstPublication.transaction.id} connects to the altchain context!
                                Altchain Bitcoin Context:
-                               $serializedAltchainBTCContext
-                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPoPTransaction""".trimIndent()
+                               $serializedAltchainBtcContext
+                               PoP Transaction Bitcoin blocks: $serializedBTCHashesInPopTransaction""".trimIndent()
             }
         }
 
@@ -640,19 +640,19 @@ private fun verifyPublications(
             val anchor = publications[i - 1]
             val toConnect = publications[i]
 
-            val anchorBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(anchor.transaction)
-            val toConnectBTCBlocks = VTBDebugUtility.extractOrderedBtcBlocksFromPopTransaction(toConnect.transaction)
+            val anchorBtcBlocks = VtbDebugUtility.extractOrderedBtcBlocksFromPopTransaction(anchor.transaction)
+            val toConnectBtcBlocks = VtbDebugUtility.extractOrderedBtcBlocksFromPopTransaction(toConnect.transaction)
 
-            val serializedAnchorBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(anchorBTCBlocks)
-            val serializedToConnectBTCBlocks = VTBDebugUtility.serializeBitcoinBlockHashList(toConnectBTCBlocks)
+            val serializedAnchorBtcBlocks = VtbDebugUtility.serializeBitcoinBlockHashList(anchorBtcBlocks)
+            val serializedToConnectBtcBlocks = VtbDebugUtility.serializeBitcoinBlockHashList(toConnectBtcBlocks)
 
-            if (!VTBDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
+            if (!VtbDebugUtility.doVtbsConnect(anchor, toConnect, (if (i > 1) publications.subList(0, i - 1) else emptyList()))) {
                 logger.info {
                     """Error: VTB at index $i does not connect to the previous VTB!
                                    VTB #${i - 1} BTC blocks:
-                                   $serializedAnchorBTCBlocks
+                                   $serializedAnchorBtcBlocks
                                    VTB #$i BTC blocks:
-                                   $serializedToConnectBTCBlocks""".trimIndent()
+                                   $serializedToConnectBtcBlocks""".trimIndent()
                 }
             } else {
                 logger.debug { "Success, VTB at index $i connects to VTB at index ${i - 1}!" }

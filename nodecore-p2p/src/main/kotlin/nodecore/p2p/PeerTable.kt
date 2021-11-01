@@ -168,7 +168,7 @@ class PeerTable(
                 .connect(socketAddress)
             return Peer(selectorManager, socket, true)
         } catch (e: IOException) {
-            logger.debug("Unable to open connection to $address:$port!")
+            logger.debug(e) { "Unable to open connection to $address:$port!" }
         }
         return null
     }

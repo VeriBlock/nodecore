@@ -86,6 +86,10 @@ class VeriBlockMerklePath {
         return compactFormat
     }
 
+    override fun toString(): String {
+        return toCompactString()
+    }
+
     override fun equals(other: Any?): Boolean {
         return this === other || other != null && javaClass == other.javaClass &&
             toCompactString() == (other as VeriBlockMerklePath).toCompactString()

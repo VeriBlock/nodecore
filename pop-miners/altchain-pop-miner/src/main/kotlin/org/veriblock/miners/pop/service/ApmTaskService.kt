@@ -12,7 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import org.koin.core.KoinComponent
 import org.koin.core.inject
-import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.altchain.AltchainPopEndorsement
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes
@@ -80,8 +80,8 @@ class ApmTaskService(
             val transaction = try {
                 val endorsementData = SerializeDeserializeService.serialize(miningInstruction.publicationData)
                 // Verify context bytes before submitting endorsement
-                val endorsement: AltchainPoPEndorsement = try {
-                    AltchainPoPEndorsement(endorsementData)
+                val endorsement: AltchainPopEndorsement = try {
+                    AltchainPopEndorsement(endorsementData)
                 } catch (e: Exception) {
                     failOperation("Invalid endorsement data: ${endorsementData.toHex()}", e)
                 }

@@ -6,13 +6,12 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.core
 
-import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
 import org.junit.Test
-import org.veriblock.core.altchain.AltchainPoPEndorsement
+import org.veriblock.core.altchain.AltchainPopEndorsement
 import org.veriblock.core.utilities.Utility
 
-class AltchainPoPEndorsementTests {
+class AltchainPopEndorsementTests {
     @Test
     fun testMinimalEndorsement_1() {
             val identifierLength = "01"
@@ -22,7 +21,7 @@ class AltchainPoPEndorsementTests {
             val header = "FF"
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -48,7 +47,7 @@ class AltchainPoPEndorsementTests {
             val header = "AABBCCDD"
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -74,7 +73,7 @@ class AltchainPoPEndorsementTests {
             val header = "00112233445566778899AABBCCDDEEFF"
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -104,7 +103,7 @@ class AltchainPoPEndorsementTests {
             val header = headerSB.toString()
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -134,7 +133,7 @@ class AltchainPoPEndorsementTests {
             val header = headerSB.toString()
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -164,7 +163,7 @@ class AltchainPoPEndorsementTests {
             val header = headerSB.toString()
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -190,7 +189,7 @@ class AltchainPoPEndorsementTests {
             val header = "ABCDEF987654"
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -216,7 +215,7 @@ class AltchainPoPEndorsementTests {
             val header = "ABCDEF987654"
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -242,7 +241,7 @@ class AltchainPoPEndorsementTests {
             val header = "ABCDEF987654"
             val noContextInfo = "00"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -270,7 +269,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfContextInfo = "01" // = 1
             val contextInfo = "FF"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -303,7 +302,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfContextInfo = "0F" // = 15
             val contextInfo = "00112233445566778899AABBCCDDEE"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -336,7 +335,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfContextInfo = "10" // = 15
             val contextInfo = "00112233445566778899AABBCCDDEEFF"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -373,7 +372,7 @@ class AltchainPoPEndorsementTests {
             }
             val contextInfo = contextSB.toString()
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -410,7 +409,7 @@ class AltchainPoPEndorsementTests {
             }
             val contextInfo = contextSB.toString()
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -447,7 +446,7 @@ class AltchainPoPEndorsementTests {
             }
             val contextInfo = contextSB.toString()
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -480,7 +479,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfContextInfo = "0001" // = 1
             val contextInfo = "AB"
             val noPayoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -513,7 +512,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfLengthOfPayoutInfo = "01"
             val lengthOfPayoutInfo = "01" // = 1
             val payoutInfo = "00"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -546,7 +545,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfLengthOfPayoutInfo = "01"
             val lengthOfPayoutInfo = "08" // = 8
             val payoutInfo = "0011223344556677"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -583,7 +582,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("AB")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -620,7 +619,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("AB")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -657,7 +656,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("AB")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -694,7 +693,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("AB")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -727,7 +726,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfLengthOfPayoutInfo = "02"
             val lengthOfPayoutInfo = "0001" // = 1
             val payoutInfo = "FF"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -762,7 +761,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfLengthOfPayoutInfo = "01"
             val lengthOfPayoutInfo = "01" // = 1
             val payoutInfo = "FF"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -802,7 +801,7 @@ class AltchainPoPEndorsementTests {
             val lengthOfLengthOfPayoutInfo = "02"
             val lengthOfPayoutInfo = "0001" // = 1
             val payoutInfo = "FF"
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -850,7 +849,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("CD")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -898,7 +897,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("CD")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -946,7 +945,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("CD")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -994,7 +993,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("CD")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -1042,7 +1041,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("CD")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -1090,7 +1089,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("CD")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -1138,7 +1137,7 @@ class AltchainPoPEndorsementTests {
                 payoutSB.append("00")
             }
             val payoutInfo = payoutSB.toString()
-            val popEndorsement = AltchainPoPEndorsement(
+            val popEndorsement = AltchainPopEndorsement(
                 assembleHex(
                     identifierLength,
                     identifier,
@@ -1178,7 +1177,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1198,7 +1197,7 @@ class AltchainPoPEndorsementTests {
     @Test(expected = IllegalArgumentException::class)
     fun testBadEndorsement_2() {
         val identifierLength = "00" // Can't have 0-length identifier
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength
             )
@@ -1218,7 +1217,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1248,7 +1247,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1278,7 +1277,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1308,7 +1307,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1338,7 +1337,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1368,7 +1367,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "04" // Value too high!
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1398,7 +1397,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "0001" // Too long!
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1428,7 +1427,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "0000" // Too long!
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1458,7 +1457,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1489,7 +1488,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
         val extraInfoAtEnd = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1521,7 +1520,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 extraInfoAtBeginning,
                 identifierLength,
@@ -1553,7 +1552,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 extraInfoInMiddle,
@@ -1585,7 +1584,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1617,7 +1616,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1649,7 +1648,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1681,7 +1680,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1713,7 +1712,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1745,7 +1744,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1777,7 +1776,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfLengthOfPayoutInfo = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1809,7 +1808,7 @@ class AltchainPoPEndorsementTests {
         val extraInfoInMiddle = "01"
         val lengthOfPayoutInfo = "01" // = 1
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,
@@ -1841,7 +1840,7 @@ class AltchainPoPEndorsementTests {
         val lengthOfPayoutInfo = "01" // = 1
         val extraInfoInMiddle = "01"
         val payoutInfo = "00"
-        AltchainPoPEndorsement(
+        AltchainPopEndorsement(
             assembleHex(
                 identifierLength,
                 identifier,

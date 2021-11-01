@@ -15,7 +15,7 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-class PoPMiningInstructionTests {
+class PopMiningInstructionTests {
     private lateinit var data: PopMiningInstruction
 
     @Before

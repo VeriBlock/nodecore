@@ -57,17 +57,17 @@ private val SERIALIZATION_VERSION_BYTES = Utility.toByteArray(SERIALIZATION_VERS
 
 object SerializeDeserializeService {
 
-    fun serialize(veriBlockPoPTransaction: VeriBlockPopTransaction, stream: OutputStream) {
-        val rawTransaction = serializeTransactionEffects(veriBlockPoPTransaction)
+    fun serialize(veriBlockPopTransaction: VeriBlockPopTransaction, stream: OutputStream) {
+        val rawTransaction = serializeTransactionEffects(veriBlockPopTransaction)
         stream.writeVariableLengthValue(rawTransaction)
-        stream.writeSingleByteLengthValue(veriBlockPoPTransaction.signature)
-        stream.writeSingleByteLengthValue(veriBlockPoPTransaction.publicKey)
+        stream.writeSingleByteLengthValue(veriBlockPopTransaction.signature)
+        stream.writeSingleByteLengthValue(veriBlockPopTransaction.publicKey)
     }
 
-    fun serializeTransactionEffects(veriBlockPoPTransaction: VeriBlockPopTransaction): ByteArray {
+    fun serializeTransactionEffects(veriBlockPopTransaction: VeriBlockPopTransaction): ByteArray {
         try {
             ByteArrayOutputStream().use { stream ->
-                serializeTransactionEffects(veriBlockPoPTransaction, stream)
+                serializeTransactionEffects(veriBlockPopTransaction, stream)
                 return stream.toByteArray()
             }
         } catch (ignore: IOException) {
@@ -105,12 +105,12 @@ object SerializeDeserializeService {
         }
     }
 
-    fun getId(veriBlockPoPTransaction: VeriBlockPopTransaction): Sha256Hash {
-        return sha256HashOf(serializeTransactionEffects(veriBlockPoPTransaction)).asSha256Hash()
+    fun getId(veriBlockPopTransaction: VeriBlockPopTransaction): Sha256Hash {
+        return sha256HashOf(serializeTransactionEffects(veriBlockPopTransaction)).asSha256Hash()
     }
 
-    fun getHash(veriBlockPoPTransaction: VeriBlockPopTransaction): Sha256Hash {
-        return sha256HashOf(serializeTransactionEffects(veriBlockPoPTransaction)).asSha256Hash()
+    fun getHash(veriBlockPopTransaction: VeriBlockPopTransaction): Sha256Hash {
+        return sha256HashOf(serializeTransactionEffects(veriBlockPopTransaction)).asSha256Hash()
     }
 
     // VeriBlockPublication
