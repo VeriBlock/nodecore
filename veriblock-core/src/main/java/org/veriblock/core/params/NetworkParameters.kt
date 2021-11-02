@@ -88,7 +88,7 @@ class NetworkParameters(
             "testnet" -> TestNetParameters
             "alpha" -> AlphaNetParameters
             "regtest" -> if (config.progPowForkHeight == 0) {
-                RegTestProgPoWParameters
+                RegTestProgPowParameters
             } else {
                 RegTestParameters
             }
@@ -312,7 +312,7 @@ sealed class RegTestParametersTemplate : NetworkParametersTemplate() {
 
 object RegTestParameters : RegTestParametersTemplate()
 
-private object RegTestProgPoWParameters : RegTestParametersTemplate() {
+private object RegTestProgPowParameters : RegTestParametersTemplate() {
     override val genesisBlock = VeriBlockBlock(
         height = 0,
         version = 2.toShort(),
@@ -341,7 +341,7 @@ val defaultAlphaNetParameters = NetworkParameters { network = AlphaNetParameters
 val defaultRegTestParameters = NetworkParameters { network = RegTestParameters.NETWORK }
 
 @JvmField
-val defaultRegTestProgPoWParameters = NetworkParameters {
+val defaultRegTestProgPowParameters = NetworkParameters {
     network = RegTestParameters.NETWORK
     progPowForkHeight = 0
     progPowStartTimeEpoch = System.currentTimeMillis() / 1000
@@ -362,7 +362,7 @@ fun getDefaultNetworkParameters(name: String, progPowGenesis: Boolean = false) =
         if (!progPowGenesis) {
             defaultRegTestParameters
         } else {
-            defaultRegTestProgPoWParameters
+            defaultRegTestProgPowParameters
         }
     }
     else -> error("Unknown VBK network: $name")

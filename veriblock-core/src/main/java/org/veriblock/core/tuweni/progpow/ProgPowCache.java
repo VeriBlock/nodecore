@@ -13,8 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class ProgPoWCache {
-    private static final Logger _logger = LoggerFactory.getLogger(ProgPoWCache.class);
+public class ProgPowCache {
+    private static final Logger _logger = LoggerFactory.getLogger(ProgPowCache.class);
 
     private static final int BUFFER_FOR_CALCULATION = 100;
 
@@ -37,7 +37,7 @@ public class ProgPoWCache {
                 // Generate both DAG cache and cDag
                 int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(blockHeight)), blockHeight);
 
-                int[] cDag = ProgPoW.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
+                int[] cDag = ProgPow.createDagCache(blockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
                 cachedPairs.put(epoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
             }
@@ -59,7 +59,7 @@ public class ProgPoWCache {
             _logger.info("Generating DAG cache for current epoch " + currentEpoch + "...");
             int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(currentBlockHeight)), currentBlockHeight);
 
-            int[] cDag = ProgPoW.createDagCache(currentBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
+            int[] cDag = ProgPow.createDagCache(currentBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(currentEpoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }
@@ -70,7 +70,7 @@ public class ProgPoWCache {
             _logger.info("Pre-generating DAG cache for future epoch " + futureEpoch + "...");
             int[] cache = EthHash.mkCache(Ints.checkedCast(EthHash.getCacheSize(futureBlockHeight)), futureBlockHeight);
 
-            int[] cDag = ProgPoW.createDagCache(futureBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
+            int[] cDag = ProgPow.createDagCache(futureBlockHeight, (ind) -> EthHash.calcDatasetItem(cache, ind));
 
             cachedPairs.put(futureEpoch, new Triple<>(cache, cDag, System.currentTimeMillis()));
         }

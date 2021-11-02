@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  *
  * @implSpec https://github.com/ifdefelse/ProgPOW
  */
-public final class ProgPoW {
+public final class ProgPow {
 
     public static int PROGPOW_PERIOD = 10;
     public static int PROGPOW_LANES = 16;
@@ -172,9 +172,9 @@ public final class ProgPoW {
     static int merge(int a, int b, int r) {
         switch ((int)((((long)r)&0x00000000FFFFFFFFL) % 4)) {
             case 0:
-                return ProgPoWMath.rotr32(a, ((r >>> 16) % 31) + 1) ^ b;
+                return ProgPowMath.rotr32(a, ((r >>> 16) % 31) + 1) ^ b;
             case 1:
-                return ProgPoWMath.rotl32(a, ((r >>> 16) % 31) + 1) ^ b;
+                return ProgPowMath.rotl32(a, ((r >>> 16) % 31) + 1) ^ b;
             // prevent rotate by 0 which is a NOP
             case 2:
                 return ((a * 33) + b);
@@ -194,7 +194,7 @@ public final class ProgPoW {
 
         KISS99Random random = new KISS99Random(z, w, jsr, jcong);
 
-        int[] mix = new int[ProgPoW.PROGPOW_REGS];
+        int[] mix = new int[ProgPow.PROGPOW_REGS];
         for (int i = 0; i < mix.length; i++) {
             mix[i] = random.generate();
         }
@@ -292,7 +292,7 @@ public final class ProgPoW {
                 int dst = mix_seq_dst[(mix_seq_dst_cnt++) % PROGPOW_REGS];
                 int sel2 = prog_rnd.generate();
                 for (int l = 0; l < PROGPOW_LANES; l++) {
-                    int data = ProgPoWMath.math(mix[l][src1], mix[l][src2], sel1);
+                    int data = ProgPowMath.math(mix[l][src1], mix[l][src2], sel1);
                     int result = merge(mix[l][dst], data, sel2);
                     mix[l][dst] = result;
                 }

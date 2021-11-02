@@ -18,7 +18,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.veriblock.core.Context
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.getDefaultNetworkParameters
-import org.veriblock.core.tuweni.progpow.ProgPoWCache
+import org.veriblock.core.tuweni.progpow.ProgPowCache
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -56,7 +56,7 @@ private fun run(): Int {
         shutdownSignal.countDown()
     })
 
-    ProgPoWCache.setMaxCachedPairs(2) // Fewer cached pairs for SPV
+    ProgPowCache.setMaxCachedPairs(2) // Fewer cached pairs for SPV
 
     print(SharedConstants.LICENSE)
     println(SharedConstants.VERIBLOCK_APPLICATION_NAME.replace("$1", ApplicationMeta.FULL_APPLICATION_NAME_VERSION.replace("VeriBlock ", "")))

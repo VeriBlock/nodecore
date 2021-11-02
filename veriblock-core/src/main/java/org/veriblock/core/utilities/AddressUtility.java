@@ -464,7 +464,7 @@ public class AddressUtility {
         return addressFromPublicKey(pubKey.getEncoded());
     }
 
-    public static byte[] toPoPAddressFormat(String address) {
+    public static byte[] toPopAddressFormat(String address) {
         return Base58.decode(AddressUtility.chopStartingCharacter(address));
     }
 }

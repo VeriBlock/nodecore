@@ -13,7 +13,7 @@
 
 package org.veriblock.core.tuweni.progpow;
 
-final class ProgPoWMath {
+final class ProgPowMath {
     static int math(int a, int b, int r) {
         int rMod = (int)((((long)r) & 0x00000000FFFFFFFFL) % 11);
         switch (rMod) {

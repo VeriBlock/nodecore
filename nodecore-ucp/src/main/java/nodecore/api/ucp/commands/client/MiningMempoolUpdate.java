@@ -82,7 +82,7 @@ public class MiningMempoolUpdate extends UCPClientCommand {
         return job_id.getData();
     }
 
-    public String getPoPTransactionMerkleROot() {
+    public String getPopTransactionMerkleROot() {
         return pop_transaction_merkle_root.getData();
     }
 

@@ -34,9 +34,9 @@ class RegTestParametersTests {
 
     @Test
     fun verifyProgPowGenesisBlock() {
-        Context.set(defaultRegTestProgPoWParameters)
-        defaultRegTestProgPoWParameters.genesisBlock.raw.toHex() shouldBe "00000000000200000000000000000000000000000000000000000000000000000000000080D7178046D25CA9AD283C5AF587A7C55F8C848A010100000000000000"
-        defaultRegTestProgPoWParameters.genesisBlock.hash.toString() shouldBe "A3E77A18A8F7B4568A062F69340D1AD4360382E5BC218A8C"
+        Context.set(defaultRegTestProgPowParameters)
+        defaultRegTestProgPowParameters.genesisBlock.raw.toHex() shouldBe "00000000000200000000000000000000000000000000000000000000000000000000000080D7178046D25CA9AD283C5AF587A7C55F8C848A010100000000000000"
+        defaultRegTestProgPowParameters.genesisBlock.hash.toString() shouldBe "A3E77A18A8F7B4568A062F69340D1AD4360382E5BC218A8C"
     }
 
     /* Compute the block hash by SHA256D on the header */

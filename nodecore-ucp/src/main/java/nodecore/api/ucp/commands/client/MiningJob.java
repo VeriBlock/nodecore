@@ -34,7 +34,7 @@ public class MiningJob extends UCPClientCommand {
     private final UCPArgumentTarget mining_target;
     private final UCPArgumentLedgerHash ledger_hash;
     private final UCPArgumentTransactionID coinbase_txid;
-    private final UCPArgumentPoPDatastoreHash pop_datastore_hash;
+    private final UCPArgumentPopDatastoreHash pop_datastore_hash;
     private final UCPArgumentMinerComment miner_comment;
     private final UCPArgumentIntermediateLevelMerkleRoot pop_transaction_merkle_root;
     private final UCPArgumentIntermediateLevelMerkleRoot normal_transaction_merkle_root;
@@ -74,7 +74,7 @@ public class MiningJob extends UCPClientCommand {
         this.mining_target = (UCPArgumentTarget) arguments[11];
         this.ledger_hash = (UCPArgumentLedgerHash) arguments[12];
         this.coinbase_txid = (UCPArgumentTransactionID) arguments[13];
-        this.pop_datastore_hash = (UCPArgumentPoPDatastoreHash) arguments[14];
+        this.pop_datastore_hash = (UCPArgumentPopDatastoreHash) arguments[14];
         this.miner_comment = (UCPArgumentMinerComment) arguments[15];
         this.pop_transaction_merkle_root = (UCPArgumentIntermediateLevelMerkleRoot)arguments[16];
         this.normal_transaction_merkle_root = (UCPArgumentIntermediateLevelMerkleRoot)arguments[17];
@@ -103,7 +103,7 @@ public class MiningJob extends UCPClientCommand {
         this.mining_target = new UCPArgumentTarget(mining_target);
         this.ledger_hash = new UCPArgumentLedgerHash(ledger_hash);
         this.coinbase_txid = new UCPArgumentTransactionID(coinbaseTransactionID);
-        this.pop_datastore_hash = new UCPArgumentPoPDatastoreHash(popDatastoreHash);
+        this.pop_datastore_hash = new UCPArgumentPopDatastoreHash(popDatastoreHash);
         this.miner_comment = new UCPArgumentMinerComment(minerComment);
         this.pop_transaction_merkle_root = new UCPArgumentIntermediateLevelMerkleRoot(popTransactionMerkleRoot);
         this.normal_transaction_merkle_root = new UCPArgumentIntermediateLevelMerkleRoot(normalTransactionMerkleRoot);
@@ -176,7 +176,7 @@ public class MiningJob extends UCPClientCommand {
         return coinbase_txid.getData();
     }
 
-    public String getPoPDatastoreHash() {
+    public String getPopDatastoreHash() {
         return coinbase_txid.getData();
     }
 
@@ -184,7 +184,7 @@ public class MiningJob extends UCPClientCommand {
         return miner_comment.getData();
     }
 
-    public String getPoPTransactionMerkleRoot() {
+    public String getPopTransactionMerkleRoot() {
         return pop_transaction_merkle_root.getData();
     }
 

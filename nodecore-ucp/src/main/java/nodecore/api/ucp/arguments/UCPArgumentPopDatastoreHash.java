@@ -6,7 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.api.ucp.arguments;
 
-public class UCPArgumentPoPDatastoreHash extends UCPArgument {
+public class UCPArgumentPopDatastoreHash extends UCPArgument {
 
     private final UCPArgument.UCPType type = UCPType.POP_DATASTORE_HASH;
 
@@ -22,7 +22,7 @@ public class UCPArgumentPoPDatastoreHash extends UCPArgument {
      * Also the Constructor for serializing the actual type, useful when creating a command.
      * @param data
      */
-    public UCPArgumentPoPDatastoreHash(String data) {
+    public UCPArgumentPopDatastoreHash(String data) {
         if (data == null) {
             throw new IllegalArgumentException(getClass().getCanonicalName() + "'s constructor cannot be called with null data!");
         }

@@ -17,7 +17,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.koin.core.context.startKoin
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.params.*
-import org.veriblock.core.tuweni.progpow.ProgPoWCache
+import org.veriblock.core.tuweni.progpow.ProgPowCache
 import org.veriblock.miners.pop.api.ApiServer
 import org.veriblock.miners.pop.api.webApiModule
 import org.veriblock.miners.pop.automine.AutoMineEngine
@@ -83,7 +83,7 @@ fun run(args: Array<String>): Int {
         org.veriblock.core.Context.create(defaultTestNetParameters);
     }
 
-    ProgPoWCache.setMaxCachedPairs(2); // Fewer cached pairs for PoP miner
+    ProgPowCache.setMaxCachedPairs(2); // Fewer cached pairs for PoP miner
 
     Threading.ignoreLockCycles()
     Threading.USER_THREAD = Executor { command: Runnable ->

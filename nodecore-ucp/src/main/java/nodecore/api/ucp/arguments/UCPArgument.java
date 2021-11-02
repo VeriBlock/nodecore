@@ -61,7 +61,7 @@ public abstract class UCPArgument {
         TRANSACTION_ID("string|hexadecimal|length:64", UCPArgumentTransactionID.class), // 32 bytes
         TRANSACTION_LIST("string", UCPArgumentTransactionList.class),
         USERNAME("string", UCPArgumentUsername.class),
-        POP_DATASTORE_HASH("string|hexadecimal|length:64", UCPArgumentPoPDatastoreHash.class), // 32 bytes
+        POP_DATASTORE_HASH("string|hexadecimal|length:64", UCPArgumentPopDatastoreHash.class), // 32 bytes
         MINER_COMMENT("string", UCPArgumentMinerComment.class),
         INTERMEDIATE_METAPACKAGE_HASH("string|hexadecimal|length:64", UCPArgumentIntermediateMetapackageHash.class); // 32 bytes
 

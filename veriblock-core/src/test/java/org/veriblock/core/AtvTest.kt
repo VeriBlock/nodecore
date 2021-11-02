@@ -8,7 +8,7 @@ import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.TruncatedMerkleRoot
-import org.veriblock.core.params.defaultRegTestProgPoWParameters
+import org.veriblock.core.params.defaultRegTestProgPowParameters
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.models.Address
@@ -27,7 +27,7 @@ fun String.unhex(): ByteArray {
 
 class AtvTest {
     init {
-        Context.set(defaultRegTestProgPoWParameters)
+        Context.set(defaultRegTestProgPowParameters)
         Security.addProvider(BouncyCastleProvider())
     }
 

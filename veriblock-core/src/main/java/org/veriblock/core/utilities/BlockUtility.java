@@ -14,8 +14,8 @@ import org.veriblock.core.bitcoinj.BitcoinUtilities;
 import org.veriblock.core.crypto.Crypto;
 import org.veriblock.core.tuweni.bytes.Bytes32;
 import org.veriblock.core.tuweni.ethash.EthHash;
-import org.veriblock.core.tuweni.progpow.ProgPoW;
-import org.veriblock.core.tuweni.progpow.ProgPoWCache;
+import org.veriblock.core.tuweni.progpow.ProgPow;
+import org.veriblock.core.tuweni.progpow.ProgPowCache;
 import org.veriblock.core.types.Pair;
 
 import java.math.BigInteger;
@@ -451,15 +451,15 @@ public final class BlockUtility {
         return extracted;
     }
 
-    public static byte[] getProgPoWHeaderHash(byte[] header) {
+    public static byte[] getProgPowHeaderHash(byte[] header) {
         Crypto crypto = new Crypto();
 
-        byte[] choppedHeaderToHash = extractHeaderBytesForProgPoWHeaderHashCalculation(header);
+        byte[] choppedHeaderToHash = extractHeaderBytesForProgPowHeaderHashCalculation(header);
         byte[] headerHash = crypto.SHA256D(choppedHeaderToHash);
         return headerHash;
     }
 
-    public static byte[] extractHeaderBytesForProgPoWHeaderHashCalculation(byte[] header) {
+    public static byte[] extractHeaderBytesForProgPowHeaderHashCalculation(byte[] header) {
         // Chop off the last 5 bytes of the header (nonce)
         byte[] chopped = new byte[header.length - 5];
         System.arraycopy(header, 0, chopped, 0, chopped.length);
@@ -505,18 +505,18 @@ public final class BlockUtility {
         }
 
         // Generate header hash...
-        byte[] headerHash = getProgPoWHeaderHash(blockHeader);
+        byte[] headerHash = getProgPowHeaderHash(blockHeader);
         long extractedNonce = BlockUtility.extractNonceFromBlockHeader(blockHeader);
 
         // Nonce in VeriBlock is only 40 bits (5 bytes)
         long converted = (extractedNonce & 0x0000_00FF_FFFF_FFFFL);
 
         // TODO: Move to crypto
-        Pair<int[], int[]> cachePair = ProgPoWCache.getDAGCache(blockNum);
+        Pair<int[], int[]> cachePair = ProgPowCache.getDAGCache(blockNum);
         int[] cache = cachePair.getFirst();
 
         int[] cDag = cachePair.getSecond();
-        Bytes32 digest = ProgPoW.progPowHash(
+        Bytes32 digest = ProgPow.progPowHash(
             blockNum,
             converted,
             Bytes32.wrap(headerHash),
