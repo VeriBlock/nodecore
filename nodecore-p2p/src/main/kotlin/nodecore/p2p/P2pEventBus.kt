@@ -23,8 +23,8 @@ import nodecore.api.grpc.RpcClearFilter
 import nodecore.api.grpc.RpcCreateFilter
 import nodecore.api.grpc.RpcEvent
 import nodecore.api.grpc.RpcFilteredBlock
-import nodecore.api.grpc.RpcGetDebugVTBsReply
-import nodecore.api.grpc.RpcGetDebugVTBsRequest
+import nodecore.api.grpc.RpcGetDebugVtbsReply
+import nodecore.api.grpc.RpcGetDebugVtbsRequest
 import nodecore.api.grpc.RpcGetStateInfoReply
 import nodecore.api.grpc.RpcGetStateInfoRequest
 import nodecore.api.grpc.RpcGetTransactionReply
@@ -83,8 +83,8 @@ object P2pEventBus {
     val getTransactionReply = AsyncEvent<P2pEvent<RpcGetTransactionReply>>("Get transaction reply", asyncEventDispatcher)
     val getVeriBlockPublicationsRequest = AsyncEvent<P2pEvent<RpcGetVeriBlockPublicationsRequest>>("Get VeriBlock publications request", asyncEventDispatcher)
     val getVeriBlockPublicationsReply = AsyncEvent<P2pEvent<RpcGetVeriBlockPublicationsReply>>("Get VeriBlock publications reply", asyncEventDispatcher)
-    val getDebugVtbsRequest = AsyncEvent<P2pEvent<RpcGetDebugVTBsRequest>>("Get debug VTBs request", asyncEventDispatcher)
-    val getDebugVtbsReply = AsyncEvent<P2pEvent<RpcGetDebugVTBsReply>>("Get debug VTBs reply", asyncEventDispatcher)
+    val getDebugVtbsRequest = AsyncEvent<P2pEvent<RpcGetDebugVtbsRequest>>("Get debug VTBs request", asyncEventDispatcher)
+    val getDebugVtbsReply = AsyncEvent<P2pEvent<RpcGetDebugVtbsReply>>("Get debug VTBs reply", asyncEventDispatcher)
     val getStateInfoRequest = AsyncEvent<P2pEvent<RpcGetStateInfoRequest>>("Get state info request", asyncEventDispatcher)
     val getStateInfoReply = AsyncEvent<P2pEvent<RpcGetStateInfoReply>>("Get state info reply", asyncEventDispatcher)
     val getVtbsForBtcBlocksRequest = AsyncEvent<P2pEvent<RpcGetVtbsForBtcBlocksRequest>>("Get VTBs for BTC blocks request", asyncEventDispatcher)

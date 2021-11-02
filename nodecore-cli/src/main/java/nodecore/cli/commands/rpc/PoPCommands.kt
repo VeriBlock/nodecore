@@ -2,13 +2,13 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.RpcAddressSet
 import nodecore.api.grpc.RpcBitcoinBlockHeader
-import nodecore.api.grpc.RpcGetPoPEndorsementsInfoRequest
+import nodecore.api.grpc.RpcGetPopEndorsementsInfoRequest
 import nodecore.api.grpc.RpcGetPopRequest
 import nodecore.api.grpc.RpcGetProtectedChildrenRequest
 import nodecore.api.grpc.RpcGetProtectingParentsRequest
 import nodecore.api.grpc.RpcStandardAddress
 import nodecore.api.grpc.RpcSubmitPopRequest
-import nodecore.api.grpc.RpcTroubleshootPoPTransactionsRequest
+import nodecore.api.grpc.RpcTroubleshootPopTransactionsRequest
 import nodecore.api.grpc.utilities.ByteStringAddressUtility
 import nodecore.api.grpc.utilities.extensions.asHexByteString
 import nodecore.api.grpc.utilities.extensions.toByteString
@@ -40,7 +40,7 @@ fun CommandFactory.popCommands() {
         suggestedCommands = { listOf("getbalance", "gethistory") }
     ) {
         val address: String? = getOptionalParameter("address")
-        val request = RpcTroubleshootPoPTransactionsRequest.newBuilder()
+        val request = RpcTroubleshootPopTransactionsRequest.newBuilder()
         if (address != null) {
             request.setAddresses(
                 RpcAddressSet.newBuilder().addAddresses(
@@ -96,7 +96,7 @@ fun CommandFactory.popCommands() {
     ) {
         val address: String = getParameter("address")
         val searchLength: Int? = getOptionalParameter("searchLength")
-        val request = RpcGetPoPEndorsementsInfoRequest.newBuilder()
+        val request = RpcGetPopEndorsementsInfoRequest.newBuilder()
             .addAddresses(
                 RpcStandardAddress.newBuilder()
                  .setStandardAddress(ByteStringAddressUtility.createProperByteStringAutomatically(address))

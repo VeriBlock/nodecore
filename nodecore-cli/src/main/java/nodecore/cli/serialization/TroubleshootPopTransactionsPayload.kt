@@ -6,10 +6,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.serialization
 
-import nodecore.api.grpc.RpcTroubleshootPoPTransactionsReply
+import nodecore.api.grpc.RpcTroubleshootPopTransactionsReply
 
 class TroubleshootPopTransactionsPayload(
-    reply: RpcTroubleshootPoPTransactionsReply
+    reply: RpcTroubleshootPopTransactionsReply
 ) {
     val PopProblemReports = Array(reply.popProblemReportsCount) { index ->
         PopTransactionProblemReport(reply.getPopProblemReports(index))

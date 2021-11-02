@@ -110,7 +110,7 @@ message RpcBitcoinBlockHeader {
     bytes header = 1 [(hex_encoded)=true];
 }
 
-message RpcPoPEndorsementInfo {
+message RpcPopEndorsementInfo {
     bytes miner_address = 1 [(address_encoded)=true];
     bytes endorsed_veriblock_block_hash = 2 [(hex_encoded)=true];
     bytes contained_in_veriblock_block_hash = 3 [(hex_encoded)=true];
@@ -128,7 +128,7 @@ message RpcStandardAddress {
     bytes standard_address = 1 [(address_encoded)=true];
 }
 
-message RpcTroubleshootPoPTransactionsRequest {
+message RpcTroubleshootPopTransactionsRequest {
     bool only_failures = 1;
     int32 search_length = 2;
     oneof search_paramater {
@@ -155,13 +155,13 @@ message RpcTransactionSet {
     repeated bytes txids = 1 [(hex_encoded)=true];
 }
 
-message RpcTroubleshootPoPTransactionsReply {
+message RpcTroubleshootPopTransactionsReply {
     bool success = 1;
     repeated RpcResult results = 2;
-    repeated RpcPoPTransactionProblemReport popProblemReports = 3;
+    repeated RpcPopTransactionProblemReport popProblemReports = 3;
 }
 
-message RpcPoPTransactionProblemReport {
+message RpcPopTransactionProblemReport {
     bytes address = 1 [(address_encoded)=true];
     bytes txid = 2 [(hex_encoded)=true];
     bytes endorsed_vbk_block_hash = 3 [(hex_encoded)=true];
@@ -182,18 +182,18 @@ message RpcPoPTransactionProblemReport {
     int32 current_block_height = 18;
 }
 
-message RpcGetPoPEndorsementsInfoRequest {
+message RpcGetPopEndorsementsInfoRequest {
     int32 search_length = 1;
     repeated RpcStandardAddress addresses = 2;
 }
 
-message RpcGetPoPEndorsementsInfoReply {
+message RpcGetPopEndorsementsInfoReply {
     bool success = 1;
     repeated RpcResult results = 2;
-    repeated RpcPoPEndorsementInfo pop_endorsements = 3;
+    repeated RpcPopEndorsementInfo pop_endorsements = 3;
 }
 
-message RpcGetPoPRewardEstimatesRequest {
+message RpcGetPopRewardEstimatesRequest {
     int32 keystones_to_search = 1;
 }
 
@@ -211,7 +211,7 @@ message RpcRewardEstimate {
     int64 reward_per_point = 3;
 }
 
-message RpcGetPoPRewardEstimatesReply {
+message RpcGetPopRewardEstimatesReply {
     bool success = 1;
     repeated RpcResult results = 2;
 
@@ -226,7 +226,7 @@ message RpcGetProtectedChildrenRequest {
 message RpcGetProtectedChildrenReply {
     bool success = 1;
     repeated RpcResult results = 2;
-    repeated RpcPoPEndorsementInfo pop_endorsements = 3;
+    repeated RpcPopEndorsementInfo pop_endorsements = 3;
 }
 
 message RpcGetProtectingParentsRequest {
@@ -237,7 +237,7 @@ message RpcGetProtectingParentsRequest {
 message RpcGetProtectingParentsReply {
     bool success = 1;
     repeated RpcResult results = 2;
-    repeated RpcPoPEndorsementInfo pop_endorsements = 3;
+    repeated RpcPopEndorsementInfo pop_endorsements = 3;
 }
 
 message RpcLedgerValue {
@@ -372,7 +372,7 @@ message RpcWalletTransaction {
     RpcTransactionMeta meta = 8;
 }
 
-message RpcPoPDatastore {
+message RpcPopDatastore {
     bytes datastore_hash = 1 [(hex_encoded)=true];
     bytes endorsed_veriblock_headers_hash = 2 [(hex_encoded)=true];
     bytes endorsed_altchain_headers_hash = 3 [(hex_encoded)=true];
@@ -400,7 +400,7 @@ message RpcAltchainHeaderEndorsementCountPair {
     int32 endorsement_count = 2;
 }
 
-message RpcAltchainPoPEndorsement {
+message RpcAltchainPopEndorsement {
     int64 identifier = 1;
     bytes header = 2;
     bytes contextInfo = 3;
@@ -414,7 +414,7 @@ message RpcBlockFeeTable {
 
 message RpcBlockContentMetapackage {
     RpcCoinbaseTransaction coinbase_transaction = 1;
-    RpcPoPDatastore pop_datastore = 2;
+    RpcPopDatastore pop_datastore = 2;
     bytes miner_comment = 3 [(ascii_encoded)=true];
     bytes ledger_hash = 4 [(hex_encoded)=true];
     sint64 extra_nonce = 5;
@@ -764,8 +764,8 @@ message RpcEvent {
         RpcGetTransactionReply transaction_reply = 29;
         RpcGetVeriBlockPublicationsRequest veriblock_publications_request = 30;
         RpcGetVeriBlockPublicationsReply veriblock_publications_reply = 31;
-        RpcGetDebugVTBsRequest debug_vtb_request = 32;
-        RpcGetDebugVTBsReply debug_vtb_reply = 33;
+        RpcGetDebugVtbsRequest debug_vtb_request = 32;
+        RpcGetDebugVtbsReply debug_vtb_reply = 33;
         RpcGetStateInfoRequest state_info_request = 35;
         RpcGetStateInfoReply state_info_reply = 36;
         RpcGetVtbsForBtcBlocksRequest vtb_for_btc_request = 37;
@@ -865,7 +865,7 @@ message RpcSubmitPopRequest {
     bytes address = 6 [(address_encoded)=true];
 }
 
-message RpcPoPEndorsement {
+message RpcPopEndorsement {
     bytes endorsed_block_header = 1 [(hex_encoded)=true];
     bytes bitcoin_transaction = 2 [(hex_encoded)=true];
     bytes bitcoin_merkle_path_to_root = 3 [(hex_encoded)=true];
@@ -879,7 +879,7 @@ message RpcGetEndorsementsOfBlockRequest {
 
 message RpcGetEndorsementsOfBlockReply {
     bool success = 1;
-    repeated RpcPoPEndorsement endorsements = 2;
+    repeated RpcPopEndorsement endorsements = 2;
 }
 
 message RpcSendCoinsRequest {
@@ -914,16 +914,16 @@ message RpcCreateAltChainEndorsementRequest {
     int64 max_fee = 4;
 }
 
-message RpcGetAltChainPoPEndorsementsRequest {
+message RpcGetAltChainPopEndorsementsRequest {
     bytes block_hash = 1 [(hex_encoded)=true];
     int64 altchain_identifier = 2;
 }
 
-message RpcGetAltChainPoPEndorsementsReply {
+message RpcGetAltChainPopEndorsementsReply {
     bool success = 1;
     repeated RpcResult results = 2;
     bytes block_hash = 3 [(hex_encoded)=true];
-    repeated RpcAltchainPoPEndorsement altchain_pop_endorsements = 4;
+    repeated RpcAltchainPopEndorsement altchain_pop_endorsements = 4;
 }
 
 message RpcGetHistoryRequest {
@@ -1566,12 +1566,12 @@ message RpcGetVeriBlockPublicationsReply {
     repeated RpcVeriBlockPublication publications = 3;
 }
 
-message RpcGetDebugVTBsRequest {
+message RpcGetDebugVtbsRequest {
     bytes vbk_context_hash = 1 [(hex_encoded)=true];
     bytes btc_context_hash = 2 [(hex_encoded)=true];
 }
 
-message RpcGetDebugVTBsReply {
+message RpcGetDebugVtbsReply {
     bool success = 1;
     repeated RpcResult results = 2;
     repeated RpcVeriBlockPublication publications = 3;
@@ -1587,11 +1587,11 @@ message RpcGetVtbsForBtcBlocksReply {
     repeated RpcVeriBlockPublication publications = 3;
 }
 
-message RpcGetContainingVTBsRequest {
+message RpcGetContainingVtbsRequest {
     bytes vbk_block_hash = 1 [(hex_encoded)=true];
 }
 
-message RpcGetContainingVTBsReply {
+message RpcGetContainingVtbsReply {
     bool success = 1;
     repeated RpcResult results = 2;
     repeated RpcVeriBlockPublication publications = 3;
@@ -1674,7 +1674,7 @@ service Admin {
 
     rpc CreateAltChainEndorsement(RpcCreateAltChainEndorsementRequest) returns (RpcCreateTransactionReply) {}
 
-    rpc GetAltChainPoPEndorsements(RpcGetAltChainPoPEndorsementsRequest) returns (RpcGetAltChainPoPEndorsementsReply) {}
+    rpc GetAltChainPopEndorsements(RpcGetAltChainPopEndorsementsRequest) returns (RpcGetAltChainPopEndorsementsReply) {}
 
     rpc GetBlocks(RpcGetBlocksRequest) returns (RpcGetBlocksReply) {}
 
@@ -1758,9 +1758,9 @@ service Admin {
 
     rpc GetPendingTransactions(RpcGetPendingTransactionsRequest) returns (RpcGetPendingTransactionsReply) {}
 
-    rpc GetPoPEndorsementsInfo(RpcGetPoPEndorsementsInfoRequest) returns (RpcGetPoPEndorsementsInfoReply) {}
+    rpc GetPopEndorsementsInfo(RpcGetPopEndorsementsInfoRequest) returns (RpcGetPopEndorsementsInfoReply) {}
 
-    rpc GetPoPRewardEstimates(RpcGetPoPRewardEstimatesRequest) returns (RpcGetPoPRewardEstimatesReply) {}
+    rpc GetPopRewardEstimates(RpcGetPopRewardEstimatesRequest) returns (RpcGetPopRewardEstimatesReply) {}
 
     rpc Ping(RpcPingRequest) returns (RpcPingReply) {}
 
@@ -1770,7 +1770,7 @@ service Admin {
 
     rpc ListBlocksSince(RpcListBlocksSinceRequest) returns (RpcListBlocksSinceReply) {}
 
-    rpc TroubleshootPoPTransactions(RpcTroubleshootPoPTransactionsRequest) returns (RpcTroubleshootPoPTransactionsReply) {}
+    rpc TroubleshootPopTransactions(RpcTroubleshootPopTransactionsRequest) returns (RpcTroubleshootPopTransactionsReply) {}
 
     rpc StopNodeCore(RpcStopNodeCoreRequest) returns (RpcProtocolReply) {}
 
@@ -1792,7 +1792,7 @@ service Admin {
 
     rpc GetVeriBlockPublications(RpcGetVeriBlockPublicationsRequest) returns (RpcGetVeriBlockPublicationsReply) {}
 
-    rpc GetDebugVTBs(RpcGetDebugVTBsRequest) returns (RpcGetDebugVTBsReply) {}
+    rpc GetDebugVtbs(RpcGetDebugVtbsRequest) returns (RpcGetDebugVtbsReply) {}
 
     rpc RpcGetVtbsForBtcBlocks(RpcGetVtbsForBtcBlocksRequest) returns (RpcGetVtbsForBtcBlocksReply) {}
 

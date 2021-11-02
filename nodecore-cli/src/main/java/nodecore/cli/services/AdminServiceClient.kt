@@ -49,8 +49,8 @@ import nodecore.api.grpc.RpcGetPeerInfoReply
 import nodecore.api.grpc.RpcGetPeerInfoRequest
 import nodecore.api.grpc.RpcGetPendingTransactionsReply
 import nodecore.api.grpc.RpcGetPendingTransactionsRequest
-import nodecore.api.grpc.RpcGetPoPEndorsementsInfoReply
-import nodecore.api.grpc.RpcGetPoPEndorsementsInfoRequest
+import nodecore.api.grpc.RpcGetPopEndorsementsInfoReply
+import nodecore.api.grpc.RpcGetPopEndorsementsInfoRequest
 import nodecore.api.grpc.RpcGetPoolStateReply
 import nodecore.api.grpc.RpcGetPoolStateRequest
 import nodecore.api.grpc.RpcGetPopReply
@@ -109,8 +109,8 @@ import nodecore.api.grpc.RpcSubmitMultisigTxReply
 import nodecore.api.grpc.RpcSubmitMultisigTxRequest
 import nodecore.api.grpc.RpcSubmitPopRequest
 import nodecore.api.grpc.RpcSubmitTransactionsRequest
-import nodecore.api.grpc.RpcTroubleshootPoPTransactionsReply
-import nodecore.api.grpc.RpcTroubleshootPoPTransactionsRequest
+import nodecore.api.grpc.RpcTroubleshootPopTransactionsReply
+import nodecore.api.grpc.RpcTroubleshootPopTransactionsRequest
 import nodecore.api.grpc.RpcUnlockWalletRequest
 import nodecore.api.grpc.RpcValidateAddressReply
 import nodecore.api.grpc.RpcValidateAddressRequest
@@ -160,7 +160,7 @@ class AdminServiceClient(
 
     override fun getBlocks(request: RpcGetBlocksRequest): RpcGetBlocksReply = blockingStub.getBlocks(request)
 
-    override fun getPopEndorsementsInfo(request: RpcGetPoPEndorsementsInfoRequest): RpcGetPoPEndorsementsInfoReply = blockingStub.getPoPEndorsementsInfo(request)
+    override fun getPopEndorsementsInfo(request: RpcGetPopEndorsementsInfoRequest): RpcGetPopEndorsementsInfoReply = blockingStub.getPopEndorsementsInfo(request)
 
     override fun getProtectedChildren(request: RpcGetProtectedChildrenRequest): RpcGetProtectedChildrenReply = blockingStub.getProtectedChildren(request)
 
@@ -232,7 +232,7 @@ class AdminServiceClient(
 
     override fun getDiagnosticInfo(request: RpcGetDiagnosticInfoRequest): RpcGetDiagnosticInfoReply = blockingStub.getDiagnosticInfo(request)
 
-    override fun troubleshootPopTransactions(request: RpcTroubleshootPoPTransactionsRequest): RpcTroubleshootPoPTransactionsReply = blockingStub.troubleshootPoPTransactions(request)
+    override fun troubleshootPopTransactions(request: RpcTroubleshootPopTransactionsRequest): RpcTroubleshootPopTransactionsReply = blockingStub.troubleshootPopTransactions(request)
 
     override fun stopNodeCore(request: RpcStopNodeCoreRequest): RpcProtocolReply = blockingStub.stopNodeCore(request)
 

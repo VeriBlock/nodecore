@@ -18,8 +18,8 @@ import nodecore.api.grpc.RpcGetBitcoinBlockIndexRequest
 import nodecore.api.grpc.RpcGetBlocksRequest
 import nodecore.api.grpc.RpcGetInfoRequest
 import nodecore.api.grpc.RpcGetLastBlockRequest
-import nodecore.api.grpc.RpcGetPoPEndorsementsInfoRequest
-import nodecore.api.grpc.RpcGetPoPRewardEstimatesRequest
+import nodecore.api.grpc.RpcGetPopEndorsementsInfoRequest
+import nodecore.api.grpc.RpcGetPopRewardEstimatesRequest
 import nodecore.api.grpc.RpcGetPopRequest
 import nodecore.api.grpc.RpcGetStateInfoRequest
 import nodecore.api.grpc.RpcGetTransactionsRequest
@@ -183,10 +183,10 @@ class NodeCoreGateway(
     }
 
     fun getPopEndorsementInfo(): List<PopEndorsementInfo> {
-        val request = RpcGetPoPEndorsementsInfoRequest.newBuilder().apply {
+        val request = RpcGetPopEndorsementsInfoRequest.newBuilder().apply {
             searchLength = 750
         }.build()
-        val reply = blockingStub.getPoPEndorsementsInfo(request)
+        val reply = blockingStub.getPopEndorsementsInfo(request)
         return reply.popEndorsementsList.map {
             PopEndorsementInfo(it)
         }
@@ -265,13 +265,13 @@ class NodeCoreGateway(
     }
 
     fun getPopEstimates(keystonesToSearch: Int): List<RpcRewardEstimate> {
-        val request = RpcGetPoPRewardEstimatesRequest.newBuilder().apply {
+        val request = RpcGetPopRewardEstimatesRequest.newBuilder().apply {
             this.keystonesToSearch = keystonesToSearch
         }.build()
         val reply = checkGrpcError {
             blockingStub
                 .withDeadlineAfter(15, TimeUnit.SECONDS)
-                .getPoPRewardEstimates(request)
+                .getPopRewardEstimates(request)
         }
         if (reply.success) {
             return reply.rewardEstimatesList

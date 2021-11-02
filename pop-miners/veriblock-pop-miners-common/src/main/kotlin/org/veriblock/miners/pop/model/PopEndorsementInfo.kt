@@ -7,13 +7,13 @@
 package org.veriblock.miners.pop.model
 
 import com.google.gson.annotations.SerializedName
-import nodecore.api.grpc.RpcPoPEndorsementInfo
+import nodecore.api.grpc.RpcPopEndorsementInfo
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toBase58
 import org.veriblock.core.utilities.extensions.toHex
 
 class PopEndorsementInfo(
-    popEndorsementInfo: RpcPoPEndorsementInfo
+    popEndorsementInfo: RpcPopEndorsementInfo
 ) {
     @SerializedName("miner_address")
     val minerAddress: String

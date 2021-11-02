@@ -98,7 +98,7 @@ class SpvService(
     fun getAddressState(addr: Address): LedgerContext = spvContext.getAddressState(addr)
 
     // if sourceAddress is null, use all available addresses
-    suspend fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<VbkTxId> {
+    fun sendCoins(sourceAddress: AddressLight?, outputs: List<Output>): List<VbkTxId> {
         val addressCoinsIndexList: MutableList<AddressCoinsIndex> = ArrayList()
         val totalOutputAmount = outputs.sumOf {
             it.amount.atomicUnits
@@ -135,7 +135,7 @@ class SpvService(
         val transactions = transactionService.createTransactionsByOutputList(
             addressCoinsIndexList, outputs
         )
-        return transactions.asFlow().onEach {
+        return transactions.asSequence().onEach {
             pendingTransactionContainer.addTransaction(it)
             peerTable.advertise(it)
         }.map {
