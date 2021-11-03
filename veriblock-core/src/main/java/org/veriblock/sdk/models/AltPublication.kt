@@ -13,7 +13,7 @@ data class AltPublication(
     val transaction: VeriBlockTransaction,
     val merklePath: VeriBlockMerklePath,
     val blockOfProof: VeriBlockBlock
-    ) {
+) {
     fun getId(): ByteArray =
         sha256HashOf(transaction.id.bytes + blockOfProof.hash.bytes)
 

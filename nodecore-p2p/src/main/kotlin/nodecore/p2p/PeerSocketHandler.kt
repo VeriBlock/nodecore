@@ -81,8 +81,8 @@ class PeerSocketHandler(
     fun write(message: RpcEvent) {
         logger.debug { "Sending ${message.resultsCase.name} message to ${peer.address}" }
         try {
-            val wasAdded = writeEventChannel.offer(message)
-            if (!wasAdded) {
+            val result = writeEventChannel.trySend(message)
+            if (!result.isSuccess) {
                 logger.warn { "Not writing event ${message.resultsCase.name} to peer ${socket.remoteAddress} because write queue is full." }
             }
         } catch (e: InterruptedException) {

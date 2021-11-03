@@ -225,17 +225,17 @@ class ApmTaskService(
                 )
 
                 val response = operation.chain.submitPopAtv(proofOfProof)
-                if (!response.accepted) {
-                    failTask("ATV $proofOfProof was not accepted to the ${operation.chain.name}'s mempool")
-                }
                 val atvId = proofOfProof.getId().toHex()
                 val chainName = operation.chain.name
+                if (!response.accepted) {
+                    failTask("ATV $atvId has not been accepted by the PoP mempool in $chainName")
+                }
 
                 if(!response.accepted) {
-                    logger.warn { "ATV=${atvId} has not been accepted by POP mempool in $chainName" }
+                    logger.warn { "ATV $atvId has not been accepted by the PoP mempool in $chainName" }
                     failOperation("Bad ATV: ${response.code} ${response.message}")
                 } else {
-                    logger.info { "ATV=${atvId} has been accepted by POP mempool in $chainName" }
+                    logger.info { "ATV $atvId has been accepted by the PoP mempool in $chainName" }
                     operation.setAtvId(atvId)
                 }
 

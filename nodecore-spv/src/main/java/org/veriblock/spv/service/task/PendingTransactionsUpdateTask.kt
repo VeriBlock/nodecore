@@ -45,7 +45,7 @@ suspend fun SpvContext.requestPendingTransactions() {
                     .build()
             }
             val response = peerTable.requestMessage(request)
-            if (response.transactionReply.success) {
+            if (response?.transactionReply?.success == true) {
                 pendingTransactionContainer.updateTransactionInfo(response.transactionReply.transaction.toModel())
             } else {
                 val transaction = pendingTransactionContainer.getTransaction(txId)

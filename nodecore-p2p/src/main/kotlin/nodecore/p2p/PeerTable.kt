@@ -37,6 +37,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.toList
 
@@ -430,11 +431,11 @@ class PeerTable(
     suspend fun requestMessage(
         event: RpcEvent,
         timeoutInMillis: Long = 5000L
-    ): RpcEvent = withTimeout(timeoutInMillis) {
+    ): RpcEvent? = withTimeout(timeoutInMillis) {
         // Create a flow that emits in execution order
         val allMessagesFlow = requestAllMessages(event, timeoutInMillis)
         // Choose the first one to complete
-        allMessagesFlow.first()
+        allMessagesFlow.firstOrNull()
     }
 
     suspend fun requestMessage(

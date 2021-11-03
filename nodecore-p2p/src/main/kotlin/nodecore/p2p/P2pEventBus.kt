@@ -57,7 +57,7 @@ object P2pEventBus {
 
     val addBlock = AsyncEvent<P2pEvent<RpcBlock>>("Add block", asyncEventDispatcher)
     val addTransaction = AsyncEvent<P2pEvent<RpcTransactionUnion>>("Add transaction", asyncEventDispatcher)
-    val announce = AsyncEvent<P2pEvent<RpcAnnounce>>("Announce", asyncEventDispatcher)
+    val announce = Event<P2pEvent<RpcAnnounce>>("Announce") // Not async because it must be handled immediately on receive
     val heartbeat = AsyncEvent<P2pEvent<RpcHeartbeat>>("Heartbeat", asyncEventDispatcher)
     val blockQuery = AsyncEvent<P2pEvent<RpcBlockQuery>>("Block query", asyncEventDispatcher)
     val blockQueryReply = AsyncEvent<P2pEvent<RpcBlockQueryReply>>("Block query reply", asyncEventDispatcher)
