@@ -140,6 +140,9 @@ object VbkHashUtil {
     fun wrapPreviousKeystoneHash(bytes: ByteArray): PreviousKeystoneVbkHash = PreviousKeystoneVbkHash(bytes)
 
     @JvmStatic
+    fun wrapAny(bytes: ByteArray): AnyVbkHash = bytes.asAnyVbkHash()
+
+    @JvmStatic
     fun wrap(hex: String): VbkHash = wrap(hex.asHexBytes())
 
     @JvmStatic
@@ -147,4 +150,7 @@ object VbkHashUtil {
 
     @JvmStatic
     fun wrapPreviousKeystoneHash(hex: String): PreviousKeystoneVbkHash = wrapPreviousKeystoneHash(hex.asHexBytes())
+
+    @JvmStatic
+    fun wrapAny(hex: String): AnyVbkHash = wrapAny(hex.asHexBytes())
 }
