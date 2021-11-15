@@ -32,6 +32,7 @@ import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
+import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.miners.pop.core.ApmContext
@@ -306,7 +307,7 @@ class SecurityInheritingMonitor(
             try {
                 submitVtbs()
             } catch (e: Exception) {
-                logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
+                logger.debugInfo(e) { "Unable to submit VTBs to ${chain.name} in a timeline manner. Will try again later..." }
                 delay(300_000L)
             } catch (t: Throwable) {
                 logger.error(t) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }

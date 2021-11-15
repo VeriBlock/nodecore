@@ -10,6 +10,7 @@ package org.veriblock.miners.pop.net
 
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
+import kotlinx.coroutines.TimeoutCancellationException
 import java.security.PrivateKey
 import java.security.PublicKey
 import kotlinx.coroutines.flow.first
@@ -54,6 +55,8 @@ class VeriBlockNetwork(
     private val synchronized = AtomicBoolean(false)
     private val sufficientFunds = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
+
+    private val timeout = Duration.ofMinutes(40);
 
     var latestBalance: Balance = Balance()
     var latestSpvStateInfo: StateInfo = StateInfo()
@@ -224,7 +227,7 @@ class VeriBlockNetwork(
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
-    ): List<VeriBlockPublication> = withTimeout(Duration.ofMinutes(40)) {
+    ): List<VeriBlockPublication> = withTimeout(timeout) {
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
@@ -247,7 +250,13 @@ class VeriBlockNetwork(
                 logger.info { "Current last block: ${lastBlock.hash} @ ${lastBlock.height}" }
             } catch (ignored: Exception) {
             }
-            throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", e)
+
+            var exception = e;
+
+            if (e.message?.contains("Timed out waiting for", ignoreCase = true) == true) {
+                exception = java.lang.Exception("Timed out waiting for ${timeout.toMinutes()} minutes")
+            }
+            throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", exception)
         }
     }
 }
