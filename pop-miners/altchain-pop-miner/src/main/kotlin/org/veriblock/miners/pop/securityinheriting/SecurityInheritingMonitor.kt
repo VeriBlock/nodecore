@@ -307,7 +307,7 @@ class SecurityInheritingMonitor(
             try {
                 submitVtbs()
             } catch (e: Exception) {
-                logger.debugInfo(e) { "Unable to submit VTBs to ${chain.name} in a timeline manner. Will try again later..." }
+                logger.debugInfo(e) { "Unable to submit VTBs to ${chain.name} in a timely manner. Will try again later..." }
                 delay(300_000L)
             } catch (t: Throwable) {
                 logger.error(t) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
