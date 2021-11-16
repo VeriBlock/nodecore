@@ -131,7 +131,8 @@ class SecurityInheritingMonitor(
 
             // Wait for altchain to be ready
             while (!isReady()) {
-                delay(1_000L)
+                logger.info("Retrying connecting to ${chain.name} daemon at ${chain.config.host}...")
+                delay(5_000L)
             }
 
             while(!isPopActive()) {
