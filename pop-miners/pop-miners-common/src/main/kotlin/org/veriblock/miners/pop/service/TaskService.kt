@@ -81,7 +81,7 @@ abstract class TaskService<MO : MiningOperation> {
                     throw e
                 }
             } catch (e: TimeoutCancellationException) {
-                logger.warn(this, e, "Operation cancelled because VeriBlock transaction did not confirm within ${timeout.toMinutes()} minutes.")
+                logger.warn(this, e, "Operation cancelled because task '$taskName' did not complete within ${timeout.toMinutes()} minutes.")
             }
         } while (!success)
     }
