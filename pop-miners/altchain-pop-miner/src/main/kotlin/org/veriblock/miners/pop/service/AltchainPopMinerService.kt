@@ -275,7 +275,7 @@ class AltchainPopMinerService(
 
         // TODO: it is hotfix. remove it
         if (transactionMonitor.getPendingTransactions().size >= 900) {
-            throw MineException("Pending transactions limit reached. Waiting for your transactions to be accepted. Keep calm and patient")
+            throw MineException("Pending transactions limit reached. Waiting for your transactions to be confirmed. Keep calm and patient")
         }
 
         // Verify all the mine pre-conditions
