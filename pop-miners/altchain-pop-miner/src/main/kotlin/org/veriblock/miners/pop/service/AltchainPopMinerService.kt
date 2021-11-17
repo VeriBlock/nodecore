@@ -273,6 +273,11 @@ class AltchainPopMinerService(
         val chainMonitor = securityInheritingService.getMonitor(chainId)
             ?: error("Unable to load altchain monitor $chainId")
 
+        // TODO: it is hotfix. remove it
+        if (transactionMonitor.getPendingTransactions().size >= 900) {
+            throw MineException("Pending transactions limit reached. Waiting for your transactions to be accepted. Keep calm and patient")
+        }
+
         // Verify all the mine pre-conditions
         val result = checkReadyConditions(chain, chainMonitor, block)
         if (result is CheckResult.Failure) {
