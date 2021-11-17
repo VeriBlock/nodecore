@@ -74,11 +74,7 @@ class SpvContext(
 
     init {
         if (trustPeerHashes) {
-            logger.warn {
-                "Fast sync mode is enabled." +
-                    " With this feature SPV trusts the bootstrap nodes' block hashes to synchronize much faster." +
-                    " In order to disable it, locate 'trustPeerHashes' in the configuration file and set it to false."
-            }
+            logger.info { "Fast sync mode is enabled." }
         }
 
         if (!Context.isCreated()) {
