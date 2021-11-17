@@ -50,6 +50,10 @@ class TransactionMonitor(
     fun getTransactions(): Collection<WalletTransaction> =
         Collections.unmodifiableCollection(transactions.values)
 
+    fun getPendingTransactions(): Collection<WalletTransaction> =
+        getTransactions()
+            .filter { it.transactionMeta.state == TransactionMeta.MetaState.PENDING }
+
     fun start() {
         SpvEventBus.newBestBlockEvent.register(this) {
             checkPendingTransactions()
@@ -57,8 +61,7 @@ class TransactionMonitor(
     }
 
     private fun checkPendingTransactions() {
-        val pendingTxs = transactions.values.asSequence()
-            .filter { it.transactionMeta.state == TransactionMeta.MetaState.PENDING }
+        val pendingTxs = getPendingTransactions()
             .map { it.id }
             .toList()
 
