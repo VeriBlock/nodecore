@@ -75,12 +75,9 @@ class PeerTable(
     private val capabilitiesMapper: PeerCapabilities.(Peer) -> PeerCapabilities = configuration.capabilitiesMapper
     private val neededCapabilities: PeerCapabilities = configuration.neededCapabilities
 
-    private var externalPeers: MutableList<NetworkAddress> = if (configuration.externalPeerEndpoints.isEmpty() && bootstrapEnabled) {
-        logger.debug("Discovered 0 external peers configured, searching for bootstrap nodes")
-        bootstrapper.getNext(bootstrapPeerLimit)
-    } else {
-        configuration.externalPeerEndpoints
-    }.toMutableList()
+    private var externalPeers: MutableList<NetworkAddress> = (configuration.externalPeerEndpoints + bootstrapper.getNext(
+        bootstrapPeerLimit
+    )).toMutableList()
     private val connectOnlyToExternal = configuration.connectOnlyToExternal
 
     private val peers: MutableMap<String, Peer> = ConcurrentHashMap()
@@ -152,7 +149,7 @@ class PeerTable(
 
     suspend fun attemptOutboundPeerConnect(address: String, port: Int): Peer? {
         val peer = createOutboundPeer(address, port)
-            // TODO: Retry connections?
+        // TODO: Retry connections?
             ?: return null
 
         addPeer(peer)

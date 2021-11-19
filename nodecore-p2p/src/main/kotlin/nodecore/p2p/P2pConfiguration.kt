@@ -11,7 +11,7 @@ class P2pConfiguration(
     val peerMinCount: Int = 8,
     val peerMaxCount: Int = 15,
     val peerBanThreshold: Int = 100,
-    val peerBootstrapEnabled: Boolean = false,
+    val peerBootstrapEnabled: Boolean = true,
     val bootstrapLimit: Int = 4,
     val bootstrapPeers: List<String> = emptyList(),
     val bootstrappingDnsSeeds: List<String> = emptyList(),

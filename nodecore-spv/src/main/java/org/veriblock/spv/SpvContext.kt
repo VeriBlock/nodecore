@@ -114,21 +114,14 @@ class SpvContext(
             val bootstrappingDnsSeeds = config.networkParameters.bootstrapDns?.let { listOf(it) } ?: emptyList()
             p2pConfiguration = P2pConfiguration(
                 networkParameters = config.networkParameters,
-                // For now we'll be using either direct discovery or DNS discovery, not a mix.
-                // This will change whenever other use cases appear.
-                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty() && externalPeerEndpoints.isEmpty() && config.connectOnlyToDirect,
+                peerBootstrapEnabled = bootstrappingDnsSeeds.isNotEmpty(),
                 bootstrappingDnsSeeds = bootstrappingDnsSeeds,
                 externalPeerEndpoints = externalPeerEndpoints,
-                connectOnlyToExternal = config.connectOnlyToDirect,
+                connectOnlyToExternal = false, // find as many peers as possible
                 capabilities = PeerCapabilities.spvCapabilities(),
                 neededCapabilities = PeerCapabilities.defaultCapabilities() and config.extraNeededCapabilities,
                 fullProgramNameVersion = SpvConstants.FULL_PROGRAM_NAME_VERSION
             )
-            if (p2pConfiguration.peerBootstrapEnabled) {
-                logger.info { "Using bootstrap discovery" }
-            } else {
-                logger.info { "Using direct discovery (${p2pConfiguration.externalPeerEndpoints.joinToString { it.addressKey }})" }
-            }
 
             val warden = PeerWarden(p2pConfiguration)
             val bootstrapper = PeerTableBootstrapper(p2pConfiguration, DnsResolver())
