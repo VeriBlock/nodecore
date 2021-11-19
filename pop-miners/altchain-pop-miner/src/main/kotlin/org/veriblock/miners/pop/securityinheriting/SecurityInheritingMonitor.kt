@@ -56,7 +56,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.miners.pop.util.CheckResult
+import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -136,7 +139,7 @@ class SecurityInheritingMonitor(
                 delay(5_000L)
             }
 
-            while(!isPopActive()) {
+            while (!isPopActive()) {
                 delay(10_000L)
             }
 
@@ -150,11 +153,6 @@ class SecurityInheritingMonitor(
                 autoSubmitVtbs()
             }.invokeOnFailure {
                 logger.error(it) { "${chain.name} VTB submission task has failed" }
-            }
-            launch {
-                autoHandleContextGap()
-            }.invokeOnFailure {
-                logger.error(it) { "${chain.name} VTB context gap handling task has failed" }
             }
         }
     }
@@ -262,7 +260,7 @@ class SecurityInheritingMonitor(
                                         logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
                                     }
                                 } else {
-                                   logger.info { "Unable to auto mine the block @$blockHeight: ${(isMinerReady as CheckResult.Failure).error}" }
+                                    logger.info { "Unable to auto mine the block @$blockHeight: ${(isMinerReady as CheckResult.Failure).error}" }
                                 }
                             }
                         }
@@ -317,22 +315,8 @@ class SecurityInheritingMonitor(
         }
     }
 
-    private suspend fun autoHandleContextGap() = coroutineScope {
-        logger.info("Starting continuous submission of VTBs for ${chain.name}")
-        while (true) {
-            try {
-                handleContextGap()
-            } catch (e: Exception) {
-                logger.debugWarn(e) { "Error handling context gap for ${chain.name}! Will try again later..." }
-            } catch (t: Throwable) {
-                logger.error(t) { "Error handling context gap for ${chain.name}! Will try again later..." }
-            }
-            delay(1200_000L)
-        }
-    }
-
     private suspend fun getLastCommonVbkBlock(): VeriBlockBlock? {
-        val bestHash = chain.getBestKnownVbkBlockHash()
+        val bestHash = chain.getVbkBestBlockHash()
         var cursor = chain.getVbkBlock(bestHash)
             ?: return null
         while (!miner.gateway.isOnActiveChain(cursor.hash)) {
@@ -352,11 +336,11 @@ class SecurityInheritingMonitor(
         logger.debug { "New block $newBlock is on the main chain" }
 
         val bestKnownBlock = getLastCommonVbkBlock()
-        if(bestKnownBlock == null) {
+        if (bestKnownBlock == null) {
             logger.error { "${chain.name} can not find last common VBK block. Misconfiguration?" }
             return
         }
-        logger.debug {"${chain.name} last common VBK block: $bestKnownBlock"}
+        logger.debug { "${chain.name} last common VBK block: $bestKnownBlock" }
 
         if (bestKnownBlock.hash == newBlock.hash) {
             // return early if altchain already knows newBlock
@@ -371,7 +355,7 @@ class SecurityInheritingMonitor(
             it.height
         }.toList()
 
-        logger.debug {"Context blocks: ${contextBlocks.size}. First: ${contextBlocks.first()}. Last: ${contextBlocks.last()}"}
+        logger.debug { "Context blocks: ${contextBlocks.size}. First: ${contextBlocks.first()}. Last: ${contextBlocks.last()}" }
 
         val mempoolContext = chain.getPopMempool().vbkBlockHashes.map { it.lowercase() }
         val successfulSubmissions = contextBlocks.asFlow()
@@ -390,19 +374,49 @@ class SecurityInheritingMonitor(
         return
     }
 
+    private var lastKnownBtcBlockHash: String = ""
+    private var lastKnownBtcBlockHashUpdateTime: Instant = Instant.now()
+
+    private suspend fun getBtcAncestorBehind(btcHash: String, behind: UInt, returnLastAvailable: Boolean = true): BitcoinBlock? {
+        var hash: String = btcHash
+        var block = chain.getBtcBlock(hash) ?: return null
+
+        for (i in 0u..behind - 1u) {
+            hash = block.previousBlock.toString()
+            // if this call returns null, and returnLastAvailable is true, then return last block,
+            // else return null
+            val block2 = chain.getBtcBlock(hash) ?: return if (returnLastAvailable) block; else null;
+            block = block2
+        }
+
+        return block
+    }
+
     suspend fun submitVtbs() {
-        val instruction = chain.getMiningInstructionByHeight()
-        val vbkContextBlockHash = instruction.context.first().asVbkHash()
-        val vbkContextBlock = miner.gateway.getBlock(vbkContextBlockHash)
+        val lastBtc = chain.getBtcBestBlockHash()
+        if (lastKnownBtcBlockHash != lastBtc) {
+            lastKnownBtcBlockHash = lastBtc
+            lastKnownBtcBlockHashUpdateTime = Instant.now()
+        } else if(Instant.now().minus(1, ChronoUnit.MINUTES).isAfter(lastKnownBtcBlockHashUpdateTime)) {
+            logger.info {"BTC context didn't change for past 1 minute, using older block as a reference"}
+            val block = getBtcAncestorBehind(lastKnownBtcBlockHash, 1000u, returnLastAvailable = true)
+            check(block != null) {
+                logger.error { "Can not find a block behind $lastKnownBtcBlockHash" }
+            }
+            lastKnownBtcBlockHash = block.hash.toString()
+        }
+
+        val lastVbk = chain.getVbkBestBlockHash()
+        val vbkContextBlock = miner.gateway.getBlock(lastVbk.asVbkHash())
         while (vbkContextBlock == null) {
             // The altchain has knowledge of a block we don't even know. Let's try again after a while
-            logger.info { "${chain.name}'s last known block $vbkContextBlockHash is not known by APM. Trying to submit VTBs later..." }
+            logger.info { "${chain.name}'s last known block $lastVbk is not known by APM. Trying to submit VTBs later..." }
             delay(20_000L)
             return submitVtbs()
         }
         logger.info {
             "${chain.name}'s known VBK context block: ${vbkContextBlock.hash} @ ${vbkContextBlock.height}." +
-                " Bitcoin context block: ${instruction.btcContext.first().toHex()}. Waiting for next VBK keystone..."
+                " Bitcoin context block: ${lastKnownBtcBlockHash}. Waiting for next VBK keystone..."
         }
 
         // Wait for the next keystone to be mined
@@ -414,61 +428,19 @@ class SecurityInheritingMonitor(
         // Fetch and wait for veriblock publications (VTBs)
         val vtbs = miner.network.getVeriBlockPublications(
             keystone.hash.toString(),
-            instruction.context.first().toHex(),
-            instruction.btcContext.first().toHex()
+            lastKnownBtcBlockHash,
+            lastVbk
         )
+
         // Validate the retrieved data
-        verifyPublications(instruction, vtbs)
-
-        logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
+//        verifyPublications(, vtbs)
 
         // Submit them to the blockchain
-        vtbs.forEach {
-            chain.submitPopVtb(it)
-        }
         val successfulSubmissions = vtbs.asFlow()
             .map { vtb ->
                 val result = chain.submitPopVtb(vtb)
                 if (!result.accepted) {
-                    logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
-                }
-                result
-            }
-            .count { it.accepted }
-        if (successfulSubmissions > 0) {
-            logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
-        } else {
-            logger.info { "Failed to submit VTBs to ${chain.name}" }
-        }
-    }
-
-    suspend fun handleContextGap() {
-        val missingBtcBlockHashes = try {
-            chain.getMissingBtcBlockHashes()
-        } catch (e: Exception) {
-            logger.debugWarn(e) { "Unable to retrieve ${chain.name}'s missing BTC block hashes" }
-            return
-        }
-
-        if (missingBtcBlockHashes.isEmpty()) {
-            return
-        }
-
-        logger.info { "The chain ${chain.name} has a context gap of ${missingBtcBlockHashes.size} BTC blocks! Retrieving corresponding publication data..." }
-        // Fetch and wait for veriblock publications (VTBs)
-        val vtbs = miner.gateway.getVtbsForBtcBlocks(missingBtcBlockHashes)
-
-        logger.info { "${vtbs.size} VTBs found! Submitting to ${chain.name}'s daemon..." }
-
-        // Submit them to the blockchain
-        vtbs.forEach {
-            chain.submitPopVtb(it)
-        }
-        val successfulSubmissions = vtbs.asFlow()
-            .map { vtb ->
-                val result = chain.submitPopVtb(vtb)
-                if (!result.accepted) {
-                    logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                    logger.info { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool. Reason: ${result.code} ${result.message}" }
                 }
                 result
             }
@@ -603,11 +575,10 @@ class SecurityInheritingMonitor(
 }
 
 private fun verifyPublications(
-    miningInstruction: ApmInstruction,
+    btcContext: List<ByteArray>,
     publications: List<VeriBlockPublication>
 ) {
     try {
-        val btcContext = miningInstruction.btcContext
         // List<byte[]> vbkContext = context.getContext();
 
         // Check that the first VTB connects somewhere in the BTC context

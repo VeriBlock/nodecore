@@ -79,7 +79,7 @@ interface SecurityInheritingChain {
     /**
      * Returns this security inheriting chain's best known VeriBlock Block hash.
      */
-    suspend fun getBestKnownVbkBlockHash(): String
+    suspend fun getVbkBestBlockHash(): String
 
     suspend fun getPopParams(): PopParamsResponse
 
@@ -91,7 +91,7 @@ interface SecurityInheritingChain {
     /**
      * Returns the hash from the best known BTC block
      */
-    suspend fun getBestKnownBtcBlockHash(): String
+    suspend fun getBtcBestBlockHash(): String
 
     /**
      * Returns the BitcoinBlock for the given [hash]
@@ -152,5 +152,4 @@ interface SecurityInheritingChain {
      */
     suspend fun getBlockChainInfo(): StateInfo
 
-    suspend fun getMissingBtcBlockHashes(): List<String>
 }

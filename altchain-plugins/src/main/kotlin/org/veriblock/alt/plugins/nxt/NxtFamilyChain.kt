@@ -82,7 +82,7 @@ class NxtFamilyChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
+    override suspend fun getVbkBestBlockHash(): String {
         TODO("Not yet implemented")
     }
 
@@ -94,7 +94,7 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getBestKnownBtcBlockHash(): String {
+    override suspend fun getBtcBestBlockHash(): String {
         TODO("Not yet implemented")
     }
 
@@ -177,10 +177,6 @@ class NxtFamilyChain(
     override suspend fun extractBlockEvidences(altchainPopEndorsements: List<AltchainPopEndorsement>): List<BlockEvidence> = TODO()
 
     override suspend fun getBlockChainInfo(): StateInfo = TODO()
-
-    override suspend fun getMissingBtcBlockHashes(): List<String> {
-        TODO("Not yet implemented")
-    }
 
     override fun validatePayoutAddress() {
         TODO("Not yet implemented")

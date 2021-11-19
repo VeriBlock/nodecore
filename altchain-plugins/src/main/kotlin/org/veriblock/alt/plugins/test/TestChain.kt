@@ -120,7 +120,7 @@ class TestChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
+    override suspend fun getVbkBestBlockHash(): String {
         return getLastVeriBlockBlockHash()
     }
 
@@ -140,7 +140,7 @@ class TestChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getBestKnownBtcBlockHash(): String {
+    override suspend fun getBtcBestBlockHash(): String {
         TODO("Not yet implemented")
     }
 
@@ -291,10 +291,6 @@ class TestChain(
         )
         transactions[transaction.txId] = transaction
         return transaction
-    }
-
-    override suspend fun getMissingBtcBlockHashes(): List<String> {
-        TODO("Not yet implemented")
     }
 
     override suspend fun getBlockChainInfo(): StateInfo = StateInfo(50, 50, 0, true, false, "testnet")

@@ -197,7 +197,7 @@ class BitcoinFamilyChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
+    override suspend fun getVbkBestBlockHash(): String {
         return rpcRequest("getvbkbestblockhash")
     }
 
@@ -357,7 +357,7 @@ class BitcoinFamilyChain(
         }
     }
 
-    override suspend fun getBestKnownBtcBlockHash(): String {
+    override suspend fun getBtcBestBlockHash(): String {
         logger.debug { "Retrieving the best known BTC block hash..." }
         return rpcRequest("getbtcbestblockhash")
     }
@@ -382,11 +382,6 @@ class BitcoinFamilyChain(
                 throw e
             }
         }
-    }
-
-    override suspend fun getMissingBtcBlockHashes(): List<String> {
-        logger.debug { "Retrieving the missing BTC block hashes" }
-        return rpcRequest("getmissingbtcblockhashes")
     }
 
     override fun validatePayoutAddress() {

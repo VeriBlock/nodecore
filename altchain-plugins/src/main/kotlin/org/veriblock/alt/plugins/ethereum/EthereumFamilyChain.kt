@@ -180,7 +180,7 @@ class EthereumFamilyChain(
         return config.payoutDelay
     }
 
-    override suspend fun getBestKnownVbkBlockHash(): String {
+    override suspend fun getVbkBestBlockHash(): String {
         return rpcRequest("pop_getVbkBestBlockHash", version = "2.0")
     }
 
@@ -329,18 +329,13 @@ class EthereumFamilyChain(
         return response.header.toVbkBlock()
     }
 
-    override suspend fun getBestKnownBtcBlockHash(): String {
+    override suspend fun getBtcBestBlockHash(): String {
         logger.debug { "Retrieving the best known BTC block hash..." }
         return rpcRequest("pop_getBtcBestBlockHash", version = "2.0")
     }
 
     override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
         TODO("Not yet implemented (getBtcBlock)") // pop_getBtcBlockByHash
-    }
-
-    override suspend fun getMissingBtcBlockHashes(): List<String> {
-        logger.debug { "Retrieving the missing BTC block hashes" }
-        return rpcRequest("pop_getMissingBtcBlockHashes")
     }
 
     override fun validatePayoutAddress() {
