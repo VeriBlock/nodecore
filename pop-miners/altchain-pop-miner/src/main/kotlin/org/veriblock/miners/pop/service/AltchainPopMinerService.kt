@@ -91,7 +91,7 @@ class AltchainPopMinerService(
             context,
             gateway,
             transactionMonitor,
-            spvContext.addressManager
+            spvContext.wallet
         )
 
         transactionMonitor.start()
@@ -148,7 +148,7 @@ class AltchainPopMinerService(
         try {
             logger.info { "VeriBlock Network: ${context.networkParameters.name}" }
 
-            logger.info { "Send funds to the ${context.vbkTokenName} address ${spvContext.addressManager.defaultAddress.hash}" }
+            logger.info { "Send funds to the ${context.vbkTokenName} address ${spvContext.wallet.defaultAddress.hash}" }
             logger.info { "Connecting to peers..." }
 
             // Restore & submit operations (including re-attach listeners) before the network starts
@@ -189,9 +189,9 @@ class AltchainPopMinerService(
         }
     }
 
-    fun getAddress(): String = spvContext.addressManager.defaultAddress.hash
+    fun getAddress(): String = spvContext.wallet.defaultAddress.hash
 
-    fun setDefaultAddress(address: String) = spvContext.addressManager.setDefaultAddress(address)
+    fun setDefaultAddress(address: String) = spvContext.wallet.setDefaultAddress(address)
 
     fun getBalance(): Balance = network.latestBalance
 
@@ -210,7 +210,7 @@ class AltchainPopMinerService(
                 VBK PoP wallet does not contain sufficient funds, 
                 Current balance: ${network.latestBalance.confirmedBalance.atomicUnits.formatCoinAmount()} ${context.vbkTokenName},
                 Minimum required: ${config.maxFee.formatCoinAmount()}, need ${(config.maxFee - network.latestBalance.confirmedBalance.atomicUnits).formatCoinAmount()} more
-                Send ${context.vbkTokenName} coins to: ${spvContext.addressManager.defaultAddress.hash}
+                Send ${context.vbkTokenName} coins to: ${spvContext.wallet.defaultAddress.hash}
             """.trimIndent()))
         }
         // Verify the synchronized status
@@ -399,7 +399,7 @@ class AltchainPopMinerService(
     }
 
     private fun createTransactionMonitor(): TransactionMonitor {
-        val address = Address(spvContext.addressManager.defaultAddress.hash)
+        val address = Address(spvContext.wallet.defaultAddress.hash)
         return TransactionMonitor(context, gateway, address)
     }
 

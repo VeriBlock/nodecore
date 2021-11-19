@@ -73,7 +73,7 @@ class PeerEventListenerTest {
             Output("V7GghFKRA6BKqtHD7LTdT2ao93DRNA".asStandardAddress(), 3499999999L.asCoin())
         )
         val standardTransaction = StandardTransaction(
-            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.networkParameters
+            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.config.networkParameters
         )
         val pub = byteArrayOf(1, 2, 3)
         val sign = byteArrayOf(3, 2, 1)

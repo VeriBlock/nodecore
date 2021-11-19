@@ -75,7 +75,7 @@ class PeerEventListener(
     private val blockchain: Blockchain,
     private val pendingTransactionContainer: PendingTransactionContainer
 ) {
-    private val networkParameters: NetworkParameters = spvContext.networkParameters
+    private val networkParameters: NetworkParameters = spvContext.config.networkParameters
 
     private val hashDispatcher = Threading.HASH_EXECUTOR.asCoroutineDispatcher()
 
@@ -250,7 +250,7 @@ class PeerEventListener(
             "Received advertisement of ${advertiseBlocks.headersList.size} blocks," +
                 " height: ${lastBlock.height}"
         }
-        val trustHashes = spvContext.trustPeerHashes && advertiseBlocks.headersList.size > 10
+        val trustHashes = spvContext.config.trustPeerHashes && advertiseBlocks.headersList.size > 10
         val veriBlockBlocks: List<VeriBlockBlock> = coroutineScope {
             advertiseBlocks.headersList.map {
                 async(hashDispatcher) {
@@ -423,9 +423,9 @@ class PeerEventListener(
     }
 
     private fun createBloomFilter(): BloomFilter {
-        val addresses = spvContext.addressManager.all
+        val addresses = spvContext.wallet.all
         val filter = BloomFilter(
-            spvContext.addressManager.numAddresses + 10, BLOOM_FILTER_FALSE_POSITIVE_RATE,
+            spvContext.wallet.numAddresses + 10, BLOOM_FILTER_FALSE_POSITIVE_RATE,
             BLOOM_FILTER_TWEAK
         )
         for (address in addresses) {

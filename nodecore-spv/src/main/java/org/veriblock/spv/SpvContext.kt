@@ -50,7 +50,7 @@ private val logger = createLogger {}
  * Initialize and hold beans/classes.
  */
 class SpvContext(
-    config: SpvConfig
+    val config: SpvConfig
 ) {
     val directory: File
     val peerTable: PeerTable

@@ -26,8 +26,7 @@ class BlockchainTest {
         tmpdir.deleteRecursively()
     }
 
-    val blockStore = BlockStore(regtest, tmpdir)
-    val blockchain = Blockchain(blockStore)
+    val blockchain = Blockchain(regtest, tmpdir)
 
     fun generateBlock(prev: VeriBlockBlock) = vbkBlockGenerator(prev, regtest) {
         // return previous block header
@@ -79,7 +78,7 @@ class BlockchainTest {
 
         // starting from height 1000, generate 2001 blocks. Chain B should win, as it has
         // higher chainwork
-        val lastBlock2 = generateBlock(blockchain.activeChain[1000]!!.readBlock(blockStore)!!.header)
+        val lastBlock2 = generateBlock(blockchain.activeChain[1000]!!.readBlock(blockchain.blockStore)!!.header)
             .take(2001)
             .onEach { blockchain.acceptBlock(it) shouldBe true }
             .last()
@@ -87,7 +86,7 @@ class BlockchainTest {
         val tipB = blockchain.getBlock(lastBlock2.hash)!!
 
         blockchain.size shouldBe /*genesis=*/1 + 2100 + 2001
-        blockchain.activeChain.tip.readBlock(blockStore)!!.header shouldBe tipB.header
+        blockchain.activeChain.tip.readBlock(blockchain.blockStore)!!.header shouldBe tipB.header
     }
 
     @Test
@@ -112,7 +111,7 @@ class BlockchainTest {
             headerGenerated.nonce
         )
 
-        val positionAfterLastValidBlock = blockStore.appendBlock(
+        val positionAfterLastValidBlock = blockchain.blockStore.appendBlock(
             StoredVeriBlockBlock(
                 header = headerCorrupted,
                 work = BigInteger.valueOf(999999999L),
@@ -120,11 +119,10 @@ class BlockchainTest {
             )
         )
 
-        val store = BlockStore(regtest, tmpdir)
-        val bchain2 = Blockchain(store)
+        val bchain2 = Blockchain(regtest, tmpdir)
 
         bchain2.getBlock(headerCorrupted.hash) shouldBe null
-        blockStore.size shouldBe positionAfterLastValidBlock
+        blockchain.blockStore.size shouldBe positionAfterLastValidBlock
         bchain2.size shouldBe 101
     }
 }

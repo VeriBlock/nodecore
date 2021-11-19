@@ -82,7 +82,7 @@ class SpvService(
             connectedPeerCount = peerTable.getConnectedPeers().size,
             networkHeight = SpvState.getNetworkHeight(),
             localBlockchainHeight = blockchain.activeChain.tip.height,
-            networkVersion = spvContext.networkParameters.name,
+            networkVersion = spvContext.config.networkParameters.name,
             dataDirectory = spvContext.directory.path,
             programVersion = SpvConstants.PROGRAM_VERSION ?: "UNKNOWN",
             nodecoreStartTime = spvContext.startTime.epochSecond,
@@ -276,7 +276,7 @@ class SpvService(
                 throw WalletException("Unable to load/import wallet file!")
             }
 
-            spvContext.addressManager.all.forEach {
+            spvContext.wallet.all.forEach {
                 spvContext.getAddressState(Address(it.hash))
             }
         } catch (e: Exception) {
@@ -357,7 +357,7 @@ class SpvService(
         )
     }
 
-    fun getLastBitcoinBlock(): Sha256Hash = spvContext.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
+    fun getLastBitcoinBlock(): Sha256Hash = spvContext.config.networkParameters.bitcoinOriginBlock.hash    //Mock todo SPV-111
 
     fun getTransactions(ids: List<VbkTxId>) = ids.mapNotNull {
         pendingTransactionContainer.getTransactionInfo(it)
