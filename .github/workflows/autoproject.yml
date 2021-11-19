@@ -1,12 +1,12 @@
-on:
-  issues:
-    types: [opened]
+on: [issues]
 jobs:
-  createCard:
+  set-project:
     runs-on: ubuntu-latest
     steps:
-      - name: Create or Update Project Card
-        uses: peter-evans/create-or-update-project-card@v1
-        with:
-          project-name: Proof-Of-Proof
-          column-name: Backlog
+      - name: Set project
+        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        env:
+          GITHUB_TOKEN: ${{ secrets.SET_PROJECT_SECRET }}
+          GITHUB_PROJECT_URL: https://github.com/orgs/VeriBlock/projects/1/
+          GITHUB_PROJECT_COLUMN_NAME: Backlog
