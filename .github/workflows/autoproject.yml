@@ -8,5 +8,5 @@ jobs:
         if: github.event_name == 'issues' && github.event.action == 'opened'
         env:
           GITHUB_TOKEN: ${{ secrets.SET_PROJECT_SECRET }}
-          GITHUB_PROJECT_URL: https://github.com/orgs/VeriBlock/projects/1/
+          GITHUB_PROJECT_URL: https://github.com/orgs/VeriBlock/projects/1
           GITHUB_PROJECT_COLUMN_NAME: Backlog
