@@ -30,17 +30,20 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CancellationException
+import org.veriblock.core.params.NetworkParameters
+import java.io.File
 
 private val logger = createLogger {}
 
 class Blockchain(
-    val blockStore: BlockStore
+    val networkParameters: NetworkParameters,
+    val dataDir: File
 ) {
+    val blockStore = BlockStore(networkParameters, dataDir)
     // in-memory block index
     val blockIndex = ConcurrentHashMap<PreviousBlockVbkHash, BlockIndex>()
     lateinit var activeChain: Chain
     val size get() = blockIndex.size
-    val networkParameters get() = blockStore.networkParameters
     val lock = ReentrantLock()
 
     private val networkBlockQueue = Channel<NetworkBlock>(UNLIMITED)
