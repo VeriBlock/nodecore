@@ -190,6 +190,10 @@ class Peer(
         // Unregister the channel
         expectedResponses.remove(request.id)
     }
+
+    override fun toString(): String {
+        return addressKey
+    }
 }
 
 inline fun Peer.sendMessage(crossinline buildBlock: RpcEvent.Builder.() -> Unit) = send(

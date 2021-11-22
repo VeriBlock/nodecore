@@ -79,16 +79,16 @@ class PeerSocketHandler(
     }
 
     fun write(message: RpcEvent) {
-        logger.debug { "Sending ${message.resultsCase.name} message to ${peer.address}" }
+        logger.debug { "Sending ${message.resultsCase.name} message to $peer" }
         try {
             val result = writeEventChannel.trySend(message)
             if (!result.isSuccess) {
-                logger.warn { "Not writing event ${message.resultsCase.name} to peer ${socket.remoteAddress} because write queue is full." }
+                logger.warn { "Not writing event ${message.resultsCase.name} to peer $peer because write queue is full." }
             }
         } catch (e: InterruptedException) {
-            logger.warn { "Output stream thread shutting down for peer ${socket.remoteAddress}: $e" }
+            logger.warn { "Output stream thread shutting down for peer $peer: $e" }
         } catch (e: ClosedSendChannelException) {
-            logger.debug { "Trying to send message to peer ${socket.remoteAddress} when the socket was already closed" }
+            logger.debug { "Trying to send message to peer $peer when the socket was already closed" }
             handleSocketError(e)
         }
     }
@@ -157,10 +157,10 @@ class PeerSocketHandler(
                 logger.info("Attempted to read from a socket that has been closed.")
                 break
             } catch (e: IOException) {
-                logger.info("Disconnected from peer ${peer.address}.")
+                logger.info("Disconnected from peer $peer.")
                 break
             } catch (e: ClosedReceiveChannelException) {
-                logger.info("Disconnected from peer ${peer.address}.")
+                logger.info("Disconnected from peer $peer.")
                 break
             } catch (e: CancellationException) {
                 logger.debug("Input stream thread shutting down")
@@ -199,10 +199,10 @@ class PeerSocketHandler(
 
             if (peer.ownsConnection && peer.reconnectionAttempts < 3) {
                 try {
-                    logger.info { "Attempting to self-heal peer connection to ${peer.addressKey}" }
+                    logger.info { "Attempting to self-heal peer connection to $peer" }
                     recoverSuccess = peer.reconnect()
                     if (recoverSuccess) {
-                        logger.info { "Connection to ${peer.addressKey} successfully recovered!" }
+                        logger.info { "Connection to $peer successfully recovered!" }
                     }
                 } catch (e: Exception) {
                     logger.warn(e) { "Error while attempting to self-heal P2P connection!" }
