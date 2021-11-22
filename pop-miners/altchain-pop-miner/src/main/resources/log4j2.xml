@@ -11,7 +11,11 @@
 	<appenders>
 
 		<shell name="consoleAppender">
-			<thresholdFilter level="${consoleLogLevel}" />
+			<Filters>
+				<thresholdFilter level="${consoleLogLevel}" />
+				<!-- Remove reflection INFO message from console. These messages will go to log file only. -->
+				<RegexFilter regex="(?s).*Reflections took.*" onMatch="DENY" onMismatch="NEUTRAL"/>
+			</Filters>
 			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %style{%-10.-10thread}{bright,white} %highlight{%-5level}{INFO=blue} %style{%-25.-25logger{0}}{bright,black} - %msg%n"/>
 		</shell>
 
@@ -48,7 +52,6 @@
 	</appenders>
 
 	<loggers>
-
 		<logger name="shell-printing" level="INFO" additivity="false">
 			<appender-ref ref="fileAppenderRouter" />
 		</logger>
