@@ -3,7 +3,7 @@
 	<properties>
 		<property name="appName" value="apm" />
 		<property name="logPath" value="${env:APM_LOG_PATH:-logs}" />
-		<property name="logLevel" value="${env:APM_LOG_LEVEL:-DEBUG}" />
+		<property name="logLevel" value="${env:APM_LOG_LEVEL:-INFO}" />
 		<property name="consoleLogLevel" value="${env:APM_CONSOLE_LOG_LEVEL:-INFO}" />
 		<property name="enableJsonLog" value="${env:APM_ENABLE_JSON_LOG:-false}" />
 	</properties>
