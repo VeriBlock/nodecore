@@ -41,6 +41,7 @@ allprojects {
         mavenLocal()
         jcenter()
         maven("https://jitpack.io")
+        mavenCentral()
     }
 
     tasks.withType<KotlinCompile> {

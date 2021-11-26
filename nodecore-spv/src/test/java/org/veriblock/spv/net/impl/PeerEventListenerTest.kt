@@ -1,14 +1,22 @@
 package org.veriblock.spv.net.impl
 
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import nodecore.api.grpc.RpcAdvertiseTransaction
+import nodecore.api.grpc.RpcEvent
 import nodecore.api.grpc.RpcTransactionAnnounce
 import nodecore.api.grpc.RpcTransactionRequest
+import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.p2p.Peer
+import nodecore.p2p.PeerState
 import nodecore.p2p.PeerTable
 import nodecore.p2p.event.P2pEvent
+import nodecore.p2p.event.toP2pEvent
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context
@@ -20,6 +28,7 @@ import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardTransaction
+import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.asStandardAddress
 import org.veriblock.spv.net.PeerEventListener
 import org.veriblock.spv.service.PendingTransactionContainer
@@ -86,5 +95,58 @@ class PeerEventListenerTest {
 
         verify(exactly = 1 ) { pendingTransactionContainer.getTransaction(txIds[0]) }
         verify(exactly = 1 ) { peer.send(any()) }
+    }
+
+    private fun createAdvertiseTransaction(txIds: List<VbkTxId>) = P2pEvent(
+        peer, "", false,
+        RpcAdvertiseTransaction.newBuilder()
+            .addAllTransactions(txIds.map {
+                RpcTransactionAnnounce.newBuilder().apply {
+                    type = RpcTransactionAnnounce.Type.NORMAL
+                    txId = it.bytes.toByteString()
+                }.build()
+            })
+            .build()
+    )
+
+    private fun createAddTransaction(transaction: Transaction): P2pEvent<RpcTransactionUnion> {
+        val event = RpcEvent.newBuilder()
+            .setId("")
+            .setAcknowledge(false)
+            .setTransaction(
+                RpcTransactionUnion.newBuilder().setSigned(transaction.getSignedMessageBuilder(spvContext.config.networkParameters))
+            )
+            .build()
+        return event.toP2pEvent(peer, event.transaction)
+    }
+
+    @Test
+    fun syncAllNetworkTransactions() {
+        val outputs = listOf(
+            Output("V7GghFKRA6BKqtHD7LTdT2ao93DRNA".asStandardAddress(), 3499999999L.asCoin())
+        )
+        val standardTransaction = StandardTransaction(
+            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.config.networkParameters
+        )
+        val pub = byteArrayOf(1, 2, 3)
+        val sign = byteArrayOf(3, 2, 1)
+        standardTransaction.addSignature(sign, pub)
+        val txIds = listOf(standardTransaction.txId)
+
+        val slotRpcEvent = slot<RpcEvent>()
+        every { peer.send(capture(slotRpcEvent)) } returns true
+        val state = PeerState()
+        every { peer.state } returns state
+
+        val advertiseTransactionEvent = createAdvertiseTransaction(txIds)
+        peerEventListener.onAdvertiseTransactions(advertiseTransactionEvent)
+        verify(exactly = 1 ) { peer.send(any()) }
+        val response = slotRpcEvent.captured.toP2pEvent(peer, slotRpcEvent.captured.txRequest)
+        val txRequest = createTxRequest(txIds)
+        (txRequest.content == response.content) shouldBe true
+
+        val addTransactionEvent = createAddTransaction(standardTransaction)
+        peerEventListener.onAddTransaction(addTransactionEvent)
+        verify(exactly = 1) { pendingTransactionContainer.addNetworkTransaction(any()) }
     }
 }

@@ -28,19 +28,19 @@ dependencies {
     api(project(":nodecore-grpc"))
     api(project(":nodecore-p2p"))
 
-    implementation("io.ktor:ktor-network-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-network-jvm:1.6.4")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.6.26")
-    implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
-    implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
-    implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    implementation("io.github.microutils:kotlin-logging:2.0.11")
+    implementation("org.apache.logging.log4j:log4j-api:2.14.1")
+    implementation("org.apache.logging.log4j:log4j-core:2.14.1")
+    implementation("org.slf4j:slf4j-api:1.7.32")
 
-    implementation("org.freemarker:freemarker:2.3.14")
+    implementation("org.freemarker:freemarker:2.3.31")
 
-    testImplementation("junit:junit:4.12")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.0")
-    testImplementation("io.mockk:mockk:1.9.3")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.6.3")
+    testImplementation("io.mockk:mockk:1.12.0")
 }
 
 tasks.test {

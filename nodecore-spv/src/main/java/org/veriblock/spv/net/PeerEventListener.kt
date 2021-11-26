@@ -99,7 +99,7 @@ class PeerEventListener(
         P2pEventBus.peerDisconnected.register(this, ::onPeerDisconnected)
     }
     
-    private fun onAddTransaction(event: P2pEvent<RpcTransactionUnion>) {
+     fun onAddTransaction(event: P2pEvent<RpcTransactionUnion>) {
         event.acknowledge()
 
         try {
