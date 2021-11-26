@@ -104,28 +104,30 @@ class PeerEventListener(
 
         try {
             val txId = extractTxIdFromMessage(event.content)
-            if (txId.isPresent) {
-                if (trafficManager.transactionReceived(txId.get(), event.producer.addressKey)) {
-                    val addTransactionResult = pendingTransactionContainer.addNetworkTransaction(event.content)
-                    if (addTransactionResult == PendingTransactionContainer.AddTransactionResult.INVALID) {
-                        P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
-                            peer = event.producer,
-                            reason = PeerMisbehaviorEvent.Reason.INVALID_TRANSACTION,
-                            message = "Peer sent a transaction that didn't pass the validations"
-                        ))
-                    }
-                } else {
-                    P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
-                        peer = event.producer,
-                        reason = PeerMisbehaviorEvent.Reason.UNREQUESTED_TRANSACTION,
-                        message = "Peer sent a transaction this NodeCore instance didn't request"
-                    ))
-                }
-            } else {
+            if (!txId.isPresent) {
                 P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
                     event.producer,
                     PeerMisbehaviorEvent.Reason.INVALID_TRANSACTION,
                     "Peer sent a transaction which txId couldn't be computed"
+                ))
+                return
+            }
+
+            if (!trafficManager.transactionReceived(txId.get(), event.producer.addressKey)) {
+                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                    peer = event.producer,
+                    reason = PeerMisbehaviorEvent.Reason.UNREQUESTED_TRANSACTION,
+                    message = "Peer sent a transaction this NodeCore instance didn't request"
+                ))
+                return
+            }
+
+            val addTransactionResult = pendingTransactionContainer.addNetworkTransaction(event.content)
+            if (addTransactionResult == PendingTransactionContainer.AddTransactionResult.INVALID) {
+                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                    peer = event.producer,
+                    reason = PeerMisbehaviorEvent.Reason.INVALID_TRANSACTION,
+                    message = "Peer sent a transaction that didn't pass the validations"
                 ))
             }
         } catch (e: Exception) {
