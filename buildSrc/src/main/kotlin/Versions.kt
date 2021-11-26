@@ -1,7 +1,7 @@
 
 const val kotlinVersion = "1.5.20"
 const val coroutinesVersion = "1.5.0"
-const val ktorVersion = "1.6.2"
+const val ktorVersion = "1.6.4"
 const val kotlinxSerializationVersion = "1.2.2"
 const val koinVersion = "2.0.1"
 const val exposedVersion = "0.26.1"
