@@ -1,20 +1,23 @@
 package org.veriblock.spv.service
 
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import nodecore.api.grpc.RpcTransactionUnion
+import nodecore.api.grpc.utilities.ByteStringUtility
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.Transaction
+import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 
 private val logger = createLogger {}
@@ -113,6 +116,39 @@ class PendingTransactionContainer(
         pendingTransactions[transaction.txId] = transaction
     }
 
+    fun addNetworkTransaction(message: RpcTransactionUnion): AddTransactionResult? {
+        var txId: String? = null
+        txId = when (message.transactionCase) {
+            RpcTransactionUnion.TransactionCase.UNSIGNED -> {
+                logger.warn("Rejected network transaction because it was unsigned")
+                return AddTransactionResult.INVALID
+            }
+            RpcTransactionUnion.TransactionCase.SIGNED -> ByteStringUtility.byteStringToHex(message.signed.transaction.txId)
+            RpcTransactionUnion.TransactionCase.SIGNED_MULTISIG -> ByteStringUtility.byteStringToHex(message.signedMultisig.transaction.txId)
+            RpcTransactionUnion.TransactionCase.TRANSACTION_NOT_SET -> {
+                logger.warn("Rejected a network transaction because the type was not set")
+                return AddTransactionResult.INVALID
+            }
+            else -> {
+                logger.warn("Rejected transaction with unknown type")
+                return  AddTransactionResult.INVALID
+            }
+        }
+        return try {
+            val transaction: Transaction = MessageSerializer.deserializeNormalTransaction(message)
+            // TODO: DenylistTransactionCache
+//            if (DenylistTransactionCache.get().contains(transaction.getTxId())) {
+//                return PendingTransactionContainer.AddTransactionResult.INVALID
+//            }
+            addTransaction(transaction)
+            logger.debug("Add transaction to mempool {}", txId)
+            AddTransactionResult.SUCCESS
+        } catch (ex: Exception) {
+            logger.warn("Could not construct transaction for reason: {}", ex.message)
+            AddTransactionResult.INVALID
+        }
+    }
+
     fun getTransaction(txId: VbkTxId): Transaction? {
         return pendingTransactions[txId]
     }
@@ -172,5 +208,11 @@ class PendingTransactionContainer(
             confirmedTransactions.remove(transaction.txId)
             addTransaction(transaction)
         }
+    }
+
+    enum class AddTransactionResult {
+        SUCCESS,
+        INVALID,
+        DUPLICATE
     }
 }

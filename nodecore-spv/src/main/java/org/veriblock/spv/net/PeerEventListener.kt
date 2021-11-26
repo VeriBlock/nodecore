@@ -7,7 +7,6 @@
 package org.veriblock.spv.net
 
 import com.google.protobuf.ByteString
-import java.util.concurrent.locks.ReentrantLock
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -35,6 +34,8 @@ import nodecore.p2p.P2pEventBus
 import nodecore.p2p.Peer
 import nodecore.p2p.PeerCapabilities
 import nodecore.p2p.PeerTable
+import nodecore.p2p.TrafficManager
+import nodecore.p2p.TransactionRequest
 import nodecore.p2p.buildMessage
 import nodecore.p2p.event.P2pEvent
 import nodecore.p2p.event.PeerMisbehaviorEvent
@@ -45,7 +46,9 @@ import org.veriblock.core.crypto.BloomFilter
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.params.NetworkParameters
+import org.veriblock.core.params.allDefaultNetworkParameters
 import org.veriblock.core.utilities.BlockUtility
+import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -57,10 +60,10 @@ import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.service.Blockchain
 import org.veriblock.spv.service.NetworkBlock
 import org.veriblock.spv.service.PendingTransactionContainer
-import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
+import java.util.*
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import org.veriblock.core.params.allDefaultNetworkParameters
 
 private val logger = createLogger {}
 
@@ -76,6 +79,7 @@ class PeerEventListener(
     private val pendingTransactionContainer: PendingTransactionContainer
 ) {
     private val networkParameters: NetworkParameters = spvContext.config.networkParameters
+    private val trafficManager: TrafficManager = TrafficManager()
 
     private val hashDispatcher = Threading.HASH_EXECUTOR.asCoroutineDispatcher()
 
@@ -98,11 +102,43 @@ class PeerEventListener(
     private fun onAddTransaction(event: P2pEvent<RpcTransactionUnion>) {
         event.acknowledge()
 
-        // TODO: Different Transaction types
-        val standardTransaction = MessageSerializer.deserializeNormalTransaction(event.content)
-        // TODO: Some peers are still sending transactions not relevant to our bloom filter; figure out why
-        if (bloomFilter.isRelevant(standardTransaction)) {
-            SpvEventBus.pendingTransactionDownloadedEvent.trigger(standardTransaction)
+        try {
+            val txId = extractTxIdFromMessage(event.content)
+            if (txId.isPresent) {
+                if (trafficManager.transactionReceived(txId.get(), event.producer.addressKey)) {
+                    val addTransactionResult = pendingTransactionContainer.addNetworkTransaction(event.content)
+                    if (addTransactionResult == PendingTransactionContainer.AddTransactionResult.INVALID) {
+                        P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                            peer = event.producer,
+                            reason = PeerMisbehaviorEvent.Reason.INVALID_TRANSACTION,
+                            message = "Peer sent a transaction that didn't pass the validations"
+                        ))
+                    }
+                } else {
+                    P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                        peer = event.producer,
+                        reason = PeerMisbehaviorEvent.Reason.UNREQUESTED_TRANSACTION,
+                        message = "Peer sent a transaction this NodeCore instance didn't request"
+                    ))
+                }
+            } else {
+                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                    event.producer,
+                    PeerMisbehaviorEvent.Reason.INVALID_TRANSACTION,
+                    "Peer sent a transaction which txId couldn't be computed"
+                ))
+            }
+        } catch (e: Exception) {
+            logger.warn("Could not queue network transaction", e)
+        }
+
+    }
+
+    private fun extractTxIdFromMessage(message: RpcTransactionUnion): Optional<String> {
+        return when (message.transactionCase) {
+            RpcTransactionUnion.TransactionCase.SIGNED -> Optional.of(ByteStringUtility.byteStringToHex(message.signed.transaction.txId))
+            RpcTransactionUnion.TransactionCase.SIGNED_MULTISIG -> Optional.of(ByteStringUtility.byteStringToHex(message.signedMultisig.transaction.txId))
+            else -> Optional.empty()
         }
     }
 
@@ -317,19 +353,18 @@ class PeerEventListener(
         //    return
         //}
 
-        val txRequestBuilder = RpcTransactionRequest.newBuilder()
-        val transactions = event.content.transactionsList
-        for (tx in transactions) {
-            val txId = tx.txId.toByteArray().asVbkTxId()
-            val broadcastCount = spvContext.transactionPool.record(txId, event.producer.addressKey)
-            if (broadcastCount == 1) {
-                txRequestBuilder.addTransactions(tx)
+        try {
+            val requestQueue = ArrayList<TransactionRequest>()
+            for (tx in event.content.transactionsList) {
+                val txId = ByteStringUtility.byteStringToHex(tx.txId)
+                if (event.producer.state.addSeenTransaction(txId, Utility.getCurrentTimeSeconds())) {
+                    requestQueue.add(TransactionRequest(txId, tx, event.producer))
+                }
             }
-        }
-        if (txRequestBuilder.transactionsCount > 0) {
-            event.producer.sendMessage {
-                setTxRequest(txRequestBuilder)
-            }
+
+            trafficManager.requestTransactions(requestQueue)
+        } catch (e: Exception) {
+            logger.warn("Unable to handle advertised transactions", e)
         }
     }
 
