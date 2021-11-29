@@ -346,8 +346,8 @@ class ApmTaskService(
             setPayoutData(payoutBlock.hash, rewardVout.value)
         } else {
             failOperation(
-                "Unable to find ${chain.name} PoP payout transaction in the expected block's coinbase!" +
-                    " Expected payout block: ${payoutBlock.hash} @ ${payoutBlock.height}"
+                "No PoP payout transaction found: ${payoutBlock.hash} @ ${payoutBlock.height}. Operation " +
+                    "completed but was not rewarded because endorsement was not mined in a timely block"
             )
         }
     }
