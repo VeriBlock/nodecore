@@ -179,8 +179,8 @@ setupJacoco()
 val spaClientDir = "$projectDir/src/main/spa-client"
 
 node {
-    version = "14.15.1"
-    npmVersion = "6.14.0"
+    version = "15.14.0"
+    npmVersion = "7.7.6"
 
     download = true
 

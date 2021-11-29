@@ -25,9 +25,9 @@ plugins {
 dependencies {
     compile(project(":veriblock-core"))
 
-    compile("io.grpc:grpc-netty-shaded:1.25.0")
-    compile("io.grpc:grpc-protobuf:1.25.0")
-    compile("io.grpc:grpc-stub:1.25.0")
+    compile("io.grpc:grpc-netty-shaded:1.42.1")
+    compile("io.grpc:grpc-protobuf:1.42.1")
+    compile("io.grpc:grpc-stub:1.42.1")
 
     compileOnly("javax.annotation:javax.annotation-api:1.2")
 }
@@ -36,12 +36,12 @@ protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"
 
     protoc {
-        artifact = "com.google.protobuf:protoc:3.6.1"
+        artifact = "com.google.protobuf:protoc:3.17.3"
     }
 
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.19.0"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.42.1"
         }
     }
 
