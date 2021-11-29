@@ -413,7 +413,7 @@ class SpvService(
     private fun getSignatureIndex(address: Address): Long {
         val signatureIndex = spvContext.getSignatureIndex(address)
         val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address, signatureIndex)
-        logger.debug { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex" }
+        logger.info { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex" }
         if (pendingSignatureIndex == null) {
             return signatureIndex ?: throw IllegalStateException(
                 "Requested signature index for address which is not present in AddressState"

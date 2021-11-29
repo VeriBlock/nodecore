@@ -128,7 +128,7 @@ class ApmTaskService(
             val walletTransaction = miner.transactionMonitor.getTransaction(transaction.id)
             operation.setTransaction(ApmSpTransaction(walletTransaction))
             logger.info(operation, "Successfully sent the VBK transaction ${walletTransaction.id}")
-            logger.debug(
+            logger.info(
                 operation, "Transaction ${transaction.id} networkByte=${transaction.networkByte} signatureIndex=${transaction.signatureIndex}"
             )
             logger.debug(operation, "Transaction ${transaction.id} raw data: ${SerializeDeserializeService.serialize(transaction).toHex()}")
