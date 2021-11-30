@@ -107,15 +107,15 @@ class PeerEventListener(
 
         val blockHash = ByteStringUtility.byteStringToHex(event.content.hash)
         try {
-            if (trafficManager.blockReceived(blockHash, event.producer.addressKey)) {
-                // TODO: add mempool management
-            } else {
+            if (!trafficManager.blockReceived(blockHash, event.producer.addressKey)) {
                 P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
                     peer = event.producer,
                     reason = PeerMisbehaviorEvent.Reason.UNREQUESTED_BLOCK,
                     message = "Peer sent a block this SPV instance didn't request"
                 ))
+                return
             }
+            // TODO: add mempool management
         } catch (e: Exception) {
             logger.warn("Could not queue network block $blockHash", e)
         }
