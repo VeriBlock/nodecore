@@ -16,6 +16,7 @@ import nodecore.api.grpc.RpcAcknowledgement
 import nodecore.api.grpc.RpcAdvertiseBlocks
 import nodecore.api.grpc.RpcAdvertiseTransaction
 import nodecore.api.grpc.RpcAnnounce
+import nodecore.api.grpc.RpcBlock
 import nodecore.api.grpc.RpcBlockHeader
 import nodecore.api.grpc.RpcCreateFilter
 import nodecore.api.grpc.RpcEvent
@@ -29,6 +30,7 @@ import nodecore.api.grpc.RpcNotFound
 import nodecore.api.grpc.RpcTransactionRequest
 import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.utilities.ByteStringUtility
+import nodecore.p2p.BlockRequest
 import nodecore.p2p.P2pConstants
 import nodecore.p2p.P2pEventBus
 import nodecore.p2p.Peer
@@ -86,6 +88,7 @@ class PeerEventListener(
     private val bloomFilter = createBloomFilter()
 
     init {
+        P2pEventBus.addBlock.register(this, ::onAddBlock)
         P2pEventBus.addTransaction.register(this, ::onAddTransaction)
         P2pEventBus.announce.register(this, ::onAnnounce)
         P2pEventBus.heartbeat.register(this, ::onHeartbeat)
@@ -97,6 +100,25 @@ class PeerEventListener(
 
         P2pEventBus.peerConnected.register(this, ::onPeerConnected)
         P2pEventBus.peerDisconnected.register(this, ::onPeerDisconnected)
+    }
+
+    fun onAddBlock(event: P2pEvent<RpcBlock>) {
+        event.acknowledge()
+
+        val blockHash = ByteStringUtility.byteStringToHex(event.content.hash)
+        try {
+            if (trafficManager.blockReceived(blockHash, event.producer.addressKey)) {
+                // TODO: add mempool management
+            } else {
+                P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                    peer = event.producer,
+                    reason = PeerMisbehaviorEvent.Reason.UNREQUESTED_BLOCK,
+                    message = "Peer sent a block this SPV instance didn't request"
+                ))
+            }
+        } catch (e: Exception) {
+            logger.warn("Could not queue network block $blockHash", e)
+        }
     }
     
      fun onAddTransaction(event: P2pEvent<RpcTransactionUnion>) {
@@ -117,7 +139,7 @@ class PeerEventListener(
                 P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
                     peer = event.producer,
                     reason = PeerMisbehaviorEvent.Reason.UNREQUESTED_TRANSACTION,
-                    message = "Peer sent a transaction this NodeCore instance didn't request"
+                    message = "Peer sent a transaction this SPV instance didn't request"
                 ))
                 return
             }
@@ -281,6 +303,15 @@ class PeerEventListener(
         logger.debug { "Got advertise blocks event from ${event.producer.address}" }
         event.acknowledge()
 
+        if (event.content.headersCount > P2pConstants.PEER_MAX_ADVERTISEMENTS) {
+            P2pEventBus.peerMisbehavior.trigger(PeerMisbehaviorEvent(
+                peer = event.producer,
+                reason = PeerMisbehaviorEvent.Reason.ADVERTISEMENT_SIZE,
+                message = "The peer exceeded the maximum allowed blocks in a single advertisement (${event.content.headersCount}, the maximum is ${P2pConstants.PEER_MAX_ADVERTISEMENTS})"
+            ))
+            return
+        }
+
         val advertiseBlocks = event.content
 
         logger.debug {
@@ -334,6 +365,29 @@ class PeerEventListener(
 
         // TODO(warchant): if allBlocksAccepted == false here, block can not be connected or invalid
         // maybe ban peer? for now, do nothing
+
+        // download full block bodies to manage mempool
+        try {
+            val blocksToRequest = ArrayList<BlockRequest>()
+
+            val list = event.content.headersList
+            for (h in list) {
+                val hash = ByteStringUtility.byteStringToHex(h.hash)
+
+                if (event.producer.state.addSeenBlock(hash, Utility.getCurrentTimeSeconds())) {
+                    blocksToRequest.add(BlockRequest(hash, h, event.producer))
+                }
+            }
+
+            logger.debug {
+                "Requesting blocks ${BlockUtility.extractBlockHeightFromBlockHeader(list[0].header.toByteArray())}" +
+                    "-${BlockUtility.extractBlockHeightFromBlockHeader(list[list.size - 1].header.toByteArray())} from ${event.producer.address}"
+            }
+
+            trafficManager.requestBlocks(blocksToRequest)
+        } catch (e: Exception) {
+            logger.warn("Unable to handle advertised blocks", e)
+        }
     }
 
     fun onAdvertiseTransactions(event: P2pEvent<RpcAdvertiseTransaction>) {
