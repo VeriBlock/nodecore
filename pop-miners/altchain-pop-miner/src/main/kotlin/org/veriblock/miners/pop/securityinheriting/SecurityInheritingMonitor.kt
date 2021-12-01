@@ -262,7 +262,7 @@ class SecurityInheritingMonitor(
                                         logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
                                     }
                                 } else {
-                                   logger.info { "Unable to auto mine the block @$blockHeight: ${(isMinerReady as CheckResult.Failure).error}" }
+                                   logger.info { "Unable to auto mine the block $blockHeight: ${(isMinerReady as CheckResult.Failure).error.message}" }
                                 }
                             }
                         }
