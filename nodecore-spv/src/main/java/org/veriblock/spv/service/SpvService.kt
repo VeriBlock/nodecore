@@ -412,17 +412,31 @@ class SpvService(
 
     private fun getSignatureIndex(address: Address): Long {
         val signatureIndex = spvContext.getSignatureIndex(address)
+        val maxConfirmedSigIndex = pendingTransactionContainer.getMaxConfirmedSigIndex()
         val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address, signatureIndex)
-        logger.info { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex" }
+        logger.info { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex (${pendingTransactionContainer.getSize()}) | maxConfirmedSigIndex: $maxConfirmedSigIndex" }
         if (pendingSignatureIndex == null) {
+            logger.debug { "pendingSignatureIndex == null: Requested signature index for address which is not present in AddressState" }
+            if (signatureIndex == null || maxConfirmedSigIndex > signatureIndex) {
+                logger.info { "pendingSignatureIndex == null. signatureIndex == null || maxConfirmedSigIndex > signatureIndex: return maxConfirmedSigIndex $maxConfirmedSigIndex" }
+                return maxConfirmedSigIndex
+            }
+            logger.debug { "pendingSignatureIndex == null. return signatureIndex ?: throw IllegalStateException" }
             return signatureIndex ?: throw IllegalStateException(
                 "Requested signature index for address which is not present in AddressState"
             )
         }
-        val coercedIndex = pendingSignatureIndex
-            .coerceAtLeast(signatureIndex ?: -1)
 
-        return coercedIndex
+        var returnValue = -1L
+        if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex) ) {
+                logger.info { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
+                return maxConfirmedSigIndex
+        }
+
+        returnValue = maxOf(signatureIndex ?: 0L, maxConfirmedSigIndex, pendingSignatureIndex)
+        logger.info { "returnValue $returnValue = maxOf(signatureIndex ${signatureIndex ?: 0L},maxConfirmedSigIndex $maxConfirmedSigIndex,pendingSignatureIndex $pendingSignatureIndex)" }
+
+        return returnValue
     }
 
     fun getDownloadStatus(): DownloadStatusResponse {
