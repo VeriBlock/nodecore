@@ -414,7 +414,7 @@ class SpvService(
         val signatureIndex = spvContext.getSignatureIndex(address)
         val maxConfirmedSigIndex = pendingTransactionContainer.getMaxConfirmedSigIndex()
         val pendingSignatureIndex = pendingTransactionContainer.getPendingSignatureIndexForAddress(address, signatureIndex)
-        logger.info { "Ledger sigIndex: $signatureIndex | Pending sigIndex: $pendingSignatureIndex (${pendingTransactionContainer.getSize()}) | maxConfirmedSigIndex: $maxConfirmedSigIndex" }
+        logger.info { "Current signature index details. Ledger: $signatureIndex | Pending: $pendingSignatureIndex (${pendingTransactionContainer.getSize()}) | Highest confirmed: $maxConfirmedSigIndex" }
         if (pendingSignatureIndex == null) {
             logger.debug { "pendingSignatureIndex == null: Requested signature index for address which is not present in AddressState" }
             if (signatureIndex == null || maxConfirmedSigIndex > signatureIndex) {
@@ -429,12 +429,12 @@ class SpvService(
 
         var returnValue = -1L
         if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex) ) {
-                logger.info { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
+                logger.debug { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
                 return maxConfirmedSigIndex
         }
 
         returnValue = maxOf(signatureIndex ?: 0L, maxConfirmedSigIndex, pendingSignatureIndex)
-        logger.info { "returnValue $returnValue = maxOf(signatureIndex ${signatureIndex ?: 0L},maxConfirmedSigIndex $maxConfirmedSigIndex,pendingSignatureIndex $pendingSignatureIndex)" }
+        logger.debug { "returnValue $returnValue = maxOf(signatureIndex ${signatureIndex ?: 0L},maxConfirmedSigIndex $maxConfirmedSigIndex,pendingSignatureIndex $pendingSignatureIndex)" }
 
         return returnValue
     }

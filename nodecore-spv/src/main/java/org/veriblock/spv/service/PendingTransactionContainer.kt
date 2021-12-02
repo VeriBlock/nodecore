@@ -76,7 +76,7 @@ class PendingTransactionContainer(
                 }
             }
             if (transactionInfo.confirmations > 0) {
-                logger.info { "LM. confirmations > 0 so remove ${transaction.txId} from pendingTransactions (current size: ${pendingTransactions.size})" }
+                logger.info { "Transaction ${transaction.txId} has been confirmed. (${pendingTransactions.size} unconfirmed transactions left)" }
                 val currentSignatureIndex : Long? = pendingTransactions[transaction.txId]?.getSignatureIndex()
                 if (currentSignatureIndex != null) {
                     if (currentSignatureIndex > maxConfirmedSigIndex) {
