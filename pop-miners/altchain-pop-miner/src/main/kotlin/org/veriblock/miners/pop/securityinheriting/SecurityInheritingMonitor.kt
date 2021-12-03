@@ -297,7 +297,6 @@ class SecurityInheritingMonitor(
                 submitContextBlock(newBlock)
             } catch (e: Exception) {
                 logger.debugWarn(e) { "Error while submitting context to ${chain.name}! Will try again later..." }
-                e.printStackTrace()
             }
         }
     }
