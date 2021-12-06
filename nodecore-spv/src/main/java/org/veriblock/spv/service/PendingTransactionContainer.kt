@@ -32,6 +32,7 @@ class PendingTransactionContainer(
     private val lock = ReentrantLock()
 
     private var lastConfirmedSignatureIndex = -1L
+    private var maxConfirmedSigIndex = -1L
 
     init {
         SpvEventBus.removedBestBlockEvent.register(this, ::handleRemovedBestBlock)
@@ -55,6 +56,14 @@ class PendingTransactionContainer(
         return null
     }
 
+    fun getMaxConfirmedSigIndex(): Long {
+        return maxConfirmedSigIndex
+    }
+
+    fun getSize(): Int {
+        return pendingTransactions.size
+    }
+
     fun updateTransactionInfo(transactionInfo: TransactionInfo) = lock.withLock {
         val transaction = transactionInfo.transaction
         if (pendingTransactions.containsKey(transaction.txId) || transactionsToMonitor.contains(transaction.txId)) {
@@ -67,6 +76,13 @@ class PendingTransactionContainer(
                 }
             }
             if (transactionInfo.confirmations > 0) {
+                logger.info { "Transaction ${transaction.txId} has been confirmed. (${pendingTransactions.size} unconfirmed transactions left)" }
+                val currentSignatureIndex : Long? = pendingTransactions[transaction.txId]?.getSignatureIndex()
+                if (currentSignatureIndex != null) {
+                    if (currentSignatureIndex > maxConfirmedSigIndex) {
+                        maxConfirmedSigIndex = currentSignatureIndex
+                    }
+                }
                 pendingTransactions.remove(transaction.txId)
                 transactionsToMonitor.remove(transaction.txId)
                 pendingTransactionsByAddress[transaction.sourceAddress]?.removeIf { it.txId == transaction.txId }
