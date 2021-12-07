@@ -1168,6 +1168,8 @@ message RpcGetDiagnosticInfoReply {
 }
 
 message RpcGetPendingTransactionsRequest {
+    bytes filter_by_address = 1 [(address_encoded)=true];
+    bool filter_by_own_address = 2;
 }
 
 message RpcGetPendingTransactionsReply {

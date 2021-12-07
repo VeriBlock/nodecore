@@ -146,10 +146,23 @@ fun CommandFactory.transactionCommands() {
         name = "Get Pending Transactions",
         form = "getpendingtransactions",
         description = "Returns the transactions pending on the network",
+        parameters = listOf(
+            CommandParameter(name = "filterByAddress", mapper = CommandParameterMappers.STRING, required = false),
+            CommandParameter(name = "filterByOwnAddress", mapper = CommandParameterMappers.BOOLEAN, required = false)
+        ),
         suggestedCommands = { listOf("send", "getbalance", "gethistory", "sigindex") }
     ) {
-        val request = RpcGetPendingTransactionsRequest.newBuilder().build()
-        val result = cliShell.adminService.getPendingTransactions(request)
+        val filterByAddress: String? = getOptionalParameter("filterByAddress")
+        val filterByOwnAddress: Boolean? = getOptionalParameter("filterByOwnAddress")
+
+        val request = RpcGetPendingTransactionsRequest.newBuilder()
+        if (filterByAddress != null) {
+            request.setFilterByAddress(ByteStringAddressUtility.createProperByteStringAutomatically(filterByAddress))
+        }
+        if (filterByOwnAddress != null) {
+            request.setFilterByOwnAddress(filterByOwnAddress)
+        }
+        val result = cliShell.adminService.getPendingTransactions(request.build())
 
         prepareResult(result.success, result.resultsList) {
             result.transactionsList.map { TransactionInfo(it) }
