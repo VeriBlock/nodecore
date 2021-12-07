@@ -17,7 +17,7 @@ private val logger = createLogger {}
 
 suspend fun checkSystemClock() = try {
     withTimeout(Duration.ofSeconds(30)) {
-        logger.info { "Checking the system clock..." }
+        logger.debug { "Checking the system clock..." }
         val kronosClock = ClockFactory.createKronosClock(LocalClock(), LocalSyncResponseCache())
         var ntpCurrentTime = kronosClock.getCurrentNtpTimeMs()
         while (ntpCurrentTime  == null) {
@@ -28,7 +28,7 @@ suspend fun checkSystemClock() = try {
             logger.error { "The system clock is out of synchronization, please synchronize it" }
             exitProcess(1)
         } else {
-            logger.info { "The system clock is synchronized" }
+            logger.debug { "The system clock is synchronized" }
         }
         kronosClock.shutdown()
     }
