@@ -147,8 +147,8 @@ fun CommandFactory.transactionCommands() {
         form = "getpendingtransactions",
         description = "Returns the transactions pending on the network",
         parameters = listOf(
-            CommandParameter(name = "filterByAddress", mapper = CommandParameterMappers.STRING, required = false),
-            CommandParameter(name = "filterByOwnAddress", mapper = CommandParameterMappers.BOOLEAN, required = false)
+            CommandParameter(name = "filterByOwnAddress", mapper = CommandParameterMappers.BOOLEAN, required = false),
+            CommandParameter(name = "filterByAddress", mapper = CommandParameterMappers.STRING, required = false)
         ),
         suggestedCommands = { listOf("send", "getbalance", "gethistory", "sigindex") }
     ) {
