@@ -86,3 +86,4 @@ commit.bat
 .idea
 *.db
 *.txmon
+package-lock.json
