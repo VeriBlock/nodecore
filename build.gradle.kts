@@ -7,6 +7,14 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (this.requested.group == "org.apache.logging.log4j") {
+            this.useVersion(log4jVersion)
+        }
+    }
+}
+
 buildscript {
     repositories {
         jcenter()
