@@ -148,7 +148,6 @@ class SpvContext(
                 logger.info { "SPV Disconnected" }
             }
         )
-        startPendingTransactionsUpdateTask()
         startAddressStateUpdateTask()
 
         Threading.PEER_TABLE_SCOPE.launchWithFixedDelay(40_000, 120_000) {

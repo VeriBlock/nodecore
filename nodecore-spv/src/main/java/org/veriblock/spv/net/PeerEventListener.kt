@@ -115,7 +115,8 @@ class PeerEventListener(
                 ))
                 return
             }
-            // TODO: add mempool management
+            val fullBlock = MessageSerializer.deserialize(event.content)
+            pendingTransactionContainer.updateTransactionsByBlock(fullBlock)
         } catch (e: Exception) {
             logger.warn("Could not queue network block $blockHash", e)
         }
