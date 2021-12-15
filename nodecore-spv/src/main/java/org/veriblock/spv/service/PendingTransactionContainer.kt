@@ -230,7 +230,6 @@ class PendingTransactionContainer(
                 "removeTransactionsInBlock cannot be called with a block with a " +
                     "null transaction set!"
             )
-        var allSuccessful = true
         for (transaction in normalTransactions) {
             // FIXME: convert StandardTransaction to TransactionData
             val builder = transaction.getSignedMessageBuilder(context.config.networkParameters)
