@@ -25,6 +25,7 @@ import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asTruncatedMerkleRoot
 import org.veriblock.core.crypto.asVbkTxId
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -141,6 +142,11 @@ object MessageSerializer {
         }
         tx.setSignatureIndex(signedTransaction.signatureIndex)
         tx.data = txMessage.data.toByteArray()
+
+        // TODO: add checks
+        tx.publicKey = signedTransaction.publicKey.toByteArray()
+        tx.signature = signedTransaction.signature.toByteArray()
+
         return tx
     }
 
