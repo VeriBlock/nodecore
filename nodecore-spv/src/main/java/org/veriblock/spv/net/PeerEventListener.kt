@@ -367,7 +367,8 @@ class PeerEventListener(
         // TODO(warchant): if allBlocksAccepted == false here, block can not be connected or invalid
         // maybe ban peer? for now, do nothing
 
-        // download full block bodies to manage mempool
+        // download full block bodies to manage mempool. Skip if SPV is not synchronized
+        if (!spvContext.spvService.getDownloadStatus().downloadStatus.isReady()) return
         try {
             val blocksToRequest = ArrayList<BlockRequest>()
 
