@@ -40,12 +40,12 @@ class StandardTransactionTest {
             )
         )
         val tx = StandardTransaction(
-            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.networkParameters
+            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.config.networkParameters
         )
         val pub = byteArrayOf(1, 2, 3)
         val sign = byteArrayOf(3, 2, 1)
         tx.addSignature(sign, pub)
-        val signedTransaction = tx.getSignedMessageBuilder(spvContext.networkParameters).build()
+        val signedTransaction = tx.getSignedMessageBuilder(spvContext.config.networkParameters).build()
         signedTransaction.signatureIndex shouldBe 5904L
         signedTransaction.transaction.sourceAmount shouldBe 3500000000L
         ByteStringUtility.byteStringToBase58(signedTransaction.transaction.sourceAddress) shouldBe "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs"
@@ -64,9 +64,9 @@ class StandardTransactionTest {
             )
         )
         val tx = StandardTransaction(
-            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.networkParameters
+            "V8dy5tWcP7y36kxiJwxKPKUrWAJbjs", 3500000000L, outputs, 5904L, spvContext.config.networkParameters
         )
-        val serialized = tx.toByteArray(spvContext.networkParameters)
+        val serialized = tx.toByteArray(spvContext.config.networkParameters)
         Utility.bytesToHex(serialized) shouldBe "01011667A654EE3E0C918D8652B63829D7F3BEF98524BF899604D09DC30001011667901A1E11C650509EFC46E09E81678054D8562AF02B04D09DC2FF0217100100"
     }
 }

@@ -50,37 +50,32 @@ private val logger = createLogger {}
  * Initialize and hold beans/classes.
  */
 class SpvContext(
-    config: SpvConfig
+    val config: SpvConfig
 ) {
-    val networkParameters: NetworkParameters = config.networkParameters
-
-    private val p2pConfiguration: P2pConfiguration
     val directory: File
-    val filePrefix: String
-    val transactionPool: TransactionPool
-    val blockStore: BlockStore
-    val blockchain: Blockchain
-    val spvService: SpvService
     val peerTable: PeerTable
-    val addressManager: AddressManager
-    val transactionService: TransactionService
+    val wallet: AddressManager
+    val blockchain: Blockchain
+    val transactionPool: TransactionPool
     val pendingTransactionContainer: PendingTransactionContainer
     val pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
+    val transactionService: TransactionService
+    val spvService: SpvService
 
+    private val p2pConfiguration: P2pConfiguration
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
 
-    val trustPeerHashes = config.trustPeerHashes
     val startTime: Instant = Instant.now()
 
     init {
-        if (trustPeerHashes) {
+        if (config.trustPeerHashes) {
             logger.info { "Fast sync mode is enabled." }
         }
 
         if (!Context.isCreated()) {
-            Context.create(networkParameters)
-        } else if (Context.get().networkParameters.name != networkParameters.name) {
-            throw IllegalStateException("Attempting to create $networkParameters SPV context while on ${Context.get().networkParameters}")
+            Context.create(config.networkParameters)
+        } else if (Context.get().networkParameters.name != config.networkParameters.name) {
+            throw IllegalStateException("Attempting to create $config.networkParameters SPV context while on ${Context.get().networkParameters}")
         }
 
         val baseDir = File(config.dataDir)
@@ -88,14 +83,12 @@ class SpvContext(
 
         try {
             directory = baseDir
-            filePrefix = networkParameters.name
-            blockStore = BlockStore(networkParameters, directory)
             transactionPool = TransactionPool()
-            blockchain = Blockchain(blockStore)
+            blockchain = Blockchain(config.networkParameters, directory)
             pendingTransactionContainer = PendingTransactionContainer(this)
-            addressManager = AddressManager()
-            val walletFile = File(directory, filePrefix + FILE_EXTENSION)
-            addressManager.load(walletFile)
+            wallet = AddressManager()
+            val walletFile = File(directory, config.networkParameters.name + FILE_EXTENSION)
+            wallet.load(walletFile)
             pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
 
             val externalPeerEndpoints = config.connectDirectlyTo.map {
@@ -105,7 +98,7 @@ class SpvContext(
 
                     val uri = URI.create(input)
                     // if port is not provided, use standard port from networkParameters
-                    val port = if (uri.port == -1) networkParameters.p2pPort else uri.port
+                    val port = if (uri.port == -1) config.networkParameters.p2pPort else uri.port
                     NetworkAddress(uri.host, port)
                 } catch (e: Exception) {
                     throw ConfigurationException("Wrong format for peer address ${it}, it should be host:port")
@@ -134,9 +127,9 @@ class SpvContext(
             val bootstrapper = PeerTableBootstrapper(p2pConfiguration, DnsResolver())
             peerTable = PeerTable(p2pConfiguration, warden, bootstrapper)
 
-            transactionService = TransactionService(addressManager, networkParameters)
+            transactionService = TransactionService(wallet, config.networkParameters)
             spvService = SpvService(
-                this, peerTable, transactionService, addressManager,
+                this, peerTable, transactionService, wallet,
                 pendingTransactionContainer, blockchain
             )
 
@@ -155,7 +148,6 @@ class SpvContext(
                 logger.info { "SPV Disconnected" }
             }
         )
-        startPendingTransactionsUpdateTask()
         startAddressStateUpdateTask()
 
         Threading.PEER_TABLE_SCOPE.launchWithFixedDelay(40_000, 120_000) {

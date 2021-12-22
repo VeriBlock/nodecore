@@ -10,4 +10,7 @@ enum class DownloadStatus {
 
     fun isDownloading(): Boolean =
         DOWNLOADING == this
+
+    fun isReady(): Boolean =
+        READY == this
 }

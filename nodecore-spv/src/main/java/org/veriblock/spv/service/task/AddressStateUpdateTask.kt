@@ -32,7 +32,7 @@ fun SpvContext.startAddressStateUpdateTask() {
 
 suspend fun SpvContext.updateAddressState() {
     try {
-        val addresses = addressManager.all.map { it.hash }
+        val addresses = wallet.all.map { it.hash }
         if (addresses.isEmpty()) {
             logger.error { "No addresses in addressManager..." }
             return
@@ -60,12 +60,12 @@ suspend fun SpvContext.updateAddressState() {
                 }
             }
             // handle responses with known addresses
-            .filter { addressManager.contains(it.address.toBase58()) }
+            .filter { wallet.contains(it.address.toBase58()) }
             // handle only cryptographically valid responses
             .filter { LedgerProofReplyValidator.validate(it) }
             // mapper returns null if it can't deserialize block header, so
             // handle responses with valid blocks
-            .mapNotNull { LedgerProofReplyMapper.map(it, trustPeerHashes) }
+            .mapNotNull { LedgerProofReplyMapper.map(it, config.trustPeerHashes) }
             // block-of-proof may be new or known. if known or new and it connects, this will return true.
             .filter { blockchain.acceptBlock(it.block) }
             // handle responses with block-of-proofs that are on active chain

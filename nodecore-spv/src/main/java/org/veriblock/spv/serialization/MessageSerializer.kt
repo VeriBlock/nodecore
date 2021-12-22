@@ -25,6 +25,7 @@ import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asTruncatedMerkleRoot
 import org.veriblock.core.crypto.asVbkTxId
+import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
@@ -39,6 +40,11 @@ import org.veriblock.spv.model.asLightAddress
 private val logger = createLogger {}
 
 object MessageSerializer {
+    private const val VBK_HASH_LENGTH_FULL = 24
+    private const val VBK_HASH_LENGTH = 12
+    private const val VBK_KEYSTONE_HASH_LENGTH = 9
+    private const val TRUNCATED_MERKLE_ROOT_LENGTH = 16
+
     fun deserialize(blockHeaderMessage: RpcBlockHeader, trustHash: Boolean = false): VeriBlockBlock {
         return if (trustHash) {
             SerializeDeserializeService.parseVeriBlockBlock(blockHeaderMessage.header.toByteArray(), blockHeaderMessage.hash.toByteArray().asVbkHash())
@@ -82,13 +88,32 @@ object MessageSerializer {
     }
 
     fun deserialize(blockMessage: RpcBlock): FullBlock {
+        val merkleRoot = ByteStringUtility.byteStringToHex(blockMessage.merkleRoot)
         val block = FullBlock(
             blockMessage.number,
             blockMessage.version.toShort(),
-            blockMessage.previousHash.asVbkPreviousBlockHash(),
-            blockMessage.secondPreviousHash.asVbkPreviousKeystoneHash(),
-            blockMessage.thirdPreviousHash.asVbkPreviousKeystoneHash(),
-            ByteStringUtility.byteStringToHex(blockMessage.merkleRoot).asTruncatedMerkleRoot(),
+
+            if (blockMessage.previousHash.size() == VBK_HASH_LENGTH_FULL)
+                blockMessage.previousHash.substring(VBK_HASH_LENGTH).asVbkPreviousBlockHash()
+            else
+                blockMessage.previousHash.asVbkPreviousBlockHash(),
+
+            if (blockMessage.secondPreviousHash.size() == VBK_HASH_LENGTH_FULL)
+                blockMessage.secondPreviousHash.substring(VBK_HASH_LENGTH_FULL - VBK_KEYSTONE_HASH_LENGTH).asVbkPreviousKeystoneHash()
+            else
+                blockMessage.secondPreviousHash.asVbkPreviousKeystoneHash(),
+
+            if (blockMessage.thirdPreviousHash.size() == VBK_HASH_LENGTH_FULL)
+                blockMessage.thirdPreviousHash.substring(VBK_HASH_LENGTH_FULL - VBK_KEYSTONE_HASH_LENGTH).asVbkPreviousKeystoneHash()
+            else
+                blockMessage.thirdPreviousHash.asVbkPreviousKeystoneHash(),
+
+            if (merkleRoot.length == VBK_HASH_LENGTH_FULL*2)
+                merkleRoot.substring((VBK_HASH_LENGTH_FULL - TRUNCATED_MERKLE_ROOT_LENGTH)*2).asTruncatedMerkleRoot()
+            else {
+                logger.error { merkleRoot.length }
+                merkleRoot.asTruncatedMerkleRoot()},
+
             blockMessage.timestamp,
             blockMessage.encodedDifficulty,
             blockMessage.winningNonce
@@ -117,6 +142,11 @@ object MessageSerializer {
         }
         tx.setSignatureIndex(signedTransaction.signatureIndex)
         tx.data = txMessage.data.toByteArray()
+
+        // TODO: add checks
+        tx.publicKey = signedTransaction.publicKey.toByteArray()
+        tx.signature = signedTransaction.signature.toByteArray()
+
         return tx
     }
 
