@@ -1,0 +1,26 @@
+<configuration>
+
+	<properties>
+		<property name="logLevel" value="${env:INT_LOG_LEVEL:-DEBUG}" />
+	</properties>
+
+	<appenders>
+
+		<console name="consoleAppender">
+			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %highlight{%-5level}{INFO=blue} %style{%-15.-15logger{0}}{bright,black} - %msg%n"/>
+		</console>
+
+	</appenders>
+
+	<loggers>
+		<logger name="nodecore.testframework" level="DEBUG" />
+		<logger name="org.testcontainers" level="WARN" />
+		<logger name="com.github.dockerjava" level="WARN"/>
+		<logger name="io.grpc.netty.shaded.io.netty" level="ERROR" />
+		<logger name="Exposed" level="ERROR" />
+		<root level="${logLevel}">
+			<appender-ref ref="consoleAppender" />
+		</root>
+	</loggers>
+
+</configuration>

@@ -59,6 +59,16 @@ class PendingTransactionContainer(
         return pendingTransactions
     }
 
+    fun getTransaction(txId: VbkTxId): Transaction? {
+        pendingTransactions[txId]?.let {
+            return it
+        }
+        addedToBlockchainTransactions[txId]?.let {
+            return it
+        }
+        return null
+    }
+
     fun getTransactionInfo(txId: VbkTxId): TransactionInfo? {
         pendingTransactionsInfo[txId]?.let {
             return it
@@ -129,6 +139,7 @@ class PendingTransactionContainer(
     }
 
     fun addNetworkTransaction(message: RpcTransactionUnion): AddTransactionResult? {
+        logger.info { "START!!!" }
         var txId: String? = null
         txId = when (message.transactionCase) {
             RpcTransactionUnion.TransactionCase.UNSIGNED -> {
@@ -147,11 +158,13 @@ class PendingTransactionContainer(
             }
         }
         return try {
+            logger.error { "deserializeNormalTransaction" }
             val transaction: Transaction = MessageSerializer.deserializeNormalTransaction(message)
             // TODO: DenylistTransactionCache
 //            if (DenylistTransactionCache.get().contains(transaction.getTxId())) {
 //                return PendingTransactionContainer.AddTransactionResult.INVALID
 //            }
+            logger.error { "addTransaction" }
             addTransaction(transaction)
             logger.debug("Add transaction to mempool {}", txId)
             AddTransactionResult.SUCCESS
@@ -159,10 +172,6 @@ class PendingTransactionContainer(
             logger.warn("Could not construct transaction for reason: {}", ex.message)
             AddTransactionResult.INVALID
         }
-    }
-
-    fun getTransaction(txId: VbkTxId): Transaction? {
-        return pendingTransactions[txId]
     }
 
     fun getPendingSignatureIndexForAddress(address: Address, ledgerSignatureIndex: Long?): Long? = lock.withLock {
