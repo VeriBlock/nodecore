@@ -43,6 +43,8 @@ import nodecore.api.grpc.RpcGetInfoReply
 import nodecore.api.grpc.RpcGetInfoRequest
 import nodecore.api.grpc.RpcGetLastBitcoinBlockReply
 import nodecore.api.grpc.RpcGetLastBitcoinBlockRequest
+import nodecore.api.grpc.RpcGetLastBitcoinFinalizedBlockReply
+import nodecore.api.grpc.RpcGetLastBitcoinFinalizedBlockRequest
 import nodecore.api.grpc.RpcGetNewAddressReply
 import nodecore.api.grpc.RpcGetNewAddressRequest
 import nodecore.api.grpc.RpcGetPeerInfoReply
@@ -225,6 +227,8 @@ class AdminServiceClient(
     override fun setDefaultAddress(request: RpcSetDefaultAddressRequest): RpcSetDefaultAddressReply = blockingStub.setDefaultAddress(request)
 
     override fun getLastBitcoinBlock(request: RpcGetLastBitcoinBlockRequest): RpcGetLastBitcoinBlockReply = blockingStub.getLastBitcoinBlock(request)
+
+    override fun getLastBitcoinFinalizedBlock(request: RpcGetLastBitcoinFinalizedBlockRequest): RpcGetLastBitcoinFinalizedBlockReply = blockingStub.getLastBitcoinFinalizedBlock(request)
 
     override fun getPendingTransactions(request: RpcGetPendingTransactionsRequest): RpcGetPendingTransactionsReply = blockingStub.getPendingTransactions(request)
 
