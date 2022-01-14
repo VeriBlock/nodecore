@@ -2,6 +2,7 @@
 
 	<properties>
 		<property name="appName" value="bootstrap-downloader" />
+		<property name="logPath" value="${env:DOWNLOADER_LOG_PATH:-logs}" />
 		<property name="logLevel" value="${env:DOWNLOADER_LOG_LEVEL:-INFO}" />
 	</properties>
 
@@ -11,11 +12,11 @@
 			<patternLayout disableAnsi="false" pattern="%d{yyyy-MM-dd HH:mm:ss} %style{%-10.-10thread}{bright,white} %highlight{%-5level}{INFO=blue} %style{%-25.-25logger{0}}{bright,black} - %msg%n"/>
 		</console>
 
-		<file name="fileAppender" fileName="logs/${appName}.log">
+		<file name="fileAppender" fileName="${logPath}/${appName}.log">
 			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
 		</file>
 
-		<file name="errorFileAppender" fileName="logs/${appName}-error.log">
+		<file name="errorFileAppender" fileName="${logPath}/${appName}-error.log">
 			<thresholdFilter level="ERROR" />
 			<patternLayout pattern="%date{YYYY-MM-dd HH:mm:ss.SSSXX} %level [%thread] %logger{10} [%file:%line] %msg%n"/>
 		</file>
