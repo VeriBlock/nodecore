@@ -53,3 +53,14 @@ tasks.startScripts {
     (windowsStartScriptGenerator as WindowsStartScriptGenerator).template =
         resources.text.fromFile("windowsStartScript.txt")
 }
+
+distributions {
+    main {
+        contents {
+            from ("./src/main/resources/application-default.conf") {
+                into("bin")
+            }
+            rename("application-default.conf", "application.conf")
+        }
+    }
+}

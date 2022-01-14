@@ -25,8 +25,6 @@ import mu.KotlinLogging
 import org.apache.commons.codec.digest.DigestUtils
 import org.veriblock.core.SharedConstants
 import org.veriblock.core.utilities.Configuration
-import org.veriblock.core.utilities.bootOption
-import org.veriblock.core.utilities.bootOptions
 import java.io.File
 import java.io.IOException
 import java.lang.IllegalStateException
@@ -254,13 +252,16 @@ data class BlockFile(
 data class DownloaderConfig(
     val network: String = "mainnet",
     val url: String = "https://mirror.veriblock.org/bootstrap",
-    val dataDir: String = getDefaultNodecoreDataDir(),
     val localUrl: Boolean = false,
     val displayHelp: Boolean = false,
-    val autoClose: Boolean = false
-)
+    val autoClose: Boolean = false,
+    private val nodecoreDataDirectory: String? = null
+) {
+    val dataDirectory: String = nodecoreDataDirectory
+        ?: getNodeCoreDataDirectory()
+}
 
-fun getDefaultNodecoreDataDir(): String {
+private fun getNodeCoreDataDirectory(): String {
     // Get the root folder from the package
     val packageParentFolder = Paths.get("").toAbsolutePath().parent?.parent
         ?: return "./"
@@ -291,69 +292,10 @@ suspend fun main(args: Array<String>) {
         return
     }
 
-    val options = listOf(
-        bootOption(
-            opt = "n",
-            longOpt = "network",
-            desc = "Specify the target network (testnet / mainnet)",
-            argName = "network",
-            configMapping = "downloader.network"
-        ),
-        bootOption(
-            opt = "u",
-            longOpt = "url",
-            desc = "Specify the download url",
-            argName = "url",
-            configMapping = "downloader.url"
-        ),
-        bootOption(
-            opt = "d",
-            longOpt = "dataDir",
-            desc = "Specify the data directory where NodeCore generated files reside",
-            argName = "dataDir",
-            configMapping = "downloader.dataDir"
-        ),
-        bootOption(
-            opt = "l",
-            longOpt = "localUrl",
-            desc = "Specify if the download url is a local url (true / false)",
-            argName = "localUrl",
-            configMapping = "downloader.localUrl"
-        ),
-        bootOption(
-            opt = "ac",
-            longOpt = "autoClose",
-            desc = "Auto close at finish",
-            argName = "autoClose",
-            configMapping = "downloader.autoClose"
-        ),
-        bootOption(
-            opt = "h",
-            desc = "Display all the program arguments",
-            configMapping = "downloader.displayHelp"
-        )
-    )
+    val config = Configuration().extract<DownloaderConfig>("downloader")
+        ?: DownloaderConfig()
 
-    val bootOptions = try {
-        bootOptions(options, args)
-    } catch (e: Exception) {
-        logger.error { "Unable to parse the program arguments: ${e.message}, use the -h argument to display the available arguments" }
-        return
-    }
-
-    val config = Configuration(
-        bootOptions = bootOptions
-    ).extract<DownloaderConfig>("downloader") ?: DownloaderConfig()
-
-    if (config.displayHelp) {
-        logger.info { "Available program arguments:" }
-        options.forEach {
-            logger.info { "-${it.opt}: ${it.desc}" }
-        }
-        return
-    }
-
-    val networkDirectory = Paths.get(config.dataDir, config.network).toFile()
+    val networkDirectory = Paths.get(config.dataDirectory, config.network).toFile()
     try {
         if (networkDirectory.exists() && !networkDirectory.canWrite()) {
             logger.info { "Unable to write at the $networkDirectory directory" }
@@ -364,10 +306,10 @@ suspend fun main(args: Array<String>) {
         return
     }
     Downloader(
-        config.url,
-        config.network,
-        config.dataDir,
-        config.localUrl
+        url = config.url,
+        network = config.network,
+        dataDirectory = config.dataDirectory,
+        isLocalUrl = config.localUrl
     ).downloadBlocks()
 
     if (!config.autoClose) {
