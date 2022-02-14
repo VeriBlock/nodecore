@@ -12,6 +12,6 @@ class PopDatastoreInfo(
     popDatastore: RpcPopDatastore
 ) {
     init {
-        //TODO: Implement
+        popDatastore.isInitialized
     }
 }

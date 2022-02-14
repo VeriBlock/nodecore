@@ -21,6 +21,7 @@ import org.veriblock.spv.model.StoredVeriBlockBlock
 import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
+import kotlin.io.path.createTempDirectory
 import kotlin.random.Random
 
 class BlockStoreTest {
@@ -30,7 +31,7 @@ class BlockStoreTest {
         Context.create(regtest)
     }
 
-    private val baseDir: File = createTempDir()
+    private val baseDir: File = createTempDirectory().toFile()
     private var blockStore = BlockStore(regtest, baseDir)
 
 

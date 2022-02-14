@@ -6,13 +6,15 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli.contracts
 
+import java.util.*
+
 class PeerEndpoint(
     val address: String,
     val password: String? = null,
     val port: Short,
     val transportType: EndpointTransportType = EndpointTransportType.HTTP
 ) {
-    override fun toString(): String = "${transportType.toString().toLowerCase()}://$address:$port"
+    override fun toString(): String = "${transportType.toString().lowercase(Locale.getDefault())}://$address:$port"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

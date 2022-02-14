@@ -422,18 +422,15 @@ class SpvService(
                 return maxConfirmedSigIndex
             }
             logger.debug { "pendingSignatureIndex == null. return signatureIndex ?: throw IllegalStateException" }
-            return signatureIndex ?: throw IllegalStateException(
-                "Requested signature index for address which is not present in AddressState"
-            )
+            return signatureIndex
         }
 
-        var returnValue = -1L
         if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex) ) {
                 logger.debug { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
                 return maxConfirmedSigIndex
         }
 
-        returnValue = maxOf(signatureIndex ?: 0L, maxConfirmedSigIndex, pendingSignatureIndex)
+        val returnValue = maxOf(signatureIndex ?: 0L, maxConfirmedSigIndex, pendingSignatureIndex)
         logger.debug { "returnValue $returnValue = maxOf(signatureIndex ${signatureIndex ?: 0L},maxConfirmedSigIndex $maxConfirmedSigIndex,pendingSignatureIndex $pendingSignatureIndex)" }
 
         return returnValue

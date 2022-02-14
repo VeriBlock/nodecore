@@ -36,6 +36,7 @@ import org.veriblock.miners.pop.securityinheriting.SecurityInheritingMonitor
 import org.veriblock.sdk.alt.PayoutDetectionType
 import org.veriblock.sdk.models.getSynchronizedMessage
 import org.veriblock.sdk.services.SerializeDeserializeService
+import java.util.*
 
 private val logger = createLogger {}
 
@@ -317,9 +318,6 @@ class ApmTaskService(
             failTask("Error while monitoring ATV: ${e.message}")
         }
 
-        val atvBlock = atvBlock
-            ?: failTask("ATV=${atvId} block should be set")
-
         // this should be instant
         val payoutBlock = chainMonitor.getBlockAtHeight(payoutBlockHeight)
         // we know payout block hash, so give `getTransaction` a hint where to search.
@@ -334,9 +332,9 @@ class ApmTaskService(
         if (rewardVout != null) {
             // TODO: this looks like something hacky, figure out how to handle
             val payoutName = if (chain.key.startsWith("v", true)) {
-                chain.key.toUpperCase().decapitalize()
+                chain.key.uppercase(Locale.getDefault()).replaceFirstChar { it.lowercase(Locale.getDefault()) }
             } else {
-                chain.key.toUpperCase()
+                chain.key.uppercase(Locale.getDefault())
             }
             logger.info(
                 this,

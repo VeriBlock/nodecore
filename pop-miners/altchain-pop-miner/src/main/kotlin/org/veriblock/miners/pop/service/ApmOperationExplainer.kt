@@ -9,6 +9,7 @@ import org.veriblock.miners.pop.core.ApmOperationState
 import org.veriblock.miners.pop.core.MiningOperationState
 import org.veriblock.miners.pop.service.ApmOperationExplainer.OperationStatus.*
 import org.veriblock.sdk.alt.PayoutDetectionType
+import java.util.*
 
 class ApmOperationExplainer(
     val context: ApmContext
@@ -27,7 +28,8 @@ class ApmOperationExplainer(
             } else {
                 ""
             }
-            val taskName = (operationState.previousState?.taskName ?: "Start").toUpperCase().replace(' ', '_')
+            val taskName =
+                (operationState.previousState?.taskName ?: "Start").uppercase(Locale.getDefault()).replace(' ', '_')
             val taskId = operationState.id + 1
             val taskIdString = if (taskId / 10 > 0) "$taskId." else " $taskId."
             OperationWorkflowStage(

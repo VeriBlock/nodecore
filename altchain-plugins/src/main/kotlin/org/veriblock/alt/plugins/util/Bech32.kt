@@ -83,7 +83,7 @@ fun checkHumanReadablePart(s: CharArray) {
         "Invalid length of human-readable part string"
     }
     for (c in s) {
-        require(!(c.toInt() < 33 || c.toInt() > 126)) {
+        require(!(c.code < 33 || c.code > 126)) {
             "Invalid character in human-readable part string"
         }
         require(c !in 'A'..'Z') {
@@ -95,11 +95,11 @@ fun checkHumanReadablePart(s: CharArray) {
 private fun expandHumanReadablePart(s: CharArray): ByteArrayOutputStream {
     val result = ByteArrayOutputStream()
     for (c in s) {
-        result.write(c.toInt() ushr 5)
+        result.write(c.code ushr 5)
     }
     result.write(0)
     for (c in s) {
-        result.write(c.toInt() and 0x1F)
+        result.write(c.code and 0x1F)
     }
     return result
 }

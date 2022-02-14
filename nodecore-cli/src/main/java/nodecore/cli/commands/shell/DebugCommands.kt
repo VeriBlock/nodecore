@@ -14,6 +14,8 @@ import java.io.IOException
 import java.net.ServerSocket
 import java.nio.file.Paths
 import org.veriblock.core.utilities.getDiagnosticInfo
+import java.util.*
+import kotlin.collections.ArrayList
 
 fun CommandFactory.debugCommands() {
     cliCommand(
@@ -29,10 +31,14 @@ fun CommandFactory.debugCommands() {
         printInfo("Running several checks, this may take a few moments...")
 
         // Get the network
-        val network = getOptionalParameter<String>("network")?.toLowerCase() ?: "mainnet"
+        val network = getOptionalParameter<String>("network")?.lowercase(Locale.getDefault()) ?: "mainnet"
         // Verify the network parameter
-        if (network != "mainnet" && network != "testnet" && network != "testnet_progpow" && network != "alpha" ) {
-            return@cliCommand failure("V004", "Unknown Network", "The supplied network $network is not valid, please use mainnet, testnet, testnet_progpow, or alpha.")
+        if (network != "mainnet" && network != "testnet" && network != "testnet_progpow" && network != "alpha") {
+            return@cliCommand failure(
+                "V004",
+                "Unknown Network",
+                "The supplied network $network is not valid, please use mainnet, testnet, testnet_progpow, or alpha."
+            )
         }
         printInfo("Detected network: $network")
 
@@ -40,22 +46,32 @@ fun CommandFactory.debugCommands() {
         val providedNodeCoreFolder = getOptionalParameter<String>("nodecoreFolder") ?: getDefaultNodeCoreFolder()
         val nodecoreFolder = File(providedNodeCoreFolder)
         if (!nodecoreFolder.exists()) {
-            return@cliCommand failure("V004", "Unable to find the NodeCore folder", "The NodeCore folder $nodecoreFolder doesn't exists.")
+            return@cliCommand failure(
+                "V004",
+                "Unable to find the NodeCore folder",
+                "The NodeCore folder $nodecoreFolder doesn't exists."
+            )
         }
         printInfo("Detected NodeCore folder: $providedNodeCoreFolder")
 
         // Get the data folder
-        val providedNetworkDataFolder = getOptionalParameter<String>("networkDataFolder") ?: Paths.get(providedNodeCoreFolder, "bin", network).toString()
+        val providedNetworkDataFolder =
+            getOptionalParameter<String>("networkDataFolder") ?: Paths.get(providedNodeCoreFolder, "bin", network)
+                .toString()
         val networkDataFolder = File(providedNetworkDataFolder)
         if (!networkDataFolder.exists()) {
-            return@cliCommand failure("V004", "Unable to find the network data folder", "The network data folder $networkDataFolder doesn't exists.")
+            return@cliCommand failure(
+                "V004",
+                "Unable to find the network data folder",
+                "The network data folder $networkDataFolder doesn't exists."
+            )
         }
         printInfo("Detected NodeCore data folder: $providedNetworkDataFolder")
 
         // Get the system environment variables related with NodeCore
         val nodecoreEnvironmentVariables = try {
             System.getenv().filter {
-                it.key.toLowerCase().contains("nodecore")
+                it.key.lowercase(Locale.getDefault()).contains("nodecore")
             }.map {
                 NodecoreEnvironmentVariables(it.key, it.value)
             }
@@ -82,7 +98,7 @@ fun CommandFactory.debugCommands() {
         // Get the process information related with NodeCore
         val processInformation = JProcesses.getProcessList().filter { process ->
             process.name.contains("nodecore", true) || process.name.contains("veriblock", true) ||
-                process.command.contains("nodecore", true) || process.command.contains("veriblock", true)
+                    process.command.contains("nodecore", true) || process.command.contains("veriblock", true)
         }.map { process ->
             ProcessInformation(process.pid, process.name, process.command)
         }

@@ -1,5 +1,6 @@
 package org.veriblock.spv.net
 
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -30,6 +31,7 @@ fun SpvContext.startAddressStateUpdateTask() {
     }
 }
 
+@OptIn(FlowPreview::class)
 suspend fun SpvContext.updateAddressState() {
     try {
         val addresses = addressManager.all.map { it.hash }

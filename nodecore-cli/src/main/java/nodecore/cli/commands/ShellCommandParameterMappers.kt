@@ -8,6 +8,7 @@ import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.shell.CommandParameterMapper
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.syntaxError
+import java.util.*
 
 object ShellCommandParameterMappers {
     val HASH: CommandParameterMapper = CommandParameterMappers.HEX_STRING
@@ -15,8 +16,8 @@ object ShellCommandParameterMappers {
     val PEER: CommandParameterMapper = { suppliedParam ->
         try {
             val transportType: EndpointTransportType = when {
-                suppliedParam.toLowerCase().startsWith("http://") -> EndpointTransportType.HTTP
-                suppliedParam.toLowerCase().startsWith("https://") -> EndpointTransportType.HTTPS
+                suppliedParam.lowercase(Locale.getDefault()).startsWith("http://") -> EndpointTransportType.HTTP
+                suppliedParam.lowercase(Locale.getDefault()).startsWith("https://") -> EndpointTransportType.HTTPS
                 else -> EndpointTransportType.HTTP
             }
             val parsedAddress = suppliedParam.replace("https://", "").replace("http://", "")

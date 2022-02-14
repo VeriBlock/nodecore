@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.binder.system.UptimeMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.veriblock.miners.pop.core.MiningOperationState
+import java.util.*
 
 object Metrics {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
@@ -52,7 +53,7 @@ object Metrics {
     private val operationStateTimersByTargetState = mutableMapOf<MiningOperationState, Timer>()
 
     fun getOperationStateTimerByState(state: MiningOperationState) = operationStateTimersByTargetState.getOrPut(state) {
-        createOperationStateTimer(state.taskName.toLowerCase().replace(' ', '_'))
+        createOperationStateTimer(state.taskName.lowercase(Locale.getDefault()).replace(' ', '_'))
     }
 
     private fun createOperationStateTimer(taskName: String) = Timer.builder("pop_miner.operations_timer")

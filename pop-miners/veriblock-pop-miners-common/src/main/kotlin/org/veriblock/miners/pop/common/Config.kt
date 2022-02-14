@@ -6,6 +6,7 @@ import org.bitcoinj.core.VersionMessage
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.params.RegTestParams
 import org.bitcoinj.params.TestNet3Params
+import java.util.*
 
 data class NodeCoreRpcConfig(
     val host: String = "127.0.0.1",
@@ -46,7 +47,7 @@ class BitcoinConfig(
     val downloadBlockchainBytesPerSecond: Int = 800,
     val blockStoreCapacity: Int = 5_000
 ) {
-    val network = when (network.toLowerCase()) {
+    val network = when (network.lowercase(Locale.getDefault())) {
         "mainnet" -> BitcoinNetwork.MainNet
         "testnet" -> BitcoinNetwork.TestNet
         "regtest" -> BitcoinNetwork.RegTest

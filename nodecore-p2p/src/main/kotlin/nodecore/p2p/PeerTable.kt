@@ -13,6 +13,8 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.util.network.NetworkAddress
 import io.ktor.util.network.port
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
@@ -174,6 +176,7 @@ class PeerTable(
         return null
     }
 
+    @OptIn(FlowPreview::class)
     private suspend fun requestPeerTables(): List<NodeMetadata> {
         val event = buildMessage {
             networkInfoRequest = RpcNetworkInfoRequest.newBuilder().build()
@@ -411,6 +414,7 @@ class PeerTable(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun requestAllMessages(
         event: RpcEvent,
         timeoutInMillis: Long = 5000L

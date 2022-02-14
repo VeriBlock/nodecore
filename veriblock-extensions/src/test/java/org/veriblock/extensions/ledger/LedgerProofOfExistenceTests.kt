@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.Test
 import org.veriblock.core.utilities.Utility
+import java.util.*
 
 class LedgerProofOfExistenceTests {
     @Test
@@ -346,7 +347,8 @@ class LedgerProofOfExistenceTests {
         )
         val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
         proofOfExistence.address shouldNotBe address
     }
 
@@ -380,7 +382,8 @@ class LedgerProofOfExistenceTests {
         )
         val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
         proofOfExistence.address shouldNotBe address
     }
 
@@ -414,7 +417,8 @@ class LedgerProofOfExistenceTests {
         )
         //val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
     }
 
     @Test
@@ -447,7 +451,8 @@ class LedgerProofOfExistenceTests {
         )
         //val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
     }
 
     @Test
@@ -480,7 +485,8 @@ class LedgerProofOfExistenceTests {
         )
         //val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
     }
 
     @Test
@@ -513,7 +519,8 @@ class LedgerProofOfExistenceTests {
         )
         //val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
     }
 
     @Test
@@ -546,7 +553,8 @@ class LedgerProofOfExistenceTests {
         )
         //val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase()  shouldNotBe  Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
     }
 
     @Test
@@ -579,7 +587,8 @@ class LedgerProofOfExistenceTests {
         )
         val address = "VFtmKMZzjx9JbyAgX3G6Y8Ri3Ho9uW"
         val proofOfExistence = LedgerProofOfExistence(verticalLayers)
-        Utility.bytesToHex(proofOfExistence.ledgerHash).toUpperCase() shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
+        Utility.bytesToHex(proofOfExistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe Utility.hexToBytes("7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59")
         proofOfExistence.address shouldNotBe address
     }
 }

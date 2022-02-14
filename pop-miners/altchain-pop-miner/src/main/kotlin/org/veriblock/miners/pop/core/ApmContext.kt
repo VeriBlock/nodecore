@@ -12,6 +12,7 @@ import org.veriblock.core.Context
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.Configuration
 import java.io.File
+import java.util.*
 
 class ApmContext(
     configuration: Configuration,
@@ -28,6 +29,6 @@ class ApmContext(
     val directory: File = File(dataDir)
     val filePrefix: String = "vbk-${networkParameters.name}"
 
-    val vbkTokenName: String = if (networkParameters.name.toLowerCase() == "mainnet") "VBK" else "tVBK"
-    val btcTokenName: String = if (networkParameters.name.toLowerCase() == "mainnet") "BTC" else "tBTC"
+    val vbkTokenName: String = if (networkParameters.name.lowercase(Locale.getDefault()) == "mainnet") "VBK" else "tVBK"
+    val btcTokenName: String = if (networkParameters.name.lowercase(Locale.getDefault()) == "mainnet") "BTC" else "tBTC"
 }

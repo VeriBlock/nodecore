@@ -6,8 +6,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package org.veriblock.miners.pop.service
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.utilities.createLogger
