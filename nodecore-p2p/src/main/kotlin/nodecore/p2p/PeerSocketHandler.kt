@@ -84,6 +84,7 @@ class PeerSocketHandler(
             val result = writeEventChannel.trySend(message)
             if (!result.isSuccess) {
                 logger.warn { "Not writing event ${message.resultsCase.name} to peer $peer because write queue is full." }
+                logger.debug { "Not writing event ${message.resultsCase.name} to peer $peer because write queue is full. Exception: ${result.exceptionOrNull()?.message}" }
             }
         } catch (e: InterruptedException) {
             logger.warn { "Output stream thread shutting down for peer $peer: $e" }
