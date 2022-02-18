@@ -6,6 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.miners.pop.service
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.bitcoinj.core.Transaction
 import org.veriblock.core.utilities.createLogger
@@ -68,6 +69,7 @@ class PopStateService(
         }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     private fun serialize(operation: VpmOperation): ByteArray {
         val protoData = OperationProto.Operation(
             id = operation.id,
@@ -96,6 +98,7 @@ class PopStateService(
         return ProtoBuf.encodeToByteArray(OperationProto.Operation.serializer(), protoData)
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     private fun reconstitute(record: OperationStateRecord): VpmOperation {
         val operation = VpmOperation(
             id = record.id,

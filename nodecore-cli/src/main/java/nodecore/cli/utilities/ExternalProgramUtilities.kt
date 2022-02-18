@@ -7,6 +7,7 @@
 package nodecore.cli.utilities
 
 import java.io.File
+import java.util.*
 
 class ExtendedIllegalStateException(
     override val message: String,
@@ -21,8 +22,8 @@ object ExternalProgramUtilities {
         scriptName: String,
         programName: String
     ): String {
-        val isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
-        val isMac = System.getProperty("os.name").toLowerCase().contains("mac os x")
+        val isWindows = System.getProperty("os.name").lowercase(Locale.getDefault()).contains("windows")
+        val isMac = System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac os x")
         val platformSpecificExtension = if (isWindows) ".bat" else ""
         val scriptFileName = scriptName + platformSpecificExtension
         return try {
@@ -31,7 +32,7 @@ object ExternalProgramUtilities {
                 ?: throw ExtendedIllegalStateException(
                     "Unable to find $programName binary or containing folder",
                     "The master directory containing " + programName + " (often in the format " + masterProgramFolderBeginning + ".x.x) could\n" +
-                        "\tnot be found in the directory \n\t" + file.canonicalPath + ""
+                            "\tnot be found in the directory \n\t" + file.canonicalPath + ""
                 )
 
             var scriptDirectory: File? = null
@@ -50,14 +51,17 @@ object ExternalProgramUtilities {
                             ProcessBuilder("cmd", "/C", "start", scriptFileName).directory(scriptDirectory).start()
                         }
                         isMac -> {
-                            ProcessBuilder("/usr/bin/osascript",
+                            ProcessBuilder(
+                                "/usr/bin/osascript",
                                 "-e", "tell app \"Terminal\"",
                                 "-e", "set currentTab to do script " +
-                                "(\"cd " + scriptDirectory.canonicalPath + " && chmod a+x " + scriptFileName + " && bash -c ./" + scriptFileName + "\")",
-                                "-e", "end tell").start()
+                                        "(\"cd " + scriptDirectory.canonicalPath + " && chmod a+x " + scriptFileName + " && bash -c ./" + scriptFileName + "\")",
+                                "-e", "end tell"
+                            ).start()
                         }
                         else -> {
-                            val fullCommand = "cd " + scriptDirectory.canonicalPath + " && chmod a+x " + scriptFileName + " && x-terminal-emulator -e ./" + scriptFileName
+                            val fullCommand =
+                                "cd " + scriptDirectory.canonicalPath + " && chmod a+x " + scriptFileName + " && x-terminal-emulator -e ./" + scriptFileName
                             ProcessBuilder("bash", "-c", fullCommand).start()
                         }
                     }
@@ -80,7 +84,7 @@ object ExternalProgramUtilities {
                     throw ExtendedIllegalStateException(
                         "Unable to find $programName binary or containing folder",
                         "The master directory containing " + programName + " (often in the format " + masterProgramFolderBeginning + "-x.x.x) could\n" +
-                            "\tnot be found in the directory \n\t" + file.canonicalPath + "."
+                                "\tnot be found in the directory \n\t" + file.canonicalPath + "."
                     )
                 } else {
                     throw ExtendedIllegalStateException(

@@ -22,6 +22,7 @@ import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.*
 
 private val logger = createLogger {}
 
@@ -51,7 +52,7 @@ class PluginService(
         logger.info { "Loaded plugin implementations: ${plugins.keys.joinToString()}" }
 
         loadedPlugins = configuredPlugins.asSequence().mapNotNull { (key, config) ->
-            val pluginKey = (config.pluginKey ?: key).toLowerCase()
+            val pluginKey = (config.pluginKey ?: key).lowercase(Locale.getDefault())
             val pluginSupplier = plugins[pluginKey]
             if (pluginSupplier == null) {
                 logger.warn { "Unable to load plugin implementation $key: chain family $pluginKey is not implemented" }

@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import org.junit.Test
 import org.veriblock.core.utilities.Utility
 import java.lang.IllegalArgumentException
+import java.util.*
 
 class LedgerProofOfNonexistenceTests {
     @Test
@@ -333,7 +334,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VHeyHqn7qLUgS6ZvmcDxjAwHgB5iNL"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
     }
 
     @Test
@@ -363,7 +365,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VHeyHqn7qLUgS6ZvmcDxjAwHgB5iNL"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -393,7 +396,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VHeyHqn7qLUgS6ZvmcDxjAwHgB5iNL"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
     }
 
     @Test
@@ -423,7 +427,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VHeyHqn7qLUgS6ZvmcDxjAwHgB5iNL"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "7BEBDCECA669943E16000F3B657322B7AD0D5DD012660A59"
     }
 
     @Test
@@ -506,7 +511,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VEUJAQb8UaTBFHNRYNDuRo99xC3V8S"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address, horizontalLayers)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -546,7 +552,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VEUJAQb8UaTBFHNRYNDuRo99xC3V8S"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address, horizontalLayers)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
     }
 
     @Test
@@ -586,7 +593,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VEUJAQb8UaTBFHNRYNDuRo99xC3V8S"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address, horizontalLayers)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
     }
 
     @Test
@@ -626,7 +634,8 @@ class LedgerProofOfNonexistenceTests {
         )
         val address = "VEUJAQb8UaTBFHNRYNDuRo99xC3V8S"
         val proofOfNonexistence = LedgerProofOfNonexistence(verticalLayers, address, horizontalLayers)
-        Utility.bytesToHex(proofOfNonexistence.ledgerHash).toUpperCase() shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
+        Utility.bytesToHex(proofOfNonexistence.ledgerHash)
+            .uppercase(Locale.getDefault()) shouldNotBe "EF29BC842170FD43D19A8EC74FD9FCFC42E30713F808522D"
     }
 
     @Test(expected = IllegalArgumentException::class)

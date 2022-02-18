@@ -20,6 +20,7 @@ import org.veriblock.sdk.models.VeriBlockMerklePath
 import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.security.Security
+import java.util.*
 
 fun String.unhex(): ByteArray {
     return Utility.hexToBytes(this)
@@ -84,11 +85,11 @@ class AtvTest {
     @Test
     fun atvSerialization() {
         val serialized = SerializeDeserializeService.serialize(atv)
-        serialized.toHex() shouldBe atvSerialized.toUpperCase()
+        serialized.toHex() shouldBe atvSerialized.uppercase(Locale.getDefault())
     }
 
     @Test
     fun atvGetId() {
-        atv.getId().toHex() shouldBe atvId.toUpperCase()
+        atv.getId().toHex() shouldBe atvId.uppercase(Locale.getDefault())
     }
 }

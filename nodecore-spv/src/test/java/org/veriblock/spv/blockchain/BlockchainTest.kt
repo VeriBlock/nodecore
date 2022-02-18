@@ -12,10 +12,12 @@ import org.veriblock.spv.model.StoredVeriBlockBlock
 import org.veriblock.spv.service.BlockStore
 import org.veriblock.spv.service.Blockchain
 import java.math.BigInteger
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.deleteIfExists
 
 class BlockchainTest {
     val regtest = getDefaultNetworkParameters("regtest")
-    val tmpdir = createTempDir()
+    val tmpdir = createTempDirectory()
 
     init {
         Context.create(regtest)
@@ -23,10 +25,10 @@ class BlockchainTest {
 
     @After
     fun after() {
-        tmpdir.deleteRecursively()
+        tmpdir.toFile().deleteRecursively()
     }
 
-    val blockStore = BlockStore(regtest, tmpdir)
+    val blockStore = BlockStore(regtest, tmpdir.toFile())
     val blockchain = Blockchain(blockStore)
 
     fun generateBlock(prev: VeriBlockBlock) = vbkBlockGenerator(prev, regtest) {
@@ -50,7 +52,7 @@ class BlockchainTest {
         }.last()
 
 
-        blockchain.size shouldBe 2100 + 1 /*genesis*/
+        blockchain.size shouldBe (2100 + 1).toInt() /*genesis*/
         blockchain.getChainHeadBlock().header shouldBe lastBlock
 
         // blocks are accessible by height in O(1)
@@ -86,7 +88,7 @@ class BlockchainTest {
 
         val tipB = blockchain.getBlock(lastBlock2.hash)!!
 
-        blockchain.size shouldBe /*genesis=*/1 + 2100 + 2001
+        blockchain.size shouldBe /*genesis=*/(1 + 2100 + 2001).toInt()
         blockchain.activeChain.tip.readBlock(blockStore)!!.header shouldBe tipB.header
     }
 
@@ -120,7 +122,7 @@ class BlockchainTest {
             )
         )
 
-        val store = BlockStore(regtest, tmpdir)
+        val store = BlockStore(regtest, tmpdir.toFile())
         val bchain2 = Blockchain(store)
 
         bchain2.getBlock(headerCorrupted.hash) shouldBe null

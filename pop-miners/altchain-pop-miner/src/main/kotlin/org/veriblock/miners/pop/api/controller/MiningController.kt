@@ -38,6 +38,7 @@ import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.miners.pop.service.ApmOperationExplainer
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.plugin.PluginService
+import java.util.*
 
 class MiningController(
     private val miner: AltchainPopMinerService,
@@ -110,7 +111,7 @@ class MiningController(
         ) { location ->
             // Get the given status filter
             val status = location.status?.let { stateString ->
-                MiningOperationStatus.values().find { it.name == stateString.toUpperCase() }
+                MiningOperationStatus.values().find { it.name == stateString.uppercase(Locale.getDefault()) }
                     ?: throw BadRequestException("'$stateString' is not valid. Available options: 'active', 'failed', 'completed', 'all'")
             } ?: MiningOperationStatus.ACTIVE
             // Get the given limit filter

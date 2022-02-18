@@ -6,9 +6,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package org.veriblock.miners.pop.transactionmonitor
 
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.core.TransactionMeta

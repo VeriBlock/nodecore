@@ -16,10 +16,6 @@ class PendingTransactionDownloadedListener(
     private val keyRing = KeyRing()
     private val lock = ReentrantLock(true)
 
-    // TODO
-    fun onPendingTransactionDownloaded(transaction: StandardTransaction) {
-    }
-
     fun loadTransactions(toLoad: List<StandardTransaction>) {
         for (tx in toLoad) {
             transactions[tx.txId] = tx

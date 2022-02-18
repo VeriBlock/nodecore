@@ -10,6 +10,7 @@
 
 package org.veriblock.miners.pop
 
+import kotlinx.coroutines.DelicateCoroutinesApi
 import java.net.BindException
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -33,6 +34,7 @@ import java.util.concurrent.CountDownLatch
 import org.veriblock.core.utilities.Configuration
 import org.veriblock.core.utilities.checkJvmVersion
 import org.veriblock.core.utilities.extensions.checkPortViability
+import java.util.*
 import kotlin.system.exitProcess
 
 private val logger = createLogger {}
@@ -43,6 +45,7 @@ private lateinit var minerService: AltchainPopMinerService
 private val eventRegistrar = Any()
 var externalQuit = false
 
+@OptIn(DelicateCoroutinesApi::class)
 private fun run(autoRestart: Boolean): Int {
     Security.addProvider(BouncyCastleProvider())
     EventBus.shellCompletedEvent.register(eventRegistrar, ::onShellCompleted)
@@ -170,7 +173,7 @@ private fun onProgramQuit(quitReason: Int) {
 }
 
 fun main(args: Array<String>) {
-    val autoRestart = args.firstOrNull()?.toLowerCase() == "autorestart"
+    val autoRestart = args.firstOrNull()?.lowercase(Locale.getDefault()) == "autorestart"
     val programExitResult = run(autoRestart)
     if (externalQuit) {
         exitProcess(2)

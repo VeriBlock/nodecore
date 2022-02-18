@@ -396,7 +396,7 @@ class Blockchain(
         if (networkBlock.block.height > currentTipHeight + 10_000) {
             return false
         }
-        networkBlockQueue.offer(networkBlock)
+        networkBlockQueue.trySend(networkBlock).isSuccess
         logger.debug { "Added block ${networkBlock.block} to network block queue" }
         return true
     }

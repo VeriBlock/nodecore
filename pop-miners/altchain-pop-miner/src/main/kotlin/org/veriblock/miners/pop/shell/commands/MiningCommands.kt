@@ -23,6 +23,7 @@ import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
+import java.util.*
 
 fun CommandFactory.miningCommands(
     minerService: AltchainPopMinerService,
@@ -40,7 +41,7 @@ fun CommandFactory.miningCommands(
             CommandParameter("block", CommandParameterMappers.INTEGER, false)
         )
     ) {
-        var chain = getOptionalParameter<String>("chain")?.toLowerCase()
+        var chain = getOptionalParameter<String>("chain")?.lowercase(Locale.getDefault())
         val block: Int? = getOptionalParameter("block")
 
         if (chain == null) {
@@ -49,7 +50,9 @@ fun CommandFactory.miningCommands(
                 throw MineException("There are no SI chains configured.")
             }
             if (plugins.size > 1) {
-                throw MineException("There are more than one altchains configured: ${plugins.joinToString { it }}. Please, specify which of them you are going to PoP mine.")
+                throw MineException(
+                    "There are more than one altchains configured: ${plugins.joinToString { it }}. Please, specify which of them you are going to PoP mine."
+                )
             }
             chain = plugins.first()
         }
@@ -71,7 +74,7 @@ fun CommandFactory.miningCommands(
         )
     ) {
         val state = getOptionalParameter<String>("state")?.let { stateString ->
-            MiningOperationStatus.values().find { it.name == stateString.toUpperCase() }
+            MiningOperationStatus.values().find { it.name == stateString.uppercase(Locale.getDefault()) }
                 ?: throw CommandException("'$stateString' is not valid. Available options: 'active', 'failed', 'completed', 'all'")
         } ?: MiningOperationStatus.ACTIVE
         val limit = getOptionalParameter<Int>("limit") ?: 50

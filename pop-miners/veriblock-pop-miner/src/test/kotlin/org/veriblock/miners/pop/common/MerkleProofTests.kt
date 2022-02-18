@@ -57,8 +57,9 @@ class MerkleProofTests {
         parts.toList() shouldContainExactly expected.toList()
         val verification = BitcoinMerklePath(txProof)
         val calculatedRoot = verification.getMerkleRoot()
-        calculatedRoot.toLowerCase() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
-        tree.getTxnHashAndMerkleRoot(LinkedList()).toString() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
+        calculatedRoot.lowercase(Locale.getDefault()) shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
+        tree.getTxnHashAndMerkleRoot(LinkedList())
+            .toString() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
     }
 
     @Test
@@ -147,6 +148,7 @@ class MerkleProofTests {
             "1B91B4D22EEAB91884E35FDA0BFBCF690AD7C21207AFAAEDB331840FBAA495ED"
         )
         parts.toList() shouldContainExactly expected.toList()
-        path.getMerkleRoot().toLowerCase() shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
+        path.getMerkleRoot()
+            .lowercase(Locale.getDefault()) shouldBe "bdd18f2b0ebacaa27e39cf74e84f4db75447dc77da11fd2c87dc67aea5b9bb96"
     }
 }

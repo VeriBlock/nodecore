@@ -17,6 +17,7 @@ import org.veriblock.core.crypto.asTruncatedMerkleRoot
 import org.veriblock.sdk.models.BitcoinBlock
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.math.BigInteger
+import java.util.*
 
 class NetworkConfig(
     var network: String = "mainnet",
@@ -83,7 +84,7 @@ class NetworkParameters(
         }
 
     init {
-        val template = when (config.network.toLowerCase()) {
+        val template = when (config.network.lowercase(Locale.getDefault())) {
             "mainnet" -> MainNetParameters
             "testnet" -> TestNetParameters
             "alpha" -> AlphaNetParameters

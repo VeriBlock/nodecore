@@ -464,8 +464,8 @@ class MinerService(
                         logger.warn("Unable to restore previous operation {}", miningOperation.id)
                     }
                 }
-                operationsToSubmit.removeAll(operationsToRemove)
-                delay(5 * 1000)
+                operationsToSubmit.removeAll(operationsToRemove.toSet())
+                delay((5 * 1000).toLong())
             }
             logger.info { "All the suspended operations have been submitted" }
         }

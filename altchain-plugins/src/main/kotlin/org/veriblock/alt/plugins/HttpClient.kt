@@ -13,7 +13,7 @@ import com.google.gson.JsonElement
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.auth.Auth
-import io.ktor.client.features.auth.providers.basic
+import io.ktor.client.features.auth.providers.*
 import io.ktor.client.features.json.GsonSerializer
 import io.ktor.client.features.json.Json
 import io.ktor.http.ContentType
@@ -44,8 +44,9 @@ fun createHttpClient(
     if (authConfig != null) {
         Auth {
             basic {
-                username = authConfig.username
-                password = authConfig.password
+                credentials {
+                    BasicAuthCredentials(authConfig.username, authConfig.password)
+                }
             }
         }
     }

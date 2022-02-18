@@ -19,6 +19,7 @@ import org.veriblock.shell.CommandFactory
 import org.veriblock.shell.Shell
 import java.security.Security
 import org.veriblock.core.utilities.getDiagnosticInfo
+import java.util.*
 import kotlin.system.exitProcess
 
 class PopShell(
@@ -50,7 +51,7 @@ class PopShell(
                         "This application contains a Bitcoin wallet. The seed words which can be used to recover this wallet will be displayed below."
                     )
                     var counter = 0
-                    while (prompt("Press 'y' to continue...").toUpperCase() != "Y") {
+                    while (prompt("Press 'y' to continue...").uppercase(Locale.getDefault()) != "Y") {
                         counter++
                         if (counter >= 3) {
                             exitProcess(1)
@@ -69,7 +70,7 @@ class PopShell(
                         "\rThis information will not be displayed again. Please make sure you have recorded them securely."
                     )
                     counter = 0
-                    while (prompt("Press 'y' to continue...").toUpperCase() != "Y") {
+                    while (prompt("Press 'y' to continue...").uppercase(Locale.getDefault()) != "Y") {
                         counter++
                         if (counter >= 3) {
                             exitProcess(1)

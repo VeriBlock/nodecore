@@ -61,7 +61,7 @@ fun ByteArray.toHex(): String {
     return String(hex)
 }
 
-fun String.isHex(): Boolean = length % 2 == 0 && toUpperCase().toCharArray().all {
+fun String.isHex(): Boolean = length % 2 == 0 && uppercase(Locale.getDefault()).toCharArray().all {
     it in hexAlphabet
 }
 

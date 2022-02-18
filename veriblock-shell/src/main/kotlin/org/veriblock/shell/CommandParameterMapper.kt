@@ -4,6 +4,7 @@ import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.extensions.countChar
 import org.veriblock.core.utilities.extensions.isHex
 import java.math.BigDecimal
+import java.util.*
 
 class CommandWithParam(
     val command: Command,
@@ -34,7 +35,7 @@ object CommandParameterMappers {
     }
 
     val BOOLEAN: CommandParameterMapper = { suppliedParam ->
-        val lowerCase = suppliedParam.toLowerCase()
+        val lowerCase = suppliedParam.lowercase(Locale.getDefault())
         if (lowerCase == "true" || lowerCase == "t") {
             true
         } else if (lowerCase == "false" || lowerCase == "f") {

@@ -6,6 +6,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.cli
 
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -231,6 +232,7 @@ class CliShell(
         return  protocolEndpoint != null || extraData != null && extraData == CommandServiceType.SHELL.name
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun initialize(programOptions: ProgramOptions) {
         var endpoint: ProtocolEndpoint? = null
         var host: String? = null

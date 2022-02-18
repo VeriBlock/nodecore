@@ -6,10 +6,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package org.veriblock.miners.pop.securityinheriting
 
 import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -520,7 +523,7 @@ class SecurityInheritingMonitor(
             val block = getBlockAtHeight(height)
             if (block != null) {
                 for (listener in listeners) {
-                    listener.offer(block)
+                    listener.trySend(block).isSuccess
                 }
             }
         }
@@ -531,7 +534,7 @@ class SecurityInheritingMonitor(
             val transaction = getTransaction(txId)
             if (transaction != null) {
                 for (listener in listeners) {
-                    listener.offer(transaction)
+                    listener.trySend(transaction).isSuccess
                 }
             }
         }

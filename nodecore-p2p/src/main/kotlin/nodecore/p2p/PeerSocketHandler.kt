@@ -89,7 +89,7 @@ class PeerSocketHandler(
             logger.warn { "Output stream thread shutting down for peer $peer: $e" }
         } catch (e: ClosedSendChannelException) {
             logger.debug { "Trying to send message to peer $peer when the socket was already closed" }
-            handleSocketError(e)
+            handleSocketError()
         }
     }
 
@@ -107,23 +107,23 @@ class PeerSocketHandler(
                 peer.state.recordBytesSent(message.size + 4L)
             } catch (e: InterruptedException) {
                 logger.debug("Output stream thread shutting down")
-                handleSocketError(e)
+                handleSocketError()
                 break
             } catch (e: CancellationException) {
                 logger.debug("Output stream thread shutting down")
-                handleSocketError(e)
+                handleSocketError()
                 break
             } catch (e: IOException) {
                 logger.info("Socket closed")
-                handleSocketError(e)
+                handleSocketError()
                 break
             } catch (e: SocketException) {
                 logger.info("Socket closed")
-                handleSocketError(e)
+                handleSocketError()
                 break
             } catch (e: Exception) {
                 logger.error(e) { "Error in output stream thread!" }
-                handleSocketError(e)
+                handleSocketError()
                 break
             }
         }
@@ -167,7 +167,7 @@ class PeerSocketHandler(
                 break
             } catch (e: Exception) {
                 logger.error(e) { "Socket error" }
-                handleSocketError(e)
+                handleSocketError()
                 break
             }
         }
@@ -179,7 +179,7 @@ class PeerSocketHandler(
 
     private val errored = AtomicBoolean(false)
 
-    private fun handleSocketError(t: Throwable) {
+    private fun handleSocketError() {
         socket.close()
 
         if (errored.getAndSet(true)) {
