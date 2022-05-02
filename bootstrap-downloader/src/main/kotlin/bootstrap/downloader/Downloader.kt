@@ -269,7 +269,7 @@ private fun getNodeCoreDataDirectory(): String {
 
     // Search the NodeCore folder inside the package
     val nodeCoreFolder = packageParentFolder.toFile().listFiles()?.find {
-        it.name.startsWith("nodecore-0") // nodecore-0.x.x...
+        it.name.startsWith("nodecore-0") && it.isDirectory && !it.isFile// nodecore-0.x.x...
     } ?: return "./"
 
     logger.info { "Found the NodeCore package: ${nodeCoreFolder.absolutePath}" }
