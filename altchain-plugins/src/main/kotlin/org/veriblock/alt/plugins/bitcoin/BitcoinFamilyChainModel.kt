@@ -139,7 +139,7 @@ internal data class BtcBlockHeader(
 internal data class VbkBlock(
     val chainWork: String?,
     val containingEndorsements: List<String?>?,
-    val endorsedBy: List<Int?>?,
+    val endorsedBy: List<String?>?,
     val height: Int?,
     val header: VbkBlockHeader?,
     val status: Int?,

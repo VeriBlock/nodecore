@@ -60,6 +60,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.models.VeriBlockBlock
+import java.util.concurrent.TimeoutException
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -309,8 +310,11 @@ class SecurityInheritingMonitor(
         while (true) {
             try {
                 submitVtbs()
-            } catch (e: Exception) {
+            } catch (e: TimeoutException) {
                 logger.debugInfo(e) { "Unable to submit VTBs to ${chain.name} in a timely manner. Will try again later..." }
+                delay(300_000L)
+            } catch (e: Exception) {
+                logger.debugWarn(e) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
                 delay(300_000L)
             } catch (t: Throwable) {
                 logger.error(t) { "Error while submitting VTBs to ${chain.name}! Will try again later..." }
@@ -320,7 +324,7 @@ class SecurityInheritingMonitor(
     }
 
     private suspend fun autoHandleContextGap() = coroutineScope {
-        logger.info("Starting continuous submission of VTBs for ${chain.name}")
+        logger.info("Starting context gap monitor task ${chain.name}")
         while (true) {
             try {
                 handleContextGap()
@@ -338,7 +342,7 @@ class SecurityInheritingMonitor(
         var cursor = chain.getVbkBlock(bestHash)
             ?: return null
         while (!miner.gateway.isOnActiveChain(cursor.hash)) {
-            logger.info { "${chain.name} block ${cursor.hash} is not on the active chain... Getting previous block." }
+            logger.info { "Altchain's known VBK block ${cursor.hash} @${cursor.height} is not on the local known chain... Getting previous block." }
             cursor = chain.getVbkBlock(cursor.previousBlock.toString())
                 ?: return null
         }
@@ -425,18 +429,13 @@ class SecurityInheritingMonitor(
         logger.info { "VeriBlock Publication data for ${chain.name} retrieved and verified! Submitting to ${chain.name}'s daemon..." }
 
         // Submit them to the blockchain
-        vtbs.forEach {
-            chain.submitPopVtb(it)
-        }
-        val successfulSubmissions = vtbs.asFlow()
-            .map { vtb ->
-                val result = chain.submitPopVtb(vtb)
-                if (!result.accepted) {
+        val successfulSubmissions = vtbs.map { vtb ->
+            chain.submitPopVtb(vtb).also {
+                if (!it.accepted) {
                     logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
                 }
-                result
             }
-            .count { it.accepted }
+        }.count { it.accepted }
         if (successfulSubmissions > 0) {
             logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
         } else {

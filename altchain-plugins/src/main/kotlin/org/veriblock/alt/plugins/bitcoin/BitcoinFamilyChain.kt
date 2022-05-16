@@ -402,14 +402,8 @@ class BitcoinFamilyChain(
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
-        try {
-            val response: AddressValidationResponse = rpcRequest("validateaddress", listOf(address))
-            if (response.isvalid) {
-                return response.scriptPubKey?.asHexBytes()
-                    ?: error("Unexpected response from 'validateaddress'. 'scriptPubKey' is not set!")
-            } else {
-                error("Invalid Address: $address")
-            }
+        val response: AddressValidationResponse = try {
+            rpcRequest("validateaddress", listOf(address))
         } catch (e: RpcException) {
             if (e.errorCode == -32601) {
                 // Method not found
@@ -418,7 +412,13 @@ class BitcoinFamilyChain(
                 throw e
             }
         } catch (e: Exception) {
-            throw IllegalStateException("Unable to perform the validateaddress rpc call to ${config.host}", e)
+            throw IllegalStateException("Unable to perform the validateaddress rpc call to ${config.host} (is it reachable?)", e)
+        }
+        if (response.isvalid) {
+            return response.scriptPubKey?.asHexBytes()
+                ?: error("Unexpected response from 'validateaddress'. 'scriptPubKey' is not set!")
+        } else {
+            error("Invalid Address: $address")
         }
     }
 }
