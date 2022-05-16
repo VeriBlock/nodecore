@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import org.veriblock.core.wallet.AddressPubKey
 
+private val VTB_RETRIEVAL_TIMEOUT = Duration.ofMinutes(40);
+
 private val logger = createLogger {}
 
 class VeriBlockNetwork(
@@ -55,8 +57,6 @@ class VeriBlockNetwork(
     private val synchronized = AtomicBoolean(false)
     private val sufficientFunds = AtomicBoolean(false)
     private val connected = SettableFuture.create<Boolean>()
-
-    private val timeout = Duration.ofMinutes(40);
 
     var latestBalance: Balance = Balance()
     var latestSpvStateInfo: StateInfo = StateInfo()
@@ -227,7 +227,7 @@ class VeriBlockNetwork(
         keystoneHash: String,
         contextHash: String,
         btcContextHash: String
-    ): List<VeriBlockPublication> = withTimeout(timeout) {
+    ): List<VeriBlockPublication> = withTimeout(VTB_RETRIEVAL_TIMEOUT) {
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash
                 |   - VBK Context Hash: $contextHash
@@ -244,19 +244,15 @@ class VeriBlockNetwork(
                 // If the list is not empty, return it
                 it.isNotEmpty()
             }
+        } catch (e: TimeoutCancellationException) {
+            throw e
         } catch (e: Exception) {
             try {
                 val lastBlock = gateway.getLastBlock()
                 logger.info { "Current last block: ${lastBlock.hash} @ ${lastBlock.height}" }
             } catch (ignored: Exception) {
             }
-
-            var exception = e;
-
-            if (e.message?.contains("Timed out waiting for", ignoreCase = true) == true) {
-                exception = java.lang.Exception("Timed out waiting for ${timeout.toMinutes()} minutes")
-            }
-            throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", exception)
+            throw RuntimeException("Error while retrieving VTBs!\n$extraLogData", e)
         }
     }
 }

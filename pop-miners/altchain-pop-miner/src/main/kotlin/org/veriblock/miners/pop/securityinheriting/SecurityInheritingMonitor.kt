@@ -14,6 +14,7 @@ import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
@@ -310,7 +311,7 @@ class SecurityInheritingMonitor(
         while (true) {
             try {
                 submitVtbs()
-            } catch (e: TimeoutException) {
+            } catch (e: TimeoutCancellationException) {
                 logger.debugInfo(e) { "Unable to submit VTBs to ${chain.name} in a timely manner. Will try again later..." }
                 delay(300_000L)
             } catch (e: Exception) {
