@@ -8,7 +8,7 @@
 
 package org.veriblock.alt.plugins.bitcoin
 
-import org.veriblock.core.contracts.EgBlockHash
+import org.veriblock.sdk.alt.model.VtbBitcoinBlock
 
 internal data class BtcContextInfo(
     val serialized: String
@@ -93,21 +93,27 @@ internal data class BtcVbkBlock(
 )
 
 internal data class BtcVtb(
-    val in_active_chain: Boolean,
-    val blockheight: Int,
-    val confirmations: Int,
-    val vtb: BtcVtbData
+    val blockhash: String,
+    val vtb: Vtb
 )
 
-internal data class BtcVtbData(
-    val id: String,
-    val version: Int,
-    val containingBlock: SpBtcBlock
+internal data class Vtb(
+    val transaction: BtcVeriBlockPopTransaction,
+    //val merklePath: VeriBlockMerklePath,
+    //val containingBlock: VeriBlockBlock,
+    //val context: List<VeriBlockBlock> = emptyList()
 )
 
-internal data class SpBtcBlock(
-    val hash: String,
-    val height: Int
+internal data class BtcVeriBlockPopTransaction(
+    //val address: Address,
+    //val publishedBlock: VeriBlockBlock,
+    //val bitcoinTransaction: BitcoinTransaction,
+    //val merklePath: MerklePath,
+    val blockOfProof: VtbBitcoinBlock,
+    val blockOfProofContext: List<VtbBitcoinBlock>,
+    //val signature: ByteArray,
+    //val publicKey: ByteArray,
+    //val networkByte: Byte?
 )
 
 internal data class BlockChainInfo(

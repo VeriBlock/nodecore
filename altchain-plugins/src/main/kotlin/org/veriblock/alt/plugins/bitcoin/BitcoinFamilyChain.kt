@@ -236,7 +236,10 @@ class BitcoinFamilyChain(
                 throw e
             }
         }
-        return Vtb(response.vtb.containingBlock.hash)
+        return Vtb(
+            btcBlockOfProof = response.vtb.transaction.blockOfProof,
+            btcBlockOfProofContext = response.vtb.transaction.blockOfProofContext
+        )
     }
 
     override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {
@@ -247,10 +250,10 @@ class BitcoinFamilyChain(
         logger.debug { "Retrieving mining instruction at height $actualBlockHeight from $name daemon at ${config.host}..." }
         val response: BtcPublicationData = rpcRequest("getpopdatabyheight", listOf(actualBlockHeight))
 
-        if (response.last_known_veriblock_blocks.isNullOrEmpty()) {
+        if (response.last_known_veriblock_blocks.isEmpty()) {
             error("Publication data's 'last_known_veriblock_blocks' must not be empty!")
         }
-        if (response.last_known_bitcoin_blocks.isNullOrEmpty()) {
+        if (response.last_known_bitcoin_blocks.isEmpty()) {
             error("Publication data's 'last_known_bitcoin_blocks' must not be empty!")
         }
 

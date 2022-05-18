@@ -203,9 +203,10 @@ class EthereumFamilyChain(
 
     override suspend fun getVtb(id: String): Vtb? {
         val response: EthVtb? = nullableRpcRequest("pop_getRawVtb", listOf(id, 1), "2.0")
-        return response?.let {
-            Vtb(it.vtb.containingBlock.hash)
-        }
+        TODO()
+        //return response?.let {
+        //    Vtb(it.vtb.containingBlock.hash)
+        //}
     }
 
     override suspend fun getMiningInstructionByHeight(blockHeight: Int?): ApmInstruction {

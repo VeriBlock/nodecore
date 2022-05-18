@@ -20,6 +20,8 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.BtcHash
+import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.utilities.debugWarn
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.transactionmonitor.TransactionMonitor
@@ -224,9 +226,9 @@ class VeriBlockNetwork(
     }
 
     suspend fun getVeriBlockPublications(
-        keystoneHash: String,
-        contextHash: String,
-        btcContextHash: String
+        keystoneHash: VbkHash,
+        contextHash: VbkHash,
+        btcContextHash: BtcHash
     ): List<VeriBlockPublication> = withTimeout(VTB_RETRIEVAL_TIMEOUT) {
         val extraLogData = """
                 |   - Keystone Hash: $keystoneHash

@@ -12,12 +12,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
-import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.extensions.asHexByteString
+import nodecore.api.grpc.utilities.extensions.toByteString
 import nodecore.p2p.NoPeersException
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
-import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.BtcHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
@@ -27,12 +26,10 @@ import org.veriblock.miners.pop.serialization.deserialize
 import org.veriblock.miners.pop.serialization.deserializeStandardTransaction
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.spv.model.StandardAddress
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.service.NetworkState
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.TransactionInfo
-import kotlin.math.abs
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.VbkTxId
 
@@ -89,13 +86,13 @@ class SpvGateway(
         return spvService.getTransactions(ids)
     }
 
-    suspend fun getVeriBlockPublications(keystoneHash: String, contextHash: String, btcContextHash: String): List<VeriBlockPublication> {
+    suspend fun getVeriBlockPublications(keystoneHash: VbkHash, contextHash: VbkHash, btcContextHash: BtcHash): List<VeriBlockPublication> {
         logger.debug { "Requesting veriblock publications for keystone $keystoneHash..." }
         val request = RpcGetVeriBlockPublicationsRequest
             .newBuilder()
-            .setKeystoneHash(ByteStringUtility.hexToByteString(keystoneHash))
-            .setContextHash(ByteStringUtility.hexToByteString(contextHash))
-            .setBtcContextHash(ByteStringUtility.hexToByteString(btcContextHash))
+            .setKeystoneHash(keystoneHash.bytes.toByteString())
+            .setContextHash(contextHash.bytes.toByteString())
+            .setBtcContextHash(btcContextHash.bytes.toByteString())
             .build()
 
         val reply = try {
@@ -126,10 +123,10 @@ class SpvGateway(
         }
     }
 
-    suspend fun getVtbsForBtcBlocks(blockHashes: List<String>): List<VeriBlockPublication> {
+    suspend fun getVtbsForBtcBlocks(blockHashes: List<BtcHash>): List<VeriBlockPublication> {
         logger.debug { "Requesting veriblock publications for ${blockHashes.size} BTC blocks..." }
         val request = RpcGetVtbsForBtcBlocksRequest.newBuilder()
-            .addAllBtcBlockHashes(blockHashes.map { it.asHexByteString() })
+            .addAllBtcBlockHashes(blockHashes.map { it.bytes.toByteString() })
             .build()
 
         val reply = try {

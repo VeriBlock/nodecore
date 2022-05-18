@@ -16,5 +16,16 @@ data class Atv(
 // TODO
 data class Vtb(
     //val btcTransactionId: String,
-    val btcBlockOfProofHash: String
+    val btcBlockOfProof: VtbBitcoinBlock,
+    val btcBlockOfProofContext: List<VtbBitcoinBlock>
+)
+
+data class VtbBitcoinBlock(
+    val hash: String,
+    val version: Int,
+    val previousBlock: String,
+    val merkleRoot: String,
+    val timestamp: Int,
+    val bits: Int,
+    val nonce: Int
 )
