@@ -29,7 +29,6 @@ buildscript {
 
 plugins {
     kotlin("jvm") version kotlinVersion
-    id("nebula.release") version "6.0.1"
     id("com.jfrog.artifactory") version "4.15.1"
     jacoco
     id("org.sonarqube") version "2.8"
@@ -79,13 +78,6 @@ subprojects {
     version = version
 }
 
-tasks.named("releaseCheck").configure {
-    doLast {
-        // Print version to configure TeamCity
-        println("##teamcity[buildNumber \'${prettyVersion()}\']")
-    }
-}
-
 sonarqube {
     properties {
         property("sonar.projectKey", "vbk:nodecore")
@@ -107,4 +99,32 @@ jacoco {
 
 tasks.wrapper {
     gradleVersion = "6.3"
+}
+
+val teamcityPrint by tasks.creating(DefaultTask::class) {
+    group = "versioning"
+    doFirst {
+        // Print version to configure TeamCity
+        println("##teamcity[buildNumber \'${prettyVersion()}\']")
+    }
+}
+
+allprojects {
+    tasks.withType<KotlinCompile> {
+        dependsOn(teamcityPrint)
+    }
+}
+
+val incrementVersion by tasks.creating(DefaultTask::class) {
+    group = "versioning"
+    doFirst { updateVersion { flatten(it) } }
+}
+val incrementReleaseCandidate by tasks.creating(DefaultTask::class) {
+    group = "versioning"
+    doFirst { updateVersion { releaseCandidate() } }
+}
+val pushVersionTag by tasks.creating(DefaultTask::class) {
+    dependsOn(teamcityPrint)
+    group = "versioning"
+    doFirst { pushVersionTag() }
 }

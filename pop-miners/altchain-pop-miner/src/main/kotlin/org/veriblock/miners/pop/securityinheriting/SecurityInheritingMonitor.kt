@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import nodecore.api.grpc.RpcVeriBlockPublication
 import org.veriblock.core.MineException
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asVbkHash
@@ -39,6 +40,7 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
+import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
@@ -435,8 +437,10 @@ class SecurityInheritingMonitor(
         // Submit them to the blockchain
         val successfulSubmissions = vtbs.map { vtb ->
             chain.submitPopVtb(vtb).also {
-                if (!it.accepted) {
-                    logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
+                if (it.accepted) {
+                    logger.info { "VTB with ${vtb.getFirstBitcoinBlock()} was accepted in ${chain.name}'s PoP mempool." }
+                } else {
+                    logger.warn { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
                 }
             }
         }.count { it.accepted }
@@ -465,9 +469,9 @@ class SecurityInheritingMonitor(
         //    chain.getMissingBtcBlockHashes()
         //} catch (e: Exception) {
         //    logger.debugWarn(e) { "Unable to retrieve ${chain.name}'s missing BTC block hashes" }
-        //    return
+        //    emptyList()
         //}
-        //
+
         if (pendingBtcBlocksWithAbsentPrevious.isEmpty()) {
             return 0
         }

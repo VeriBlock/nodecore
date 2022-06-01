@@ -12,17 +12,8 @@ import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.task
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.testing.jacoco.tasks.JacocoReport
-
-fun Project.prettyVersion(): String {
-    var version = rootProject.version.toString()
-    if (version.contains("+")) {
-        version = version.substring(0, version.length - 8).replace("+", ".")
-        if (version.endsWith("master")) {
-            version = version.substring(0, version.length - 7)
-        }
-    }
-    return version
-}
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 val Project.sourceSets: SourceSetContainer
     get() = extensions.getByName("sourceSets") as SourceSetContainer
@@ -115,5 +106,34 @@ fun Project.setupJacoco() {
             html.isEnabled = false
             csv.isEnabled = false
         }
+    }
+}
+
+fun String.execute(cwd: File): String {
+    return try {
+        val parts = this.split("\\s".toRegex())
+        val proc = ProcessBuilder(*parts.toTypedArray())
+            .directory(cwd)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectError(ProcessBuilder.Redirect.PIPE)
+            .start()
+
+        //println("$ $this")
+        proc.waitFor(8, TimeUnit.SECONDS)
+        proc.errorStream.use {
+            val output = it.bufferedReader().readText()
+            if (output.isNotEmpty()) {
+                System.err.print(output)
+                println("ERRORS:\n$output")
+            }
+        }
+        proc.inputStream.use {
+            val output = it.bufferedReader().readText().trim()
+            //println(output)
+            output
+        }
+    } catch (ex: java.io.IOException) {
+        ex.printStackTrace()
+        ex.message ?: "IOException"
     }
 }
