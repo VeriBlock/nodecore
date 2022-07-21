@@ -28,7 +28,11 @@ dependencies {
     api(project(":nodecore-grpc"))
     api(project(":nodecore-p2p"))
 
-    implementation("io.ktor:ktor-network-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-network-jvm:$ktorVersion") {
+        version {
+            strictly(ktorVersion)
+        }
+    }
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")
