@@ -28,9 +28,9 @@ dependencies {
     api(project(":nodecore-grpc"))
     api(project(":nodecore-p2p"))
 
-    implementation("io.ktor:ktor-network-jvm:$ktorVersion") {
-        version {
-            strictly(ktorVersion)
+    constraints {
+        implementation("io.ktor:ktor-network-jvm:$ktorVersion") {
+            because("Because yes")
         }
     }
 
