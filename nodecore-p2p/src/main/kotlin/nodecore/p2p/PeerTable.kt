@@ -8,8 +8,10 @@ package nodecore.p2p
 
 import com.google.common.net.InetAddresses
 import io.ktor.network.selector.ActorSelectorManager
+import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
+import io.ktor.network.sockets.toJavaAddress
 import io.ktor.util.network.NetworkAddress
 import io.ktor.util.network.port
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +25,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -165,7 +166,7 @@ class PeerTable(
     private suspend fun createOutboundPeer(address: String, port: Int): Peer? {
         try {
             logger.debug { "Attempting to establish client connection to peer $address:$port" }
-            val socketAddress = NetworkAddress(address, port)
+            val socketAddress = InetSocketAddress(address, port)
             val socket = aSocket(selectorManager)
                 .tcp()
                 .connect(socketAddress)
@@ -193,7 +194,7 @@ class PeerTable(
     }
 
     fun registerIncomingConnection(socket: Socket) {
-        val hostAddress = socket.remoteAddress.address
+        val hostAddress = socket.remoteAddress.toJavaAddress().address
         if (peers.size >= maximumPeerCount) {
             logger.info("Maximum amount of peers reached, rejecting connection")
             socket.close()
@@ -206,7 +207,7 @@ class PeerTable(
         }
 
         // FIXME this key may not be enough (multiple peers may connect from the same IP and port)
-        val addressKey = socket.remoteAddress.addressKey
+        val addressKey = socket.remoteAddress.toJavaAddress().addressKey
         val original = peers[addressKey]
         if (original != null) {
             if (original.status != Peer.Status.Closed && original.status != Peer.Status.Errored) {

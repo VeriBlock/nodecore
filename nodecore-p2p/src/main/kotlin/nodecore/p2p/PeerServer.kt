@@ -6,8 +6,8 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package nodecore.p2p
 
+import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.sockets.aSocket
-import io.ktor.util.network.NetworkAddress
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ class PeerServer(
     configuration: P2pConfiguration,
     private val peerTable: PeerTable
 ) {
-    private val bindAddress = NetworkAddress(configuration.peerBindAddress, configuration.peerBindPort)
+    private val bindAddress = InetSocketAddress(configuration.peerBindAddress, configuration.peerBindPort)
 
     private val running = AtomicBoolean(false)
 

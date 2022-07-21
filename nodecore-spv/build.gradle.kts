@@ -28,11 +28,7 @@ dependencies {
     api(project(":nodecore-grpc"))
     api(project(":nodecore-p2p"))
 
-    constraints {
-        implementation("io.ktor:ktor-network-jvm:$ktorVersion") {
-            because("Because yes")
-        }
-    }
+    implementation("io.ktor:ktor-network-jvm:$ktorVersion")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:1.6.26")

@@ -8,9 +8,10 @@ package nodecore.p2p
 
 import com.google.protobuf.InvalidProtocolBufferException
 import io.ktor.network.selector.SelectorManager
+import io.ktor.network.sockets.InetSocketAddress
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
-import io.ktor.util.network.NetworkAddress
+import io.ktor.network.sockets.toJavaAddress
 import io.ktor.util.network.port
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.withTimeout
@@ -36,8 +37,9 @@ class Peer(
         Closed
     }
 
-    var address: String = socket.remoteAddress.address
-    var port: Int = socket.remoteAddress.port
+    val addr = socket.remoteAddress.toJavaAddress()
+    var address: String = addr.address
+    var port: Int = addr.port
 
     val addressKey: String
         get() = "$address:$port"
@@ -81,7 +83,7 @@ class Peer(
         return try {
             reconnectionAttempts++
 
-            val socketAddress = NetworkAddress(address, port)
+            val socketAddress = InetSocketAddress(address, port)
             
             // Stop the current connection
             socketHandler.stop()
@@ -92,8 +94,9 @@ class Peer(
                 .connect(socketAddress)
 
             // Reset basic info
-            address = socket.remoteAddress.address
-            port = socket.remoteAddress.port
+            val addr = socket.remoteAddress.toJavaAddress()
+            address = addr.address
+            port = addr.port
             state = PeerState()
             status = Status.Connected
             socketHandler = PeerSocketHandler(this, socket)

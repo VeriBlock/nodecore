@@ -16,7 +16,7 @@ dependencies {
     implementation(project(":nodecore-grpc"))
 
     // Sockets
-    implementation("io.ktor:ktor-network-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-network:2.0.3")
 
     // Logging
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
