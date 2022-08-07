@@ -36,7 +36,7 @@ dependencies {
     implementation("com.google.guava:guava:26.0-jre")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("io.github.microutils:kotlin-logging:2.1.23")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
 

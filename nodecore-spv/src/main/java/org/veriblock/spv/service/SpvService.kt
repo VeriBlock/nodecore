@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import nodecore.api.grpc.RpcAdvertiseTransaction
+import nodecore.api.grpc.RpcBlockHeader
+import nodecore.api.grpc.RpcBlockHeadersByHashesRequest
+import nodecore.api.grpc.RpcBlockInfo
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsReply
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import nodecore.api.grpc.RpcTransactionAnnounce
@@ -55,7 +58,10 @@ import java.util.*
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import nodecore.p2p.PeerCapabilities
+import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.VbkTxId
+import org.veriblock.sdk.models.FullBlock
+import org.veriblock.spv.serialization.MessageSerializer
 
 private val logger = createLogger {}
 
@@ -425,9 +431,9 @@ class SpvService(
             return signatureIndex
         }
 
-        if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex) ) {
-                logger.debug { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
-                return maxConfirmedSigIndex
+        if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex)) {
+            logger.debug { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
+            return maxConfirmedSigIndex
         }
 
         val returnValue = maxOf(signatureIndex ?: 0L, maxConfirmedSigIndex, pendingSignatureIndex)
@@ -442,12 +448,39 @@ class SpvService(
         val status: DownloadStatus = when {
             SpvState.downloadPeer == null || currentHeight == 0 || bestBlockHeight == 0 ->
                 DownloadStatus.DISCOVERING
+
             bestBlockHeight > 0 && bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
                 DownloadStatus.READY
+
             else ->
                 DownloadStatus.DOWNLOADING
         }
         return DownloadStatusResponse(status, currentHeight, bestBlockHeight)
+    }
+
+    suspend fun getFullBlock(hash: VbkHash): FullBlock? {
+        // if we don't know this block, we exit early.
+        // but we don't need the block itself.
+        blockchain.getBlock(hash) ?: return null
+
+        val request = buildMessage {
+            blockRequest = blockRequestBuilder
+                .addHeaders(
+                    RpcBlockHeader.newBuilder()
+                        .setHash(ByteString.copyFrom(hash.bytes))
+                        .build()
+                )
+                .build()
+        }
+
+        val rpcBlock = peerTable.requestMessage(
+            event = request
+        ) { if (it.block == null) -1 else 1 }.block
+
+        val block = MessageSerializer.deserialize(rpcBlock)
+        logger.warn { block.toString() }
+
+        return null
     }
 }
 

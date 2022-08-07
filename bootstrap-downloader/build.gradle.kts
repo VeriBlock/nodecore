@@ -1,5 +1,8 @@
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 
+repositories {
+    mavenCentral()
+}
 plugins {
     java
     kotlin("jvm")
@@ -14,7 +17,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("io.github.microutils:kotlin-logging:2.1.23")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")

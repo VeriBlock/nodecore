@@ -20,11 +20,13 @@ import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.SecurityInheritingChain
 import org.veriblock.sdk.alt.model.Atv
+import org.veriblock.sdk.alt.model.BtcBlockResponse
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SubmitPopResponse
+import org.veriblock.sdk.alt.model.VbkBlockResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
@@ -90,7 +92,11 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
+    override suspend fun getVbkBlock(hash: String): VbkBlockResponse? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getVbkBlockHash(height: Int): String? {
         TODO("Not yet implemented")
     }
 
@@ -98,7 +104,7 @@ class NxtFamilyChain(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
+    override suspend fun getBtcBlock(hash: String): BtcBlockResponse? {
         TODO("Not yet implemented")
     }
 

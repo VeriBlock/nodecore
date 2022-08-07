@@ -62,6 +62,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.miners.pop.util.CheckResult
+import org.veriblock.sdk.alt.model.VbkBlockResponse
+import org.veriblock.sdk.alt.model.VbkHeader
 import org.veriblock.sdk.models.VeriBlockBlock
 import java.time.LocalDate
 import kotlin.concurrent.withLock
@@ -143,7 +145,7 @@ class SecurityInheritingMonitor(
                 delay(5_000L)
             }
 
-            while(!isPopActive()) {
+            while (!isPopActive()) {
                 delay(10_000L)
             }
 
@@ -269,7 +271,7 @@ class SecurityInheritingMonitor(
                                         logger.error { "Failed to auto mine the block $blockHeight: ${e.message}" }
                                     }
                                 } else {
-                                   logger.info { "Unable to auto mine the block $blockHeight: ${(isMinerReady as CheckResult.Failure).error.message}" }
+                                    logger.info { "Unable to auto mine the block $blockHeight: ${(isMinerReady as CheckResult.Failure).error.message}" }
                                 }
                             }
                         }
@@ -342,13 +344,13 @@ class SecurityInheritingMonitor(
         }
     }
 
-    private suspend fun getLastCommonVbkBlock(): VeriBlockBlock? {
+    private suspend fun getLastCommonVbkBlock(): VbkHeader? {
         val bestHash = chain.getBestKnownVbkBlockHash()
-        var cursor = chain.getVbkBlock(bestHash)
+        var cursor = chain.getVbkBlock(bestHash)?.header
             ?: return null
         while (!miner.gateway.isOnActiveChain(cursor.hash)) {
             logger.info { "Altchain's known VBK block ${cursor.hash} @${cursor.height} is not on the local known chain... Getting previous block." }
-            cursor = chain.getVbkBlock(cursor.previousBlock.toString())
+            cursor = chain.getVbkBlock(cursor.previousBlock.toString())?.header
                 ?: return null
         }
 
@@ -367,7 +369,7 @@ class SecurityInheritingMonitor(
             logger.error { "${chain.name} can not find last common VBK block. Misconfiguration?" }
             return
         }
-        logger.debug {"${chain.name} last common VBK block: $bestKnownBlock"}
+        logger.debug { "${chain.name} last common VBK block: $bestKnownBlock" }
 
         if (bestKnownBlock.hash == newBlock.hash) {
             // return early if altchain already knows newBlock
@@ -382,7 +384,7 @@ class SecurityInheritingMonitor(
             it.height
         }.toList()
 
-        logger.debug {"Context blocks: ${contextBlocks.size}. First: ${contextBlocks.first()}. Last: ${contextBlocks.last()}"}
+        logger.debug { "Context blocks: ${contextBlocks.size}. First: ${contextBlocks.first()}. Last: ${contextBlocks.last()}" }
 
         val popMempool = chain.getPopMempool()
         val mempoolContext = popMempool.vbkBlockHashes.map { it.lowercase() }
@@ -451,57 +453,59 @@ class SecurityInheritingMonitor(
         }
     }
 
+    private suspend fun getLastVbkBlockIntroducingBtcContext(): VbkBlockResponse? {
+        val lastBtcHash = chain.getBestKnownBtcBlockHash()
+        val lastBtc = chain.getBtcBlock(lastBtcHash)
+        if (lastBtc == null) {
+            logger.error { "Node responded that its best BTC block hash is $lastBtcHash but RPC to fetch its content was not able to find this block. Bug in the node?" }
+            return null
+        }
+
+        // this is height of VBK block that references last known BTC block on ALT chain
+        val refVbkBlockHeight = lastBtc.vbkrefs.maxOrNull()
+        if (refVbkBlockHeight == null) {
+            logger.error { "BTC block $lastBtcHash expected to be referenced by some VBK block. Node bug?" }
+            return null
+        }
+
+        // get its hash
+        val refVbkHash = chain.getVbkBlockHash(refVbkBlockHeight)
+        if (refVbkHash == null) {
+            logger.error { "BTC block $lastBtcHash is referenced by VBK:${refVbkBlockHeight} but a node responded that block on this height is not found. Node bug?" }
+            return null
+        }
+
+        // get its info
+        val refVbk = chain.getVbkBlock(refVbkHash)
+        if (refVbk == null) {
+            logger.error { "Expected to find $refVbkHash VBK block. Node bug?" }
+            return null
+        }
+
+        return refVbk
+    }
+
     /**
      * Handles the context gap and returns the amount of missing BTC blocks to be processed yet
      */
     suspend fun handleContextGap(): Int {
-        val popMempool = chain.getPopMempool()
-        val remainingVtbs = popMempool.vtbs.mapNotNull {
-            chain.getVtb(it)
-        }
-        val btcContextBlockHash = chain.getBestKnownBtcBlockHash().asBtcHash()
-        val allPendingBtcBlocks = remainingVtbs.flatMap { it.btcBlockOfProofContext + it.btcBlockOfProof }
-        val allPendingBtcBlockHashes = allPendingBtcBlocks.map { it.hash.asBtcHash() }.toSet() + btcContextBlockHash
-        val pendingBtcBlocksWithAbsentPrevious = allPendingBtcBlocks.filter {
-            it.previousBlock.asBtcHash() !in allPendingBtcBlockHashes
-        }
-        //val missingBtcBlockHashes = try {
-        //    chain.getMissingBtcBlockHashes()
-        //} catch (e: Exception) {
-        //    logger.debugWarn(e) { "Unable to retrieve ${chain.name}'s missing BTC block hashes" }
-        //    emptyList()
-        //}
-
-        if (pendingBtcBlocksWithAbsentPrevious.isEmpty()) {
+        logger.warn { "Starting handling context gap" }
+        val vbk: VbkBlockResponse = getLastVbkBlockIntroducingBtcContext() ?: return 0
+        val bestVbk: VbkBlockResponse = chain.getVbkBlock(chain.getBestKnownVbkBlockHash()) ?: return 0
+        val maxGapSize = 1000 // vbk blocks
+        if (bestVbk.height <= vbk.height || (bestVbk.height - vbk.height) < maxGapSize) {
+            // there's no context gap
             return 0
         }
 
-        val oldestPendingBtcBlocksWithAbsentPrevious = pendingBtcBlocksWithAbsentPrevious.minByOrNull { it.timestamp }!!
-        val earliestTime = LocalDate.ofEpochDay(oldestPendingBtcBlocksWithAbsentPrevious.timestamp / (3600L * 24))
-        logger.info {
-            "The chain ${chain.name} has a context gap of ${pendingBtcBlocksWithAbsentPrevious.size} BTC blocks!" +
-                " Oldest missing BTC block: ${oldestPendingBtcBlocksWithAbsentPrevious.previousBlock} ($earliestTime)." +
-                " Retrieving corresponding publication data..."
+        val fullVbk = miner.gateway.getFullBlock(vbk.header.hash)
+        if (fullVbk == null) {
+            logger.info {"Cannot get full VBK block ${vbk.header.hash}"}
+            return 0
         }
-        // Fetch and wait for veriblock publications (VTBs)
-        val vtbs = miner.gateway.getVtbsForBtcBlocks(pendingBtcBlocksWithAbsentPrevious.map { it.previousBlock.asBtcHash() })
 
-        logger.info { "${vtbs.size} VTBs found! Submitting to ${chain.name}'s daemon..." }
-
-        // Submit them to the blockchain
-        val successfulSubmissions = vtbs.map { vtb ->
-            chain.submitPopVtb(vtb).also {
-                if (!it.accepted) {
-                    logger.debug { "VTB with ${vtb.getFirstBitcoinBlock()} was not accepted in ${chain.name}'s PoP mempool." }
-                }
-            }
-        }.count { it.accepted }
-        if (successfulSubmissions > 0) {
-            logger.info { "Successfully submitted $successfulSubmissions VTBs to ${chain.name}!" }
-        } else {
-            logger.info { "Failed to submit VTBs to ${chain.name}" }
-        }
-        return pendingBtcBlocksWithAbsentPrevious.size - successfulSubmissions
+        return 0
+        // context gap of bigger size than maxGapSize
     }
 
     private fun handleNewBlock(block: SecurityInheritingBlock) {

@@ -11,14 +11,15 @@ import org.veriblock.core.bitcoinj.BitcoinUtilities
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.PreviousKeystoneVbkHash
-import org.veriblock.core.crypto.VbkHash
-import org.veriblock.core.crypto.MerkleRoot
 import org.veriblock.core.crypto.TruncatedMerkleRoot
+import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.sdk.services.SerializeDeserializeService
 import java.math.BigInteger
-import java.util.Arrays
+import java.util.*
+
+annotation class SkipSerialisation
 
 open class VeriBlockBlock(
     val height: Int,
@@ -30,6 +31,7 @@ open class VeriBlockBlock(
     val timestamp: Int,
     val difficulty: Int,
     var nonce: Long,
+    @Transient
     private val precomputedHash: VbkHash? = null
 ) {
     val raw: ByteArray

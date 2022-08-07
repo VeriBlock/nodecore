@@ -82,6 +82,10 @@ class SpvGateway(
         )
     }
 
+    suspend fun getFullBlock(hash: VbkHash): FullBlock? {
+        return spvService.getFullBlock(hash)
+    }
+
     fun getTransactions(ids: List<VbkTxId>): List<TransactionInfo> {
         return spvService.getTransactions(ids)
     }

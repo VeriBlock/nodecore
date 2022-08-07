@@ -11,11 +11,13 @@ package org.veriblock.sdk.alt
 import org.veriblock.core.altchain.AltchainPopEndorsement
 import org.veriblock.core.contracts.BlockEvidence
 import org.veriblock.sdk.alt.model.Atv
+import org.veriblock.sdk.alt.model.BtcBlockResponse
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SubmitPopResponse
+import org.veriblock.sdk.alt.model.VbkBlockResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.models.*
 
@@ -86,7 +88,12 @@ interface SecurityInheritingChain {
     /**
      * Returns the VeriBlockBlock for the given [hash]
      */
-    suspend fun getVbkBlock(hash: String): VeriBlockBlock?
+    suspend fun getVbkBlock(hash: String): VbkBlockResponse?
+
+    /**
+     * Returns the VeriBlock Block hash on given [height] from active chain.
+     */
+    suspend fun getVbkBlockHash(height: Int): String?
 
     /**
      * Returns the hash from the best known BTC block
@@ -96,7 +103,7 @@ interface SecurityInheritingChain {
     /**
      * Returns the BitcoinBlock for the given [hash]
      */
-    suspend fun getBtcBlock(hash: String): BitcoinBlock?
+    suspend fun getBtcBlock(hash: String): BtcBlockResponse?
 
     /**
      * Returns this security inheriting chain's PoP mempool (ATVs and VTBs).

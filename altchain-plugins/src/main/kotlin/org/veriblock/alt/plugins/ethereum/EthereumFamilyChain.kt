@@ -31,13 +31,16 @@ import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.Atv
+import org.veriblock.sdk.alt.model.BtcBlockResponse
 import org.veriblock.sdk.alt.model.NetworkParam
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.PopPayoutParams
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
+import org.veriblock.sdk.alt.model.StoredInVbkBlockData
 import org.veriblock.sdk.alt.model.SubmitPopResponse
+import org.veriblock.sdk.alt.model.VbkBlockResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
@@ -321,13 +324,27 @@ class EthereumFamilyChain(
         )
     }
 
-    override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
+    override suspend fun getVbkBlock(hash: String): VbkBlockResponse? {
         val response = rpcRequest<EthGetVbkBlockResponse>(
             method="pop_getVbkBlockByHash",
             params = listOf(hash),
             version = "2.0")
 
-        return response.header.toVbkBlock()
+        return VbkBlockResponse(
+            chainWork = response.chainWork,
+            containingEndorsements = response.containingEndorsements,
+            endorsedBy = response.endorsedBy,
+            blockOfProofEndorsements = response.blockOfProofEndorsements,
+            height = response.height,
+            header = response.header.toVbkBlock(),
+            status = response.status,
+            altrefs = response.altrefs,
+            stored = StoredInVbkBlockData(response.stored.vtbids)
+        )
+    }
+
+    override suspend fun getVbkBlockHash(height: Int): String? {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getBestKnownBtcBlockHash(): String {
@@ -335,7 +352,7 @@ class EthereumFamilyChain(
         return rpcRequest("pop_getBtcBestBlockHash", version = "2.0")
     }
 
-    override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
+    override suspend fun getBtcBlock(hash: String): BtcBlockResponse? {
         TODO("Not yet implemented (getBtcBlock)") // pop_getBtcBlockByHash
     }
 
