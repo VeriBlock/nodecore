@@ -15,7 +15,7 @@ import java.util.Arrays
 import java.util.Collections
 
 open class VeriBlockTransaction(
-    type: Byte,
+    type: Byte = 1, /* vbk tx == 1 */
     sourceAddress: Address,
     sourceAmount: Coin,
     outputs: List<Output>?,
@@ -25,15 +25,17 @@ open class VeriBlockTransaction(
     publicKey: ByteArray,
     networkByte: Byte?
 ) {
-    val id: VbkTxId
+    val id: VbkTxId by lazy {
+        SerializeDeserializeService.getId(this)
+    }
     val type: Byte
     val sourceAddress: Address
     val sourceAmount: Coin
     val outputs: List<Output>
     val signatureIndex: Long
     val publicationData: PublicationData?
-    val signature: ByteArray
-    val publicKey: ByteArray
+    var signature: ByteArray
+    var publicKey: ByteArray
     val networkByte: Byte?
 
     init {
@@ -55,7 +57,6 @@ open class VeriBlockTransaction(
         this.signature = signature
         this.publicKey = publicKey
         this.networkByte = networkByte
-        id = SerializeDeserializeService.getId(this)
     }
 
     override fun equals(other: Any?): Boolean {

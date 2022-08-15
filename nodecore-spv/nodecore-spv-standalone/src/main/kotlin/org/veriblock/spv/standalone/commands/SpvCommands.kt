@@ -3,7 +3,6 @@ package org.veriblock.spv.standalone.commands
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
-import kotlinx.coroutines.runBlocking
 import org.jline.utils.AttributedStyle
 import org.veriblock.core.WalletException
 import org.veriblock.core.utilities.Utility
@@ -17,7 +16,6 @@ import org.veriblock.shell.command
 import org.veriblock.shell.core.failure
 import org.veriblock.shell.core.success
 import org.veriblock.spv.SpvContext
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.asLightAddress
 
 fun CommandFactory.spvCommands(

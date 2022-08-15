@@ -51,9 +51,7 @@ import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.SpvState
-import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.TransactionTypeIdentifier
-import org.veriblock.spv.serialization.MessageSerializer
 import org.veriblock.spv.service.Blockchain
 import org.veriblock.spv.service.NetworkBlock
 import org.veriblock.spv.service.PendingTransactionContainer

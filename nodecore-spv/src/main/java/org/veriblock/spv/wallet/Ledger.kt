@@ -8,11 +8,11 @@
 package org.veriblock.spv.wallet
 
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.TransactionMeta
 import java.util.ArrayList
 import java.util.HashMap
-import java.util.function.Consumer
 
 class Ledger {
     private val entries: MutableMap<String, AddressLedger> = HashMap()
@@ -52,21 +52,21 @@ class Ledger {
 
     private fun createLedgerEntriesFrom(tx: StandardTransaction): List<LedgerEntry> {
         val ledgerEntries = ArrayList<LedgerEntry>()
-        val status = if (tx.transactionMeta!!.state === TransactionMeta.MetaState.CONFIRMED) {
+        val status = if (tx.meta.state === TransactionMeta.MetaState.CONFIRMED) {
             LedgerEntry.Status.CONFIRMED
         } else {
             LedgerEntry.Status.PENDING
         }
-        if (entries.containsKey(tx.inputAddress!!.get())) {
+        if (entries.containsKey(tx.tx.sourceAddress.address)) {
             ledgerEntries.add(
-                LedgerEntry(tx.inputAddress!!.get(), tx.txId, tx.inputAmount!!, Coin.ZERO, tx.getSignatureIndex(), 0, status)
+                LedgerEntry(tx.tx.sourceAddress.address, tx.tx.id, tx.tx.sourceAmount, Coin.ZERO, tx.tx.signatureIndex, 0, status)
             )
         }
-        for (i in tx.getOutputs().indices) {
-            val o = tx.getOutputs()[i]
-            if (entries.containsKey(o.address.get())) {
+        for (i in tx.tx.outputs.indices) {
+            val o = tx.tx.outputs[i]
+            if (entries.containsKey(o.address.address)) {
                 ledgerEntries.add(
-                    LedgerEntry(o.address.get(), tx.txId, Coin.ZERO, o.amount, -1, i, status)
+                    LedgerEntry(o.address.address, tx.tx.id, Coin.ZERO, o.amount, -1, i, status)
                 )
             }
         }

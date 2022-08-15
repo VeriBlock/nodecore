@@ -20,7 +20,6 @@ import org.veriblock.miners.pop.api.dto.WithdrawRequest
 import org.veriblock.miners.pop.api.dto.WithdrawResponse
 import org.veriblock.miners.pop.service.AltchainPopMinerService
 import org.veriblock.sdk.models.asCoin
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.asStandardAddress
 
 class WalletController(

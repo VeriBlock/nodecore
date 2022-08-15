@@ -325,22 +325,10 @@ class EthereumFamilyChain(
     }
 
     override suspend fun getVbkBlock(hash: String): VbkBlockResponse? {
-        val response = rpcRequest<EthGetVbkBlockResponse>(
+        return rpcRequest<VbkBlockResponse>(
             method="pop_getVbkBlockByHash",
             params = listOf(hash),
             version = "2.0")
-
-        return VbkBlockResponse(
-            chainWork = response.chainWork,
-            containingEndorsements = response.containingEndorsements,
-            endorsedBy = response.endorsedBy,
-            blockOfProofEndorsements = response.blockOfProofEndorsements,
-            height = response.height,
-            header = response.header.toVbkBlock(),
-            status = response.status,
-            altrefs = response.altrefs,
-            stored = StoredInVbkBlockData(response.stored.vtbids)
-        )
     }
 
     override suspend fun getVbkBlockHash(height: Int): String? {

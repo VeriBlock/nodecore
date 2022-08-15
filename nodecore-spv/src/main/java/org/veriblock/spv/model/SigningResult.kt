@@ -7,11 +7,6 @@
 package org.veriblock.spv.model
 
 class SigningResult(
-    private val succeeded: Boolean,
-    val signature: ByteArray?,
-    val publicKey: ByteArray?
-) {
-    fun succeeded(): Boolean {
-        return succeeded
-    }
-}
+    val signature: ByteArray,
+    val publicKey: ByteArray
+)

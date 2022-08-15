@@ -1,15 +1,14 @@
 package org.veriblock.spv.service
 
 import nodecore.p2p.Peer
-import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.VeriBlockBlock
+import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.spv.model.AddressLight
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardTransaction
-import org.veriblock.spv.model.Transaction
 
 enum class BlockchainState {
     LOADING,
@@ -78,7 +77,7 @@ data class WalletBalance(
 )
 
 data class AltChainEndorsement(
-    val transaction: StandardTransaction,
+    val transaction: VeriBlockTransaction,
     val signatureIndex: Long
 )
 

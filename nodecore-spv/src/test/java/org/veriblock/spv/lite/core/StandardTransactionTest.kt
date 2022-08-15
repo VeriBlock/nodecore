@@ -10,8 +10,6 @@ import org.veriblock.core.utilities.Utility
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
-import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.asStandardAddress
 import java.io.File
 

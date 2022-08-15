@@ -105,7 +105,7 @@ class MerkleRoot(bytes: ByteArray) : Sha256Hash(bytes) {
 
 class TruncatedMerkleRoot(bytes: ByteArray) : Sha256Hash(trimBytes(bytes, TRUNCATED_MERKLE_ROOT_LENGTH)) {
     init {
-        check(bytes.size == TRUNCATED_MERKLE_ROOT_LENGTH || bytes.size == TRUNCATED_MERKLE_ROOT_LENGTH * 2) {
+        check(bytes.size == TRUNCATED_MERKLE_ROOT_LENGTH || bytes.size == 24) {
             "Trying to create a truncated merkle root hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }

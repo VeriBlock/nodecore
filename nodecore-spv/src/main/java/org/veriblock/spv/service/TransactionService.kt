@@ -7,8 +7,6 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 package org.veriblock.spv.service
 
-import com.google.protobuf.ByteString
-import nodecore.api.grpc.RpcTransaction
 import org.veriblock.core.types.Pair
 import org.veriblock.core.utilities.AddressUtility
 import org.veriblock.core.utilities.Utility
@@ -16,12 +14,14 @@ import org.veriblock.sdk.models.Coin
 import org.veriblock.core.crypto.Sha256Hash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.wallet.AddressManager
+import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.VeriBlockPopTransaction
+import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.model.AddressCoinsIndex
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.SigningResult
 import org.veriblock.spv.model.StandardTransaction
-import org.veriblock.spv.model.Transaction
 import java.util.ArrayList
 
 class TransactionService(
@@ -46,11 +46,11 @@ class TransactionService(
     fun createTransactionsByOutputList(
         addressCoinsIndexList: List<AddressCoinsIndex>,
         outputList: List<Output>
-    ): List<Transaction> {
-        val transactions: MutableList<Transaction> = ArrayList()
+    ): List<VeriBlockTransaction> {
+        val transactions: MutableList<VeriBlockTransaction> = ArrayList()
         var sortedOutputs = outputList.sortedBy { it.amount.atomicUnits }.toMutableList()
         val sortedAddressCoinsIndexList = addressCoinsIndexList.filter { it.coins > 0 }.sortedBy { it.coins }
-        val totalOutputAmount = sortedOutputs.map { it.amount.atomicUnits }.sum()
+        val totalOutputAmount = sortedOutputs.sumOf { it.amount.atomicUnits }
         for (sourceAddressesIndex in sortedAddressCoinsIndexList) {
             val fee = calculateFee(sourceAddressesIndex.address, totalOutputAmount, sortedOutputs, sourceAddressesIndex.index)
             val fulfillAndForPay = splitOutPutsAccordingBalance(
@@ -117,7 +117,7 @@ class TransactionService(
         inputAmount: Long,
         outputs: List<Output>,
         signatureIndex: Long
-    ): Transaction {
+    ): VeriBlockTransaction {
         require(AddressUtility.isValidStandardAddress(inputAddress)) {
             "createStandardTransaction cannot be called with an invalid inputAddress ($inputAddress)!"
         }
@@ -137,10 +137,20 @@ class TransactionService(
             "createStandardTransaction cannot be called with an output total which is larger than the inputAmount" +
                 " (outputTotal = $outputTotal, inputAmount = $inputAmount)!"
         }
-        val transaction: Transaction = StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex, networkParameters)
-        val signingResult = signTransaction(transaction.txId, inputAddress)
-        if (signingResult.succeeded()) {
-            transaction.addSignature(signingResult.signature, signingResult.publicKey)
+        val transaction = VeriBlockTransaction(
+            networkByte=networkParameters.transactionPrefix,
+            sourceAddress = Address(inputAddress),
+            sourceAmount = Coin(inputAmount),
+            outputs = outputs,
+            signatureIndex = signatureIndex,
+            signature = ByteArray(0),
+            publicKey = ByteArray(0),
+            publicationData = null
+        )
+        val signingResult = signTransaction(transaction.id, inputAddress)
+        if (signingResult != null) {
+            transaction.signature = signingResult.signature
+            transaction.publicKey = signingResult.publicKey
         }
         return transaction
     }
@@ -148,13 +158,14 @@ class TransactionService(
     // TODO(warchant): use Address instead of String for all addresses
     fun createUnsignedAltChainEndorsementTransaction(
         inputAddress: String, fee: Long, publicationData: ByteArray?, signatureIndex: Long
-    ): Transaction {
+    ): VeriBlockTransaction {
         require(AddressUtility.isValidStandardAddress(inputAddress)) {
             "createAltChainEndorsementTransaction cannot be called with an invalid inputAddress ($inputAddress)!"
         }
         require(Utility.isPositive(fee)) {
             "createAltChainEndorsementTransaction cannot be called with a non-positiveinputAmount ($fee)!"
         }
+        return VeriBlockTransaction()
         return StandardTransaction(null, inputAddress, fee, emptyList(), signatureIndex, publicationData, networkParameters)
     }
 
@@ -191,12 +202,12 @@ class TransactionService(
         return totalSize
     }
 
-    fun signTransaction(txId: Sha256Hash, address: String): SigningResult {
+    fun signTransaction(txId: Sha256Hash, address: String): SigningResult? {
         val signature = addressManager.signMessage(txId.bytes, address)
-            ?: return SigningResult(false, null, null)
+            ?: return null
         val publicKey = addressManager.getPublicKeyForAddress(address)
-            ?: return SigningResult(false, null, null)
-        return SigningResult(true, signature, publicKey.encoded)
+            ?: return null
+        return SigningResult(signature, publicKey.encoded)
     }
 
     companion object {
@@ -224,25 +235,6 @@ class TransactionService(
             totalSize += dataSizeBytes.size // Data Length Bytes (value will be 0)
             totalSize += dataLength
             return totalSize
-        }
-
-        @JvmStatic
-        fun getRegularTransactionMessageBuilder(tx: StandardTransaction): RpcTransaction.Builder {
-            val builder = RpcTransaction.newBuilder()
-            builder.transactionFee = tx.getTransactionFee()
-            builder.txId = ByteString.copyFrom(tx.txId.bytes)
-            builder.type = RpcTransaction.Type.STANDARD
-            builder.sourceAmount = tx.inputAmount!!.atomicUnits
-            builder.sourceAddress = ByteString.copyFrom(tx.inputAddress!!.toByteArray())
-            builder.data = ByteString.copyFrom(tx.data)
-            //        builder.setTimestamp(getTimeStamp());
-            //        builder.setSize(tx.getSize());
-            for (output in tx.getOutputs()) {
-                val outputBuilder = builder.addOutputsBuilder()
-                outputBuilder.address = ByteString.copyFrom(output.address.toByteArray())
-                outputBuilder.amount = output.amount.atomicUnits
-            }
-            return builder
         }
     }
 

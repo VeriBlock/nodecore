@@ -18,8 +18,6 @@ import org.veriblock.core.params.defaultTestNetParameters
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
-import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.asStandardAddress
 import org.veriblock.spv.net.PeerEventListener
 import org.veriblock.spv.service.PendingTransactionContainer

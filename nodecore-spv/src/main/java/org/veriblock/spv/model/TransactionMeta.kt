@@ -14,9 +14,7 @@ import org.veriblock.spv.util.SpvEventBus
 import java.util.ArrayList
 import java.util.HashSet
 
-class TransactionMeta(
-    val txId: VbkTxId
-) {
+class TransactionMeta {
     private val appearsInBlock: MutableList<VbkHash> = ArrayList()
     var appearsAtChainHeight = -1
     var depth = 0

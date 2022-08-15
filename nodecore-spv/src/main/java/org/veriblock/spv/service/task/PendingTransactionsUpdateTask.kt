@@ -50,7 +50,7 @@ suspend fun SpvContext.requestPendingTransactions() {
             } else {
                 val transaction = pendingTransactionContainer.getTransaction(txId)
                 if (transaction != null) {
-                    peerTable.advertise(transaction)
+                    peerTable.advertise(transaction.)
                 }
             }
         } catch (e: Exception) {

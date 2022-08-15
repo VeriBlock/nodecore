@@ -25,15 +25,13 @@ import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.Coin
+import org.veriblock.sdk.models.Output
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.LedgerContext
 import org.veriblock.spv.model.LedgerValue
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardAddress
-import org.veriblock.spv.model.StandardTransaction
-import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.asLightAddress
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.Blockchain
@@ -92,7 +90,7 @@ class AdminApiServiceTest {
                 address.asLightAddress(),
                 listOf(
                     Output(
-                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        Address("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"),
                         100.asCoin()
                     )
                 )
@@ -150,7 +148,7 @@ class AdminApiServiceTest {
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
                 listOf(
                     Output(
-                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        Address("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"),
                         100.asCoin()
                     )
                 )
@@ -176,7 +174,7 @@ class AdminApiServiceTest {
                 address.asLightAddress(),
                 listOf(
                     Output(
-                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        Address("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"),
                         100.asCoin()
                     )
                 )
@@ -196,7 +194,7 @@ class AdminApiServiceTest {
                 "VcspPDtJNpNmLV8qFTqb2F5157JNHS".asLightAddress(),
                 listOf(
                     Output(
-                        "VDBt3GuwPe1tA5m4duTPkBq5vF22rw".asLightAddress(),
+                        Output("VDBt3GuwPe1tA5m4duTPkBq5vF22rw"),
                         100.asCoin()
                     )
                 )

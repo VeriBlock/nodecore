@@ -65,7 +65,7 @@ class SpvContext(
     val addressManager: AddressManager
     val transactionService: TransactionService
     val pendingTransactionContainer: PendingTransactionContainer
-    val pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
+//    val pendingTransactionDownloadedListener: PendingTransactionDownloadedListener
 
     private val addressState: ConcurrentHashMap<Address, LedgerContext> = ConcurrentHashMap()
 
@@ -96,7 +96,7 @@ class SpvContext(
             addressManager = AddressManager()
             val walletFile = File(directory, filePrefix + FILE_EXTENSION)
             addressManager.load(walletFile)
-            pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
+//            pendingTransactionDownloadedListener = PendingTransactionDownloadedListener(this)
 
             val externalPeerEndpoints = config.connectDirectlyTo.map {
                 try {

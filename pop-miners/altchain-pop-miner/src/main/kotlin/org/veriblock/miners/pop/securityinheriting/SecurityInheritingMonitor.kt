@@ -30,8 +30,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import nodecore.api.grpc.RpcVeriBlockPublication
 import org.veriblock.core.MineException
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.asBtcHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.utilities.Configuration
@@ -40,7 +40,6 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
 import org.veriblock.core.utilities.debugInfo
 import org.veriblock.core.utilities.debugWarn
-import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.miners.pop.core.ApmContext
 import org.veriblock.miners.pop.util.Threading
 import org.veriblock.miners.pop.EventBus
@@ -64,8 +63,8 @@ import java.util.concurrent.locks.ReentrantLock
 import org.veriblock.miners.pop.util.CheckResult
 import org.veriblock.sdk.alt.model.VbkBlockResponse
 import org.veriblock.sdk.alt.model.VbkHeader
+import org.veriblock.sdk.models.FullBlock
 import org.veriblock.sdk.models.VeriBlockBlock
-import java.time.LocalDate
 import kotlin.concurrent.withLock
 
 private val logger = createLogger {}
@@ -498,11 +497,24 @@ class SecurityInheritingMonitor(
             return 0
         }
 
-        val fullVbk = miner.gateway.getFullBlock(vbk.header.hash)
-        if (fullVbk == null) {
-            logger.info {"Cannot get full VBK block ${vbk.header.hash}"}
-            return 0
+        var cursorHash: PreviousBlockVbkHash = vbk.header.hash.trimToPreviousBlockSize()
+        while(true) {
+            val fullVbk: FullBlock? = miner.gateway.getFullBlock(cursorHash)
+            if (fullVbk == null) {
+                logger.error { "Cannot get full block $cursorHash" }
+                return 0
+            }
+
+            fullVbk.popTransactions.forEach { tx ->
+                VeriBlockPublication(tx,
+
+                    )
+            }
+
+            cursorHash = fullVbk.previousBlock
         }
+
+
 
         return 0
         // context gap of bigger size than maxGapSize

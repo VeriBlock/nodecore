@@ -20,11 +20,11 @@ class VeriBlockPopTransaction(
     val merklePath: MerklePath,
     val blockOfProof: BitcoinBlock,
     val blockOfProofContext: List<BitcoinBlock>,
-    val signature: ByteArray,
-    val publicKey: ByteArray,
+    var signature: ByteArray,
+    var publicKey: ByteArray,
     val networkByte: Byte?
 ) {
-    val id: Sha256Hash = getId(this)
+    val id by lazy { getId(this) }
 
     init {
         check(signature.isNotEmpty()) {
