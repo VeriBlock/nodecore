@@ -60,39 +60,39 @@ dependencies {
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
     // Swagger integration, expecting an official integration to be released soon
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.2-beta.13")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:$ktorOpenApiGeneratorVersion")
     // SPA
-    implementation("com.github.lamba92:ktor-spa:1.2.1")
+    implementation("com.github.lamba92:ktor-spa:$ktorSpaVersion")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonDatabindVersion")
 
     // Protobuf Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
 
-    implementation("commons-cli:commons-cli:1.4")
-    implementation("com.google.code.gson:gson:2.8.2")
-    implementation("com.google.guava:guava:26.0-jre")
-    implementation("com.diogonunes:JCDP:2.0.3.1")
+    implementation("commons-cli:commons-cli:$commonsCliVersion")
+    implementation("com.google.code.gson:gson:$gsonVersion")
+    implementation("com.google.guava:guava:$guavaVersion")
+    implementation("com.diogonunes:JCDP:$JCDPVersion")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
-    implementation("com.zaxxer:HikariCP:3.3.1")
+    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
 
-    testImplementation("junit:junit:4.12")
-    testImplementation("org.apache.commons:commons-lang3:3.8.1")
-    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
+    testImplementation("junit:junit:$junit4Version")
+    testImplementation("org.apache.commons:commons-lang3:$commonsLang3Version")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestAssertionsCoreVersion")
 
     // Integration tests
-    testImplementation("org.testcontainers:testcontainers:1.14.1")
+    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
     testImplementation("io.ktor:ktor-client-gson:$ktorVersion")
 }
