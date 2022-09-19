@@ -23,7 +23,7 @@ dependencies {
     implementation(project(":veriblock-shell"))
     implementation(project(":nodecore-spv"))
 
-    implementation("commons-cli:commons-cli:1.4")
+    implementation("commons-cli:commons-cli:1.5.0")
     implementation("commons-io:commons-io:2.5")
 
     // Dependency Injection

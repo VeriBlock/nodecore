@@ -20,7 +20,7 @@ dependencies {
 
     // Configuration
     api("io.github.config4k:config4k:0.4.0")
-    api("commons-cli:commons-cli:1.4")
+    api("commons-cli:commons-cli:1.5.0")
 
     // Crypto
     api("org.bouncycastle:bcprov-jdk15on:1.70")

@@ -11,7 +11,7 @@ dependencies {
     api(project(":nodecore-ucp"))
     api(project(":nodecore-grpc"))
 
-    api("commons-cli:commons-cli:1.4")
+    api("commons-cli:commons-cli:1.5.0")
     api("org.apache.commons:commons-lang3:3.0")
     api("com.google.protobuf:protobuf-gradle-plugin:0.8.6")
     api("org.reflections:reflections:0.9.11")
