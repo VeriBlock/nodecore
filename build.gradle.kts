@@ -105,7 +105,7 @@ jacoco {
 }
 
 tasks.wrapper {
-    gradleVersion = "6.8"
+    gradleVersion = "7.5"
 }
 
 val teamcityPrint by tasks.creating(DefaultTask::class) {
