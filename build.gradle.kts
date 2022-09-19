@@ -5,8 +5,6 @@
 // https://www.veriblock.org
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-import com.adarshr.gradle.testlogger.TestLoggerExtension
-import com.adarshr.gradle.testlogger.theme.ThemeType
 import org.gradle.api.logging.LogLevel.LIFECYCLE
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -37,7 +35,6 @@ plugins {
     jacoco
     id("org.sonarqube") version "2.8"
     id("nebula.ospackage") version "8.3.0"
-    id("com.adarshr.test-logger") version "3.1.0"
 }
 
 allprojects {
@@ -133,23 +130,4 @@ val pushVersionTag by tasks.creating(DefaultTask::class) {
     dependsOn(teamcityPrint)
     group = "versioning"
     doFirst { pushVersionTag() }
-}
-
-configure<TestLoggerExtension> {
-    theme = ThemeType.STANDARD
-    showCauses = true
-    showExceptions = true
-    showStackTraces = true
-    showFullStackTraces = false
-    slowThreshold = 2000
-    showSummary = true
-    showSimpleNames = false
-    showPassed = true
-    showSkipped = true
-    showFailed = true
-    showStandardStreams = false
-    showPassedStandardStreams = false
-    showSkippedStandardStreams = true
-    showFailedStandardStreams = true
-    logLevel = LIFECYCLE
 }
