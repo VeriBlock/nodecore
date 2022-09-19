@@ -14,9 +14,11 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # all major versions
-        java: [8, 11, 14, 17]
+        # 17 is not supported yet
+        java: [8, 11, 14]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -25,7 +27,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'adopt'
+          distribution: 'temurin'
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
