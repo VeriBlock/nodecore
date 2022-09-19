@@ -44,7 +44,7 @@ dependencies {
 
     // Database
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("com.zaxxer:HikariCP:3.3.1")
+    implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
 
     // Dependency Injection
