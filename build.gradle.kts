@@ -8,7 +8,6 @@
 import com.adarshr.gradle.testlogger.TestLoggerExtension
 import com.adarshr.gradle.testlogger.theme.ThemeType
 import org.gradle.api.logging.LogLevel.LIFECYCLE
-import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 configurations.all {
@@ -105,7 +104,7 @@ jacoco {
 }
 
 tasks.wrapper {
-    gradleVersion = "7.5"
+    gradleVersion = "6.8"
 }
 
 val teamcityPrint by tasks.creating(DefaultTask::class) {
