@@ -87,7 +87,7 @@ fun CommandFactory.veriBlockWalletCommands(
 
     command(
         name = "View Recent Rewards",
-        form = "viewrecentrewards",
+        form = "viewrecentrewards|showrecentrewards",
         description = "Lists recent and upcoming rewards"
     ) {
         try {
