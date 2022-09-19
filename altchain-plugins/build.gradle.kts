@@ -40,9 +40,9 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
 
-    testImplementation("junit:junit:4.12")
-    testImplementation("io.kotest:kotest-assertions-core:4.3.2")
-    testImplementation("io.mockk:mockk:1.9.3")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.kotest:kotest-assertions-core:4.6.3")
+    testImplementation("io.mockk:mockk:1.12.0")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning
