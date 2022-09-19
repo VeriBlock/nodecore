@@ -12,7 +12,6 @@ import org.veriblock.sdk.models.asCoinDecimal
 import org.veriblock.spv.SpvConfig
 import org.veriblock.spv.SpvContext
 import org.veriblock.spv.model.AddressCoinsIndex
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.StandardAddress
 
 class TransactionServiceTest : TestCase() {

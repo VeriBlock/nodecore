@@ -18,17 +18,17 @@ class PendingTransactionDownloadedListener(
 
     fun loadTransactions(toLoad: List<StandardTransaction>) {
         for (tx in toLoad) {
-            transactions[tx.txId] = tx
-            spvContext.transactionPool.insert(tx.transactionMeta!!)
+            transactions[tx.tx.id] = tx
+            spvContext.transactionPool.insert(tx.tx.id, tx.meta)
         }
     }
 
     fun commitTx(tx: StandardTransaction) = lock.withLock {
-        if (transactions.containsKey(tx.txId)) {
+        if (transactions.containsKey(tx.tx.id)) {
             return
         }
-        tx.transactionMeta!!.setState(TransactionMeta.MetaState.PENDING)
-        transactions[tx.txId] = tx
+        tx.meta.setState(TransactionMeta.MetaState.PENDING)
+        transactions[tx.tx.id] = tx
         ledger.record(tx)
     }
 
@@ -40,20 +40,20 @@ class PendingTransactionDownloadedListener(
         Collections.unmodifiableCollection(transactions.values)
 
     private fun isTransactionRelevant(tx: StandardTransaction): Boolean {
-        if (transactions.containsKey(tx.txId)) {
+        if (transactions.containsKey(tx.tx.id)) {
             return true
         }
-        return if (keyRing.contains(tx.inputAddress!!.get())) {
+        return if (keyRing.contains(tx.tx.sourceAddress.address)) {
             true
         } else {
-            tx.getOutputs().any {
-                keyRing.contains(it.address.get())
+            tx.tx.outputs.any {
+                keyRing.contains(it.address.address)
             }
         }
     }
 
     private fun addTransaction(tx: StandardTransaction) = lock.withLock {
-        transactions.putIfAbsent(tx.txId, tx)
+        transactions.putIfAbsent(tx.tx.id, tx)
         ledger.record(tx)
         //save();
     }

@@ -30,7 +30,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion")
 
     // Logging
-    api("io.github.microutils:kotlin-logging:1.6.26")
+    api("io.github.microutils:kotlin-logging:2.1.23")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")

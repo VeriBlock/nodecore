@@ -123,25 +123,6 @@ internal data class BlockChainInfo(
     val initialblockdownload: Boolean
 )
 
-internal data class BtcBlockBlock(
-    val chainWork: String?,
-    val height: Int?,
-    val header: BtcBlockHeader?,
-    val status: Int?,
-    val vbkRefs: List<Int?>?,
-    val blockOfProofEndorsements: List<String?>?
-)
-
-internal data class BtcBlockHeader(
-    val hash: String?,
-    val version: Int?,
-    val previousBlock: String?,
-    val merkleRoot: String?,
-    val timestamp: Int?,
-    val bits: Long?,
-    val nonce: Int?
-)
-
 internal data class VbkBlock(
     val chainWork: String?,
     val containingEndorsements: List<String?>?,

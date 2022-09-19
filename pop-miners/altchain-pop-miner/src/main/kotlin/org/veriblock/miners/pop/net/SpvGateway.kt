@@ -17,6 +17,7 @@ import nodecore.p2p.NoPeersException
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash
 import org.veriblock.core.crypto.BtcHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.asVbkHash
 import org.veriblock.core.params.NetworkParameters
 import org.veriblock.core.utilities.createLogger
@@ -26,12 +27,12 @@ import org.veriblock.miners.pop.serialization.deserialize
 import org.veriblock.miners.pop.serialization.deserializeStandardTransaction
 import org.veriblock.sdk.models.*
 import org.veriblock.sdk.services.SerializeDeserializeService
-import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.service.NetworkState
 import org.veriblock.spv.service.SpvService
 import org.veriblock.spv.service.TransactionInfo
 import org.veriblock.core.crypto.VbkHash
 import org.veriblock.core.crypto.VbkTxId
+
 
 private val logger = createLogger {}
 
@@ -80,6 +81,10 @@ class SpvGateway(
                 }
             )
         )
+    }
+
+    suspend fun getFullBlock(hash: PreviousBlockVbkHash): FullBlock? {
+        return spvService.getFullBlock(hash)
     }
 
     fun getTransactions(ids: List<VbkTxId>): List<TransactionInfo> {
@@ -194,17 +199,14 @@ class SpvGateway(
 
     private fun signTransaction(
         addressManager: AddressManager,
-        unsignedTransaction: StandardTransaction
-    ): StandardTransaction {
-        val sourceAddress = unsignedTransaction.inputAddress!!.get()
+        unsignedTransaction: VeriBlockTransaction
+    ): VeriBlockTransaction {
+        val sourceAddress = unsignedTransaction.sourceAddress.address
         requireNotNull(addressManager.get(sourceAddress)) {
             "The address $sourceAddress is not contained in the specified wallet file!"
         }
-        val transactionId = unsignedTransaction.txId.bytes
-        val signature = addressManager.signMessage(transactionId, sourceAddress)
-        val publicKey = addressManager.getPublicKeyForAddress(sourceAddress).encoded
-
-        unsignedTransaction.addSignature(signature, publicKey)
+        unsignedTransaction.signature = addressManager.signMessage(unsignedTransaction.id.bytes, sourceAddress)
+        unsignedTransaction.publicKey = addressManager.getPublicKeyForAddress(sourceAddress).encoded
         return unsignedTransaction
     }
 

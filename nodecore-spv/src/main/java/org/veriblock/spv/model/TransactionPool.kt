@@ -19,11 +19,10 @@ import kotlin.concurrent.withLock
 
 class TransactionPool {
     private class WeakPoolReference(
+        val id: VbkTxId,
         meta: TransactionMeta,
         queue: ReferenceQueue<TransactionMeta>?
-    ) : WeakReference<TransactionMeta>(meta, queue) {
-        var hash: Sha256Hash? = meta.txId
-    }
+    ) : WeakReference<TransactionMeta>(meta, queue)
 
     private val lock = ReentrantLock(true)
     private val referenceQueue = ReferenceQueue<TransactionMeta>()
@@ -53,20 +52,20 @@ class TransactionPool {
                 return transactionMeta
             }
         }
-        val tx = TransactionMeta(txId)
-        pool[txId] = WeakPoolReference(tx, referenceQueue)
+        val tx = TransactionMeta()
+        pool[txId] = WeakPoolReference(txId, tx, referenceQueue)
         tx
     }
 
-    fun insert(meta: TransactionMeta) = lock.withLock {
-        pool[meta.txId] = WeakPoolReference(meta, referenceQueue)
+    fun insert(id: VbkTxId, meta: TransactionMeta) = lock.withLock {
+        pool[id] = WeakPoolReference(id, meta, referenceQueue)
     }
 
     private fun purge() = lock.withLock {
         var reference: Reference<out TransactionMeta>? = referenceQueue.poll()
         while (reference != null) {
             val txReference = reference as WeakPoolReference
-            pool.remove(txReference.hash)
+            pool.remove(txReference.id)
             reference = referenceQueue.poll()
         }
     }

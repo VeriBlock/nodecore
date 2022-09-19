@@ -8,6 +8,9 @@
 import groovy.lang.GroovyObject
 import org.jfrog.gradle.plugin.artifactory.dsl.PublisherConfig
 
+repositories {
+    mavenCentral()
+}
 plugins {
     java
     kotlin("jvm")
@@ -28,7 +31,7 @@ dependencies {
     implementation("io.github.config4k:config4k:0.4.0")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.6.26")
+    implementation("io.github.microutils:kotlin-logging:2.1.23")
 
     // Reflection
     implementation("org.reflections:reflections:0.9.12")

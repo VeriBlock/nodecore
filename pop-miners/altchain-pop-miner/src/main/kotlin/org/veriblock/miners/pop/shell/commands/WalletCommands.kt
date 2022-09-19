@@ -18,7 +18,6 @@ import org.veriblock.shell.CommandParameter
 import org.veriblock.shell.CommandParameterMappers
 import org.veriblock.shell.command
 import org.veriblock.shell.core.success
-import org.veriblock.spv.model.Output
 import org.veriblock.spv.model.asStandardAddress
 
 fun CommandFactory.walletCommands(

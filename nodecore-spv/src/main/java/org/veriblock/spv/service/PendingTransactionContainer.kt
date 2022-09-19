@@ -12,7 +12,6 @@ import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.Address
 import org.veriblock.sdk.models.VeriBlockBlock
 import org.veriblock.spv.SpvContext
-import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.util.SpvEventBus
 import org.veriblock.spv.util.Threading
 

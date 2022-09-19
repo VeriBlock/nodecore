@@ -1,8 +1,13 @@
 package org.veriblock.core.crypto
 
+import com.google.gson.TypeAdapter
+import com.google.gson.internal.bind.TypeAdapters
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import org.veriblock.core.utilities.Utility
 import org.veriblock.core.utilities.extensions.asHexBytes
 import org.veriblock.core.utilities.extensions.toHex
+import java.io.IOException
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
@@ -11,6 +16,8 @@ sealed class AnyVbkHash(
 ) {
     val length: Int
         get() = bytes.size
+
+    constructor(hash: String) : this(hash.asHexBytes())
 
     abstract fun trimToPreviousBlockSize(): PreviousBlockVbkHash
 
@@ -33,18 +40,24 @@ sealed class AnyVbkHash(
         bytes.toHex()
 }
 
-private fun AnyVbkHash.trimBytes(size: Int): ByteArray {
+fun trimBytes(bytes: ByteArray, size: Int): ByteArray {
     return ByteArray(size).apply {
         System.arraycopy(bytes, bytes.size - size, this, 0, size)
     }
 }
 
-open class VbkHash internal constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
+private fun AnyVbkHash.trimBytes(size: Int): ByteArray {
+    return trimBytes(bytes, size)
+}
+
+open class VbkHash internal constructor(bytes: ByteArray) : AnyVbkHash(trimBytes(bytes, HASH_LENGTH)) {
     init {
-        check(bytes.size == HASH_LENGTH) {
+        check(bytes.size == HASH_LENGTH || bytes.size == VbkHash.HASH_LENGTH) {
             "Trying to create a VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
+
+    constructor(hash: String) : this(hash.asHexBytes())
 
     override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
         PreviousBlockVbkHash(trimBytes(PreviousBlockVbkHash.HASH_LENGTH))
@@ -58,12 +71,14 @@ open class VbkHash internal constructor(bytes: ByteArray) : AnyVbkHash(bytes) {
     }
 }
 
-class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
+class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(trimBytes(bytes, HASH_LENGTH)) {
     init {
-        check(bytes.size == HASH_LENGTH) {
+        check(bytes.size == HASH_LENGTH || bytes.size == VbkHash.HASH_LENGTH) {
             "Trying to create a previous block VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
+
+    constructor(hash: String) : this(hash.asHexBytes())
 
     override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
         this
@@ -77,12 +92,14 @@ class PreviousBlockVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
     }
 }
 
-class PreviousKeystoneVbkHash(bytes: ByteArray) : AnyVbkHash(bytes) {
+class PreviousKeystoneVbkHash(bytes: ByteArray) : AnyVbkHash(trimBytes(bytes, HASH_LENGTH)) {
     init {
-        check(bytes.size == HASH_LENGTH) {
+        check(bytes.size == HASH_LENGTH || bytes.size == VbkHash.HASH_LENGTH) {
             "Trying to create a previous keystone VBK hash with invalid amount of bytes: ${bytes.size} (${bytes.toHex()})"
         }
     }
+
+    constructor(hash: String) : this(hash.asHexBytes())
 
     override fun trimToPreviousBlockSize(): PreviousBlockVbkHash =
         error("Trying to trim a previous keystone VBK hash down to a previous block VBK hash")

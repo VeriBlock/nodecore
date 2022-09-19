@@ -8,19 +8,27 @@
 package org.veriblock.spv.service
 
 import com.google.protobuf.ByteString
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
 import nodecore.api.grpc.RpcAdvertiseTransaction
+import nodecore.api.grpc.RpcBlockHeader
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsReply
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
+import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
 import nodecore.api.grpc.RpcTransactionAnnounce
+import nodecore.p2p.PeerCapabilities
 import nodecore.p2p.PeerTable
 import nodecore.p2p.buildMessage
-import org.veriblock.core.*
+import org.veriblock.core.AddressCreationException
+import org.veriblock.core.EndorsementCreationException
+import org.veriblock.core.ImportException
+import org.veriblock.core.SendCoinsException
+import org.veriblock.core.WalletException
+import org.veriblock.core.WalletLockedException
 import org.veriblock.core.crypto.AnyVbkHash
+import org.veriblock.core.crypto.PreviousBlockVbkHash
 import org.veriblock.core.crypto.Sha256Hash
+import org.veriblock.core.crypto.VbkHash
+import org.veriblock.core.crypto.VbkTxId
 import org.veriblock.core.types.Pair
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError
@@ -30,6 +38,10 @@ import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.core.wallet.AddressManager
 import org.veriblock.core.wallet.AddressPubKey
 import org.veriblock.sdk.models.Address
+import org.veriblock.sdk.models.FullBlock
+import org.veriblock.sdk.models.Output
+import org.veriblock.sdk.models.VeriBlockPopTransaction
+import org.veriblock.sdk.models.VeriBlockTransaction
 import org.veriblock.sdk.models.asCoin
 import org.veriblock.sdk.services.SerializeDeserializeService
 import org.veriblock.spv.SpvConstants
@@ -41,21 +53,14 @@ import org.veriblock.spv.model.BlockHeader
 import org.veriblock.spv.model.DownloadStatus
 import org.veriblock.spv.model.DownloadStatusResponse
 import org.veriblock.spv.model.LedgerContext
-import org.veriblock.spv.model.Output
-import org.veriblock.spv.model.StandardTransaction
 import org.veriblock.spv.model.StoredVeriBlockBlock
-import org.veriblock.spv.model.Transaction
 import org.veriblock.spv.model.TransactionTypeIdentifier
 import org.veriblock.spv.model.asLightAddress
 import org.veriblock.spv.net.AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING
 import org.veriblock.spv.service.TransactionService.Companion.predictAltChainEndorsementTransactionSize
 import java.io.File
 import java.io.IOException
-import java.util.*
-import nodecore.api.grpc.RpcGetVtbsForBtcBlocksReply
-import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
-import nodecore.p2p.PeerCapabilities
-import org.veriblock.core.crypto.VbkTxId
+
 
 private val logger = createLogger {}
 
@@ -139,7 +144,7 @@ class SpvService(
             pendingTransactionContainer.addTransaction(it)
             peerTable.advertise(it)
         }.map {
-            it.txId
+            it.id
         }.toList()
     }
 
@@ -157,7 +162,7 @@ class SpvService(
         }
     }
 
-    suspend fun submitTransactions(transactions: List<Transaction>) {
+    suspend fun submitTransactions(transactions: List<VeriBlockTransaction>) {
         for (transaction in transactions) {
             pendingTransactionContainer.addTransaction(transaction)
             peerTable.advertise(transaction)
@@ -198,9 +203,8 @@ class SpvService(
         val privateKeyLength = privateKey[0].toInt()
         val privateKeyBytes = privateKey.copyOfRange(1, privateKeyLength + 1)
         val publicKeyBytes = privateKey.copyOfRange(privateKeyLength + 1, privateKey.size)
-        val importedAddress = addressManager.importKeyPair(publicKeyBytes, privateKeyBytes)
+        return addressManager.importKeyPair(publicKeyBytes, privateKeyBytes)
             ?: throw ImportException("The private key ${privateKey.toHex()} is invalid or corrupted!")
-        return importedAddress
     }
 
     fun encryptWallet(passphrase: String) {
@@ -333,7 +337,7 @@ class SpvService(
             val tx = transactionService.createUnsignedAltChainEndorsementTransaction(
                 sourceAddress.address, fee, publicationData, signatureIndex
             )
-            return AltChainEndorsement((tx as StandardTransaction), signatureIndex)
+            return AltChainEndorsement(tx, signatureIndex)
         } catch (e: Exception) {
             logger.debugWarn(e) { "Failed to create alt chain endorsement" }
             throw EndorsementCreationException("Failed to create alt chain endorsement")
@@ -425,9 +429,9 @@ class SpvService(
             return signatureIndex
         }
 
-        if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex) ) {
-                logger.debug { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
-                return maxConfirmedSigIndex
+        if (signatureIndex == null && maxConfirmedSigIndex > maxOf(pendingSignatureIndex)) {
+            logger.debug { "signatureIndex == null, maxConfirmedSigIndex > maxOf(pendingSignatureIndex, return maxConfirmedSigIndex : $maxConfirmedSigIndex" }
+            return maxConfirmedSigIndex
         }
 
         val returnValue = maxOf(signatureIndex ?: 0L, maxConfirmedSigIndex, pendingSignatureIndex)
@@ -442,28 +446,47 @@ class SpvService(
         val status: DownloadStatus = when {
             SpvState.downloadPeer == null || currentHeight == 0 || bestBlockHeight == 0 ->
                 DownloadStatus.DISCOVERING
+
             bestBlockHeight > 0 && bestBlockHeight - currentHeight < AMOUNT_OF_BLOCKS_WHEN_WE_CAN_START_WORKING ->
                 DownloadStatus.READY
+
             else ->
                 DownloadStatus.DOWNLOADING
         }
         return DownloadStatusResponse(status, currentHeight, bestBlockHeight)
     }
+
+    suspend fun getFullBlock(hash: PreviousBlockVbkHash): FullBlock? {
+        // if we don't know this block, we exit early.
+        // but we don't need the block itself.
+        blockchain.getBlock(hash) ?: return null
+
+        val request = buildMessage {
+            blockRequest = blockRequestBuilder
+                .addHeaders(
+                    RpcBlockHeader.newBuilder()
+                        .setHash(ByteString.copyFrom(hash.bytes))
+                        .build()
+                )
+                .build()
+        }
+
+        val rpcBlock = peerTable.requestMessage(
+            event = request
+        ) { if (it.block == null) -1 else 1 }.block
+
+        // TODO(warchant): Deserialize RpcBlock -> FullBlock
+
+    }
 }
 
-fun PeerTable.advertise(transaction: Transaction) {
+private fun PeerTable.advertiseTx(id: ByteArray, type: RpcTransactionAnnounce.Type) {
     val advertise = buildMessage {
         advertiseTx = RpcAdvertiseTransaction.newBuilder()
             .addTransactions(
                 RpcTransactionAnnounce.newBuilder()
-                    .setType(
-                        if (transaction.transactionTypeIdentifier === TransactionTypeIdentifier.PROOF_OF_PROOF) {
-                            RpcTransactionAnnounce.Type.PROOF_OF_PROOF
-                        } else {
-                            RpcTransactionAnnounce.Type.NORMAL
-                        }
-                    )
-                    .setTxId(ByteString.copyFrom(transaction.txId.bytes))
+                    .setType(type)
+                    .setTxId(ByteString.copyFrom(id))
                     .build()
             )
             .build()
@@ -475,4 +498,12 @@ fun PeerTable.advertise(transaction: Transaction) {
             logger.error(ex.message, ex)
         }
     }
+}
+
+fun PeerTable.advertise(transaction: VeriBlockTransaction) {
+    this.advertiseTx(transaction.id.bytes, RpcTransactionAnnounce.Type.NORMAL)
+}
+
+fun PeerTable.advertise(transaction: VeriBlockPopTransaction) {
+    this.advertiseTx(transaction.id.bytes, RpcTransactionAnnounce.Type.PROOF_OF_PROOF)
 }

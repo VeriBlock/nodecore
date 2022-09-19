@@ -27,12 +27,14 @@ import org.veriblock.core.utilities.extensions.isHex
 import org.veriblock.core.utilities.extensions.toHex
 import org.veriblock.sdk.alt.ApmInstruction
 import org.veriblock.sdk.alt.model.Atv
+import org.veriblock.sdk.alt.model.BtcBlockResponse
 import org.veriblock.sdk.alt.model.PopMempool
 import org.veriblock.sdk.alt.model.PopParamsResponse
 import org.veriblock.sdk.alt.model.SecurityInheritingBlock
 import org.veriblock.sdk.alt.model.SecurityInheritingTransaction
 import org.veriblock.sdk.alt.model.SecurityInheritingTransactionVout
 import org.veriblock.sdk.alt.model.SubmitPopResponse
+import org.veriblock.sdk.alt.model.VbkBlockResponse
 import org.veriblock.sdk.alt.model.Vtb
 import org.veriblock.sdk.alt.plugin.PluginConfig
 import org.veriblock.sdk.alt.plugin.PluginSpec
@@ -286,9 +288,9 @@ class BitcoinFamilyChain(
     override fun extractAddressDisplay(addressData: ByteArray): String {
         return if (config.addressPrefix != null) {
             val witnessProgram = ByteArray(addressData.size - 2)
-            addressData.copyInto(witnessProgram, 0,2, addressData.size)
+            addressData.copyInto(witnessProgram, 0, 2, addressData.size)
             try {
-                segwitToBech32(config.addressPrefix,0, witnessProgram)
+                segwitToBech32(config.addressPrefix, 0, witnessProgram)
             } catch (exception: Exception) {
                 throw IllegalArgumentException("Can't extract the Bech32 address from the address data: ${addressData.toHex()}", exception)
             }
@@ -335,21 +337,23 @@ class BitcoinFamilyChain(
         return rpcRequest("getpopparams", emptyList<String>())
     }
 
-    override suspend fun getVbkBlock(hash: String): VeriBlockBlock? {
+    override suspend fun getVbkBlockHash(height: Int): String? {
+        return try {
+            return rpcRequest("getvbkblockhash", listOf(height))
+        } catch (e: RpcException) {
+            if (e.errorCode == NOT_FOUND_ERROR_CODE) {
+                // Block not found
+                null
+            } else {
+                throw e
+            }
+        }
+    }
+
+    override suspend fun getVbkBlock(hash: String): VbkBlockResponse? {
         logger.debug { "Retrieving the VBK block for the hash $hash" }
         return try {
-            val response: VbkBlock = rpcRequest("getvbkblock", listOf(hash))
-            VeriBlockBlock(
-                height = response.header?.height ?: error("getvbkblock height field must be set"),
-                version = response.header.version ?: error("getvbkblock version field must be set"),
-                previousBlock = response.header.previousBlock?.asAnyVbkHash()?.trimToPreviousBlockSize() ?: error("getvbkblock previousBlock field must be set"),
-                previousKeystone = response.header.previousKeystone?.asAnyVbkHash()?.trimToPreviousKeystoneSize() ?: error("getvbkblock previousKeystone field must be set"),
-                secondPreviousKeystone = response.header.secondPreviousKeystone?.asAnyVbkHash()?.trimToPreviousKeystoneSize() ?: error("getvbkblock secondPreviousKeystone field must be set"),
-                merkleRoot = response.header.merkleRoot?.asTruncatedMerkleRoot() ?: error("getvbkblock merkleRoot field must be set"),
-                timestamp = response.header.timestamp ?: error("getvbkblock timestamp field must be set"),
-                difficulty = response.header.difficulty ?: error("getvbkblock difficulty field must be set"),
-                nonce = response.header.nonce ?: error("getvbkblock nonce field must be set")
-            )
+            return rpcRequest("getvbkblock", listOf(hash))
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
@@ -365,18 +369,10 @@ class BitcoinFamilyChain(
         return rpcRequest("getbtcbestblockhash")
     }
 
-    override suspend fun getBtcBlock(hash: String): BitcoinBlock? {
+    override suspend fun getBtcBlock(hash: String): BtcBlockResponse? {
         logger.debug { "Retrieving the BTC block for the hash $hash" }
         return try {
-            val response: BtcBlockBlock = rpcRequest("getbtcblock", listOf(hash))
-            BitcoinBlock(
-                version = response.header?.version ?: error("getbtcblock version field must be set"),
-                previousBlock = response.header.previousBlock?.asBtcHash() ?: error("getbtcblock previousBlock field must be set"),
-                merkleRoot = response.header.merkleRoot?.asMerkleRoot() ?: error("getbtcblock merkleRoot field must be set"),
-                timestamp = response.header.timestamp ?: error("getbtcblock timestamp field must be set"),
-                difficulty = 0, // FIXME difficulty field is not at the response
-                nonce = response.header.nonce ?: error("getbtcblock nonce field must be set")
-            )
+            return rpcRequest("getbtcblock", listOf(hash))
         } catch (e: RpcException) {
             if (e.errorCode == NOT_FOUND_ERROR_CODE) {
                 // Block not found
