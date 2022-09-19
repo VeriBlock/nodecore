@@ -19,7 +19,7 @@ dependencies {
     api("org.quartz-scheduler:quartz:2.2.1")
     api("org.quartz-scheduler:quartz-jobs:2.2.1")
     api("com.j256.ormlite:ormlite-core:5.1")
-    api("com.j256.ormlite:ormlite-jdbc:5.1")
+    api("com.j256.ormlite:ormlite-jdbc:6.1")
     api("org.xerial:sqlite-jdbc:$sqliteVersion")
     api("org.bitcoinj:bitcoinj-core:0.14.7")
     api("org.apache.logging.log4j:log4j-api:$log4jVersion")
