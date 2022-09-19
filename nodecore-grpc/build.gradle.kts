@@ -26,7 +26,7 @@ dependencies {
     compile(project(":veriblock-core"))
 
     compile("io.grpc:grpc-netty-shaded:1.42.1")
-    compile("io.grpc:grpc-protobuf:1.42.1")
+    compile("io.grpc:grpc-protobuf:1.49.1")
     compile("io.grpc:grpc-stub:1.42.1")
 
     compileOnly("javax.annotation:javax.annotation-api:1.2")
