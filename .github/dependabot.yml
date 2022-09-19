@@ -7,13 +7,13 @@ version: 2
 updates:
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directory: "/.github/workflows"
     schedule:
       interval: "daily"
 
   # Maintain dependencies for npm
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/pop-miners/altchain-pop-miner/src/main/spa-client"
     schedule:
       interval: "daily"
       
