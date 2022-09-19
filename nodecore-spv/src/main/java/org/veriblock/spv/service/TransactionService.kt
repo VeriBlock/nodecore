@@ -139,7 +139,7 @@ class TransactionService(
         }
         val transaction: Transaction = StandardTransaction(inputAddress, inputAmount, outputs, signatureIndex, networkParameters)
         val signingResult = signTransaction(transaction.txId, inputAddress)
-        if (signingResult.succeeded()) {
+        if (signingResult != null) {
             transaction.addSignature(signingResult.signature, signingResult.publicKey)
         }
         return transaction
@@ -191,12 +191,12 @@ class TransactionService(
         return totalSize
     }
 
-    fun signTransaction(txId: Sha256Hash, address: String): SigningResult {
+    fun signTransaction(txId: Sha256Hash, address: String): SigningResult? {
         val signature = addressManager.signMessage(txId.bytes, address)
-            ?: return SigningResult(false, null, null)
+            ?: return null
         val publicKey = addressManager.getPublicKeyForAddress(address)
-            ?: return SigningResult(false, null, null)
-        return SigningResult(true, signature, publicKey.encoded)
+            ?: return null
+        return SigningResult(signature, publicKey.encoded)
     }
 
     companion object {
