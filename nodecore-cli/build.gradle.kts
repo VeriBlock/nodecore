@@ -121,3 +121,4 @@ tasks.register<Deb>("createDeb") {
 }
 
 setupJacoco()
+

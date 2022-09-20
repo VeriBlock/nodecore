@@ -40,7 +40,7 @@ dependencies {
 
     testImplementation("junit:junit:4.12")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.0")
-    testImplementation("io.mockk:mockk:1.9.3")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
 tasks.test {

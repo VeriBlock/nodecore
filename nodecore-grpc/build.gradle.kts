@@ -18,30 +18,31 @@ plugins {
     idea
     `java-library`
     `maven-publish`
-    id("com.google.protobuf")
+    id("com.google.protobuf") version protobufPluginVersion
     id("com.jfrog.artifactory")
 }
 
 dependencies {
-    compile(project(":veriblock-core"))
+    implementation(project(":veriblock-core"))
 
-    compile("io.grpc:grpc-netty-shaded:1.42.1")
-    compile("io.grpc:grpc-protobuf:1.42.1")
-    compile("io.grpc:grpc-stub:1.42.1")
+    api("io.grpc:grpc-netty-shaded:$grpcVersion")
+    api("io.grpc:grpc-protobuf:$grpcVersion")
+    api("io.grpc:grpc-stub:$grpcVersion")
 
     compileOnly("javax.annotation:javax.annotation-api:1.2")
+    compileOnly("org.apache.tomcat:annotations-api:6.0.53") // necessary for Java 9+
 }
 
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/generated"
 
     protoc {
-        artifact = "com.google.protobuf:protoc:3.17.3"
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
     }
 
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.42.1"
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
     }
 

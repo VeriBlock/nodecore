@@ -18,7 +18,7 @@ plugins {
     idea
     application
     kotlin("plugin.serialization") version kotlinVersion
-    id("com.github.node-gradle.node") version "2.0.0"
+    id("com.github.node-gradle.node") version "3.4.0"
     id("nebula.ospackage")
     `java-library`
     `maven-publish`
@@ -179,12 +179,10 @@ setupJacoco()
 val spaClientDir = "$projectDir/src/main/spa-client"
 
 node {
-    version = "15.14.0"
-    npmVersion = "7.7.6"
-
-    download = true
-
-    nodeModulesDir = File(spaClientDir)
+    version.set("15.14.0")
+    npmVersion.set("7.7.6")
+    download.set(true)
+    nodeProjectDir.set(File(spaClientDir))
 }
 
 sourceSets {

@@ -46,11 +46,11 @@ class TransactionServiceTest : TestCase() {
         )
         result shouldNotBe null
 
-        val totalResultOutPut = result.map { tx ->
-            tx.getOutputs().map {
+        val totalResultOutPut = result.sumOf { tx ->
+            tx.getOutputs().sumOf {
                 it.amount.atomicUnits
-            }.sum()
-        }.sum()
+            }
+        }
 
         totalResultOutPut shouldBe 450L * Coin.COIN_VALUE
     }
