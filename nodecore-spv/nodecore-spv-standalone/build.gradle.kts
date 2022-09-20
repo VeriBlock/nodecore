@@ -46,7 +46,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
     // Other
-    implementation("me.tongfei:progressbar:0.8.1")
+    implementation("me.tongfei:progressbar:0.9.4")
 
     testImplementation("junit:junit:4.12")
     testImplementation("io.kotest:kotest-assertions-core:4.3.2")
