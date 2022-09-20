@@ -42,7 +42,7 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.kotest:kotest-assertions-core:4.6.3")
-    testImplementation("io.mockk:mockk:1.12.0")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
 // Exclude logback from everywhere to avoid the slf4j warning

@@ -90,3 +90,4 @@ tasks.register<Deb>("createDeb") {
     }
     link("/usr/local/bin/$packageName", "/opt/nodecore/$packageName/bin/$packageName")
 }
+

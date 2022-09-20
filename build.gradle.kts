@@ -20,13 +20,15 @@ configurations.all {
 
 buildscript {
     repositories {
-        jcenter()
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
+        maven { url = uri("https://repo1.maven.org/maven2") }
     }
     dependencies {
         classpath("com.netflix.nebula:gradle-ospackage-plugin:1.12.2")
         classpath("org.ajoberstar:grgit:1.1.0")
         classpath("org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1")
-        classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.8")
     }
 }
 
@@ -35,6 +37,7 @@ plugins {
     id("nebula.release") version "6.0.1"
     id("com.jfrog.artifactory") version "4.24.23"
     jacoco
+//    id("org.ajoberstar.grgit") version "5.0.0"
     id("org.sonarqube") version "2.8"
     id("nebula.ospackage") version "8.3.0"
     id("com.adarshr.test-logger") version "3.1.0"
@@ -43,7 +46,10 @@ plugins {
 allprojects {
     repositories {
         mavenLocal()
-        jcenter()
+        maven { url = uri("https://repo1.maven.org/maven2") }
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
         maven("https://jitpack.io")
         mavenCentral()
     }
@@ -51,7 +57,7 @@ allprojects {
     tasks.withType<KotlinCompile> {
         kotlinOptions {
             kotlinOptions.jvmTarget = "1.8"
-            freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+            freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
         }
     }
 
@@ -100,11 +106,11 @@ sonarqube {
 }
 
 jacoco {
-    toolVersion = "0.8.5"
+    toolVersion = "0.8.8"
 }
 
 tasks.wrapper {
-    gradleVersion = "6.8"
+    gradleVersion = "7.5"
 }
 
 val teamcityPrint by tasks.creating(DefaultTask::class) {
@@ -152,4 +158,18 @@ configure<TestLoggerExtension> {
     showSkippedStandardStreams = true
     showFailedStandardStreams = true
     logLevel = LIFECYCLE
+}
+
+allprojects {
+    afterEvaluate {
+        tasks.withType<Tar>{
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+        tasks.withType<Zip> {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+        tasks.withType<Copy> {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+    }
 }
