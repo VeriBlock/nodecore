@@ -10,6 +10,18 @@ import com.adarshr.gradle.testlogger.theme.ThemeType
 import org.gradle.api.logging.LogLevel.LIFECYCLE
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+// only jdk8,11..14 are supported
+val supportedJdks = listOf(
+    JavaVersion.VERSION_1_8, // jdk8
+    JavaVersion.VERSION_11,  // jdk11
+    JavaVersion.VERSION_12,  // jdk12
+    JavaVersion.VERSION_13,  // jdk13
+    JavaVersion.VERSION_14,  // jdk14
+)
+if(supportedJdks.indexOf(JavaVersion.current()) == -1){
+    throw GradleException("This build must be run with java[8,11,12,13,14], your version: ${JavaVersion.current()}")
+}
+
 configurations.all {
     resolutionStrategy.eachDependency {
         if (this.requested.group == "org.apache.logging.log4j") {
@@ -20,9 +32,7 @@ configurations.all {
 
 buildscript {
     repositories {
-        maven {
-            url = uri("https://plugins.gradle.org/m2/")
-        }
+        maven { url = uri("https://plugins.gradle.org/m2/") }
         maven { url = uri("https://repo1.maven.org/maven2") }
     }
     dependencies {
@@ -141,26 +151,30 @@ val pushVersionTag by tasks.creating(DefaultTask::class) {
     doFirst { pushVersionTag() }
 }
 
-configure<TestLoggerExtension> {
-    theme = ThemeType.STANDARD
-    showCauses = true
-    showExceptions = true
-    showStackTraces = true
-    showFullStackTraces = false
-    slowThreshold = 2000
-    showSummary = true
-    showSimpleNames = false
-    showPassed = true
-    showSkipped = true
-    showFailed = true
-    showStandardStreams = false
-    showPassedStandardStreams = false
-    showSkippedStandardStreams = true
-    showFailedStandardStreams = true
-    logLevel = LIFECYCLE
-}
-
 allprojects {
+    apply {
+        plugin("com.adarshr.test-logger")
+    }
+
+    configure<TestLoggerExtension> {
+        theme = ThemeType.STANDARD
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+        showFullStackTraces = false
+        slowThreshold = 2000
+        showSummary = true
+        showSimpleNames = false
+        showPassed = true
+        showSkipped = true
+        showFailed = true
+        showStandardStreams = false
+        showPassedStandardStreams = false
+        showSkippedStandardStreams = true
+        showFailedStandardStreams = true
+        logLevel = LIFECYCLE
+    }
+
     afterEvaluate {
         tasks.withType<Tar>{
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
