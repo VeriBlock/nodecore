@@ -42,7 +42,7 @@ dependencies {
     implementation("org.jline:jline:3.9.0")
     implementation("org.jline:jline-terminal:3.9.0")
     implementation("org.jline:jline-terminal-jansi:3.9.0")
-    implementation("io.netty:netty-tcnative-boringssl-static:2.0.7.Final")
+    implementation("io.netty:netty-tcnative-boringssl-static:2.0.54.Final")
     implementation("com.opencsv:opencsv:4.3.2")
     implementation("commons-codec:commons-codec:1.9")
     implementation("org.jprocesses:jProcesses:1.6.5")
