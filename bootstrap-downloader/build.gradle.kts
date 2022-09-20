@@ -20,7 +20,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")
 
     // Other
-    implementation("me.tongfei:progressbar:0.8.1")
+    implementation("me.tongfei:progressbar:0.9.4")
     implementation("commons-codec:commons-codec:1.9")
     implementation("commons-cli:commons-cli:1.4")
     implementation("org.fusesource.jansi:jansi:1.18")
