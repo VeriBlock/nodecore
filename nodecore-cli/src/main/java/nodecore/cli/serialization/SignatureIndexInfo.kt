@@ -8,7 +8,7 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcAddressSignatureIndexes
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toProperAddressType
 
 class SignatureIndexInfo(
     indexes: RpcAddressSignatureIndexes

@@ -8,8 +8,8 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcValidateAddressReply
-import nodecore.api.grpc.utilities.extensions.toHex
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toHex
+import org.veriblock.sdk.extensions.toProperAddressType
 
 class ValidateAddressPayload(
     reply: RpcValidateAddressReply

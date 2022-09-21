@@ -10,7 +10,7 @@ package org.veriblock.extensions.ledger;
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.RpcLedgerProofOfNonexistence;
 import nodecore.api.grpc.RpcLedgerProofOfNonexistenceOrBuilder;
-import nodecore.api.grpc.utilities.ByteStringAddressUtility;
+import org.veriblock.sdk.extensions.ByteStringAddressUtility;
 import org.veriblock.core.bitcoinj.Base58;
 import org.veriblock.core.bitcoinj.Base59;
 import org.veriblock.core.utilities.AddressUtility;

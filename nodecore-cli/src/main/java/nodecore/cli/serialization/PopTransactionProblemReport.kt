@@ -7,8 +7,8 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.RpcPopTransactionProblemReport
-import nodecore.api.grpc.utilities.extensions.toHex
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toHex
+import org.veriblock.sdk.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import org.veriblock.core.utilities.extensions.toHex
 

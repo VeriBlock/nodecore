@@ -7,7 +7,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.RpcMakeUnsignedMultisigTxReply
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toHex
 import org.veriblock.core.utilities.extensions.toHex
 
 class MakeUnsignedMultisigTxPayload(

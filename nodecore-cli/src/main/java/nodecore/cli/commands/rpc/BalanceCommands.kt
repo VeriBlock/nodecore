@@ -2,7 +2,7 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.RpcGetBalanceRequest
 import nodecore.api.grpc.RpcGetBalanceUnlockScheduleRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

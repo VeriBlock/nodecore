@@ -10,7 +10,7 @@ package org.veriblock.spv.model
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.RpcSignedTransaction
 import nodecore.api.grpc.RpcTransaction
-import nodecore.api.grpc.utilities.extensions.asHexByteString
+import org.veriblock.sdk.extensions.asHexByteString
 import org.veriblock.core.crypto.Crypto
 import org.veriblock.core.utilities.SerializerUtility
 import org.veriblock.core.utilities.Utility

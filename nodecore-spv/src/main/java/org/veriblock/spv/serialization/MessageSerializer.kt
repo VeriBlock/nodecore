@@ -14,10 +14,10 @@ import nodecore.api.grpc.RpcEvent
 import nodecore.api.grpc.RpcSignedMultisigTransaction
 import nodecore.api.grpc.RpcSignedTransaction
 import nodecore.api.grpc.RpcTransactionUnion
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.extensions.asVbkPreviousBlockHash
-import nodecore.api.grpc.utilities.extensions.asVbkPreviousKeystoneHash
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringUtility
+import org.veriblock.sdk.extensions.asVbkPreviousBlockHash
+import org.veriblock.sdk.extensions.asVbkPreviousKeystoneHash
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.sdk.models.BitcoinTransaction
 import org.veriblock.sdk.models.MerklePath

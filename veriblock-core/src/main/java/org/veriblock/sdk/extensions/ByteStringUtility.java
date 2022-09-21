@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-package nodecore.api.grpc.utilities;
+package org.veriblock.sdk.extensions;
 
 import com.google.protobuf.ByteString;
 import org.veriblock.core.utilities.Utility;

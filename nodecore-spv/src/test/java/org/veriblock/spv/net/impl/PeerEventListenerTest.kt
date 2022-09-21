@@ -5,7 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import nodecore.api.grpc.RpcTransactionAnnounce
 import nodecore.api.grpc.RpcTransactionRequest
-import nodecore.api.grpc.utilities.extensions.toByteString
+import org.veriblock.sdk.extensions.toByteString
 import nodecore.p2p.Peer
 import nodecore.p2p.PeerTable
 import nodecore.p2p.event.P2pEvent

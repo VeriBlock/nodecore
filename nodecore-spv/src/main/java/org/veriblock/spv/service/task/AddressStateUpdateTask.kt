@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.mapNotNull
 import nodecore.api.grpc.RpcLedgerProofReply
 import nodecore.api.grpc.RpcLedgerProofRequest
-import nodecore.api.grpc.utilities.extensions.asBase58ByteString
-import nodecore.api.grpc.utilities.extensions.toBase58
+import org.veriblock.sdk.extensions.asBase58ByteString
+import org.veriblock.sdk.extensions.toBase58
 import nodecore.p2p.buildMessage
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.debugError

@@ -1,7 +1,7 @@
 package org.veriblock.spv.lite.core
 
 import io.kotest.matchers.shouldBe
-import nodecore.api.grpc.utilities.ByteStringUtility
+import org.veriblock.sdk.extensions.ByteStringUtility
 import org.junit.Before
 import org.junit.Test
 import org.veriblock.core.Context

@@ -9,8 +9,8 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import com.opencsv.bean.CsvBindByName
 import nodecore.api.grpc.RpcWalletTransaction
-import nodecore.api.grpc.utilities.extensions.toHex
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toHex
+import org.veriblock.sdk.extensions.toProperAddressType
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 import java.time.Instant

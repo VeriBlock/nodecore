@@ -17,10 +17,10 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.extensions.asHexByteString
-import nodecore.api.grpc.utilities.extensions.toHex
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.asHexByteString
+import org.veriblock.sdk.extensions.toHex
+import org.veriblock.sdk.extensions.toProperAddressType
 import nodecore.p2p.PeerCapabilities
 import org.veriblock.core.ImportException
 import org.veriblock.core.MineException

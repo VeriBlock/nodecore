@@ -9,7 +9,7 @@ package nodecore.cli.serialization
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcSignedTransaction
 import nodecore.api.grpc.RpcSignedTransactionInfo
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toHex
 
 class SignedTransactionInfo(
     val signature: String,

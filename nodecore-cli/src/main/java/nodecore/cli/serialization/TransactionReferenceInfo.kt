@@ -7,7 +7,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.RpcTransactionInfo
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toHex
 
 class TransactionReferenceInfo(
     transactionInfo: RpcTransactionInfo

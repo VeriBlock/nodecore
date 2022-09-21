@@ -6,7 +6,7 @@ import nodecore.api.grpc.RpcGetBlockchainsRequest
 import nodecore.api.grpc.RpcGetBlocksRequest
 import nodecore.api.grpc.RpcGetLastBitcoinBlockRequest
 import nodecore.api.grpc.RpcSubmitBlocksRequest
-import nodecore.api.grpc.utilities.extensions.asHexByteString
+import org.veriblock.sdk.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

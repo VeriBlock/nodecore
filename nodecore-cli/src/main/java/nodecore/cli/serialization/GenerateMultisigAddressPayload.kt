@@ -7,8 +7,8 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.RpcGenerateMultisigAddressReply
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.toProperAddressType
 
 class GenerateMultisigAddressPayload(
     reply: RpcGenerateMultisigAddressReply
