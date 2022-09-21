@@ -8,7 +8,7 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcBlockSummary
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toHex
 import org.veriblock.core.utilities.Utility
 
 class BlockSummaryInfo(

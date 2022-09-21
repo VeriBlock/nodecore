@@ -1,4 +1,4 @@
-package nodecore.api.grpc.utilities.extensions
+package org.veriblock.sdk.extensions
 
 import com.google.protobuf.ByteString
 import org.veriblock.core.crypto.PreviousBlockVbkHash

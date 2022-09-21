@@ -2,8 +2,8 @@ package nodecore.cli.commands.rpc
 
 import nodecore.api.grpc.RpcDumpPrivateKeyRequest
 import nodecore.api.grpc.RpcImportPrivateKeyRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.extensions.asHexByteString
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

@@ -21,9 +21,9 @@ import nodecore.api.grpc.RpcTransaction
 import nodecore.api.grpc.RpcTransactionSet
 import nodecore.api.grpc.RpcTransactionUnion
 import nodecore.api.grpc.RpcUnsignedMultisigTransactionWithIndex
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
-import nodecore.api.grpc.utilities.extensions.asHexByteString
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringUtility
+import org.veriblock.sdk.extensions.asHexByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

@@ -11,6 +11,8 @@ plugins {
 }
 
 dependencies {
+    api(project(":nodecore-grpc"))
+
     // Kotlin
     api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     api("org.jetbrains.kotlin:kotlin-reflect")

@@ -5,7 +5,7 @@ import nodecore.api.grpc.RpcGenerateMultisigAddressRequest
 import nodecore.api.grpc.RpcGetNewAddressRequest
 import nodecore.api.grpc.RpcSetDefaultAddressRequest
 import nodecore.api.grpc.RpcValidateAddressRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

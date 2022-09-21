@@ -15,7 +15,7 @@ import nodecore.api.grpc.RpcResult
 import nodecore.api.grpc.RpcTransactionMeta
 import nodecore.api.grpc.RpcUnlockWalletRequest
 import nodecore.api.grpc.RpcWalletTransaction
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
 import nodecore.cli.CliShell
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers

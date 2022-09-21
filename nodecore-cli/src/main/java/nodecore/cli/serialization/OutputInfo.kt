@@ -7,7 +7,7 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.RpcOutput
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toProperAddressType
 import org.veriblock.core.utilities.extensions.formatAtomicLongWithDecimal
 
 class OutputInfo(

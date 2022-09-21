@@ -11,7 +11,7 @@ import io.ktor.util.network.*
 import kotlinx.coroutines.launch
 import nodecore.api.grpc.RpcBlockInfo
 import nodecore.api.grpc.RpcHeartbeat
-import nodecore.api.grpc.utilities.extensions.toByteString
+import org.veriblock.sdk.extensions.toByteString
 import nodecore.p2p.DnsResolver
 import nodecore.p2p.P2pConfiguration
 import nodecore.p2p.PeerTable

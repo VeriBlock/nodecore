@@ -9,9 +9,9 @@ import nodecore.api.grpc.RpcGetProtectingParentsRequest
 import nodecore.api.grpc.RpcStandardAddress
 import nodecore.api.grpc.RpcSubmitPopRequest
 import nodecore.api.grpc.RpcTroubleshootPopTransactionsRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.extensions.asHexByteString
-import nodecore.api.grpc.utilities.extensions.toByteString
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.asHexByteString
+import org.veriblock.sdk.extensions.toByteString
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

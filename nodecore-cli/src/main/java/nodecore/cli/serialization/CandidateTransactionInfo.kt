@@ -8,7 +8,7 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcCandidateTransaction
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toHex
 
 class CandidateTransactionInfo(
     candidate: RpcCandidateTransaction

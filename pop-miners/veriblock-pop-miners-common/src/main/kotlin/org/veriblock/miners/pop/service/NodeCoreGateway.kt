@@ -30,7 +30,7 @@ import nodecore.api.grpc.RpcRewardEstimate
 import nodecore.api.grpc.RpcSendCoinsRequest
 import nodecore.api.grpc.RpcSubmitPopRequest
 import nodecore.api.grpc.RpcUnlockWalletRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
 import org.veriblock.core.utilities.BlockUtility
 import org.veriblock.core.utilities.createLogger
 import org.veriblock.core.utilities.extensions.asHexBytes

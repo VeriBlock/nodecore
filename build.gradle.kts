@@ -51,6 +51,7 @@ plugins {
     id("org.sonarqube") version "2.8"
     id("nebula.ospackage") version "8.3.0"
     id("com.adarshr.test-logger") version "3.1.0"
+    id("com.savvasdalkitsis.module-dependency-graph") version "0.10"
 }
 
 allprojects {

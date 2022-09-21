@@ -5,8 +5,8 @@ import nodecore.api.grpc.RpcGetTransactionRequest
 import nodecore.api.grpc.RpcOutput
 import nodecore.api.grpc.RpcTransaction
 import nodecore.api.grpc.RpcTransactionInfo
-import nodecore.api.grpc.utilities.extensions.toByteString
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toByteString
+import org.veriblock.sdk.extensions.toHex
 import nodecore.p2p.buildMessage
 import org.veriblock.core.crypto.asVbkTxId
 import org.veriblock.core.utilities.createLogger
@@ -22,7 +22,7 @@ import org.veriblock.spv.util.Threading.PEER_TABLE_SCOPE
 import org.veriblock.spv.util.invokeOnFailure
 import org.veriblock.spv.util.launchWithFixedDelay
 import kotlin.system.exitProcess
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toProperAddressType
 
 private val logger = createLogger {}
 

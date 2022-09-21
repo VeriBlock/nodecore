@@ -23,8 +23,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":veriblock-core"))
-
     api("io.grpc:grpc-netty-shaded:$grpcVersion")
     api("io.grpc:grpc-protobuf:$grpcVersion")
     api("io.grpc:grpc-stub:$grpcVersion")

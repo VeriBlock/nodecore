@@ -3,8 +3,8 @@ package nodecore.cli.commands.rpc
 import com.google.protobuf.ByteString
 import nodecore.api.grpc.RpcGetSignatureIndexRequest
 import nodecore.api.grpc.RpcSignMessageRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
-import nodecore.api.grpc.utilities.ByteStringUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

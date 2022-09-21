@@ -12,7 +12,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import nodecore.api.grpc.RpcGetVeriBlockPublicationsRequest
 import nodecore.api.grpc.RpcGetVtbsForBtcBlocksRequest
-import nodecore.api.grpc.utilities.extensions.toByteString
+import org.veriblock.sdk.extensions.toByteString
 import nodecore.p2p.NoPeersException
 import org.veriblock.core.contracts.Balance
 import org.veriblock.core.crypto.AnyVbkHash

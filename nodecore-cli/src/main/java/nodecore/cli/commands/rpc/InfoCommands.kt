@@ -5,7 +5,7 @@ import nodecore.api.grpc.RpcGetHistoryRequest
 import nodecore.api.grpc.RpcGetInfoRequest
 import nodecore.api.grpc.RpcGetPeerInfoRequest
 import nodecore.api.grpc.RpcGetStateInfoRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

@@ -7,8 +7,8 @@
 package nodecore.cli.serialization
 
 import nodecore.api.grpc.RpcGetPopReply
-import nodecore.api.grpc.utilities.extensions.toBase58
-import nodecore.api.grpc.utilities.extensions.toHex
+import org.veriblock.sdk.extensions.toBase58
+import org.veriblock.sdk.extensions.toHex
 
 class PopPayload(
     reply: RpcGetPopReply

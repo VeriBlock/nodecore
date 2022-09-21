@@ -8,7 +8,7 @@ package nodecore.cli.serialization
 
 import com.google.gson.annotations.SerializedName
 import nodecore.api.grpc.RpcImportPrivateKeyReply
-import nodecore.api.grpc.utilities.extensions.toProperAddressType
+import org.veriblock.sdk.extensions.toProperAddressType
 
 class ImportPrivateKeyInfo(
     reply: RpcImportPrivateKeyReply

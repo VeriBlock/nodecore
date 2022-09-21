@@ -6,7 +6,7 @@ import nodecore.api.grpc.RpcRestartPoolWebServerRequest
 import nodecore.api.grpc.RpcStartPoolRequest
 import nodecore.api.grpc.RpcStartSoloPoolRequest
 import nodecore.api.grpc.RpcStopPoolRequest
-import nodecore.api.grpc.utilities.ByteStringAddressUtility
+import org.veriblock.sdk.extensions.ByteStringAddressUtility
 import nodecore.cli.cliShell
 import nodecore.cli.commands.ShellCommandParameterMappers
 import nodecore.cli.prepareResult

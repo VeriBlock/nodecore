@@ -29,7 +29,7 @@ import nodecore.api.grpc.RpcNetworkInfoRequest
 import nodecore.api.grpc.RpcNotFound
 import nodecore.api.grpc.RpcTransactionRequest
 import nodecore.api.grpc.RpcTransactionUnion
-import nodecore.api.grpc.utilities.ByteStringUtility
+import org.veriblock.sdk.extensions.ByteStringUtility
 import nodecore.p2p.P2pConstants
 import nodecore.p2p.P2pEventBus
 import nodecore.p2p.Peer

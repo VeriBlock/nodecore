@@ -10,7 +10,7 @@ package org.veriblock.extensions.ledger;
 import com.google.protobuf.ByteString;
 import nodecore.api.grpc.RpcLedgerProofNode;
 import nodecore.api.grpc.RpcLedgerProofNodeOrBuilder;
-import nodecore.api.grpc.utilities.ByteStringUtility;
+import org.veriblock.sdk.extensions.ByteStringUtility;
 import org.veriblock.core.crypto.Crypto;
 
 import javax.annotation.Nullable;
