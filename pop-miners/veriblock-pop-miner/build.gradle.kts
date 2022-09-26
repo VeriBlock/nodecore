@@ -40,7 +40,7 @@ dependencies {
     implementation("com.diogonunes:JCDP:2.0.3.1")
     implementation("org.quartz-scheduler:quartz:2.2.1")
     implementation("org.quartz-scheduler:quartz-jobs:2.2.1")
-    implementation("org.bitcoinj:bitcoinj-core:0.15.10")
+    implementation("org.bitcoinj:bitcoinj-core:0.16.1")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
