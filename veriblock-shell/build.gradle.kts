@@ -36,7 +36,7 @@ dependencies {
 
     implementation("org.jline:jline:3.13.1")
     implementation("org.jline:jline-terminal:3.13.1")
-    implementation("org.jline:jline-terminal-jansi:3.13.1")
+    implementation("org.jline:jline-terminal-jansi:3.21.0")
 
     implementation("com.google.guava:guava:20.0")
     implementation("com.opencsv:opencsv:4.3.2")
