@@ -24,7 +24,7 @@ dependencies {
 
     implementation("org.apache.commons:commons-lang3:3.7")
     implementation("com.google.guava:guava:24.1-jre")
-    implementation("dnsjava:dnsjava:3.3.0")
+    implementation("dnsjava:dnsjava:3.5.1")
 
     // Unit tests
     testImplementation("junit:junit:4.13.2")
