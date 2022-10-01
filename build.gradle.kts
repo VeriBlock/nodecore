@@ -37,7 +37,7 @@ buildscript {
     }
     dependencies {
         classpath("com.netflix.nebula:gradle-ospackage-plugin:1.12.2")
-        classpath("org.ajoberstar:grgit:1.1.0")
+        classpath("org.ajoberstar:grgit:2.3.0")
         classpath("org.jfrog.buildinfo:build-info-extractor-gradle:4.15.1")
     }
 }
