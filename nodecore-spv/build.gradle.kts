@@ -36,7 +36,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
-    implementation("org.freemarker:freemarker:2.3.14")
+    implementation("org.freemarker:freemarker:2.3.31")
 
     testImplementation("junit:junit:4.12")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.3.0")
