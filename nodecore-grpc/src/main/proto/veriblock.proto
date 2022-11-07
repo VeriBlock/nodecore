@@ -770,6 +770,8 @@ message RpcEvent {
         RpcGetStateInfoReply state_info_reply = 36;
         RpcGetVtbsForBtcBlocksRequest vtb_for_btc_request = 37;
         RpcGetVtbsForBtcBlocksReply vtb_for_btc_reply = 38;
+        RpcGetLastBitcoinFinalizedBlockRequest last_btc_finalized_block_request = 39;
+        RpcGetLastBitcoinFinalizedBlockReply last_btc_finalized_block_reply = 40;
     }
     string id = 11;
     bool acknowledge = 12;
@@ -1035,6 +1037,28 @@ message RpcGetTransactionReply {
     RpcTransactionInfo transaction = 3;
 }
 
+message RpcGetLastBitcoinFinalizedBlockRequest {
+    int32 bitcoinConfirmations = 1;
+}
+
+message RpcGetLastBitcoinFinalizedBlockReply {
+    bool success = 1;
+    repeated RpcResult results = 2;
+    RpcGetLastBitcoinFinalizedBlockInfo last_btc_finalized_block = 3;
+}
+
+message RpcGetLastBitcoinFinalizedBlockInfo {
+    int32 height = 1;
+    bytes hash = 2 [(hex_encoded)=true];
+    bool known = 3;
+    bool pop_verified = 4;
+    RpcVerifiedOrEndorsedInInfo verified_in = 5;
+    RpcVerifiedOrEndorsedInInfo endorsed_in = 6;
+    int32 sp_finality = 7;
+    int32 bitcoin_finality = 8;
+    bool is_attack_in_progress = 9;
+}
+
 message RpcTransactionInfo {
     int32 confirmations = 1;
     RpcTransaction transaction = 2;
@@ -1046,6 +1070,11 @@ message RpcTransactionInfo {
     int32 bitcoin_confirmations = 8;
     bytes block_hash = 9 [(hex_encoded) = true];
     string merkle_path = 10;
+}
+
+message RpcVerifiedOrEndorsedInInfo {
+    int32 height = 1;
+    bytes hash = 2 [(hex_encoded)=true];
 }
 
 message RpcGetTransactionsReply {
@@ -1727,6 +1756,8 @@ service Admin {
     rpc SubmitTransactions(RpcSubmitTransactionsRequest) returns (RpcProtocolReply) {}
 
     rpc GetTransactions(RpcGetTransactionsRequest) returns (RpcGetTransactionsReply) {}
+
+    rpc GetLastBitcoinFinalizedBlock(RpcGetLastBitcoinFinalizedBlockRequest) returns (RpcGetLastBitcoinFinalizedBlockReply) {}
 
     rpc ValidateAddress(RpcValidateAddressRequest) returns (RpcValidateAddressReply) {}
 

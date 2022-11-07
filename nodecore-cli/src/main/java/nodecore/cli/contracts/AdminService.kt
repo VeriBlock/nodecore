@@ -41,6 +41,8 @@ import nodecore.api.grpc.RpcGetInfoReply
 import nodecore.api.grpc.RpcGetInfoRequest
 import nodecore.api.grpc.RpcGetLastBitcoinBlockReply
 import nodecore.api.grpc.RpcGetLastBitcoinBlockRequest
+import nodecore.api.grpc.RpcGetLastBitcoinFinalizedBlockReply
+import nodecore.api.grpc.RpcGetLastBitcoinFinalizedBlockRequest
 import nodecore.api.grpc.RpcGetNewAddressReply
 import nodecore.api.grpc.RpcGetNewAddressRequest
 import nodecore.api.grpc.RpcGetPeerInfoReply
@@ -149,6 +151,7 @@ interface AdminService {
     fun getSignatureIndex(request: RpcGetSignatureIndexRequest): RpcGetSignatureIndexReply
     fun setDefaultAddress(request: RpcSetDefaultAddressRequest): RpcSetDefaultAddressReply
     fun getLastBitcoinBlock(request: RpcGetLastBitcoinBlockRequest): RpcGetLastBitcoinBlockReply
+    fun getLastBitcoinFinalizedBlock(request: RpcGetLastBitcoinFinalizedBlockRequest): RpcGetLastBitcoinFinalizedBlockReply
     fun getProtectedChildren(request: RpcGetProtectedChildrenRequest): RpcGetProtectedChildrenReply
     fun getProtectingParents(request: RpcGetProtectingParentsRequest): RpcGetProtectingParentsReply
     fun restartPoolWebServer(request: RpcRestartPoolWebServerRequest): RpcRestartPoolWebServerReply

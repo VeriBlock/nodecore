@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString
 import nodecore.api.grpc.RpcAbandonAddressTransactionsRequest
 import nodecore.api.grpc.RpcAbandonTransactionRequest
 import nodecore.api.grpc.RpcAddressIndexPair
+import nodecore.api.grpc.RpcGetLastBitcoinFinalizedBlockRequest
 import nodecore.api.grpc.RpcGetPendingTransactionsRequest
 import nodecore.api.grpc.RpcGetTransactionsRequest
 import nodecore.api.grpc.RpcMakeUnsignedMultisigTxRequest
@@ -179,6 +180,24 @@ fun CommandFactory.transactionCommands() {
 
         prepareResult(result.success, result.resultsList) {
             TransactionReferencesPayload(result.transactionsList)
+        }
+    }
+
+    rpcCommand(
+        name = "Get last BTC finalized block",
+        form = "getlastbtcfinalizedblock",
+        description = "Gets information regarding last BTC finalized block by bitcoint confirmation number",
+        parameters = listOf(
+            CommandParameter(name = "bitcoinConfirmations", mapper = CommandParameterMappers.INTEGER, required = true)
+        )
+    ) {
+        val bitcoinConfirmations: Int = getParameter("bitcoinConfirmations")
+        val request = RpcGetLastBitcoinFinalizedBlockRequest.newBuilder().setBitcoinConfirmations(bitcoinConfirmations)
+
+        val result = cliShell.adminService.getLastBitcoinFinalizedBlock(request.build())
+
+        prepareResult(result.success, result.resultsList) {
+           result.lastBtcFinalizedBlock
         }
     }
 
