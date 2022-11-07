@@ -47,7 +47,7 @@ private val logger = createLogger {}
 private const val NOT_FOUND_ERROR_CODE = -5
 
 @PluginSpec(name = "BitcoinFamily", key = "btc")
-class BitcoinFamilyChain(
+open class BitcoinFamilyChain(
     override val key: String,
     configuration: PluginConfig
 ) : HttpSecurityInheritingChain {
@@ -288,7 +288,7 @@ class BitcoinFamilyChain(
             val witnessProgram = ByteArray(addressData.size - 2)
             addressData.copyInto(witnessProgram, 0,2, addressData.size)
             try {
-                segwitToBech32(config.addressPrefix,0, witnessProgram)
+                segwitToBech32(config.addressPrefix!!,0, witnessProgram)
             } catch (exception: Exception) {
                 throw IllegalArgumentException("Can't extract the Bech32 address from the address data: ${addressData.toHex()}", exception)
             }
@@ -396,12 +396,12 @@ class BitcoinFamilyChain(
         checkNotNull(config.payoutAddress) {
             "$name's payoutAddress ($key.payoutAddress) must be configured!"
         }
-        if (config.payoutAddress.isEmpty() || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
+        if (config.payoutAddress?.isEmpty() == true || config.payoutAddress == "INSERT PAYOUT ADDRESS") {
             error(
                 "'${config.payoutAddress}' is not a valid value for the $name's payoutAddress configuration ($key.payoutAddress). Please set up a valid payout address"
             )
         }
-        payoutAddress = config.payoutAddress
+        payoutAddress = config.payoutAddress!!
     }
 
     private suspend fun validateAddress(address: String): ByteArray {
