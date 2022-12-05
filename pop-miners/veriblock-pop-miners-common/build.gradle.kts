@@ -31,7 +31,7 @@ dependencies {
     api(project(":nodecore-grpc"))
     api(project(":pop-miners:pop-miners-common"))
 
-    api("org.bitcoinj:bitcoinj-core:0.15.8")
+    api("org.bitcoinj:bitcoinj-core:0.16.2")
 
     // Dependency Injection
     implementation("org.koin:koin-core:$koinVersion")
