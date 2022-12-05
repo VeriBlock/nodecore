@@ -21,7 +21,7 @@ dependencies {
     api("com.j256.ormlite:ormlite-core:5.1")
     api("com.j256.ormlite:ormlite-jdbc:6.1")
     api("org.xerial:sqlite-jdbc:$sqliteVersion")
-    api("org.bitcoinj:bitcoinj-core:0.14.7")
+    api("org.bitcoinj:bitcoinj-core:0.16.2")
     api("org.apache.logging.log4j:log4j-api:$log4jVersion")
     api("org.apache.logging.log4j:log4j-core:$log4jVersion")
     api("org.slf4j:slf4j-api:$slf4jVersion")
