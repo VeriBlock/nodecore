@@ -64,7 +64,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8")
     // Metrics
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.4")
     // Swagger integration, expecting an official integration to be released soon
     implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.2-beta.8")
 

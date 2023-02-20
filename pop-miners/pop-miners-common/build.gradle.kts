@@ -55,7 +55,7 @@ dependencies {
 
     // Metrics
     implementation("io.micrometer:micrometer-core:1.1.4")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.1.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.4")
 
     implementation("commons-cli:commons-cli:1.4")
     implementation("com.google.guava:guava:26.0-jre")
